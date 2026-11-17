@@ -51,6 +51,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
+import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
 
 // ---------------------------------------------------------------- config
 
@@ -71,7 +72,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -171,6 +172,8 @@ function loadConfig(env) {
   const hosted = hostedConfig(env, bad)
   // Web search and downloads (web.mjs): the provider, the grants file, the fetch limits.
   const web = webConfig(env, bad)
+  // Batch jobs (batch.mjs): the job grants file the front desk writes, and the lane's limits.
+  const batch = batchConfig(env, bad)
 
   if (problems.length) {
     for (const p of problems) console.error(`config: ${p}`)
@@ -193,6 +196,7 @@ function loadConfig(env) {
     claude,
     hosted,
     web,
+    batch,
     port: num.GATEWAY_PORT,
     maxBody: num.GATEWAY_MAX_BODY_BYTES,
     maxTotalBody: num.GATEWAY_MAX_TOTAL_BODY_BYTES,
@@ -288,6 +292,7 @@ const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, t
   ON CONFLICT (week, caller, model) DO UPDATE SET requests = requests + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out`)
 const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
+const batch = makeBatch({ cfg: C.batch, db })
 const web = makeWeb({ cfg: C.web, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const readUsage = db.prepare(`SELECT coalesce(sum(CASE WHEN model IN ('web-search', 'web-fetch') THEN 0 ELSE requests END), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
@@ -765,8 +770,8 @@ async function handle(req, res, rec, signal) {
 
   if (rec.route === 'usage' && req.method === 'GET') {
     rec.status = 200
-    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider } : null })
-    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who) })
+    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name), batch_job: batch.jobOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider, prices: C.hosted.prices } : null, claude_prices: C.claude.prices })
+    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who) })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
   // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
@@ -822,7 +827,21 @@ async function handle(req, res, rec, signal) {
     const u = usageOf(who)
     return u.tokens_used + pending >= u.quota ? u : null
   }
-  const before = overQuota()
+  // A batch job's request (batch.mjs): its own budget instead of the weekly quota, and one request
+  // in flight per caller, so a job never holds both of a project's slots.
+  const lane = laneOf(req)
+  let batchHold = null
+  if (lane) {
+    rec.lane = 'batch'
+    const r = batch.admit(who, lane)
+    if (r) {
+      rec.status = r.status
+      rec.why = r.why
+      return send(res, r.status, { error: { message: r.message, type: r.type, ...(r.code ? { code: r.code } : {}) } }, r.retryAfter ? { 'Retry-After': String(r.retryAfter) } : {})
+    }
+    batchHold = batch.hold(who)
+  }
+  const before = lane ? null : overQuota()
   if (before) {
     return no(429, 'the weekly quota is used up', `this week's quota of ${before.quota} tokens is used up; it resets at ${before.resets_at}`, 'insufficient_quota', {
       'Retry-After': secondsUntil(Date.parse(before.resets_at)),
@@ -834,6 +853,7 @@ async function handle(req, res, rec, signal) {
   try {
     release = await queue.acquire(who, signal)
   } catch (e) {
+    batchHold?.()
     rec.wait_ms = Date.now() - queuedAt
     if (e.code === 'caller_busy') {
       return no(429, 'the caller has too many requests waiting', `too many requests at once from this caller (${C.perCaller} running, ${C.perCallerQueue} waiting); retry shortly`, 'rate_limit_error', { 'Retry-After': '5' })
@@ -855,7 +875,9 @@ async function handle(req, res, rec, signal) {
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
     const upstreamBody = { model: isHosted ? hosted.model : C.models.get(body.model), stream: false }
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
-    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, overQuota, isHosted ? hosted.target : null)
+    // A job's retries are checked against its budget, a conversation's against the weekly quota.
+    const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
+    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : null)
     rec.status = out.status
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
@@ -867,11 +889,13 @@ async function handle(req, res, rec, signal) {
     }
   } finally {
     release()
+    batchHold?.()
     rec.tries = tally.tries
     rec.tokens_in = tally.in
     rec.tokens_out = tally.out
     rec.estimated = tally.estimated ? 'bytes' : null
-    if (tally.tries) addUsage.run(weekKey(weekStart()), who, body.model, tally.in, tally.out)
+    if (tally.tries && lane) batch.record(who, lane, tally.in, tally.out)
+    else if (tally.tries) addUsage.run(weekKey(weekStart()), who, body.model, tally.in, tally.out)
     if (isHosted && tally.tries) rec.cost_micro_usd = hosted.record(who, tally.in, tally.out)
   }
 }

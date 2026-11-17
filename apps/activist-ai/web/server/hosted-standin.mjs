@@ -106,7 +106,7 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
     return { status: 200, body: { ok: true, run: `h${Date.now().toString(36)}`, provider } }
   }
 
-  return async function handle(req, res, p, url) {
+  const handle = async function handle(req, res, p, url) {
     if (p === '/api/fallback' && req.method === 'GET') {
       return json(res, 200, { claude: { ...claudeInfo(), canChange: role() === 'owner' }, hosted: await info(), stretch: st.stretch, stretchTo: st.stretchTo, canChange: role() === 'owner' }), true
     }
@@ -133,4 +133,6 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
     }
     return json(res, 200, await info()), true
   }
+  handle.info = info // for the jobs stand-in in dev.mjs: which models a job may offer
+  return handle
 }

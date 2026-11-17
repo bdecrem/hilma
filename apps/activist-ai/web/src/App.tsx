@@ -13,10 +13,13 @@ import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
 import { SettingsView } from './components/Settings.tsx'
 import { DataView } from './components/DataView.tsx'
+import { JobsView } from './components/JobsView.tsx'
 
-type Route = 'home' | 'files' | 'data' | 'settings'
-const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : 'home')
-const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings' }
+type Route = 'home' | 'files' | 'data' | 'settings' | 'jobs'
+const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : hash.startsWith('#/jobs') ? 'jobs' : 'home')
+// #/jobs/<id> opens one job.
+const jobOf = (hash: string): string | null => /^#\/jobs\/([0-9a-f]{12})$/.exec(hash)?.[1] ?? null
+const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings', jobs: 'Jobs' }
 /** `#/?ask=<conversation id>` opens the drawer on that conversation. */
 const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?')[1] ?? '').get('ask')
 /** `?still` in the address: no live stream (screenshots, printing). */
@@ -25,7 +28,8 @@ const STILL = new URLSearchParams(location.search).has('still')
 export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const canRun = () => props.role !== 'viewer'
   const [route, setRoute] = createSignal<Route>(routeOf(location.hash))
-  const onHash = () => setRoute(routeOf(location.hash))
+  const [jobId, setJobId] = createSignal<string | null>(jobOf(location.hash))
+  const onHash = () => (setRoute(routeOf(location.hash)), setJobId(jobOf(location.hash)))
   window.addEventListener('hashchange', onHash)
   onCleanup(() => window.removeEventListener('hashchange', onHash))
 
@@ -94,7 +98,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   // A new view moves focus to its heading, so a screen reader hears where it is.
   createEffect((prev: Route | undefined) => {
     const r = route()
-    if (prev && prev !== r) queueMicrotask(() => (r === 'home' ? heading : r === 'settings' ? settingsTitle : document.getElementById(r === 'files' ? 'files-title' : 'data-title'))?.focus())
+    if (prev && prev !== r) queueMicrotask(() => (r === 'home' ? heading : r === 'settings' ? settingsTitle : document.getElementById(r === 'files' ? 'files-title' : r === 'jobs' ? 'jobs-title' : 'data-title'))?.focus())
     if (r === 'settings') void ola.loadClaude()
     return r
   })
@@ -208,6 +212,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <Show when={route() === 'data'}>
                 <DataView />
               </Show>
+              <Show when={route() === 'jobs'}>
+                <JobsView jobId={jobId()} />
+              </Show>
               <Show when={route() === 'settings'}>
                 <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} />
               </Show>
@@ -237,6 +244,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </a>
               <a class="ghost-button on-room" href="#/data">
                 <Icon name="table" size={18} /> Data
+              </a>
+              <a class="ghost-button on-room" href="#/jobs">
+                <Icon name="run" size={18} /> Jobs
               </a>
               <Show when={canRun()}>
                 <button type="button" class="ghost-button on-room" onClick={addFiles}>

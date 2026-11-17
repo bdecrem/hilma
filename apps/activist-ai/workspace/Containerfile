@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-15 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-16 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -46,6 +46,11 @@
 # and `ola-page`, which renders a page in chromium-headless-shell (Debian's, no network) to a
 # screenshot and measures it. ws.mjs builds from a staged context that holds workspace/ and skills/,
 # and labels the image with the skill set's hash. (Not 2.3.0-14: another builder's number.)
+#
+# 2.3.0-16: ola-batch, batch jobs ("ask the same thing of every document"): the agent proposes a job,
+# the person starts it in the app, and the front desk runs `ola-batch run` here, one document per
+# model call through the door, every quote checked against the stored text. AGENTS.md says when to
+# use it. Everything of 2.3.0-15 is in it too. (Not 2.3.0-14: another builder's.)
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -85,7 +90,7 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page /opt/ola/bin/
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch /opt/ola/bin/
 # Ola's skills, and the system config that makes them the only ones (see the header).
 COPY opencode-system.jsonc /etc/opencode/opencode.jsonc
 COPY skills /opt/ola/skills

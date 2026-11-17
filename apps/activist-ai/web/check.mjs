@@ -879,6 +879,151 @@ async function fallbackChecks(engine, label) {
   await fallbackChecks(webkit, 'webkit')
 }
 
+// ---------------------------------------------------------------- batch jobs (README, "Batch jobs")
+// The page against the front desk's own jobs code (dev.mjs runs frontdesk/jobs.mjs), ola-batch on
+// the dev folder, the real gateway's batch lane and the scripted model with its planted quotes.
+async function jobsChecks(engine, label) {
+  const b = await engine.launch()
+  const d = await startDev(['--fake-model'])
+  const c = await b.newContext({ viewport: { width: 1440, height: 1000 } })
+  const pg = await c.newPage()
+  pg.on('request', (r) => {
+    const u = r.url()
+    if (!u.startsWith('data:') && !u.startsWith('blob:') && new URL(u).origin !== d.origin) foreign.add(u)
+  })
+  const shot = async (name, page = pg) => SHOTS && (await page.waitForTimeout(300), await page.screenshot({ path: path.join(SHOTS, `${label}-${name}.png`), fullPage: true }))
+  const dev = (p, method = 'POST') => pg.evaluate(([p, method]) => fetch(p, { method }).then((r) => r.json()), [p, method])
+  const post = (p, body) => pg.evaluate(([p, body]) => fetch(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ status: r.status, json: await r.json() })), [p, body])
+  const state = () => pg.locator('.job-head .job-state').innerText()
+  let job = null
+  try {
+    await pg.goto(`${d.url}#/`)
+    await pg.waitForSelector('.thing')
+    job = (await dev('/__dev/batch?corpus=30')).job
+    await check(`${label}: a proposed job is listed under Jobs, waiting for a look, and nothing has run`, async () => {
+      assert(job, 'no job was proposed')
+      await pg.getByRole('link', { name: 'Jobs' }).click()
+      await pg.waitForSelector('.job-card')
+      const t = await pg.locator('.job-card').first().innerText()
+      assert(/Who makes the adaptation decision/.test(t) && /Waiting for your look/.test(t) && /30 documents/.test(t), t)
+      assert((await dev('/__dev/batch')).calls === 0, 'the model was called before anyone said yes')
+      await shot('jobs-list-proposed')
+      return t.replace(/\s+/g, ' ').slice(0, 120)
+    })
+    await check(`${label}: the proposal shows the form, the documents, the time and the share of the week, before anything runs`, async () => {
+      await pg.locator('.job-card a').first().click()
+      await pg.waitForSelector('.job-proposal')
+      const t = (await pg.locator('.job-proposal').innerText()).replace(/\s+/g, ' ')
+      for (const want of ['Who makes the adaptation decision?', 'households, local government, national government, firms, other, or not stated', 'In what year does the planning horizon end?', 'Documents 30', 'Of a week of this project’s use', 'Run a trial on 10 documents', 'never shown as checked']) assert(t.includes(want), `missing "${want}" in: ${t.slice(0, 600)}`)
+      assert(!(await pg.locator('.job-models').count()), 'a model choice with no outside model on')
+      await shot('proposal')
+      return /Time on this machine (.*?) Model use/.exec(t)?.[1] ?? ''
+    })
+    await check(`${label}: with the hosted model on, the proposal offers it with its cost; a member cannot pick it, and the front desk refuses a member who tries`, async () => {
+      assert((await post('/api/hosted/settings', { enabled: true, consent: true })).status === 200, 'hosted on')
+      await pg.reload()
+      await pg.waitForSelector('.job-models')
+      const t = (await pg.locator('.job-models').innerText()).replace(/\s+/g, ' ')
+      assert(/hosted open model at Made-up Cloud/.test(t) && /leaves this machine for Made-up Cloud/.test(t) && /About \$\d+\.\d\d for this job/.test(t), t)
+      await pg.locator('.job-model', { hasText: 'hosted' }).locator('input').check()
+      assert(await pg.getByRole('button', { name: /Run a trial/ }).isDisabled(), 'a trial on an outside model without the consent box')
+      await shot('proposal-hosted')
+      await dev('/__dev/role?to=member')
+      await pg.reload()
+      await pg.waitForSelector('.job-models')
+      assert(await pg.locator('.job-model', { hasText: 'hosted' }).locator('input').isDisabled(), 'a member can pick the outside model')
+      const r = await post('/api/jobs/trial', { job, model: 'hosted', consent: true })
+      assert(r.status === 403 && r.json.error === 'owner_only', `a member's outside trial: ${r.status} ${r.json.error}`)
+      await dev('/__dev/role?to=owner')
+      assert((await post('/api/hosted/settings', { enabled: false })).status === 200, 'hosted off')
+      return `a member's try: ${r.status}`
+    })
+    await check(`${label}: the trial codes 10 documents and shows each value with its quote, its page and the check; planted quotes are marked`, async () => {
+      await pg.reload()
+      await pg.getByRole('button', { name: /Run a trial on 10/ }).click()
+      await pg.waitForFunction(() => /Trial done/.test(document.querySelector('.job-head .job-state')?.textContent ?? ''), null, { timeout: 60_000 })
+      await pg.waitForSelector('.job-grid tbody tr')
+      const rows = await pg.locator('.job-grid tbody tr').count()
+      assert(rows === 10, `${rows} rows`)
+      const planted = new Set((await dev('/__dev/batch')).planted.filter((x) => x.retry).map((x) => x.title))
+      const docs = await pg.locator('.job-grid tbody tr').evaluateAll((trs) => trs.map((tr) => ({ doc: tr.querySelector('th')?.firstChild?.textContent?.trim(), first: tr.querySelector('td .job-check')?.textContent ?? '', quote: tr.querySelector('td .job-quote')?.textContent ?? '' })))
+      for (const r of docs) {
+        if (planted.has(r.doc)) assert(/Quote not found: not checked/.test(r.first), `${r.doc}: ${r.first}`)
+        else assert(/Quote found/.test(r.first) && r.quote.length > 10, `${r.doc}: ${r.first}`)
+      }
+      assert((await pg.locator('.job-start').innerText()).includes('Start the whole job'), 'no way to start the whole job')
+      await shot('trial-table')
+      return `10 rows; ${[...planted].filter((t) => docs.some((r) => r.doc === t)).length} planted quote(s) in the trial, marked`
+    })
+    await check(`${label}: only the owner may start the whole job; it needs the budget confirmed; pause, resume, done; the table is in Data, marked machine-coded`, async () => {
+      await dev('/__dev/role?to=member')
+      await pg.reload()
+      await pg.waitForSelector('.job-start')
+      assert(/Only the project’s owner can start the whole job/.test(await pg.locator('.job-start').innerText()), 'a member sees a start button')
+      const r = await post('/api/jobs/start', { job, budget: 1_000_000, confirm: true })
+      assert(r.status === 403, `a member's start: ${r.status}`)
+      await dev('/__dev/role?to=owner')
+      await dev('/__dev/batch?delay=250')
+      await pg.reload()
+      await pg.waitForSelector('.job-start input[type=number]')
+      const go = pg.getByRole('button', { name: 'Start the whole job' })
+      assert(await go.isDisabled(), 'started without the budget confirmed')
+      await pg.locator('.job-start .job-consent input').check()
+      await go.click()
+      await pg.waitForFunction(() => /Running/.test(document.querySelector('.job-head .job-state')?.textContent ?? ''), null, { timeout: 20_000 })
+      await pg.waitForFunction(() => /left/.test(document.querySelector('.job-counts')?.textContent ?? ''), null, { timeout: 20_000 }).catch(() => {})
+      await shot('job-running')
+      await pg.goto(`${d.url}#/jobs`)
+      await pg.waitForSelector('.job-card[data-state=running]')
+      await shot('jobs-list-running')
+      await pg.locator('.job-card a').first().click()
+      await pg.getByRole('button', { name: 'Pause' }).click()
+      await pg.waitForFunction(() => /Paused/.test(document.querySelector('.job-head .job-state')?.textContent ?? ''), null, { timeout: 10_000 })
+      await pg.waitForTimeout(4000)
+      const a = await pg.locator('.job-counts').innerText()
+      await pg.waitForTimeout(3500)
+      const b2 = await pg.locator('.job-counts').innerText()
+      assert(a === b2, `still counting while paused: ${a} / ${b2}`)
+      await pg.getByRole('button', { name: 'Resume' }).click()
+      await pg.waitForFunction(() => /Done/.test(document.querySelector('.job-head .job-state')?.textContent ?? ''), null, { timeout: 60_000 })
+      const done = await pg.locator('.job-counts').innerText()
+      assert(/30 of 30/.test(done), done)
+      assert((await dev('/__dev/batch')).maxInflight === 1, 'more than one batch request at a time')
+      await shot('job-done')
+      await pg.goto(`${d.url}#/data`)
+      await pg.waitForSelector('.data-tables')
+      const row = (await pg.locator('.data-tables tr', { hasText: 'decisions' }).innerText()).replace(/\s+/g, ' ')
+      assert(/Machine-coded/.test(row) && /30/.test(row) && /A job Ola ran/.test(row), row)
+      await shot('data-machine-coded')
+      return `paused at "${a}", done: ${done}; Data: ${row.slice(0, 90)}`
+    })
+    await check(`${label}: no sideways scroll at 390 px on Jobs and a job's rows`, async () => {
+      const m = await b.newContext({ viewport: { width: 390, height: 844 } })
+      const mp = await m.newPage()
+      const widths = []
+      for (const h of ['#/jobs', `#/jobs/${job}`]) {
+        await mp.goto(`${d.url}${h}`)
+        await mp.waitForSelector(h === '#/jobs' ? '.job-card' : '.job-grid')
+        widths.push(await mp.evaluate(() => document.documentElement.scrollWidth))
+      }
+      if (SHOTS) await mp.screenshot({ path: path.join(SHOTS, `${label}-job-390.png`), fullPage: true })
+      await m.close()
+      assert(widths.every((w) => w <= 390), `page widths ${widths.join(', ')}`)
+      return `widths ${widths.join(', ')}`
+    })
+  } finally {
+    await c.close()
+    await b.close()
+    await d.stop()
+  }
+}
+{
+  const { webkit } = await import('playwright')
+  console.log('\nBatch jobs, the page (the front desk’s jobs code, ola-batch, the gateway’s batch lane, the scripted model):')
+  await jobsChecks(chromium, 'jobs-chromium')
+  await jobsChecks(webkit, 'jobs-webkit')
+}
+
 // ---------------------------------------------------------------- slash commands and reactions
 // README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
 // and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium

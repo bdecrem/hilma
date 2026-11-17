@@ -195,6 +195,14 @@ export const desk: FrontDesk = {
   excelUrl: (table) => `/api/data/xlsx?${qs({ name: table, w: workspace() ?? '' })}`,
 }
 
+// Batch jobs (frontdesk/jobs.mjs): the list, one job with a page of its rows, and the person's say.
+export const jobs = {
+  list: () => call<import('./types.ts').JobsPayload>('/api/jobs'),
+  one: (id: string, o: { stage?: 'trial' | 'full'; offset?: number; problems?: boolean } = {}) =>
+    call<import('./types.ts').JobPage>(`/api/jobs/job?${qs({ id, stage: o.stage, offset: o.offset, limit: 50, problems: o.problems ? 1 : undefined })}`),
+  act: (action: 'trial' | 'start' | 'pause' | 'resume' | 'cancel', body: Record<string, unknown>) => post<{ ok: boolean; state: string; budget?: number }>(`/api/jobs/${action}`, body),
+}
+
 // ---------------------------------------------------------------- passkeys (WebAuthn)
 //
 // The server sends WebAuthn options as JSON (base64url for binary); the browser API wants

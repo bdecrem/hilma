@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-15` (2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-16` (2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-15 (a 600 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-16 (a 600 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1511,3 +1511,144 @@ project stopped. Encryption and where the copies go are the backup job's (being 
 **Measured 2026-11-17 on the mini** (image 2.3.0-8): a 200,000-row CSV loads in 0.5 s and a sorted,
 filtered page of it comes back through `container exec` in 0.3 s; in the page (web/check.mjs, Chromium
 and WebKit) the table opens, sorts, searches and pages well within the check's limits.
+
+## Batch jobs: the same question for every document (2026-11-17)
+
+What a person can do: in a project with many documents in its database, ask "For each of these 400
+studies, tell me who makes the adaptation decision and the time horizon, with a quote". Ola writes
+the question down as a job; under **Jobs** the person reads it (the form, how many documents, how
+long, how much of the machine), runs a **trial** on 10 to 20 documents chosen at random, looks at
+those rows with their quotes, and only then starts the whole job. It runs for hours or days with the
+page closed, shows its progress, can be paused, resumed and cancelled, and lands in **Data** as a
+table marked machine-coded, downloadable as Excel.
+
+```
+agent (in the conversation): ola-batch propose spec.json      the form, the documents, an estimate; nothing runs
+person, under Jobs:          Run a trial on 15 documents        POST /api/jobs/trial   (owners and members, Ola's own model)
+                             Start the whole job + budget       POST /api/jobs/start   (owners only)
+                             Pause / Resume / Cancel            POST /api/jobs/pause | resume | cancel
+front desk (jobs.mjs):       writes the job's grant (GATEWAY_BATCH_FILE), runs `ola-batch run <job>` in the VM
+                             through `container exec`, keeps it going (a tick every 10 s)
+ola-batch run, in the VM:    one document at a time: one model call through the door, the quote check,
+                             one row saved; a retry with the failure shown; heartbeat every 3 s
+gateway (batch.mjs):         X-Ola-Lane: batch + X-Ola-Job: only with the grant, against the job's budget
+```
+
+**Why the job is the front desk's, and runs in the VM.** A job cannot be one opencode run: that ends at
+the two-hour ceiling, and a workspace with nothing executing stops 30 idle minutes after the person
+leaves (GAMI's full-text run is about 17 to 20 million input tokens, hours to days on one machine).
+Nor can the front desk read the documents itself: the host never opens a project's database, and the
+documents must not leave the sealed VM. So the front desk owns the job's life (when it may run, its
+budget, starting it again) and the VM does the reading: `ola-batch run` inside the project's own VM,
+each document one small model call through the VM's door to the gateway, with the VM's own token, as
+the agent's own calls are. The two-hour ceiling stays for conversations; a job is not an opencode run
+and its limit is its budget. While a job is in its trial or running, it holds the workspace busy, so
+the idle stop waits. After a front desk restart, a machine restart or a crash the front desk finds
+every job that was going in the platform database and starts its runner again, waking the VM (after an
+unattended reboot this is the one thing that starts a workspace by itself); a full machine makes it
+wait and say so. The runner saves after every document, so a restart loses at most the call in flight,
+and a lock in the VM keeps two runners off one job.
+
+**The model's budget, and the person waiting in a conversation.** A project's two slots and its
+weekly quota (20 million tokens) were sized for conversations; one real job is about a week of it.
+So a job has its own budget, which the owner confirms when starting it (the proposal offers the
+estimate plus 30%; the trial gets its share of the estimate, twice over), and the gateway enforces
+it: a request with `X-Ola-Lane: batch` is served only while the front desk's grant names that job
+(`{"ws-<id>": {"job", "tokens"}}`, written from the platform database: only jobs in their trial or
+running), is counted against the job (`batch_usage`), not the weekly quota, and may have **one**
+request in flight per project (`GATEWAY_BATCH_INFLIGHT_PER_CALLER`), so a person's conversation always
+has the other slot. Used up: 429 with error code `job_budget`; the runner pauses the job and says so,
+and the owner can resume with a larger budget. **The header `X-Ola-Lane: batch` is the batch lane's
+name for the priority work too** (batch slots only while no interactive request waits): that was not
+on main when this was built, so the job keeps itself to one request at a time. A job on the hosted
+model also needs the project's hosted grant and stays under its monthly dollar ceiling, like any
+request. Claude jobs go through `/anthropic` with the project's Claude grant and monthly ceiling; their
+per-job budget is counted by the runner only (the Claude route does not read the lane yet).
+
+**Who decides.** Owners and members run a trial on Ola's own model. Only an owner starts the whole job
+(it sets how much of this machine the job uses), resumes with a new budget, or uses an outside model:
+the proposal offers the hosted open model or Claude only when the project's switch for it is on, with
+the cost for the whole job (prices from the gateway's `/v1/usage`), and a box to agree that the
+documents' text goes to that company. Viewers read. The platform database keeps one row per started
+job (`batch_jobs`, migration 8: the job's id, state, model, budget, who, when; no title, field or
+document) and the audit log `job_trial_started`, `job_started` (with the budget), `job_paused`,
+`job_resumed`, `job_cancelled`, `job_finished` (with the tokens used).
+
+**The quote check, in full** (`quote_check` in `workspace/ola-batch`). Every value comes with a verbatim
+quote and its page; a program checks the quote against that document's stored text (`doc_text`, by
+page) after these changes to both sides and nothing else: Unicode NFKC (a ligature such as "ﬁ" is "fi");
+soft hyphens removed, U+2010 and U+2011 read as "-"; curly quotes read as straight; **a line-break hyphen**
+(a letter, "-", a line break, a letter) read both ways, joined ("adap-\ntation" is "adaptation") and
+kept ("long-\nterm" is "long-term"), a match in either counts; every run of white space one space.
+Then the quote must be one exact, case-sensitive substring. Shorter than four words, or with an
+ellipsis: not found. Results: `found` (on the stated page), `found on another page` (the page is
+corrected), `quote not found`, and `not stated` (nothing to check: "not stated" is always a valid
+answer). An answer with a quote not found, or out of shape (a category not in the list, not a number),
+is asked again once with what was wrong; what comes back then stays, marked. The page shows every
+value with its quote, page and check; a value whose quote was not found reads "Quote not found: not
+checked", never as checked.
+
+**The results table**, one per job, named by the spec (`decisions`): one row per document, with
+`document_id`, `document`, for each field `<field>`, `<field>_quote`, `<field>_page`, `<field>_check`,
+then `checked` (all quotes found, or how many not), `stage` (trial or full), `model`, `coded_at` and
+`machine_coded` (always 1). Its catalog entry says "Machine-coded by Ola, not source data", its source is
+`machine-coded (job <id>)`, and Data marks it **Machine-coded** wherever it is listed. `batch_jobs` and
+`batch_items` (the job's own bookkeeping) are not shown in Data.
+
+**`ola-batch`** (in the image, 2.3.0-16; `ola-batch --help` has the spec):
+
+```bash
+ola-batch propose spec.json        # {"name", "title", "instructions"?, "fields": [{name, type: text|category|number|yesno,
+                                   #   question, values?}], "documents": "all" | "SELECT id FROM documents WHERE …",
+                                   #   "trial": 10..20, "model": "general"}
+ola-batch list | show <job> | results <job> [--problems] [--limit N]
+ola-batch check <doc_id> <page|-> "<quote>"      # the same check, for any quote the agent writes
+ola-batch withdraw <job>                          # a proposal that never ran
+# the front desk's: ola-batch api list | show --job J [--stage --offset --limit --problems] | status --job J
+#                   ola-batch api set --job J --state trial|running|paused|cancelled [--budget N --model M]
+#                   ola-batch run <job>
+```
+
+`workspace/AGENTS.md` tells the agent to use it for the same question over more than about ten
+documents, to say plainly that nothing runs until the person starts it under Jobs, and to report a
+value whose quote was not found as unchecked.
+
+**Settings.** Gateway: `GATEWAY_BATCH_FILE` (the grants file; without it every batch request is
+refused), `GATEWAY_BATCH_JOB_MAX_TOKENS` (100,000,000: no budget above it, whatever the file says),
+`GATEWAY_BATCH_INFLIGHT_PER_CALLER` (1). Front desk: `OLA_FD_BATCH_FILE` (`$OLA_HOME/gateway-batch`),
+`OLA_FD_JOB_TICK_MS` (10,000), `OLA_FD_JOB_STALE_S` (45: a runner whose heartbeat is older is started
+again), `OLA_FD_JOB_MAX_TOKENS` (100,000,000). In the VM: `OLA_BATCH_MAX_CHARS` (120,000 characters of
+one document, about 30,000 tokens; a longer one is read from its start, and the prompt says so).
+
+**Proofs.** `gateway/test.mjs` ("batch jobs": refused without the grant, with another job's id or
+another project's token; its own budget while the weekly quota of 100 tokens stays whole for
+conversations; `job_budget` at the end of it; one request in flight while a conversation beside it is
+served; the hosted model still needs its grant; usage shows the job; a grant taken back refuses at
+once). `workspace/batch.test.mjs` (run by `workspace/check.mjs`; ola-batch on the host against the
+scripted model: the quote-check rules, 60 made-up studies from `workspace/testdata/make-corpus.py` with
+planted wrong quotes from `web/server/fake-batch.mjs`, every one caught, a runner killed with SIGKILL
+mid-job and started again with no document coded twice, pause within seconds, a second runner
+refused, cancel keeping the rows). `workspace/check.mjs` (inside the VM: the check across a line-break
+hyphen and a ligature, an invented quote refused, the bookkeeping out of Data, AGENTS.md).
+`frontdesk/check.mjs` (in the sealed VM, with a 3 s idle stop and a 24 s run ceiling: the proposal
+listed and nothing run; the batch lane refused from inside without a yes; a member refused an
+outside-model trial and the whole job, a viewer everything; the trial of 15; the whole job of 60 past
+the ceiling and the idle stop with the workspace running throughout, a conversation answered in under
+3 s mid-job, pause (grant gone, count still) and resume, a `kill -9` of the front desk and a new one
+finishing the job with no document coded twice, the 5 quotes planted twice marked and only those,
+the table in Data and as Excel, the audit words; cancel; a budget too small pausing a job with its
+sentence). `web/check.mjs` (Chromium and WebKit, against the front desk's own jobs code in `dev.mjs`:
+the proposal's words, the hosted option with its cost and a member unable to pick it, the trial table
+with quotes and checks and planted quotes marked, only the owner starting the whole job and only with
+the budget confirmed, running, pause, resume, done, Data's mark, 390 px).
+
+**After deploying:** add `GATEWAY_BATCH_FILE=/Users/admin/.ola/gateway-batch` to `~/.ola/gateway.env`
+(the front desk writes that file by default) and `node ops/ola.mjs install`; the deploy builds image
+2.3.0-16, and projects take it at their next start.
+
+**Not done yet.** The priority lane (above); a note to the phone when a job ends; jobs over a list of
+items per document ("each adaptation decision", the Almanac's per-item sheets: one row per document
+for now); the law mode of the check (a quote inside the cited article); a page-level reading order for
+two-column PDFs, without which a quote that wraps a column cannot be found (intake's work); measured
+speeds on the Studio for the estimate (until then: 1,000 tokens a second reading and 40 writing for
+Ola's own model, replaced by the trial's measurement for the whole job).

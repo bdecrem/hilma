@@ -29,7 +29,8 @@ import csv, datetime, hashlib, html.parser, io, json, os, re, shutil, sqlite3, s
 WORK = os.environ.get("OLA_WORK", "/work")
 DB = os.path.join(WORK, "project.db")
 TMP = os.path.join(WORK, ".ola", "tmp")
-CORE = {"documents", "doc_text", "tables_catalog", "ola_meta"}
+# batch_jobs and batch_items are ola-batch's own bookkeeping (its answers go to named tables).
+CORE = {"documents", "doc_text", "tables_catalog", "ola_meta", "batch_jobs", "batch_items"}
 SCHEMA_VERSION = "1"
 DOC_TYPES = {".pdf": "application/pdf", ".txt": "text/plain", ".md": "text/markdown", ".html": "text/html", ".htm": "text/html",
              ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

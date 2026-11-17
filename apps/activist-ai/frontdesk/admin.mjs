@@ -43,6 +43,7 @@ import { makeInvite } from './auth.mjs'
 import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
+import { writeBatchGrants } from './jobs.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -68,8 +69,9 @@ const workspace = (slug) => db.prepare('SELECT * FROM workspaces WHERE slug = ?'
 const admin = (row) => audit(db, { actorKind: 'admin', ...row })
 // The gateway's grants file follows the database: after anything that changes who owns a project,
 // whether it is open, or a fallback setting: Claude's (claude.mjs writeGrants) and the hosted open
-// model's (hosted.mjs writeHostedGrants). Returns the Claude grants.
-const grants = () => (writeHostedGrants(db, cfg.hosted), writeGrants(db, cfg.claude))
+// model's (hosted.mjs writeHostedGrants), and batch jobs' (jobs.mjs writeBatchGrants: a closed project's
+// job loses its grant). Returns the Claude grants.
+const grants = () => (writeHostedGrants(db, cfg.hosted), writeBatchGrants(db, cfg.jobs), writeGrants(db, cfg.claude))
 
 // ---------------------------------------------------------------- rotation
 //

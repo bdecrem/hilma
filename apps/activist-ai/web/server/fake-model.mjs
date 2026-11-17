@@ -17,6 +17,7 @@
 // <steps> folder listings, each reply held <ms> first, then a one-line answer. The front desk's
 // checks use it for runs longer than the idle limit, and longer than the run ceiling.
 import http from 'node:http'
+import { batchAnswer, isBatchRequest, newBatchState } from './fake-batch.mjs'
 
 function lastUserText(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -57,6 +58,7 @@ function plan(tools, count) {
 // model could not do is the one handed to it).
 export function startFakeModel({ hosted = false } = {}) {
   let calls = 0
+  const batch = newBatchState()
   const server = http.createServer(async (req, res) => {
     let raw = ''
     for await (const c of req) raw += c
@@ -70,6 +72,22 @@ export function startFakeModel({ hosted = false } = {}) {
       return send(400, { error: { message: 'bad json' } })
     }
     calls++
+    // A batch job's form (workspace/ola-batch): answered from the document, with planted wrong
+    // quotes for the checker to catch (fake-batch.mjs).
+    if (isBatchRequest(body)) {
+      batch.inflight++
+      batch.maxInflight = Math.max(batch.maxInflight, batch.inflight)
+      try {
+        if (batch.delayMs) await new Promise((r) => setTimeout(r, batch.delayMs))
+        if (res.destroyed || !res.socket || res.socket.destroyed) return
+        const a = batchAnswer(body, batch)
+        const r = reply({ content: a.content })
+        r.usage = { prompt_tokens: a.prompt, completion_tokens: a.completion, total_tokens: a.prompt + a.completion }
+        return send(200, r)
+      } finally {
+        batch.inflight--
+      }
+    }
     const messages = body.messages ?? []
     if (!hosted && /please fail/i.test(lastUserText(messages))) return send(400, { error: { message: 'The model refused this request (scripted failure).', type: 'invalid_request_error' } })
     // Titles and other side calls carry no tools: answer them briefly.
@@ -112,7 +130,7 @@ export function startFakeModel({ hosted = false } = {}) {
     }
     return send(200, reply({ content: `${hosted ? 'The hosted open model here. ' : ''}I counted the rows in survey.csv with a short program: there are ${count}, not counting the header. I wrote that down in rows.md.` }))
   })
-  return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok({ server, port: server.address().port, calls: () => calls })))
+  return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok({ server, port: server.address().port, calls: () => calls, batch })))
 }
 
 function reply({ content = null, tool = null }) {

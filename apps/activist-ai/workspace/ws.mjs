@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-15'
+export const IMAGE = 'ola-workspace:2.3.0-16'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -955,6 +955,30 @@ export async function dbApi(id, args, { ms = 15_000, max = 16 * 1024 * 1024 } = 
     if (x && typeof x === 'object' && !Array.isArray(x)) return x
   } catch {}
   refuse('the project database answered out of shape', 'DB_FAILED')
+}
+
+/** `ola-batch api <args>` in the VM (batch jobs), parsed like dbApi; a job the VM does not have is NO_JOB. */
+export async function batchApi(id, args, { ms = 20_000, max = 8 * 1024 * 1024 } = {}) {
+  validId(id)
+  const child = execTool(id, 'ola-batch', ['api', ...args])
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, max)
+  clearTimeout(timer)
+  if (r.code !== 0) refuse(/no such job/.test(r.err) ? 'no such job' : 'the job did not answer', /no such job/.test(r.err) ? 'NO_JOB' : 'JOB_FAILED')
+  try {
+    const x = JSON.parse(r.out)
+    if (x && typeof x === 'object' && !Array.isArray(x)) return x
+  } catch {}
+  refuse('the job answered out of shape', 'JOB_FAILED')
+}
+
+/** `ola-batch run <job>` in the VM: the job itself, for as long as it runs (the front desk keeps it going). */
+export function batchRunner(id, job) {
+  validId(id)
+  if (!/^[0-9a-f]{12}$/.test(job)) refuse('not a job id')
+  const child = execTool(id, 'ola-batch', ['run', job])
+  child.stdout.resume()
+  return child
 }
 
 /** `ola-db api backup|xlsx ...` as a stream of bytes (a download); kill() ends it. */

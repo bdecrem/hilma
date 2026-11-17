@@ -34,6 +34,7 @@ import { claudeConfig, makeClaude } from './claude.mjs'
 import { CONTAINER, HOME as WS_HOME } from '../workspace/ws.mjs'
 import { makeWeb } from './web.mjs'
 import { hostedConfig, makeHosted } from './hosted.mjs'
+import { jobsConfig, makeJobs } from './jobs.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -83,6 +84,8 @@ export function config(env = process.env) {
     searchProvider: env.OLA_FD_SEARCH_PROVIDER ?? 'Brave Search',
     // Fallback to a hosted open model (hosted.mjs): the gateway's hosted grants file, the ceiling.
     hosted: hostedConfig(env),
+    // Batch jobs (jobs.mjs): the gateway's job grants file, how often jobs are looked after.
+    jobs: jobsConfig(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -233,6 +236,7 @@ export function makeFrontDesk(cfg = config()) {
   const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
+  const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -429,6 +433,27 @@ export function makeFrontDesk(cfg = config()) {
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
     // front desk's memory: no exec, does not wake the workspace, is not use.
     if (p === '/api/runs' && req.method === 'GET') return json(res, 200, workspaces.runsOf(ws.slug))
+    // Batch jobs (jobs.mjs): the list and one job (any member), and trial, start, pause, resume and
+    // cancel (owners and members; the whole job, outside models and budgets: owners).
+    if (p === '/api/jobs' || p.startsWith('/api/jobs/')) {
+      try {
+        if (p === '/api/jobs' && req.method === 'GET') return json(res, 200, await jobs.list(ws))
+        if (p === '/api/jobs/job' && req.method === 'GET') {
+          const r = await jobs.show(ws, url.searchParams.get('id'), { stage: url.searchParams.get('stage'), offset: intParam(url, 'offset', 0, 1_000_000), limit: intParam(url, 'limit', 50, 200), problems: url.searchParams.get('problems') === '1' })
+          return json(res, r.status, r.body)
+        }
+        const what = p.slice('/api/jobs/'.length)
+        if (req.method !== 'POST' || !['trial', 'start', 'pause', 'resume', 'cancel'].includes(what)) return json(res, 404, NOT_FOUND)
+        const body = await readJson(req, 16 * 1024)
+        if (!body) return json(res, 400, { error: 'bad_json' })
+        const r = await jobs.act(ws, sess.personId, what, body)
+        return json(res, r.status, r.body)
+      } catch (e) {
+        if (['CLOSED', 'MACHINE_BUSY', 'START_FAILED'].includes(e?.code)) return startRefused(res, e)
+        if (e?.code === 'JOB_FAILED' || e?.code === 'NO_JOB') return json(res, 502, { error: 'job_failed', message: 'The project’s jobs could not be read just now. Try again in a minute.' })
+        throw e
+      }
+    }
     // Data: the project database, read-only, through `ola-db api` inside the VM (never opened on
     // the host). Each request is one exec with a time and size cap, and one transfer slot.
     if (p.startsWith('/api/data') && req.method === 'GET') {
@@ -786,7 +811,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, close: () => (claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, close: () => (jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

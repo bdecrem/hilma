@@ -11,6 +11,8 @@ import { ProblemBox } from './Drawer.tsx'
 
 const PAGE = 50
 const num = (n: number) => n.toLocaleString('en-US')
+// A table a batch job wrote (workspace/ola-batch): marked wherever it is listed, so it is never taken for source data.
+const machineCoded = (t: DataTable) => /^machine-coded/.test(t.source ?? '')
 const problemOf = (e: unknown, text: string): Problem => (e instanceof DeskError ? e.problem : { text, detail: String(e) })
 
 export function DataView() {
@@ -93,11 +95,16 @@ export function DataView() {
                                 <Icon name="table" size={18} />
                                 <span>{t.name}</span>
                               </button>
+                              <Show when={machineCoded(t)}>
+                                <span class="machine-coded" title="Values a model read from each document, each with its quote and a program's check. Not source data.">
+                                  Machine-coded
+                                </span>
+                              </Show>
                               <span class="file-meta">{t.description ?? `${count(t.columns.length, 'column')}: ${t.columns.slice(0, 4).map((c) => c.name).join(', ')}${t.columns.length > 4 ? ', …' : ''}`}</span>
                             </td>
                             <td class="num">{num(t.rows)}</td>
                             <td class="data-source">
-                              {t.source === 'made by Ola' || !t.source ? 'Made by Ola' : t.source}
+                              {machineCoded(t) ? 'A job Ola ran' : t.source === 'made by Ola' || !t.source ? 'Made by Ola' : t.source}
                               <Show when={t.updated}>
                                 <span class="file-meta flush">{t.source === 'made by Ola' || !t.source ? 'changed' : 'loaded'} {when(t.updated!)}</span>
                               </Show>
@@ -168,7 +175,7 @@ function TableBrowser(props: { table: DataTable; onClose: () => void; headRef: (
           </h2>
           <p class="table-sub">
             {props.table.description ? `${props.table.description} · ` : ''}
-            {num(props.table.rows)} rows · {props.table.source === 'made by Ola' || !props.table.source ? 'made by Ola' : `from ${props.table.source}`}
+            {num(props.table.rows)} rows · {machineCoded(props.table) ? 'machine-coded by a job Ola ran, not source data' : props.table.source === 'made by Ola' || !props.table.source ? 'made by Ola' : `from ${props.table.source}`}
           </p>
         </div>
         <a class="ghost-button on-paper small" href={desk.excelUrl(props.table.name)} download={`${props.table.name}.xlsx`}>

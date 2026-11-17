@@ -496,6 +496,31 @@ print(json.dumps(out))
       t('ola-page: renders a page at 390 and 1280 px inside the VM, and reports the request to another address it could not make', r['390']?.code === 0 && r['390'].size?.[0] === 390 && r['1280']?.size?.[0] === 1280 && r['390'].outside?.length === 1 && r['390'].broken?.length === 1, JSON.stringify(r).slice(0, 240))
     }
   }
+  // Batch jobs (ola-batch, image 2.3.0-16): the tool is in the image and AGENTS.md says when to use
+  // it; inside the VM its quote check finds a quote across a line-break hyphen and a ligature and
+  // refuses an invented one; the job tables stay out of the Data list. The jobs themselves, end to
+  // end through the front desk and the gateway, are frontdesk/check.mjs's.
+  {
+    const r = inside(A, [
+      'import json, os, subprocess',
+      'os.makedirs("/work/.ola/bt", exist_ok=True)',
+      'open("/work/.ola/bt/s.txt", "w").write("Field notes.\\n\\nThe adap-\\ntation decision is made by the \\ufb01shing households of the coast.\\n")',
+      'run = lambda *a: subprocess.run(["/opt/ola/bin/" + a[0], *a[1:]], capture_output=True, text=True)',
+      'd = json.loads(run("ola-db", "add", ".ola/bt/s.txt").stdout)',
+      'ok = json.loads(run("ola-batch", "check", str(d["id"]), "1", "The adaptation decision is made by the fishing households").stdout)["result"]',
+      'bad = json.loads(run("ola-batch", "check", str(d["id"]), "1", "The decision is made by the national government").stdout)["result"]',
+      'run("ola-batch", "list")',
+      'tables = [t["name"] for t in json.loads(run("ola-db", "api", "tables").stdout)["tables"]]',
+      'run("ola-db", "remove", ".ola/bt/s.txt")',
+      'print(json.dumps({"ok": ok, "bad": bad, "tables": tables}))',
+    ].join('\n'))
+    let got = {}
+    try {
+      got = JSON.parse(r.out.trim().split('\n').pop())
+    } catch {}
+    const agents = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/AGENTS.md'], { encoding: 'utf8' }).stdout
+    t('inside: ola-batch checks quotes across a line-break hyphen and a ligature, refuses an invented one, and keeps its own tables out of Data; AGENTS.md names it', got.ok === 'found' && got.bad === 'quote not found' && !(got.tables ?? []).some((n) => n.startsWith('batch_')) && agents.includes('ola-batch propose'), JSON.stringify(got) || r.err.slice(-200))
+  }
   // Fallback to a hosted open model: the image's opencode names `ola/hosted`; the gateway serves it
   // to this VM only while the project has a grant, a one-time grant only until its moment, and the
   // provider's model id (never the caller's) goes upstream.
@@ -892,6 +917,16 @@ print(json.dumps({"mib": n, "stopped": why}))
   await destroyAll()
   if (gateway) gateway.kill('SIGTERM')
   site?.server.close()
+}
+
+// ola-batch on the host against the scripted model (workspace/batch.test.mjs): the quote check's
+// rules, 60 made-up studies with planted wrong quotes, a runner killed mid-job, pause and cancel.
+{
+  const bt = spawnSync(process.execPath, ['--test', '--test-reporter=tap', path.join(path.dirname(fileURLToPath(import.meta.url)), 'batch.test.mjs')], { encoding: 'utf8', timeout: 300_000, maxBuffer: 16 * 1024 * 1024 })
+  const pass = /# pass (\d+)/.exec(bt.stdout ?? '')?.[1]
+  const fail = /# fail (\d+)/.exec(bt.stdout ?? '')?.[1]
+  const why = bt.status === 0 ? '' : `; exit ${bt.status} ${bt.signal ?? ''} ${bt.error?.code ?? ''}: ${(bt.stdout ?? '').split('\n').filter((l) => /not ok|Error|expected|actual/.test(l)).slice(0, 4).join(' | ').slice(0, 400)} ${(bt.stderr ?? '').slice(-300)}`
+  t('ola-batch: the quote check, a 60-document job with planted quotes, a kill mid-job, pause and cancel (batch.test.mjs)', bt.status === 0, `${pass ?? '?'} passed, ${fail ?? '?'} failed${why}`)
 }
 
 console.log(`\nmeasured: ${JSON.stringify(measured)}`)

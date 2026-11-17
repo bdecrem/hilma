@@ -29,6 +29,8 @@ import { startFakeModel } from './server/fake-model.mjs'
 import { fixture } from './server/fixture.mjs'
 import { makeClaudeStandin } from './server/claude-standin.mjs'
 import { makeHostedStandin } from './server/hosted-standin.mjs'
+import { openDb } from '../frontdesk/db.mjs'
+import { makeJobs } from '../frontdesk/jobs.mjs'
 const fixtureName = fixture.project.name
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -105,9 +107,11 @@ const freePort = () =>
   })
 
 // The model behind the gateway.
+let fakeModel = null // the scripted one, when --fake-model: its batch answers are the jobs checks'
 let upstream, upstreamKey, upstreamModel
 if (FAKE) {
   const fake = await startFakeModel()
+  fakeModel = fake
   upstream = `http://127.0.0.1:${fake.port}/v1`
   upstreamKey = 'fake-model-key-not-a-secret'
   upstreamModel = 'fake'
@@ -146,6 +150,8 @@ if (process.env.OLA_DEV_HOSTED !== 'unset' && (FAKE || process.env.OLA_DEV_HOSTE
 
 // The gateway, with one caller: this workspace (named as a workspace is, so the hosted grants apply).
 const gwPort = await freePort()
+const batchFile = path.join(run, 'gateway-batch')
+fs.writeFileSync(batchFile, '{}', { mode: 0o600 })
 const gwToken = randomBytes(24).toString('hex')
 const usageToken = randomBytes(24).toString('hex')
 child('gateway', process.execPath, [path.join(AI, 'gateway/server.mjs')], {
@@ -159,6 +165,8 @@ child('gateway', process.execPath, [path.join(AI, 'gateway/server.mjs')], {
     GATEWAY_PORT: String(gwPort),
     GATEWAY_DB: path.join(run, 'gateway-usage.db'),
     GATEWAY_USAGE_TOKEN: usageToken,
+    // Batch jobs: the grants file the jobs stand-in writes (frontdesk/jobs.mjs writeBatchGrants).
+    GATEWAY_BATCH_FILE: batchFile,
     ...hostedEnv,
   },
 }, [upstreamKey, gwToken, usageToken])
@@ -253,7 +261,43 @@ function oc(method, pathname, body = null) {
     .then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }))
     .catch(() => ({ status: 0, json: null }))
 }
+// Batch jobs (frontdesk/jobs.mjs): a platform database with the one dev project in it.
+const batchEnv = { ...process.env, OLA_WORK: work, OLA_BATCH_GATEWAY: `http://127.0.0.1:${gwPort}`, BOX_API_KEY: gwToken }
+const devDb = openDb(path.join(run, 'platform'))
+const devPerson = Number(devDb.prepare("INSERT INTO people (handle, display_name, status, is_admin, webauthn_user_id, created_at) VALUES ('dev', 'You', 'active', 0, randomblob(16), ?)").run(Date.now()).lastInsertRowid)
+const devTeam = Number(devDb.prepare("INSERT INTO teams (slug, name, created_at) VALUES ('dev', 'Dev', ?)").run(Date.now()).lastInsertRowid)
+const devWs = { id: Number(devDb.prepare("INSERT INTO workspaces (slug, name, team_id, status, created_at) VALUES ('dev', 'Dev', ?, 'active', ?)").run(devTeam, Date.now()).lastInsertRowid), slug: 'dev' }
+const pyJson = (args) =>
+  new Promise((resolve, reject) => {
+    const c = spawn('python3', [path.join(AI, 'workspace/ola-batch'), ...args], { env: batchEnv, stdio: ['ignore', 'pipe', 'pipe'] })
+    let o = ''
+    let e = ''
+    c.stdout.on('data', (d) => (o += d))
+    c.stderr.on('data', (d) => (e += d))
+    c.on('close', (code) => {
+      if (code !== 0) return reject(Object.assign(new Error(e.trim()), { code: /no such job/.test(e) ? 'NO_JOB' : 'JOB_FAILED' }))
+      try {
+        resolve(JSON.parse(o))
+      } catch {
+        reject(Object.assign(new Error('out of shape'), { code: 'JOB_FAILED' }))
+      }
+    })
+  })
+let devJobs = null
 const hostedStandin = makeHostedStandin({ oc, grantsFile: hostedEnv.GATEWAY_HOSTED_FILE ?? path.join(run, 'gateway-hosted-unused'), provider: hostedEnv.HOSTED_BASE_URL ? HOSTED_PROVIDER : null, usage: gatewayUsage, claudeInfo: () => claudeStandin.info(), role: () => devRole })
+devJobs = makeJobs({
+  db: devDb,
+  jc: { file: batchFile, tickMs: 1000, staleMs: 15_000, maxTokens: 100_000_000 },
+  cc: { usageToken, gateway: `http://127.0.0.1:${gwPort}` },
+  workspaces: { ensureRunning: async () => {}, holdBusy: () => () => {} },
+  hostedInfo: () => hostedStandin.info(),
+  claudeInfo: async () => claudeStandin.info(),
+  log,
+  tool: {
+    api: (_slug, args) => pyJson(['api', ...args]),
+    runner: (_slug, job) => spawn('python3', [path.join(AI, 'workspace/ola-batch'), 'run', job], { env: batchEnv, stdio: ['ignore', 'ignore', 'pipe'] }),
+  },
+})
 let pagePort = PORT
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
@@ -341,6 +385,47 @@ const server = http.createServer(async (req, res) => {
       child.stdout.on('data', (d) => (out += d))
       const code = await new Promise((r) => child.on('close', r))
       return code === 0 ? json(res, 200, JSON.parse(out)) : json(res, code === 4 ? 404 : 502, { error: 'data_failed', message: 'The project’s data could not be read just now.' })
+    }
+    // Batch jobs, as the front desk serves them: the front desk's own code (frontdesk/jobs.mjs) with a
+    // small platform database for the one dev project, ola-batch run on the dev folder, its model
+    // calls through this gateway's batch lane with the grant that code writes.
+    if (p === '/api/jobs' || p.startsWith('/api/jobs/')) {
+      const w = { ...devWs, role: devRole }
+      if (p === '/api/jobs' && req.method === 'GET') return json(res, 200, await devJobs.list(w))
+      if (p === '/api/jobs/job' && req.method === 'GET') {
+        const q = url.searchParams
+        const r = await devJobs.show(w, q.get('id'), { stage: q.get('stage'), offset: Number(q.get('offset') ?? 0) || 0, limit: Number(q.get('limit') ?? 50) || 50, problems: q.get('problems') === '1' })
+        return json(res, r.status, r.body)
+      }
+      const what = p.slice('/api/jobs/'.length)
+      if (req.method !== 'POST' || !['trial', 'start', 'pause', 'resume', 'cancel'].includes(what)) return json(res, 404, { error: 'not_found' })
+      let raw = ''
+      for await (const c of req) raw += c
+      const r = await devJobs.act(w, devPerson, what, JSON.parse(raw || '{}'))
+      return json(res, r.status, r.body)
+    }
+    // Dev-only: made-up studies in the project database and a job proposed over them, as the agent
+    // would (workspace/testdata/make-corpus.py, ola-db add, ola-batch propose); `delay` holds each
+    // scripted batch answer back (ms), so a running job can be seen.
+    if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/batch' && req.method === 'POST') {
+      if (url.searchParams.get('delay')) fakeModel && (fakeModel.batch.delayMs = Number(url.searchParams.get('delay')))
+      if (url.searchParams.get('corpus')) {
+        const n = String(Number(url.searchParams.get('corpus')) || 30)
+        const dir = path.join(work, 'studies')
+        spawnSync('python3', [path.join(AI, 'workspace/ola-db'), 'init'], { env: { ...process.env, OLA_WORK: work } }) // as ola-init does in the VM
+        spawnSync('python3', [path.join(AI, 'workspace/testdata/make-corpus.py'), dir, path.join(run, 'truth.json'), '--n', n])
+        for (const f of fs.readdirSync(dir).sort()) spawnSync('python3', [path.join(AI, 'workspace/ola-db'), 'add', `studies/${f}`, '--by', 'upload'], { env: { ...process.env, OLA_WORK: work } })
+        fs.writeFileSync(path.join(run, 'spec.json'), JSON.stringify({ name: 'decisions', title: 'Who makes the adaptation decision, and when the planning horizon ends', instructions: 'Code what each study itself found, not what it cites.', fields: [{ name: 'decider', type: 'category', question: 'Who makes the adaptation decision?', values: ['households', 'local government', 'national government', 'firms', 'other'] }, { name: 'horizon', type: 'number', question: 'In what year does the planning horizon end?' }], documents: 'all', trial: 10 }))
+        const out = await new Promise((resolve) => {
+          const c = spawn('python3', [path.join(AI, 'workspace/ola-batch'), 'propose', path.join(run, 'spec.json')], { env: batchEnv, stdio: ['ignore', 'pipe', 'pipe'] })
+          let o = ''
+          c.stdout.on('data', (d) => (o += d))
+          c.stderr.on('data', (d) => (o += d))
+          c.on('close', () => resolve(o))
+        })
+        return json(res, 200, { job: /Proposed job ([0-9a-f]{12})/.exec(out)?.[1] ?? null, out })
+      }
+      return json(res, 200, { planted: fakeModel?.batch.planted ?? [], calls: fakeModel?.batch.calls ?? 0, maxInflight: fakeModel?.batch.maxInflight ?? 0 })
     }
     // Dev-only switches for the checks: stop and start the workspace's opencode.
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/opencode' && req.method === 'POST') {

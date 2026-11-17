@@ -47,12 +47,19 @@ const ACTIONS_V6 = [
   // off again. No search words and no addresses: those are content.
   'web_allowed', 'web_revoked',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 7's list (frozen too).
+const ACTIONS_V7 = [
   ...ACTIONS_V6,
   // migration 7: Fallback to a hosted open model turned on, off, used; and one request handed to
   // either fallback "just this once" (the owner's yes on the stretch card, the switch left off)
   'hosted_enabled', 'hosted_disabled', 'hosted_used', 'hosted_once', 'claude_once',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V7,
+  // migration 8: batch jobs (jobs.mjs): a trial or a whole job started (tokens_in holds the budget
+  // approved), paused, resumed, cancelled, finished (tokens_in and tokens_out: what it used).
+  'job_trial_started', 'job_started', 'job_paused', 'job_resumed', 'job_cancelled', 'job_finished',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -298,7 +305,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V7)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -313,6 +320,46 @@ const MIGRATIONS = [
   INSERT INTO audit_v7 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
   DROP TABLE audit;
   ALTER TABLE audit_v7 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 8: batch jobs (frontdesk/jobs.mjs). One row per job a person started: its id in the project's
+  // own database (12 hex), its state, the model, the budget approved (tokens), who, when. Nothing
+  // of what it asks or reads: that is content, and stays in the project's VM. New audit words, so
+  // the table is rebuilt for the CHECK, as in 2, 3, 4, 6 and 7.
+  `
+  CREATE TABLE batch_jobs (
+    id INTEGER PRIMARY KEY,
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    job TEXT NOT NULL CHECK (length(job) = 12),
+    state TEXT NOT NULL CHECK (state IN ('trial', 'trial_done', 'running', 'paused', 'done', 'cancelled')),
+    stage TEXT NOT NULL DEFAULT 'trial' CHECK (stage IN ('trial', 'full')),
+    model TEXT NOT NULL CHECK (model IN ('general', 'hosted', 'claude')),
+    budget INTEGER NOT NULL CHECK (budget > 0),
+    started_by INTEGER REFERENCES people(id),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    UNIQUE (workspace_id, job)
+  ) STRICT;
+  CREATE TABLE audit_v8 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v8 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v8 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]

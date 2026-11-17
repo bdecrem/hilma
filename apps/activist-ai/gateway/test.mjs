@@ -1276,3 +1276,81 @@ test('a one-time grant ("Just this once") is honored until its moment and while 
     await g.stop()
   }
 })
+
+// ---------------------------------------------------------------- batch jobs (batch.mjs)
+
+async function laneCall(g, token, body, job) {
+  const res = await fetch(g.url + '/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Ola-Lane': 'batch', ...(job ? { 'X-Ola-Job': job } : {}) }, body: JSON.stringify(body) })
+  const text = await res.text()
+  let json = null
+  try {
+    json = JSON.parse(text)
+  } catch {}
+  return { status: res.status, json, headers: res.headers }
+}
+
+test('batch jobs: refused without the job’s grant; their own budget, not the weekly quota; one request in flight; hosted still needs its grant', async () => {
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'batch-'))
+  const grants = path.join(dir, 'gateway-batch')
+  const hostedGrants = path.join(dir, 'gateway-hosted')
+  writeGrants(grants, {})
+  writeGrants(hostedGrants, {})
+  const k = { one: tok(), two: tok() }
+  const JOB = 'a1b2c3d4e5f6'
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}`, GATEWAY_WEEKLY_TOKENS: '100', GATEWAY_BATCH_FILE: grants, GATEWAY_USAGE_TOKEN: T.usage + T.usage,
+    HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: `hosted-key-${tok()}`, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: hostedGrants }
+  const g = await gateway(env)
+  try {
+    // No grant: refused before the model server sees anything, with or without a job id.
+    for (const job of [null, JOB]) {
+      const r = await laneCall(g, k.one, chat({ tag: 'b0' }), job)
+      assert.equal(r.status, 403)
+      assert.match(r.json.error.message, /No job is approved/)
+    }
+    assert.equal(up.st.seen.length, 0)
+    writeGrants(grants, { 'ws-one': { job: JOB, tokens: 300 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"batch_grants"') && l.includes('"callers":1')), 5000, 'the batch grants reload')
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'b1' }), 'ffffffffffff')).status, 403, 'another job id')
+    assert.equal((await laneCall(g, k.two, chat({ tag: 'b2' }), JOB)).status, 403, 'another project')
+    // Within the budget: 120 tokens a call, over a weekly quota of 100 that conversations keep whole.
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'b3', usage: [100, 20] }), JOB)).status, 200)
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'b4', usage: [100, 20] }), JOB)).status, 200)
+    const conv = await call(g, k.one, chat({ tag: 'c1', usage: [10, 5] }))
+    assert.equal(conv.status, 200, 'the conversation lost its weekly quota to the job')
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'b5', usage: [100, 20] }), JOB)).status, 200) // 240 of 300 used before it
+    const over = await laneCall(g, k.one, chat({ tag: 'b6' }), JOB)
+    assert.equal(over.status, 429)
+    assert.equal(over.json.error.code, 'job_budget')
+    assert.match(over.json.error.message, /budget that was approved/)
+    // One request in flight per caller for the batch lane; a conversation still gets through beside it.
+    writeGrants(grants, { 'ws-one': { job: JOB, tokens: 100000 } })
+    await waitFor(() => g.lines.filter((l) => l.includes('"event":"batch_grants"') && l.includes('"callers":1')).length >= 2, 5000, 'the batch grants reload')
+    const slow = laneCall(g, k.one, chat({ tag: 'b7', delay: 800 }), JOB)
+    await sleep(200)
+    const second = await laneCall(g, k.one, chat({ tag: 'b8' }), JOB)
+    assert.equal(second.status, 429)
+    assert.ok(second.headers.get('retry-after'))
+    const beside = await call(g, k.one, chat({ tag: 'c2', usage: [1, 1] }))
+    assert.equal(beside.status, 200, 'a conversation beside the job')
+    assert.equal((await slow).status, 200)
+    // The hosted model in the batch lane still needs the project's hosted grant.
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'b9' }, 'hosted'), JOB)).status, 403)
+    assert.equal(hostedUp.st.seen.length, 0)
+    // Usage: the job's own count, and the weekly count without the job's tokens.
+    const usage = await call(g, T.usage + T.usage, null, { method: 'GET', path: '/v1/usage' })
+    const one = usage.json.data.find((u) => u.caller === 'ws-one')
+    assert.equal(one.batch_job.job, JOB)
+    assert.equal(one.batch_job.tokens, 360 + 15)
+    assert.equal(one.tokens_used, 15 + 2)
+    const mine = await call(g, k.one, null, { method: 'GET', path: '/v1/usage' })
+    assert.equal(mine.json.batch_job.job, JOB)
+    assert.ok(g.logs().some((l) => l.lane === 'batch' && l.status === 200))
+    // Taking the grant away (a pause, a cancel, the end) refuses the next request at once.
+    writeGrants(grants, {})
+    await waitFor(async () => (await laneCall(g, k.one, chat({ tag: 'b10' }), JOB)).status === 403, 5000, 'the grant taken back')
+  } finally {
+    await g.stop()
+  }
+})

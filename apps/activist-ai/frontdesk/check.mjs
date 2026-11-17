@@ -62,6 +62,8 @@ const env = {
   OLA_FD_WORKING_WINDOW_S: '4', // "people working" changes once per window; 4 s so the check can watch it
   OLA_FD_SLOW_MS: '4000', // a download must move 32 KiB per window; 4 s here (30 s by default) so the check can watch it
   OLA_FD_GATEWAY_USAGE_TOKEN: randomBytes(24).toString('hex'), // Fallback to Claude: the front desk asks the gateway with it
+  OLA_FD_JOB_TICK_MS: '1000', // batch jobs: looked after every second here (10 s by default)
+  OLA_FD_JOB_STALE_S: '10',
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -200,6 +202,8 @@ const gwEnv = {
   // the hosted open model, and the grants file the front desk writes for it
   ...HOSTED_UP,
   GATEWAY_HOSTED_FILE: path.join(env.OLA_HOME, 'gateway-hosted'),
+  // batch jobs: the job grants the front desk writes (jobs.mjs, OLA_HOME/gateway-batch by default)
+  GATEWAY_BATCH_FILE: path.join(env.OLA_HOME, 'gateway-batch'),
 }
 let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
@@ -1715,6 +1719,197 @@ await check('the run ceiling interrupts a run cleanly and the page says why', as
   assert(stops.length === 1 && stops[0].session === sid && stops[0].minutes === 0.4, `/api/runs: ${stops.length} stops (${stops.map((x) => x.session === sid ? 'this run' : 'another').join(', ')})`)
   const m = /Ola stopped this after[^.]*\./.exec(text)?.[0] ?? text.slice(0, 80)
   return `stopped ${(at / 1000).toFixed(1)} s after the request (ceiling 24 s); no model call after; the turn says: "${m}"`
+})
+
+// ---------------------------------------------------------------- batch jobs (jobs.mjs, ola-batch)
+// 60 made-up studies in fd-a's project database; the scripted model answers each form from the
+// document and plants wrong quotes in some answers (web/server/fake-batch.mjs). The front desk runs
+// here with a 3 s idle stop and a 24 s run ceiling (restartForLongRuns): a job outlives both.
+const pyInVm = (script, input = '') =>
+  new Promise((resolve) => {
+    const c = spawn(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', script], { stdio: ['pipe', 'pipe', 'pipe'] })
+    let out = ''
+    let err = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.stderr.on('data', (d) => (err += d))
+    c.on('close', (code) => resolve({ code, out: out.trim(), err: err.trim() }))
+    c.stdin.end(input)
+  })
+const SPEC = {
+  name: 'decisions',
+  title: 'Who makes the adaptation decision, and when the planning horizon ends',
+  instructions: 'Code what each study itself found.',
+  documents: 'all',
+  trial: 15,
+  fields: [
+    { name: 'decider', type: 'category', question: 'Who makes the adaptation decision?', values: ['households', 'local government', 'national government', 'firms', 'other'] },
+    { name: 'horizon', type: 'number', question: 'In what year does the planning horizon end?' },
+  ],
+}
+// Writes the files (JSON on stdin), indexes them, and proposes the job, as the agent would.
+const SEED = 'import json, os, subprocess, sys\nd = json.load(sys.stdin)\nos.makedirs("/work/" + d["dir"], exist_ok=True)\nfor n, t in d["files"].items():\n    open("/work/" + d["dir"] + "/" + n, "w").write(t)\n    subprocess.run(["/opt/ola/bin/ola-db", "add", d["dir"] + "/" + n, "--by", "upload"], check=True, capture_output=True)\nopen("/work/.ola/spec.json", "w").write(json.dumps(d["spec"]))\nprint(subprocess.run(["/opt/ola/bin/ola-batch", "propose", "/work/.ola/spec.json"], capture_output=True, text=True).stdout)\n'
+const laneProbe = (job) => `import sys, json, urllib.request\nbody = json.dumps({"model": "general", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json", "X-Ola-Lane": "batch", "X-Ola-Job": "${job}"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n`
+const CONVERSATION_PROBE = 'import sys, json, time, urllib.request\nbody = json.dumps({"model": "general", "messages": [{"role": "user", "content": "hi"}]}).encode()\nt = time.time()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    s = urllib.request.urlopen(req, timeout=60).status\nexcept urllib.error.HTTPError as e:\n    s = e.code\nprint(s, round(time.time() - t, 2))\n'
+async function seedStudies(dir, n, spec) {
+  const tmp = mkdtempSync(path.join(tmpdir(), 'ola-studies-'))
+  spawnSync('python3', [path.join(AI, 'workspace/testdata/make-corpus.py'), path.join(tmp, 'f'), path.join(tmp, 'truth.json'), '--n', String(n)])
+  const names = spawnSync('ls', [path.join(tmp, 'f')], { encoding: 'utf8' }).stdout.trim().split('\n')
+  const files = Object.fromEntries(names.map((f) => [f, readFileSync(path.join(tmp, 'f', f), 'utf8')]))
+  const truth = JSON.parse(readFileSync(path.join(tmp, 'truth.json'), 'utf8'))
+  rmSync(tmp, { recursive: true, force: true })
+  await wake()
+  const r = await pyInVm(SEED, JSON.stringify({ dir, files, spec }))
+  return { job: /Proposed job ([0-9a-f]{12})/.exec(r.out)?.[1] ?? null, out: r.out || r.err, truth }
+}
+// The idle stop is 3 s here: a request first, so the VM is up for an exec.
+const wake = () => api('/api/files', { cookie: a.cookie, ws: FA })
+const jobGet = async (who, job, q = '') => (await api(`/api/jobs/job?id=${job}${q}`, { cookie: who.cookie, ws: FA })).json
+const batchGrants = () => JSON.parse(readFileSync(path.join(env.OLA_HOME, 'gateway-batch'), 'utf8'))
+let job60 = null
+let truth60 = null
+
+await check('batch jobs: the agent proposes a job over 60 studies in the sealed VM; it is listed, with the form, the estimate and the trial, and nothing runs', async () => {
+  const s = await seedStudies('studies', 60, SPEC)
+  job60 = s.job
+  truth60 = s.truth
+  assert(job60, `no job proposed: ${s.out.slice(0, 300)}`)
+  const list = (await api('/api/jobs', { cookie: a.cookie, ws: FA })).json
+  const j = list.jobs.find((x) => x.id === job60)
+  assert(j && j.state === 'proposed' && j.progress.total === 60 && j.progress.trial_total === 15 && j.estimate.tokens > 0 && j.estimate.weekShare > 0, JSON.stringify(j).slice(0, 300))
+  assert(fake.batch.calls === 0, 'the model was asked before anyone said yes')
+  assert(!batchGrants()[`ws-${FA}`], 'a grant before anyone said yes')
+  return `estimate ${j.estimate.tokens} tokens, ${j.estimate.seconds} s, ${(j.estimate.weekShare * 100).toFixed(1)}% of the week; budget offered ${j.estimate.budget}`
+})
+
+await check('batch jobs: from inside the VM, the batch lane is refused without the person’s yes (no grant), even naming the job', async () => {
+  await wake()
+  const r = await pyInVm(laneProbe(job60), secretsOf(FA).BOX_API_KEY)
+  assert(r.out === '403', `the gateway answered ${r.out} ${r.err.slice(0, 120)}`)
+  return 'refused with 403'
+})
+
+await check('batch jobs: a member who is not the owner cannot start a job on an outside model, nor the whole job; a viewer starts nothing', async () => {
+  // The hosted switch as the checks before left it, put back after (the rotation checks rely on it).
+  const hostedWas = (await api('/api/fallback', { cookie: a.cookie, ws: FA })).json?.hosted?.enabled === true
+  admin('add-member', 'team-a', 'vera', 'member')
+  try {
+    if (!hostedWas) assert((await jpost(a, '/api/hosted/settings', { enabled: true, consent: true })).status === 200, 'the owner turning the hosted model on')
+    const out = await jpost(v, '/api/jobs/trial', { job: job60, model: 'hosted', consent: true })
+    assert(out.status === 403 && out.json.error === 'owner_only', `a member's outside trial: ${out.status} ${out.text.slice(0, 120)}`)
+    const full = await jpost(v, '/api/jobs/start', { job: job60, budget: 1_000_000, confirm: true })
+    assert(full.status === 403, `a member's whole job: ${full.status}`)
+    const opts = (await api('/api/jobs', { cookie: v.cookie, ws: FA })).json.options
+    assert(opts.find((o) => o.model === 'hosted')?.allowed === false, `options for the member: ${JSON.stringify(opts)}`)
+  } finally {
+    if (!hostedWas) await jpost(a, '/api/hosted/settings', { enabled: false })
+    admin('add-member', 'team-a', 'vera', 'viewer')
+  }
+  const viewer = await jpost(v, '/api/jobs/trial', { job: job60 })
+  assert(viewer.status === 403, `a viewer's trial: ${viewer.status}`)
+  assert(fake.batch.calls === 0 && !batchGrants()[`ws-${FA}`], 'something ran')
+  return 'member: 403 owner_only for the hosted trial and for the whole job; viewer: 403'
+})
+
+await check('batch jobs: the trial codes 15 documents in the VM and stops for a yes; its rows carry quotes, pages and checks', async () => {
+  const r = await jpost(a, '/api/jobs/trial', { job: job60 })
+  assert(r.status === 200, `trial: ${r.status} ${r.text.slice(0, 200)}`)
+  assert(batchGrants()[`ws-${FA}`]?.job === job60, 'no grant for the trial')
+  await until(async () => (await jobGet(a, job60)).job.approved?.state === 'trial_done', 120_000, 'the trial finishing')
+  const g = await jobGet(a, job60, '&stage=trial')
+  assert(g.results.total === 15 && g.job.progress.pending === 45, `trial rows ${g.results.total}, pending ${g.job.progress.pending}`)
+  assert(!batchGrants()[`ws-${FA}`], 'the grant outlived the trial')
+  const cols = g.results.columns
+  assert(['decider', 'decider_quote', 'decider_page', 'decider_check', 'model', 'coded_at', 'machine_coded'].every((c) => cols.includes(c)), cols.join(','))
+  return `15 rows; ${fake.batch.calls} model calls`
+})
+
+await check('batch jobs: the whole job runs past the 24 s run ceiling and the 3 s idle stop, survives a kill -9 of the front desk without redoing a document, pauses and resumes, keeps a conversation answered, and every planted quote is caught', async () => {
+  fake.batch.delayMs = 700
+  const t0 = Date.now()
+  const r = await jpost(a, '/api/jobs/start', { job: job60, budget: 2_000_000, confirm: true })
+  assert(r.status === 200, `start: ${r.status} ${r.text.slice(0, 200)}`)
+  await until(async () => (await jobGet(a, job60)).job.progress.done >= 22, 60_000, 'the job under way')
+  // A conversation's request while the job holds its one batch slot: answered at once.
+  const conv = await pyInVm(CONVERSATION_PROBE, secretsOf(FA).BOX_API_KEY)
+  const [cs, csec] = conv.out.split(' ')
+  assert(cs === '200' && Number(csec) < 3, `a conversation during the job: ${conv.out} ${conv.err.slice(0, 100)}`)
+  // Pause: the grant goes, the count stops.
+  assert((await jpost(a, '/api/jobs/pause', { job: job60 })).status === 200, 'pause')
+  assert(!batchGrants()[`ws-${FA}`], 'the grant outlived the pause')
+  await sleep(5000)
+  const p1 = (await jobGet(a, job60)).job.progress.done
+  await sleep(4000)
+  const p2 = (await jobGet(a, job60)).job.progress.done
+  assert(p1 === p2, `still coding while paused: ${p1} then ${p2}`)
+  assert((await jpost(a, '/api/jobs/resume', { job: job60 })).status === 200, 'resume')
+  await until(async () => (await jobGet(a, job60)).job.progress.done > p2 + 2, 60_000, 'the job going again')
+  // kill -9 the front desk mid-job; a new one picks the job up.
+  const before = (await jobGet(a, job60)).job.progress.done
+  const callsAtKill = fake.batch.calls
+  fd.kill('SIGKILL')
+  await until(() => fd.exitCode !== null || fd.signalCode !== null, 10_000, 'the front desk dying')
+  await sleep(2000)
+  fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_RUN_CEILING_MIN: '0.4', OLA_FD_WAKE_WAIT_MS: '0' })
+  await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
+  const states = new Set()
+  await until(async () => (states.add(wsState(FA)), (await jobGet(a, job60)).job.approved?.state === 'done'), 240_000, 'the job finishing after the restart')
+  const ran = Date.now() - t0
+  const g = await jobGet(a, job60, '&limit=200')
+  assert(g.results.total === 60, `${g.results.total} rows`)
+  assert([...states].every((x) => x === 'running'), `the workspace during the job: ${[...states].join(', ')}`)
+  assert(ran > 30_000, `the job took only ${ran} ms`)
+  const firsts = fake.batch.planted.filter((x) => !x.retry).length
+  await wake()
+  const tries = (await pyInVm(`import sqlite3\nprint(*sqlite3.connect("/work/project.db").execute("SELECT sum(tries), count(*) FROM batch_items WHERE job = '${job60}'").fetchone())`)).out
+  const sumTries = Number(tries.split(' ')[0])
+  assert(sumTries <= 60 + firsts + 2, `tries ${tries} for 60 documents and ${firsts} planted quotes: something was coded twice`)
+  assert(fake.batch.calls - callsAtKill <= 60 - before + firsts + 2, `calls after the kill: ${fake.batch.calls - callsAtKill} for ${60 - before} documents left`)
+  assert(fake.batch.maxInflight === 1, `${fake.batch.maxInflight} batch requests at once`)
+  // The checker: every quote planted again on the retry is marked, and only those.
+  const rows = g.results.rows.map((x) => Object.fromEntries(g.results.columns.map((c, i) => [c, x[i]])))
+  const again = new Set(fake.batch.planted.filter((x) => x.retry).map((x) => x.title))
+  const bad = rows.filter((x) => x.decider_check === 'quote not found').map((x) => x.document)
+  assert(firsts === 10 && again.size === 5, `planted: ${firsts} first, ${again.size} again`)
+  assert(bad.length === again.size && bad.every((d) => again.has(d)), `marked: ${bad.join(', ')}; planted again: ${[...again].join(', ')}`)
+  for (const x of rows) if (x.decider_check === 'found') assert(x.decider === truth60[x.document].decider, `${x.document}: ${x.decider}`)
+  assert(rows.every((x) => x.machine_coded === 1), 'a row not marked machine-coded')
+  assert(!batchGrants()[`ws-${FA}`], 'the grant outlived the job')
+  const data = (await api('/api/data', { cookie: a.cookie, ws: FA })).json
+  const t = data.tables.find((x) => x.name === 'decisions')
+  assert(t && t.rows === 60 && /^machine-coded/.test(t.source), `Data: ${JSON.stringify(t)}`)
+  const xl = await fetch(`${ORIGIN}/api/data/xlsx?w=${FA}&name=decisions`, { headers: { cookie: `${CK}=${a.cookie}` } })
+  assert(xl.status === 200 && (await xl.arrayBuffer()).byteLength > 2000, `Excel: ${xl.status}`)
+  const pdb = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'), { readOnly: true })
+  const acts = pdb.prepare("SELECT action FROM audit WHERE action LIKE 'job_%' ORDER BY id").all().map((x) => x.action)
+  pdb.close()
+  for (const want of ['job_trial_started', 'job_started', 'job_paused', 'job_resumed', 'job_finished']) assert(acts.includes(want), `audit: ${acts.join(', ')}`)
+  fake.batch.delayMs = 0
+  return `${(ran / 1000).toFixed(0)} s (ceiling 24 s, idle stop 3 s), workspace running throughout; ${before} done at the kill; ${sumTries} tries for 60 documents (10 planted, 5 planted again); marked: ${bad.length}; a conversation answered in ${csec} s mid-job`
+})
+
+await check('batch jobs: cancel keeps what was coded and takes the grant away; a budget too small pauses a job and says so', async () => {
+  const s = await seedStudies('studies2', 12, { ...SPEC, name: 'second', trial: 10 })
+  assert(s.job, s.out)
+  fake.batch.delayMs = 500
+  assert((await jpost(a, '/api/jobs/trial', { job: s.job })).status === 200, 'trial')
+  await until(async () => (await jobGet(a, s.job)).job.progress.done >= 2, 60_000, 'the trial under way')
+  assert((await jpost(a, '/api/jobs/cancel', { job: s.job })).status === 200, 'cancel')
+  await sleep(4000)
+  const g = await jobGet(a, s.job)
+  assert(g.job.approved.state === 'cancelled' && g.job.progress.done >= 2 && !batchGrants()[`ws-${FA}`], JSON.stringify(g.job.approved))
+  const d1 = g.job.progress.done
+  await sleep(3000)
+  assert((await jobGet(a, s.job)).job.progress.done === d1, 'still coding after the cancel')
+  // A third job with a budget too small for it: paused by the gateway's refusal, with a sentence.
+  const t = await seedStudies('studies3', 12, { ...SPEC, name: 'third', trial: 10 })
+  fake.batch.delayMs = 0
+  assert((await jpost(a, '/api/jobs/trial', { job: t.job })).status === 200, 'trial 3')
+  await until(async () => (await jobGet(a, t.job)).job.approved?.state === 'trial_done', 60_000, 'trial 3')
+  assert((await jpost(a, '/api/jobs/start', { job: t.job, budget: 1000, confirm: true })).status === 200, 'start 3')
+  await until(async () => (await jobGet(a, t.job)).job.approved?.state === 'paused', 60_000, 'the budget pausing it')
+  const j3 = (await jobGet(a, t.job)).job
+  assert(/budget/.test(j3.note ?? ''), `note: ${j3.note}`)
+  return `cancelled at ${d1} of 10; the third paused at ${j3.progress.done} of 12: "${j3.note}"`
 })
 
 await check('an idle workspace stops, its event stream does not wake it, and opening the project does ("Waking your workspace…")', async () => {

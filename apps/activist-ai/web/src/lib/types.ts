@@ -315,3 +315,62 @@ export interface Problem {
   text: string
   detail: string | null
 }
+
+// ---------------------------------------------------------------- batch jobs (frontdesk/jobs.mjs)
+export interface JobField {
+  name: string
+  type: 'text' | 'category' | 'number' | 'yesno'
+  question: string
+  values?: string[]
+}
+export interface JobEstimate {
+  documents: number | null
+  tokens: number | null
+  tokens_in: number | null
+  tokens_out: number | null
+  seconds: number | null
+  budget: number | null
+  basis: string | null
+  weekQuota: number | null
+  weekShare: number | null
+}
+export type JobState = 'proposed' | 'trial' | 'trial_done' | 'running' | 'paused' | 'done' | 'cancelled'
+export interface Job {
+  id: string
+  name: string | null
+  title: string | null
+  instructions?: string | null
+  fields: JobField[]
+  model: 'general' | 'hosted' | 'claude'
+  state: JobState
+  trialSize: number | null
+  budget: number | null
+  estimate: JobEstimate | null
+  remainingEstimate: JobEstimate | null
+  note: string | null
+  created: string | null
+  heartbeatAge: number | null
+  secondsLeft: number | null
+  progress: { pending: number; done: number; failed: number; no_text: number; problems: number; trial_total: number; trial_left: number; total: number; tokens: number }
+  approved: { state: JobState; stage: 'trial' | 'full'; model: string; budget: number; at: string } | null
+  waiting: string | null
+}
+export interface JobOption {
+  model: 'general' | 'hosted' | 'claude'
+  label: string
+  outside: boolean
+  provider?: string
+  allowed: boolean
+  prices?: { in: number; out: number } | null
+}
+export interface JobsPayload {
+  jobs: Job[]
+  options: JobOption[]
+  role: string
+}
+export interface JobPage {
+  job: Job
+  results: { columns: string[]; rows: (string | number | null)[][]; total: number; offset: number }
+  options: JobOption[]
+  role: string
+}
