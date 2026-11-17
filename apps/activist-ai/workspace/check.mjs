@@ -554,6 +554,42 @@ print(json.dumps(out))
       const r = insideJSON(A, page, { timeout: 240_000 })
       t('ola-page: renders a page at 390 and 1280 px inside the VM, and reports the request to another address it could not make', r['390']?.code === 0 && r['390'].size?.[0] === 390 && r['1280']?.size?.[0] === 1280 && r['390'].outside?.length === 1 && r['390'].broken?.length === 1, JSON.stringify(r).slice(0, 240))
     }
+    // ola-page against a page that never ends and one that eats memory (review 5 follow-up): each look
+    // ends within its deadline, the browser is held to its share of memory, nothing of it is left
+    // running, and opencode lives on. Small limits here so the check is quick.
+    {
+      const hostile = String.raw`
+import json, os, subprocess, time
+def procs(word):
+    found = []
+    for p in os.listdir("/proc"):
+        try:
+            argv = open("/proc/%s/cmdline" % p, "rb").read().split(b"\0") if p.isdigit() else [b""]
+            if any(word.encode() in a for a in argv[:2]) and not argv[0].endswith(b"python3"):
+                found.append(p)
+        except OSError:
+            pass
+    return found
+open("/tmp/loop.html", "w").write('<!doctype html><title>l</title><p>x</p><script>while (true) {}</script>')
+open("/tmp/hog.html", "w").write('<!doctype html><title>h</title><p>x</p><script>const keep = []; for (let i = 0; i < 400; i++) { const b = new Uint8Array(32 << 20); b.fill(1); keep.push(b) }</script>')
+out = {}
+env = dict(os.environ, OLA_PAGE_DEADLINE_S="25", OLA_PAGE_MEM_MB="768")
+for name in ("loop", "hog"):
+    t = time.time()
+    try:
+        r = subprocess.run(["ola-page", "/tmp/%s.html" % name, "--out", "/tmp/%s.png" % name], capture_output=True, text=True, timeout=90, env=env)
+        code = r.returncode
+    except subprocess.TimeoutExpired:
+        code = "hung"
+    time.sleep(2)
+    left = procs("headless") + procs("chromium")
+    out[name] = {"code": code, "s": round(time.time() - t, 1), "left": len(left)}
+out["opencode"] = procs("opencode") != []
+print(json.dumps(out))
+`
+      const r = insideJSON(A, hostile, { timeout: 240_000 })
+      t('ola-page: a page that loops for ever and one that eats memory each end within the deadline, leave no browser running, and opencode lives on', r.loop?.code !== 'hung' && r.loop?.s < 40 && r.hog?.code !== 'hung' && r.hog?.s < 40 && r.loop.left === 0 && r.hog.left === 0 && r.opencode === true, JSON.stringify(r))
+    }
   }
   // Batch jobs (ola-batch, image 2.3.0-16): the tool is in the image and AGENTS.md says when to use
   // it; inside the VM its quote check finds a quote across a line-break hyphen and a ligature and

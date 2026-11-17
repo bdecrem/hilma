@@ -182,11 +182,23 @@ class CDP:
             b = fcntl.fcntl(w_out, fcntl.F_DUPFD, 10)
             os.dup2(a, 3)
             os.dup2(b, 4)
+            # A page is someone else's code (review 5 follow-up): the browser and every process it
+            # starts may hold OLA_PAGE_MEM_MB (2048) of written memory and write files of 256 MiB at
+            # most, so a page that grows without end fails here instead of taking the computer's
+            # memory (and opencode with it). Address space is not capped: the browser reserves a lot.
+            try:
+                import resource
+                mem = int(os.environ.get("OLA_PAGE_MEM_MB", "2048")) << 20
+                resource.setrlimit(resource.RLIMIT_DATA, (mem, mem))
+                resource.setrlimit(resource.RLIMIT_FSIZE, (256 << 20, 256 << 20))
+            except (ImportError, ValueError, OSError):
+                pass
 
         args = [binary, "--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage", "--remote-debugging-pipe",
                 f"--user-data-dir={profile}", "--no-first-run", "--no-default-browser-check", "--disable-background-networking",
                 "--disable-component-update", "--disable-sync", "--disable-extensions", "--mute-audio", "--hide-scrollbars",
-                "--disable-features=Translate,MediaRouter,OptimizationHints", "--font-render-hinting=none", "about:blank"]
+                "--disable-features=Translate,MediaRouter,OptimizationHints", "--font-render-hinting=none",
+                "--js-flags=--max-old-space-size=512", "--renderer-process-limit=1", "about:blank"]
         self.p = subprocess.Popen(args, preexec_fn=wire, close_fds=False, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         os.close(r_in)
         os.close(w_out)
@@ -277,6 +289,15 @@ def main():
     url = base + "/".join(page.relative_to(page.parent).parts)
     profile = tempfile.mkdtemp(prefix="ola-page-")
     cdp = None
+    # The whole look has a deadline (review 5 follow-up): a page that never settles, or loops in its
+    # script, ends here with the browser stopped, never later.
+    import signal
+
+    def overdue(*_):
+        raise TimeoutError("the page took longer than %d s" % deadline)
+    deadline = int(os.environ.get("OLA_PAGE_DEADLINE_S", "150"))
+    signal.signal(signal.SIGALRM, overdue)
+    signal.alarm(deadline)
     report = {"page": a.page, "width": a.width}
     try:
         cdp = CDP(binary, profile)
@@ -319,6 +340,7 @@ def main():
         print(f"ola-page: could not load the page ({type(e).__name__}: {str(e)[:160]})", file=sys.stderr)
         return 1
     finally:
+        signal.alarm(0)
         if cdp:
             cdp.close()
         srv.shutdown()

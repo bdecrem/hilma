@@ -18,6 +18,23 @@ def fail(cmd, msg, code=1):
     sys.exit(code)
 
 
+
+def capped(timeout):
+    """Limits for a program that reads someone else's file (poppler, Tesseract): its memory
+    (OLA_TOOL_MEM_MB, 1536 MiB of address space), its CPU time (the timeout and a little) and the
+    size of a file it may write (512 MiB), so a hostile PDF or picture cannot take the whole
+    computer's memory and get opencode killed in its place (review 5 follow-up). Linux only."""
+    def f():
+        try:
+            import resource
+            mem = int(os.environ.get("OLA_TOOL_MEM_MB", "1536")) << 20
+            resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
+            resource.setrlimit(resource.RLIMIT_CPU, (int(timeout) + 5, int(timeout) + 10))
+            resource.setrlimit(resource.RLIMIT_FSIZE, (512 << 20, 512 << 20))
+        except (ImportError, ValueError, OSError):
+            pass
+    return f if sys.platform.startswith("linux") else None
+
 def call(cmd, path, body, timeout=600, tries=1, batch=False):
     """POST JSON to the gateway; returns (status, json). Exits on a closed door."""
     headers = {"Authorization": "Bearer " + os.environ.get("BOX_API_KEY", ""), "Content-Type": "application/json"}
@@ -100,7 +117,7 @@ def pdf_pages(cmd, path, pages, dpi=150):
     with tempfile.TemporaryDirectory() as d:
         for p in pages:
             stem = os.path.join(d, "p%d" % p)
-            r = subprocess.run(["pdftoppm", "-r", str(dpi), "-png", "-f", str(p), "-l", str(p), "-singlefile", path, stem], capture_output=True, timeout=120)
+            r = subprocess.run(["pdftoppm", "-r", str(dpi), "-png", "-f", str(p), "-l", str(p), "-singlefile", path, stem], capture_output=True, timeout=120, preexec_fn=capped(120))
             if r.returncode != 0 or not os.path.exists(stem + ".png"):
                 fail(cmd, "page %d of %s could not be turned into a picture" % (p, path), 2)
             with open(stem + ".png", "rb") as f:
@@ -109,7 +126,7 @@ def pdf_pages(cmd, path, pages, dpi=150):
 
 
 def pdf_count(path):
-    r = subprocess.run(["pdfinfo", path], capture_output=True, text=True, timeout=60)
+    r = subprocess.run(["pdfinfo", path], capture_output=True, text=True, timeout=60, preexec_fn=capped(60))
     m = re.search(r"^Pages:\s+(\d+)", r.stdout, re.M)
     return int(m.group(1)) if m else 0
 
@@ -306,7 +323,7 @@ def translate(argv):
     path = argv[0]
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
-        r = subprocess.run(["pdftotext", path, "-"], capture_output=True, text=True, timeout=300)
+        r = subprocess.run(["pdftotext", path, "-"], capture_output=True, text=True, timeout=300, preexec_fn=capped(300))
         text = r.stdout
     elif ext in (".txt", ".md", ".csv", ".html", ".xml", ".json", ""):
         text = read_file(cmd, path, 20 * 1024 * 1024).decode("utf-8", "replace")
