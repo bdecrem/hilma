@@ -61,6 +61,11 @@ all 25.
   anything else.
 - **Nothing counts from search alone:** an answer resting on something only seen in search results
   fails the source check.
+- **Evidence labels:** for each piece of implementation evidence the agent states which group it
+  covers (refugees and asylum seekers, regular migrants, irregular migrants, all) and whether it
+  shows practice or only law. The source check verifies the labels against the source, and a rating
+  whose evidence does not cover the people the answer covers, or is law only, fails automatically.
+  For the six existing dossiers the source check assigns the labels.
 - **Court rulings:** a ruling supports a Yes only if the agent read the ruling itself and it sets a
   general rule. In `compile.py` since 2026-11-17.
 
