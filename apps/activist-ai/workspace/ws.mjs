@@ -158,6 +158,19 @@ function readEnvFile(file) {
 export const secrets = (id) => readEnvFile(paths(id).secrets)
 
 // The GATEWAY_TOKENS line for every workspace that exists, written for the gateway's launcher.
+//
+// Ownership: every entry whose name starts with `ws-` is a workspace's and is written from the
+// workspaces' secrets alone, so a destroyed or rotated workspace's token is gone at once (a `ws-`
+// entry with no workspace behind it is dropped too). Every other entry belongs to someone else
+// (the `bart` host caller that bart/ola-bart.sh adds, for Bart's own apps) and is kept byte for
+// byte, in its order, after the workspaces'. A file that is not one GATEWAY_TOKENS= line keeps
+// nothing of its own: the gateway would refuse it anyway and keep the old callers in force.
+export const OWNED_PREFIX = 'ws-'
+export function foreignTokenEntries(text) {
+  const t = String(text ?? '').trim()
+  if (!/^GATEWAY_TOKENS=[^\n]*$/.test(t)) return []
+  return t.slice('GATEWAY_TOKENS='.length).split(',').filter((e) => e !== '' && !e.trim().startsWith(OWNED_PREFIX))
+}
 export function writeGatewayTokens() {
   const dir = path.join(HOME, 'ws')
   const entries = []
@@ -169,6 +182,11 @@ export function writeGatewayTokens() {
     if (f) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
   }
   const file = path.join(HOME, 'gateway-tokens')
+  let before = ''
+  try {
+    before = readFileSync(file, 'utf8')
+  } catch {}
+  entries.push(...foreignTokenEntries(before))
   // Written beside and renamed into place, so the gateway (which reloads it on a change) never
   // reads half a file.
   writeFileSync(`${file}.tmp`, `GATEWAY_TOKENS=${entries.join(',')}\n`, { mode: 0o600 })

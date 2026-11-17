@@ -218,7 +218,9 @@ are never printed), the door's and the desk's pid and log, and the two sockets. 
 folders for the workspace (the container's config, which holds its environment, and the volume
 image) are set to mode 700 at `create`. `~/.ola/gateway-tokens` (600)
 holds the `GATEWAY_TOKENS` line for the gateway, which reloads it by itself after a `create`,
-`rotate` or `destroy`. Everything opencode keeps (its session database, logs, caches) is under
+`rotate` or `destroy`. Entries named `ws-*` are the workspaces' and are rewritten from their
+secrets every time (a removed workspace's token is gone at once); every other entry, such as the
+`bart` host caller that `bart/ola-bart.sh token` adds, is kept byte for byte. Everything opencode keeps (its session database, logs, caches) is under
 `/work/.ola`, so `files` shows it and `destroy` removes it; the image's root holds nothing of the
 customer's. **The image's root is read-only** (`--read-only`): `/work` and the `/tmp` tmpfs (in the
 VM's memory, so bounded by it) are the only places anything can be written. Before the review of

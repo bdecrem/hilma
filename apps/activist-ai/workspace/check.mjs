@@ -262,6 +262,16 @@ try {
   await destroyAll() // leftovers from an interrupted run
   rmSync(ws.HOME, { recursive: true, force: true })
 
+  // -------- the tokens file keeps the callers it does not own (Bart's `bart` host caller)
+  // A foreign entry, written as ola-bart.sh writes it (with odd spacing, which must survive byte
+  // for byte), and a stale `ws-` entry with no workspace behind it, which must not.
+  mkdirSync(ws.HOME, { recursive: true, mode: 0o700 })
+  const tokFile = path.join(ws.HOME, 'gateway-tokens')
+  const hostTok = `chk-host-${Math.random().toString(36).slice(2)}-0000000000000000`
+  const foreign = [`bart:${hostTok}`, ` app.x:${hostTok}-second`]
+  writeFileSync(tokFile, `GATEWAY_TOKENS=ws-gone:${hostTok}-stale-entry,${foreign.join(',')}\n`, { mode: 0o600 })
+  const tokEntries = () => readFileSync(tokFile, 'utf8').trim().slice('GATEWAY_TOKENS='.length).split(',')
+
   // -------- create, and the refusals
   let t0 = Date.now()
   await ws.create(A)
@@ -272,7 +282,18 @@ try {
     const r = await ws.create(`${PRE}chk-over`, { [flag]: value }).then(() => 'created', (e) => e.message)
     t(`create refuses --${flag} ${value} (above the ceiling)`, r !== 'created' && !ws.inspect(`${PRE}chk-over`), r)
   }
+  {
+    const e = tokEntries()
+    t('tokens file: creates keep the host callers byte for byte and drop a stale ws- entry', foreign.every((f) => e.includes(f)) && !e.some((x) => x.startsWith('ws-gone:')) && [A, B, C].every((id) => e.some((x) => x.startsWith(`ws-${id}:`))), `${e.length} entries`)
+  }
   await startGateway()
+  {
+    const r = await new Promise((resolve) => {
+      const req = http.get({ host: '127.0.0.1', port: GW_PORT, path: '/v1/models', headers: { authorization: `Bearer ${hostTok}` } }, (res) => (res.resume(), resolve(res.statusCode)))
+      req.on('error', () => resolve(-1))
+    })
+    t('tokens file: the gateway accepts the kept host caller', r === 200, `status ${r}`)
+  }
 
   await ws.waitForRoom([A, B, C], 2) // the check runs two VMs at a time
   t0 = Date.now()
@@ -548,6 +569,10 @@ print(json.dumps({"mib": n, "stopped": why}))
   t('destroy: no door or desk process left', doors === '', doors)
   const leftovers = ws.listOla().filter((c) => (c.configuration?.id || c.id).startsWith(`ola-${PRE}chk-`))
   t('destroy: no ola-chk container or volume left', leftovers.length === 0 && [A, B, C].every((id) => !ws.volumeOf(id)))
+  {
+    const e = tokEntries()
+    t('tokens file: after every destroy only the host callers are left, unchanged', JSON.stringify(e) === JSON.stringify(foreign), `${e.length} entries`)
+  }
 } catch (e) {
   t('the check ran to the end', false, `${e?.name}: ${e?.message}`)
 } finally {
