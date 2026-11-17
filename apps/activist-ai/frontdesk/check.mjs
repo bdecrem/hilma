@@ -250,7 +250,7 @@ async function api(pathname, { method = 'GET', cookie, csrf, ws, origin = method
   try {
     r = await fetch(`${ORIGIN}${pathname}`, { method, headers: h, body, redirect: 'manual' })
   } catch (e) {
-    if (method !== 'GET' || !['UND_ERR_SOCKET', 'ECONNRESET', 'EPIPE'].includes(e?.cause?.code) || fd?.exitCode !== null) throw e
+    if (!['UND_ERR_SOCKET', 'ECONNRESET', 'EPIPE'].includes(e?.cause?.code) || fd?.exitCode !== null) throw e
     staleSockets++
     r = await fetch(`${ORIGIN}${pathname}`, { method, headers: { ...h, connection: 'close' }, body, redirect: 'manual' })
   }
@@ -1248,7 +1248,8 @@ const dbRow = (sql) => new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'
 /** A new conversation in alice's project, a hosted run in it, and its end (the front desk's word). */
 async function hostedRun(who, request, extra = {}) {
   const s = await jpost(who, '/oc/api/session', { title: 'hosted check', metadata: { autonomy: 'go' } })
-  const id = s.json?.id
+  const id = s.json?.id ?? s.json?.data?.id
+  if (typeof id !== 'string') throw new Error(`no conversation: ${s.status} ${s.text.slice(0, 160)}`)
   const r = await jpost(who, '/api/hosted/run', { request, conversation: id, ...extra })
   if (r.status !== 200) return { status: r.status, json: r.json, id }
   await until(async () => (await api('/api/fallback', { cookie: who.cookie, ws: FA })).json?.hosted?.running === null, HOSTED_LIVE ? 300_000 : 120_000, 'the hosted run ending')
@@ -1258,7 +1259,16 @@ async function hostedRun(who, request, extra = {}) {
 }
 // A chat request with model `hosted` from inside the VM, with its own token (from stdin): the gateway's answer.
 const HOSTED_PROBE = 'import sys, json, urllib.request\nbody = json.dumps({"model": "hosted", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
-const hostedFromInside = () => spawnSync(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', HOSTED_PROBE], { input: secretsOf(FA).BOX_API_KEY, encoding: 'utf8' }).stdout.trim()
+// Not spawnSync: the scripted hosted model answers from this process, so its event loop must run.
+const hostedFromInside = () =>
+  new Promise((resolve) => {
+    const c = spawn(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', HOSTED_PROBE], { stdio: ['pipe', 'pipe', 'ignore'] })
+    let out = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.on('close', () => resolve(out.trim()))
+    c.stdin.end(secretsOf(FA).BOX_API_KEY)
+  })
+const hostedLog = () => gateway.log.split('\n').filter((l) => l.includes('"model":"hosted"')).slice(-3).map((l) => l.replace(/"t":"[^"]*",/, '').slice(0, 220)).join(' | ')
 
 await check('the hosted open model is off by default and independent of Claude; only the owner turns it on, with consent; the grants file follows', async () => {
   const f = await api('/api/fallback', { cookie: a.cookie, ws: FA })
@@ -1284,7 +1294,7 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
   const t0 = Date.now()
   const r = await hostedRun(a, HOSTED_ASK)
   assert(r.status === 200, `run: ${r.status} ${JSON.stringify(r.json)}`)
-  assert(JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `models ${r.models}, outcome ${r.idle}`)
+  assert(JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `models ${r.models}, outcome ${r.idle}; gateway: ${hostedLog()}`)
   const file = HOSTED_LIVE ? inVm('cat /work/hosted-count.txt') : inVm('test -e /work/rows.md && echo there')
   const real = inVm("python3 -c \"import csv; print(sum(1 for _ in csv.reader(open('/work/survey.csv'))) - 1)\"")
   assert(HOSTED_LIVE ? file.trim() === real : file === 'there', `the file: ${file} (the survey has ${real})`)
@@ -1307,7 +1317,9 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
 await check('"Just this once": with the switches off the owner hands one request over; the gateway honors it for that run only, the next is refused from inside the VM; a member cannot; the same for Claude', async () => {
   const off = await jpost(a, '/api/hosted/settings', { enabled: false })
   assert(off.status === 200 && !hostedFile()[`ws-${FA}`] && auditRows(FA).some((r) => r.action === 'hosted_disabled'), 'not off')
-  assert(hostedFromInside() === '403', 'the hosted model answered from inside with the switch off')
+  await sleep(2500) // the gateway reloads the grants file within 2 s
+  const offInside = await hostedFromInside()
+  assert(offInside === '403', `the hosted model from inside with the switch off: ${offInside} (${hostedLog()})`)
   const plain = await jpost(a, '/api/hosted/run', { request: 'x', conversation: 'ses_x' })
   assert(plain.status === 403 && plain.json.error === 'hosted_off', `a run with it off: ${plain.status}`)
   admin('add-member', 'team-a', 'vera', 'member')
@@ -1323,7 +1335,7 @@ await check('"Just this once": with the switches off the owner hands one request
   const after = { file: hostedFile()[`ws-${FA}`] ?? null, on: (await api('/api/fallback', { cookie: a.cookie, ws: FA })).json.hosted.enabled, rows: dbRow("SELECT count(*) AS n FROM fallback_once").n }
   assert(after.file === null && after.on === false && after.rows === 0, `after the run: ${JSON.stringify(after)}`)
   await sleep(2500) // the gateway reloads the grants file within 2 s
-  const inside = hostedFromInside()
+  const inside = await hostedFromInside()
   assert(inside === '403', `a second request from inside the VM: ${inside}`)
   const once = dbRow("SELECT tokens_in, cost_micro_usd, name_ref FROM audit WHERE action = 'hosted_once' ORDER BY id DESC LIMIT 1")
   assert(once && once.tokens_in > 0 && once.name_ref === null, `hosted_once: ${JSON.stringify(once)}`)
