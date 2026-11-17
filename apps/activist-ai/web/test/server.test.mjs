@@ -25,8 +25,9 @@ test('a session is created in the workspace with rules the page cannot widen', (
   const body = rewriteSessionCreate(JSON.stringify({ title: 't', location: { directory: '/' }, permissions: [{ action: '*', resource: '*', effect: 'allow' }], metadata: { autonomy: 'ask' } }), '/work')
   assert.equal(body.location.directory, '/work')
   assert.deepEqual(body.metadata, { autonomy: 'ask' })
-  const last = body.permissions.slice(-4).map((r) => `${r.action}:${r.effect}`)
-  assert.deepEqual(last, ['webfetch:deny', 'websearch:deny', 'external_directory:deny', 'browser:deny'])
+  const last = body.permissions.slice(-5).map((r) => `${r.action}:${r.effect}${r.action === 'external_directory' && r.effect === 'allow' ? `:${r.resource}` : ''}`)
+  // The denials, then the one exception: reading Ola's own skills in the image (first-user pass).
+  assert.deepEqual(last, ['webfetch:deny', 'websearch:deny', 'external_directory:deny', 'browser:deny', 'external_directory:allow:/opt/ola/skills/*'])
   assert.ok(body.permissions.some((r) => r.action === 'shell' && r.effect === 'ask'))
   assert.equal(rewriteSessionCreate('{not json', '/work'), null)
   const go = rewriteSessionCreate('{}', '/work')
