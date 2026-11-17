@@ -52,6 +52,27 @@ export function readSession(value: string | undefined): string | null {
   return users().has(m[1]) ? m[1] : null
 }
 
+// The phone app's admin sign-in (Bart's Ola iPhone app, 2026-11-17): the same accounts and the
+// same wrong-try limits as the page, but a token instead of a cookie. It is signed with a
+// different label, so a cookie is not a token and a token is not a cookie. 30 days.
+const APP_TOKEN_DAYS = 30
+const tokenSign = (payload: string) => createHmac('sha256', need('KOCHITO_APP_SECRET')).update(`app-token:${payload}`).digest('base64url')
+
+export function appToken(user: string, now = Date.now()): { token: string; expires: number } {
+  const expires = Math.floor(now / 1000) + APP_TOKEN_DAYS * 24 * 3600
+  const payload = `${user}.${expires}`
+  return { token: `olaapp.${payload}.${tokenSign(payload)}`, expires }
+}
+
+// The account a token names, or null (bad, expired, or the account was removed).
+export function readAppToken(value: string | null | undefined, now = Date.now()): string | null {
+  const m = value?.match(/^olaapp\.([a-z0-9_-]{1,40})\.(\d{9,11})\.([A-Za-z0-9_-]{43})$/)
+  if (!m) return null
+  if (!same(tokenSign(`${m[1]}.${m[2]}`), m[3])) return null
+  if (Number(m[2]) < now / 1000) return null
+  return users().has(m[1]) ? m[1] : null
+}
+
 export async function sessionUser(): Promise<string | null> {
   return readSession((await cookies()).get(APP_COOKIE)?.value)
 }
