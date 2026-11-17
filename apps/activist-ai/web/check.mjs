@@ -840,10 +840,10 @@ async function fallbackChecks(engine, label) {
       const buttons = await card().locator('button').allInnerTexts()
       const leaves = await card().locator('.stretch-leaves').innerText()
       await shot('card-member')
-      assert(title === 'This may be a stretch for Ola’s own model.' && JSON.stringify(buttons) === JSON.stringify(['Not now']) && /owner can turn on/.test(leaves), `member card: ${title} / ${buttons} / ${leaves}`)
+      assert(title === 'This may be a stretch for Ola’s own model.' && JSON.stringify(buttons) === JSON.stringify(['OK']) && /owner can turn on/.test(leaves), `member card: ${title} / ${buttons} / ${leaves}`)
       const once = await settings('/api/hosted/run', { request: 'x', conversation: 'ses_x', once: true })
       assert(once === 403, `a member's "just this once" by API: ${once}`)
-      await card().getByRole('button', { name: 'Not now' }).click()
+      await card().getByRole('button', { name: 'OK' }).click()
       await dev('/__dev/role?to=owner', 'POST')
     })
     await check(`${label}: the card at 390 px: no sideways scroll, no text under 15 px`, async () => {

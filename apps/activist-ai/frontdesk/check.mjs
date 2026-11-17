@@ -1639,7 +1639,11 @@ await check('the run ceiling interrupts a run cleanly and the page says why', as
   const last = A.page.locator('.drawer .turn').last()
   await until(async () => (await last.getAttribute('data-status')) === 'stopped', 60_000, 'the run stopping at the ceiling')
   const at = Date.now() - t0
-  await A.page.waitForFunction(() => /longest one request may run/.test(document.querySelector('.drawer .turn:last-of-type')?.textContent ?? ''), null, { timeout: 10_000 })
+  await A.page.waitForFunction(() => /longest one request may run/.test(document.querySelector('.drawer .turn:last-of-type')?.textContent ?? ''), null, { timeout: 10_000 }).catch(async (e) => {
+    const said = (await last.innerText()).replace(/\s+/g, ' ').slice(-300)
+    const runs = await api('/api/runs', { cookie: a.cookie, ws: FA })
+    throw new Error(`${e.message.split('\n')[0]}; the turn says: ${said}; /api/runs: ${runs.text.slice(0, 300)}`)
+  })
   const text = (await last.innerText()).replace(/\s+/g, ' ')
   assert(at >= 23_000 && at < 50_000, `stopped after ${at} ms (ceiling 24 s)`)
   assert(!(await executing(FA)).length, 'the session is still executing')

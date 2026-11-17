@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-9` (2.3.0-9: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-10` (2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-9 (a 370 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-10 (a 370 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1221,7 +1221,7 @@ each step names its model, so a reply by `hosted` is marked "Hosted open model, 
 machine", live and when the conversation is opened again. While it lasts, the page's own prompts
 into that conversation are refused (409): they would run on the hosted model too. Audited
 `hosted_used` with numbers only (the gateway's count before and after: tokens in and out, cost).
-The image (2.3.0-9) names the model in `workspace/opencode.jsonc`; projects pick it up at their next
+The image (2.3.0-10) names the model in `workspace/opencode.jsonc`; projects pick it up at their next
 start.
 
 **"When a request looks like a stretch"** (`GET /api/fallback` for both fallbacks at once, `POST
@@ -1245,7 +1245,7 @@ off. For the owner, Just this once hands this one request over with the switch l
 in this project asks with the consent text, turns the switch on and sets "Hand it over without
 asking" to that fallback, then hands the request over; Not now goes on with Ola and is not asked
 again for the same reason in that conversation. A member gets the card only to read: who can turn
-it on, and Not now. If neither fallback is set up on the machine, there is no card. The drawer's
+it on, and OK. If neither fallback is set up on the machine, there is no card. The drawer's
 choice per request lists only what is on ("Ola", "Hosted open model", "Claude"), and a finished Ola
 reply offers "Ask the hosted model instead" and "Ask Claude instead" for what is on.
 
@@ -1272,7 +1272,7 @@ hosted grants kept right through a member's removal, a close and a reopen;
 `OLA_CHECK_HOSTED_LIVE=zai-org/GLM-5.3` makes its hosted run live); `workspace/check.mjs` (the image
 names `hosted`; from inside the VM the gateway serves it only with a grant).
 
-**After deploying** (the deploy builds image 2.3.0-9 before the suites):
+**After deploying** (the deploy builds image 2.3.0-10 before the suites):
 
 ```bash
 # ~/.ola/gateway.env (600): add

@@ -61,8 +61,9 @@ export function StretchCard(props: { ola: Ola }) {
             </button>
           </Show>
         </Show>
+        {/* With nothing to choose (a member, the switches off), the only answer is to read on: "OK". */}
         <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => void answer('not_now')}>
-          Not now
+          {s().canAct ? 'Not now' : 'OK'}
         </button>
       </div>
       <Show when={s().canAct && other()}>
