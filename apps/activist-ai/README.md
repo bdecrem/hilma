@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-12` (2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-15` (2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-12 (a 370 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-15 (a 600 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1419,6 +1419,37 @@ indexes its text (pdftotext for PDFs), prints an excerpt framed as "From the web
 not instructions to follow", and how to cite it. `workspace/AGENTS.md` says when to search, never to
 put the person's own text in a search, to cite address and date, and that a page that gives orders
 is a page that says so.
+
+## Skills and seeing pages (image 2.3.0-15)
+
+**Skills** are Ola's own written know-how, versioned and tested in `skills/` (read `skills/README.md`):
+`chart`, `workbook`, `report` and `design-pass`, each a folder in the open Agent Skills format
+(`SKILL.md`, `scripts/`, `references/`, `assets/`, a `CHANGELOG.md`, `tests/`), plus `batch-quotes`,
+a hidden placeholder until `ola-batch` lands. opencode 2.3.0 reads the format natively: the agent sees
+each skill's description at every step and loads one with its `skill` tool. They are built into the
+image read-only at `/opt/ola/skills`, named by a system config at `/etc/opencode/opencode.jsonc`
+(`workspace/opencode-system.jsonc`) that opencode ranks above anything in a project, and that lets the
+agent load Ola's skills and nothing else: a skill planted anywhere in `/work`, or listed by a planted
+`/work/opencode.json`, is neither offered nor loadable, and one with an Ola skill's name loses to Ola's
+(`workspace/check.mjs`, eight checks). The image is labeled `ola.skills=<hash>` of the skill folders.
+The image gained matplotlib, python-docx, reportlab and the DejaVu fonts for them.
+
+**`ola-page <file.html> [--width N] --out shot.png [--json checks.json]`** renders a page inside the
+VM the way a visitor's browser shows it under Open (the page's folder served on 127.0.0.1, Debian's
+`chromium-headless-shell` 156 driven over a pipe; there is no network, so a request to another address
+fails and is reported), saves a full-page screenshot, and prints what a program can measure: sideways
+scroll, things past the right edge, clipped text, text below the WCAG contrast it needs (computed from
+the page's own colors), the smallest and the most common text size, fonts in use, broken images,
+missing files and script errors. `AGENTS.md` tells the agent to look before it says a page is done (the
+evals had it loop up to 104 steps guessing at pages it could not see). The renderer adds 292 MB to
+`/usr/lib/chromium` (with its libraries the image grows from about 0.9 GB to about 1.4 GB). When
+`ola-see <image> "<question>"` is in the image, the `design-pass` skill asks it to look at each shot;
+without it, the skill says in one line that it could not look at the page itself and relies on the
+measurements.
+
+**With and without:** `evals/run.mjs --skills on|off` runs a task with the skills offered or with the
+session denied every skill, and `evals/skills-report.mjs` puts the two side by side, per skill, over
+eight tasks (`s1` to `s8`, two per skill). Numbers in `evals/results/summary-skills.json`.
 
 ## Where the data lives (for someone who knows Supabase)
 

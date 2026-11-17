@@ -38,16 +38,16 @@
 // included, under /work/.ola), so `files` shows all of it and `destroy` removes all of it.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { chmodSync, closeSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, closeSync, cpSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-13'
+export const IMAGE = 'ola-workspace:2.3.0-15'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -1130,17 +1130,47 @@ export async function destroy(id, { confirm } = {}) {
 // off (a slow or stalled download, a killed deploy) never leaves something called IMAGE that is
 // half made; the next build starts again. The downloads in the Containerfile retry and give up on
 // a stalled connection. Up to three tries in all.
+// The build context is staged: this folder plus the skill folders of ../skills (at skills/ in the
+// context; the folder's own README and check.py stay out, since opencode would read a loose .md at
+// the top as a skill), so the image's skills are exactly the repo's, labeled with their hash.
+const SKILLS_SRC = path.join(here, '../skills')
+const skillFolders = (dir = SKILLS_SRC) => readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory() && !e.name.startsWith('.') && !e.name.startsWith('_')).map((e) => e.name).sort()
+export function skillsHash(dir = SKILLS_SRC) {
+  const h = createHash('sha256')
+  const walk = (d, rel) => {
+    for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      if (e.name.startsWith('.') || e.name === '__pycache__') continue
+      const p = path.join(d, e.name)
+      if (e.isDirectory()) walk(p, `${rel}${e.name}/`)
+      else if (e.isFile()) h.update(`${rel}${e.name}\0`).update(readFileSync(p)).update('\0')
+    }
+  }
+  for (const s of skillFolders(dir)) walk(path.join(dir, s), `${s}/`)
+  return h.digest('hex').slice(0, 16)
+}
+function stageContext() {
+  const ctx = mkdtempSync(path.join(tmpdir(), 'ola-image-'))
+  cpSync(here, ctx, { recursive: true, filter: (src) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(src) })
+  for (const s of skillFolders()) cpSync(path.join(SKILLS_SRC, s), path.join(ctx, 'skills', s), { recursive: true, filter: (src) => !/[\\/](__pycache__|\.DS_Store)([\\/]|$)/.test(src) })
+  return ctx
+}
 export function buildImage({ tries = 3 } = {}) {
   const tmp = `${IMAGE}-building`
-  for (let i = 1; i <= tries; i++) {
-    ctr(['image', 'delete', tmp], { allowFail: true })
-    const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '-t', tmp, '-f', path.join(here, 'Containerfile'), here], { stdio: 'inherit' })
-    if (r.status === 0) {
-      ctr(['image', 'tag', tmp, IMAGE])
+  const ctx = stageContext()
+  const hash = skillsHash()
+  try {
+    for (let i = 1; i <= tries; i++) {
       ctr(['image', 'delete', tmp], { allowFail: true })
-      return
+      const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '--build-arg', `OLA_SKILLS_HASH=${hash}`, '-t', tmp, '-f', path.join(ctx, 'Containerfile'), ctx], { stdio: 'inherit' })
+      if (r.status === 0) {
+        ctr(['image', 'tag', tmp, IMAGE])
+        ctr(['image', 'delete', tmp], { allowFail: true })
+        return
+      }
+      console.error(`ws: the image build failed (try ${i} of ${tries})`)
     }
-    console.error(`ws: the image build failed (try ${i} of ${tries})`)
+  } finally {
+    rmSync(ctx, { recursive: true, force: true })
   }
   ctr(['image', 'delete', tmp], { allowFail: true })
   refuse('the image build failed')

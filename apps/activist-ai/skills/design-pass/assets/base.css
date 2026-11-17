@@ -1,0 +1,32 @@
+/* A starting point for a page with no style of its own (design-pass skill, references/design.md).
+   Local only: the system fonts, no web fonts. Change --accent to a color from the subject; keep
+   its contrast on --page at 4.5 or more. Every size and gap below is on the scale; use only these. */
+:root {
+  --page: #fbfaf8;
+  --ink: #1a1d24;
+  --ink-2: #4a505c;      /* 8.0 : 1 on --page */
+  --rule: #dcdad5;
+  --accent: #23497a;     /* 8.6 : 1 on --page */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+  --t-note: 13px; --t-read: 17px; --t-section: 20px; --t-title: clamp(28px, 5vw, 40px); --t-figure: clamp(40px, 7vw, 56px);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: var(--t-read)/1.6 var(--font); }
+main { max-width: 1120px; margin: 0 auto; padding: var(--s6) var(--s4) var(--s8); }
+.prose, main > p { max-width: 68ch; }
+h1 { font-size: var(--t-title); line-height: 1.15; font-weight: 720; letter-spacing: -0.02em; margin: 0 0 var(--s3); }
+h2 { font-size: var(--t-section); line-height: 1.25; font-weight: 680; margin: var(--s7) 0 var(--s3); }
+p { margin: 0 0 var(--s4); }
+a { color: var(--accent); text-underline-offset: 2px; }
+small, .note, figcaption { font-size: var(--t-note); line-height: 1.45; color: var(--ink-2); }
+.figure { font-size: var(--t-figure); line-height: 1; font-weight: 720; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s5); margin: var(--s6) 0; }
+.table-wrap { overflow-x: auto; margin: var(--s5) 0; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 650; border-bottom: 1.5px solid var(--ink); padding: var(--s2) var(--s3) var(--s2) 0; }
+td { border-bottom: 1px solid var(--rule); padding: var(--s2) var(--s3) var(--s2) 0; vertical-align: top; }
+td.num, th.num { text-align: right; }
+img, svg { max-width: 100%; height: auto; }
+@media (min-width: 900px) { main { padding: var(--s7) var(--s6) var(--s8); } }

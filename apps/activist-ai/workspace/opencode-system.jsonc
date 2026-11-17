@@ -1,0 +1,21 @@
+// opencode's SYSTEM config inside every workspace VM, at /etc/opencode/opencode.jsonc (read-only in
+// the image). opencode ranks /etc/opencode above every global and project config, and its policies
+// above all of theirs, so nothing in /work can change what is here (checked in workspace/check.mjs).
+//
+// Skills (apps/activist-ai/skills, built into /opt/ola/skills): only Ola's own. A project folder can
+// hold .opencode/skills, .claude/skills or .agents/skills, and a /work/opencode.json could list more;
+// opencode would find them. Here every skill is denied by ID except Ola's, and Ola's folder is named
+// in this file, which outranks any project's list, so a planted skill with the same ID loses.
+// The built-in skills (opencode's own docs, bug reports, the desktop browser) are denied too.
+// Keep the allow list equal to the folders in apps/activist-ai/skills (skills/check.py proves it).
+{
+  "skills": ["/opt/ola/skills"],
+  "policies": [
+    { "action": "skill.use", "resource": "*", "effect": "deny" },
+    { "action": "skill.use", "resource": "chart", "effect": "allow" },
+    { "action": "skill.use", "resource": "workbook", "effect": "allow" },
+    { "action": "skill.use", "resource": "report", "effect": "allow" },
+    { "action": "skill.use", "resource": "design-pass", "effect": "allow" },
+    { "action": "skill.use", "resource": "batch-quotes", "effect": "allow" }
+  ]
+}

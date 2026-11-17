@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-13 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-15 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -38,6 +38,14 @@
 # permissions), and ola-claude gives Claude Code a fresh, empty settings folder per run, only user
 # settings from it, no hooks and no MCP servers but its own (a /work/.claude/settings.local.json
 # let every write skip the person's yes under "Ask me first", and a hook there ran a command).
+#
+# 2.3.0-15: Ola's skills (apps/activist-ai/skills: chart, workbook, report, design-pass, and the
+# batch-quotes placeholder) read-only at /opt/ola/skills, named by a system config at
+# /etc/opencode/opencode.jsonc (opencode-system.jsonc) that outranks anything in /work and lets the
+# agent load Ola's skills only; their libraries (matplotlib, python-docx, reportlab, the DejaVu fonts);
+# and `ola-page`, which renders a page in chromium-headless-shell (Debian's, no network) to a
+# screenshot and measures it. ws.mjs builds from a staged context that holds workspace/ and skills/,
+# and labels the image with the skill set's hash. (Not 2.3.0-14: another builder's number.)
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -64,6 +72,7 @@ RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30
 FROM ${DEBIAN}
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 socat sqlite3 poppler-utils python3-openpyxl \
+      python3-matplotlib python3-docx python3-reportlab fonts-dejavu-core fonts-dejavu-extra chromium-headless-shell \
  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
  && useradd --create-home --uid 1000 --shell /bin/bash work \
  && mkdir -p /work /ola/gw \
@@ -76,8 +85,13 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch /opt/ola/bin/
-RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page /opt/ola/bin/
+# Ola's skills, and the system config that makes them the only ones (see the header).
+COPY opencode-system.jsonc /etc/opencode/opencode.jsonc
+COPY skills /opt/ola/skills
+ARG OLA_SKILLS_HASH=unknown
+LABEL ola.skills=${OLA_SKILLS_HASH}
+RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola /etc/opencode
 
 # Everything the agent keeps lives in /work, so `ws.mjs files` shows all of it and
 # `ws.mjs destroy` removes all of it. The config is read-only in the image.
@@ -87,6 +101,7 @@ ENV HOME=/work/.ola/home \
     XDG_STATE_HOME=/work/.ola/state \
     XDG_CACHE_HOME=/work/.ola/cache \
     OPENCODE_DISABLE_PROJECT_CONFIG=1 \
+    MPLCONFIGDIR=/work/.ola/cache/matplotlib \
     PATH=/opt/ola/bin:/usr/local/bin:/usr/bin:/bin
 USER work
 WORKDIR /work

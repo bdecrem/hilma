@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+"""ola-page: look at a page the way a visitor's browser shows it, inside the sealed computer.
+
+    ola-page index.html [--width 390] [--height 900] --out shot.png [--json checks.json] [--viewport]
+
+Serves the page's own folder on 127.0.0.1 (so the page's fetch() of its data files works, as it does
+under Open), loads it in a headless Chromium (chromium-headless-shell from Debian, driven over a
+pipe, no network: the computer has none), saves a full-page screenshot, and measures what a program
+can measure: horizontal scroll, elements that run past the right edge, clipped text, text below the
+WCAG contrast ratio (4.5, or 3 for large text) computed from the page's own colors, the smallest
+text, the type sizes and font families in use, broken images, script errors, missing files and any
+request to another address (a page here may load only its own files).
+
+Prints a few plain lines, and with --json writes every finding. Exit 0 when the page loaded (even with
+findings), 1 when it could not be loaded, 2 on a usage error. Only Python's standard library.
+"""
+import argparse, fcntl, http.server, json, os, shutil, socketserver, struct, subprocess, sys, tempfile, threading, time
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+CANDIDATES = ["/usr/bin/chromium-headless-shell", "/usr/lib/chromium/chromium-headless-shell", "/usr/lib/chromium/headless_shell", "/usr/bin/chromium"]
+TYPES = {".html": "text/html; charset=utf-8", ".htm": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript",
+         ".json": "application/json", ".csv": "text/csv; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
+         ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".woff2": "font/woff2", ".woff": "font/woff", ".ttf": "font/ttf",
+         ".otf": "font/otf", ".txt": "text/plain; charset=utf-8", ".geojson": "application/json", ".ico": "image/x-icon", ".pdf": "application/pdf"}
+MAX_HEIGHT = 12000
+
+# Runs in the page. Returns everything a program can judge without eyes.
+MEASURE = r"""
+(() => {
+  const vw = window.innerWidth, out = {}
+  const de = document.documentElement, body = document.body
+  out.viewport_width = vw
+  out.scroll_width = de.scrollWidth
+  out.horizontal_scroll = Math.max(0, de.scrollWidth - vw)
+  out.page_height = Math.max(de.scrollHeight, body ? body.scrollHeight : 0)
+  out.title = document.title || ''
+  const parse = (c) => { const m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null; const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 } }
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4) }
+  const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+  const over = (t, b) => ({ r: t.r * t.a + b.r * (1 - t.a), g: t.g * t.a + b.g * (1 - t.a), b: t.b * t.a + b.b * (1 - t.a), a: 1 })
+  const hex = (c) => '#' + [c.r, c.g, c.b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')
+  const label = (el) => { let s = el.tagName.toLowerCase(); if (el.id) s += '#' + el.id; else if (typeof el.className === 'string' && el.className.trim()) s += '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.'); return s }
+  const say = (el) => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60)
+  function background(el) {
+    const layers = []
+    for (let e = el; e; e = e.parentElement) {
+      const s = getComputedStyle(e)
+      if (s.backgroundImage && s.backgroundImage !== 'none') return null
+      const c = parse(s.backgroundColor)
+      if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break }
+    }
+    let base = { r: 255, g: 255, b: 255, a: 1 }
+    for (let i = layers.length - 1; i >= 0; i--) base = over(layers[i], base)
+    return base
+  }
+  function scrollerAbove(el) {
+    for (let e = el.parentElement; e && e !== body && e !== de; e = e.parentElement) {
+      const ox = getComputedStyle(e).overflowX
+      if (ox === 'auto' || ox === 'scroll') return true
+    }
+    return false
+  }
+  const seen = new Set(), sizes = {}, families = {}, colors = {}
+  const lowContrast = [], small = [], clipped = [], pastEdge = []
+  let unknownBg = 0, texts = 0, minSize = Infinity
+  const walker = document.createTreeWalker(body || de, NodeFilter.SHOW_TEXT)
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!n.textContent.trim()) continue
+    const el = n.parentElement
+    if (!el || seen.has(el)) continue
+    seen.add(el)
+    const s = getComputedStyle(el)
+    if (s.visibility === 'hidden' || s.display === 'none' || ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(el.tagName)) continue
+    const r = el.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) continue
+    let op = 1
+    for (let e = el; e; e = e.parentElement) op *= Number(getComputedStyle(e).opacity)
+    if (op < 0.05) continue
+    texts++
+    const size = parseFloat(s.fontSize), weight = Number(s.fontWeight) || 400
+    sizes[Math.round(size * 2) / 2] = (sizes[Math.round(size * 2) / 2] || 0) + 1
+    const fam = (s.fontFamily.split(',')[0] || '').replace(/["']/g, '').trim()
+    families[fam] = (families[fam] || 0) + 1
+    if (size < minSize) minSize = size
+    if (size < 12) small.push({ where: label(el), text: say(el), size })
+    const bg = background(el), fg = parse(s.color)
+    if (!bg || !fg) unknownBg++
+    else {
+      const f = over({ ...fg, a: fg.a * op }, bg)
+      const L1 = lum(f), L2 = lum(bg)
+      const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05)
+      const large = size >= 24 || (size >= 18.66 && weight >= 700)
+      colors[hex(f)] = (colors[hex(f)] || 0) + 1
+      if (ratio < (large ? 3 : 4.5)) lowContrast.push({ where: label(el), text: say(el), ratio: Math.round(ratio * 100) / 100, needs: large ? 3 : 4.5, color: hex(f), background: hex(bg) })
+    }
+    const ox = s.overflowX, oy = s.overflowY
+    if ((el.scrollWidth > el.clientWidth + 1 && (ox === 'hidden' || ox === 'clip' || s.textOverflow === 'ellipsis')) ||
+        (el.scrollHeight > el.clientHeight + 2 && (oy === 'hidden' || oy === 'clip') && el.clientHeight > 0))
+      clipped.push({ where: label(el), text: say(el) })
+    if (r.right > vw + 1 && !scrollerAbove(el)) pastEdge.push({ where: label(el), text: say(el), right: Math.round(r.right) })
+  }
+  for (const el of document.querySelectorAll('img, svg, canvas, table, pre, iframe, video')) {
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.right > vw + 1 && !scrollerAbove(el)) pastEdge.push({ where: label(el), text: '', right: Math.round(r.right) })
+  }
+  out.texts = texts
+  out.smallest_text_px = texts ? minSize : null
+  out.text_sizes = sizes
+  out.font_families = families
+  out.text_colors = Object.keys(colors).length
+  out.low_contrast = lowContrast.slice(0, 30)
+  out.low_contrast_count = lowContrast.length
+  out.contrast_unknown = unknownBg
+  out.small_text = small.slice(0, 30)
+  out.small_text_count = small.length
+  out.clipped = clipped.slice(0, 30)
+  out.clipped_count = clipped.length
+  out.past_right_edge = pastEdge.slice(0, 30)
+  out.past_right_edge_count = pastEdge.length
+  // reading text: the most common size, and paragraphs whose lines run past about 90 characters
+  let body_px = null, most = 0
+  for (const [k, v] of Object.entries(sizes)) if (v > most) { most = v; body_px = Number(k) }
+  out.body_text_px = body_px
+  out.long_lines = [...document.querySelectorAll('p, li, dd, blockquote')].filter((el) => {
+    const t = (el.innerText || '').trim(); if (t.length < 160) return false
+    const s = getComputedStyle(el), r = el.getBoundingClientRect()
+    return r.width / (parseFloat(s.fontSize) * 0.5) > 90
+  }).length
+  out.h1_count = document.querySelectorAll('h1').length
+  // without it a phone lays the page out about 980 px wide and shrinks it to fit: tiny text
+  out.has_viewport_meta = /width\s*=\s*device-width/i.test(document.querySelector('meta[name=viewport]')?.getAttribute('content') || '')
+  out.broken_images =[...document.images].filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')).slice(0, 20)
+  out.headings = [...document.querySelectorAll('h1,h2,h3')].map((h) => h.tagName.toLowerCase() + ' ' + say(h)).slice(0, 40)
+  return JSON.stringify(out)
+})()
+"""
+
+
+class Quiet(http.server.SimpleHTTPRequestHandler):
+    root = "/"
+
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        rel = unquote(urlparse(self.path).path).lstrip("/") or "index.html"
+        f = (Path(self.root) / rel).resolve()
+        if not str(f).startswith(str(Path(self.root).resolve()) + os.sep) and f != Path(self.root).resolve():
+            self.send_error(403)
+            return
+        if f.is_dir():
+            f = f / "index.html"
+        try:
+            body = f.read_bytes()
+        except OSError:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", TYPES.get(f.suffix.lower(), "application/octet-stream"))
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    do_HEAD = do_GET
+
+
+class Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
+
+
+class CDP:
+    """Chrome DevTools Protocol over --remote-debugging-pipe (fd 3 in, fd 4 out, NUL-separated JSON)."""
+
+    def __init__(self, binary, profile):
+        r_in, self.w = os.pipe()
+        self.r, w_out = os.pipe()
+
+        def wire():
+            a = fcntl.fcntl(r_in, fcntl.F_DUPFD, 10)
+            b = fcntl.fcntl(w_out, fcntl.F_DUPFD, 10)
+            os.dup2(a, 3)
+            os.dup2(b, 4)
+
+        args = [binary, "--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage", "--remote-debugging-pipe",
+                f"--user-data-dir={profile}", "--no-first-run", "--no-default-browser-check", "--disable-background-networking",
+                "--disable-component-update", "--disable-sync", "--disable-extensions", "--mute-audio", "--hide-scrollbars",
+                "--disable-features=Translate,MediaRouter,OptimizationHints", "--font-render-hinting=none", "about:blank"]
+        self.p = subprocess.Popen(args, preexec_fn=wire, close_fds=False, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        os.close(r_in)
+        os.close(w_out)
+        self.buf = b""
+        self.n = 0
+        self.events = []
+
+    def send(self, method, params=None, session=None, timeout=30):
+        self.n += 1
+        msg = {"id": self.n, "method": method, "params": params or {}}
+        if session:
+            msg["sessionId"] = session
+        os.write(self.w, json.dumps(msg).encode() + b"\0")
+        want = self.n
+        end = time.time() + timeout
+        while time.time() < end:
+            for m in self.read(end - time.time()):
+                if m.get("id") == want:
+                    if "error" in m:
+                        raise RuntimeError(f"{method}: {m['error'].get('message')}")
+                    return m.get("result", {})
+                self.events.append(m)
+        raise TimeoutError(method)
+
+    def read(self, timeout):
+        import select
+        r, _, _ = select.select([self.r], [], [], max(0.0, min(timeout, 1.0)))
+        if not r:
+            return []
+        chunk = os.read(self.r, 1 << 20)
+        if not chunk:
+            raise RuntimeError("the page renderer stopped")
+        self.buf += chunk
+        out = []
+        while b"\0" in self.buf:
+            one, self.buf = self.buf.split(b"\0", 1)
+            try:
+                out.append(json.loads(one))
+            except ValueError:
+                pass
+        return out
+
+    def pump(self, seconds):
+        end = time.time() + seconds
+        while time.time() < end:
+            self.events.extend(self.read(end - time.time()))
+
+    def close(self):
+        try:
+            self.p.kill()
+            self.p.wait(5)
+        except Exception:
+            pass
+
+
+def png_size(path):
+    with open(path, "rb") as f:
+        head = f.read(24)
+    return struct.unpack(">II", head[16:24]) if head[:8] == b"\x89PNG\r\n\x1a\n" else (0, 0)
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="ola-page", description="Screenshot a page and measure what a program can see.")
+    ap.add_argument("page")
+    ap.add_argument("--width", type=int, default=1280)
+    ap.add_argument("--height", type=int, default=900, help="the window's height (the shot is the whole page unless --viewport)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--json")
+    ap.add_argument("--viewport", action="store_true", help="only what fits in the window, not the whole page")
+    ap.add_argument("--wait", type=int, default=600, help="milliseconds to let the page settle after it loads")
+    ap.add_argument("--scale", type=float, default=1.0)
+    a = ap.parse_args()
+    page = Path(a.page).resolve()
+    if not page.is_file():
+        print(f"ola-page: no such page: {a.page}", file=sys.stderr)
+        return 2
+    if not 200 <= a.width <= 3000 or not 200 <= a.height <= 4000:
+        print("ola-page: --width and --height must be 200 to 3000 (4000 for height)", file=sys.stderr)
+        return 2
+    binary = os.environ.get("OLA_PAGE_CHROMIUM") or next((c for c in CANDIDATES if os.access(c, os.X_OK)), None) or shutil.which("chromium-headless-shell")
+    if not binary:
+        print("ola-page: no page renderer is installed on this computer", file=sys.stderr)
+        return 1
+    Quiet.root = str(page.parent)
+    srv = Server(("127.0.0.1", 0), Quiet)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}/"
+    url = base + "/".join(page.relative_to(page.parent).parts)
+    profile = tempfile.mkdtemp(prefix="ola-page-")
+    cdp = None
+    report = {"page": a.page, "width": a.width}
+    try:
+        cdp = CDP(binary, profile)
+        tid = cdp.send("Target.createTarget", {"url": "about:blank"})["targetId"]
+        sid = cdp.send("Target.attachToTarget", {"targetId": tid, "flatten": True})["sessionId"]
+        for m in ("Page.enable", "Runtime.enable", "Network.enable", "Log.enable"):
+            cdp.send(m, session=sid)
+        cdp.send("Emulation.setDeviceMetricsOverride", {"width": a.width, "height": a.height, "deviceScaleFactor": a.scale, "mobile": False}, session=sid)
+        cdp.send("Page.navigate", {"url": url}, session=sid)
+        end = time.time() + 20
+        while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events):
+            cdp.pump(0.25)
+        loaded = any(e.get("method") == "Page.loadEventFired" for e in cdp.events)
+        cdp.pump(a.wait / 1000)
+        res = cdp.send("Runtime.evaluate", {"expression": MEASURE, "returnByValue": True}, session=sid)
+        report.update(json.loads(res["result"]["value"]))
+        h = a.height if a.viewport else min(max(report.get("page_height") or a.height, a.height), MAX_HEIGHT)
+        shot = cdp.send("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": not a.viewport,
+                                                   "clip": {"x": 0, "y": 0, "width": a.width, "height": h, "scale": 1}}, session=sid, timeout=60)
+        import base64
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_bytes(base64.b64decode(shot["data"]))
+        outside, missing, errors = [], [], []
+        for e in cdp.events:
+            m, p = e.get("method"), e.get("params", {})
+            if m == "Network.requestWillBeSent":
+                u = p.get("request", {}).get("url", "")
+                if not u.startswith(base) and not u.startswith(("data:", "blob:", "about:")):
+                    outside.append(u[:200])
+            elif m == "Network.responseReceived" and p.get("response", {}).get("status") == 404:
+                missing.append(urlparse(p["response"]["url"]).path)
+            elif m == "Runtime.exceptionThrown":
+                d = p.get("exceptionDetails", {})
+                errors.append(((d.get("exception") or {}).get("description") or d.get("text") or "error").split("\n")[0][:200])
+            elif m == "Log.entryAdded" and p.get("entry", {}).get("level") == "error" and p["entry"].get("source") != "network":
+                errors.append(p["entry"].get("text", "")[:200])
+        report.update({"loaded": loaded, "outside_requests": sorted(set(outside))[:20], "missing_files": sorted(set(missing))[:20],
+                       "script_errors": errors[:20], "shot": a.out, "shot_size": list(png_size(a.out))})
+    except Exception as e:
+        print(f"ola-page: could not load the page ({type(e).__name__}: {str(e)[:160]})", file=sys.stderr)
+        return 1
+    finally:
+        if cdp:
+            cdp.close()
+        srv.shutdown()
+        shutil.rmtree(profile, ignore_errors=True)
+    if a.json:
+        Path(a.json).write_text(json.dumps(report, indent=1))
+    w, hh = report["shot_size"]
+    print(f"Saved {a.out} ({w} x {hh} px) of {a.page} at {a.width} px wide.")
+    lines = [
+        f"sideways scroll: {report['horizontal_scroll']} px" + (" (the page is wider than the window)" if report["horizontal_scroll"] else ""),
+        f"past the right edge: {report['past_right_edge_count']}",
+        f"clipped text: {report['clipped_count']}",
+        f"text below the contrast it needs: {report['low_contrast_count']}" + (f" ({report['contrast_unknown']} on images or gradients not measured)" if report["contrast_unknown"] else ""),
+        f"smallest text: {report['smallest_text_px']} px; sizes in use: {len(report['text_sizes'])}; fonts: {', '.join(list(report['font_families'])[:4]) or 'none'}",
+        f"requests to other addresses: {len(report['outside_requests'])}; missing files: {len(report['missing_files'])}; broken images: {len(report['broken_images'])}; script errors: {len(report['script_errors'])}",
+    ]
+    for l in lines:
+        print("  " + l)
+    for key, say in (("low_contrast", "low contrast"), ("past_right_edge", "past the edge"), ("clipped", "clipped"), ("small_text", "small text")):
+        for x in report[key][:5]:
+            extra = f" ratio {x['ratio']} (needs {x['needs']}), {x['color']} on {x['background']}" if key == "low_contrast" else (f" {x['size']} px" if key == "small_text" else "")
+            print(f"    {say}: {x['where']} \"{x['text'][:40]}\"{extra}")
+    if not report["loaded"]:
+        print("  the page never finished loading (it may wait on something that cannot load here)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
