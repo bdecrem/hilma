@@ -70,7 +70,7 @@ function parse(body: string) {
     if (line.startsWith('## ')) sections.push({ title: line.slice(3).trim(), lines: [] })
     else if (sections.length && line.trim()) sections[sections.length - 1].lines.push(line.trim())
   }
-  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call', 'Active project', 'On my plate', 'Decided', 'To be decided']
+  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call', 'Active project', 'On my plate', 'Decided', 'To be decided', 'Check-in list']
   const get = (t: string) => sections.find((s) => s.title === t)
   const items = (t: string) => (get(t)?.lines ?? []).filter((l) => l.startsWith('- ')).map((l) => l.slice(2))
   const days = sections
