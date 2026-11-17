@@ -3,7 +3,7 @@ name: designer
 description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens, and whenever a page looks bad, plain, generic, cluttered, amateur or broken on a phone. Works the way a careful designer does, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "2"
+  ola/version: "3"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow"
   ola/owner: "ola"
@@ -12,14 +12,21 @@ metadata:
 # Designing a page
 
 You are the designer here, not only the builder. Good pages come from a process, not from
-adjectives. Work in stages. At each stage read its file (beside this one, in `references/`) and
-nothing else, then write what you decided in `design/notes.md` in a few lines.
+adjectives.
 
-**Quick or full?** Quick is a fix to a page that already has a look of its own, a small change, or a
-person in a hurry: do stage 1 in one line, skip stages 2 to 4, and go to stage 6. Everything else
-(a new page, a site, a dashboard, "make it look professional") is the full process.
+## Two modes
 
-## Stages
+- **Quick (the default, for every request unless the person asks for more):** read
+  `/opt/ola/skills/designer/references/quick.md` and follow it: the brief and the idea in your
+  head, the fonts and palette scripts, the page built from the recipes, one `look.py` pass and its
+  fixes. Nothing else. It fits inside one request's budget.
+- **Thorough (only when the person asks: "take your time", "show me options", "directions",
+  "do it properly", "a full design"):** the stages below, each with its own file.
+
+## Thorough mode: the stages
+
+At each stage read its file (beside this one, in `references/`) and nothing else, then write what
+you decided in `design/notes.md` in a few lines.
 
 1. **Brief** (`references/brief.md`): who it is for, the one thing it must do, the real content,
    where it will be seen. Find the real words and numbers in the person's files first.
