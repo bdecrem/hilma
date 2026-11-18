@@ -22,6 +22,16 @@ Bart has gotten angry about this, hard. When a task is started, **finish it in t
 
 State all of this plainly; this is a standing expectation, not a one-off.
 
+## Context: when to /clear, and "handoff" (2026-11-17)
+
+`.claude/hooks/context-check.py` (Stop + PreCompact) texts Bart and prints a line when a
+session reaches 400k tokens of context, 14 hours, or its first compaction ("/clear soon"),
+and again at 600k / 24 h / a second compaction ("Time to /clear"). Bart: "today the system
+got bad because of context pollution". When he says **"handoff"**: write everything a fresh
+session needs (for Venture: NOW.md, JOURNAL.md, LOG.md, then `sync.mjs push`; elsewhere a
+short note in the project's own notes), commit and push what is finished, list what is still
+running and where it reports, then answer in one line: "Ready for /clear."
+
 ## Small change = small job. Ship it in under a minute.
 
 If I described something as a one-line / two-line / trivial change, that is a
