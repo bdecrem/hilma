@@ -370,7 +370,9 @@ function judge(S, r, now, prev) {
   if (r.public) {
     const p = r.public
     const left = daysLeft(p.notAfter, now)
-    const answers = p.status === 401 && p.basic
+    // The site answers: 200 since the site password came off (2026-11-17), or 401 with a Basic
+    // challenge if it is ever put back.
+    const answers = p.status === 200 || (p.status === 401 && p.basic)
     c.push({ id: 'public', item: 4, level: answers ? 'ok' : 'alarm', two: true, say: `the site (${S.PUBLIC_HOST}) does not answer from the internet.`, clear: 'The site answers from the internet again.', detail: `public ${p.ip ?? '-'} ${p.status || p.error}${p.basic ? ' basic' : ''}` })
     if (answers) c.push({ id: 'cert', item: 4, level: left !== null && left > S.CERT_ALARM_DAYS ? 'ok' : 'alarm', two: true, say: `the site's certificate runs out in ${left} days and has not renewed.`, clear: "The site's certificate is renewed.", detail: `public certificate ${left} days left` })
   }
@@ -530,7 +532,7 @@ export function boardStatus(S, state, r, conds, now) {
   const parts = {}
   const names = { fd: 'web app', gw: 'model connection', tls: 'secure front', tunnel: 'tunnel' }
   for (const [k, v] of Object.entries(r.web ?? {})) parts[names[k] ?? k] = !!v.ok
-  if (r.public) parts['public address'] = r.public.status === 401 && !!r.public.basic
+  if (r.public) parts['public address'] = r.public.status === 200 || (r.public.status === 401 && !!r.public.basic)
   if (r.almanac) parts['Almanac'] = r.almanac.status === 200
   return {
     host: 'mini',

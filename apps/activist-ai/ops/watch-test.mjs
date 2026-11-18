@@ -59,7 +59,7 @@ function leaf(dir, days) {
 }
 
 // ------------------------------------------------------------------ fakes on loopback
-const up = { fd: true, gw: true, almanac: true, prompt: true, imsg: 200 }
+const up = { fd: true, gw: true, almanac: true, prompt: true, open: false, imsg: 200 }
 const texts = []
 const statuses = [] // what the board push sent
 const listen = (srv) => new Promise((r) => srv.listen(0, '127.0.0.1', () => r(srv.address().port)))
@@ -105,7 +105,8 @@ before(async () => {
       const p = /^GET (\S+)/.exec(t)?.[1]
       if (p === '/api/health') s.end('HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok')
       else if (up.prompt) s.end('HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Ola"\r\ncontent-length: 0\r\nconnection: close\r\n\r\n')
-      else s.end('HTTP/1.1 200 OK\r\ncontent-length: 0\r\nconnection: close\r\n\r\n')
+      else if (up.open) s.end('HTTP/1.1 200 OK\r\ncontent-length: 0\r\nconnection: close\r\n\r\n')
+      else s.end('HTTP/1.1 502 Bad Gateway\r\ncontent-length: 0\r\nconnection: close\r\n\r\n')
     })
     s.on('error', () => {})
   })
@@ -122,7 +123,7 @@ after(() => {
   rmSync(T, { recursive: true, force: true })
 })
 beforeEach(() => {
-  Object.assign(up, { fd: true, gw: true, almanac: true, prompt: true, imsg: 200 })
+  Object.assign(up, { fd: true, gw: true, almanac: true, prompt: true, open: false, imsg: 200 })
   tlsServer.setSecureContext({ ...LONG })
   fakes()
   texts.length = 0
@@ -306,8 +307,15 @@ test('the public address: the password prompt and a certificate with more than 1
   assert.deepEqual((await watch(at('14:04'))).sent, ['Ola: back to normal. The site answers from the internet again.'])
   const r2 = await watch(at('14:06'))
   assert.equal(r2.sent.length, 1)
-  assert.match(r2.sent[0], /^Ola alarm: The site's certificate runs out in \d days and has not renewed\.$/)
+  assert.match(r2.sent[0], /^Ola alarm: The site's certificate runs out in \d+ days and has not renewed\.$/)
   assert.ok(state().warnings.renewal, 'the served certificate under 21 days is a warning too')
+})
+
+test('the site password off (2026-11-17): the sign-in page answering 200 is the site answering', async () => {
+  up.prompt = false
+  up.open = true
+  await watch(at('14:00'))
+  assert.deepEqual((await watch(at('14:02'))).sent, [])
 })
 
 test('an untrusted certificate is an alarm on the public address', async () => {
