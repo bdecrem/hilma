@@ -1,6 +1,6 @@
 # Ola in one page
 
-Last checked against: `d54096d4` (2026-11-18)
+Last checked against: `81c9d954` (2026-11-18)
 
 This is the map. Every agent reads it first; the detail lives in the docs it points to. When Ola
 code changes, check this page against it and update the line above (procedure at the end).
@@ -112,7 +112,7 @@ never holds user data.
   minutes. README, "When something breaks".
 - **TLS:** a Let's Encrypt certificate by DNS-01, key made on the staging machine, renewed by
   `ops/cert.mjs` from the iMac (daily job `cx.ola.cert`). README, "The address: app.ola.cx".
-- **Apps:** `apple/bump-build.sh`, then `apple/testflight/ship-via-mini.sh [ios|mac|both]`.
+- **Apps:** `apple/bump-build.sh`, then `apple/testflight/ship-via-mini.sh [ios|mac|both]`. The M1 iMac can ship both; the M4 only the iPhone app (the Mac download's Developer ID signature needs the M1's Xcode account): `apple/testflight/README.md`, "Shipping from the M4 iMac".
   Every release stages the committed skills and refuses a build whose skills differ.
 - **Tracking:** every Ola commit names its issue, `[OLA-n]`; the tracker is
   `node scripts/venture/issues.mjs`, shown at app.kochitolabs.com.
