@@ -197,6 +197,10 @@ def main():
     if reg == "auto":
         reg = "bold" if re.search(r"""<meta[^>]+name=["']?ola-register["']?[^>]+content=["']?bold""", page.read_text(errors="replace"), re.I) else "calm"
     bold = reg == "bold"
+    src = page.read_text(errors="replace")
+    # a page started from a worked example must not keep the example's words
+    leftover = [x for x in ("Example page for the designer skill", "EXAMPLE for the designer skill", "Halsey Avenue Merchants", "Linden Place Tenants Union",
+                            "Spoke Collective") if x in src] if not page.name.startswith("bold-") else []
     print(f"Register: {reg}" + (" (Bold rules, references/bold.md)" if bold else ""))
     shots = page.parent / "shots"
     shots.mkdir(exist_ok=True)
@@ -214,7 +218,7 @@ def main():
             made[tag] = shot
             r = json.loads(js.read_text())
             t = r.get("taste") or {}
-            groups = [("broken", broken(r, w)), ("readable", readable(r, w, bold)), ("order", order(t, w, bold)), ("decorated", decorated(t, bold)),
+            groups = [("broken", broken(r, w) + [f"words left from the worked example ({x!r}): rewrite or delete them" for x in leftover]),("readable", readable(r, w, bold)), ("order", order(t, w, bold)), ("decorated", decorated(t, bold)),
                       ("bare", bare(t, r, w, bold)), ("usable", usable(t, w))]
             n = sum(len(g) for _, g in groups)
             total += n

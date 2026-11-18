@@ -154,10 +154,14 @@ Always:
 
 ## 9. Quick Bold, in order
 
+(SKILL.md, "Bold, step by step", is the same in commands.)
+
 1. The idea: what is the giant (the date or the number) and what is the shape (from section 4)?
-2. `palette.py --bold --preset ...` (or `--scheme`), `fonts.py add "<display>" "<text>"`.
-3. Open the closest example above and build from its structure: hero field with title and giant, the
-   shape, a band with the one action, sections that alternate fields, a footer.
+2. Copy the closest example above to `index.html` and `fonts.py add` its two families (or another
+   preset: `palette.py --bold --preset ...` and replace the `:root`).
+3. Rewrite every word from the person's files and redraw the shape for this subject; delete the
+   example's top comment and its "Example page" footer. Keep its structure: hero field with title and
+   giant, the shape, a band with the one action, sections that alternate fields, a footer.
 4. `look.py index.html --name check` (it reads the `ola-register` meta). Fix every [broken],
    [readable], [order], [decorated] and [bare] line.
 5. Look at the two shots yourself: is it fun, is it gorgeous, would the people it is for stop on it?

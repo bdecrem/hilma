@@ -102,6 +102,9 @@ for ex in sorted((HERE / "assets").glob("bold-*.html")):
     r = run(*look, d / ex.name, "--name", "ex", "--no-see")
     s = json.loads((d / f"shots/{ex.stem}-ex.json").read_text()) if (d / f"shots/{ex.stem}-ex.json").exists() else {}
     case(f"the Bold example {ex.name} is read as Bold and has no defects", s.get("register") == "bold" and s.get("defects") == 0, r.stdout[-700:])
+shutil.copy(HERE / "assets" / "bold-rent-party.html", d / "copied.html")
+r = run(*look, d / "copied.html", "--name", "cp", "--no-see")
+case("a page copied from a worked example and not rewritten is called out", "words left from the worked example" in r.stdout, r.stdout[-500:])
 # Bold allows a color system, a gradient behind a shape and rounded stickers ...
 (d / "boldok.html").write_text("""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name="ola-register" content="bold"><title>B</title>
 <style>body{margin:0;background:#f7efdf;color:#16121c;font:18px/1.5 system-ui,sans-serif} .hero{background:#ff4b1f;padding:24px 16px} h1{font-size:96px;line-height:.9;margin:0}

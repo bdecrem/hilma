@@ -3,7 +3,7 @@ name: designer
 description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "5"
+  ola/version: "6"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
@@ -27,6 +27,30 @@ Pick one first, from the person's words and the subject:
   (`palette.py --bold`), a display face set very big, full-bleed color fields, a shape from the subject.
 - **Calm** (the default, also whenever it is unclear): reports, results, dashboards, forms, notices,
   letters, anything people must read carefully or trust. Everything else in this skill.
+
+### Bold, step by step (do these in order; they replace quick.md for a Bold page)
+
+1. Choose the worked example closest in mood (`/opt/ola/skills/designer/assets/`):
+   - `bold-rent-party.html`: a party, fundraiser, campaign, strike, rally, anything indie or loud
+     (riso inks: vermillion, ultramarine, sunflower, lime on cream; Bricolage Grotesque + Space Grotesk)
+   - `bold-night-market.html`: an evening, a concert, music, a market, a dance (night-neon inks on
+     violet-black; Anton + Space Grotesk)
+   - `bold-bike-day.html`: families, kids, daytime, a garden, a picnic, a library (candy pastels under
+     one plum ink; Bowlby One + Space Grotesk)
+2. Copy it and its two fonts beside the page, for example:
+   `cp /opt/ola/skills/designer/assets/bold-rent-party.html index.html`
+   `python3 /opt/ola/skills/designer/scripts/fonts.py add "Bricolage Grotesque" "Space Grotesk" --to .`
+   (Fraunces is there too for a gorgeous dinner or gala, as the display face with Space Grotesk.)
+3. Rewrite every word for this subject from the person's files: their title, their date as the
+   giant numeral, the place, every fact; nothing invented, nothing left from the example. Delete the
+   example's top comment and its "Example page" footer. Keep the structure: a full-bleed color field
+   with the title and the giant date, a drawn shape, a band with the one action, sections that
+   alternate fields.
+4. Redraw the SVG shape for THIS subject (bold.md section 4): the street for a block party, a
+   bullhorn or the march route for a strike, a long table or a plate for a dinner, the fund's goal as
+   blocks. Simple shapes in the palette's inks, the arithmetic in a comment.
+5. `python3 /opt/ola/skills/designer/scripts/look.py index.html --name check` and fix every line it
+   lists. More on any part: `/opt/ola/skills/designer/references/bold.md`.
 
 
 ## Three modes

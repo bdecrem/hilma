@@ -6,9 +6,10 @@ directions, no extra rounds, no reading the other files unless something below s
 ## 0. Calm or Bold
 
 If the person asked for fun, colorful, gorgeous, playful, bold, loud, modern or "make it pop", or the
-page is for a party, festival, celebration, fundraiser party or a campaign aimed at young people: read
-`/opt/ola/skills/designer/references/bold.md` and follow its "Quick Bold" steps instead of 3 and 4
-below (steps 1, 2 and 5 still hold). Otherwise, and when unsure, Calm: this file.
+page is for a party, festival, celebration, fundraiser or a campaign aimed at young people: STOP
+here and follow "Bold, step by step" in SKILL.md instead (copy the closest
+`/opt/ola/skills/designer/assets/bold-*.html` example, its fonts, rewrite every word). Otherwise, and
+when unsure, Calm: this file.
 
 ## 1. Brief (two lines in your head, not a file)
 
