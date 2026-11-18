@@ -33,6 +33,11 @@ binary goes into the Mac app, the notice goes into the bundle and the app's cred
 (`apple/Mac/Credits.rtf`, opencode's text word for word; update it if their LICENSE changes. An RTF with no color table, so the panel's own text color applies in light and dark: the HTML version before it came out black on near-black in dark mode in the 0.1 (4) check on another Mac, though white on this M4 under macOS 27. `Ola\'92s` is the apostrophe in the file's cp1252), and `ola --version`
 names opencode and its license.
 
+**Which Ola this is (2026-11-18, OLA-152).** The home screen's corner shows "Ola 0.1 (11)" where opencode
+shows its own version, and `/version` says "Ola 0.1 (11), built on opencode 2.3.0". Both read `OLA_VERSION`,
+which the `ola` command sets from the app's version and build (`OlaCLI.versionText`); `ola --version` prints
+the same. Display only: the one command added here does nothing but show that line.
+
 Left as opencode on purpose: internal ids (`opencode.settings`, the theme named `opencode`), the provider
 names "OpenCode Go" / "OpenCode Console" (their products), the update dialog, the `opencode` binary name and
 its `--help`. The line printed when a conversation ends says `Continue  ola -c`.

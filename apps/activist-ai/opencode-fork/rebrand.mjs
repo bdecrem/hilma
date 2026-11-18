@@ -39,6 +39,11 @@ const edits = [
   [T + 'util/presentation.ts', 'row("Continue", `opencode -s ${input.session.sessionID}`)', 'row("Continue", `ola -c`)', 1],
   [T + 'mini/splash.ts', 'const command = `opencode mini -s ${meta.session_id}`', 'const command = `ola -c`', 1],
   [T + 'component/error-component.tsx', '<text fg={colors.muted}>OpenCode {app.version}</text>', '<text fg={colors.muted}>Ola (opencode {app.version})</text>', 1],
+  // Which Ola this is (2026-11-18, Bart: "how can i read the version number in the cli? should be somewhere
+  // in a / command?"): the home screen's corner shows Ola's version and build, and /version says it. The `ola`
+  // command passes them in OLA_VERSION ("0.1 (11)"); without it the corner shows opencode's version as before.
+  [T + 'feature-plugins/home/footer.tsx', '<text fg={props.context.theme.text.muted}>{props.context.app.version}</text>', '<text fg={props.context.theme.text.muted}>{process.env.OLA_VERSION ? `Ola ${process.env.OLA_VERSION}` : props.context.app.version}</text>', 1],
+  [T + 'app.tsx', '      {\n        name: "opencode.settings",', '      {\n        name: "ola.version",\n        title: "Show Ola\'s version",\n        slash: { name: "version" },\n        run: () => toast.show({ message: `Ola ${process.env.OLA_VERSION ?? "(version unknown)"}, built on opencode ${app.version}`, variant: "info" }),\n        category: "System",\n      },\n      {\n        name: "opencode.settings",', 1],
 ];
 
 const fail = (m) => { console.error('patches no longer apply: ' + m); process.exit(1); };

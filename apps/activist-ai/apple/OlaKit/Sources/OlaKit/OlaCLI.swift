@@ -8,6 +8,15 @@ import Foundation
 /// `ModelDoor` for the model and web commands with the account, `LocalServer` for opencode (the same
 /// config, permissions and environment as the app), opencode's own terminal interface on top.
 public enum OlaCLI {
+  /// Ola's version and build as people read it, "0.1 (11)": `ola --version`, and the terminal
+  /// interface's corner and /version (it gets this in OLA_VERSION).
+  public static var versionText: String {
+    let i = Bundle.main.infoDictionary
+    let v = i?["CFBundleShortVersionString"] as? String ?? "?"
+    let b = i?["CFBundleVersion"] as? String
+    return b.map { "\(v) (\($0))" } ?? v
+  }
+
   public enum Command: Equatable {
     /// The conversation in the terminal; `continueLast` picks up the last one.
     case talk(continueLast: Bool)
@@ -165,7 +174,7 @@ public enum OlaCLI {
     func run(_ c: Command) -> Int32 {
       switch c {
       case .help: print(OlaCLI.help); return 0
-      case .version: print("ola \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (built on opencode \(OpencodeInstall.version), MIT License, \u{00A9} 2025 opencode)"); return 0
+      case .version: print("ola \(OlaCLI.versionText) (built on opencode \(OpencodeInstall.version), MIT License, \u{00A9} 2025 opencode)"); return 0
       case .bad(let s): say(s); return 2
       case .installCommand:
         let r = CLIInstall.install(appExecutable: Bundle.main.executableURL)
@@ -375,6 +384,8 @@ public enum OlaCLI {
       let mine = ProcessInfo.processInfo.environment
       for k in ["TERM", "COLORTERM", "TERM_PROGRAM", "TERM_PROGRAM_VERSION", "LC_TERMINAL", "LC_TERMINAL_VERSION", "COLUMNS", "LINES", "NO_COLOR"] { if let v = mine[k] { env[k] = v } }
       env["OPENCODE_PASSWORD"] = config.password
+      // The interface shows which Ola this is: its home screen's corner and /version (OLA-152).
+      env["OLA_VERSION"] = OlaCLI.versionText
       // posix_spawn, not Process: Process puts its child in a process group of its own, which the
       // terminal treats as background (the interface stops as soon as it touches the terminal).
       // This keeps it in the terminal's foreground group, so it gets the keys, Ctrl-C and resizes.
