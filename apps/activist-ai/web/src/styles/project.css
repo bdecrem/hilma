@@ -387,3 +387,15 @@
 .menu-list {
   margin-top: var(--s3);
 }
+
+/* On a phone, once a conversation is under way, the composer keeps to the switch and the place to
+   type: the line under the switch comes back when the switch is flipped. */
+@media (max-width: 760px) {
+  .autonomy-hint.quiet {
+    display: none;
+  }
+  .autonomy label.lots-toggle {
+    min-height: 36px;
+  }
+}
+

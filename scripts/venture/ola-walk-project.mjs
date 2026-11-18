@@ -49,7 +49,8 @@ try {
   say(/project/i.test(await text('.project-kicker')), 'the word Project over its name', `${await text('.project-kicker')} / ${await text('h1')}`)
   say((await p.getByRole('link', { name: 'Your projects' }).count()) > 0, 'a way back to Your projects')
   const tabs = await p.getByRole('tab').allInnerTexts()
-  say(tabs.length === 3 && /^Conversation/.test(tabs[0]), 'three tabs, opened on the conversation', tabs.join(' | ').replace(/\s+/g, ' '))
+  // Sources is a tab only once Ola has downloaded something into this project.
+  say(tabs.length >= 2 && /^Conversation/.test(tabs[0]) && /^Made by Ola/.test(tabs[1]) && (await p.getByRole('tab', { name: 'Conversation' }).getAttribute('aria-selected')) === 'true', 'the tabs, opened on the conversation', tabs.join(' | ').replace(/\s+/g, ' '))
   const input = await p.locator('#ask-input').boundingBox()
   say(input && input.y + input.height <= 844, 'the place to type is on the screen', input ? `ends at ${Math.round(input.y + input.height)} of 844` : 'not found')
   const wide = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
@@ -72,9 +73,11 @@ try {
   await p.getByRole('tab', { name: /Made by Ola/ }).click()
   await p.waitForTimeout(1200)
   await shot('made')
-  await p.getByRole('tab', { name: /Sources/ }).click()
-  await p.waitForTimeout(1200)
-  await shot('sources')
+  if (await p.getByRole('tab', { name: /Sources/ }).count()) {
+    await p.getByRole('tab', { name: /Sources/ }).click()
+    await p.waitForTimeout(1200)
+    await shot('sources')
+  }
   await p.getByRole('button', { name: 'Menu' }).click()
   await p.locator('dialog.menu-sheet[open]').waitFor({ timeout: 5000 })
   const items = (await p.locator('dialog.menu-sheet[open] .menu-name').allInnerTexts()).join(', ')

@@ -1,7 +1,7 @@
 // "Ask Ola": the conversation, in a drawer beside the things (a sheet on a phone).
 // A request, then the run in plain-word steps (details on request), then the answer. Approvals,
 // errors and a lost connection are said out loud, never swallowed.
-import { createEffect, createResource, createSignal, For, onCleanup, Show } from 'solid-js'
+import { createEffect, createResource, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
 import type { CompareInfo, CompareResultLine, Fallback, Problem, Question, Step, Turn } from '../lib/types.ts'
 import { runSummary } from '../lib/conversation.ts'
@@ -24,6 +24,12 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     return !!t && (t.status === 'working' || t.status === 'sending')
   }
   const [now, setNow] = createSignal(Date.now())
+  // On a phone the line under the Lots of permissions switch is shown before the first request
+  // and right after the switch is flipped; once a conversation is under way it gives its room to
+  // the conversation (2026-11-18: with it, the conversation had about a quarter of the screen).
+  const [switchTouched, setSwitchTouched] = createSignal(false)
+  // The next request puts it away again.
+  createEffect(on(() => props.ola.state.turns.length, () => setSwitchTouched(false), { defer: true }))
   const tick = setInterval(() => working() && setNow(Date.now()), 1000)
   onCleanup(() => clearInterval(tick))
 
@@ -293,7 +299,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
           {/* One switch, not two look-alike buttons (OLA-127: tapping the chosen one seemed to do nothing),
               under its one name everywhere, "Lots of permissions" (OLA-139; one per runtime, OLA-142). */}
           <label class="lots-toggle" for="lots-switch">
-            <input id="lots-switch" type="checkbox" role="switch" checked={s().autonomy === 'go'} onChange={(e) => props.ola.setAutonomy(e.currentTarget.checked ? 'go' : 'ask')} />
+            <input id="lots-switch" type="checkbox" role="switch" checked={s().autonomy === 'go'} onChange={(e) => (setSwitchTouched(true), props.ola.setAutonomy(e.currentTarget.checked ? 'go' : 'ask'))} />
             {/* Drawn like Settings' switches: the knob moves across, the pill turns blue, Off becomes On. */}
             <span class="switch" aria-hidden="true" aria-checked={s().autonomy === 'go'}>
               <span class="switch-knob" />
@@ -301,7 +307,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             </span>
             <span class="lots-toggle-label">Lots of permissions</span>
           </label>
-          <span class="autonomy-hint">
+          <span class="autonomy-hint" classList={{ quiet: s().turns.length > 0 && !switchTouched() }}>
             {s().engine === 'claude' && s().claude?.enabled
               ? s().autonomy === 'ask'
                 ? 'Claude asks before it runs code or writes a file.'
