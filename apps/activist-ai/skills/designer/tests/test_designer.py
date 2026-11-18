@@ -87,5 +87,23 @@ case("a page renders in the bundled fonts with no outside request", {"Public San
 # sheet.py: two pages side by side in one picture.
 r = run(HERE / "scripts" / "sheet.py", d / "plain.html", d / "components.html", "--out", d / "sheet.png")
 case("sheet.py puts two directions side by side", r.returncode == 0 and (d / "sheet.png").stat().st_size > 20000, r.stdout + r.stderr)
+case("sheet.py keeps its working files hidden, so the project lists only the pages",
+     (d / ".sheet-parts" / "sheet.html").exists() and not list(d.glob("sheet*.html")) and not (d / "sheet-parts").exists())
+
+# sheet.py: one layout in two palettes is not two concepts (OLA-130); two layouts are.
+FACTS = "<h1>Lena Ortiz</h1><p>Associate Professor of Linguistics</p><p>Syntax, semantics and corpus methods. She teaches Syntax I and Research Methods.</p>" \
+        "<h2>Research</h2><p>Right dislocation, wh-placeholders and corpus annotation, across six languages and four corpora.</p><h2>Contact</h2><p>lena@example.org</p>"
+def concept(name, css):
+    (d / name).write_text(f"<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width'><title>{name}</title><style>{css}</style><main>{FACTS}</main>")
+concept("one-a.html", "body{margin:0;background:#fdf9f4;color:#261e12;font:17px/1.6 serif} main{max-width:720px;margin:64px auto;padding:0 24px} h1{font-size:44px}")
+concept("one-b.html", "body{margin:0;background:#f7f1ea;color:#2a1a10;font:17px/1.6 sans-serif} main{max-width:720px;margin:64px auto;padding:0 24px} h1{font-size:44px;color:#9f422b}")
+concept("poster.html", "body{margin:0;background:#16121c;color:#f7efdf;font:15px/1.5 sans-serif} main{padding:0} h1{font-size:150px;line-height:.9;margin:0;padding:48px;background:#ff4b1f;color:#16121c} "
+        "main>p,h2{margin:0 48px 8px auto;width:360px}")
+concept("split.html", "body{margin:0;background:#eef2f7;color:#0f1d2b;font:16px/1.6 sans-serif} main{display:grid;grid-template-columns:420px 1fr;min-height:100vh} "
+        "h1{grid-column:1;grid-row:1/9;margin:0;padding:64px 40px;font-size:40px;background:#0c60a3;color:#fff} main>*:not(h1){grid-column:2;padding:0 64px;margin:12px 0}")
+r = run(HERE / "scripts" / "sheet.py", d / "one-a.html", d / "one-b.html", "--out", d / "same.png")
+case("sheet.py says SAME LAYOUT for one page in two palettes, and exits 3", r.returncode == 3 and "SAME LAYOUT: A and B" in r.stdout, r.stdout[-400:] + r.stderr[-200:])
+r = run(HERE / "scripts" / "sheet.py", d / "one-a.html", d / "poster.html", d / "split.html", "--out", d / "differ.png")
+case("sheet.py passes three different layouts of the same facts", r.returncode == 0 and "SAME LAYOUT" not in r.stdout, r.stdout[-400:] + r.stderr[-200:])
 print(f"designer tests: {sum(results)} of {len(results)} passed")
 sys.exit(0 if all(results) else 1)

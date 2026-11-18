@@ -28,7 +28,9 @@ tenants' meeting:
    palette (`palette.py ... --css design/a.css`). About 60 lines of HTML and CSS each; no lorem.
 2. Compare them:
    `python3 /opt/ola/skills/designer/scripts/sheet.py design/a.html design/b.html design/c.html --out design/sheet.png --ask`
-   Then open `design/sheet.png` and look at it yourself.
+   If it prints `SAME LAYOUT`, those two are one layout in two palettes: rebuild one from another
+   layout (the list in `references/concepts.md`) and compare again. Then open `design/sheet.png` and
+   look at it yourself.
 3. Choose with these questions, in this order:
    - Which one has an idea you can name, taken from this subject?
    - In which is the first thing you see the right thing (the date, the finding, the button)?

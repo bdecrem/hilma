@@ -527,6 +527,73 @@ def u7_solve(work, truth, wrong=False):
     return "Updated prototype.html."
 
 
+# ------------------------------------------------------------------ u8: three design concepts (OLA-130)
+# The owner asked for "3 design concepts" for a personal homepage and got one page laid out the same way
+# in three palettes. Three real pages, each with the facts, on three different layouts.
+
+FIELDS = [("syntax and semantics", ["Syntax I", "Semantics", "Research Methods"]), ("urban ecology", ["Field Ecology", "Cities and Water", "Statistics for Ecologists"]),
+          ("labor history", ["The Working Day", "Unions and the State", "Reading the Archive"]), ("public health", ["Epidemiology I", "Health Policy", "Clinics and Communities"])]
+
+
+def u8_generate(work, seed, rng):
+    name = NAMES[(seed + 3) % len(NAMES)]
+    field, courses = rng.choice(FIELDS)
+    year = rng.randint(2004, 2016)
+    email = name.split()[0].lower() + "@example.org"
+    topics = rng.sample(["fieldwork with community groups", "a ten-year panel study", "open data for local councils", "a book in progress",
+                         "teaching with primary sources", "a public lecture series"], 3)
+    (Path(work) / "person.md").write_text(f"""# {name}
+
+Associate Professor of {field.title()}, Riverbend University.
+PhD {year}. Joined Riverbend in {year + 3}.
+Research: {field}; current work on {topics[0]}, {topics[1]} and {topics[2]}.
+Teaches: {', '.join(courses)}.
+Email: {email}. Office hours on Tuesdays.
+""")
+    return {"name": name, "facts": [name, courses[0], email]}
+
+
+def u8_pages(work):
+    return sorted(str(p.relative_to(work)) for p in Path(work).rglob("*.htm*") if not any(s.startswith(".") for s in p.relative_to(work).parts))
+
+
+def u8_check(work, truth, session, C):
+    import importlib.util
+    pages = u8_pages(work)
+    C.add("three_pages", len(pages) >= 3, "missed_items", f"pages: {pages[:6]}")
+    if len(pages) < 3:
+        C.skip(["each_page_has_the_facts", "three_different_layouts"], "stopped_early")
+        return
+    shots, lost = [], {}
+    for i, rel in enumerate(pages[:4]):
+        shot = str(Path(work) / f".u8-{i}.png")
+        r = page(work, {"path": rel, "width": 1280, "shot": shot})
+        missing = has_all(r.get("text") or "", truth["facts"])
+        if not r.get("ok") or missing:
+            lost[rel] = missing or "did not load"
+        if Path(shot).exists():
+            shots.append((rel, shot))
+    C.add("each_page_has_the_facts", not lost, "missed_items", str(lost)[:200])
+    spec = importlib.util.spec_from_file_location("sheet", HERE.parent.parent / "skills/designer/scripts/sheet.py")
+    sheet = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sheet)
+    same = sheet.same_layouts(shots) if len(shots) >= 3 else [("?", "?", "no pictures")]
+    C.add("three_different_layouts", not same, "design_slop", str(same)[:200])
+
+
+def u8_solve(work, truth, wrong=False):
+    facts = f"<h1>{truth['name']}</h1><p>Associate Professor. Teaches {truth['facts'][1]}.</p><h2>Research</h2><p>Fieldwork, a panel study and open data, over many years.</p><h2>Contact</h2><p>{truth['facts'][2]}</p>"
+    looks = ["body{margin:0;background:#fdf9f4;color:#261e12;font:17px/1.6 serif} main{max-width:720px;margin:64px auto;padding:0 24px} h1{font-size:44px}",
+             "body{margin:0;background:#16121c;color:#f7efdf;font:15px/1.5 sans-serif} h1{font-size:150px;line-height:.9;margin:0;padding:48px;background:#ff4b1f;color:#16121c} main>p,h2{margin:0 48px 8px auto;width:360px}",
+             "body{margin:0;background:#eef2f7;color:#0f1d2b;font:16px/1.6 sans-serif} main{display:grid;grid-template-columns:420px 1fr;min-height:100vh} h1{grid-column:1;grid-row:1/9;margin:0;padding:64px 40px;font-size:40px;background:#0c60a3;color:#fff} main>*:not(h1){grid-column:2;padding:0 64px;margin:12px 0}"]
+    if wrong:
+        looks = [looks[0], looks[0].replace("#fdf9f4", "#f7f1ea").replace("serif", "sans-serif"), looks[0].replace("#261e12", "#0c2a4a")]
+    (Path(work) / "design").mkdir(exist_ok=True)
+    for i, css in enumerate(looks):
+        (Path(work) / "design" / f"concept-{'abc'[i]}.html").write_text(f"<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width'><title>Concept {'ABC'[i]}</title><style>{css}</style><main>{facts}</main>")
+    return "Three concepts: design/concept-a.html, design/concept-b.html, design/concept-c.html."
+
+
 def _png(w, h):
     import struct, zlib
     raw = b"".join(b"\x00" + b"\xff\xff\xff" * w for _ in range(h))
@@ -550,6 +617,7 @@ INSTR = {
                         "Make it a clickable prototype I can open on my laptop (prototype.html), and save a picture of each screen.",
     "u7-app-unfinished": "prototype.html is the phone app for our meeting notes. People who tried it say it feels unfinished, like a web page, not a real app. "
                          "Fix the design so it feels like a normal, finished iPhone app. Keep our notes in it.",
+    "u8-three-concepts": "person.md has what we found about this professor. Now make a nice new personal homepage for her and give me 3 design concepts.",
 }
 
 TASKS = {
@@ -560,6 +628,7 @@ TASKS = {
     "u5-signup-flow": dict(skill="designer", level="hard", outputs=["index.html"], generate=u5_generate, check=u5_check, solve=lambda w, t: u5_solve(w, t), wrong=W(u5_solve)),
     "u6-phone-screens": dict(skill="app-designer", level="hard", outputs=["prototype.html"], generate=u6_generate, check=u6_check, solve=lambda w, t: u6_solve(w, t), wrong=W(u6_solve)),
     "u7-app-unfinished": dict(skill="app-designer", level="medium", outputs=["prototype.html"], generate=u7_generate, check=u7_check, solve=lambda w, t: u7_solve(w, t), wrong=W(u7_solve)),
+    "u8-three-concepts": dict(skill="designer", level="medium", outputs=[], generate=u8_generate, check=u8_check, solve=lambda w, t: u8_solve(w, t), wrong=W(u8_solve)),
 }
 for k, v in TASKS.items():
     v["family"] = "skills"

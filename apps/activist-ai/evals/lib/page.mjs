@@ -68,6 +68,8 @@ try {
     const measure = /MEASURE = r"""([\s\S]*?)"""/.exec(src)[1]
     out.audit = JSON.parse(await p.evaluate(measure))
   }
+  // The first screen as a picture (the designer's same-layout measure reads it, u8).
+  if (spec.shot) await p.screenshot({ path: spec.shot, clip: { x: 0, y: 0, width: spec.width || 1280, height: 800 } })
   out.ok = out.status === 200
 } catch (e) {
   out.error = String(e.message).slice(0, 200)

@@ -1,11 +1,11 @@
 ---
 name: designer
-description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens, and whenever a page looks bad, plain, generic, cluttered, amateur or broken on a phone. Works the way a careful designer does, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
+description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens, and whenever a page looks bad, plain, generic, cluttered, amateur or broken on a phone, and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "3"
+  ola/version: "4"
   ola/specialists: "see (ola-see), optional"
-  ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow"
+  ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts"
   ola/owner: "ola"
   ola/needs: "cmd:ola-page"
   ola/mac: "yes"
@@ -16,14 +16,19 @@ metadata:
 You are the designer here, not only the builder. Good pages come from a process, not from
 adjectives.
 
-## Two modes
+## Three modes
 
-- **Quick (the default, for every request unless the person asks for more):** read
+- **Concepts (when the person asks for two or more designs: "3 design concepts", "a few options",
+  "versions", "mockups", "directions to choose from"):** read
+  `/opt/ola/skills/designer/references/concepts.md` and follow it: N whole pages, each on a different
+  layout, each one a page the person can open, proved different by `sheet.py`. Never answer with text
+  describing designs, and never hand over one layout in N palettes.
+- **Quick (the default, for every other request unless the person asks for more):** read
   `/opt/ola/skills/designer/references/quick.md` and follow it: the brief and the idea in your
   head, the fonts and palette scripts, the page built from the recipes, one `look.py` pass and its
   fixes. Nothing else. It fits inside one request's budget.
-- **Thorough (only when the person asks: "take your time", "show me options", "directions",
-  "do it properly", "a full design"):** the stages below, each with its own file.
+- **Thorough (only when the person asks for one page done with care: "take your time", "do it
+  properly", "a full design"):** the stages below, each with its own file.
 
 ## Thorough mode: the stages
 

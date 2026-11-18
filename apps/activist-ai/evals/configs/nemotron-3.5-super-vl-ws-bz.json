@@ -1,0 +1,12 @@
+{
+  "name": "nemotron-3.5-super-vl-ws-bz",
+  "harness": "opencode-ws",
+  "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+  "serving": "Together.ai serverless, through the evals' own gateway/server.mjs on the Mac mini (127.0.0.1:4398, model name general, and see = meta-models/Muse-Glimmer-30B for ola-see; started with OLA_EVALS_ROOT=~/ola-bz/apps/activist-ai/evals start-gateway-ws.sh bzn 4398 nvidia/NVIDIA-Nemotron-3.5-Super-VL 3000000 see=meta-models/Muse-Glimmer-30B), reached from a sealed workspace VM through its door. The concepts runs of OLA-130.",
+  "machine": "Mac mini (CASBS), Apple container, image ola-workspace:2.3.0-31, 4 CPUs, 6 GB, no network",
+  "ola_home": "~/ola-bz/apps/activist-ai/evals/home-bzn",
+  "gateway_db": "~/ola-bz/apps/activist-ai/evals/state/bzn-gateway.db",
+  "slots": ["bz-n1"],
+  "context": 131072,
+  "max_output": 16000
+}
