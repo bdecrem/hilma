@@ -223,7 +223,7 @@ export function CompareSheet(props: { open: boolean; info: CompareInfo | null; c
         <h2 id="compare-title" class="sheet-title">
           Compare with Claude
         </h2>
-        <Show when={id() && problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
+        <Show when={id() ? problem() : null}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
         {/* Not started yet: the choice. A refusal is said under the buttons, where the tap was. */}
         <Show when={!id()}>
           <Show

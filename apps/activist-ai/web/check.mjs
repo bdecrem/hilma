@@ -98,6 +98,14 @@ async function send(page, text) {
   }
 }
 const lastTurn = (page) => page.locator('.drawer .turn').last()
+// Opens the project on its conversation at any width: a laptop shows the things and an Ask Ola bar,
+// a phone opens on the conversation itself (OLA-128), where the things sit behind a tab.
+async function openConversation(page, url) {
+  await page.goto(`${url}#/`)
+  await page.locator('.drawer.open #ask-input, .thing').locator('visible=true').first().waitFor({ timeout: 30_000 })
+  if (!(await page.locator('.drawer.open').count())) await page.getByRole('button', { name: 'Ask Ola' }).click()
+  await page.waitForSelector('.drawer.open #ask-input')
+}
 const waitDone = (page, ms = 60_000) => page.waitForFunction(() => {
   const t = [...document.querySelectorAll('.drawer .turn')].pop()
   return t && ['done', 'failed', 'stopped'].includes(t.dataset.status)
@@ -595,8 +603,9 @@ for (const [engine, launcher] of [['Chromium', null], ['WebKit', webkit]]) {
     await p3.waitForSelector('.thing')
     assert(await p3.getByRole('link', { name: 'What Ola has of yours' }).isVisible(), 'no row of links on a laptop')
     assert(!(await p3.getByRole('tab').count()), 'tabs on a laptop')
+    // The list of sources arrives after the things: wait for it, do not read the empty section.
+    await p3.locator('.sources', { hasText: 'example.org/coastal-plans' }).waitFor({ timeout: 10_000 }).catch(() => assert(false, 'no Sources on a laptop'))
     await p3.locator('.sources').scrollIntoViewIfNeeded()
-    assert(/example\.org\/coastal-plans/.test(await p3.locator('.sources').innerText()), 'no Sources on a laptop')
     await p3.evaluate(() => window.scrollTo(0, 0))
     await snap(p3, 'laptop-1-home')
     await p3.getByRole('button', { name: 'Ask Ola' }).click()
@@ -1238,9 +1247,7 @@ async function compareChecks(engine, label) {
   const sheet = () => pg.locator('dialog.compare-sheet[open]')
   const ours = /\b(twin|twins|eval|evals|judge|judged)\b/i
   const openDrawer = async () => {
-    await pg.goto(`${d.url}#/`)
-    await pg.waitForSelector('.thing')
-    await pg.getByRole('button', { name: 'Ask Ola' }).click()
+    await openConversation(pg, d.url)
     await pg.waitForTimeout(300)
   }
   const askAndWait = async (text) => {
@@ -1323,9 +1330,7 @@ async function compareChecks(engine, label) {
       const phone = await b.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, isMobile: true })
       const mp = await phone.newPage()
       try {
-        await mp.goto(`${d.url}#/`)
-        await mp.waitForSelector('.thing')
-        await mp.getByRole('button', { name: 'Ask Ola' }).click()
+        await openConversation(mp, d.url)
         await mp.fill('#ask-input', 'Count survey.csv a third time.')
         await mp.press('#ask-input', 'Enter')
         await waitDone(mp)
