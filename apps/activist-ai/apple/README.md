@@ -426,6 +426,50 @@ own Tailscale address (the request times out), so the simulator, which shares th
 used loopback: that proves pairing, the relay and the app, not the phone's Tailscale route, which is
 the same route the mini used.
 
+## Where Ola works, on the phone (2026-11-17)
+
+Bart: "the same 'where Ola works' switch from the macOS app should also be in the iPhone app - so
+not just the mirroring of the Mac app." Settings, **Where Ola works** (`iOS/PhoneWhereViews.swift`,
+`OlaKit/PhoneWhere.swift`):
+
+- **Through my Mac**: the pairing above, unchanged. The phone shows whatever the Mac is doing,
+  "On this Mac" sessions included.
+- **On the Ola machine**: the phone works with Bart's opencode on the machine directly (the same
+  `~/ola-bart` server, so the same sessions the Mac sees in its own "On the Ola machine"), with the
+  Mac off. It signs in in the app with an Ola name and password (`AccountAPI.login`, kind `phone`; the
+  server lists it under Your devices), no passkey step. An account that asks for its passkey too is
+  told to turn that off on the web (the phone build has no passkey permission yet).
+
+How the phone reaches the machine: **over Tailscale, through the machine's phone door**
+(`../bart/phone-door.mjs`, port 4312 on the Tailscale address, started by `cx.ola.bart` beside
+opencode and the model forwarder). The door lets a request through only with an Ola device key whose
+person is on its list (`OLA_BART_PHONE_HANDLES`, default `bart`), checked with the front desk's
+`/api/device/me` (kept a minute, so a phone removed under Your devices or signed out stops within a
+minute, open event streams too), only on the relay's route list, and adds opencode's password, which
+the phone never holds. Why not through `app.ola.cx`: Bart's opencode runs with his full privileges on
+the machine (a shell as `admin`); putting it behind the public address would make his account
+password the only thing between the internet and that shell. The Mac's path is Tailscale plus the
+machine password; the phone's is Tailscale plus a revocable sign-in, so nothing new is public and no
+route skips the front desk's sign-in. When Tailscale is off on the phone, the sign-in screen and the
+session list say "Turn on Tailscale on this phone." (`PhoneWhere.tailscaleOn`: a 100.64.0.0/10
+address on any interface).
+
+**Defaults:** a phone paired before this version stays "Through my Mac" (`PhoneWhere.mode` is `mac`
+when a pairing is saved and nothing was chosen). A fresh install's first screen offers both: "Pair
+with your Mac" and "Sign in to the Ola machine", each with a link to the other. **Switching** attaches
+the store to the other place at once (`OlaStore.attach(_:orSaved: false)`), so the session list
+reloads from there; choosing a place not set up yet opens its pairing or sign-in in a sheet and
+switches when that succeeds. Signing out of the machine goes back to the Mac if paired; forgetting the
+Mac goes to the machine if signed in. Notifications and Fallback to Claude stay Mac-only and are
+hidden on the machine.
+
+Checks: `swift test --filter PhoneWhereTests`. In the simulator, `-OlaWhere mac|machine|none`, the
+sign-in from `SIMCTL_CHILD_OLA_SIGNIN_HANDLE`/`_PASSWORD` (a made-up staging account, never Bart's),
+`SIMCTL_CHILD_OLA_MACHINE_DOOR` for a scratch door, `-OlaAsk "<request>"` (a new session with it) and
+`-OlaSwitchAfter <s> <mac|machine>` (the Settings switch). Proved 2026-11-17 against a scratch door
+on the mini admitting only the made-up account, in front of `~/ola-bart`, and a headless relay on
+loopback for the Mac side: screens in `~/Desktop/Ola/phone-modes/`.
+
 **Without Tailscale on the phone (a later version, design note only):** a small relay on the Ola
 machine with a public HTTPS name; the Mac app keeps one outbound connection to it, the phone another;
 the two do an end-to-end key exchange bound to the pairing code (for example Noise or an X25519

@@ -74,6 +74,17 @@ and pasted into the Mac app's Settings (it goes into the Keychain). If either pr
 stops both and launchd starts the pair again. Proved from the iMac: `/v1/models` through port 4311 is
 401 without the token and 200 with it.
 
+## The phone door, for the iPhone's "On the Ola machine" (2026-11-17)
+
+`phone-door.mjs`, the third process of the same job, on the Tailscale address only, port 4312
+(`OLA_BART_PHONE_PORT`): the iPhone app signed in with an Ola name and password works with this
+opencode directly, Mac off. It needs `Authorization: Bearer <Ola device key>`, asks the front desk
+(`https://app.ola.cx/api/device/me`, kept a minute) whose key it is, admits only the handles in
+`OLA_BART_PHONE_HANDLES` (default `bart`; 403 for anyone else), forwards only the routes the apps use
+and adds `OPENCODE_PASSWORD` itself. Eight wrong keys from one address in a minute: a minute's wait.
+`status` probes it (401 without a key). Why this and not the public address: `../apple/README.md`,
+"Where Ola works, on the phone".
+
 ## Web search (2026-11-17)
 
 opencode's own web search tool has no provider in this setup: it waits about a minute and ends

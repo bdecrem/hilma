@@ -30,6 +30,8 @@ PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/ola/bart.log"
 PORT="${OLA_BART_PORT:-4310}"
 FPORT="${OLA_BART_MODEL_PORT:-4311}"              # the forwarder to the gateway, for "On this Mac"
+DPORT="${OLA_BART_PHONE_PORT:-4312}"              # the phone's door (phone-door.mjs), for the iPhone's "On the Ola machine"
+PHONE_HANDLES="${OLA_BART_PHONE_HANDLES:-bart}"   # the Ola accounts whose phones may use it
 HOST="${OLA_BART_HOST:-$(tailscale ip -4 2>/dev/null | head -1 || true)}"
 [ -n "$HOST" ] || HOST="$(/Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4 2>/dev/null | head -1 || true)"
 UID_="$(id -u)"
@@ -291,18 +293,22 @@ export XDG_CONFIG_HOME="$STATE/config" XDG_DATA_HOME="$STATE/data" XDG_STATE_HOM
 export PATH="$STATE/bin/web:\$PATH" OLA_WORK="$PROJECT" OLA_LIB="$STATE/bin/web" OLA_GATEWAY_HOSTPORT=127.0.0.1:4180
 export OLA_PAGE_CHROMIUM="$(chromium)"
 cd "$PROJECT"
-# Two processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
-# the gateway) and opencode. If either stops, both stop, and launchd starts the pair again.
+# Three processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
+# the gateway), the phone's door (the iPhone's "On the Ola machine", signed in with an Ola account)
+# and opencode. If one stops, all stop, and launchd starts them again.
 node "$STATE/bin/forward.mjs" "$HOST" "$FPORT" 4180 &
 fwd=\$!
+OLA_BART_PHONE_HANDLES="$PHONE_HANDLES" node "$STATE/bin/phone-door.mjs" "$HOST" "$DPORT" "$HOST:$PORT" &
+door=\$!
 "$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT" &
 oc=\$!
-trap 'kill \$fwd \$oc 2>/dev/null' TERM INT EXIT
+trap 'kill \$fwd \$door \$oc 2>/dev/null' TERM INT EXIT
 # macOS's bash 3.2 has no wait -n.
-while kill -0 \$fwd 2>/dev/null && kill -0 \$oc 2>/dev/null; do sleep 2; done
+while kill -0 \$fwd 2>/dev/null && kill -0 \$door 2>/dev/null && kill -0 \$oc 2>/dev/null; do sleep 2; done
 exit 1
 SH
   cp "$HERE/forward.mjs" "$STATE/bin/forward.mjs"
+  cp "$HERE/phone-door.mjs" "$STATE/bin/phone-door.mjs"
   chmod 700 "$STATE/bin/run.sh"
 }
 
@@ -332,6 +338,7 @@ probe() {
   code_yes=$(curl -s -o /dev/null -m 5 -w '%{http_code}' -K - <<<"user = \"opencode:$pw\"
 url = \"http://$HOST:$PORT/api/session\"" || true)
   echo "http://$HOST:$PORT  without the password: $code_no  with it: $code_yes"
+  echo "phone door http://$HOST:$DPORT  without a key: $(curl -s -o /dev/null -m 5 -w '%{http_code}' "http://$HOST:$DPORT/api/session" || true)"
 }
 
 case "${1:-}" in

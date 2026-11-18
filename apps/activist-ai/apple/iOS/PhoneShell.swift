@@ -129,6 +129,8 @@ struct SessionsHome: View {
     List {
       if case .lost = store.connection {
         Section { NotReachable(store: store) }
+      } else if store.connection == .refused, store.onMachine {
+        Section { SignedOutRow(store: store) }
       }
       ForEach(shown) { s in
         Button { open(s.id) } label: {
@@ -153,7 +155,7 @@ struct SessionsHome: View {
       if store.sessions.isEmpty {
         switch store.connection {
         case .connecting: ProgressView("Loading")
-        case .open: ContentUnavailableView { Label("No sessions yet", systemImage: "bubble.left.and.text.bubble.right") } description: { Text("Start one and Ola gets to work on your Mac.") } actions: { Button("New Session") { store.newSession(); open("") }.buttonStyle(.borderedProminent) }
+        case .open: ContentUnavailableView { Label("No sessions yet", systemImage: "bubble.left.and.text.bubble.right") } description: { Text(store.onMachine ? "Start one and Ola gets to work on the Ola machine." : "Start one and Ola gets to work on your Mac.") } actions: { Button("New Session") { store.newSession(); open("") }.buttonStyle(.borderedProminent) }
         default: EmptyView()
         }
       } else if shown.isEmpty {
@@ -184,7 +186,7 @@ struct SessionsHome: View {
     .confirmationDialog("Delete \u{201C}\(deleting?.title ?? "")\u{201D}?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
       Button("Delete", role: .destructive) { if let s = deleting { Task { await store.delete(s.id) } } }
     } message: {
-      Text("This deletes it on your Mac too. Files stay.")
+      Text(store.onMachine ? "This deletes it on the Ola machine, for your Mac too. Files stay." : "This deletes it on your Mac too. Files stay.")
     }
   }
 }
@@ -228,15 +230,34 @@ struct NotReachable: View {
   var store: OlaStore
   var body: some View {
     HStack(spacing: 10) {
-      Image(systemName: "desktopcomputer.trianglebadge.exclamationmark").foregroundStyle(Ola.vermilionText)
+      Image(systemName: store.onMachine ? "exclamationmark.triangle" : "desktopcomputer.trianglebadge.exclamationmark").foregroundStyle(Ola.vermilionText)
       VStack(alignment: .leading, spacing: 2) {
-        Text("Your Mac is not reachable").font(.subheadline.weight(.semibold))
-        Text("Ola on your phone works through the Mac app.").font(.footnote).foregroundStyle(Ola.ink2)
+        Text(store.onMachine ? "The Ola machine is not reachable" : "Your Mac is not reachable").font(.subheadline.weight(.semibold))
+        Text(store.onMachine ? PhoneWhere.unreachableLine(tailscaleOn: PhoneWhere.tailscaleOn || PhoneWhereState.shared.fixture) : "Ola on your phone works through the Mac app.").font(.footnote).foregroundStyle(Ola.ink2)
       }
       Spacer()
       Button("Try Again") { store.reconnect() }.buttonStyle(.bordered).controlSize(.small)
     }
     .padding(.vertical, 4)
+  }
+}
+
+/// On the Ola machine, the phone's key no longer works (signed out, or removed under Your devices).
+struct SignedOutRow: View {
+  var store: OlaStore
+  @State private var signingIn = false
+  var body: some View {
+    HStack(spacing: 10) {
+      Image(systemName: "person.crop.circle.badge.exclamationmark").foregroundStyle(Ola.vermilionText)
+      VStack(alignment: .leading, spacing: 2) {
+        Text("Signed out on this phone").font(.subheadline.weight(.semibold))
+        Text("Sign in again to keep working on the Ola machine.").font(.footnote).foregroundStyle(Ola.ink2)
+      }
+      Spacer()
+      Button("Sign In") { signingIn = true }.buttonStyle(.bordered).controlSize(.small)
+    }
+    .padding(.vertical, 4)
+    .sheet(isPresented: $signingIn) { WhereSetupSheet(mode: .machine, store: store) }
   }
 }
 
@@ -251,6 +272,8 @@ struct SettingsScreen: View {
   @State private var pairAgain = false
   @State private var forgetting = false
   @State private var signingIn = false
+  @State private var signingOut = false
+  @Bindable private var place = PhoneWhereState.shared
 
   var macState: String {
     switch store.connection {
@@ -262,18 +285,37 @@ struct SettingsScreen: View {
     }
   }
 
+  var machineState: String {
+    switch store.connection {
+    case .open: return "Connected"
+    case .connecting: return "Connecting"
+    case .lost: return !PhoneWhere.tailscaleOn && !place.fixture ? "Tailscale is off on this phone" : "Not answering"
+    case .refused: return "Signed out"
+    case .notSetUp: return "Not signed in"
+    }
+  }
+
   var body: some View {
     Form {
-      Section("My Mac") {
-        LabeledContent("Mac", value: store.config?.macName ?? "Not paired")
-        LabeledContent("Status", value: macState)
-        if let mode = store.macHello?["mode"].string {
-          LabeledContent("Ola works", value: mode == "mac" ? "On the Mac" : "On the Ola machine")
+      WhereSection(store: store)
+      if place.mode == .machine {
+        Section("Ola machine") {
+          LabeledContent("Signed in as", value: place.shownName)
+          LabeledContent("Status", value: machineState)
+          Button("Sign Out", role: .destructive) { signingOut = true }
         }
-        Button("Pair Again") { pairAgain = true }
-        Button("Forget This Mac", role: .destructive) { forgetting = true }
+      } else {
+        Section("My Mac") {
+          LabeledContent("Mac", value: store.config?.macName ?? "Not paired")
+          LabeledContent("Status", value: macState)
+          if let mode = store.macHello?["mode"].string {
+            LabeledContent("Ola works", value: mode == "mac" ? "On the Mac" : "On the Ola machine")
+          }
+          Button("Pair Again") { pairAgain = true }
+          Button("Forget This Mac", role: .destructive) { forgetting = true }
+        }
       }
-      Section {
+      if place.mode != .machine { Section {
         if push.allowed && push.token != nil {
           Toggle("Finished", isOn: Binding(get: { push.finished }, set: { push.finished = $0 }))
           Toggle("Needs me", isOn: Binding(get: { push.needs }, set: { push.needs = $0 }))
@@ -282,7 +324,7 @@ struct SettingsScreen: View {
         } else {
           Text("Not available in this build yet.").foregroundStyle(Ola.ink2)
         }
-      } header: { Text("Notifications") } footer: { Text("They come only while Ola is open on your Mac.") }
+      } header: { Text("Notifications") } footer: { Text("They come only while Ola is open on your Mac.") } }
       Section("Working animation") {
         HStack(spacing: 14) {
           WorkingFigure(turn: Turn(id: "preview-\(working)", request: "", at: .now, status: .working), size: 56)
@@ -307,9 +349,11 @@ struct SettingsScreen: View {
         }
         .pickerStyle(.segmented)
       }
-      Section {
-        LabeledContent("Fallback to Claude", value: store.macHello?["claude"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown")
-      } footer: { Text("Set on your Mac.") }
+      if place.mode != .machine {
+        Section {
+          LabeledContent("Fallback to Claude", value: store.macHello?["claude"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown")
+        } footer: { Text("Set on your Mac.") }
+      }
       Section("Admin") {
         if admin.signedIn, let t = admin.token {
           LabeledContent("Signed in", value: t.user)
@@ -334,9 +378,13 @@ struct SettingsScreen: View {
     .task { await store.loadMacHello(); await push.refreshAllowed() }
     .sheet(isPresented: $pairAgain) { PairScreen(store: store) { pairAgain = false } }
     .sheet(isPresented: $signingIn) { AdminSignIn { signingIn = false } }
+    .sheet(item: $place.setup) { m in WhereSetupSheet(mode: m, store: store) }
     .confirmationDialog("Forget this Mac?", isPresented: $forgetting, titleVisibility: .visible) {
-      Button("Forget", role: .destructive) { store.forget() }
+      Button("Forget", role: .destructive) { place.forgetMac(store: store) }
     } message: { Text("You can pair again later.") }
+    .confirmationDialog("Sign out of the Ola machine?", isPresented: $signingOut, titleVisibility: .visible) {
+      Button("Sign Out", role: .destructive) { Task { await place.signOut(store: store) } }
+    } message: { Text(PhoneWhere.paired ? "Your phone goes back to working through your Mac." : "You can sign in again later.") }
   }
 }
 

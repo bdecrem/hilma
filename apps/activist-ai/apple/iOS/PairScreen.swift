@@ -6,6 +6,8 @@ import VisionKit
 /// through the Mac, and holds only the pairing secret.
 struct PairScreen: View {
   var store: OlaStore
+  /// "Sign in to the Ola machine instead", on the first screen.
+  var other: (() -> Void)? = nil
   var onDone: () -> Void = {}
   @State private var typed = ""
   @State private var scanning = false
@@ -35,6 +37,9 @@ struct PairScreen: View {
           Button("Pair") { pair(typed) }.buttonStyle(OlaButton(kind: typed.isEmpty ? .ghost : .primary)).disabled(typed.isEmpty || busy)
         }
         if let problem { Text(problem).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true) }
+        if let other {
+          Button("Sign in to the Ola machine instead", action: other).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.blue).padding(.top, 8)
+        }
       }
       .padding(24)
     }
@@ -59,6 +64,7 @@ struct PairScreen: View {
     Task {
       do {
         try await store.connect(code.config)
+        PhoneWhereState.shared.paired()
         onDone()
       } catch OlaError.unauthorized {
         problem = "Your Mac did not accept this code. Pair again on the Mac."

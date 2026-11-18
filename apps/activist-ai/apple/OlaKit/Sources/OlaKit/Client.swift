@@ -8,11 +8,15 @@ public struct ServerConfig: Equatable, Sendable {
   /// to the Mac app's relay, which adds the real credentials.
   public var viaMac: Bool
   public var macName: String?
-  public init(url: URL, password: String, viaMac: Bool = false, macName: String? = nil) {
+  /// The phone on the Ola machine directly (PhoneWhere): `password` is this phone's Ola device key,
+  /// sent as a Bearer token to the machine's phone door (bart/phone-door.mjs), which adds opencode's.
+  public var account: Bool
+  public init(url: URL, password: String, viaMac: Bool = false, macName: String? = nil, account: Bool = false) {
     self.url = url
     self.password = password
     self.viaMac = viaMac
     self.macName = macName
+    self.account = account
   }
   /// The mini's Tailscale name. Its address, http://100.95.51.98:4310, answers too, but App
   /// Transport Security cannot be told to allow plain HTTP to an IP address: in the simulator the
@@ -121,7 +125,7 @@ public final class OpenCodeClient: @unchecked Sendable {
   }
 
   private var authorization: String {
-    config.viaMac ? "Bearer \(config.password)" : "Basic " + Data("opencode:\(config.password)".utf8).base64EncodedString()
+    config.viaMac || config.account ? "Bearer \(config.password)" : "Basic " + Data("opencode:\(config.password)".utf8).base64EncodedString()
   }
 
   /// The bytes of a GET (the Mac relay's own routes).
@@ -291,7 +295,7 @@ public final class OpenCodeClient: @unchecked Sendable {
   /// opencode's events as they happen (`GET /api/event`, server-sent events). Ends or throws when
   /// the connection goes; the caller reconnects. `onHeartbeat` sees every line, events or not.
   public func events(onHeartbeat: @escaping @Sendable () -> Void = {}) -> AsyncThrowingStream<JSON, Error> {
-    let req = request("GET", "/api/event", timeout: config.viaMac ? 45 : 75)
+    let req = request("GET", "/api/event", timeout: config.viaMac || config.account ? 45 : 75)
     let session = streamSession
     return AsyncThrowingStream { continuation in
       let task = Task {

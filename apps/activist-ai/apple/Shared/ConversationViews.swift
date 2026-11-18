@@ -654,6 +654,11 @@ struct ConnectionBar: View {
       } action: {
         Button("Try Now") { store.reconnect() }.buttonStyle(OlaButton(kind: .onRoom))
       }
+    case .refused where store.config?.account == true:
+      // The phone on the Ola machine with its own sign-in (PhoneWhere): its key stopped working.
+      bar(icon: "lock") {
+        (Text("Signed out on this phone. ").font(OlaFont.sans(Metrics.ui, .semibold)) + Text("Sign in again from the session list.").font(OlaFont.sans(Metrics.ui)))
+      } action: { EmptyView() }
     case .refused:
       bar(icon: "lock") {
         (Text("The machine refused the saved password. ").font(OlaFont.sans(Metrics.ui, .semibold)) + Text("Connect again with the new one.").font(OlaFont.sans(Metrics.ui)))

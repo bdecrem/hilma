@@ -15,10 +15,20 @@ struct OlaPhoneApp: App {
     #endif
     // `-OlaFixture <name>`: made-up sessions, no network (for simulator screenshots).
     let args = ProcessInfo.processInfo.arguments
+    // `-OlaWhere mac|machine|none`: start in that place, as the Settings switch would leave it.
+    if let i = args.firstIndex(of: "-OlaWhere"), i + 1 < args.count {
+      PhoneWhere.mode = PhoneMode(rawValue: args[i + 1])
+      #if DEBUG
+      // A fresh install, for the first screen in the simulator.
+      if args[i + 1] == "none", !args.contains("-OlaFixture") { Credentials.forget(); AccountKeeper.forget() }
+      #endif
+      PhoneWhereState.shared.set(PhoneWhere.mode)
+    }
     if let i = args.firstIndex(of: "-OlaFixture"), i + 1 < args.count {
       _store = State(initialValue: OlaStore(fixture: Fixture.named(args[i + 1])))
     } else {
-      _store = State(initialValue: OlaStore(config: Credentials.load()))
+      // The place this phone works in: its Mac (the pairing), or the Ola machine (the sign-in).
+      _store = State(initialValue: OlaStore(config: PhoneWhere.mode.flatMap(PhoneWhere.config)))
     }
   }
 
@@ -31,9 +41,16 @@ struct OlaPhoneApp: App {
           // (SIMCTL_CHILD_OLA_PASSWORD), never on a command line, and goes into the Keychain.
           let env = ProcessInfo.processInfo.environment
           if let code = env["OLA_PAIR"].flatMap(PairingCode.parse) {
-            Task { try? await store.connect(code.config) }
+            Task { try? await store.connect(code.config); PhoneWhereState.shared.paired() }
             return
           }
+          // Signing in to the Ola machine as a made-up account: the name and the password arrive
+          // in the environment (SIMCTL_CHILD_OLA_SIGNIN_*), never on a command line, and the
+          // sign-in goes the way the screen's Sign In button sends it.
+          if let h = env["OLA_SIGNIN_HANDLE"], let pw = env["OLA_SIGNIN_PASSWORD"], !PhoneWhere.signedIn {
+            Task { _ = await PhoneWhereState.shared.signIn(handle: h, password: pw, store: store) }
+          }
+          DebugHooks.run(store)
           #endif
           store.start()
         }
@@ -56,7 +73,7 @@ struct PhoneRoot: View {
   var body: some View {
     Group {
       if store.connection == .notSetUp {
-        PairScreen(store: store)
+        PhoneStart(store: store)
       } else {
         PhoneShell(store: store, path: $path)
       }
@@ -73,6 +90,8 @@ struct PhoneRoot: View {
     .onChange(of: store.connection) { _, c in
       if c == .open, store.config?.viaMac == true, !push.asked { askNotifications = true }
     }
+    // Notifications come through the Mac: not asked on the Ola machine.
+    .onChange(of: store.config?.account) { _, a in if a == true { askNotifications = false } }
     .alert("Get a notification when Ola is done or needs your OK?", isPresented: $askNotifications) {
       Button("Allow") { Task { await push.requestPermission() } }
       Button("Not now", role: .cancel) { push.asked = true }
@@ -88,8 +107,42 @@ struct PhoneRoot: View {
       // `-OlaOpenFirst`: open the newest session once the list arrives (a live screenshot).
       if let id, path.isEmpty, ProcessInfo.processInfo.arguments.contains("-OlaOpenFirst") { path = [id] }
     }
+    .onChange(of: store.selectedID) { _, id in
+      // `-OlaAsk`: the conversation the hook started is on screen.
+      if let id, ProcessInfo.processInfo.arguments.contains("-OlaAsk") { path = [id] }
+    }
   }
 }
+
+#if DEBUG
+/// Launch hooks for driving the app headlessly in the simulator (there is no window to tap):
+///   -OlaAsk "<request>"          once connected, a new session with that request
+///   -OlaSwitchAfter <s> <mode>   after s seconds, the Settings switch to mac or machine
+@MainActor
+enum DebugHooks {
+  static func run(_ store: OlaStore) {
+    let a = ProcessInfo.processInfo.arguments
+    if let i = a.firstIndex(of: "-OlaAsk"), i + 1 < a.count {
+      let text = a[i + 1]
+      Task {
+        // With a sign-in in the environment, the request is for the Ola machine: wait for it.
+        let machine = ProcessInfo.processInfo.environment["OLA_SIGNIN_HANDLE"] != nil
+        @MainActor func ready() -> Bool { store.connection == .open && (!machine || store.config?.account == true) }
+        for _ in 0..<120 where !ready() { try? await Task.sleep(nanoseconds: 500_000_000) }
+        guard ready() else { return }
+        store.newSession()
+        await store.send(text)
+      }
+    }
+    if let i = a.firstIndex(of: "-OlaSwitchAfter"), i + 2 < a.count, let s = Double(a[i + 1]), let m = PhoneMode(rawValue: a[i + 2]) {
+      Task {
+        try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000))
+        PhoneWhereState.shared.choose(m, store: store)
+      }
+    }
+  }
+}
+#endif
 
 // MARK: sessions, in the room
 
