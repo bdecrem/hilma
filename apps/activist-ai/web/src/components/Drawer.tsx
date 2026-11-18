@@ -29,7 +29,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   // the conversation (2026-11-18: with it, the conversation had about a quarter of the screen).
   const [switchTouched, setSwitchTouched] = createSignal(false)
   // The next request puts it away again.
-  createEffect(on(() => props.ola.state.turns.length, () => setSwitchTouched(false), { defer: true }))
+  createEffect(on(() => [props.ola.state.turns.length, props.ola.state.suggestion?.id], () => setSwitchTouched(false), { defer: true }))
   const tick = setInterval(() => working() && setNow(Date.now()), 1000)
   onCleanup(() => clearInterval(tick))
 
@@ -307,7 +307,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             </span>
             <span class="lots-toggle-label">Lots of permissions</span>
           </label>
-          <span class="autonomy-hint" classList={{ quiet: s().turns.length > 0 && !switchTouched() }}>
+          <span class="autonomy-hint" classList={{ quiet: (s().turns.length > 0 || !!s().suggestion) && !switchTouched() }}>
             {s().engine === 'claude' && s().claude?.enabled
               ? s().autonomy === 'ask'
                 ? 'Claude asks before it runs code or writes a file.'

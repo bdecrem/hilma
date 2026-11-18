@@ -113,7 +113,13 @@ try {
         await q.scrollIntoViewIfNeeded()
         await shot(`question-${asked}`)
         console.log(`      question: ${await text('.question-card')}`.slice(0, 300))
-        await q.locator('button').first().click()
+        // A real choice is tapped; an open question (one stand-in button, or asked a second time) is answered in words.
+        const choices = await q.locator('button').count()
+        const own = q.locator('input[type=text], textarea').first()
+        if ((choices <= 2 || asked > 1) && (await own.count())) {
+          await own.fill('The Community Room')
+          await own.press('Enter')
+        } else await q.locator('button').first().click()
         await p.waitForTimeout(1500)
         continue
       }

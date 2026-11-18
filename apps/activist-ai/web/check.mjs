@@ -829,7 +829,9 @@ async function claudeChecks(engine, label) {
       await pg.getByRole('button', { name: 'Close' }).click()
       assert(/turned on Fallback to Claude/.test(promise) && !/not sent to any AI company/.test(promise), 'the promise still says nothing leaves')
       await pg.goto(`${d.url}#/files`)
-      const facts = await pg.locator('.facts').innerText()
+      // The facts fill in after the page opens: wait for the line, do not read the first paint.
+      await pg.locator('.facts', { hasText: 'Claude read' }).first().waitFor({ timeout: 10_000 }).catch(() => {})
+      const facts = (await pg.locator('.facts').allInnerTexts()).join(' ')
       assert(/Claude read/.test(facts), `files facts: ${facts.slice(0, 120)}`)
     })
     await check(`${label}: no sideways scroll at 390 px on Settings, and no text under 15 px`, async () => {
