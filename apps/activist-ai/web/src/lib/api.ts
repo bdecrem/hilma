@@ -59,6 +59,8 @@ export interface FrontDesk {
   me(): Promise<Me>
   signOut(): Promise<void>
   project(): Promise<ProjectPayload>
+  /** Admins: a new project, named; it opens at ?w=<slug>. */
+  newProject(name: string): Promise<{ slug: string; name: string }>
   /** Runs the front desk stopped at the run ceiling in the last day, and why (the message to show). */
   runs(): Promise<RunsPayload>
   files(): Promise<FileEntry[]>
@@ -225,6 +227,7 @@ export const desk: FrontDesk = {
     await call('/api/signout', { method: 'POST' })
   },
   project: () => call<ProjectPayload>('/api/project'),
+  newProject: (name) => post<{ slug: string; name: string }>('/api/projects', { name }),
   runs: () => call<RunsPayload>('/api/runs'),
   files: async () => (await call<{ files: FileEntry[] }>('/api/files')).files,
   upload: (file, opts) =>

@@ -289,15 +289,16 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             </span>
           </fieldset>
         </Show>
-        <fieldset class="autonomy">
-          <legend class="sr-only">How Ola works</legend>
-          <label classList={{ on: s().autonomy === 'go' }}>
-            <input type="radio" name="autonomy" value="go" checked={s().autonomy === 'go'} onChange={() => props.ola.setAutonomy('go')} />
-            Go ahead
-          </label>
-          <label classList={{ on: s().autonomy === 'ask' }}>
-            <input type="radio" name="autonomy" value="ask" checked={s().autonomy === 'ask'} onChange={() => props.ola.setAutonomy('ask')} />
-            Ask me first
+        <div class="autonomy ask-first" classList={{ on: s().autonomy === 'ask' }}>
+          {/* One switch, not two look-alike buttons (OLA-127: tapping the chosen one seemed to do nothing). */}
+          <label class="ask-toggle" for="ask-switch">
+            <input id="ask-switch" type="checkbox" role="switch" checked={s().autonomy === 'ask'} onChange={(e) => props.ola.setAutonomy(e.currentTarget.checked ? 'ask' : 'go')} />
+            {/* Drawn like Settings' switches: the knob moves across, the pill turns blue, Off becomes On. */}
+            <span class="switch" aria-hidden="true" aria-checked={s().autonomy === 'ask'}>
+              <span class="switch-knob" />
+              {s().autonomy === 'ask' ? 'On' : 'Off'}
+            </span>
+            <span class="ask-toggle-label">Ask before changes</span>
           </label>
           <span class="autonomy-hint">
             {s().engine === 'claude' && s().claude?.enabled
@@ -312,7 +313,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                 ? 'Ola asks before it runs code or writes a file.'
                 : 'Ola works inside this project without asking. A web search or download still asks you first.'}
           </span>
-        </fieldset>
+        </div>
         <Show when={s().said && !menuOpen()}>
           <p class="command-note" role="status">
             {s().said}

@@ -261,6 +261,14 @@ async function openDrawer(page) {
   await page.locator('.drawer.open').waitFor({ timeout: 5000 })
 }
 /** A request in a new conversation (or this one, `fresh: false`); returns once it is on the page. */
+/** From the conversation to the project's things: on a phone the "Made by Ola" tab, on a laptop Close. */
+async function toThings(page) {
+  const tab = page.getByRole('tab', { name: /Made by Ola/ })
+  if (await tab.isVisible().catch(() => false)) return tab.click()
+  await page.getByRole('button', { name: 'Close the drawer' }).click()
+}
+export { toThings }
+
 async function ask(run, text, { fresh = true } = {}) {
   const page = run.page
   await openDrawer(page)
@@ -324,15 +332,17 @@ try {
         await page.getByLabel('Choose a password').fill('a kettle on the windowsill')
         await page.getByRole('button', { name: 'Make my account' }).click()
         await page.waitForSelector('.project-title', { timeout: 30_000 })
-        await page.waitForSelector('.empty-title, .thing', { timeout: 30_000 })
+        // A phone opens a project on its conversation; a laptop on its things.
+        await page.waitForSelector('.empty-title, .thing, .drawer.open #ask-input', { timeout: 30_000 })
         return `"${await page.locator('.project-title').innerText()}"`
       })
       await step(run, 'A', 'the empty project says what to do', 10, async () => {
         const t = await page.locator('main').innerText()
-        if (!/Ask Ola/.test(t)) throw new Error('the empty project does not point at Ask Ola')
+        const talk = await page.locator('.drawer.open .drawer-empty').isVisible().catch(() => false)
+        if (!/Ask Ola/.test(t) && !talk) throw new Error('the empty project does not point at Ask Ola')
       })
       await step(run, 'A', 'ask for a hello-world page', 300, async () => {
-        await page.locator('.empty-actions .primary-button').first().click()
+        if (!(await page.locator('.drawer.open').count())) await page.locator('.empty-actions .primary-button').first().click()
         await page.locator('.drawer.open').waitFor({ timeout: 5000 })
         await ask(run, 'Make me a simple web page that says Hello, world, with a short welcome line under it.')
         const r = await finishRun(run, 290_000)
@@ -350,7 +360,7 @@ try {
         if (!/hello/i.test(text)) throw new Error(`the opened page says: ${text.slice(0, 120) || '(nothing)'}`)
       })
       await step(run, 'A', 'the page is on the project home', 20, async () => {
-        await page.getByRole('button', { name: 'Close the drawer' }).click()
+        await toThings(page)
         await until(() => page.locator('.thing').count(), 15_000, 'a thing on the home')
       })
     }
@@ -390,8 +400,10 @@ try {
         await tab.close()
       })
       await step(run, 'B', 'find both again from the project home', 20, async () => {
-        await page.getByRole('button', { name: 'Close the drawer' }).click()
+        await toThings(page)
         await page.reload()
+        await page.waitForSelector('.drawer.open, .thing')
+        await toThings(page).catch(() => {})
         await page.waitForSelector('.thing')
         const home = await page.locator('main').innerText()
         const missing = ['.xlsx', '.png'].filter((x) => !home.toLowerCase().includes(x))

@@ -1,13 +1,13 @@
 // The app: a project opens on its things; "Ask Ola" is a bar at the bottom that opens into a
 // drawer with the conversation; "What Ola has of yours" is one click from the header.
 // Routes are hash routes (#/ and #/files) so the front desk serves one page for every path.
-import type { Me, Role } from './lib/types.ts'
+import type { Me, Role, SourceThing } from './lib/types.ts'
 import { createEffect, createResource, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { desk, DeskError } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
 import { count, people } from './lib/format.ts'
 import { Icon, Wordmark } from './components/Icon.tsx'
-import { EmptyProject, groupThings, OtherFiles, ThingCard } from './components/Things.tsx'
+import { EmptyProject, groupThings, OtherFiles, Sources, ThingCard } from './components/Things.tsx'
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
@@ -75,10 +75,11 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const hostedOn = () => !!ola.state.hosted?.enabled
   let promiseDialog: HTMLDialogElement | undefined
 
-  const openDrawer = () => {
+  const openDrawer = (focus = true) => {
     void ola.loadClaude() // the owner may have turned a fallback on or off since this page opened
     setDrawer(true)
-    queueMicrotask(() => drawerInput?.focus())
+    if (isNarrow()) window.scrollTo(0, 0)
+    if (focus) queueMicrotask(() => drawerInput?.focus())
   }
   const closeDrawer = () => {
     setDrawer(false)
@@ -153,9 +154,60 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
 
   const p = () => project()?.project
   const machine = () => project()?.machine
+  // What Ola made, and apart from it what it downloaded from the web (sources/).
+  const madeThings = () => (project()?.things ?? []).filter((t) => t.kind !== 'source')
+  const sources = () => (project()?.things ?? []).filter((t): t is SourceThing => t.kind === 'source')
+
+  // On a phone the project is one of three pages under its name: the conversation (where it
+  // opens), what Ola made, and its sources. The conversation is the drawer, laid in the page.
+  const [view, setView] = createSignal<'made' | 'sources'>('made')
+  const tab = () => (drawer() && canRun() ? 'talk' : view())
+  const showTab = (t: 'talk' | 'made' | 'sources') => {
+    if (t === 'talk') return openDrawer(false)
+    setView(t)
+    setDrawer(false)
+  }
+  // Where the drawer starts on a phone: under the project's name and the tabs, which stay in view.
+  let head: HTMLElement | undefined
+  const [drawerTop, setDrawerTop] = createSignal(0)
+  const measure = () => head && setDrawerTop(Math.round(head.getBoundingClientRect().bottom + window.scrollY))
+  onMount(() => {
+    const ro = new ResizeObserver(measure)
+    queueMicrotask(() => {
+      head = document.querySelector('.project-head') as HTMLElement | undefined
+      if (head) ro.observe(head)
+      measure()
+    })
+    onCleanup(() => ro.disconnect())
+  })
+  createEffect(() => {
+    void project()
+    void isNarrow()
+    queueMicrotask(measure)
+  })
+  // A phone opens the project on its conversation (the person asks; what was made is a tab away).
+  let opened = false
+  createEffect(() => {
+    if (opened || !project() || route() !== 'home') return
+    opened = true
+    if (isNarrow() && canRun() && !drawer()) openDrawer(false)
+  })
+
+  const [menu, setMenu] = createSignal(false)
+  let menuDialog: HTMLDialogElement | undefined
+  createEffect(() => {
+    if (!menuDialog) return
+    if (menu() && !menuDialog.open) menuDialog.showModal()
+    else if (!menu() && menuDialog.open) menuDialog.close()
+  })
+  const go = (hash: string) => {
+    setMenu(false)
+    if (isNarrow()) setDrawer(false)
+    location.hash = hash
+  }
 
   return (
-    <div class="app" classList={{ 'drawer-open': drawer() }}>
+    <div class="app" classList={{ 'drawer-open': drawer(), 'on-home': route() === 'home' }} style={{ '--drawer-top': `${drawerTop()}px` }}>
       <a class="skip-link" href="#main">
         Skip to the content
       </a>
@@ -164,34 +216,25 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           <Wordmark />
         </a>
         <nav class="crumbs" aria-label="Where you are">
-          <Show when={p()}>
-            <Show when={route() !== 'home'} fallback={<span class="crumb-muted">{p()!.group}</span>}>
-              <a href="#/">{p()!.name}</a>
-            </Show>
+          <Show when={p() && route() !== 'home'}>
+            <a href="#/">{p()!.name}</a>
             <span class="crumb-sep" aria-hidden="true">
               /
             </span>
             <span class="crumb-here" aria-current="page">
-              {route() !== 'home' ? ROUTE_TITLE[route()] : p()!.name}
+              {ROUTE_TITLE[route()]}
             </span>
           </Show>
         </nav>
         <div class="topbar-right">
-          <Show when={machine()}>
-            {(m) => (
-              <p class="machine" title="How many people are working on Ola’s computer right now. It never says who.">
-                <span class="machine-lights" aria-hidden="true">
-                  <For each={Array.from({ length: m().capacity }, (_, i) => i < m().working)}>{(on) => <span class="light" classList={{ on }} />}</For>
-                </span>
-                <span class="machine-text">{m().working === 1 ? 'One person' : `${m().working} people`} working on the machine</span>
-              </p>
-            )}
-          </Show>
-          <button type="button" class="ghost-button on-room" onClick={() => setPromise(true)}>
-            <Icon name="machine" size={18} /> <span class="narrow-hide">On this machine</span>
+          <button type="button" class="ghost-button on-room on-room-wide" onClick={() => setPromise(true)}>
+            <Icon name="machine" size={18} /> On this machine
           </button>
-          <button type="button" class="ghost-button on-room signout" onClick={props.onSignOut} title={`Signed in as ${props.me.person.name}`}>
+          <button type="button" class="ghost-button on-room signout on-room-wide" onClick={props.onSignOut} title={`Signed in as ${props.me.person.name}`}>
             Sign out
+          </button>
+          <button type="button" class="ghost-button on-room menu-button" aria-haspopup="dialog" onClick={() => setMenu(true)}>
+            <span class="menu-lines" aria-hidden="true" /> Menu
           </button>
         </div>
       </header>
@@ -233,70 +276,87 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           }
         >
           <section class="project-head" aria-labelledby="project-title">
-            <div>
-              <h1 id="project-title" class="project-title" ref={heading} tabindex="-1">
-                {p()?.name ?? 'Your project'}
-              </h1>
-              <Show when={p()}>
-                <p class="project-sub">
-                  {p()!.group} · {people(p()!.people)} ·{' '}
-                  <Show when={project()!.things.length} fallback={<strong>nothing made yet</strong>}>
-                    <strong>{count(project()!.things.length, 'thing')}</strong>
-                  </Show>
-                  <Show when={p()!.filesUploaded}>
-                    , from <strong>{count(p()!.filesUploaded, 'file')} you uploaded</strong>
-                  </Show>
-                </p>
+            <a class="to-projects" href="/#/projects">
+              <Icon name="back" size={16} /> Your projects
+            </a>
+            <p class="project-kicker" aria-hidden="true">
+              Project
+            </p>
+            <h1 id="project-title" class="project-title" ref={heading} tabindex="-1">
+              {p()?.name ?? 'Your project'}
+            </h1>
+            <Show when={p()}>
+              <p class="project-sub">
+                {p()!.group} · {p()!.people.length > 1 ? `with ${people(p()!.people.filter((x) => x !== 'you'))}` : 'just you'}
+              </p>
+            </Show>
+            {/* The other places of the project, on a laptop: one quiet row (on a phone, the Menu). */}
+            <nav class="project-links" aria-label="This project">
+              <a href="#/files">What Ola has of yours</a>
+              <a href="#/data">Data</a>
+              <a href="#/jobs">Jobs</a>
+              <a href="#/settings">Settings</a>
+              <Show when={props.me.person.admin}>
+                <a href="#/quality">Quality</a>
               </Show>
-            </div>
-            <div class="project-actions">
-              <a class="ghost-button on-room" href="#/files">
-                <Icon name="eye" size={18} /> What Ola has of yours
-              </a>
-              <a class="ghost-button on-room" href="#/data">
-                <Icon name="table" size={18} /> Data
-              </a>
-              <a class="ghost-button on-room" href="#/jobs">
-                <Icon name="run" size={18} /> Jobs
-              </a>
               <Show when={canRun()}>
-                <button type="button" class="ghost-button on-room" onClick={addFiles}>
-                  <Icon name="plus" size={18} /> Add files
+                <button type="button" class="link-button on-room" onClick={addFiles}>
+                  <Icon name="plus" size={16} /> Add files
                 </button>
               </Show>
-              <a class="ghost-button on-room" href="#/settings">
-                <Icon name="settings" size={18} /> Settings
-              </a>
-              <Show when={props.me.person.admin}>
-                <a class="ghost-button on-room" href="#/quality">
-                  <Icon name="table" size={18} /> Quality
-                </a>
-              </Show>
-            </div>
+            </nav>
+            {/* On a phone the page is one of three: the conversation, what Ola made, its sources. */}
+            <Show when={project() && isNarrow()}>
+              <div class="tabs" role="tablist" aria-label="Show">
+                <Show when={canRun()}>
+                  <button type="button" role="tab" class="tab" aria-selected={tab() === 'talk'} onClick={() => showTab('talk')}>
+                    Conversation
+                  </button>
+                </Show>
+                <button type="button" role="tab" class="tab" aria-selected={tab() === 'made'} onClick={() => showTab('made')}>
+                  Made by Ola <span class="tab-count">{madeThings().length}</span>
+                </button>
+                <Show when={sources().length}>
+                  <button type="button" role="tab" class="tab" aria-selected={tab() === 'sources'} onClick={() => showTab('sources')}>
+                    Sources <span class="tab-count">{sources().length}</span>
+                  </button>
+                </Show>
+              </div>
+            </Show>
           </section>
           <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your project. This takes a few seconds…' : 'Opening your project…'}</p>}>
-            <Show when={project()!.things.length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
-              {/* What Ola made, by kind: pages, charts and images, tables, documents. */}
-              <For each={groupThings(project()!.things)}>
-                {(g) => (
-                  <section class="thing-group" aria-labelledby={`group-${g.key}`} data-group={g.key}>
-                    <h2 id={`group-${g.key}`} class="group-title">
-                      {g.title} <span class="group-count">{g.things.length}</span>
-                    </h2>
-                    <div class="things" role="list" aria-label={g.title}>
-                      <For each={g.things}>
-                        {(t) => (
-                          <div role="listitem" class="thing-slot" data-kind={t.kind}>
-                            <ThingCard thing={t} />
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  </section>
-                )}
-              </For>
-              <Show when={project()!.files?.length}>
-                <OtherFiles files={project()!.files!} total={project()!.otherTotal ?? project()!.files!.length} hasThings={!!project()!.things.length} />
+            <Show when={madeThings().length || sources().length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
+              <div class="made" classList={{ 'tab-hidden': isNarrow() && tab() !== 'made' }}>
+                {/* What Ola made, by kind: pages, charts and images, tables, documents. */}
+                <For each={groupThings(madeThings())}>
+                  {(g) => (
+                    <section class="thing-group" aria-labelledby={`group-${g.key}`} data-group={g.key}>
+                      <h2 id={`group-${g.key}`} class="group-title">
+                        {g.title} <span class="group-count">{g.things.length}</span>
+                      </h2>
+                      <div class="things" role="list" aria-label={g.title}>
+                        <For each={g.things}>
+                          {(t) => (
+                            <div role="listitem" class="thing-slot" data-kind={t.kind}>
+                              <ThingCard thing={t} />
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </section>
+                  )}
+                </For>
+                <Show when={!madeThings().length}>
+                  <p class="made-none">Ola has not made anything in this project yet. Ask for something and it shows up here.</p>
+                </Show>
+                <Show when={project()!.files?.length}>
+                  <OtherFiles files={project()!.files!} total={project()!.otherTotal ?? project()!.files!.length} hasThings={!!project()!.things.length} />
+                </Show>
+              </div>
+              <Show when={sources().length}>
+                <div classList={{ 'tab-hidden': isNarrow() && tab() !== 'sources' }}>
+                  <Sources sources={sources()} />
+                </div>
               </Show>
             </Show>
           </Show>
@@ -310,7 +370,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
       </Show>
       <div class="askdock" classList={{ hidden: drawer() || !canRun() || route() === 'quality' }}>
         <form class="askbar" onSubmit={sendFromBar} aria-label="Ask Ola">
-          <button type="button" class="askbar-open" onClick={openDrawer} aria-expanded={drawer()} aria-controls="ask-drawer" aria-label="Ask Ola">
+          <button type="button" class="askbar-open" onClick={() => openDrawer()} aria-expanded={drawer()} aria-controls="ask-drawer" aria-label="Ask Ola">
             <span class="drawer-mark" classList={{ working: working() }} aria-hidden="true" />
             <span>Ask Ola</span>
           </button>
@@ -336,7 +396,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               }>
                 <span class="mark-dot" aria-hidden="true" /> Lost the connection to Ola’s computer. Trying again ·{' '}
               </Show>
-              <button type="button" class="link-button on-room" onClick={openDrawer}>
+              <button type="button" class="link-button on-room" onClick={() => openDrawer()}>
                 Open the drawer
               </button>
             </p>
@@ -346,12 +406,130 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
       <Drawer ola={ola} open={drawer()} onClose={closeDrawer} onAddFiles={addFiles} onFiles={showFiles} draft={draft()} setDraft={setDraft} inputRef={(el) => (drawerInput = el)} />
       <ApprovalSheet ola={ola} provider={props.me.policy.searchProvider} />
 
+ <dialog ref={menuDialog} class="sheet menu-sheet" aria-labelledby="menu-title" onClose={() => setMenu(false)} onClick={(e) => e.target === menuDialog && setMenu(false)}>
+        <div class="sheet-inner">
+          <div class="menu-head">
+            <h2 id="menu-title" class="sheet-title">
+              {p()?.name ?? 'Your project'}
+            </h2>
+            <button type="button" class="ghost-button small on-paper" onClick={() => setMenu(false)}>
+              <Icon name="close" size={16} /> Close
+            </button>
+          </div>
+          <ul class="menu-list">
+            <Show when={canRun()}>
+              <li>
+                <button type="button" class="menu-item" onClick={() => (setMenu(false), addFiles())}>
+                  <Icon name="plus" size={20} />
+                  <span>
+                    <span class="menu-name">Add files</span>
+                    <span class="menu-what">Give Ola a spreadsheet, a PDF or a document to work with</span>
+                  </span>
+                </button>
+              </li>
+            </Show>
+            <li>
+              <a class="menu-item" href="#/files" onClick={(e) => (e.preventDefault(), go('#/files'))}>
+                <Icon name="eye" size={20} />
+                <span>
+                  <span class="menu-name">What Ola has of yours</span>
+                  <span class="menu-what">Every file in this project, and what Ola can read</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="menu-item" href="#/data" onClick={(e) => (e.preventDefault(), go('#/data'))}>
+                <Icon name="table" size={20} />
+                <span>
+                  <span class="menu-name">Data</span>
+                  <span class="menu-what">The tables and documents Ola keeps for this project</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="menu-item" href="#/jobs" onClick={(e) => (e.preventDefault(), go('#/jobs'))}>
+                <Icon name="run" size={20} />
+                <span>
+                  <span class="menu-name">Jobs</span>
+                  <span class="menu-what">Long work over many documents, started by you</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="menu-item" href="#/settings" onClick={(e) => (e.preventDefault(), go('#/settings'))}>
+                <Icon name="settings" size={20} />
+                <span>
+                  <span class="menu-name">Settings</span>
+                  <span class="menu-what">How Ola works in this project</span>
+                </span>
+              </a>
+            </li>
+            <Show when={props.me.person.admin}>
+              <li>
+                <a class="menu-item" href="#/quality" onClick={(e) => (e.preventDefault(), go('#/quality'))}>
+                  <Icon name="check" size={20} />
+                  <span>
+                    <span class="menu-name">Quality</span>
+                    <span class="menu-what">How Ola did against Claude, for you as admin</span>
+                  </span>
+                </a>
+              </li>
+            </Show>
+            <li>
+              <button type="button" class="menu-item" onClick={() => (setMenu(false), setPromise(true))}>
+                <Icon name="machine" size={20} />
+                <span>
+                  <span class="menu-name">On this machine</span>
+                  <span class="menu-what">Where your files are, and what never leaves</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+          <ul class="menu-list menu-you">
+            <li>
+              <a class="menu-item" href="/#/projects">
+                <Icon name="back" size={20} />
+                <span>
+                  <span class="menu-name">Your projects</span>
+                  <span class="menu-what">{props.me.workspaces.length > 1 ? `All ${count(props.me.workspaces.length, 'project')} you can open` : 'The list of your projects'}</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="menu-item" href="/#/account">
+                <Icon name="settings" size={20} />
+                <span>
+                  <span class="menu-name">Your account</span>
+                  <span class="menu-what">Password, passkeys and your computers</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <button type="button" class="menu-item" onClick={props.onSignOut}>
+                <Icon name="close" size={20} />
+                <span>
+                  <span class="menu-name">Sign out</span>
+                  <span class="menu-what">Signed in as {props.me.person.name}</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </dialog>
+
       <dialog ref={promiseDialog} class="sheet promise" aria-labelledby="promise-title" onClose={() => setPromise(false)}>
         <div class="sheet-inner">
           <h2 id="promise-title" class="sheet-title">
             On this machine
           </h2>
           <p class="sheet-lede">Everything you do here runs on one Mac that Bart owns, in his office. The model that reads your files runs on it too.</p>
+          <Show when={machine()}>
+            {(m) => (
+              <p class="machine-now">
+                Right now {m().working === 1 ? 'one person is' : `${count(m().working, 'person', 'people')} are`} using it, of the {m().capacity} it can take at once. It never says who.
+              </p>
+            )}
+          </Show>
           <ul class="promise-list">
             <Show
               when={claudeOn() || hostedOn()}

@@ -350,7 +350,7 @@ export async function moreJourneys(h) {
         await page.reload()
         const t0 = Date.now()
         const wakingSaid = await page.locator('.loading').innerText().catch(() => '')
-        await page.waitForSelector('.thing', { timeout: 60_000 })
+        await page.waitForSelector('.thing, .drawer.open #ask-input', { timeout: 60_000 })
         return `said "${wakingSaid}", awake in ${((Date.now() - t0) / 1000).toFixed(1)} s`
       })
     }

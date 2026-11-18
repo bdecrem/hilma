@@ -67,11 +67,13 @@ export function pageTitle(html) {
   return t ? t.slice(0, 80) : null
 }
 export const isPageFile = (rel) => /\.html?$/i.test(rel)
+/** What Ola downloaded from the web (ola-fetch saves it under sources/): a source, never "made". */
+export const isSourceFile = (f) => /^sources\/[^/]+$/.test(f.path)
 const isImage = (rel) => /\.(png|jpe?g|gif|webp|svg)$/i.test(rel)
 const isFileDoc = (rel) => /\.(pdf|docx)$/i.test(rel)
 /** A file the home shows as a thing: any page, or a .csv/.md, a picture, a PDF or a Word file Ola
  * wrote at the top of the folder (pictures inside a page's folder belong to the page). */
-export const isThingFile = (f) => isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && (/\.(csv|md|xlsx)$/.test(f.path) || isImage(f.path) || isFileDoc(f.path)))
+export const isThingFile = (f) => isSourceFile(f) || isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && (/\.(csv|md|xlsx)$/.test(f.path) || isImage(f.path) || isFileDoc(f.path)))
 
 /** Things made from what is in the workspace. */
 export async function derivedThings(files) {
@@ -79,6 +81,13 @@ export async function derivedThings(files) {
   const things = []
   for (const f of list) {
     if (!isThingFile(f)) continue
+    if (isSourceFile(f)) {
+      // Its address and date come from the project database (the page asks /api/data/docs).
+      const title = isPageFile(f.path) ? pageTitle(await files.readText(f.path, 32 * 1024)) : null
+      const format = isPageFile(f.path) ? 'page' : /\.pdf$/i.test(f.path) ? 'PDF' : 'file'
+      things.push({ kind: 'source', id: `file:${f.path}`, title: title ?? f.path.slice('sources/'.length), byline: { madeBy: 'ola', when: f.modified, from: [] }, state: 'ready', file: f.path, openable: true, format })
+      continue
+    }
     if (f.path.endsWith('.xlsx')) {
       // An Excel file Ola made: a table on the home, its rows and sheets behind Open (not read here).
       things.push({ kind: 'table', id: `file:${f.path}`, title: f.path, byline: { madeBy: 'ola', when: f.modified, from: [] }, state: 'ready', file: f.path, openable: true, columns: [], rows: [], note: 'An Excel file Ola made. Open shows its rows, sheet by sheet; Download has the file.' })

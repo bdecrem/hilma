@@ -1,0 +1,389 @@
+/* ------------------------------------------------------------ the project page (OLA-128)
+   Phone first. Which project you are in is said at the top ("Your projects" to leave it, the word
+   Project over its name); the other places of the project are one Menu (a quiet row of links on a
+   laptop); on a phone the page is one of three tabs under the name: the conversation (where it
+   opens: the drawer laid in the page, its composer on the bottom edge), what Ola made, and the
+   sources Ola downloaded. Tokens only (tokens.css); loaded after app.css. */
+
+/* ---- the top line */
+.menu-button {
+  gap: var(--s2);
+}
+.menu-lines,
+.menu-lines::before,
+.menu-lines::after {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.menu-lines {
+  position: relative;
+}
+.menu-lines::before,
+.menu-lines::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+.menu-lines::before {
+  top: -5px;
+}
+.menu-lines::after {
+  top: 5px;
+}
+
+/* ---- the project's name */
+.project-head {
+  display: block;
+  padding: var(--s2) var(--s2) var(--s5);
+}
+.to-projects {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  min-height: 36px;
+  color: var(--mist);
+  font-weight: 600;
+  text-decoration: none;
+}
+.to-projects:hover {
+  color: var(--on-room);
+  text-decoration: underline;
+}
+.project-kicker {
+  margin-top: var(--s2);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.project-title {
+  margin-top: 2px;
+}
+.project-sub {
+  margin-top: var(--s1);
+}
+.project-links {
+  margin-top: var(--s4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s5);
+}
+.project-links a {
+  color: var(--on-room);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 210, 234, 0.45);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+.project-links a:hover {
+  text-decoration-color: var(--lamp);
+}
+.project-links .link-button.on-room {
+  color: var(--lamp);
+}
+
+/* ---- the three tabs (phone) */
+.tabs {
+  margin-top: var(--s4);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 3px;
+  background: var(--room-deep);
+  border-radius: 10px;
+}
+.tab {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mist);
+  font-weight: 650;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 var(--s2);
+}
+.tab[aria-selected='true'] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(8, 14, 32, 0.3);
+}
+.tab-count {
+  font-weight: 600;
+  opacity: 0.75;
+}
+.tab-hidden {
+  display: none;
+}
+.made-none {
+  color: var(--mist);
+  font-size: 17px;
+  padding: var(--s2) var(--s2) var(--s5);
+}
+
+/* ---- sources: what Ola downloaded, apart from what it made */
+.sources {
+  margin-top: var(--s6);
+}
+.sources-lede {
+  margin: calc(-1 * var(--s2)) 0 var(--s3);
+  color: var(--mist);
+}
+.source-list {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.source-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: var(--s3);
+  align-items: start;
+  padding: var(--s4);
+}
+.source-row + .source-row {
+  border-top: 1px solid var(--rule);
+}
+.source-icon {
+  color: var(--ink-3);
+  padding-top: 2px;
+}
+.source-title {
+  font-weight: 650;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.source-address {
+  display: inline-block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  color: var(--link);
+  overflow-wrap: anywhere;
+}
+.source-address.muted {
+  color: var(--ink-3);
+}
+.source-meta {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+}
+.source-open {
+  font-weight: 650;
+  color: var(--link);
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- the menu */
+.menu-sheet {
+  border-top-color: var(--room);
+}
+.menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.menu-list {
+  margin-top: var(--s4);
+  display: grid;
+}
+.menu-list + .menu-list {
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+}
+.menu-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--s3);
+  align-items: start;
+  padding: var(--s3) var(--s2);
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+}
+.menu-item:hover {
+  background: var(--paper-2);
+}
+.menu-item > span {
+  display: grid;
+  gap: 1px;
+}
+.menu-name {
+  font-weight: 680;
+  font-size: 17px;
+}
+.menu-what {
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+}
+.machine-now {
+  margin-top: var(--s3);
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+/* ---- New project (admins, on the projects page) */
+.new-project {
+  margin-top: var(--s6);
+  padding-top: var(--s5);
+  border-top: 1px solid rgba(201, 210, 234, 0.3);
+}
+.new-project-title {
+  font-size: var(--fs-section);
+  font-weight: 700;
+}
+.new-project-row {
+  margin-top: var(--s3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.new-project-row input {
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 48px;
+  border: 1.5px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 0 var(--s3);
+  font-size: 17px;
+}
+.new-project-row .on-room-primary {
+  background: var(--lamp);
+  color: var(--ink);
+  border-color: var(--lamp);
+}
+
+/* ---- a laptop keeps the row and the two buttons; a phone has the Menu for all of it */
+@media (min-width: 761px) {
+  .menu-button {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .on-room-wide,
+  .project-links {
+    display: none !important;
+  }
+  .topbar {
+    min-height: 56px;
+  }
+  .wordmark {
+    font-size: 28px;
+  }
+  .project-head {
+    padding: 0 0 var(--s3);
+  }
+  .project-kicker {
+    margin-top: var(--s1);
+  }
+  .project-title {
+    font-size: 26px;
+  }
+  /* The conversation is the page: the drawer starts under the name and the tabs, edge to edge,
+     its composer on the bottom edge above Safari's bar. */
+  .app.on-home .drawer {
+    top: var(--drawer-top, 8px);
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    transition: none;
+  }
+  .app.on-home .drawer:not(.open) {
+    visibility: hidden;
+  }
+  .app.on-home.drawer-open .main > :not(.project-head) {
+    display: none;
+  }
+  .app.on-home .drawer-head .drawer-title,
+  .app.on-home .drawer-head .drawer-mark,
+  .app.on-home .drawer-close {
+    display: none;
+  }
+  .app.on-home .drawer-head {
+    padding-top: var(--s2);
+    padding-bottom: var(--s2);
+    min-height: 0;
+  }
+  .composer {
+    padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom));
+  }
+  /* The ask bar is a bar on the bottom edge, not a box floating over the cards. */
+  .askdock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    transform: none;
+    gap: var(--s2);
+    padding: var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom));
+    background: var(--room-deep);
+    box-shadow: 0 -6px 18px rgba(8, 14, 32, 0.35);
+  }
+  .askbar {
+    box-shadow: none;
+  }
+  .main {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Round two, from the screenshots: the tabs take the width their words need ("Made by Ola" was
+   cut); the bar's ring is gone on a phone (the tab is the way to the conversation); the sources tab
+   starts right under the tabs; the Menu's rows are tighter. */
+@media (max-width: 760px) {
+  .tabs {
+    display: flex;
+  }
+  .tab {
+    flex: 1 1 auto;
+    padding: 0 var(--s3);
+  }
+  .askbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .askbar-open {
+    display: none;
+  }
+  .made.tab-hidden ~ div .sources {
+    margin-top: var(--s2);
+  }
+  /* In the conversation, room for it: the group line goes (the name and "Project" stay), and the
+     drawer's head shows only when it has something to say beyond "ready". */
+  .app.on-home.drawer-open .project-sub {
+    display: none;
+  }
+  .app.on-home .drawer-head:not(:has(.link-button)) {
+    display: none;
+  }
+}
+.menu-item {
+  padding: var(--s2);
+}
+.menu-list {
+  margin-top: var(--s3);
+}
