@@ -116,6 +116,9 @@ public enum OlaCLI {
     if let f = env["OLA_MODEL_TOKEN_FILE"], let t = try? String(contentsOfFile: f, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {
       LocalSettings.tokenOverride = t
     }
+    // Another way to the model in a check (a Mac without Tailscale reaches the machine's model door
+    // through an ssh tunnel): OLA_MODEL_URL=http://127.0.0.1:<port>/v1.
+    if let u = env["OLA_MODEL_URL"], !u.isEmpty { LocalSettings.modelURLOverride = u }
   }
 
   /// What happens, step by step, into a file (OLA_CLI_TRACE=<file>; for finding out why it is stuck).
@@ -361,7 +364,7 @@ public enum OlaCLI {
         s.askFirst = !PermissionSettings.lots
         server = s
         let route: ModelRoute
-        if let pasted { route = .pasted(token: pasted) } else { route = .door(try await openDoor()) }
+        if let pasted { route = .pasted(token: pasted, modelURL: LocalSettings.modelURLOverride ?? LocalServer.defaultModelURL) } else { route = .door(try await openDoor()) }
         // The person's own /hosted is the only way the hosted model is chosen here (the app opens the
         // door only while it hands a request over; in the terminal the typed command is the yes).
         if model == "ola/hosted" || { if case .talk = c { return true }; return false }() { door?.allowHosted = { true } }
