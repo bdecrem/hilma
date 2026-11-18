@@ -516,7 +516,8 @@ the web app's builder. Its stream is said in the same words as Ola's (`Claude.sw
 `web/src/lib/steps.ts`). Stop interrupts it and then ends every process it started (they are tracked
 while it runs). Claude turns are kept per session in `~/Library/Application Support/Ola/claude/` and
 merged by time; the phone reads them through the relay (`/ola/claude/<session>`). With the switch on:
-"Ola | Claude" beside the composer, "Ask Claude instead" under a finished Ola reply, and a "Claude"
+a small grey "Ola ⌄" pull-down inside the composer, left of the send button (OLA-155), a small "Try
+again with ⌄" pull-down under a finished Ola reply (OLA-156; both `QuietMenu`), and a "Claude"
 mark on every Claude turn. **Only in "On this Mac" for now**; on the Ola machine the switch is
 disabled ("Not yet on the Ola machine"), and the phone shows Claude turns but cannot start one.
 
