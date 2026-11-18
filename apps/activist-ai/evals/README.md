@@ -191,6 +191,34 @@ model, passed a two-task pilot with the skill (u1, u6: 2 of 2, 18/18 and 14/14).
 list price (Nemotron 16M tokens in, the pilot and checks on GLM 1.9M, `see` 0.3M).
 `results/summary-design.json` has the rows.
 
+## The designer's Bold register, with and without (2026-11-17, OLA-134)
+
+Three tasks where the person asks for fun, colorful, gorgeous (`lib/r4_design.py`, task.json
+`"register": "bold"`): `u9-block-party` ("a fun, colorful page"), `u10-youth-strike` ("a bold, modern
+page" for high school students), `u11-garden-fundraiser` ("a gorgeous page" for a harvest dinner). The
+checks are Bold's: no sideways scroll, contrast, nothing from outside, no glows, glass, emoji or
+placeholder text, and not timid (at least two hues, the first thing three times the reading size or
+more, not a plain white page), the facts, the date on the first screen, and no times that are not in
+the person's file (`no_invented_times`, after a concept made up a stage schedule). `design-judge.mjs`
+judges these pairs with a Bold rubric (fun and gorgeous, a color system, big type, a shape from the
+subject). Configuration `nemotron-3.5-super-vl-ws-bold` (gateway on 4401, `run-design.sh` with
+`DESIGN_CONFIG`), image 2.3.0-34, designer 7, 3 seeds, 500,000 tokens a run:
+
+| Task | Without (runs, checks) | With (runs, checks) | Judge (with / without / split) |
+|---|---|---|---|
+| u9 block party | 0/3, 47/60 | 0/3, 55/60 | 3 / 0 / 0 |
+| u10 youth strike | 0/3, 47/60 | 2/3, 56/60 | 2 / 0 / 1 |
+| u11 garden fundraiser | 0/3, 45/60 | 0/3, 53/60 | 3 / 0 / 0 |
+| u1 tenants' meeting (Calm, the regression check) | 0/3, 46/54 | 3/3, 54/54 | 3 / 0 / 0 |
+
+Every page made without the skill was a centered column of rounded cards, often on a gradient, with
+emoji; with it, a full-bleed color field, a giant date, and a ticket, a street or a route drawn for the
+subject. Most runs with the skill that failed had made their page and ran into the token cap (20 to 30
+steps at about 25,000 tokens each, as in Calm); two were cut off mid-rewrite. The first version
+(designer 5) never opened bold.md on this model, hence the step-by-step in SKILL.md. Sheets:
+`~/Desktop/Ola/designer-bold/` on the iMac. `results/summary-bold.json` has the rows,
+`results/bold-judge.json` the verdicts.
+
 ## Round five: the sound skill, with and without (2026-11-17)
 
 Six tasks for `sound` (code in `lib/r5_sound.py`, folders by `lib/mk_r3.py`, proved by `task.py selftest`

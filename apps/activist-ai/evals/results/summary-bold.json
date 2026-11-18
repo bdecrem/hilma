@@ -1,0 +1,228 @@
+{
+ "name": "nemotron-3.5-super-vl-ws-bold",
+ "image": "ola-workspace:2.3.0-34",
+ "skill": "designer 7",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "rows": [
+  {
+   "arm": "with",
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "passed": 1,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 571808
+  },
+  {
+   "arm": "with",
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "passed": 1,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 385403
+  },
+  {
+   "arm": "with",
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "passed": 1,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 533376
+  },
+  {
+   "arm": "without",
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "passed": 0,
+   "checks": "14/18",
+   "label": "page_broken",
+   "tokens": 64659
+  },
+  {
+   "arm": "without",
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "passed": 0,
+   "checks": "16/18",
+   "label": "not_accessible",
+   "tokens": 95030
+  },
+  {
+   "arm": "without",
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "passed": 0,
+   "checks": "16/18",
+   "label": "design_slop",
+   "tokens": 68626
+  },
+  {
+   "arm": "with",
+   "task": "u10-youth-strike",
+   "seed": 1,
+   "passed": 0,
+   "checks": "16/20",
+   "label": "token_limit",
+   "tokens": 517110
+  },
+  {
+   "arm": "with",
+   "task": "u10-youth-strike",
+   "seed": 2,
+   "passed": 1,
+   "checks": "20/20",
+   "label": "success",
+   "tokens": 561228
+  },
+  {
+   "arm": "with",
+   "task": "u10-youth-strike",
+   "seed": 3,
+   "passed": 1,
+   "checks": "20/20",
+   "label": "success",
+   "tokens": 506656
+  },
+  {
+   "arm": "without",
+   "task": "u10-youth-strike",
+   "seed": 1,
+   "passed": 0,
+   "checks": "16/20",
+   "label": "design_slop",
+   "tokens": 72924
+  },
+  {
+   "arm": "without",
+   "task": "u10-youth-strike",
+   "seed": 2,
+   "passed": 0,
+   "checks": "17/20",
+   "label": "weak_hierarchy",
+   "tokens": 64865
+  },
+  {
+   "arm": "without",
+   "task": "u10-youth-strike",
+   "seed": 3,
+   "passed": 0,
+   "checks": "14/20",
+   "label": "design_slop",
+   "tokens": 99128
+  },
+  {
+   "arm": "with",
+   "task": "u11-garden-fundraiser",
+   "seed": 1,
+   "passed": 0,
+   "checks": "17/20",
+   "label": "token_limit",
+   "tokens": 567880
+  },
+  {
+   "arm": "with",
+   "task": "u11-garden-fundraiser",
+   "seed": 2,
+   "passed": 0,
+   "checks": "19/20",
+   "label": "token_limit",
+   "tokens": 539954
+  },
+  {
+   "arm": "with",
+   "task": "u11-garden-fundraiser",
+   "seed": 3,
+   "passed": 0,
+   "checks": "17/20",
+   "label": "token_limit",
+   "tokens": 500071
+  },
+  {
+   "arm": "without",
+   "task": "u11-garden-fundraiser",
+   "seed": 1,
+   "passed": 0,
+   "checks": "14/20",
+   "label": "design_slop",
+   "tokens": 92778
+  },
+  {
+   "arm": "without",
+   "task": "u11-garden-fundraiser",
+   "seed": 2,
+   "passed": 0,
+   "checks": "15/20",
+   "label": "design_slop",
+   "tokens": 137664
+  },
+  {
+   "arm": "without",
+   "task": "u11-garden-fundraiser",
+   "seed": 3,
+   "passed": 0,
+   "checks": "16/20",
+   "label": "design_slop",
+   "tokens": 110883
+  },
+  {
+   "arm": "with",
+   "task": "u9-block-party",
+   "seed": 1,
+   "passed": 0,
+   "checks": "18/20",
+   "label": "missed_items",
+   "tokens": 471569
+  },
+  {
+   "arm": "with",
+   "task": "u9-block-party",
+   "seed": 2,
+   "passed": 0,
+   "checks": "18/20",
+   "label": "token_limit",
+   "tokens": 531725
+  },
+  {
+   "arm": "with",
+   "task": "u9-block-party",
+   "seed": 3,
+   "passed": 0,
+   "checks": "19/20",
+   "label": "token_limit",
+   "tokens": 543391
+  },
+  {
+   "arm": "without",
+   "task": "u9-block-party",
+   "seed": 1,
+   "passed": 0,
+   "checks": "14/20",
+   "label": "design_slop",
+   "tokens": 117394
+  },
+  {
+   "arm": "without",
+   "task": "u9-block-party",
+   "seed": 2,
+   "passed": 0,
+   "checks": "14/20",
+   "label": "design_slop",
+   "tokens": 88689
+  },
+  {
+   "arm": "without",
+   "task": "u9-block-party",
+   "seed": 3,
+   "passed": 0,
+   "checks": "19/20",
+   "label": "assumed_silently",
+   "tokens": 333644
+  }
+ ]
+}

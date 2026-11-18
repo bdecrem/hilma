@@ -1,0 +1,170 @@
+{
+ "made": "2026-11-18T04:36:40.989Z",
+ "judge": "see (through the evals gateway)",
+ "pairs": 12,
+ "consistent_across_swap": "11 of 12",
+ "tally": {
+  "u1-tenants-event": {
+   "with": 3,
+   "without": 0,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  },
+  "u10-youth-strike": {
+   "with": 2,
+   "without": 0,
+   "same": 0,
+   "split": 1,
+   "other": 0
+  },
+  "u11-garden-fundraiser": {
+   "with": 3,
+   "without": 0,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  },
+  "u9-block-party": {
+   "with": 3,
+   "without": 0,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  }
+ },
+ "results": [
+  {
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is restrained and typographic, with a clear date-first hierarchy that reads well on both laptop and phone.\nB is dark, card-heavy with emoji icons and dual accents that feel decorative rather than purposeful.\nBetter: A",
+    "A is a dark, card-heavy layout with multiple accents and small type that feels decorated rather than purposeful.\nB is a calm typographic page with a single blue accent, clear hierarchy and restrained, readable form on phone and desktop.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is a restrained typographic notice with a clear hierarchy and no superfluous UI chrome.\nB relies on rounded info cards, a pill badge and a yellow callout that feel decorative rather than essential.\n\nBetter: A",
+    "A leans on stacked rounded cards with a green pill header and extra accent color that adds decoration over hierarchy.\nB is calm and typographic, using a restrained black-and-white palette and a clear document-like order that reads well on both sizes.\n\nBetter: B"
+   ]
+  },
+  {
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Restrained, typographic and calm, with a clear headline-first hierarchy that stays readable on phone.\n\nB: Structured by a dark header but overdone with rounded cards and decorative color that feels like template chrome for a simple notice.\n\nBetter: A",
+    "A feels busy with a dark banner and repeated rounded cards that decorate rather than clarify the meeting information.\nB is a calm, typographic page with a clear headline/date order and a single red accent that reads well on laptop and phone.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u10-youth-strike",
+   "seed": 1,
+   "first": "with",
+   "swapped": "without",
+   "verdict": "split",
+   "why": [
+    "A is a poster-y, high-contrast red/yellow/blue page with big display type and a giant 9 ticket that feels fun, colorful and instantly readable on phone.\nB is a dark, low-saturation layout with small cards and a glowing sun icon that feels safe and minimal, not fun or colorful.\n\nBetter: A",
+    "A: Clean, readable climate-strike layout with legible hierarchy, but dark and muted, timid rather than fun and gorgeous.\n\nB: Loud three-color fields and strong mobile type, but the desktop view is just abstract blobs with no copy and the content shown is mismatched/unfinished.\n\nBetter: A"
+   ]
+  },
+  {
+   "task": "u10-youth-strike",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is a loud, poster-like orange field with giant black type and a ticket-shaped date/route graphic that feels like a rally invitation.\nB is a muted dark dashboard with small type and generic card rows that reads like an info page, not a fun, scroll-stopping campaign.\n\nBetter: A",
+    "A: Dark and list-driven with small green-on-black cards, timid typography and no poster energy or subject-based shape.\nB: Bold orange poster with a confident orange/blue/yellow/cream system, giant “20” ticket for Main Street and big display type that feels fun and immediate.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u10-youth-strike",
+   "seed": 3,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Bold orange poster field with massive black display type and a giant 20 date that reads like a real campaign poster.\nB: Dark glassy UI with small type, generic cards and glow, feels like a template not a fun poster.\n\nBetter: A",
+    "A is a dark, glassy UI kit with small type and generic cards that feels timid and template-y.\nB is a confident orange poster with big display type and a giant 20 that reads instantly like a real campaign poster.\n\nBetter: B"
+   ]
+  },
+  {
+   "task": "u11-garden-fundraiser",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is a poster-like, confident green-orange-cream layout with big display type and a giant ticket-stub date that reads instantly and feels festive.\nB is a pale, timid template with washed-out fields, small generic type, glassy cards and cute illustration that feels generic and hard to stop for.\nBetter: A",
+    "A is timid, pastel and templated with small type, generic blobs and no clear poster moment.\nB is bold, poster-like with a confident dark-green/cream/orange system, huge display type and a ticket-stub date that reads instantly on phone and desktop.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u11-garden-fundraiser",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is a confident poster with a full orange field, big character type, and a giant 19 that makes the date the hero, feeling fun and immediate.\nB is a timid, pale template with a slogan headline, tiny pills and glassy cards that feels generic and easy to scroll past.\n\nBetter: A",
+    "A is timid and washed-out with a muted palette, small hierarchy, generic pills and a lot of empty space that feels like a template.\nB is a bold poster with a confident orange-green-cream system, giant “19” date, big display type and a long-table motif that makes the event instantly fun and legible.\n\nBetter: B"
+   ]
+  },
+  {
+   "task": "u11-garden-fundraiser",
+   "seed": 3,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Bold orange field and a tilted “ticket” poster feel like a real festival poster and are fun and colorful, even if the type stays small.\nB: Clean and legible with a garden motif, but the palette is muted, the layout is polite and white, and it never feels gorgeous or stop-scrolling.\nBetter: A",
+    "A is timid and beige with small type, generic plant doodles, and button emoji that feel like a template, not a party.\nB is a bold, poster-like layout with confident orange/cream/yellow/blue fields and a tilted table card that makes the event instantly legible and fun.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u9-block-party",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Bold poster with giant 14 and block houses, fun mint field and big type that reads instantly.\nB: Template card stack on a default gradient with emojis and small type, generic and diluted.\nBetter: A",
+    "A: Gradient-backed card layout with small type, glassy panels and generic emoji accents that feels like a template and never pops.\nB: Bold mint-and-dark poster with a giant 14, confident color fields and a block illustration that reads instantly and works on phone.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u9-block-party",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A is a confident poster with a mint field, huge date-driven display type and a subject-specific street-map diagram that reads instantly on phone.\nB is a cluttered card layout with a default pink-orange gradient, decorative bunting, dots and emoji that dilute the event and feel generic.\nBetter: A",
+    "A: Timid invitation card with a pink-orange gradient, scattered dots and small type, no subject-driven graphic.\nB: Bold poster with a giant “12”, confident mint-purple palette and a block-map illustration that reads instantly on phone and desktop.\nBetter: B"
+   ]
+  },
+  {
+   "task": "u9-block-party",
+   "seed": 3,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Strong poster field with a big, confident Mercer Court Block Party 9 lockup, clean mint-and-purple system, and an integrated block-street graphic that reads at a glance.\nB: Playful houses illustration and a clear big 9, but the cream band and four small scattered colour tabs dilute the palette and fragment the poster impact.\n\nBetter: A",
+    "A is cute and playful with the house illustration but breaks the confident color system with a white band and drops the “What’s happening” info on mobile.\nB keeps a unified mint field, strong stacked display type, and a graphic street motif that holds the color system and hierarchy consistently on laptop and phone.\n\nBetter: B"
+   ]
+  }
+ ]
+}
