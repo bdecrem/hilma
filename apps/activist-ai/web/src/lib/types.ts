@@ -89,7 +89,13 @@ export interface FileDocThing extends ThingBase {
   format: 'PDF' | 'Word'
 }
 
-export type Thing = DashboardThing | DocumentThing | ChartThing | TableThing | SiteThing | ImageThing | FileDocThing
+/** Something Ola downloaded from the web into sources/: shown apart from what it made, with its address. */
+export interface SourceThing extends ThingBase {
+  kind: 'source'
+  format: 'page' | 'PDF' | 'file'
+}
+
+export type Thing = SourceThing | DashboardThing | DocumentThing | ChartThing | TableThing | SiteThing | ImageThing | FileDocThing
 export type ThingKind = Thing['kind']
 
 export interface Project {

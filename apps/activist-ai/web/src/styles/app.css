@@ -1165,6 +1165,37 @@ code {
   outline: 3px solid var(--lamp);
   outline-offset: 2px;
 }
+/* "Lots of permissions": one switch, drawn like Settings' switches (.switch below), with its name
+   beside it. The checkbox covers the whole row, so a tap anywhere on it flips the switch. */
+.autonomy label.lots-toggle {
+  position: relative;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  min-height: 44px;
+  gap: var(--s3);
+}
+.autonomy label.lots-toggle input {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: pointer;
+}
+.autonomy label.lots-toggle .switch {
+  pointer-events: none;
+}
+.lots-toggle-label {
+  font-weight: 650;
+  color: var(--ink);
+}
+.autonomy label.lots-toggle:has(input:focus-visible) {
+  outline: none;
+}
+.autonomy label.lots-toggle:has(input:focus-visible) .switch {
+  outline: 3px solid var(--lamp);
+  outline-offset: 2px;
+}
 .autonomy-hint {
   flex-basis: 100%;
   color: var(--ink-3);

@@ -61,6 +61,7 @@ import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { audit, openDb } from './db.mjs'
+import { createWorkspace } from './projects.mjs'
 import { makeInvite, makePasswordLink } from './auth.mjs'
 import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
@@ -260,27 +261,19 @@ switch (cmd) {
     break
   }
   case 'create-workspace': {
+    // The same code as the page's "New project" (projects.mjs).
     const [slug] = args
-    if (!slug || !/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(slug)) fail('a workspace slug is 3 to 32 lowercase letters, digits or dashes')
     const name = flags.name ?? fail('--name "Workspace name"')
     const teamSlug = flags.team ?? fail('--team <team-slug> (created if new, with --team-name)')
-    let t = db.prepare('SELECT * FROM teams WHERE slug = ?').get(teamSlug)
-    if (!t) {
-      db.prepare('INSERT INTO teams (slug, name, created_at) VALUES (?, ?, ?)').run(teamSlug, flags['team-name'] ?? fail('a new team needs --team-name'), now)
-      t = team(teamSlug)
-    }
-    if (db.prepare('SELECT 1 FROM workspaces WHERE slug = ?').get(slug)) fail(`workspace ${slug} already exists`)
     const owner = flags.owner ? person(flags.owner) : null
     const limits = ['memory', 'disk', 'cpus'].flatMap((k) => (flags[k] ? [`--${k}`, flags[k]] : []))
-    const r = spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), 'create', slug, ...limits], { stdio: 'inherit', env: process.env })
-    if (r.status !== 0) fail('ws.mjs create failed; nothing was added to the database')
-    const w = db.prepare("INSERT INTO workspaces (slug, name, team_id, status, created_at) VALUES (?, ?, ?, 'active', ?)").run(slug, name, t.id, now)
-    admin({ action: 'workspace_created', workspace: Number(w.lastInsertRowid) })
-    if (owner) {
-      db.prepare("INSERT INTO memberships (team_id, person_id, role, added_at) VALUES (?, ?, 'owner', ?) ON CONFLICT (team_id, person_id) DO UPDATE SET role = 'owner'").run(t.id, owner.id, now)
-      admin({ action: 'member_added', subject: owner.id, role: 'owner', workspace: Number(w.lastInsertRowid) })
+    let made
+    try {
+      made = await createWorkspace(db, { slug, name, team: { slug: teamSlug, name: flags['team-name'] }, ownerId: owner?.id ?? null, limits })
+    } catch (e) {
+      fail(e.message)
     }
-    console.log(`workspace ${slug} created for team ${t.slug}; the gateway picks up its token from ${process.env.OLA_HOME ?? '~/.ola'}/gateway-tokens by itself.`)
+    console.log(`workspace ${slug} created for team ${made.team.slug}; the gateway picks up its token from ${process.env.OLA_HOME ?? '~/.ola'}/gateway-tokens by itself.`)
     break
   }
   case 'add-member': {

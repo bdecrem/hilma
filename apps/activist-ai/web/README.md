@@ -1,5 +1,16 @@
 # Ola: the web app
 
+**The project page (2026-11-17, OLA-128).** The top says which project you are in ("Your projects"
+to leave it, the word Project over its name). On a phone the project opens on its **conversation**,
+laid in the page under three tabs: Conversation, Made by Ola, and Sources (what Ola downloaded from
+the web into `sources/`, each with the address it came from, never shown as something Ola made).
+Everything else (What Ola has of yours, Data, Jobs, Settings, Quality, On this machine, your
+projects, your account, Sign out) is in one Menu; a laptop shows them as one quiet row of links
+under the name and keeps the things with the bar at the bottom. "Lots of permissions" is one switch.
+`#/projects` always shows the list of projects, even with one, and an admin makes a new project
+there (POST /api/projects, the same code as `admin.mjs create-workspace`). Screens:
+`node scripts/project-shots.mjs <dir>`.
+
 The only client customers get. A project opens on its **things** (documents, tables, charts,
 small sites, a dashboard Bart built with them); **Ask Ola** is a bar at the bottom that opens
 into a drawer with the conversation; **What Ola has of yours** is one click from the header.

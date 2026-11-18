@@ -355,6 +355,23 @@ await check('alice: invitation link → a password chosen (the page says nothing
   if (await A.page.locator('.notice-bar').count()) await A.page.getByRole('button', { name: 'I have read this' }).click()
   return `project "${title}"; a passkey added in Your account`
 })
+await check('"New project" is for admins only: a member is answered 404 and nothing is made; the shared code makes, refuses and leaves nothing on a failed VM (test/projects.test.mjs)', async () => {
+  const count = () => {
+    const d = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'))
+    try {
+      return d.prepare('SELECT COUNT(*) AS n FROM workspaces').get().n
+    } finally {
+      d.close()
+    }
+  }
+  const before = count()
+  const r = await api('/api/projects', { method: 'POST', cookie: a.cookie, csrf: a.csrf, body: JSON.stringify({ name: 'Made-up new project' }), headers: { 'content-type': 'application/json' } })
+  assert(r.status === 404, `a member's new project: ${r.status}`)
+  assert(count() === before, 'a workspace was made')
+  const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/projects.test.mjs')], { encoding: 'utf8', timeout: 60_000 })
+  assert(u.status === 0, u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | '))
+  return `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} unit checks`
+})
 await check('bob and vera register from their own invitations', async () => {
   await register(B, invites.bob, PW.bob)
   await register(V, invites.vera, PW.vera)
@@ -1587,7 +1604,7 @@ if (!LIVE) {
     await A.page.waitForSelector('.project-title')
     await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
     await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
-    await A.page.locator('.autonomy label', { hasText: how }).click()
+    await A.page.locator('#lots-switch').setChecked(how === 'Lots of permissions')
     await A.page.fill('#ask-input', `Please search the web for ${Q}`)
     await A.page.press('#ask-input', 'Enter')
   }
@@ -1686,7 +1703,7 @@ if (!LIVE) {
         await A.page.waitForSelector('.project-title')
         await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
         await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
-        await A.page.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
+        await A.page.locator('#lots-switch').setChecked(false)
       }
       await A.page.fill('#ask-input', 'Count the rows of survey.csv (made up)')
       await A.page.press('#ask-input', 'Enter')
@@ -2350,7 +2367,7 @@ if (LIVE) {
     await A.page.waitForSelector('.project-title')
     await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
     if (await A.page.getByRole('button', { name: 'New conversation' }).count()) await A.page.getByRole('button', { name: 'New conversation' }).click()
-    await A.page.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
+    await A.page.locator('#lots-switch').setChecked(false)
     await A.page.fill('#ask-input', 'Make a hello world web page')
     await A.page.press('#ask-input', 'Enter')
     const last = A.page.locator('.drawer .turn').last()

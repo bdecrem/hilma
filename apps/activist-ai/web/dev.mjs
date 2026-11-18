@@ -417,6 +417,16 @@ const server = http.createServer(async (req, res) => {
       const r = await devJobs.act(w, devPerson, what, JSON.parse(raw || '{}'))
       return json(res, r.status, r.body)
     }
+    // Dev-only: a made-up web page saved under sources/ and recorded with its address, as ola-fetch
+    // does in the VM, so the home's Sources can be seen without the web.
+    if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/source' && req.method === 'POST') {
+      const env = { ...process.env, OLA_WORK: work }
+      fs.mkdirSync(path.join(work, 'sources'), { recursive: true })
+      fs.writeFileSync(path.join(work, 'sources', 'coastal-plans.html'), '<!doctype html><html><head><title>Coastal adaptation plans, a made-up overview</title></head><body><h1>Coastal adaptation plans</h1><p>Several made-up coastal districts restored mangrove belts.</p></body></html>')
+      spawnSync('python3', [path.join(AI, 'workspace/ola-db'), 'init'], { env })
+      const r = spawnSync('python3', [path.join(AI, 'workspace/ola-db'), 'add', 'sources/coastal-plans.html', '--by', 'web', '--source', 'https://www.example.org/coastal-plans', '--fetched', new Date().toISOString()], { env, encoding: 'utf8' })
+      return json(res, r.status === 0 ? 200 : 500, { ok: r.status === 0 })
+    }
     // Dev-only: made-up studies in the project database and a job proposed over them, as the agent
     // would (workspace/testdata/make-corpus.py, ola-db add, ola-batch propose); `delay` holds each
     // scripted batch answer back (ms), so a running job can be seen.

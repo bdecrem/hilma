@@ -7,7 +7,8 @@
 //     (#/reset/<token>), choosing a new password. Passkeys are added in Your account only.
 //   - #/device?…: the Ola app on a Mac asks to sign in; signed in, the person says yes or not now.
 //   - #/account: the person's own account (password, passkeys, the switch, their Macs).
-//   - signed in, no workspace in the address: the person's projects (one opens directly).
+//   - signed in, no workspace in the address: the person's projects (one opens directly, unless the
+//     address is #/projects: "Your projects" in a project always shows the list; admins make one there).
 //   - signed in, a workspace in the address that is theirs: the app.
 // WebAuthn options are fetched before the link is pressed, so the browser's passkey prompt runs
 // straight from the click (Safari requires that); the passkey after a right password is its own click.
@@ -38,7 +39,7 @@ export function Gate() {
       setCsrf(m.csrf)
       setMaxUpload(m.policy?.maxUpload)
       // One project and none named in the address: open it, in place (no reload).
-      if (!workspace() && m.workspaces.length === 1 && !deviceRequestOf(location.hash) && !accountOf()) history.replaceState(null, '', `?w=${encodeURIComponent(m.workspaces[0].slug)}${location.hash || '#/'}`)
+      if (!workspace() && m.workspaces.length === 1 && !deviceRequestOf(location.hash) && !accountOf() && location.hash !== '#/projects') history.replaceState(null, '', `?w=${encodeURIComponent(m.workspaces[0].slug)}${location.hash || '#/'}`)
       return m
     } catch (e) {
       if (e instanceof DeskError && e.status === 401) return null
@@ -520,6 +521,49 @@ function AccountView(props: { me: Me; onSignOut: () => void }) {
   )
 }
 
+/** "New project" (admins only; the front desk answers anyone else 404): a name, then it opens. */
+function NewProject() {
+  const [name, setName] = createSignal('')
+  const [busy, setBusy] = createSignal(false)
+  const [problem, setProblem] = createSignal<Problem | null>(null)
+  const make = async (e: Event) => {
+    e.preventDefault()
+    if (!name().trim() || busy()) return
+    setBusy(true)
+    setProblem(null)
+    try {
+      const r = await desk.newProject(name().trim())
+      location.assign(`/?w=${encodeURIComponent(r.slug)}#/`)
+    } catch (err) {
+      setProblem(problemOf(err, 'The project could not be made. Nothing was added.'))
+      setBusy(false)
+    }
+  }
+  return (
+    <form class="new-project" onSubmit={make} aria-labelledby="new-project-title">
+      <h2 id="new-project-title" class="new-project-title">
+        New project
+      </h2>
+      <p class="gate-lede">A new project starts empty, with its own files and its own sealed computer. You are its owner.</p>
+      <div class="new-project-row">
+        <label class="sr-only" for="new-project-name">
+          The project's name
+        </label>
+        <input id="new-project-name" type="text" maxlength={80} autocomplete="off" placeholder="The project's name" value={name()} disabled={busy()} onInput={(e) => setName(e.currentTarget.value)} />
+        <button type="submit" class="primary-button on-room-primary" disabled={busy() || !name().trim()}>
+          {busy() ? 'Making it…' : 'Make the project'}
+        </button>
+      </div>
+      <Show when={busy()}>
+        <p class="gate-lede" role="status">
+          Making the project. This takes up to a minute.
+        </p>
+      </Show>
+      <Show when={problem()}>{(p) => <GateProblem problem={p()} />}</Show>
+    </form>
+  )
+}
+
 function Projects(props: { me: Me; unknown: boolean; onSignOut: () => void }) {
   const roleWords = { owner: 'You run this project', member: 'You work in this project', viewer: 'You can read this project' }
   return (
@@ -555,6 +599,9 @@ function Projects(props: { me: Me; unknown: boolean; onSignOut: () => void }) {
             )}
           </For>
         </ul>
+      </Show>
+      <Show when={props.me.person.admin}>
+        <NewProject />
       </Show>
       <Show when={props.me.devices && (props.me.devices.allowed || props.me.devices.count > 0)}>
         <YourDevices tone="room" />

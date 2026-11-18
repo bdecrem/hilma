@@ -5,5 +5,6 @@ import './styles/app.css'
 import './styles/open.css'
 import './styles/compare.css'
 import './styles/account.css'
+import './styles/project.css'
 
 render(() => <Gate />, document.getElementById('root')!)

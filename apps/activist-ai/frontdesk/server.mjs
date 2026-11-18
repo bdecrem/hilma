@@ -41,8 +41,9 @@ import { devicesConfig, makeDevices } from './devices.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
-import { derivedThings, isThingFile, otherCount, otherFiles } from '../web/server/project.mjs'
+import { derivedThings, isSourceFile, isThingFile, otherCount, otherFiles } from '../web/server/project.mjs'
 import { skillsHash } from '../skills/version.mjs'
+import { createWorkspace, makeVm, slugFor, validProjectName } from './projects.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
@@ -352,11 +353,11 @@ export function makeFrontDesk(cfg = config()) {
     // Markdown are read (and so capped at 1 MiB).
     const needsText = (f) => /\.(html?|csv|md)$/i.test(f.path)
     const picks = entries
-      .filter((f) => isThingFile(f) && (!needsText(f) || f.size <= 1024 * 1024))
+      .filter((f) => isThingFile(f) && (!needsText(f) || f.size <= 1024 * 1024 || isSourceFile(f)))
       .sort((a, b) => b.modified.localeCompare(a.modified) || a.path.localeCompare(b.path))
       .slice(0, MAX_THINGS)
     const key = (f) => `${ws.slug}\0${f.path}\0${shas.get(`${ws.slug}\0${f.path}`) ?? '?'}`
-    const missing = picks.filter((f) => needsText(f) && !texts.has(key(f)))
+    const missing = picks.filter((f) => needsText(f) && f.size <= 1024 * 1024 && !texts.has(key(f)))
     if (missing.length) {
       const got = await workspaces.peek(ws.slug, missing.map((f) => f.path), 32 * 1024)
       if (texts.size > 2000) texts.clear()
@@ -364,6 +365,8 @@ export function makeFrontDesk(cfg = config()) {
     }
     return derivedThings({ list: async () => picks, readText: async (rel) => texts.get(key(picks.find((f) => f.path === rel))) ?? null })
   }
+
+  const creating = new Set() // admins with a new project being made (one at a time each)
 
   async function workspaceRoute(req, res, sess, url, p) {
     const slug = req.headers['x-ola-workspace'] ?? (req.method === 'GET' ? url.searchParams.get('w') : null)
@@ -1036,6 +1039,26 @@ export function makeFrontDesk(cfg = config()) {
       if ((p === '/api/quality' || p === '/api/quality/weekly') && req.method === 'GET') {
         if (!sess.isAdmin) return json(res, 404, NOT_FOUND)
         return json(res, 200, p === '/api/quality' ? compare.quality() : compare.weekly())
+      }
+      // "New project" on the projects page: admins only (anyone else hears 404), the same code as
+      // `admin.mjs create-workspace`. The project goes in the admin's own team, the one their
+      // newest project is in (a team named after them when they have none), with them as owner.
+      if (p === '/api/projects' && req.method === 'POST') {
+        if (!sess.isAdmin) return json(res, 404, NOT_FOUND)
+        const body = await readJson(req)
+        if (!body || !validProjectName(body.name)) return json(res, 400, { error: 'bad_name', message: 'A project needs a name of one line, up to 80 characters.' })
+        if (creating.has(sess.personId)) return json(res, 429, { error: 'busy', message: 'Your last new project is still being made. Wait for it.' }, { 'retry-after': '5' })
+        const own = db.prepare("SELECT t.slug, t.name FROM memberships m JOIN teams t ON t.id = m.team_id LEFT JOIN workspaces w ON w.team_id = t.id WHERE m.person_id = ? AND m.role = 'owner' ORDER BY w.created_at DESC LIMIT 1").get(sess.personId)
+        const team = own ?? { slug: slugFor(sess.handle, 'team').slice(0, 32), name: sess.name }
+        creating.add(sess.personId)
+        try {
+          const made = await createWorkspace(db, { slug: slugFor(body.name, randomUUID().slice(0, 6)), name: body.name, team, ownerId: sess.personId, actor: { actor: sess.personId }, vm: (slug, limits) => makeVm(slug, limits, { stdio: 'ignore' }) })
+          return json(res, 200, { slug: made.slug, name: body.name.trim() })
+        } catch (e) {
+          return json(res, 500, { error: 'not_made', message: 'The project could not be made. Nothing was added.', detail: String(e.message ?? e).slice(0, 300) })
+        } finally {
+          creating.delete(sess.personId)
+        }
       }
       if (p === '/api/signout' && req.method === 'POST') {
         auth.signOut(sess)

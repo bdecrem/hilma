@@ -1,7 +1,7 @@
 // The project's things, each as paper on the desk: a header band (icon, title, who made it and
 // when) and a body that shows the thing itself, never a thumbnail too small to read.
-import { createSignal, For, Match, Show, Switch } from 'solid-js'
-import type { Byline, ChartThing, DashboardThing, DocumentThing, FileDocThing, FileEntry, ImageThing, SiteThing, TableThing, Thing } from '../lib/types.ts'
+import { createResource, createSignal, For, Match, Show, Switch } from 'solid-js'
+import type { Byline, ChartThing, DashboardThing, DocumentThing, FileDocThing, FileEntry, ImageThing, SiteThing, SourceThing, TableThing, Thing } from '../lib/types.ts'
 import { bytes, count, when } from '../lib/format.ts'
 import { canOpen, desk } from '../lib/api.ts'
 import { Icon } from './Icon.tsx'
@@ -333,6 +333,64 @@ export function EmptyProject(props: { canRun: boolean; onAsk: () => void; onAddF
           </div>
         </Show>
       </div>
+    </section>
+  )
+}
+
+/** The address as a person reads it: no "https://", no "www.", no trailing slash. */
+export const shortAddress = (u: string) => u.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '')
+
+/**
+ * What Ola downloaded from the web to read (sources/), apart from what it made: each with the
+ * address it came from and the day, from the project database. Never "a web page Ola made".
+ */
+export function Sources(props: { sources: SourceThing[] }) {
+  const [docs] = createResource(
+    () => props.sources.map((s) => s.file).join('|') || false,
+    () => desk.docs({}).catch(() => null),
+  )
+  const info = (path: string | null | undefined) => {
+    const d = docs()
+    const rows = d && !d.q ? d.documents : []
+    return rows.find((r) => r.path === path) ?? null
+  }
+  return (
+    <section class="sources" aria-labelledby="sources-title" data-group="sources">
+      <h2 id="sources-title" class="group-title">
+        Sources <span class="group-count">{props.sources.length}</span>
+      </h2>
+      <p class="sources-lede">What Ola downloaded from the web to read. Ola did not make these.</p>
+      <ul class="source-list">
+        <For each={props.sources}>
+          {(src) => {
+            const row = () => info(src.file)
+            return (
+              <li class="source-row" data-kind="source">
+                <span class="source-icon" aria-hidden="true">
+                  <Icon name="search" size={18} />
+                </span>
+                <div class="source-main">
+                  <p class="source-title">{src.title}</p>
+                  <Show when={row()?.source_url} fallback={<p class="source-address muted">{src.file}</p>}>
+                    <a class="source-address" href={row()!.source_url!} target="_blank" rel="noopener noreferrer">
+                      {shortAddress(row()!.source_url!)}
+                      <span class="sr-only"> (the original page on the web, in a new tab)</span>
+                    </a>
+                  </Show>
+                  <p class="source-meta">
+                    Downloaded {when(row()?.fetched_at ?? src.byline.when)} · {src.format === 'page' ? 'a web page' : src.format === 'PDF' ? 'a PDF' : 'a file'}
+                  </p>
+                </div>
+                <Show when={src.file}>
+                  <a class="source-open" href={desk.openUrl(src.file!)} target="_blank" rel="noopener noreferrer">
+                    Open<span class="sr-only"> the saved copy of {src.title}, in a new tab</span>
+                  </a>
+                </Show>
+              </li>
+            )
+          }}
+        </For>
+      </ul>
     </section>
   )
 }
