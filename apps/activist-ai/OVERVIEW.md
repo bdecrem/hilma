@@ -1,6 +1,6 @@
 # Ola in one page
 
-Last checked against: `fae98e3f` (2026-11-17)
+Last checked against: `d54096d4` (2026-11-18)
 
 This is the map. Every agent reads it first; the detail lives in the docs it points to. When Ola
 code changes, check this page against it and update the line above (procedure at the end).
@@ -15,13 +15,23 @@ and you can delete it anytime. The first users are **Frances** (the Adaptation A
 **Ian** (the MRD law library), in December. Their existing services stay where they are; a project
 home links to them.
 
+## Four products, two runtimes
+
+Bart's words (2026-11-18), used everywhere from now on. The **four products** are the web app, the
+`ola` command, the Mac app and the iPhone app. The **two runtimes** are where the agent and the
+files are: the **cloud runtime** (the Ola machine) and the **local runtime** (your Mac; for the
+iPhone, through your Mac). Settings about the work follow the runtime, the same in every product
+there ("Lots of permissions" is one switch per runtime); things about the person (sign-in,
+appearance, notifications) follow the person. In the Mac and iPhone apps the runtime is chosen in
+**New Session**; Settings keeps only the setup.
+
 ## Where people use it
 
 | Surface | What it is | Code | State |
 |---|---|---|---|
-| **Web app**, `https://app.ola.cx` | The main client. A project opens on its things (documents, tables, charts, pages); **Ask Ola** is a drawer with the conversation; Files, Data, Jobs, Settings. Look A, "paper under the lamp" | `web/` (Vite + Solid on `@opencode/client`), served by `frontdesk/` | live on the staging machine, made-up data |
-| **Mac app** | SwiftUI. "Where Ola works": on the Ola machine, or **On this Mac** (opencode runs locally in a chosen folder; only model and web requests go to the Ola machine). Bundles Ola's opencode build and skills | `apple/Mac`, `apple/OlaKit`, `apple/Shared` | 0.1, a Developer ID signed, notarized download that updates itself (GitHub releases of hilma) |
-| **iPhone app** | Pairs with the Mac app by QR code over Tailscale and shows what the Mac shows; also the Kit tab (voice, admins only) | `apple/iOS` | TestFlight, internal group, bundle ID `cx.ola.mac` (shared with the Mac app's App Store record since 2026-11-17) |
+| **Web app**, `https://app.ola.cx` | The main client, cloud runtime only. A project opens on its things (documents, tables, charts, pages); **Ask Ola** is a drawer with the conversation; Files, Data, Jobs, Settings. On a phone the project opens on its conversation, under three tabs (Conversation, Made by Ola, Sources) with one Menu; Ola's questions show as a card. Look A, "paper under the lamp" | `web/` (Vite + Solid on `@opencode/client`), served by `frontdesk/` | live on the staging machine, made-up data |
+| **Mac app** | SwiftUI. Both runtimes live at once: **New Session** (Cmd-N) asks Cloud (on the Ola machine) or Local (on this Mac: opencode runs in a chosen folder; only model and web requests go to the Ola machine), and the sidebar lists sessions under each. Bundles Ola's opencode build and skills | `apple/Mac`, `apple/OlaKit`, `apple/Shared` | 0.1, a Developer ID signed, notarized download that updates itself (GitHub releases of hilma) |
+| **iPhone app** | Cloud: signs in to the Ola machine with a name and password (Mac off). Local: pairs with the Mac app by QR code over Tailscale. The pencil opens New Session with the same choice; sessions are listed under each runtime. Also the Kit tab (voice, admins only) | `apple/iOS` | TestFlight, internal group, bundle ID `cx.ola.mac` (shared with the Mac app's App Store record since 2026-11-17) |
 | **`ola` command** | opencode's terminal interface with Ola's wordmark, "On this Mac" in a terminal; the Mac app's own executable in CLI mode | `apple/OlaKit/OlaCLI.swift`, `opencode-fork/` | ships inside the Mac app |
 | **Landing page**, `https://ola.cx` | Bart's letter beside a drawing of the "datacenter". Static, no JavaScript, no third-party requests | `site/` → `public/ola-site/` (Vercel) | live |
 
@@ -55,7 +65,15 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
    today). Both are rented on Together with made-up data until the Mac Studio serves them locally.
    Two fallbacks, both off by default and turned on per project by its owner: **Claude Code**
    itself, run inside the same sealed VM, and a **hosted open model**. `/claude` and `/hosted` hand
-   one request over; the "this may be a stretch" card suggests it.
+   one request over; the "this may be a stretch" card suggests it: during a run when Ola is
+   stuck, and before a run when the request is big (many documents, files past the context, a
+   long build) or is design work (the simple confidence check, `web/src/lib/steps.ts` precheck).
+   The ladder is local inference, then a hosted open model, then Claude, each only when the
+   cheaper one is not good enough. Local inference is stubbed on Together until the Studio.
+5. **Permissions.** "Lots of permissions" (on by default) lets Ola run commands, change files,
+   search the web and download without asking; off, it asks before each step, and "yes, for the
+   rest of this session" covers that kind of step for the session (a web step is one kind). It
+   never works outside its folder or project either way.
 
 ## The parts
 
@@ -119,6 +137,10 @@ never holds user data.
 - **2026-11-17** Ola's skills ship inside the Mac app and `ola`, version-checked on every release.
 - **2026-11-17** The opencode fork stays cosmetic: behavior changes go in config and OlaKit.
 - **2026-11-17** Closing the gap to Claude through the harness and the skills is the top priority.
+- **2026-11-18** Four products, two runtimes; settings follow the runtime, personal things follow the person.
+- **2026-11-18** The runtime is chosen in New Session in the Mac and iPhone apps; Settings keeps only the setup.
+- **2026-11-18** The ladder: local inference, then a hosted open model, then Claude. The card in the conversation is the main way to the cloud; the setting is the gate behind it.
+- **2026-11-18** No Chinese model goes into Ola without Bart's explicit yes, every time. (To be decided before launch: whether the ladder needs a Chinese rung; the hosted fallback is GLM-5.3 today, from before the rule.)
 
 ## Live now, and next
 
