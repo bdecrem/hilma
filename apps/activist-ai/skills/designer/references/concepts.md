@@ -5,6 +5,10 @@ choose from". The person will open each one and choose. So each concept is a rea
 and each one looks different at a glance. Three copies of one page in other fonts and colors are one
 concept, and the person sees "just text, three versions".
 
+Keep it to one pass, so it fits one request: read only this file (not the other references), write
+the pages, run `sheet.py` once and fix only what it names. Every `.html` you leave in the project is
+listed as a page the person can open, so leave no swatch or test pages (no `palette.py --html`).
+
 ## 1. Brief and facts (in your head, a few lines in design/notes.md)
 
 Who it is for, the one thing it must do, and the real facts from the person's files or what you looked
@@ -41,12 +45,11 @@ Write down which layout each concept uses and its one idea, one line each, befor
 
 ## 4. Look, and prove they differ
 
-    python3 /opt/ola/skills/designer/scripts/sheet.py design/concept-a.html design/concept-b.html design/concept-c.html --out design/concepts.png --ask
+    python3 /opt/ola/skills/designer/scripts/sheet.py design/concept-a.html design/concept-b.html design/concept-c.html --out design/concepts.png
 
-If it prints `SAME LAYOUT` (exit 3), the two pages it names are one layout in two palettes: rebuild the
-second from another layout in the list and run it again. Do not hand over until it passes. Then open
-`design/concepts.png` and look at it yourself: can you tell the concepts apart from across the room?
-Run `look.py design/concept-a.html --name a` for each and fix what it lists.
+If it prints `SAME LAYOUT` (exit 3), the two pages it names are one layout in two palettes: rewrite the
+second one's CSS from another layout in the list and run it again. Do not hand over until it passes.
+Write each page in one go (one write per page), not in many small edits.
 
 ## 5. Hand off
 
