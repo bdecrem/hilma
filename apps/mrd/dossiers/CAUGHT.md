@@ -50,6 +50,20 @@ went to the recode. No protection answer changed. Five implementation ratings mo
 | 33, confiscation or destruction of documents | Evidence rebuilt in the recode shows confiscation of workers' documents is frequent (GRETA 2026, US TIP 2025, the Beja acquittals). | Recode | Changed: "Usually" to "Sometimes; Usually" |
 | 5, 47 | Claims attributed to sources that do not contain them (a GREVIO press release that says nothing about migrant women; an asylum report cited for residence refusals after convictions). | Source check (claim not in the source) | Recorded |
 
+## Norway (checks finished 2026-11-17: 55 verified as they were, 9 changed, 0 waiting; $277)
+
+The source check failed 18 of 64 answers, the second reader objected to 14, 1 was low confidence. One
+protection answer changed; eight implementation ratings moved half a step, seven of them down.
+
+| Indicator | What was wrong | Caught by | Outcome |
+|---|---|---|---|
+| 21, appeal of detention | The dossier said two of the three (legality, conditions, length) can be appealed. The second reader read the Immigration Act's §§ 106 a and 106 b and found all three; the recode confirmed it with § 11 of the Detention Centre Regulations and the Public Administration Act § 28. | Second reader, then recode | Changed: "Yes, two of the three" to "Yes" |
+| 39, 43, 45 | Articles of the Criminal Procedure Act and the Immigration Act cited from pages the coder never opened, and the check could not find the quoted words there. | Source check | Fixed: provisions read in the recode; answers unchanged |
+| 55, 61 | Words quoted from the Immigration Act were not at the cited section. | Source check | Fixed in the recode; answers unchanged |
+| 137, citizenship for stateless persons | Instruction G-08/2016 cited from an ECRE news item about it. | Source check | Changed: rebuilt on the instruction's own text (an archived copy) and Nationality Act § 3; rating raised from "Sometimes; Usually" to "Usually" on Statistics Norway's figures |
+| 10 implementation ratings | No source the coder opened shows practice. | Source check | Evidence rebuilt in the recode |
+| 77, 85, 87, 89, 97, 99, 109 | Ratings of "Effectively Always" or close to it that rested on guidance or on evidence not about migrants. Practice sources read in the recode show gaps: same-sex couples who cannot marry at home, the Ombud's findings at the Trandum detention centre, low union membership and employer resistance among labour migrants, refugees afraid to attend demonstrations, a growing family-permit backlog. | Source check and second reader | Changed: each lowered half a step |
+
 ## When a check was wrong
 
 | Date | What | Fix |
@@ -57,3 +71,4 @@ went to the recode. No protection answer changed. Five implementation ratings mo
 | 2026-11-17 | The source check matched evidence to answers by group labels alone, and failed every detention answer because evidence about detained irregular migrants was "not about all migrants". | The check now asks whether the evidence fits the people the right matters for. |
 | 2026-11-17 | The source check called a full-text reproduction of a law on a third-party site (a law firm's library, Justia, vLex) a "secondary account" and failed the answer: Costa Rica 9 and 11 on the first pass, 39 and 127 on their recodes. | The check now goes by what is on the page: the full text anywhere is the text itself; an article, guide or summary is a secondary account even when it quotes. 39 and 127 are being checked again. |
 | 2026-11-17 | The decision step reported a rating that moved half a step as "verified". Half a step counts as agreement between readers; it is still a change to what is published. | Any difference between the old and new answer is now reported as changed (Portugal 33, 67, 77, 123, 135; Costa Rica 33). |
+| 2026-11-17 | Norway 87 and 89 were sent to a person because the source check did not search a treaty annex for the cited article and reported the page as not read. | Rechecked: both pass. A recheck of part of a chunk also tripped the "missing answers" guard; fixed in `audit.py`. A review item whose only reason is a page the checker could not load gets one recheck before anyone is asked. |

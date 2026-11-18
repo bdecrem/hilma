@@ -366,7 +366,8 @@ def ingest(c, slug, phase, key, path):
             ok, fails, ann = judge_sources(a, got[q], log, tags)
             patch(c, q, **({"source_check": ann} if phase == "sources" else {"redo_source_check": ann})); n += 1
             print(f"  q{q} {'pass' if ok else 'FAIL'}" + ("" if ok else " · " + "; ".join(fails)[:300]))
-        missing = [q for q in qids if q in R and (R[q]["original"] if phase == "sources" else R[q].get("redo")) and q not in got]
+        missing = [q for q in qids if q in R and (R[q]["original"] if phase == "sources" else R[q].get("redo")) and q not in got
+                   and not (phase == "sources2" and R[q].get("redo_source_check"))]      # a partial recheck covers only what it was asked
         if missing:
             print(f"  missing q{missing}"); return 1
     elif phase == "verify":
