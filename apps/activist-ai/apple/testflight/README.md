@@ -40,6 +40,30 @@ DRY=1 apps/activist-ai/apple/testflight/ship-via-mini.sh both                   
   settings, CA92.1). ElevenLabs and LiveKit carry their own.
 - **The build number** shows in the phone's Settings, About and in the Mac's Ola menu, About Ola.
 
+## Shipping from the M4 iMac (2026-11-18)
+
+The defaults are the M1 iMac's. From the M4:
+
+```bash
+ASC_KEY_ID=AH7Q68TW6S OLA_PROFILE="ola appstore m4" MINI=admin@171.66.240.175 \
+  apps/activist-ai/apple/testflight/ship-via-mini.sh both
+```
+
+- The App Store Connect key `748UX45NAP` is only on the M1; the M4 has `AH7Q68TW6S` (same team).
+- The M4 has its own Apple Distribution certificate, so its own profile: `ASC_KEY_ID=AH7Q68TW6S
+  OLA_PROFILE="ola appstore m4" node testflight/asc-setup.mjs` made and installed it (expires
+  2027-03-14).
+- Tailscale is off on the M4: reach the mini at its Stanford address.
+- **The Mac download cannot be signed on the M4**: Xcode there has no Apple account, and neither
+  of its API keys may use the cloud Developer ID certificate ("Cloud signing permission error").
+  Ship it from the M1, reached through the mini when the M4 has no Tailscale:
+  `ssh -J admin@171.66.240.175 bart@<the M1's Tailscale address>` (checkout `~/Documents/code/hilma`),
+  `git pull --ff-only`, then `ship-via-mini.sh mac` with its defaults. The phone app can ship from
+  either iMac.
+- The mini's Xcode 26.3 needs its iOS platform installed to archive the phone app. A disk cleanup
+  on 2026-11-18 removed it ("iOS 26.2 is not installed"); `xcodebuild -downloadPlatform iOS` on
+  the mini puts it back (about 8 GB). Never delete it when freeing space there.
+
 ## Why the Mac app is not on TestFlight
 
 TestFlight and the Mac App Store take only sandboxed apps. Measured 2026-11-17 with a sandboxed probe
