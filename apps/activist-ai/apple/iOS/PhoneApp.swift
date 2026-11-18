@@ -122,6 +122,7 @@ struct PhoneRoot: View {
 /// Launch hooks for driving the app headlessly in the simulator (there is no window to tap):
 ///   -OlaAsk "<request>"          once connected, a new session with that request
 ///   -OlaSwitchAfter <s> <mode>   after s seconds, the Settings switch to mac or machine
+///   -OlaPermissions lots|ask     once connected, the Settings switch "Lots of permissions"
 @MainActor
 enum DebugHooks {
   static func run(_ store: OlaStore) {
@@ -136,6 +137,13 @@ enum DebugHooks {
         guard ready() else { return }
         store.newSession()
         await store.send(text)
+      }
+    }
+    // -OlaPermissions lots|ask: once connected, the Settings switch "Lots of permissions" (OLA-139).
+    if let i = a.firstIndex(of: "-OlaPermissions"), i + 1 < a.count, let m = PermissionMode(rawValue: a[i + 1]) {
+      Task {
+        for _ in 0..<120 where store.connection != .open { try? await Task.sleep(nanoseconds: 500_000_000) }
+        await PhonePermissions.shared.set(m, store: store)
       }
     }
     if let i = a.firstIndex(of: "-OlaSwitchAfter"), i + 2 < a.count, let s = Double(a[i + 1]), let m = PhoneMode(rawValue: a[i + 2]) {

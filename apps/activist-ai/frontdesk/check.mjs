@@ -1609,11 +1609,18 @@ if (!LIVE) {
   })
   await check('Lots of permissions: a web search goes ahead with no question, on a one-time grant for exactly it, and nothing is remembered', async () => {
     const n = searchLines().length
-    await webAsk('Lots of permissions')
-    const asked = A.page.locator('dialog.approval[open]').waitFor({ timeout: 25_000 }).then(() => true, () => false)
-    await done()
-    await until(() => searchLines().length > n, 10_000, 'the search at the gateway')
-    assert(!(await asked) && !(await A.page.locator('dialog.approval[open]').count()), 'a question was shown under Lots of permissions')
+    // At a phone's width (iPhone 14), as Bart would use it.
+    await A.page.setViewportSize({ width: 390, height: 844 })
+    try {
+      await webAsk('Lots of permissions')
+      const asked = A.page.locator('dialog.approval[open]').waitFor({ timeout: 25_000 }).then(() => true, () => false)
+      await done()
+      await until(() => searchLines().length > n, 10_000, 'the search at the gateway')
+      assert(!(await asked) && !(await A.page.locator('dialog.approval[open]').count()), 'a question was shown under Lots of permissions')
+      if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'lots-web-search-390.png') })
+    } finally {
+      await A.page.setViewportSize({ width: 1280, height: 860 })
+    }
     const l = searchLines().at(-1)
     assert(l.status === 200 && l.grant === 'once', JSON.stringify(l))
     assert((await api('/api/settings', { cookie: a.cookie, ws: FA })).json.web.always === false, 'Lots turned on Always in this project')

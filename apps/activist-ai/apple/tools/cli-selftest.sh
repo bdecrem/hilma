@@ -71,9 +71,14 @@ if [ -n "$STUB" ]; then
   seen=$(curl -s "$BASE/stub/seen")
   python3 -c 'import json,sys; s=json.loads(sys.argv[1]); sys.exit(0 if s and all(v for _,v in s) else 1)' "$seen"
   check $? "every model request reached the server with the account token (never the door's key)" "$seen"
+  # Lots of permissions (the default): the command goes ahead. Ask before each step: refused.
   rm -f "$WORK/made-by-ola.txt"
   out=$(ola run "RUN-A-COMMAND please" 2>&1 < /dev/null)
-  [ ! -e "$WORK/made-by-ola.txt" ] && [[ "$out" == *"rejected"* ]]; check $? "a one-shot run cannot ask, so a shell command is refused, not run" "$(echo "$out" | grep -i reject | head -1)"
+  [ -e "$WORK/made-by-ola.txt" ]; check $? "Lots of permissions: a one-shot run's shell command goes ahead" "$(echo "$out" | tail -1)"
+  rm -f "$WORK/made-by-ola.txt"
+  ola settings permissions ask > /dev/null 2>&1
+  out=$(ola run "RUN-A-COMMAND please" 2>&1 < /dev/null)
+  [ ! -e "$WORK/made-by-ola.txt" ] && [[ "$out" == *"rejected"* ]]; check $? "Ask before each step: a one-shot run cannot ask, so a shell command is refused, not run" "$(echo "$out" | grep -i reject | head -1)"
 else
   [ $rc = 0 ] && [ -n "$reply" ]; check $? "ola \"…\" prints a reply and exits 0" "$reply"
 fi
