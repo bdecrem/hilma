@@ -4,9 +4,10 @@ import SwiftUI
 
 /// Signing this Mac in to an Ola account, and what the app shows around it. Everything happens in
 /// the app's own window (2026-11-17, "normal means you'd never leave the app"): a name and password,
-/// the system's passkey sheet when the account asks for its passkey too, and right after the first
-/// sign-in a skippable "Add a passkey?". The app holds the key in the Keychain and lends the agent
-/// only the model door's key for this launch.
+/// and the system's passkey sheet only when the account asks for its passkey too. A passkey is an
+/// option in Settings (Account), never a step after signing in; "Use a passkey instead" shows on the
+/// sign-in screen only on a Mac that has used a passkey for Ola before. The app holds the key in the
+/// Keychain and lends the agent only the model door's key for this launch.
 @MainActor
 @Observable
 final class AccountController {
@@ -16,10 +17,6 @@ final class AccountController {
     case working
     /// The system's passkey sheet is up (signing in).
     case passkey
-    /// Just signed in, the account has no passkey: "Add a passkey?" (skippable).
-    case offerPasskey
-    /// The system's passkey sheet is up (making a new passkey).
-    case addingPasskey
     /// The last try did not work (in plain words).
     case problem(String)
     /// Nothing went wrong, but it could not finish (sign-in not open yet).
@@ -34,8 +31,14 @@ final class AccountController {
   private(set) var usage: String?
   /// Whether this build can show the passkey sheet (NativePasskey.available; screenshots set it).
   let passkeys: Bool
-  /// A problem on the "Add a passkey?" step (it stays on that step).
-  private(set) var passkeyProblem: String?
+  /// Settings' "Add a Passkey": the system's sheet is up.
+  private(set) var addingPasskey = false
+  /// What came of the last "Add a Passkey", in plain words (bad: a problem, shown in red).
+  private(set) var passkeyNote: (text: String, bad: Bool)?
+  /// This Mac has used a passkey for Ola (signed in with one, or added one): only then does the
+  /// sign-in screen offer "Use a passkey instead".
+  static let usedKey = "ola.account.passkeyUsed"
+  var passkeyUsedHere: Bool { AccountKeeper.defaults.bool(forKey: Self.usedKey) }
   /// Set after a sign-in on a Mac that was never set up, so it goes straight to "On this Mac".
   var onSignedIn: (() -> Void)?
   /// Called when the server ends this Mac's sign-in (a 401 from the door).
@@ -47,14 +50,18 @@ final class AccountController {
   let hostedGate = HostedGate()
 
   /// Screenshots: a still picture with no Keychain and no network.
-  init(preview phase: Phase = .idle, name: String? = nil, passkeys: Bool = true, passkeyProblem: String? = nil) {
+  init(preview phase: Phase = .idle, name: String? = nil, passkeys: Bool = true, adding: Bool = false, passkeyNote: (text: String, bad: Bool)? = nil, passkeyUsed: Bool = false) {
     self.phase = phase
     self.name = name
     self.passkeys = passkeys
-    self.passkeyProblem = passkeyProblem
+    addingPasskey = adding
+    self.passkeyNote = passkeyNote
+    previewPasskeyUsed = passkeyUsed
     signedIn = name != nil
-    if [.offerPasskey, .addingPasskey].contains(phase) { fromGate = true }
   }
+  private var previewPasskeyUsed: Bool?
+  /// Whether the sign-in screen shows "Use a passkey instead".
+  var offersPasskey: Bool { passkeys && (previewPasskeyUsed ?? passkeyUsedHere) }
   var previewUsage: String? {
     get { usage }
     set { usage = newValue }
@@ -68,18 +75,14 @@ final class AccountController {
   private(set) var fromGate = false
   /// Settings asked for the sign-in screen on a Mac that already works another way (the owner's).
   var wantsGate = false
-  /// The window stays on the sign-in screen for the passkey steps.
-  var inPasskeyStep: Bool { [.passkey, .offerPasskey, .addingPasskey].contains(phase) }
-
-  /// "Not now" on "Add a passkey?" is remembered per name, so it is asked once.
-  static let declinedKey = "ola.account.passkeyDeclined"
+  /// The window stays on the sign-in screen while the passkey sheet finishes a sign-in.
+  var inPasskeyStep: Bool { phase == .passkey }
 
   /// The normal sign-in (2026-11-17): a name and password, straight from the app. A person who asks
   /// for their passkey too gets the system's passkey sheet next, in this window.
   func signIn(handle: String, password: String) {
     task?.cancel()
     fromGate = true
-    passkeyProblem = nil
     phase = .working
     let h = handle.trimmingCharacters(in: .whitespacesAndNewlines)
     task = Task {
@@ -97,7 +100,7 @@ final class AccountController {
     }
   }
 
-  /// "Sign in with a passkey": the passkey alone, no name or password.
+  /// "Use a passkey instead": the passkey alone, no name or password.
   func signInWithPasskey() {
     task?.cancel()
     fromGate = true
@@ -117,7 +120,9 @@ final class AccountController {
     do {
       let a = try await NativePasskey.assert(c)
       guard phase == .passkey else { return }
-      finish(try await api.loginPasskey(c, a))
+      let s = try await api.loginPasskey(c, a)
+      AccountKeeper.defaults.set(true, forKey: Self.usedKey)
+      finish(s)
     } catch {
       guard phase == .passkey else { return }
       fail(error)
@@ -128,10 +133,10 @@ final class AccountController {
     guard AccountKeeper.keep(session) else { phase = .problem("This Mac\u{2019}s Keychain didn\u{2019}t take the sign-in. Try again."); return }
     name = session.person.name
     signedIn = true
-    let declined = AccountKeeper.defaults.stringArray(forKey: Self.declinedKey) ?? []
-    // Right after the first sign-in, if the account has no passkey and the person has not said Not now.
-    phase = session.hasPasskey == false && !declined.contains(session.person.handle) ? .offerPasskey : .idle
-    if phase == .idle { wantsGate = false }
+    passkeyNote = nil
+    // Signed in is signed in: no passkey step follows (a passkey is an option in Settings).
+    phase = .idle
+    wantsGate = false
     onSignedIn?()
     refreshUsage()
   }
@@ -142,43 +147,26 @@ final class AccountController {
     phase = (error as? AccountError) == .notAvailableYet ? .notice(words) : .problem(words)
   }
 
-  // MARK: "Add a passkey?"
+  // MARK: Settings' "Add a Passkey" (an option, never a step)
 
-  /// Add: the system's sheet makes a passkey for app.ola.cx, saved on the account with this Mac's key.
+  /// The system's sheet makes a passkey for app.ola.cx, saved on the account with this Mac's key.
   func addPasskey() {
-    guard passkeys, let s = AccountKeeper.session else { return }
-    passkeyProblem = nil
-    phase = .addingPasskey
-    task = Task {
+    guard passkeys, !addingPasskey, let s = AccountKeeper.session else { return }
+    passkeyNote = nil
+    addingPasskey = true
+    Task {
+      defer { addingPasskey = false }
       do {
         let reg = try await api.addPasskeyOptions(s)
         let cred = try await NativePasskey.register(reg)
         try await api.addPasskeyVerify(s, reg, cred)
-        guard phase == .addingPasskey else { return }
-        closePasskeyStep()
+        AccountKeeper.defaults.set(true, forKey: Self.usedKey)
+        passkeyNote = ("Your passkey is added. Next time, sign in with Touch ID if you like.", false)
       } catch {
-        guard phase == .addingPasskey else { return }
-        phase = .offerPasskey
-        if (error as? AccountError) != .cancelled { passkeyProblem = (error as? LocalizedError)?.errorDescription ?? "The passkey wasn\u{2019}t added. Try again." }
+        if (error as? AccountError) == .cancelled { return }
+        passkeyNote = ((error as? LocalizedError)?.errorDescription ?? "The passkey wasn\u{2019}t added. Try again.", true)
       }
     }
-  }
-
-  /// Not now (or Continue when this build cannot add one): asked once per name.
-  func skipPasskey() {
-    if passkeys, let h = AccountKeeper.defaults.string(forKey: AccountKeeper.handleKey) {
-      var declined = AccountKeeper.defaults.stringArray(forKey: Self.declinedKey) ?? []
-      if !declined.contains(h) { declined.append(h) }
-      AccountKeeper.defaults.set(declined, forKey: Self.declinedKey)
-    }
-    closePasskeyStep()
-  }
-
-  private func closePasskeyStep() {
-    task?.cancel()
-    passkeyProblem = nil
-    wantsGate = false
-    phase = .idle
   }
 
   func cancel() {
@@ -295,40 +283,19 @@ struct SignInScreen: View {
   var body: some View {
     GateSheet {
       switch account.phase {
-      case .passkey, .addingPasskey:
-        GateTitle(title: account.phase == .passkey ? "Use your passkey" : "Add a passkey")
-        GateText(account.phase == .passkey
-          ? "Your account asks for your passkey too. Use Touch ID in the window that opened to finish signing in."
-          : "Use Touch ID in the window that opened. The passkey is saved in your iCloud Keychain.")
+      case .passkey:
+        GateTitle(title: "Use your passkey")
+        GateText("Use Touch ID in the window that opened to finish signing in.")
         HStack(spacing: Space.s) {
           ProgressView().controlSize(.small)
           Text("Waiting for your passkey\u{2026}").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3)
           Spacer()
-          Button("Cancel") { account.phase == .passkey ? account.cancel() : account.skipPasskey() }.buttonStyle(OlaButton(kind: .ghost))
-        }
-        .padding(.top, Space.xs)
-      case .offerPasskey:
-        GateTitle(title: "Add a passkey?")
-        GateText(account.passkeys
-          ? "Next time, sign in with Touch ID instead of typing your password."
-          : "Next time, sign in with Touch ID instead of typing your password. Adding a passkey in the app arrives with the next update.")
-        if let p = account.passkeyProblem {
-          Label(p, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        HStack(spacing: Space.s) {
-          Spacer()
-          if account.passkeys {
-            Button("Not Now") { account.skipPasskey() }.buttonStyle(OlaButton(kind: .ghost))
-            Button("Add Passkey") { account.addPasskey() }.buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-          } else {
-            Button("Continue") { account.skipPasskey() }.buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-          }
+          Button("Cancel") { account.cancel() }.buttonStyle(OlaButton(kind: .ghost))
         }
         .padding(.top, Space.xs)
       default:
         GateTitle(title: account.phase == .expired ? "You\u{2019}ve been signed out on this Mac" : "Sign in to Ola")
-        GateText(account.phase == .expired ? "Sign in again to keep working. Your sessions on this Mac are still here." : "Use the name and password of your Ola account. Ola then works in a folder you choose on this Mac.")
+        if account.phase == .expired { GateText("Sign in again to keep working. Your sessions on this Mac are still here.") }
         form
         // A wrong password, a refusal or a wait: one plain line under the fields.
         switch account.phase {
@@ -350,7 +317,7 @@ struct SignInScreen: View {
         .padding(.top, Space.xs)
         Divider().overlay(Ola.rule).padding(.vertical, Space.xs)
         VStack(alignment: .leading, spacing: Space.xs) {
-          if account.passkeys { Button("Sign in with a passkey") { account.signInWithPasskey() }.buttonStyle(LinkButton()) }
+          if account.offersPasskey { Button("Use a passkey instead") { account.signInWithPasskey() }.buttonStyle(LinkButton()) }
           if let useOwnSetup { Button("Use my own Ola machine instead", action: useOwnSetup).buttonStyle(LinkButton()) }
           Text("Forgot your password? Ask Bart for a link to choose a new one.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
         }
@@ -454,11 +421,28 @@ struct AccountSettings: View {
           Spacer(minLength: Space.s)
           Button("Sign Out") { Task { await account.signOut() } }
         }
+        if account.passkeys {
+          // A passkey is an option, here only (never a step after signing in).
+          HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+              Text("Passkey")
+              if let n = account.passkeyNote, n.bad {
+                Text(n.text).font(.system(size: 11)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
+              } else if let n = account.passkeyNote {
+                SettingNote(n.text)
+              } else {
+                SettingNote("Optional. Sign in on this Mac with Touch ID instead of your password.")
+              }
+            }
+            Spacer(minLength: Space.s)
+            Button(account.addingPasskey ? "Adding\u{2026}" : "Add a Passkey") { account.addPasskey() }.disabled(account.addingPasskey)
+          }
+        }
       } else {
         HStack(alignment: .firstTextBaseline) {
           VStack(alignment: .leading, spacing: 4) {
             switch account.phase {
-            case .passkey, .addingPasskey, .offerPasskey: StatusLine(kind: .busy, text: "Finish signing in in the Ola window")
+            case .passkey: StatusLine(kind: .busy, text: "Finish signing in in the Ola window")
             case .working: StatusLine(kind: .busy, text: "Signing in")
             case .expired: StatusLine(kind: .problem, text: "Signed out. Sign in again to keep working.")
             case .problem(let p): StatusLine(kind: .problem, text: p)

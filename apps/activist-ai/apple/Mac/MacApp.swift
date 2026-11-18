@@ -126,7 +126,7 @@ struct MacGate: View {
   /// pasted model token, both from before sign-in existed). A sign-in the server ended asks again.
   var needsSignIn: Bool {
     if account.phase == .expired { return true }
-    // The passkey steps (signing in with one, "Add a passkey?") stay on this screen.
+    // The passkey sheet finishing a sign-in stays on this screen.
     if account.inPasskeyStep { return true }
     if account.signedIn { return false }
     // Settings asked for it on a Mac that works another way (Cancel goes back).

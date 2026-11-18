@@ -182,28 +182,32 @@ builds.
 - **Signing in** (`OlaKit/NativePasskey.swift`, `AccountAPI.login`, `loginPasskey`, `passkeyCeremony`):
   for an account with "Ask for my passkey too", a right password gives a ceremony for that person's
   passkeys; the app shows the system's passkey sheet (ASAuthorizationPlatformPublicKeyCredentialProvider
-  for app.ola.cx) and sends the answer to `POST /api/device/login/passkey`. "Sign in with a passkey"
-  does the same for any of the person's passkeys, with no name or password.
-- **"Add a passkey?"** right after a sign-in whose account has no passkey: "Next time, sign in with
-  Touch ID instead of typing your password." Add Passkey / Not Now (asked once per name). The new
-  passkey is made by the sheet and saved with this Mac's key (`/api/device/passkey/options`,
-  `/verify`, only in the first 15 minutes after this Mac signed in).
+  for app.ola.cx) and sends the answer to `POST /api/device/login/passkey`. The sign-in screen is a
+  name, a password and Sign In (Bart, 2026-11-17: "passkey can be optional"); a quiet "Use a passkey
+  instead" link does the same for any of the person's passkeys, with no name or password, and shows
+  only on a Mac that has used a passkey for Ola before (`ola.account.passkeyUsed`, set when a passkey
+  signs in or is added here).
+- **A passkey is an option in Settings (Account)**, never a step after signing in: "Add a Passkey",
+  "Optional. Sign in on this Mac with Touch ID instead of your password." The passkey is made by the
+  sheet and saved with this Mac's key (`/api/device/passkey/options`, `/verify`, only in the first 15
+  minutes after this Mac signed in; later it says so in plain words).
 - **What Apple must allow first.** An app may use a site's passkeys only when it is signed with the
   associated domain `webcredentials:app.ola.cx` (`Mac/Ola.entitlements`) and the site serves
   `/.well-known/apple-app-site-association` naming it (the front desk does, `274T5WCVD2.cx.ola.mac`).
   That permission needs a provisioning profile with Associated Domains, which Xcode cannot make until
   Bart accepts Apple's latest Program License Agreement. Until then builds go without it:
-  `NativePasskey.available` is false (read from the app's own signature), "Sign in with a passkey" is
-  hidden, an account that asks for its passkey says "this version of Ola can't use passkeys yet ...
-  turn off Ask for my passkey too in your account on the web", and "Add a passkey?" says "Adding a
-  passkey in the app arrives with the next update" with Continue. Never a browser.
+  `NativePasskey.available` is false (read from the app's own signature), "Use a passkey instead" and
+  Settings' "Add a Passkey" are hidden, and an account that asks for its passkey says "this version
+  of Ola can't use passkeys yet ... turn off Ask for my passkey too in your account on the web".
+  Never a browser.
 - **After the agreement**, in order: (1) `OLA_PASSKEY=1 tools/build.sh mac` (automatic signing with
   `-allowProvisioningUpdates`; Xcode adds Associated Domains to the App ID and makes the profile);
   (2) the front desk and TLS front deployed with this change, then from any Mac
-  `curl -s https://app.ola.cx/.well-known/apple-app-site-association` prints the JSON (no passcode);
+  `curl -s https://app.ola.cx/.well-known/apple-app-site-association` prints the JSON;
   (3) `swcutil dl -d app.ola.cx` (or `sudo swcutil show` after a launch) shows the app approved for
   webcredentials; Apple's CDN may take up to a day to fetch the file; (4) one live sign-in on the
-  built app: Add Passkey after a password sign-in, sign out, "Sign in with a passkey" with Touch ID.
+  built app: Settings, Add a Passkey after a password sign-in, sign out, "Use a passkey instead" with
+  Touch ID.
   Ship that build as the download (`~/Desktop/Ola/mac-download/Ola.zip`).
 
 Each person signs in with their own Ola account and reaches the model through `https://app.ola.cx`
@@ -229,9 +233,9 @@ is also in plain settings so the app can say who is signed in without reading th
   working only when not signed in; it is marked "DELETE once account sign-in is live" in
   `LocalServer.swift`, `WhereOlaWorks.swift` and `Keychain.swift`. "On the Ola machine" is unchanged.
 - **Screens**: `OLA_ONLY=signin tools/build.sh mac <dir>` (signed out, wrong password, the passkey
-  sheet, passkeys not in this version, "Add a passkey?" both ways, adding, not open yet, failed,
-  signed out by the server, choose a folder, getting ready, its failure, Settings signed in and out;
-  light and dark).
+  sheet, passkeys not in this version, "Use a passkey instead" on a Mac that used one, not open yet,
+  failed, signed out by the server, choose a folder, getting ready, its failure, Settings signed in
+  and out, a passkey added there and refused there; light and dark).
 
 Matched to the server as built (`../README.md`, "Signing in from the Mac app and the command line"):
 

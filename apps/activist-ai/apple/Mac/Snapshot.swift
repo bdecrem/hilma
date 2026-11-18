@@ -88,10 +88,7 @@ enum Snapshot {
         ("signin-2-passkey-sheet", AnyView(SignInScreen(account: AccountController(preview: .passkey)))),
         ("signin-2b-passkey-not-in-this-version", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.passkeysNotInThisVersion.errorDescription!), passkeys: false), useOwnSetup: {}))),
         ("signin-2c-signed-out-no-passkeys", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeys: false), useOwnSetup: {}))),
-        ("signin-3-add-passkey", AnyView(SignInScreen(account: AccountController(preview: .offerPasskey, name: "Maria L.")))),
-        ("signin-3b-add-passkey-next-update", AnyView(SignInScreen(account: AccountController(preview: .offerPasskey, name: "Maria L.", passkeys: false)))),
-        ("signin-3c-adding-passkey", AnyView(SignInScreen(account: AccountController(preview: .addingPasskey, name: "Maria L.")))),
-        ("signin-3d-add-passkey-problem", AnyView(SignInScreen(account: AccountController(preview: .offerPasskey, name: "Maria L.", passkeyProblem: AccountError.notFresh.errorDescription!)))),
+        ("signin-1e-passkey-used-here", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeyUsed: true), useOwnSetup: {}))),
         ("signin-4-not-open-yet", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.notAvailableYet.errorDescription!))))),
         ("signin-4b-failed", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.unreachable.errorDescription!))))),
         ("signin-5-expired", AnyView(SignInScreen(account: AccountController(preview: .expired)))),
@@ -105,6 +102,8 @@ enum Snapshot {
       let accounts: [(String, AccountController, CLIInstaller, String)] = [
         ("signin-9-settings-signed-in", AccountController(preview: .idle, name: "Bart Decrem"), CLIInstaller(result: "Installed. In Terminal, go to a folder and type ola.", installed: true), "mac"),
         ("signin-9-settings-signed-out", AccountController(preview: .idle), CLIInstaller(installed: false), "machine"),
+        ("signin-9b-settings-passkey-added", AccountController(preview: .idle, name: "Bart Decrem", passkeyNote: ("Your passkey is added. Next time, sign in with Touch ID if you like.", false)), CLIInstaller(installed: true), "mac"),
+        ("signin-9c-settings-passkey-not-fresh", AccountController(preview: .idle, name: "Bart Decrem", passkeyNote: (AccountError.notFresh.errorDescription!, true)), CLIInstaller(installed: true), "mac"),
       ]
       for (name, account, cli, where_) in accounts where only == nil || name.contains(only!) {
         defaults.set(where_, forKey: LocalSettings.modeKey)
@@ -113,8 +112,9 @@ enum Snapshot {
         let store = OlaStore(fixture: Fixture.main)
         account.previewUsage = account.signedIn ? "You\u{2019}ve used 42% of this week\u{2019}s share. It starts again Monday." : nil
         let controller = WhereOlaWorks(store: store, account: account)
-        let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: cli, tokenKnown: true).defaultAppStorage(defaults)
-        write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)
+        var settings = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: cli, tokenKnown: true)
+        settings.only = .account // the Account pane itself (sign-in, the passkey option, the command)
+        write(settings.defaultAppStorage(defaults), size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)
       }
     }
     // Settings as a Mac settings window (apple-shots/settings): every pane, in the two layouts
