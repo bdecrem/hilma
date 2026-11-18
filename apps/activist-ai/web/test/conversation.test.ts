@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, precheck, runProblem, stepProblem, shortPath, STRETCH_CHECKS } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, precheck, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -136,6 +136,25 @@ test('before a run, the stretch checks fire only on far-too-large named files an
   assert.ok(long.length >= STRETCH_CHECKS.buildMinChars)
   assert.equal(precheck(long, []), 'long_build')
   assert.equal(precheck(parts.split('\n').slice(0, 7).join('\n') + '\n' + 'x'.repeat(900) + ' build it', []), null, 'seven parts are not many')
+})
+
+test('the simple confidence check: many documents, or design, before a run (OLA-144)', () => {
+  const docs = Array.from({ length: 24 }, (_, i) => ({ path: `reports/report-${i + 1}.pdf`, size: 200_000 }))
+  assert.equal(precheck('Go through every report and list the landlords named in each', docs), 'many_files')
+  assert.equal(precheck('Summarize all the PDFs', docs), 'many_files')
+  assert.equal(precheck('Summarize all the PDFs', docs.slice(0, 19)), null, 'nineteen documents are not many')
+  assert.equal(precheck('Tell me about the reports from every landlord meeting we held this year, in order, please', docs.slice(0, 5)), null)
+  const eight = docs.slice(0, 8).map((f) => f.path.split('/').pop()).join(', ')
+  assert.equal(precheck(`Compare ${eight}`, docs.slice(0, 8)), 'many_files', 'eight files named')
+  assert.equal(precheck('Compare report-1.pdf and report-2.pdf', docs), null, 'two files named')
+  assert.equal(precheck('Design a landing page for the tenants’ union', []), 'design')
+  assert.equal(precheck('Make a poster for the block party on Saturday', []), 'design')
+  assert.equal(precheck('Build me a personal homepage', []), 'design')
+  assert.equal(precheck('What does the design of this survey miss?', []), null, 'asked about, not asked to make')
+  assert.equal(precheck('Count the rows in survey.csv', []), null)
+  assert.equal(precheck('Make a chart of answers by city', []), null)
+  assert.match(STRETCH_WHY.many_files, /many documents/)
+  assert.match(STRETCH_WHY.design, /Design/)
 })
 
 test('a step by the hosted open model marks the turn; so does its stored message', () => {

@@ -29,6 +29,23 @@ final class FallbacksTests: XCTestCase {
     XCTAssertNil(Stretch.precheck(String(build.prefix(500)), files: []), "too short")
   }
 
+  /// The simple confidence check (OLA-144): the web app's cases, word for word.
+  func testConfidenceCheckManyDocumentsAndDesign() {
+    let docs = (1...24).map { (path: "reports/report-\($0).pdf", size: 200_000) }
+    XCTAssertEqual(Stretch.precheck("Go through every report and list the landlords named in each", files: docs), .manyFiles)
+    XCTAssertEqual(Stretch.precheck("Summarize all the PDFs", files: docs), .manyFiles)
+    XCTAssertNil(Stretch.precheck("Summarize all the PDFs", files: Array(docs.prefix(19))), "nineteen documents are not many")
+    let eight = docs.prefix(8).map { String($0.path.split(separator: "/").last!) }.joined(separator: ", ")
+    XCTAssertEqual(Stretch.precheck("Compare \(eight)", files: Array(docs.prefix(8))), .manyFiles)
+    XCTAssertNil(Stretch.precheck("Compare report-1.pdf and report-2.pdf", files: docs), "two files named")
+    XCTAssertEqual(Stretch.precheck("Design a landing page for the tenants\u{2019} union", files: []), .design)
+    XCTAssertEqual(Stretch.precheck("Make a poster for the block party on Saturday", files: []), .design)
+    XCTAssertEqual(Stretch.precheck("Build me a personal homepage", files: []), .design)
+    XCTAssertNil(Stretch.precheck("What does the design of this survey miss?", files: []), "asked about, not asked to make")
+    XCTAssertNil(Stretch.precheck("Make a chart of answers by city", files: []))
+    XCTAssertEqual(StretchReason(rawValue: "many_files"), .manyFiles)
+  }
+
   func testStuckIsWhatCanBeSeen() {
     func step(_ id: String, _ status: Step.Status) -> Step { Step(id: id, tool: "shell", words: Words(icon: .run, verb: "Ran", object: "x"), status: status, started: .now) }
     var t = Turn(id: "t", request: "x", at: .now, status: .done)

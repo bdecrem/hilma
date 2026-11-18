@@ -49,9 +49,10 @@ public enum StretchMode: String, CaseIterable, Codable, Sendable {
   }
 }
 
-/// Why a request looks like a stretch: during a run (error, budget, tools) or before it (big_files, long_build).
+/// Why a request looks like a stretch: during a run (error, budget, tools) or before it (big_files,
+/// long_build, and the simple confidence check of OLA-144: many_files, design).
 public enum StretchReason: String, Codable, Sendable {
-  case error, budget, tools, bigFiles = "big_files", longBuild = "long_build"
+  case error, budget, tools, bigFiles = "big_files", longBuild = "long_build", manyFiles = "many_files", design
   /// The person asked for Claude or Claude Code in plain words ("use claude code for this").
   case asked
 
@@ -63,6 +64,8 @@ public enum StretchReason: String, Codable, Sendable {
     case .tools: "Three of Ola\u{2019}s steps in a row did not work."
     case .bigFiles: "The files this request names are much larger than Ola\u{2019}s own model can read at once."
     case .longBuild: "This is a long build in many parts."
+    case .manyFiles: "This request covers many documents at once."
+    case .design: "Design is the kind of work Ola\u{2019}s own model is weakest at today."
     case .asked: "You asked for Claude Code."
     }
   }
@@ -150,6 +153,17 @@ public enum Stretch {
   public static let buildMinChars = 800
   static let buildVerb = try! NSRegularExpression(pattern: #"\b(build|make|create|write|set up|develop|implement|design)\b"#, options: .caseInsensitive)
   static let listed = try! NSRegularExpression(pattern: #"^\s*(\d{1,3}[.)]|[-*\u2022])\s+\S"#)
+  // The simple confidence check (OLA-144; the web app's STRETCH_CHECKS, the same thresholds): many
+  // documents (at least 8 of the folder's files named, or "all / every / each" of them in a folder
+  // with at least 20 documents), or a designed thing to be made.
+  public static let manyNamed = 8
+  public static let manyDocs = 20
+  static let allOfThem = try! NSRegularExpression(pattern: #"\b(all|every|each)\b[^.?!\n]{0,40}\b(files?|documents?|docs|pdfs?|papers?|reports?|studies|letters|transcripts|minutes|laws|pages)\b"#, options: .caseInsensitive)
+  static let docLike = try! NSRegularExpression(pattern: #"\.(pdf|docx?|txt|md|markdown|rtf|csv|tsv|xlsx?|pptx?|html?|json|epub)$"#, options: .caseInsensitive)
+  static let designThing = try! NSRegularExpression(pattern: #"\b(landing page|home ?page|web ?site|poster|flyer|logo|branding|brochure)\b"#, options: .caseInsensitive)
+  static let designVerb = try! NSRegularExpression(pattern: #"\b(build|make|create|draw|lay ?out|restyle)\b"#, options: .caseInsensitive)
+  /// "Design a…" outright ("the design of this survey" is a question, not a request to make).
+  static let designAsk = try! NSRegularExpression(pattern: #"\b(re)?design (a|an|the|me|us|our|my|some|this|that)\b"#, options: .caseInsensitive)
 
   static func has(_ r: NSRegularExpression, _ s: String) -> Bool { r.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil }
 
@@ -162,8 +176,14 @@ public enum Stretch {
     }
     let bytes = named.reduce(0) { $0 + $1.size }
     if bytes / bytesPerToken > overContext * contextTokens { return .bigFiles }
+    let namedAny = files.filter { f in
+      text.contains(f.path.lowercased()) || text.contains((f.path.split(separator: "/").last.map(String.init) ?? f.path).lowercased())
+    }.count
+    if namedAny >= manyNamed { return .manyFiles }
+    if has(allOfThem, request), files.filter({ has(docLike, $0.path) }).count >= manyDocs { return .manyFiles }
     let parts = request.split(separator: "\n", omittingEmptySubsequences: false).filter { has(listed, String($0)) }.count
     if request.count >= buildMinChars && parts >= buildParts && has(buildVerb, request) { return .longBuild }
+    if has(designAsk, request) || (has(designThing, request) && has(designVerb, request)) { return .design }
     return nil
   }
 

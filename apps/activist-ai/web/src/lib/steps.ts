@@ -337,16 +337,38 @@ export const STRETCH_CHECKS = {
   buildMinChars: 800,
   /** …that asks for something to be made. */
   buildVerb: /\b(build|make|create|write|set up|develop|implement|design)\b/i,
+  // The simple confidence check (OLA-144, Bart, 2026-11-18: "a simple heuristic and then we'll
+  // see if in practice that's useful"): offer the card before a task that is big (many documents)
+  // or of a kind the evaluations show Ola's own model often fails (design; long jobs are above).
+  /** Many documents: the request names at least this many of the project's files… */
+  manyNamed: 8,
+  /** …or asks for all of them ("every PDF", "all the reports")… */
+  allOfThem: /\b(all|every|each)\b[^.?!\n]{0,40}\b(files?|documents?|docs|pdfs?|papers?|reports?|studies|letters|transcripts|minutes|laws|pages)\b/i,
+  /** …in a project with at least this many documents. */
+  manyDocs: 20,
+  /** What counts as a document. */
+  docLike: /\.(pdf|docx?|txt|md|markdown|rtf|csv|tsv|xlsx?|pptx?|html?|json|epub)$/i,
+  /** Design: the request asks for a designed thing (evals/results/summary-design.json: without
+   *  help the model's pages mostly fail as slop or broken)… */
+  designThing: /\b(landing page|home ?page|web ?site|poster|flyer|logo|branding|brochure)\b/i,
+  /** …to be made… */
+  designVerb: /\b(build|make|create|draw|lay ?out|restyle)\b/i,
+  /** …or says "design a…" outright ("the design of this survey" is a question, not a request to make). */
+  designAsk: /\b(re)?design (a|an|the|me|us|our|my|some|this|that)\b/i,
 }
 
-/** Before a run: does the request alone look like a stretch? 'big_files', 'long_build', or null. */
+/** Before a run: does the request alone look like a stretch? 'big_files', 'many_files', 'long_build', 'design', or null. */
 export function precheck(request: string, files: { path: string; size: number }[], c = STRETCH_CHECKS): StretchReason | null {
   const text = request.toLowerCase()
   const named = files.filter((f) => c.textLike.test(f.path) && (text.includes(f.path.toLowerCase()) || text.includes(f.path.split('/').pop()!.toLowerCase())))
   const bytes = named.reduce((n, f) => n + f.size, 0)
   if (bytes / c.bytesPerToken > c.overContext * c.contextTokens) return 'big_files'
+  const namedAny = files.filter((f) => text.includes(f.path.toLowerCase()) || text.includes(f.path.split('/').pop()!.toLowerCase())).length
+  if (namedAny >= c.manyNamed) return 'many_files'
+  if (c.allOfThem.test(request) && files.filter((f) => c.docLike.test(f.path)).length >= c.manyDocs) return 'many_files'
   const parts = request.split('\n').filter((l) => /^\s*(\d{1,3}[.)]|[-*•])\s+\S/.test(l)).length
   if (request.length >= c.buildMinChars && parts >= c.buildParts && c.buildVerb.test(request)) return 'long_build'
+  if (c.designAsk.test(request) || (c.designThing.test(request) && c.designVerb.test(request))) return 'design'
   return null
 }
 
@@ -357,6 +379,8 @@ export const STRETCH_WHY: Record<StretchReason, string> = {
   tools: 'Three of Ola’s steps in a row did not work.',
   big_files: 'The files this request names are much larger than Ola’s own model can read at once.',
   long_build: 'This is a long build in many parts.',
+  many_files: 'This request covers many documents at once.',
+  design: 'Design is the kind of work Ola’s own model is weakest at today.',
 }
 
 /** The sentence on a reply that was handed over without asking ("Hand it over without asking"). */

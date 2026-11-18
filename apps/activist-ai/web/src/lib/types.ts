@@ -212,7 +212,7 @@ export type ClaudeAuto = 'ask' | 'stuck' | 'always'
 /** "When a request looks like a stretch": suggest it and let me decide; hand it over without asking; never suggest. */
 export type Stretch = 'suggest' | 'handover' | 'never'
 /** What Ola saw that makes a request look like a stretch (observable signals only, never a score). */
-export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build'
+export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build' | 'many_files' | 'design'
 
 /** GET /api/fallback: the hosted open model for this project. */
 export interface HostedInfo {

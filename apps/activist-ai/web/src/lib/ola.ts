@@ -5,7 +5,7 @@
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, questionOf, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
-import { describeApproval, handoffWords, precheck, stuckReason, type Stuck } from './steps.ts'
+import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
@@ -216,9 +216,9 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     if (state.hosted?.enabled && via === 'hosted') return sendHosted(request)
     // Before a run: a few cheap checks on the request alone (steps.ts precheck). The project's
     // files are asked for only when the request seems to name one, and only if a card could follow.
-    if (planFor('big_files').kind !== 'none' || planFor('long_build').kind !== 'none') {
+    if ((['big_files', 'many_files', 'long_build', 'design'] as const).some((r) => planFor(r).kind !== 'none')) {
       let files: { path: string; size: number }[] = []
-      if (/\.[A-Za-z0-9]{2,8}\b/.test(request)) files = await Promise.race([desk.files().catch(() => []), sleep(3000).then(() => [])])
+      if (/\.[A-Za-z0-9]{2,8}\b/.test(request) || STRETCH_CHECKS.allOfThem.test(request)) files = await Promise.race([desk.files().catch(() => []), sleep(3000).then(() => [])])
       const reason = precheck(request, files)
       if (reason && stretch(reason, request, null)) return
     }

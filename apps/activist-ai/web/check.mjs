@@ -998,6 +998,25 @@ async function fallbackChecks(engine, label) {
       await waitDone(pg)
       assert((await who()) === 'Ola', 'not sent to Ola')
     })
+    // The simple confidence check (OLA-144): the same card, shown before the run for a kind of
+    // work Ola's own model often fails. An ordinary request right after it gets no card.
+    await check(`${label}: before a run, a design request gets the card with its reason; "Not now" sends it to Ola, and an ordinary request gets no card`, async () => {
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await ask('Design a landing page for the tenants’ union')
+      await card().waitFor({ timeout: 15_000 })
+      const why = await card().locator('.stretch-why').innerText()
+      assert((await pg.locator('.drawer .turn').count()) === 0 && /Design is the kind of work Ola’s own model is weakest at today\. Ola has not started on it\./.test(why), `before the run: ${why}`)
+      await shot('card-design')
+      await card().getByRole('button', { name: 'Not now' }).click()
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      await waitDone(pg)
+      assert((await who()) === 'Ola', 'not sent to Ola')
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await ask('Count the rows in survey.csv')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      assert((await card().count()) === 0, 'an ordinary request got the card')
+      await waitDone(pg)
+    })
     await check(`${label}: "Always in this project" asks with the consent text, turns the switch on, and later stretches go over without asking`, async () => {
       await pg.getByRole('button', { name: 'New conversation' }).click()
       await ask('please fail')

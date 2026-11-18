@@ -11,6 +11,14 @@ under the name and keeps the things with the bar at the bottom. "Lots of permiss
 there (POST /api/projects, the same code as `admin.mjs create-workspace`). Screens:
 `node scripts/project-shots.mjs <dir>`.
 
+**The simple confidence check (2026-11-18, OLA-144).** Before a run, `precheck` (`src/lib/steps.ts`,
+ported in `apple/OlaKit/.../Fallbacks.swift`) offers the "this may be a stretch" card when the
+request is big (it names 8 or more of the project's files, or asks for all of them in a project
+with 20 or more documents; files far past the model's context; a long build in 8 or more parts) or
+is design work (a landing page, website, poster, logo to be made, or "design a..."). During a run
+the stuck signals are unchanged. Every threshold is in `STRETCH_CHECKS`. Bart: "a simple heuristic
+and then we'll see if in practice that's useful": watch how often "Not now" is the answer.
+
 The only client customers get. A project opens on its **things** (documents, tables, charts,
 small sites, a dashboard Bart built with them); **Ask Ola** is a bar at the bottom that opens
 into a drawer with the conversation; **What Ola has of yours** is one click from the header.
