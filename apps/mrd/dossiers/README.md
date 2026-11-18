@@ -89,6 +89,11 @@ findings, status, before / after, reason), runs and their cost in `dossier_check
    reader called wrong, three different answers, a redo whose sources fail): review, nothing is
    rewritten, a person decides. Implementation levels half a step apart count as the same.
 
+One repair round (since the Philippines run): when the only thing wrong with a recode is that one of
+its own sources fails the source check, `--emit redo` sends it back once with that finding (the first
+recode is kept in `redo_first`); if the second one fails too, a person decides. Run it by hand for a
+finished country: `node cc/check.mjs <slug> redo --again`, then `sources2 --again`, then `--decide`.
+
 **`CAUGHT.md` is the running log of what the checks caught or fixed** (Bart asked for it on 2026-11-17): add
 to it when a country finishes, when a person decides a review item, and when a check itself was wrong.
 

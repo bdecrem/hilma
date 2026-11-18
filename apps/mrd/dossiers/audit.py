@@ -282,7 +282,7 @@ def redo_prompt(c, key, items, lawmap):
         first.append("\n".join(b))
     task = f"""Your task: code these indicators again
 
-They were coded once and did not hold up: the coder was unsure, or a cited source turned out not to be what it was cited as, or a second reader disagreed. The first coding, the source check's findings and the second reader's reasons are below. Reach your own conclusion from the primary sources; you may keep the answer or change it.
+They were coded before and did not hold up (for some this is the second recode: then the "first coding" shown is the earlier recode, and what failed is one or more of its own sources, which you replace with the text itself or drop, keeping everything that checked out): the coder was unsure, or a cited source turned out not to be what it was cited as, or a second reader disagreed. The first coding, the source check's findings and the second reader's reasons are below. Reach your own conclusion from the primary sources; you may keep the answer or change it.
 
 - Read every instrument you rely on in the text itself, in full where it matters: the article and the articles around it, the regulation, the court decision and not a report of it. There is no limit on how much you read. Official portals first ({c['portals'].split('. Key instruments')[0]}).
 - A court decision carries a Yes only if you read the decision itself and it states a general rule that reaches the indicator's situation.
@@ -324,6 +324,13 @@ def emit(c, slug, phase, path, only=None, again=False):
         elif phase == "redo":
             items = []
             for r in rs:
+                # one repair round: the recode's own sources failed the source check, and nothing else is in dispute
+                if (r["status"] == "review" and r.get("decided_by") == "pipeline" and r.get("redo") and not r.get("redo_first")
+                        and r.get("redo_source_check") and not r["redo_source_check"].get("pass") and (r.get("reason") or "").startswith("Coded again, and the new sources")):
+                    why = (r.get("failed") or []) + [f"the recode's own source check: {f}" for f in r["redo_source_check"].get("failures", [])]
+                    patch(c, r["question_id"], redo_first=r["redo"], redo=None, redo_source_check=None, status="pending", reason=None, decided_by=None, failed=why)
+                    r2 = dict(r, original=r["redo"], source_check=r["redo_source_check"], failed=why)
+                    items.append(r2); continue
                 if r["status"] != "pending" or r.get("redo"):
                     continue
                 if not (r.get("source_check") and r.get("verifier")):

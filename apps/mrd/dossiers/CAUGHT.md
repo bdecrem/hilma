@@ -64,6 +64,24 @@ protection answer changed; eight implementation ratings moved half a step, seven
 | 10 implementation ratings | No source the coder opened shows practice. | Source check | Evidence rebuilt in the recode |
 | 77, 85, 87, 89, 97, 99, 109 | Ratings of "Effectively Always" or close to it that rested on guidance or on evidence not about migrants. Practice sources read in the recode show gaps: same-sex couples who cannot marry at home, the Ombud's findings at the Trandum detention centre, low union membership and employer resistance among labour migrants, refugees afraid to attend demonstrations, a growing family-permit backlog. | Source check and second reader | Changed: each lowered half a step |
 
+## Philippines (checks run 2026-11-17: 54 verified as they were, 6 changed, 4 in a repair round; $260)
+
+The source check failed 26 of 64 answers, the second reader objected to 15, 5 were low confidence.
+Two protection answers changed.
+
+| Indicator | What was wrong | Caught by | Outcome |
+|---|---|---|---|
+| 83, freedom to hold opinion | The dossier said Yes on the Constitution's free-speech clause. The Immigration Act (CA 613 Sec. 37(a)(8)) makes an alien deportable for believing in certain doctrines; the first coder knew it and discounted it because it is not used, which is practice, not law. | Second reader, then recode | Changed: Yes to No |
+| 7, migrants with disabilities | The dossier said No. The second reader found RA 11862 (2022) on trafficking victims; the recode added DOJ Circular 024-2022 and the Supreme Court's naturalization rule, none of them read the first time. | Second reader, then recode | Changed: No to Yes, implementation "Rarely; Sometimes" at low confidence |
+| 49, 51, 53, non-refoulement | The Supreme Court's Sabir resolution and DOJ Circular 024 cited from accounts of them, the circular "as quoted in" the resolution. | Source check | 49 changed: Yes kept on the Anti-Torture Act alone, the unread quotation dropped, rating lowered to "Sometimes; Usually" (deportations of scam-centre workers without screening, TIP report 2026). 51, 53: sources replaced, answers unchanged |
+| 85, 89, 97, 99, 125, 127 | Bureau of Immigration orders, a 2025 labour department order and a TESDA circular cited from summaries, one "as described in" a bill's explanatory note. | Source check | Sources read or replaced in the recode; answers unchanged |
+| 67, 69 | The facilitated naturalization rule and the Moy Ya Lim Yao decision cited without being opened. | Source check | 69 changed: Yes kept on the full decisions, rating lowered from "Usually" to "Sometimes" (refusals and long contested proceedings) |
+| 63 | "Effectively Always" rested on the absence of cases. | Source check | Changed: "Usually; Effectively Always" |
+| 39 | Rating rebuilt on recent evidence that interpreters are provided. | Recode | Changed: "Sometimes" to "Sometimes; Usually" |
+| 15 implementation ratings | No source the coder opened shows practice. | Source check | Evidence rebuilt in the recode |
+| 73, 75, 109 | The recode itself cited one instrument each from a summary (a law-school yearbook, the Court's description of a circular, a law firm's note). | Source check on the recode | Second recode running; a person is asked only if that fails too |
+| 111, unemployment benefits | No source shows a foreign member claiming, getting or being refused the benefit. | Source check on the recode | Second recode running; likely to end with a person, because the evidence may not exist |
+
 ## When a check was wrong
 
 | Date | What | Fix |
