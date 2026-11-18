@@ -54,6 +54,10 @@ Read, in this order:
    he said, dated.
 6. `apps/venture/README.md` for the mechanics (calls, the open conversation,
    iMessage, scripts).
+7. **Ola: read `apps/activist-ai/OVERVIEW.md` first**, before any Ola code or
+   doc (the product, the request path, the parts, the settled decisions), and
+   run `node scripts/venture/overview-check.mjs`. If it says stale, update the
+   overview before relying on it (see step 6, item 5).
 
 If the private folder is missing or empty (a new machine, a lost folder):
 `node scripts/venture/sync.mjs pull` restores every document from Supabase,
@@ -183,6 +187,13 @@ his, money moved, something sent to a stranger, research returned):
 4. `node scripts/venture/sync.mjs push` (the copy in Supabase is the backup,
    and what the voice and the texting Claude read; it also uploads
    `private/data/`).
+5. **At a handoff, and after Ola work lands:** `node scripts/venture/overview-check.mjs`.
+   If it prints `stale: N Ola commits since <date>`, read those commits
+   (`--list`), change what they changed in `apps/activist-ai/OVERVIEW.md`, set
+   its "Last checked against" line to the newest commit on origin/main and its
+   date, and commit OVERVIEW.md on its own with the issue `[OLA-132]` (a commit
+   that changes only the overview does not make it stale). The board shows a red
+   "stale" badge until then.
 
 A session that dies right after a checkpoint has lost nothing. A session that
 dies without one has lost whatever it had not written down, so checkpoint
@@ -197,7 +208,9 @@ is still concrete and still enforced; then reread
 LESSONS.md whole, merge duplicates, rewrite vague lessons into specific ones,
 move what no longer applies to a "Retired" section with the reason, and
 recompute the calibration in BETS.md (how many predictions were right, and
-where I am systematically off). Log the review in LOG.md.
+where I am systematically off). For Ola, rerun `overview-check.mjs` and bring
+`apps/activist-ai/OVERVIEW.md` up to date (step 6, item 5), and check its
+"Decided" and "Live now, and next" against the week. Log the review in LOG.md.
 
 Lessons about the business go in `private/LESSONS.md`. Only the few rules that
 must reach every Claude session (not only venture ones) go in the memory file

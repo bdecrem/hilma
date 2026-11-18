@@ -1,4 +1,5 @@
 import type { Area, BoardData, Issue } from '@/lib/venture/board'
+import type { Overview } from '@/lib/venture/overview'
 
 // Made-up data for designing the board (/kochito/kit/mock on a dev server only). Nothing here is
 // real: the titles, numbers and decisions are invented so the page can be looked at with a full day.
@@ -109,3 +110,12 @@ export function fixture(): BoardData {
     ],
   }
 }
+
+// the overview card, stale, as it looks when Ola's code has moved
+export const fixtureOverview = (): Overview => ({
+  body: '# A made-up overview\n\nLast checked against: `1a2b3c4` (2026-11-17)\n\n## What Ola is, and for whom\n\nA made-up paragraph.\n',
+  hash: '1a2b3c4',
+  date: '2026-11-17',
+  lede: 'Ola is a private AI agent service for activists and community groups. This sentence is made up for the mock, to show the card at its usual length on a full board.',
+  fresh: { state: 'stale', count: 3, commits: [] },
+})

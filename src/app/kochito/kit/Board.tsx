@@ -1,8 +1,10 @@
 import type { BoardData, Issue } from '@/lib/venture/board'
+import type { Overview } from '@/lib/venture/overview'
 import Done from './Done'
 import Shell, { Health, STATUS_STALE } from './Shell'
 import { inline } from './inline'
 import { IssueRow } from './IssueRow'
+import { OverviewBadge, overviewLine } from './OverviewBadge'
 import { ago, dayShort, shiftDay } from './time'
 
 // The board's overview at app.kochitolabs.com, built around the project (Ola). Round two
@@ -16,7 +18,7 @@ const plain = (s: string) => s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\[([^\
 const MIN = 60e3
 const LEAD_STALE = 3 * 60 * MIN
 
-export default function Board({ d, q, user, face, base, variant = 'a' }: { d: BoardData; q: string; user: string; face: string; base: string; variant?: 'a' | 'b' }) {
+export default function Board({ d, o, q, user, face, base, variant = 'a' }: { d: BoardData; o: Overview; q: string; user: string; face: string; base: string; variant?: 'a' | 'b' }) {
   const now = d.now
   const age = (iso: string | null | undefined) => (iso ? Date.parse(now) - Date.parse(iso) : Infinity)
   const issues = d.issues ?? []
@@ -174,6 +176,17 @@ export default function Board({ d, q, user, face, base, variant = 'a' }: { d: Bo
                 </div>
               </div>
             )}
+          </section>
+          <section className={`kb-sec kb-ov${o.fresh.state === 'stale' ? ' stale' : ''}`} id="overview" aria-labelledby="overview-h">
+            <div className="kb-sec-head">
+              <h2 id="overview-h">
+                Ola in one page <OverviewBadge o={o} />
+              </h2>
+              <p>
+                {overviewLine(o)} <a href={`${base}/overview`}>Read it →</a>
+              </p>
+            </div>
+            {o.lede && <p className="kb-ov-lede">{o.lede}</p>}
           </section>
           {plan && curWeek && (
             <section className="kb-sec" id="plan" aria-labelledby="plan-h">

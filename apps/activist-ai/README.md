@@ -1,5 +1,9 @@
 # activist-ai
 
+**Read [`OVERVIEW.md`](OVERVIEW.md) first**: Ola in one page (what it is, the request path, the
+parts, deploy, the settled decisions, live vs. next). `node scripts/venture/overview-check.mjs`
+says whether it is still current.
+
 A private agent service: Claude-Code-style work (an agent that reads your files, runs code and
 writes results in a workspace) on open models, on one machine we own, for a few invited people.
 Started 2026-11-15. The plan, the promise and its limits are in the private notes

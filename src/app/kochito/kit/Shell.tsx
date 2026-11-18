@@ -72,7 +72,7 @@ function Group({ title, links }: { title: string; links: (SideLink & { href?: st
   )
 }
 
-export function Nav({ base, q, notes, open, current, slug }: { base: string; q: string; notes: NoteLink[]; open: number | null; current: 'home' | 'issues' | 'note'; slug?: string }) {
+export function Nav({ base, q, notes, open, current, slug }: { base: string; q: string; notes: NoteLink[]; open: number | null; current: 'home' | 'issues' | 'note' | 'overview'; slug?: string }) {
   return (
     <nav className="kb-nav" aria-label="Key links">
       <Group
@@ -80,6 +80,7 @@ export function Nav({ base, q, notes, open, current, slug }: { base: string; q: 
         links={[
           { name: 'Overview', url: null, href: `${base}/` || '/', current: current === 'home' },
           { name: 'Every issue', url: null, href: `${base}/issues`, note: open === null ? undefined : `${open} open`, current: current === 'issues' },
+          { name: 'Ola in one page', url: null, href: `${base}/overview`, current: current === 'overview' },
         ]}
       />
       <Group title="Open" links={OPEN} />
@@ -114,7 +115,7 @@ export default function Shell({
   user: string
   notes: NoteLink[]
   open: number | null
-  current: 'home' | 'issues' | 'note'
+  current: 'home' | 'issues' | 'note' | 'overview'
   slug?: string
   aside?: React.ReactNode
   children: React.ReactNode

@@ -502,3 +502,12 @@
 .kb-md-table { overflow-x: auto; }
 .kb-md table { border-collapse: collapse; font-size: 14.5px; }
 .kb-md th, .kb-md td { border-bottom: 1px solid var(--line); padding: 6px 10px 6px 0; text-align: left; vertical-align: top; }
+
+/* Ola in one page (OLA-132): a card on the overview and its own page, /overview. The badge is the
+   status pill's shape; red (the warn red, white text) only when the page is stale. */
+.kb-badge { display: inline-block; vertical-align: 0.3em; margin-left: 8px; border: 1.5px solid var(--edge); border-radius: 99px; padding: 0 9px; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; background: var(--card); color: var(--ink-2); }
+.kb-badge.stale { background: #b3392f; border-color: #b3392f; color: #fffaf0; }
+.kb-badge.unknown { border-style: dashed; color: var(--ink-3); }
+.kb-crumb .kb-badge { margin: 0 6px 0 0; vertical-align: 0; }
+.kb-ov-page .kb-more { margin: -6px 0 22px; }
+.kb-ov-lede { margin: 0; max-width: 44em; font-size: 16.5px; line-height: 1.55; color: var(--ink-2); }

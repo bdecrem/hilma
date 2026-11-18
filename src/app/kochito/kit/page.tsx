@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { loadBoard } from '@/lib/venture/board'
+import { loadOverview } from '@/lib/venture/overview'
 import Board from './Board'
 import { FACE, gate } from './gate'
 import Login from './Login'
@@ -20,5 +21,6 @@ export const viewport: Viewport = { themeColor: '#f6ecd9', viewportFit: 'cover' 
 export default async function Page() {
   const { user, base, q } = await gate()
   if (!user) return <Login face={FACE} />
-  return <Board d={await loadBoard()} q={q} user={user} face={FACE} base={base} />
+  const [d, o] = await Promise.all([loadBoard(), loadOverview()])
+  return <Board d={d} o={o} q={q} user={user} face={FACE} base={base} />
 }

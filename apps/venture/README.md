@@ -208,6 +208,14 @@ the filters are the address), each issue has its own page `/issues/OLA-n`
 `/notes/<slug>`, behind the same sign-in (`next.config.ts` rewrites the three
 paths on that host).
 
+**Ola in one page** (OLA-132): a card on the overview and its own page,
+`app.kochitolabs.com/overview`, render `apps/activist-ai/OVERVIEW.md` (read from
+the deployment's files; `next.config.ts` traces it into those routes). Its red
+"stale" badge follows `scripts/venture/overview-check.mjs`'s rule: Vercel has
+no git, so `src/lib/venture/overview.ts` asks GitHub's public API for Ola's
+commits on main since the page's "Last checked against" hash, cached 15
+minutes; when GitHub cannot be read the card says "not checked" and why.
+
 **The issue tracker** is the record of work and the source of the plate (the
 journal's "On my plate" is no longer read by anything; the journal keeps Now,
 Decided, To be decided, Check-in list and the day notes). Tables
