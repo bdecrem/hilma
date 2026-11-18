@@ -26,10 +26,26 @@ final class AdminState {
   var signedIn: Bool { token.map { !$0.expired() } ?? false }
 
   func refresh() async {
-    guard let t = token, !ProcessInfo.processInfo.arguments.contains("-OlaAdminFixture") else { return }
+    guard !ProcessInfo.processInfo.arguments.contains("-OlaAdminFixture") else { return }
+    if !signedIn { await viaOla() }
+    guard let t = token else { return }
     do { links = try await AdminAuth.check(t) } catch let e as AdminAuth.Failure {
-      if case .refused = e { signOut(); problem = "Sign in again." }
+      if case .refused = e {
+        signOut()
+        await viaOla()
+        if token == nil { problem = "Sign in again." }
+      }
     } catch {}
+  }
+
+  /// An admin signed in to Ola needs no second sign-in (OLA-151; Bart, 2026-11-18: "user bart is an
+  /// admin user and i want to see the voice chat tab"). Quiet for everyone else.
+  func viaOla() async {
+    guard let s = AccountKeeper.session, let (t, l) = try? await AdminAuth.signIn(ola: s) else { return }
+    AdminAuth.save(t)
+    token = t
+    links = l
+    problem = nil
   }
 
   func signIn(_ name: String, _ password: String) async -> Bool {
@@ -76,7 +92,7 @@ struct PhoneShell: View {
         TabView(selection: $tab) {
           sessions(gear: false).tabItem { Label("Sessions", systemImage: "bubble.left.and.text.bubble.right") }.tag("sessions")
           if admin.signedIn {
-            NavigationStack { KitRootView() }.tabItem { Label("Kit", systemImage: "waveform") }.tag("kit")
+            NavigationStack { KitRootView() }.tabItem { Label("Voice Chat", systemImage: "waveform") }.tag("kit")
           }
           NavigationStack { SettingsScreen(store: store) }.tabItem { Label("Settings", systemImage: "gearshape") }.tag("settings")
         }

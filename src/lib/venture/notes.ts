@@ -13,7 +13,10 @@ export const NOTES_DOC_MAX = 150_000 // a longer file is a raw dump, not a note:
 // "now" (where things stand) goes first, then the standing rules distilled from Bart's
 // corrections, the corrections themselves and the lessons: he asked (2026-11-14) that those
 // "are always part of your context". These load whatever their size.
-const FIRST = ['now', 'rules', 'corrections', 'lessons', 'charter', 'bets', 'kit', '001-founding-interview']
+// "terminal-chat" is what Bart and the terminal Kit said, kept current after every message
+// (scripts/venture/chat-export.py; 2026-11-18, Bart to the voice Kit: "You typed it just now in
+// the chat that I'm having with you. Go read it.").
+const FIRST = ['now', 'terminal-chat', 'rules', 'corrections', 'lessons', 'charter', 'bets', 'kit', '001-founding-interview']
 
 // Which documents are loaded in full and which are only listed: the FIRST ones, then the
 // rest newest first, each taken if it is under the per-file limit and still fits.

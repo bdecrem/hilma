@@ -88,7 +88,10 @@ async function putRemoteManifest(m) {
 const cmd = process.argv[2]
 if (cmd === 'push') {
   const have = new Map((await rows()).map((r) => [r.slug, r]))
-  for (const f of files()) {
+  // `push --only <file.md>`: that one document and nothing else (the terminal conversation, after
+  // every message: scripts/venture/chat-export.py).
+  const only = process.argv[3] === '--only' ? process.argv[4] : null
+  for (const f of files().filter((f) => !only || f === only)) {
     const body = readFileSync(new URL(f, dir), 'utf8').trim()
     if (!body) {
       console.log(`skipped ${f}: empty (a report still being written?)`) // an agent's placeholder must not block every other note
@@ -102,6 +105,7 @@ if (cmd === 'push') {
     if (error) throw new Error(error.message)
     console.log(`pushed ${f} → ${slug}`)
   }
+  if (only) process.exit(0)
   await bucket()
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {}
   // what the bucket holds; the first time, this machine's own record of what it uploaded
@@ -139,6 +143,13 @@ if (cmd === 'push') {
   // the notes past it and both lines went dead until Bart spoke to one).
   const check = spawnSync('npx', ['tsx', fileURLToPath(new URL('scripts/venture/notes-check.ts', root)), '--quiet'], { stdio: 'inherit' })
   if (check.status !== 0) process.exit(check.status ?? 1)
+} else if (cmd === 'drop') {
+  // `drop <slug>`: removes one document's row (a note that was renamed or replaced). The file is yours to delete.
+  const slug = process.argv[3]
+  if (!slug) throw new Error('usage: sync.mjs drop <slug>')
+  const { error } = await db.from('venture_docs').delete().eq('slug', slug)
+  if (error) throw new Error(error.message)
+  console.log(`dropped ${slug}`)
 } else if (cmd === 'pull') {
   mkdirSync(dir, { recursive: true })
   for (const r of await rows()) {

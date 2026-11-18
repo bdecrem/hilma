@@ -35,6 +35,10 @@ function users(): Map<string, string> {
   return out
 }
 
+// Is this name one of the site's accounts? (An admin's Ola sign-in may stand in for the passcode:
+// src/app/api/kochito/app-token/route.ts.)
+export const isAppUser = (name: string): boolean => /^[a-z0-9_-]{1,40}$/.test(name) && users().has(name)
+
 const same = (a: string, b: string) => timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest())
 const sign = (payload: string) => createHmac('sha256', need('KOCHITO_APP_SECRET')).update(payload).digest('base64url')
 

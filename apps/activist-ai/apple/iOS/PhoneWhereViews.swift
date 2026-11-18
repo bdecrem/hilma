@@ -93,6 +93,8 @@ final class PhoneWhereState {
       signedInName = AccountKeeper.name
       setup = nil
       use(.machine, store: store)
+      // An admin's Ola sign-in also brings the Voice Chat tab (OLA-151).
+      Task { await AdminState.shared.refresh() }
       return true
     } catch {
       problem = (error as? LocalizedError)?.errorDescription ?? PhoneWhere.words(error)

@@ -59,6 +59,21 @@ public enum AdminAuth {
     return (t, links(j))
   }
 
+  /// An admin's Ola sign-in is enough (OLA-151): the site asks Ola who this sign-in is and, for an
+  /// Ola admin who is also one of its accounts, answers as the passcode sign-in does. `refused`
+  /// for anyone else. The Ola sign-in is sent to our own site only, over HTTPS, and not kept there.
+  public static func signIn(ola: AccountSession, session: URLSession = .shared, site: URL = site) async throws -> (AdminToken, [AdminLink]) {
+    var r = URLRequest(url: site.appendingPathComponent("api/kochito/app-token"))
+    r.httpMethod = "POST"
+    r.setValue("application/json", forHTTPHeaderField: "content-type")
+    r.httpBody = JSON.object(["ola": .string(ola.token)]).data
+    let (d, res) = try await fetch(r, session)
+    let j = JSON.parse(d) ?? .null
+    guard res.statusCode == 200 else { throw Failure.refused(j["error"].string ?? "That did not work.") }
+    guard let t = AdminToken(j["token"].str) else { throw Failure.badReply }
+    return (t, links(j))
+  }
+
   /// Is the token still good? Returns the links; throws `refused` when it is not.
   public static func check(_ t: AdminToken, session: URLSession = .shared, site: URL = site) async throws -> [AdminLink] {
     if t.expired() { throw Failure.refused("Sign in again.") }
