@@ -1819,9 +1819,12 @@ code {
     grid-template-columns: 1fr;
     gap: var(--s5);
   }
+  /* On a phone the fields and Sign in come first, above the fold; the study sits below them
+     (Nov 17: at 390 px the drawing pushed the button off the first screen). */
   .gate-art {
-    order: -1;
-    max-width: 340px;
+    order: 1;
+    max-width: 280px;
+    margin: var(--s4) auto 0;
   }
   .gate-art figcaption {
     display: none;
