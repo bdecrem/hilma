@@ -161,7 +161,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   var peer: OlaStore?
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
+  /// No icons in the Ola menu (Bart, 2026-11-18, the third time: "get rid of that icon", the gear
+  /// beside Settings). This macOS puts a symbol on every standard item of the application menu;
+  /// they are taken off whenever the menu is built, changed or about to open.
+  func plainAppMenu() {
+    guard let menu = NSApp.mainMenu?.items.first?.submenu else { return }
+    for i in menu.items where i.image != nil { i.image = nil }
+  }
+  private var menuWatch: [NSObjectProtocol] = []
+  func keepAppMenuPlain() {
+    let c = NotificationCenter.default
+    for n in [NSMenu.didAddItemNotification, NSMenu.didChangeItemNotification, NSMenu.didBeginTrackingNotification, NSApplication.didBecomeActiveNotification, NSApplication.didUpdateNotification] {
+      menuWatch.append(c.addObserver(forName: n, object: nil, queue: .main) { [weak self] _ in MainActor.assumeIsolated { self?.plainAppMenu() } })
+    }
+    plainAppMenu()
+  }
+
   func applicationDidFinishLaunching(_ notification: Notification) {
+    MainActor.assumeIsolated { keepAppMenuPlain() }
+    // `-OlaMenuProbe <file>` (a hidden second instance, for a check): writes each item of the Ola
+    // menu with whether it carries an icon, then quits. Bart, 2026-11-18, three times: no icon
+    // beside Settings in the Ola menu.
+    if let i = CommandLine.arguments.firstIndex(of: "-OlaMenuProbe"), i + 1 < CommandLine.arguments.count {
+      let path = CommandLine.arguments[i + 1]
+      DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        let items = NSApp.mainMenu?.items.first?.submenu?.items ?? []
+        let lines = items.filter { !$0.isSeparatorItem }.map { i -> String in
+          guard let im = i.image else { return "\(i.title)\tno icon" }
+          return "\(i.title)\tICON \(im.name() ?? "?") \(Int(im.size.width))x\(Int(im.size.height)) reps \(im.representations.count) desc \(im.accessibilityDescription ?? "-")"
+        }
+        try? lines.joined(separator: "\n").write(toFile: path, atomically: true, encoding: .utf8)
+        exit(0)
+      }
+      return
+    }
     // Not in the snapshot, self-test or `ola` modes (they never show a window); not before the
     // first download exists (the feed answers 404 and the quiet check says nothing).
     let args = ProcessInfo.processInfo.arguments.dropFirst()
