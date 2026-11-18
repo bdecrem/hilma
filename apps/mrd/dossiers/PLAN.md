@@ -1,5 +1,7 @@
 # Dossier due diligence, and 25 new countries
 
+**Paused by Bart on 2026-11-18 at 06:27: every script stopped, nothing may run (no Fable, no Opus, no Sonnet) until he says so.** Left: Costa Rica 17, Qatar 4, China 12 answers to recode; restart with `nohup ./keep-checking.sh > logs/keep-checking.log 2>&1 &` only on his word.
+
 Agreed with Bart on 2026-11-17. Status: Part 1 started that afternoon (`nohup ./check-all.sh`, log
 `logs/check-all.log`; `python3 audit.py <slug> --report` per country). Parts 2 to 4 follow in order.
 How it is built: "The checks" in README.md.
