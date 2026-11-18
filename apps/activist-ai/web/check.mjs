@@ -103,7 +103,7 @@ const lastTurn = (page) => page.locator('.drawer .turn').last()
 async function openConversation(page, url) {
   await page.goto(`${url}#/`)
   await page.locator('.drawer.open #ask-input, .thing').locator('visible=true').first().waitFor({ timeout: 30_000 })
-  if (!(await page.locator('.drawer.open').count())) await page.getByRole('button', { name: 'Ask Ola' }).click()
+  if (!(await page.locator('.drawer.open').count())) await page.getByRole('button', { name: 'Ask Ola' }).click({ timeout: 3000 }).catch(() => {})
   await page.waitForSelector('.drawer.open #ask-input')
 }
 const waitDone = (page, ms = 60_000) => page.waitForFunction(() => {

@@ -246,6 +246,14 @@ const browser = await chromium.launch()
 const foreign = new Set()
 async function person(viewport = { width: 1280, height: 860 }) {
   const ctx = await browser.newContext({ viewport })
+  // The page remembers "Lots of permissions" per project (OLA-142). These checks were written for a
+  // page that starts each load under Lots: forget the choice at every load, so one check's "Ask
+  // before each step" never follows a later check (web/check.mjs covers the memory itself).
+  await ctx.addInitScript(() => {
+    try {
+      for (const k of Object.keys(localStorage)) if (k.startsWith('ola.permissions.')) localStorage.removeItem(k)
+    } catch {}
+  })
   const page = await ctx.newPage()
   const cdp = await ctx.newCDPSession(page)
   await cdp.send('WebAuthn.enable')
@@ -1603,8 +1611,10 @@ if (!LIVE) {
     await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
     await A.page.waitForSelector('.project-title')
     // A phone opens on the conversation itself (OLA-128); a laptop has the Ask Ola bar.
-    await A.page.locator('.drawer.open #ask-input, .askbar, .askdock').locator('visible=true').first().waitFor({ timeout: 30_000 })
-    if (!(await A.page.locator('.drawer.open').count())) await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
+    // (The bar can show for a moment before a phone opens its conversation: a short try, then the drawer.)
+    await A.page.locator('.drawer.open #ask-input, .askbar').locator('visible=true').first().waitFor({ timeout: 30_000 })
+    if (!(await A.page.locator('.drawer.open').count())) await A.page.getByRole('button', { name: 'Ask Ola' }).first().click({ timeout: 3000 }).catch(() => {})
+    await A.page.waitForSelector('.drawer.open #ask-input', { timeout: 15_000 })
     await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
     await A.page.locator('#lots-switch').setChecked(how === 'Lots of permissions')
     await A.page.fill('#ask-input', `Please search the web for ${Q}`)
