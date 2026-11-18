@@ -1,9 +1,9 @@
 // Ola's App Store Connect setup, over the API, safe to run again (each step checks first):
-//   1. bundle ids cx.ola.phone (iOS) and cx.ola.mac (macOS, reserved for the signed download)
-//   2. Push Notifications on cx.ola.phone (the phone's notifications, apple/README.md)
-//   3. the app record "Ola" for cx.ola.phone, SKU cx-ola-phone, English (U.S.)
+//   1. bundle id cx.ola.mac, shared by the iPhone app and the Mac app (one record, 2026-11-17)
+//   2. Push Notifications on cx.ola.mac (the phone's notifications, apple/README.md)
+//   3. the app record "Ola: private AI agent" for cx.ola.mac (made by hand; the API cannot), English (U.S.)
 //   4. the internal TestFlight group "Ola internal" (every build), with the Account Holder in it
-//   5. the IOS_APP_STORE profile "ola phone appstore m1" for this Mac's Apple Distribution
+//   5. the IOS_APP_STORE profile "ola appstore m1" for this Mac's Apple Distribution
 //      certificate, minted after push is on and installed for xcodebuild
 //
 //   node apps/activist-ai/apple/testflight/asc-setup.mjs
@@ -14,10 +14,10 @@
 import { execSync } from 'node:child_process'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'
 import { api, TEAM } from './asc.mjs'
 
-const PHONE = 'cx.ola.phone', MAC = 'cx.ola.mac'
-const APP_NAMES = ['Ola', 'Ola: private AI agent', 'Ola Agent']
+const PHONE = 'cx.ola.mac' // the iPhone app uses the Mac's id and record
+const APP_NAMES = ['Ola: private AI agent']
 const SKU = 'cx-ola-phone', GROUP = 'Ola internal'
-const PROFILE = process.env.OLA_PROFILE ?? 'ola phone appstore m1'
+const PROFILE = process.env.OLA_PROFILE ?? 'ola appstore m1'
 const results = []
 const say = (step, state, note = '') => { results.push([step, state, note]); console.log(`${state.padEnd(8)} ${step}${note ? ': ' + note : ''}`) }
 
@@ -28,7 +28,7 @@ async function step(name, fn) {
   }
 }
 
-let phoneId, macId, appId, groupId
+let phoneId, appId, groupId
 async function bundleId(identifier, platform, name) {
   const have = (await api('GET', `/v1/bundleIds?filter[identifier]=${identifier}&limit=5`)).data.find((b) => b.attributes.identifier === identifier)
   if (have) { say(`bundle id ${identifier}`, 'OK', 'already registered'); return have.id }
@@ -37,14 +37,13 @@ async function bundleId(identifier, platform, name) {
 }
 
 await step(`bundle id ${PHONE}`, async () => { phoneId = await bundleId(PHONE, 'IOS', 'Ola phone') })
-await step(`bundle id ${MAC}`, async () => { macId = await bundleId(MAC, 'MAC_OS', 'Ola Mac') })
 
-await step('push notifications on cx.ola.phone', async () => {
+await step(`push notifications on ${PHONE}`, async () => {
   if (!phoneId) throw new Error('waiting')
   const caps = (await api('GET', `/v1/bundleIds/${phoneId}/bundleIdCapabilities`)).data
-  if (caps.some((c) => c.attributes.capabilityType === 'PUSH_NOTIFICATIONS')) return say('push notifications on cx.ola.phone', 'OK', 'already on')
+  if (caps.some((c) => c.attributes.capabilityType === 'PUSH_NOTIFICATIONS')) return say(`push notifications on ${PHONE}`, 'OK', 'already on')
   await api('POST', '/v1/bundleIdCapabilities', { data: { type: 'bundleIdCapabilities', attributes: { capabilityType: 'PUSH_NOTIFICATIONS' }, relationships: { bundleId: { data: { type: 'bundleIds', id: phoneId } } } } })
-  say('push notifications on cx.ola.phone', 'MADE')
+  say(`push notifications on ${PHONE}`, 'MADE')
 })
 
 await step('app record', async () => {
@@ -86,9 +85,8 @@ await step('tester (the Account Holder)', async () => {
   const email = holder.attributes.username
   const inGroup = (await api('GET', `/v1/betaGroups/${groupId}/betaTesters?limit=200`)).data
   if (inGroup.some((t) => (t.attributes.email ?? '').toLowerCase() === email.toLowerCase())) return say('tester (the Account Holder)', 'OK', 'already in the group')
-  const existing = (await api('GET', `/v1/betaTesters?filter[email]=${encodeURIComponent(email)}&limit=5`)).data[0]
-  if (existing) await api('POST', `/v1/betaGroups/${groupId}/relationships/betaTesters`, { data: [{ type: 'betaTesters', id: existing.id }] })
-  else await api('POST', '/v1/betaTesters', { data: { type: 'betaTesters', attributes: { email, firstName: holder.attributes.firstName, lastName: holder.attributes.lastName }, relationships: { betaGroups: { data: [{ type: 'betaGroups', id: groupId }] } } } })
+  // Always by email: adding an existing tester record to an internal group is a 409 (2026-11-17).
+  await api('POST', '/v1/betaTesters', { data: { type: 'betaTesters', attributes: { email, firstName: holder.attributes.firstName, lastName: holder.attributes.lastName }, relationships: { betaGroups: { data: [{ type: 'betaGroups', id: groupId }] } } } })
   say('tester (the Account Holder)', 'MADE', 'added to the group (TestFlight sends the invitation)')
 })
 

@@ -31,7 +31,7 @@ if env["OLA_PUSH_SEND"] == "1" {
   if phones.isEmpty { print("FAIL  no paired phone has given its push token yet"); exit(1) }
   var ok = true
   for p in phones {
-    let apns = try APNs(p8: p8, keyID: kid, teamID: "274T5WCVD2", topic: "cx.ola.phone", host: p.pushSandbox == false ? APNs.production : APNs.sandbox)
+    let apns = try APNs(p8: p8, keyID: kid, teamID: "274T5WCVD2", topic: "cx.ola.mac", host: p.pushSandbox == false ? APNs.production : APNs.sandbox)
     let e = NotifyEvent(kind: .finished, session: "test", title: "Ola", body: "Done: notifications work.", key: "test:\(Date().timeIntervalSince1970)")
     let (status, reason) = await apns.send(e, device: p.pushToken!)
     print("\(status == 200 ? "PASS" : "FAIL")  a notification to \(p.label)  (\(status)\(reason.isEmpty ? "" : " \(reason)"))")

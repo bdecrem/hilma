@@ -31,7 +31,7 @@ extension Color {
 /// and one color that means "Ola needs you". Each value is named by its role. Three palettes were
 /// drawn side by side (apple-shots/polish-2/palettes.png); the chosen one is the default and the
 /// other two can be shown without a rebuild: `defaults write cx.ola.mac OlaPalette A|B|C`
-/// (on the phone, the same key in cx.ola.phone).
+/// (on the phone, the same key in cx.ola.mac).
 struct Palette {
   var id: String
   // The frame: sidebar, title bar, the room around the page. One tonal step from the page.

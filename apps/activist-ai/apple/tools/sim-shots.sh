@@ -17,8 +17,8 @@ xcrun simctl install "$UDID" "$APP"
 shot() { # name, appearance, args...
   local name=$1 look=$2; shift 2
   xcrun simctl ui "$UDID" appearance "$look"
-  xcrun simctl terminate "$UDID" cx.ola.phone 2>/dev/null || true
-  xcrun simctl launch "$UDID" cx.ola.phone "$@" >/dev/null
+  xcrun simctl terminate "$UDID" cx.ola.mac 2>/dev/null || true
+  xcrun simctl launch "$UDID" cx.ola.mac "$@" >/dev/null
   sleep "${OLA_WAIT:-4}"
   xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "$OUT/$name.png"

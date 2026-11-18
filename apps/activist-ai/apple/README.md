@@ -17,7 +17,7 @@ apple/
     olakit-selftest    a command-line check against the real server
   Shared/            SwiftUI used by both apps: theme, Markdown, the conversation, approvals, connect, pages
   Mac/               the Mac app (cx.ola.mac)
-  iOS/               the iPhone app (cx.ola.phone)
+  iOS/               the iPhone app (cx.ola.mac)
   tools/             build.sh, the icon and the fonts
 ```
 
@@ -330,7 +330,7 @@ dark-blue bar made it dark gray on blue in light mode). Three palettes were draw
 (`~/Desktop/ola-brand/apple-shots/polish-2/palettes.png`): A ink and paper (the accent is the ink), B
 paper with the blue accent (chosen), C a slate frame with the blue accent. A and C stay selectable
 without a rebuild: `defaults write cx.ola.mac OlaPalette A` (or `C`; `defaults delete cx.ola.mac
-OlaPalette` for the chosen one), then relaunch; on the phone the same key in `cx.ola.phone`.
+OlaPalette` for the chosen one), then relaunch; on the phone the same key in `cx.ola.mac`.
 Snapshot renders all three (`OLA_ONLY=palette`).
 
 **Scale (2026-11-16 design pass, `Shared/Theme.swift`).** On the Mac the interface is the system's
@@ -367,7 +367,7 @@ While Ola works, the run line shows one of four small characters drawn in code i
 dot (`Shared/WorkingArt.swift`, placed by `Shared/Working.swift`): **swing** (the icon's tag on its
 string), **hop** (the coral comma hopping on its tail), **machine** (the sidebar's datacenter box), and
 **eyes** (the 👀, drawn). One per run, by the run's id, so the Mac and the phone show the same one in
-the same pose; `defaults write cx.ola.mac OlaWorking hop` (or `cx.ola.phone`) forces one, `defaults
+the same pose; `defaults write cx.ola.mac OlaWorking hop` (or `cx.ola.mac`) forces one, `defaults
 delete` undoes it. A rare special beat every 20 to 40 s; a new step gets a small acknowledging beat;
 waiting for a yes, it stops and looks down at the approval; done and failed get a short goodbye. After
 20 s with nothing new, a 120-point version comes out under the run and tucks back when something
@@ -508,12 +508,12 @@ counted, refused again after off).
 
 **Notifications** go to the phone for two things only: a run finished (done, or stopped by itself) and
 a run waiting for Bart (an approval). The Mac app sends them through Apple push (`OlaKit/Notify.swift`:
-an ES256 token from the team's key, `cx.ola.phone` as the topic, Apple's sandbox host for debug
+an ES256 token from the team's key, `cx.ola.mac` as the topic, Apple's sandbox host for debug
 builds); the phone gives its push token and its two switches (Finished, Needs me) to the Mac through
 the relay, and says which session is on screen (that one does not notify). The key is imported once in
 Mac Settings, Phone notifications, Set Up (an open panel at the key file), and kept in the Keychain.
 They come only while Ola is open on the Mac. **Blocked by Apple, not code:** the push capability
-needs Push Notifications on the App ID `cx.ola.phone`, and Xcode cannot add it until Bart accepts the
+needs Push Notifications on the App ID `cx.ola.mac`, and Xcode cannot add it until Bart accepts the
 latest Program License Agreement at developer.apple.com. So the iPhone build signs without push by
 default; after he accepts, `OLA_PUSH=1 tools/build.sh device` builds it with push. A real test
 notification: `OLA_PUSH_SEND=1 swift run olakit-selftest` (only with Bart watching).

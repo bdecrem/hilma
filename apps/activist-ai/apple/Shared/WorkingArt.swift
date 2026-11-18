@@ -12,7 +12,7 @@ enum WorkingCharacter: String, CaseIterable, Sendable {
   /// Forced for renders (never written to defaults).
   nonisolated(unsafe) static var forced: WorkingCharacter?
 
-  /// One per run, by seed; `defaults write cx.ola.mac OlaWorking <name>` (or cx.ola.phone) forces one.
+  /// One per run, by seed; `defaults write cx.ola.mac OlaWorking <name>` (on the phone too) forces one.
   static func pick(seed: UInt64) -> WorkingCharacter {
     if let forced { return forced }
     if let s = UserDefaults.standard.string(forKey: "OlaWorking"), let c = WorkingCharacter(rawValue: s.lowercased()) { return c }

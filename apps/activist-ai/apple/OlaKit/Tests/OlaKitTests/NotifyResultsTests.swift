@@ -46,13 +46,13 @@ final class NotifyResultsTests: XCTestCase {
     }
     let port = try await server.start()
     defer { server.stop() }
-    let apns = try APNs(p8: key.pemRepresentation, keyID: "KEYID12345", teamID: "274T5WCVD2", topic: "cx.ola.phone", host: URL(string: "http://127.0.0.1:\(port)")!)
+    let apns = try APNs(p8: key.pemRepresentation, keyID: "KEYID12345", teamID: "274T5WCVD2", topic: "cx.ola.mac", host: URL(string: "http://127.0.0.1:\(port)")!)
     let e = NotifyEvent.needsYou(Approval(id: "per_9", sessionID: "ses_1", action: "shell", title: "Ola wants to run a command", items: [], stepID: nil), session: session)
     let (status, _) = await apns.send(e, device: "abc123")
     XCTAssertEqual(status, 200)
     let r = try XCTUnwrap(received)
     XCTAssertEqual(r.path, "/3/device/abc123")
-    XCTAssertEqual(r.header("apns-topic"), "cx.ola.phone")
+    XCTAssertEqual(r.header("apns-topic"), "cx.ola.mac")
     XCTAssertEqual(r.header("apns-push-type"), "alert")
     let body = try XCTUnwrap(JSON.parse(r.body))
     XCTAssertEqual(body["aps"]["alert"]["title"].str, "Dancing cat")

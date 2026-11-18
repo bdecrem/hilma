@@ -10,7 +10,7 @@ import SwiftUI
 @Observable
 final class PhonePush {
   static let teamID = "274T5WCVD2"
-  static let topic = "cx.ola.phone"
+  static let topic = "cx.ola.mac"
   /// Set when the key went into the Keychain, so Settings can say so without reading it.
   static let readyKey = "ola.push.ready"
   let link: PhoneLink

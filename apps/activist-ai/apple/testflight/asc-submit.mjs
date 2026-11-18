@@ -2,9 +2,9 @@
 // internal group "Ola internal" (a group with every build gets it by itself; adding it then is a
 // 422), and say where it stands. Internal testers need no beta review, so nothing is submitted.
 //   node apps/activist-ai/apple/testflight/asc-submit.mjs <buildNumber> [IOS|MAC_OS]
-// The app is found by bundle id (cx.ola.phone); ASC_KEY_ID picks the key (748UX45NAP here).
+// The app is found by bundle id (cx.ola.mac, iPhone and Mac); ASC_KEY_ID picks the key (748UX45NAP here).
 import { api, sleep } from './asc.mjs'
-const BUILD = process.argv[2], PLAT = process.argv[3] ?? 'IOS', BUNDLE = PLAT === 'MAC_OS' ? 'cx.ola.mac' : 'cx.ola.phone'
+const BUILD = process.argv[2], PLAT = process.argv[3] ?? 'IOS', BUNDLE = 'cx.ola.mac'
 if (!BUILD) { console.error('usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]'); process.exit(1) }
 const app = (await api('GET', `/v1/apps?filter[bundleId]=${BUNDLE}`)).data[0]
 if (!app) { console.error(`no App Store Connect app for ${BUNDLE}: run node testflight/asc-setup.mjs`); process.exit(1) }

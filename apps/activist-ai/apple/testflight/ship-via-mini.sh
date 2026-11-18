@@ -5,7 +5,7 @@
 # beta-SDK archives, so the archive is built UNSIGNED on the Mac mini with its release Xcode
 # (this script rsyncs apple/ and workspace/ plus the generated Ola.xcodeproj to ~/ola-ship there;
 # the mini needs no git and no xcodegen), copied back, signed here, then:
-#   ios  exported with the "ola phone appstore m1" profile and uploaded with the ASC key, then
+#   ios  exported with the "ola appstore m1" profile and uploaded with the ASC key, then
 #        asc-submit.mjs waits for processing and puts the build in the internal group
 #   mac  signed with Developer ID (hardened runtime), notarized, stapled, a disk image published
 #        to public/ola-site/mac/ with latest.json (the app's update check), committed and pushed
@@ -27,7 +27,7 @@ KEYS="$HOME/.appstoreconnect/private_keys"
 KEY_ID=${ASC_KEY_ID:-748UX45NAP}
 ISSUER="69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
 TEAM=274T5WCVD2
-PROFILE=${OLA_PROFILE:-ola phone appstore m1}
+PROFILE=${OLA_PROFILE:-ola appstore m1}
 DIST="Apple Distribution: Bart Decrem ($TEAM)"
 DRY=${DRY:-}
 [ -f "$KEYS/AuthKey_$KEY_ID.p8" ] || { echo "error: no App Store Connect key $KEY_ID in $KEYS" >&2; exit 1; }
@@ -112,7 +112,7 @@ ship_ios() {
   # 127 shipped without theirs).
   local ent="$OUT/ios.entitlements"
   sed 's#<string>development</string>#<string>production</string>#' iOS/Ola.entitlements > "$ent"
-  /usr/libexec/PlistBuddy -c "Add :application-identifier string $TEAM.cx.ola.phone" \
+  /usr/libexec/PlistBuddy -c "Add :application-identifier string $TEAM.cx.ola.mac" \
     -c "Add :com.apple.developer.team-identifier string $TEAM" \
     -c "Add :get-task-allow bool false" -c "Add :beta-reports-active bool true" "$ent" >/dev/null
   find "$app/Frameworks" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) 2>/dev/null | while read -r f; do
@@ -136,7 +136,7 @@ ship_ios() {
 <key>signingStyle</key><string>manual</string>
 <key>signingCertificate</key><string>Apple Distribution</string>
 <key>teamID</key><string>$TEAM</string>
-<key>provisioningProfiles</key><dict><key>cx.ola.phone</key><string>$PROFILE</string></dict>
+<key>provisioningProfiles</key><dict><key>cx.ola.mac</key><string>$PROFILE</string></dict>
 </dict></plist>
 PLIST
   echo "== exporting with \"$PROFILE\" ($dest)"
