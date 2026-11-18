@@ -431,7 +431,7 @@ def decide_one(r):
             issues.append(f"implementation: the redo rates \"{redo['implementation']}\", the first coder \"{o['implementation']}\", the second reader \"{v['implementation_answer']}\" ({v['implementation_verdict'].replace('_', ' ')})")
     if issues:
         return "review", "The readers do not agree: " + "; ".join(issues) + ".", None
-    if same_p and same_i:
+    if same_p and redo["implementation"] == o["implementation"]:
         return "verified", "Coded again from the primary sources with the same result; the new sources were checked. " + (redo.get("what_changed") or ""), redo
     return "changed", (redo.get("what_changed") or "Changed after the redo."), redo
 

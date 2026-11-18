@@ -34,9 +34,26 @@ confidence; 25 answers went to the recode.
 | 101, status after loss of employment | The second reader read the migration law and its regulation and finds that losing the job is a ground for cancelling status; the dossier's answer is more favourable. | Second reader | Still in the recode |
 | 33, destruction of documents | A wrong article number (the penalty for private documents is art. 368) and unsupported evidence. | Recode | Corrected in the recode; decision pending |
 
+## Portugal (checks finished 2026-11-17: 59 verified as they were, 5 changed, 0 waiting; $238)
+
+The source check failed 13 of 64 answers, the second reader objected to 4, 1 was low confidence; 16
+went to the recode. No protection answer changed. Five implementation ratings moved half a step.
+
+| Indicator | What was wrong | Caught by | Outcome |
+|---|---|---|---|
+| 19, 49, 53, 125, 127 | The words quoted from the Foreigners Act (Lei 23/2007, arts. 83 and 142) and the Asylum Act (Lei 27/2008, art. 7) were not at the cited article on the page cited; 127 also quoted a 2014 text that a 2025 decree-law has replaced. | Source check | Fixed: each article re-read on the official gazette and cited where the text is; answers unchanged |
+| 11, 41, 71, 81, 133 | No source the coder opened shows practice; in 81 one "source" was a verify-you-are-human wall. | Source check | Fixed: evidence rebuilt from sources opened in the recode; ratings unchanged. 41 also corrected a point of law: the Asylum Act's art. 12 was rewritten by Lei 62/2026 |
+| 67, humanitarian migrants' route to citizenship | The practice evidence said nothing about refugees or other protection holders. | Source check and second reader | Changed: "Sometimes; Usually" to "Sometimes", on refugee-specific evidence |
+| 77, same-sex couples in family reunification | The only practice source was about general delays at the migration agency. | Source check and second reader | Changed: "Usually; Effectively Always" to "Usually", confidence lowered to low because nothing documents practice for same-sex couples |
+| 123, public housing | The rating was not supported by its evidence. | Second reader | Changed: "Usually" to "Sometimes; Usually"; allocation rules in Lagos and Lisbon limit access |
+| 135, discrimination on race or ethnicity | The second reader found practice worse than rated. | Second reader | Changed: "Sometimes; Usually" to "Sometimes"; the anti-discrimination commission has issued no decisions in the period |
+| 33, confiscation or destruction of documents | Evidence rebuilt in the recode shows confiscation of workers' documents is frequent (GRETA 2026, US TIP 2025, the Beja acquittals). | Recode | Changed: "Usually" to "Sometimes; Usually" |
+| 5, 47 | Claims attributed to sources that do not contain them (a GREVIO press release that says nothing about migrant women; an asylum report cited for residence refusals after convictions). | Source check (claim not in the source) | Recorded |
+
 ## When a check was wrong
 
 | Date | What | Fix |
 |---|---|---|
 | 2026-11-17 | The source check matched evidence to answers by group labels alone, and failed every detention answer because evidence about detained irregular migrants was "not about all migrants". | The check now asks whether the evidence fits the people the right matters for. |
 | 2026-11-17 | The source check called a full-text reproduction of a law on a third-party site (a law firm's library, Justia, vLex) a "secondary account" and failed the answer: Costa Rica 9 and 11 on the first pass, 39 and 127 on their recodes. | The check now goes by what is on the page: the full text anywhere is the text itself; an article, guide or summary is a secondary account even when it quotes. 39 and 127 are being checked again. |
+| 2026-11-17 | The decision step reported a rating that moved half a step as "verified". Half a step counts as agreement between readers; it is still a change to what is published. | Any difference between the old and new answer is now reported as changed (Portugal 33, 67, 77, 123, 135; Costa Rica 33). |
