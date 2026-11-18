@@ -24,9 +24,12 @@ State all of this plainly; this is a standing expectation, not a one-off.
 
 ## Context: when to /clear, and "handoff" (2026-11-17)
 
-`.claude/hooks/context-check.py` (Stop + PreCompact) texts Bart and prints a line when a
+`.claude/hooks/context-check.py` (Stop + PreCompact) prints one line in the terminal when a
 session reaches 400k tokens of context, 14 hours, or its first compaction ("/clear soon"),
-and again at 600k / 24 h / a second compaction ("Time to /clear"). Bart: "today the system
+and again at 600k / 24 h / a second compaction ("Time to /clear"). It never texts him
+(2026-11-18: two /clear texts while he was working in the session were a chore, not help).
+When he asks whether to /clear, give one answer that already counts what he would lose
+("not yet: ask what you want to ask first", or "yes"), never a yes followed by a condition. Bart: "today the system
 got bad because of context pollution". When he says **"handoff"**: write everything a fresh
 session needs (for Venture: NOW.md, JOURNAL.md, LOG.md, then `sync.mjs push`; elsewhere a
 short note in the project's own notes), commit and push what is finished, list what is still

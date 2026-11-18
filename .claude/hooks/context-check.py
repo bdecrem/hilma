@@ -12,11 +12,15 @@ alerts once per level:
   soon  context >= 400k tokens, or the session is 14 h old, or it has compacted once
   now   context >= 600k tokens, or 24 h old, or compacted twice
 
-An alert is a line in the terminal and a text to Bart (scripts/venture/imsg.mjs), naming
-the session. Headless runs (claude -p, the Mac mini runner) never alert.
+An alert is one line in the terminal, in the session it is about. It is never a text
+(2026-11-18, Bart, after two /clear texts while he was working in the session: "now i'm trying
+to figure out how to get rid of 2 text messages about running /clear ... LITERALLY what i do
+not want to be doing"). /clear is never urgent to the minute, and he can only act on it at
+the terminal, where the line already is. Headless runs (claude -p, the Mac mini runner) never
+alert.
 Test: python3 .claude/hooks/context-check.py --dry < hook.json
 """
-import json, os, subprocess, sys, time
+import json, os, sys, time
 from datetime import datetime, timezone
 
 SOON = dict(tokens=400_000, hours=14, compactions=1)
@@ -90,8 +94,8 @@ def main():
         if comp: why.append(f"compacted {comp}x")
         name = f'"{title}"' if title else f"session {sid[:8]}"
         head = "Time to /clear" if level == "now" else "/clear soon"
-        msg = (f"{head}: the {name} session is {', '.join(why)}. "
-               f"Say \"handoff\" there and I'll write the state down, then type /clear.")
+        msg = (f"{head}: this session is {', '.join(why)}. Nothing to do right now; "
+               f"when you are done asking things here, say \"handoff\" and then type /clear.")
         state.setdefault("alerted", [])
         state["alerted"] += ["soon", "now"] if level == "now" else ["soon"]
     json.dump(state, open(sf, "w"))
@@ -101,11 +105,7 @@ def main():
     if DRY:
         print(msg)
         return
-    root = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-    imsg = os.path.join(root, "scripts/venture/imsg.mjs")
-    if os.path.exists(imsg):
-        subprocess.Popen(["node", imsg, "send", msg], cwd=root, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
+    # The terminal line only. No text, ever (see the note at the top; rule 40 and rule 44).
     print(json.dumps({"systemMessage": msg}))
 
 
