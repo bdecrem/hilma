@@ -357,6 +357,46 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     return json(res, r.status, r.body)
   }
 
+  /**
+   * Kept conversations (OLA-159): what a person chose to share to help improve Ola. Their app sends
+   * each finished turn while the setting is on; the person can see how many are kept and delete them.
+   *   POST   /api/device/kept  one turn (the same turn again replaces it)
+   *   GET    /api/device/kept  { count, since }
+   *   DELETE /api/device/kept  all of this person's, at once
+   */
+  const KEPT = { product: ['mac', 'iphone', 'cli', 'web'], runtime: ['local', 'cloud'], engine: ['ola', 'hosted', 'claude'], status: ['done', 'failed', 'stopped'] }
+  async function kept(req, res, dev) {
+    if (req.method === 'GET') {
+      const r = db.prepare('SELECT count(*) AS n, min(at) AS since FROM kept_turns WHERE person_id = ?').get(dev.personId)
+      return json(res, 200, { count: r.n, since: r.since ? new Date(r.since).toISOString() : null })
+    }
+    if (req.method === 'DELETE') {
+      const r = db.prepare('DELETE FROM kept_turns WHERE person_id = ?').run(dev.personId)
+      log(`kept: p${dev.personId} deleted ${r.changes} turn(s)`)
+      return json(res, 200, { deleted: Number(r.changes) })
+    }
+    if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+    const b = await readJson(req, 1024 * 1024)
+    if (!b) return json(res, 400, { error: 'bad_json' })
+    const text = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '')
+    const one = (v, list) => (list.includes(v) ? v : null)
+    const t = {
+      product: one(b.product, KEPT.product), runtime: one(b.runtime, KEPT.runtime), engine: one(b.engine, KEPT.engine), status: one(b.status, KEPT.status),
+      session: text(b.session, 120), turn: text(b.turn, 120), request: text(b.request, 40_000), answer: text(b.answer, 400_000),
+      at: Number.isFinite(Date.parse(b.at)) ? Date.parse(b.at) : Date.now(),
+    }
+    if (!t.product || !t.runtime || !t.engine || !t.status || !t.session || !t.turn || !t.request) return json(res, 400, { error: 'bad_turn' })
+    // Steps: what was done, in the app's own plain words, never file contents or command output.
+    const steps = (Array.isArray(b.steps) ? b.steps : []).slice(0, 300).map((s) => ({ tool: text(s?.tool, 60), words: text(s?.words, 300), status: text(s?.status, 20), error: text(s?.error, 600) || undefined }))
+    db.prepare(
+      `INSERT INTO kept_turns (person_id, device_id, at, received_at, product, runtime, app, session, session_title, turn, engine, model, status, seconds, request, answer, steps, switched_from)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(person_id, session, turn) DO UPDATE SET received_at = excluded.received_at, status = excluded.status, seconds = excluded.seconds, answer = excluded.answer, steps = excluded.steps, model = excluded.model, switched_from = excluded.switched_from, session_title = excluded.session_title`,
+    ).run(dev.personId, String(dev.id), t.at, Date.now(), t.product, t.runtime, text(b.app, 40) || null, t.session, text(b.session_title, 200) || null, t.turn, t.engine, text(b.model, 120) || null, t.status,
+      Number.isFinite(b.seconds) ? Math.max(0, Math.round(b.seconds)) : null, t.request, t.answer, JSON.stringify(steps), one(b.switched_from, KEPT.engine))
+    return json(res, 200, { ok: true })
+  }
+
   async function handle(req, res, p) {
     if (!enabled) return json(res, 404, { error: 'not_found' })
     if (p === '/api/device/login') return login(req, res)
@@ -394,6 +434,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
       return json(res, 200, { ok: true })
     }
     if (p === '/api/device/passkey/options' || p === '/api/device/passkey/verify') return addPasskey(req, res, dev, p)
+    if (p === '/api/device/kept') return kept(req, res, dev)
     if (p.startsWith('/api/device/gw/')) return toGateway(req, res, dev, p.slice('/api/device/gw'.length))
     return json(res, 404, { error: 'not_found' })
   }

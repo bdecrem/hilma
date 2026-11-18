@@ -168,7 +168,7 @@ enum Snapshot {
       }
       let info = SkillsInfo(preview: OlaSkills.version(), states: skillStates, machine: OlaSkills.compare(OlaSkills.version(), OlaSkills.version()))
       for (tag, on) in [("off", FallbackSettings()), ("on", FallbackSettings(claude: true, hosted: true, stretch: .handover))] {
-        let settings = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: CLIInstaller(result: "Installed. In Terminal, go to a folder and type ola.", installed: true), tokenKnown: true, skills: info, fallbacksPreview: on)
+        let settings = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: CLIInstaller(result: "Installed. In Terminal, go to a folder and type ola.", installed: true), tokenKnown: true, skills: info, fallbacksPreview: on, keptPreview: .init(on: tag == "on", count: tag == "on" ? 12 : 0, signedIn: true))
         for pane in SettingsPane.allCases where tag == "on" || pane == .models {
           for (letter, layout) in [("A-toolbar", SettingsSnapshot.Layout.toolbar), ("B-sidebar", .sidebar)] {
             let name = "settings-\(letter)-\(pane.rawValue)\(pane == .models ? "-\(tag)" : "")-\(mode)"

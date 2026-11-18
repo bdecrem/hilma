@@ -77,6 +77,10 @@ struct OlaMacApp: App {
           for s in [store, peer] {
             Notifier.wire(s)
             PermissionSettings.wire(s)
+            // Conversations the person chose to share (Settings, Advanced; off by default).
+            s.onTurnEnded = { [weak s] session, turn, previous in
+              KeptConversations.turnEnded(turn, previous: previous, session: session, runtime: s?.runtime, product: "mac", model: s?.model?.id)
+            }
           }
           Task { await PermissionSettings.pull() }
           w.configureClaude()

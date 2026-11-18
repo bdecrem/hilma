@@ -50,6 +50,13 @@ public final class OlaStore {
   public var onApproval: ((_ session: SessionInfo, _ approval: Approval) -> Void)?
   /// Every finish and every wait for Bart, wherever he is looking (the Mac app sends them to the phone).
   public var onNotify: ((NotifyEvent) -> Void)?
+  /// A turn ended (done, failed or stopped), with the turn before it in the same conversation:
+  /// for keeping conversations the person chose to share (KeptConversations, OLA-159).
+  public var onTurnEnded: ((SessionInfo, Turn, Turn?) -> Void)?
+  private func turnEnded(_ s: SessionInfo) {
+    guard let onTurnEnded, let turns = conversations[s.id]?.turns, let t = turns.last, [.done, .failed, .stopped].contains(t.status) else { return }
+    onTurnEnded(s, t, turns.count > 1 ? turns[turns.count - 2] : nil)
+  }
   /// An approval that goes ahead without asking (the Mac's "Lots of permissions",
   /// PermissionSettings.wire): asked at each approval, so a change applies to the next step.
   public var goesAhead: ((_ action: String, _ resources: [String]) -> Bool)?
@@ -327,6 +334,7 @@ public final class OlaStore {
     if conversations[sid] != nil {
       conversations[sid]!.apply(ev)
       if let s = sessions.first(where: { $0.id == sid }) {
+        if type.hasPrefix("session.execution."), type != "session.execution.started" { turnEnded(s) }
         if type.hasPrefix("session.execution."), type != "session.execution.started", let t = conversations[sid]!.turns.last, let e = NotifyEvent.finished(t, session: s) { onNotify?(e) }
         if type == "permission.asked", let a = conversations[sid]!.approval { onNotify?(NotifyEvent.needsYou(a, session: s)) }
       }
@@ -708,6 +716,7 @@ public final class OlaStore {
             }
             if let s = self.sessions.first(where: { $0.id == id }) {
               self.onRunEnded?(s, t)
+              self.turnEnded(s)
               if let e = NotifyEvent.finished(t, session: s) { self.onNotify?(e) }
             }
           }

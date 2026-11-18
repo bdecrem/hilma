@@ -82,7 +82,7 @@ const [cmd, ...rest] = argv
 const flags = {}
 const args = []
 for (let i = 0; i < rest.length; i++) {
-  if (['--admin', '--json', '--add-device', '--wake', '--link'].includes(rest[i])) flags[rest[i].slice(2)] = true
+  if (['--admin', '--json', '--add-device', '--wake', '--link', '--switched', '--full'].includes(rest[i])) flags[rest[i].slice(2)] = true
   else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
   else args.push(rest[i])
 }
@@ -527,6 +527,24 @@ switch (cmd) {
     else
       for (const r of rows.reverse())
         console.log(`${new Date(r.at).toISOString()}  ${r.action.padEnd(20)} ${r.ok ? '' : 'FAILED '}by ${r.actor_kind === 'person' || r.actor_kind === 'run' ? (r.actor ?? '-') + (r.actor_kind === 'run' ? ' (a run)' : '') : r.actor_kind}${r.workspace ? ` in ${r.workspace}` : ''}${r.subject ? ` re ${r.subject}` : ''}${r.role ? ` as ${r.role}` : ''}${r.size != null ? ` ${r.size} B` : ''}${r.sha256 ? ` sha256 ${r.sha256.slice(0, 12)}` : ''}${r.name_ref ? ` file#${r.name_ref.slice(0, 10).toLowerCase()}` : ''}`)
+    break
+  }
+  case 'kept': {
+    // node admin.mjs kept [handle] [--switched] [--days 7] [--full]: the turns people chose to share
+    // (OLA-159), newest first. --switched: only those where another engine was tried first (OLA-157).
+    const days = Number(flags.days ?? 7)
+    const rows = db.prepare(
+      `SELECT k.*, p.handle FROM kept_turns k JOIN people p ON p.id = k.person_id
+       WHERE k.at >= ? AND (? IS NULL OR p.handle = ?) AND (? = 0 OR k.switched_from IS NOT NULL) ORDER BY k.at DESC LIMIT 500`,
+    ).all(Date.now() - days * 86400_000, args[0] ?? null, args[0] ?? null, flags.switched ? 1 : 0)
+    if (flags.json) { console.log(JSON.stringify(rows)); break }
+    for (const r of rows) {
+      const when = new Date(r.at).toISOString().slice(0, 16).replace('T', ' ')
+      console.log(`${when}  ${r.handle}  ${r.product}/${r.runtime}  ${r.engine}${r.switched_from ? ` (after ${r.switched_from})` : ''}  ${r.status}${r.seconds != null ? ` ${r.seconds}s` : ''}  ${JSON.parse(r.steps).length} steps`)
+      console.log(`    asked: ${r.request.replace(/\s+/g, ' ').slice(0, flags.full ? 4000 : 160)}`)
+      if (flags.full) console.log(`    answer: ${r.answer.replace(/\s+/g, ' ').slice(0, 4000)}`)
+    }
+    console.log(`${rows.length} kept turn(s) in the last ${days} day(s)`)
     break
   }
   case 'list': {

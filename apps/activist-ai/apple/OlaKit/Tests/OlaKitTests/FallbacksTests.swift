@@ -46,6 +46,28 @@ final class FallbacksTests: XCTestCase {
     XCTAssertEqual(StretchReason(rawValue: "many_files"), .manyFiles)
   }
 
+  /// Kept conversations (OLA-159): what is sent for a finished turn, and the switch mark (OLA-157).
+  func testKeptTurnBody() {
+    let session = SessionInfo(id: "ses_1", title: "Crossword", created: .now, updated: .now)
+    let step = Step(id: "a", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "index.html"), status: .done, started: .now)
+    var ola = Turn(id: "m1", request: "build me a crossword app", at: Date(timeIntervalSince1970: 1_800_000_000), status: .done, steps: [step], answer: "Here.")
+    ola.ended = ola.at.addingTimeInterval(41)
+    let a = KeptConversations.body(ola, previous: nil, session: session, runtime: .local, product: "mac", model: "ola/general")
+    XCTAssertEqual(a["engine"].str, "ola")
+    XCTAssertEqual(a["model"].str, "ola/general")
+    XCTAssertEqual(a["seconds"].double, 41)
+    XCTAssertEqual(a["steps"].array.first?["words"].str, "Wrote index.html")
+    XCTAssertTrue(a["switched_from"].isNull, "the first try is not a switch")
+    var claude = Turn(id: "m2", request: "build me a crossword app", at: .now, status: .done, answer: "A working one.")
+    claude.engine = .claude
+    let b = KeptConversations.body(claude, previous: ola, session: session, runtime: .local, product: "mac", model: "ola/general")
+    XCTAssertEqual(b["switched_from"].str, "ola", "Claude after Ola's own model: a switch")
+    XCTAssertTrue(b["model"].isNull, "Ola's model name is not Claude's")
+    let c = KeptConversations.body(ola, previous: claude, session: session, runtime: .cloud, product: "iphone", model: nil)
+    XCTAssertTrue(c["switched_from"].isNull, "back to Ola is not a fallback")
+    XCTAssertEqual(c["runtime"].str, "cloud")
+  }
+
   func testStuckIsWhatCanBeSeen() {
     func step(_ id: String, _ status: Step.Status) -> Step { Step(id: id, tool: "shell", words: Words(icon: .run, verb: "Ran", object: "x"), status: status, started: .now) }
     var t = Turn(id: "t", request: "x", at: .now, status: .done)

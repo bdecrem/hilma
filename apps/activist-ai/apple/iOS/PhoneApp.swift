@@ -72,6 +72,10 @@ struct OlaPhoneApp: App {
           PhoneWhereState.shared.peer = peer
           for s in [store, peer] {
             PhonePermissions.wire(s)
+            // Conversations the person chose to share (Settings, Advanced; off by default).
+            s.onTurnEnded = { [weak s] session, turn, previous in
+              KeptConversations.turnEnded(turn, previous: previous, session: session, runtime: s?.runtime, product: "iphone", model: s?.model?.id)
+            }
             s.start()
           }
         }

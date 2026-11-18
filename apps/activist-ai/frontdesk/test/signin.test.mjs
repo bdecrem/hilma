@@ -368,6 +368,34 @@ test('the app adds a passkey with its own pass, only soon after signing in; a we
   assert.equal(late.json.error, 'not_fresh')
 })
 
+// ---------------------------------------------------------------- kept conversations (OLA-159)
+test('kept conversations: only with the device’s own pass; a turn is stored, sent again it is replaced; the person sees the count and deletes them all', async () => {
+  const turn = { product: 'mac', runtime: 'local', engine: 'ola', status: 'done', session: 'ses_1', turn: 'msg_1', at: '2026-11-18T22:00:00Z', seconds: 41, app: '0.1 (12)',
+    request: 'build me a smart app that uses ai to generate a crossword puzzle on demand.', answer: 'Here it is.', steps: [{ tool: 'write', words: 'Wrote index.html', status: 'done' }] }
+  assert.equal((await asApp('/api/device/kept', turn)).status, 401, 'no pass')
+  assert.equal((await asApp('/api/device/kept', { ...turn, engine: 'gpt' }, patKey)).status, 400, 'an engine that is not ours')
+  assert.equal((await asApp('/api/device/kept', { ...turn, request: '' }, patKey)).status, 400, 'no request')
+  assert.equal((await asApp('/api/device/kept', turn, patKey)).status, 200)
+  assert.equal((await asApp('/api/device/kept', { ...turn, answer: 'Here it is, fixed.' }, patKey)).status, 200)
+  // Claude tried the same thing after Ola: the switch is kept (OLA-157).
+  assert.equal((await asApp('/api/device/kept', { ...turn, turn: 'msg_2', engine: 'claude', switched_from: 'ola', answer: 'A working crossword.' }, patKey)).status, 200)
+  const rows = db.prepare("SELECT k.turn, k.engine, k.answer, k.switched_from, k.steps, p.handle FROM kept_turns k JOIN people p ON p.id = k.person_id ORDER BY k.turn").all()
+  assert.equal(rows.length, 2)
+  assert.deepEqual([rows[0].handle, rows[0].answer, rows[0].switched_from], ['pat', 'Here it is, fixed.', null])
+  assert.deepEqual([rows[1].engine, rows[1].switched_from], ['claude', 'ola'])
+  assert.equal(JSON.parse(rows[0].steps)[0].words, 'Wrote index.html')
+  const seen = await call('/api/device/kept', { method: 'GET', bearer: patKey })
+  assert.deepEqual([seen.status, seen.json.count, seen.json.since], [200, 2, '2026-11-18T22:00:00.000Z'])
+  // The admin reads them, and only the switched ones on request.
+  const listed = spawnSync(process.execPath, [new URL('../admin.mjs', import.meta.url).pathname, 'kept', 'pat', '--switched', '--days', '3650'], { env: process.env, encoding: 'utf8' })
+  assert.match(listed.stdout, /claude \(after ola\)/, listed.stdout + listed.stderr)
+  assert.match(listed.stdout, /1 kept turn/)
+  const gone = await call('/api/device/kept', { method: 'DELETE', bearer: patKey })
+  assert.deepEqual([gone.status, gone.json.deleted], [200, 2])
+  assert.equal(db.prepare('SELECT count(*) AS n FROM kept_turns').get().n, 0)
+})
+
+
 let patSoft
 test('the app signs in with a passkey: after a right password when the account asks for it, or the passkey alone; ceremonies do not cross between the app and the web', async () => {
   db.prepare("UPDATE people SET require_passkey = 1 WHERE handle = 'pat'").run()

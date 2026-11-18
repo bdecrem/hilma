@@ -8,7 +8,7 @@ import SwiftUI
 /// stacked cards. Two layouts were drawn and compared, apple-shots/settings: a toolbar of panes,
 /// chosen, and a sidebar like System Settings.)
 enum SettingsPane: String, CaseIterable, Identifiable {
-  case general, account, models, skills, phone
+  case general, account, models, skills, phone, advanced
   var id: String { rawValue }
   var title: String {
     switch self {
@@ -17,6 +17,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case .models: "Models"
     case .skills: "Skills"
     case .phone: "Phone"
+    case .advanced: "Advanced"
     }
   }
   var symbol: String {
@@ -26,6 +27,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case .models: "cpu"
     case .skills: "wand.and.stars"
     case .phone: "iphone"
+    case .advanced: "gearshape.2"
     }
   }
 }
@@ -45,6 +47,8 @@ struct SettingsView: View {
   var only: SettingsPane? = nil
   /// Screenshots: the fallbacks to show, so drawing never reads the app's own.
   var fallbacksPreview: FallbackSettings? = nil
+  /// Screenshots: Advanced as it would look (on, with a count), without asking the server.
+  var keptPreview: KeptSettings.Preview? = nil
   @State private var connecting = false
   @AppStorage("ola.settingsPane") private var chosen = SettingsPane.general.rawValue
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
@@ -57,7 +61,7 @@ struct SettingsView: View {
       case .models: whereOla != nil
       case .skills: skills != nil
       case .phone: phoneLink != nil || phonePush != nil
-      case .general: true
+      case .general, .advanced: true
       }
     }
   }
@@ -105,6 +109,8 @@ struct SettingsView: View {
     case .phone:
       if let phoneLink { PhoneSettings(link: phoneLink) }
       if let phonePush { SettingsGroup(title: "Phone notifications") { PushSettings(push: phonePush) } }
+    case .advanced:
+      KeptSettings(preview: keptPreview)
     }
   }
 
@@ -318,3 +324,56 @@ struct SettingsSnapshot: View {
     }
   }
 }
+
+/// Advanced: "Store your conversations on ola.cx to help us improve our systems" (OLA-159; Bart's
+/// words). Off by default. On: each finished request and its answer goes to the Ola machine; the
+/// person sees how many are kept and can delete them all.
+struct KeptSettings: View {
+  struct Preview { var on: Bool; var count: Int?; var signedIn: Bool }
+  var preview: Preview? = nil
+  @AppStorage(KeptConversations.key) private var on = false
+  @State private var count: Int?
+  @State private var since: Date?
+  @State private var deleting = false
+  @State private var note: String?
+
+  var signedIn: Bool { preview?.signedIn ?? AccountKeeper.signedIn }
+  var isOn: Bool { preview?.on ?? on }
+  var shownCount: Int? { preview?.count ?? count }
+
+  var body: some View {
+    SettingsGroup(title: "Helping Ola get better") {
+      VStack(alignment: .leading, spacing: 2) {
+        Toggle("Store your conversations on ola.cx to help us improve our systems", isOn: Binding(get: { isOn }, set: { on = $0; Task { await refresh() } }))
+          .disabled(!signedIn)
+        SettingNote(signedIn
+          ? "Off unless you turn it on. On: each request you finish and Ola\u{2019}s answer are kept on the Ola machine, with the steps in words. Never your files."
+          : "Sign in to Ola first (Settings, Account).")
+      }
+      if signedIn, let n = shownCount, n > 0 || isOn {
+        HStack(alignment: .firstTextBaseline) {
+          Text(n == 0 ? "Nothing is kept yet." : n == 1 ? "1 request is kept." : "\(n) requests are kept.").foregroundStyle(.secondary)
+          Spacer(minLength: Space.s)
+          Button("Delete What Is Kept\u{2026}", role: .destructive) { deleting = true }.disabled(n == 0)
+        }
+      }
+      if let note { SettingNote(note) }
+    }
+    .task { await refresh() }
+    .confirmationDialog("Delete every conversation kept on ola.cx?", isPresented: $deleting, titleVisibility: .visible) {
+      Button("Delete", role: .destructive) {
+        Task {
+          let n = await KeptConversations.deleteAll()
+          note = n == nil ? "That did not reach the Ola machine. Try again." : "Deleted."
+          await refresh()
+        }
+      }
+    } message: { Text("This removes them from the Ola machine. Your sessions on this Mac stay as they are.") }
+  }
+
+  func refresh() async {
+    guard preview == nil, AccountKeeper.signedIn else { return }
+    if let s = await KeptConversations.status() { count = s.count; since = s.since }
+  }
+}
+

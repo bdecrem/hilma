@@ -439,6 +439,7 @@ struct SettingsScreen: View {
           LabeledContent("Fallback to Claude", value: local?.macHello?["claude"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown")
         } footer: { Text("Set on your Mac.") }
       }
+      PhoneKeptSection()
       Section("Admin") {
         if admin.signedIn, let t = admin.token {
           LabeledContent("Signed in", value: t.user)
@@ -526,3 +527,27 @@ struct KitRootView: View {
       .navigationTitle("Kit")
   }
 }
+
+/// Advanced, on the phone: the same switch as the Mac's (OLA-159), off by default.
+struct PhoneKeptSection: View {
+  @AppStorage(KeptConversations.key) private var on = false
+  @State private var count: Int?
+  @State private var deleting = false
+  var signedIn: Bool { AccountKeeper.signedIn }
+
+  var body: some View {
+    Section {
+      Toggle("Store your conversations on ola.cx to help us improve our systems", isOn: $on).disabled(!signedIn)
+      if signedIn, let n = count, n > 0 {
+        Button("Delete What Is Kept (\(n))", role: .destructive) { deleting = true }
+      }
+    } header: { Text("Advanced") } footer: {
+      Text(signedIn ? "Off unless you turn it on. On: each request you finish and Ola\u{2019}s answer are kept on the Ola machine, with the steps in words. Never your files." : "Sign in to the Ola machine first.")
+    }
+    .task(id: on) { if signedIn, let s = await KeptConversations.status() { count = s.count } }
+    .confirmationDialog("Delete every conversation kept on ola.cx?", isPresented: $deleting, titleVisibility: .visible) {
+      Button("Delete", role: .destructive) { Task { _ = await KeptConversations.deleteAll(); if let s = await KeptConversations.status() { count = s.count } } }
+    }
+  }
+}
+

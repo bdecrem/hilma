@@ -548,6 +548,36 @@ const MIGRATIONS = [
   ALTER TABLE audit_v12 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // Kept conversations (2026-11-18, OLA-159). Bart: "store your conversations on ola.cx to help us
+  // improve our systems", a setting that is off by default. A person who turned it on sends each
+  // finished turn from their app; they can see how many are kept and delete them all (devices.mjs).
+  // `switched_from`: the same person had another engine try before this one (OLA-157: a switch to
+  // Claude after Ola's own model means the first result was not good enough).
+  `
+  CREATE TABLE kept_turns (
+    id INTEGER PRIMARY KEY,
+    person_id INTEGER NOT NULL REFERENCES people(id),
+    device_id TEXT,
+    at INTEGER NOT NULL,
+    received_at INTEGER NOT NULL,
+    product TEXT NOT NULL CHECK (product IN ('mac', 'iphone', 'cli', 'web')),
+    runtime TEXT NOT NULL CHECK (runtime IN ('local', 'cloud')),
+    app TEXT,
+    session TEXT NOT NULL,
+    session_title TEXT,
+    turn TEXT NOT NULL,
+    engine TEXT NOT NULL CHECK (engine IN ('ola', 'hosted', 'claude')),
+    model TEXT,
+    status TEXT NOT NULL CHECK (status IN ('done', 'failed', 'stopped')),
+    seconds INTEGER,
+    request TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    steps TEXT NOT NULL,
+    switched_from TEXT CHECK (switched_from IS NULL OR switched_from IN ('ola', 'hosted', 'claude')),
+    UNIQUE (person_id, session, turn)
+  ) STRICT;
+  CREATE INDEX kept_turns_person ON kept_turns(person_id, at);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */
