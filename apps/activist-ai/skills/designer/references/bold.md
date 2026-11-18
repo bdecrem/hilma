@@ -12,10 +12,11 @@ overlap and a little motion.
 Put `<meta name="ola-register" content="bold">` in the page's head, so `look.py` checks it by Bold's
 rules (or pass `--register bold`).
 
-Three worked examples, made-up content, open and copy what you need:
+Four worked examples, made-up content, open and copy what you need:
 
 | Example | Preset | Display face | The idea |
 |---|---|---|---|
+| `/opt/ola/skills/designer/assets/bold-hello.html` | riso | Bricolage Grotesque 800 | a page with no date (hello, welcome, home, personal, a news box): the headline as the picture on a full-bleed ultramarine field, a sun rising in the corner, the news as a cream card with a hard ink shadow |
 | `/opt/ola/skills/designer/assets/bold-night-market.html` | night-neon | Anton | the street drawn as a row of stalls under string lights; the date as a 300 px numeral; a sky gradient that is the market's hours |
 | `/opt/ola/skills/designer/assets/bold-rent-party.html` | riso | Bricolage Grotesque 800 | a ticket stub laid on a full-bleed vermillion field; the fund as ten blocks of ink |
 | `/opt/ola/skills/designer/assets/bold-bike-day.html` | candy | Bowlby One | the date as a giant numeral beside a big wheel; what gets fixed as colored stickers |

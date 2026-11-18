@@ -199,7 +199,7 @@ def main():
     bold = reg == "bold"
     src = page.read_text(errors="replace")
     # a page started from a worked example must not keep the example's words
-    leftover = [x for x in ("Example page for the designer skill", "EXAMPLE for the designer skill", "Halsey Avenue Merchants", "Linden Place Tenants Union",
+    leftover = [x for x in ("Example page for the designer skill", "EXAMPLE for the designer skill", "Halsey Avenue Merchants", "Linden Place Tenants Union", "Riverside Neighbors",
                             "Spoke Collective") if x in src] if not page.name.startswith("bold-") else []
     print(f"Register: {reg}" + (" (Bold rules, references/bold.md)" if bold else ""))
     shots = page.parent / ".shots"  # hidden: the front desk lists no path segment starting with "."

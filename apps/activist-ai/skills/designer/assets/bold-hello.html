@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- EXAMPLE for the designer skill's Bold register (references/bold.md): a page with no date, for a
+     hello, welcome, home, about or personal page, or any small page (a title, a line, a box or two).
+     The group, the street and the news are made up. Preset riso, Bricolage Grotesque 800 for display,
+     Space Grotesk for text.
+     The idea: the page says hello, so the hello is the picture: a giant headline on a full-bleed
+     ultramarine field, a sunflower sun rising behind it, and the news as a cream card pinned on the
+     field with a hard ink shadow. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ola-register" content="bold">
+<title>Hello from Riverside Neighbors</title>
+<style>
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/BricolageGrotesque.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+/* palette.py --bold --preset riso */
+:root {
+  --paper: #f7efdf; --ink: #16121c; --ink-2: #57525f;
+  --c1: #ff4b1f; --on-c1: #16121c; --c2: #3d3bff; --on-c2: #f7efdf; --c3: #ffc31f; --on-c3: #16121c; --c4: #b6f23a; --on-c4: #16121c;
+  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --text: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 18px/1.55 var(--text); }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--c3); outline-offset: 3px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; position: relative; }
+@media (min-width: 760px) { .wrap { padding: 0 40px; } }
+
+/* First screen: full-bleed ultramarine, the headline as big as it fits, the news card beside it
+   (below it on a phone). The sun sits in the field's lower right corner, under the card, never on
+   the headline: at 1280 px the headline column is 1100 * 1.3 / 2.3 = 620 px wide, the sun starts at
+   1280 - 320 = 960 px. */
+.hero { background: var(--c2); color: var(--on-c2); padding: 40px 0 64px; position: relative; overflow: hidden; }
+/* the svg sits inside the edge; the sun runs past its own box and is cut there, so it bleeds off the page */
+.sun { position: absolute; right: 0; bottom: 0; width: min(60vw, 320px); height: auto; pointer-events: none; }
+.hero .wrap { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 900px) { .hero .wrap { grid-template-columns: 1.3fr 1fr; gap: 56px; min-height: 560px; } }
+.kicker { display: inline-block; font: 700 16px/1 var(--text); background: var(--c4); color: var(--on-c4); padding: 8px 12px; margin: 0 0 20px; transform: rotate(-2deg); }
+h1 { font: 800 clamp(64px, 13vw, 156px)/0.86 var(--display); letter-spacing: -0.045em; margin: 0; }
+.lede { font-size: 21px; line-height: 1.45; font-weight: 500; margin: 24px 0 0; max-width: 32ch; }
+
+/* The box: a cream card on the field, turned a little, a hard ink shadow, a label tab on its edge. */
+.card { position: relative; background: var(--paper); color: var(--ink); padding: 36px 28px 28px; transform: rotate(1.5deg);
+  box-shadow: 10px 10px 0 var(--ink); max-width: 460px; z-index: 1; }
+.card .tab { position: absolute; top: -18px; left: 20px; font: 800 18px/1 var(--display); background: var(--c1); color: var(--on-c1); padding: 10px 14px; }
+.card h2 { font: 800 clamp(28px, 3.4vw, 38px)/1.02 var(--display); letter-spacing: -0.02em; margin: 0 0 12px; }
+.card p { margin: 0 0 12px; }
+.card .src { font-size: 14px; color: var(--ink-2); margin: 0; }
+
+/* A band in sunflower with three short things, each under a big numeral. */
+.band { background: var(--c3); color: var(--on-c3); }
+.band .wrap { padding-top: 56px; padding-bottom: 56px; display: grid; gap: 32px; }
+@media (min-width: 900px) { .band .wrap { grid-template-columns: repeat(3, 1fr); } }
+.band b { display: block; font: 800 64px/0.9 var(--display); letter-spacing: -0.04em; color: var(--c2); }
+.band h3 { font: 800 26px/1.05 var(--display); margin: 8px 0 6px; }
+.band p { margin: 0; max-width: 32ch; }
+footer { padding: 32px 0 48px; }
+footer p { margin: 0; font-size: 15px; color: var(--ink-2); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <!-- the sun: one sunflower circle and three vermillion rays, cut by the field's edge -->
+  <svg class="sun" viewBox="0 0 320 240" aria-hidden="true">
+    <circle cx="200" cy="230" r="160" fill="#ffc31f"/>
+    <rect x="40" y="150" width="280" height="22" fill="#ff4b1f"/>
+    <rect x="40" y="194" width="280" height="22" fill="#ff4b1f"/>
+  </svg>
+  <div class="wrap">
+    <div>
+      <p class="kicker">Riverside Neighbors</p>
+      <h1>Hello, neighbor.</h1>
+      <p class="lede">We are the people on Alder and Birch Streets who fix things together.</p>
+    </div>
+    <article class="card" aria-labelledby="news">
+      <span class="tab">News</span>
+      <h2 id="news">The footbridge reopens on Saturday</h2>
+      <p>The city finished the new railings. The walk to the river is back to five minutes.</p>
+      <p class="src">From the city's public works notice</p>
+    </article>
+  </div>
+</header>
+
+<main>
+  <div class="band">
+    <div class="wrap">
+      <div><b>1</b><h3>Say hi</h3><p>Come to the next meeting, or write to us. Nobody has to join anything.</p></div>
+      <div><b>2</b><h3>Fix a thing</h3><p>Pick one job on the list: a light, a bench, a sign.</p></div>
+      <div><b>3</b><h3>Tell a friend</h3><p>The more of us there are, the faster the city answers.</p></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Example page for the designer skill (Bold register). The group, the streets and the news are made up.</p>
+  </div>
+</footer>
+</body>
+</html>

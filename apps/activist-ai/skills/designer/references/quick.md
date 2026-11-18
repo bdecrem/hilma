@@ -5,11 +5,12 @@ directions, no extra rounds, no reading the other files unless something below s
 
 ## 0. Calm or Bold
 
-If the person asked for fun, colorful, gorgeous, playful, bold, loud, modern or "make it pop", or the
-page is for a party, festival, celebration, fundraiser or a campaign aimed at young people: STOP
-here and follow "Bold, step by step" in SKILL.md instead (copy the closest
-`/opt/ola/skills/designer/assets/bold-*.html` example, its fonts, rewrite every word). Otherwise, and
-when unsure, Calm: this file.
+Answer SKILL.md's four questions first. Bold whenever the person said pretty, nice, beautiful, fun,
+colorful, modern, gorgeous, "make it pop", "make it look better" or "use your design skill", for any
+hello, welcome, home or personal page, any short page, and any party, festival, celebration,
+fundraiser or youth campaign: STOP here and follow "Bold, step by step" in SKILL.md instead (copy the
+closest `/opt/ola/skills/designer/assets/bold-*.html` example, its fonts, rewrite every word). Calm
+(this file) only for reports, results, dashboards, forms, notices, letters and long text.
 
 ## 1. Brief (two lines in your head, not a file)
 
