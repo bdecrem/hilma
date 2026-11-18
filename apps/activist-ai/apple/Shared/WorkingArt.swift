@@ -12,11 +12,16 @@ enum WorkingCharacter: String, CaseIterable, Sendable {
   /// Forced for renders (never written to defaults).
   nonisolated(unsafe) static var forced: WorkingCharacter?
 
-  /// One per run, by seed; `defaults write cx.ola.mac OlaWorking <name>` (on the phone too) forces one.
+  /// `defaults write cx.ola.mac OlaWorking <name>` (on the phone too) forces one. Otherwise the Mac
+  /// always shows the comma (hop, OLA-154) and the phone picks one per run by seed.
   static func pick(seed: UInt64) -> WorkingCharacter {
     if let forced { return forced }
     if let s = UserDefaults.standard.string(forKey: "OlaWorking"), let c = WorkingCharacter(rawValue: s.lowercased()) { return c }
+    #if os(macOS)
+    return .hop
+    #else
     return allCases[Int(seed % UInt64(allCases.count))]
+    #endif
   }
 }
 
