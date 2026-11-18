@@ -221,9 +221,7 @@ struct OlaCommands: Commands {
   @FocusedValue(\.olaDraft) private var draft
 
   var body: some Commands {
-    CommandGroup(after: .appInfo) {
-      Button("Check for Updates…") { Task { await UpdateCheck.check(userAsked: true) } }
-    }
+    // Check for Updates… is in Settings, General (OLA-149): nothing of ours in the Ola menu.
     CommandGroup(replacing: .newItem) {
       // Where the session works is chosen first: cloud or local (OLA-143).
       Button("New Session\u{2026}") { chooser.shown = true }.keyboardShortcut("n")

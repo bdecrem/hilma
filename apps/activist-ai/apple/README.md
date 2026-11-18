@@ -71,7 +71,7 @@ OLA_PASSWORD_FILE=<file> swift run olakit-selftest      # against the real serve
 goes to TestFlight's internal group; the Mac app cannot (TestFlight on the Mac needs the App Sandbox,
 and in it the agent cannot run git, Python, Node, scripts or Claude Code: measured, the table is in
 that README), so it ships as a Developer ID signed, notarized disk image on ola.cx with an update
-check (Ola, Check for Updates…). Both wait on Bart accepting Apple's updated Program License Agreement.
+check (Settings, General, Check for Updates…). Both wait on Bart accepting Apple's updated Program License Agreement.
 
 ## Every release
 

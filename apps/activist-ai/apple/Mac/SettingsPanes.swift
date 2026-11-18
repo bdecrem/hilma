@@ -100,6 +100,7 @@ struct SettingsView: View {
       machine
       if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
       PermissionsSettings(cloudSetUp: cloudStore.config != nil || Credentials.savedAddress != nil)
+      updates
     case .account:
       if let account { AccountSettings(account: account, cli: cli) }
     case .models:
@@ -111,6 +112,18 @@ struct SettingsView: View {
       if let phonePush { SettingsGroup(title: "Phone notifications") { PushSettings(push: phonePush) } }
     case .advanced:
       KeptSettings(preview: keptPreview)
+    }
+  }
+
+  /// This build and the update check (OLA-149: here, not in the Ola menu). The daily check at
+  /// launch is unchanged.
+  var updates: some View {
+    SettingsGroup(title: "Updates") {
+      LabeledContent("Version") { Text("\(UpdateCheck.thisVersion) (\(UpdateCheck.thisBuild))").foregroundStyle(.secondary) }
+      HStack {
+        Spacer()
+        Button("Check for Updates\u{2026}") { Task { await UpdateCheck.check(userAsked: true) } }
+      }
     }
   }
 
