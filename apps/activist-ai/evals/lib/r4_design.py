@@ -435,8 +435,42 @@ def bold_start(C, work, rel, extra):
     return True
 
 
+TIME = re.compile(r"\b(\d{1,2})(?::(\d\d))?\s*(a\.?\s?m\.?|p\.?\s?m\.?)?(?![\d:])", re.I)
+
+
+def times_in(text, need_ampm=True):
+    """Clock times as (hour, minutes, am/pm or None); 'noon' and 'midnight' count. Bare numbers only with minutes (2:00)."""
+    out = set()
+    for h, m, ap in TIME.findall(text):
+        if not ap and not m:
+            continue
+        if int(h) > 23 or (m and int(m) > 59):
+            continue
+        out.add((int(h) % 12 if ap else int(h), m or "00", (ap or "")[:1].lower() or None))
+    low = text.lower()
+    if "noon" in low:
+        out.add((0, "00", "p"))
+    if "midnight" in low:
+        out.add((0, "00", "a"))
+    return out
+
+
+def invented_times(page_text, source_text):
+    """Times on the page that are nowhere in the person's files (a made-up schedule)."""
+    src = times_in(source_text)
+    loose = {(h % 12, m) for h, m, _ in src}
+    bad = []
+    for h, m, ap in times_in(page_text):
+        if ap is None:
+            if (h % 12, m) not in loose:
+                bad.append(f"{h}:{m}")
+        elif (h, m, ap) not in src and not (ap and (h, m) in {(x, y) for x, y, z in src if z is None}):
+            bad.append(f"{h or 12}:{m} {ap}m")
+    return sorted(set(bad))
+
+
 def bold_check(work, truth, session, C):
-    extra = ["facts_kept", "date_on_the_first_screen"]
+    extra = ["facts_kept", "date_on_the_first_screen", "no_invented_times"]
     if not bold_start(C, work, "index.html", extra):
         return
     phone, lap = bold_checks(C, work, "index.html")
@@ -446,6 +480,10 @@ def bold_check(work, truth, session, C):
     day = truth["date"].split()[1]
     C.add("date_on_the_first_screen", re.search(rf"\b{day}\b", first) is not None and (truth["date"].split()[0][:3].lower() in first.lower() or truth["date"] in first),
           "weak_hierarchy", first[:200])
+    # A layout with a schedule slot must not be filled with a made-up lineup (owner's live walk, 2026-11-17).
+    source = " ".join(p.read_text(errors="replace") for p in Path(work).glob("*.md") if p.name in ("party.md", "strike.md", "dinner.md"))
+    made_up = invented_times(phone.get("text") or "", source)
+    C.add("no_invented_times", not made_up, "assumed_silently", f"times not in the files: {made_up[:6]}")
 
 
 def party_generate(work, seed, rng):
@@ -569,7 +607,7 @@ def bold_slop(src):
     def solve(work, truth):
         md = (Path(work) / src).read_text()
         lines = [l for l in md.splitlines() if l.strip() and not l.startswith("#")]
-        (Path(work) / "index.html").write_text(SLOP.replace("{body}", "".join(f"<div class=card><p>{l} 🎉</p></div>" for l in lines)))
+        (Path(work) / "index.html").write_text(SLOP.replace("{body}", "".join(f"<div class=card><p>{l} 🎉</p></div>" for l in lines) + "<div class=card><p>Schedule: 2:00 Doors open, 3:30 The Elm Street Singers, 6:45 pm DJ Riverside</p></div>"))
         return "Made index.html."
     return solve
 

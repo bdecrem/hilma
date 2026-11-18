@@ -2,7 +2,7 @@
 """Put two or three pages (or pictures) side by side in one picture, to compare directions.
 
     python3 /opt/ola/skills/designer/scripts/sheet.py design/a.html design/b.html design/c.html --out design/sheet.png
-    python3 /opt/ola/skills/designer/scripts/sheet.py shots/index-before-1280.png shots/index-round2-1280.png --out shots/compare.png --labels "Before,After"
+    python3 /opt/ola/skills/designer/scripts/sheet.py .shots/index-before-1280.png .shots/index-round2-1280.png --out .shots/compare.png --labels "Before,After"
 
 For each page: its first screen at a laptop (1280 x 800) and a phone (390 x 844), made with `ola-page`.
 Pictures are used as they are. They are laid out in columns labeled A, B, C (or --labels), the laptop

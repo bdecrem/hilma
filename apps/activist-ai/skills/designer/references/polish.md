@@ -5,7 +5,7 @@ Polish removes and aligns; it never adds decoration.
 ## The loop
 
 1. `python3 /opt/ola/skills/designer/scripts/look.py index.html --name round1`
-   (`--dark` too when the page has a dark mode). It saves shots at 390 and 1280 px in `shots/`, lists
+   (`--dark` too when the page has a dark mode). It saves shots at 390 and 1280 px in `.shots/` (hidden from the project list), lists
    what a program finds in six groups, prints the first screen in order of visual weight, and, when
    `ola-see` is here, asks a model to look at the laptop, the phone and a blurred laptop view.
 2. Open the two shots yourself and look. Then read `slop-and-plain.md` once more.

@@ -32,7 +32,18 @@ table{width:1100px} .clip{width:80px;overflow:hidden;white-space:nowrap}
 look = [HERE / "scripts" / "look.py"]
 r = run(*look, d / "bad.html", "--name", "before")
 out = r.stdout
-case("look runs at both widths and saves the shots", r.returncode == 0 and (d / "shots/bad-before-390.png").exists() and (d / "shots/bad-before-1280.png").exists(), out[-400:] + r.stderr[-300:])
+case("look runs at both widths and saves the shots", r.returncode == 0 and (d / ".shots/bad-before-390.png").exists() and (d / ".shots/bad-before-1280.png").exists(), out[-400:] + r.stderr[-300:])
+case("its working files are hidden (.shots/, no shots/ and no .html in it), so the project lists only real pages",
+     not (d / "shots").exists() and not list((d / ".shots").glob("*.html")))
+fake = d / "fakebin"
+fake.mkdir()
+(fake / "ola-see").write_text("#!/bin/sh\necho 'No defects found.'\n")
+(fake / "ola-see").chmod(0o755)
+import os
+rs = subprocess.run([sys.executable, str(look[0]), str(d / "bad.html"), "--name", "seen"], capture_output=True, text=True, timeout=300,
+                    env={**os.environ, "PATH": f"{fake}:{os.environ.get('PATH', '')}"})
+case("with ola-see, the look's sheet is kept as a picture and its .html is deleted",
+     (d / ".shots/bad-seen-sheet.png").exists() and not (d / ".shots/bad-seen-sheet.html").exists(), rs.stdout[-300:] + rs.stderr[-300:])
 case("it finds the sideways scroll at 390 px", "scrolls sideways" in out)
 case("it finds the low contrast with its ratio", "low contrast" in out and "#bbbbbb on #ffffff" in out)
 case("it finds the tiny text", "under 12 px" in out)
@@ -55,7 +66,7 @@ if shutil.which("ola-see") is None:
 for f in ("components.html", "base.css"):
     shutil.copy(HERE / "assets" / f, d / f)
 r = run(*look, d / "components.html", "--name", "recipes", "--no-see")
-s = json.loads((d / "shots/components-recipes.json").read_text()) if (d / "shots/components-recipes.json").exists() else {}
+s = json.loads((d / ".shots/components-recipes.json").read_text()) if (d / ".shots/components-recipes.json").exists() else {}
 case("the component recipes have no defects a program can find", r.returncode == 0 and s.get("defects") == 0, r.stdout[-900:])
 
 # The bare page: white, one blue, a table, one size.
@@ -100,7 +111,7 @@ shutil.copytree(HERE / "assets" / "fonts", d / "fonts", dirs_exist_ok=True)
 for ex in sorted((HERE / "assets").glob("bold-*.html")):
     shutil.copy(ex, d / ex.name)
     r = run(*look, d / ex.name, "--name", "ex", "--no-see")
-    s = json.loads((d / f"shots/{ex.stem}-ex.json").read_text()) if (d / f"shots/{ex.stem}-ex.json").exists() else {}
+    s = json.loads((d / f".shots/{ex.stem}-ex.json").read_text()) if (d / f".shots/{ex.stem}-ex.json").exists() else {}
     case(f"the Bold example {ex.name} is read as Bold and has no defects", s.get("register") == "bold" and s.get("defects") == 0, r.stdout[-700:])
 shutil.copy(HERE / "assets" / "bold-rent-party.html", d / "copied.html")
 r = run(*look, d / "copied.html", "--name", "cp", "--no-see")

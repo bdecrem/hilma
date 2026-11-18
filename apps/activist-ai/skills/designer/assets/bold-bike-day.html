@@ -3,7 +3,7 @@
      the numbers are made up. Preset candy (pastel fields, one plum ink), Bowlby One for display,
      Space Grotesk for text.
      The idea: a bike fix day is a wheel and a stamp. The page draws a big wheel whose spokes are the
-     six things the mechanics fix, and the date is a round sticker stamped on the hub. -->
+     six things the mechanics fix, FREE stamped on its hub, and the date is the giant numeral beside the title. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -34,6 +34,11 @@ a { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 4p
 .org { font: 700 16px/1.3 var(--text); margin: 0 0 12px; }
 h1 { font: 400 clamp(46px, 9vw, 96px)/0.95 var(--display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
 .lede { font: 500 20px/1.45 var(--text); margin: 18px 0 0; max-width: 30ch; }
+/* The date as the giant: the numeral in the display face, the day and the hours beside it. */
+.date { display: flex; align-items: flex-end; gap: 16px; margin: 20px 0 0; }
+.day { font: 400 clamp(110px, 26vw, 200px)/0.8 var(--display); margin: 0; }
+.hours { font: 700 22px/1.2 var(--text); margin: 0; padding-bottom: 8px; }
+.hours span { display: block; }
 .when { display: inline-block; margin-top: 24px; background: var(--ink); color: var(--paper); padding: 14px 20px; font: 700 20px/1.3 var(--text); transform: rotate(-1.5deg); }
 
 /* The wheel: rim, tire, six spokes labeled with what gets fixed, the date stamped on the hub. */
@@ -72,11 +77,15 @@ footer { padding: 24px 0 40px; border-top: 3px solid var(--ink); }
     <div>
       <p class="org">Eastgate Library and the Spoke Collective</p>
       <h1>Free bike fix day</h1>
+      <div class="date">
+        <p class="day">2</p>
+        <p class="hours">Saturday, May<span>10 am to 3 pm</span></p>
+      </div>
       <p class="lede">Bring your bike, or your kid's. Volunteer mechanics fix it with you, for free, while you wait.</p>
-      <p class="when">Saturday, May 2, 10 am to 3 pm<br>Eastgate Library parking lot</p>
+      <p class="when">Eastgate Library parking lot, 410 Eastgate Avenue</p>
     </div>
     <!-- 520 x 520, center 260. Tire r 230, rim r 200, hub r 70. Six spokes every 60 degrees. -->
-    <svg class="wheel" viewBox="0 0 520 520" role="img" aria-label="A bicycle wheel; the date, May 2, is stamped on its hub">
+    <svg class="wheel" viewBox="0 0 520 520" role="img" aria-label="A bicycle wheel with FREE stamped on its hub">
       <circle cx="260" cy="260" r="236" fill="#2b1640"/>
       <circle cx="260" cy="260" r="206" fill="#fff6ef"/>
       <g class="spin" stroke="#2b1640" stroke-width="6" stroke-linecap="round">
@@ -86,8 +95,7 @@ footer { padding: 24px 0 40px; border-top: 3px solid var(--ink); }
       </g>
       <g transform="rotate(-8 260 260)">
         <circle cx="260" cy="260" r="92" fill="#ff9ec7" stroke="#2b1640" stroke-width="6"/>
-        <text x="260" y="248" text-anchor="middle" font-family="Bowlby One, sans-serif" font-size="30" fill="#2b1640">MAY</text>
-        <text x="260" y="306" text-anchor="middle" font-family="Bowlby One, sans-serif" font-size="66" fill="#2b1640">2</text>
+        <text x="260" y="276" text-anchor="middle" font-family="Bowlby One, sans-serif" font-size="44" fill="#2b1640">FREE</text>
       </g>
     </svg>
   </div>

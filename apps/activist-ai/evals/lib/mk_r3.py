@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import r3_skills, r4_design, r5_sound
 
-VERSIONS = {}
+VERSIONS = {"u9-block-party": 2, "u10-youth-strike": 2, "u11-garden-fundraiser": 2}  # 2: no_invented_times (2026-11-17)
 root = Path(__file__).resolve().parent.parent / "tasks"
 for mod, rnd in ((r3_skills, 3), (r4_design, 4), (r5_sound, 5)):
     for tid, T in mod.TASKS.items():

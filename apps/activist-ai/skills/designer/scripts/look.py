@@ -13,7 +13,7 @@ not much bigger than the text. In both: no glows, glass, emoji, placeholder text
 sideways scroll.
 
 For each width (390 and 1280 unless --widths), runs `ola-page` (screenshot + measurements) and saves
-shots/<page>-<name>-<width>.png beside the page. Prints, in plain words with what to do instead:
+.shots/<page>-<name>-<width>.png beside the page (hidden, so the project lists only real pages). Prints, in plain words with what to do instead:
   broken     sideways scroll, things past the edge, cut-off text, broken images, script errors, outside requests
   readable   contrast (the actual ratio), tiny text, long lines, too many fonts or sizes
   order      the first screen in order of visual weight (the squint test): one clear first thing or rivals
@@ -23,7 +23,7 @@ shots/<page>-<name>-<width>.png beside the page. Prints, in plain words with wha
   usable     alt text, labeled pictures and fields, heading order, focus styles, reduced motion, tap targets
 Then, when `ola-see` exists, one model looks at a sheet of the laptop view, the phone view and the
 laptop view blurred (as if squinting) and says what it sees first and what is wrong. Without it, it
-says so in one line. Writes shots/<page>-<name>.json with the counts, so rounds can be compared.
+says so in one line. Writes .shots/<page>-<name>.json with the counts, so rounds can be compared.
 """
 import argparse, html, json, re, shutil, subprocess, sys
 from pathlib import Path
@@ -202,7 +202,7 @@ def main():
     leftover = [x for x in ("Example page for the designer skill", "EXAMPLE for the designer skill", "Halsey Avenue Merchants", "Linden Place Tenants Union",
                             "Spoke Collective") if x in src] if not page.name.startswith("bold-") else []
     print(f"Register: {reg}" + (" (Bold rules, references/bold.md)" if bold else ""))
-    shots = page.parent / "shots"
+    shots = page.parent / ".shots"  # hidden: the front desk lists no path segment starting with "."
     shots.mkdir(exist_ok=True)
     see = None if a.no_see else shutil.which("ola-see")
     total, summary, made = 0, {"page": page.name, "name": a.name, "widths": {}}, {}
@@ -237,6 +237,7 @@ img{{display:block;background:#fff}} .l{{width:1000px}} .p{{width:300px}} .s{{wi
 <div><img class="l" src="{html.escape(made['1280'].name)}"></div><div><img class="p" src="{html.escape(made['390'].name)}"></div><div><img class="s" src="{html.escape(made['1280'].name)}"></div>""")
         out = shots / f"{page.stem}-{a.name}-sheet.png"
         p = subprocess.run(["ola-page", str(sheet), "--width", "2400", "--height", "820", "--viewport", "--out", str(out)], capture_output=True, text=True, timeout=200)
+        sheet.unlink(missing_ok=True)  # only the picture is kept; an .html here would look like one of the person's pages
         if p.returncode == 0:
             s = subprocess.run([see, str(out), QUESTION_BOLD if bold else QUESTION], capture_output=True, text=True, timeout=300)
             seen = (s.stdout or s.stderr).strip()

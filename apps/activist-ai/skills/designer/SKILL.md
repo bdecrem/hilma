@@ -3,7 +3,7 @@ name: designer
 description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "6"
+  ola/version: "7"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
@@ -42,15 +42,23 @@ Pick one first, from the person's words and the subject:
    `python3 /opt/ola/skills/designer/scripts/fonts.py add "Bricolage Grotesque" "Space Grotesk" --to .`
    (Fraunces is there too for a gorgeous dinner or gala, as the display face with Space Grotesk.)
 3. Rewrite every word for this subject from the person's files: their title, their date as the
-   giant numeral, the place, every fact; nothing invented, nothing left from the example. Delete the
-   example's top comment and its "Example page" footer. Keep the structure: a full-bleed color field
+   giant numeral (the `.day` element, never only inside the SVG), the place, every fact; nothing invented, nothing left from the example. Delete the
+   example's top comment and its "Example page" footer. The example's bands, times, names and
+   numbers are not facts: where this page's person gave nothing for a slot (a lineup, a schedule, a
+   goal), write a marked draft line (`<p data-draft>Draft: the schedule goes here</p>`) or drop the
+   slot. Never invent names, times or numbers. Keep the structure: a full-bleed color field
    with the title and the giant date, a drawn shape, a band with the one action, sections that
    alternate fields.
 4. Redraw the SVG shape for THIS subject (bold.md section 4): the street for a block party, a
    bullhorn or the march route for a strike, a long table or a plate for a dinner, the fund's goal as
    blocks. Simple shapes in the palette's inks, the arithmetic in a comment.
 5. `python3 /opt/ola/skills/designer/scripts/look.py index.html --name check` and fix every line it
-   lists. More on any part: `/opt/ola/skills/designer/references/bold.md`.
+   lists; run it once more only if you changed the layout, then hand off. Check in the shots that
+   nothing overlaps the title (a drawing goes beside or below it, never on top). More on any part:
+   `/opt/ola/skills/designer/references/bold.md`.
+
+Work in small edits to keep within the budget: after `cp`, replace the example's words and drawing
+with the edit tool a section at a time; never write the whole file out again, and never print it.
 
 
 ## Three modes
@@ -95,7 +103,7 @@ you decided in `design/notes.md` in a few lines.
 
 ## Rules that are never broken
 
-- Real content only. Never lorem ipsum, "Your headline here", John Doe or invented numbers. If a
+- Real content only. Never lorem ipsum, "Your headline here", John Doe, or invented numbers, names, times or schedules (a layout with a lineup slot is no reason to make one up). If a
   fact is missing, write a clearly marked draft line ("Draft: ...") and say so in the hand-off.
 - Keep every word, number, date, link and data value the person gave you, unless it was wrong.
 - A page loads only its own files: no web fonts, CDNs or outside images. Fonts come from `fonts.py`.

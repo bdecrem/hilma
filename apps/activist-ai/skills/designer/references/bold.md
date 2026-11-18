@@ -18,7 +18,7 @@ Three worked examples, made-up content, open and copy what you need:
 |---|---|---|---|
 | `/opt/ola/skills/designer/assets/bold-night-market.html` | night-neon | Anton | the street drawn as a row of stalls under string lights; the date as a 300 px numeral; a sky gradient that is the market's hours |
 | `/opt/ola/skills/designer/assets/bold-rent-party.html` | riso | Bricolage Grotesque 800 | a ticket stub laid on a full-bleed vermillion field; the fund as ten blocks of ink |
-| `/opt/ola/skills/designer/assets/bold-bike-day.html` | candy | Bowlby One | a big wheel with the date stamped on its hub; what gets fixed as colored stickers |
+| `/opt/ola/skills/designer/assets/bold-bike-day.html` | candy | Bowlby One | the date as a giant numeral beside a big wheel; what gets fixed as colored stickers |
 
 ## 1. Color: three to five inks, built, not picked
 
@@ -148,7 +148,7 @@ Always:
 - Decoration that says nothing: blobs, waves, sparkles, abstract 3D shapes, glows and neon halos
   (`text-shadow`, colored `box-shadow` blur), glassy blurred panels.
 - A slogan instead of the facts ("Together we thrive!"): the title says what, the giant says when.
-- Placeholder or invented content; emoji as icons.
+- Placeholder or invented content (a lineup, a schedule, names, prices the person never gave: mark the slot "Draft: ..." instead); emoji as icons.
 - Text under 4.5:1 (3:1 for display type 24 px and up); sideways scroll at 390 px.
 - More than two font families.
 

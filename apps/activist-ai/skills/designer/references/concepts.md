@@ -42,6 +42,11 @@ Write down which layout each concept uses and its one idea, one line each, befor
 - The `<title>` names the concept, so the person can tell them apart in the list of pages:
   `<title>Concept A, the poster: Lawrence Cheung</title>`.
 - The whole page, with every real fact, not only a first screen.
+- Only the person's facts. When a layout has a slot the person gave nothing for (a schedule, band or
+  speaker names, times, prices, a quote), fill it with a visibly marked draft line,
+  `<p data-draft>Draft: the schedule goes here</p>`, and say so in the hand-off. Never invent names,
+  times, numbers or quotes to fill a layout: "2:00 Doors open, 3:30 The Elm Street Singers" for an
+  event that gave only "music, 2 to 8 pm" is a made-up fact on a page people will act on.
 
 ## 4. Look, and prove they differ
 

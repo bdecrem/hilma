@@ -16,4 +16,4 @@ If you could not look at the page with a model (no `ola-see`), add one sentence 
 - `index.html` (and its other pages), `fonts/` with the licenses, the page's CSS
 - `design/notes.md` (the brief, the idea, the choice in two sentences)
 - `design/a.html`, `design/b.html`, `design/sheet.png` (the directions you compared)
-- `shots/` (the rounds at phone and laptop width, so the person can compare)
+- `.shots/` (the rounds at phone and laptop width, hidden from the project list; open them yourself)
