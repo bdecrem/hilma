@@ -75,7 +75,10 @@ struct SettingsView: View {
       }
     }
     .environment(\.settingsLook, look)
-    .sheet(isPresented: $connecting) { ConnectForm(store: store) { connecting = false }.frame(width: 400) }
+    .sheet(isPresented: $connecting) {
+      // Connecting saves the machine; `apply` then puts it in whichever store holds the cloud.
+      ConnectForm(store: cloudStore) { connecting = false; Task { await whereOla?.apply() } }.frame(width: 400)
+    }
   }
 
   @ViewBuilder func pane(_ p: SettingsPane) -> some View {
@@ -89,9 +92,10 @@ struct SettingsView: View {
   @ViewBuilder func content(_ p: SettingsPane) -> some View {
     switch p {
     case .general:
+      // The setup of each runtime; which one a session works in is chosen in New Session.
+      machine
       if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
-      PermissionsSettings()
-      if mode != "mac" { machine }
+      PermissionsSettings(cloudSetUp: cloudStore.config != nil || Credentials.savedAddress != nil)
     case .account:
       if let account { AccountSettings(account: account, cli: cli) }
     case .models:
@@ -104,18 +108,21 @@ struct SettingsView: View {
     }
   }
 
-  /// The machine's rows, only when Ola works there.
+  /// The store holding the cloud runtime's sessions (on screen, or the other one).
+  var cloudStore: OlaStore { whereOla?.store(.cloud) ?? store }
+
+  /// The cloud runtime's setup: the Ola machine's address and password.
   var machine: some View {
-    SettingsGroup(title: "Ola machine") {
+    SettingsGroup(title: "Cloud: on the Ola machine") {
       LabeledContent("Address") {
-        Text(store.config?.url.host() ?? "Not connected").foregroundStyle(.secondary)
-          .lineLimit(1).truncationMode(.middle).textSelection(.enabled).help(store.config?.url.absoluteString ?? "")
+        Text(cloudStore.config?.url.host() ?? "Not connected").foregroundStyle(.secondary)
+          .lineLimit(1).truncationMode(.middle).textSelection(.enabled).help(cloudStore.config?.url.absoluteString ?? "")
       }
       LabeledContent("Status") { StatusLine(kind: statusKind, text: statusText) }
       HStack {
-        Button("Forget This Machine", role: .destructive) { store.forget() }
+        if cloudStore.config != nil { Button("Forget This Machine", role: .destructive) { cloudStore.forget(); Task { await whereOla?.apply() } } }
         Spacer()
-        Button("Connect Again\u{2026}") { connecting = true }
+        Button(cloudStore.config == nil ? "Set Up\u{2026}" : "Connect Again\u{2026}") { connecting = true }
       }
     }
   }
@@ -123,7 +130,7 @@ struct SettingsView: View {
   static let snapshotSize = CGSize(width: width, height: 300)
 
   var statusKind: StatusLine.Kind {
-    switch store.connection {
+    switch cloudStore.connection {
     case .open: .ok
     case .connecting: .busy
     case .lost, .refused: .problem
@@ -132,7 +139,7 @@ struct SettingsView: View {
   }
 
   var statusText: String {
-    switch store.connection {
+    switch cloudStore.connection {
     case .open: "Connected"
     case .connecting: "Connecting"
     case .lost: "Not answering"
@@ -142,23 +149,40 @@ struct SettingsView: View {
   }
 }
 
-/// Permissions: one switch, "Lots of permissions", for the whole app (both places it works), the
-/// `ola` command, the phone and the Ola machine (PermissionSettings; OLA-139). Off is "Ask before
-/// each step". On the machine the machine itself goes ahead, so the phone needs no Mac for it.
+/// Permissions: "Lots of permissions", one switch per runtime (OLA-142, meeting of 2026-11-18:
+/// "settings follow the runtime, not the product"). Cloud: kept and applied on the Ola machine, the
+/// same switch the phone shows there. Local: this Mac's agent, the `ola` command, and the phone
+/// through this Mac. Off is "Ask before each step".
 struct PermissionsSettings: View {
-  @AppStorage(PermissionSettings.key) private var mode = PermissionMode.lots.rawValue
+  var cloudSetUp: Bool
+  @AppStorage(PermissionSettings.key) private var local = PermissionMode.lots.rawValue
+  @AppStorage(PermissionSettings.cloudKey) private var cloud = PermissionMode.lots.rawValue
   @State private var problem: String?
 
   var body: some View {
-    let lots = mode == PermissionMode.lots.rawValue
     SettingsGroup(title: "Permissions") {
-      Toggle("Lots of permissions", isOn: Binding(get: { lots }, set: { on in
-        let m: PermissionMode = on ? .lots : .ask
-        mode = m.rawValue
-        Task { problem = await PermissionSettings.set(m) }
-      }))
-      SettingNote((lots ? PermissionMode.lots.note : PermissionMode.ask.note) + " The same on your phone, in the ola command and on the Ola machine.")
-      if let problem { SettingNote(problem) }
+      VStack(alignment: .leading, spacing: 2) {
+        Toggle("Lots of permissions in the cloud", isOn: Binding(get: { cloud == PermissionMode.lots.rawValue }, set: { on in
+          let m: PermissionMode = on ? .lots : .ask
+          let was = cloud
+          cloud = m.rawValue
+          Task {
+            problem = await PermissionSettings.setCloud(m)
+            if problem != nil { cloud = was }
+          }
+        }))
+        .disabled(!cloudSetUp)
+        SettingNote(cloudSetUp ? (cloud == PermissionMode.lots.rawValue ? PermissionMode.lots.note : PermissionMode.ask.note) + " Kept on the Ola machine, the same on your phone there." : "Set up the Ola machine first.")
+      }
+      VStack(alignment: .leading, spacing: 2) {
+        Toggle("Lots of permissions on this Mac", isOn: Binding(get: { local == PermissionMode.lots.rawValue }, set: { on in
+          let m: PermissionMode = on ? .lots : .ask
+          local = m.rawValue
+          Task { _ = await PermissionSettings.set(m) }
+        }))
+        SettingNote((local == PermissionMode.lots.rawValue ? PermissionMode.lots.note : PermissionMode.ask.note) + " The same in the ola command and on your phone through this Mac.")
+      }
+      if let problem { StatusLine(kind: .problem, text: problem) }
     }
     .task { await PermissionSettings.pull() }
   }

@@ -17,6 +17,10 @@
 // the ask-first steps under `lots`. Those two routes also take opencode's own Basic password (the
 // Mac app's credential for this machine), and only those: the Mac sets the same choice here.
 //
+// And "Yes, for the rest of this session" (OLA-142): an answer `always` on the reply route is kept
+// by the approver for that session (approver.mjs sayYesForSession) and opencode hears "once". The
+// reply route also takes opencode's Basic password, so the Mac's answers come here too.
+//
 //   OPENCODE_PASSWORD=… node phone-door.mjs <listen-host> <listen-port> <opencode-host:port>
 //   env: OLA_BART_PHONE_HANDLES (comma list), OLA_ACCOUNT_BASE (default https://app.ola.cx),
 //        OLA_BART_PERMISSIONS (the choice's file; without it no approver runs and the routes are 404)
@@ -118,6 +122,38 @@ async function permissions(req, res) {
   send()
 }
 
+const REPLY = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/permission\/([A-Za-z0-9_-]{1,80})\/reply$/
+
+/**
+ * An answer to a permission question (OLA-142). "Yes, for the rest of this session" (opencode's
+ * word `always`) is kept by the approver for that session and kind and opencode hears "once"
+ * (approver.mjs, sayYesForSession); any other answer goes to opencode as it came.
+ */
+async function reply(req, res, sessionID, requestID) {
+  let raw = ''
+  for await (const c of req) {
+    raw += c
+    if (raw.length > 16 * 1024) return say(res, 413, 'too_large', 'Too long.')
+  }
+  let body = null
+  try {
+    body = JSON.parse(raw || 'null')
+  } catch {}
+  if (!body || typeof body.decision !== 'string') return say(res, 400, 'bad_json', 'A decision is needed.')
+  if (body.decision === 'always' && approver) {
+    const status = await approver.sayYesForSession(sessionID, requestID)
+    if (status >= 200 && status < 300) return res.writeHead(204, { 'cache-control': 'no-store' }).end()
+    return say(res, status === 404 ? 404 : 502, 'reply_failed', 'Your answer did not reach Ola. Try again.')
+  }
+  const data = Buffer.from(JSON.stringify(body))
+  const up = http.request({ host: upHost, port: upPort, method: 'POST', path: `/api/session/${sessionID}/permission/${requestID}/reply`, headers: { authorization: BASIC, host: upstream, 'content-type': 'application/json', 'content-length': String(data.length), accept: 'application/json' } }, (r) => {
+    res.writeHead(r.statusCode === 401 ? 502 : r.statusCode ?? 502, { 'content-type': r.headers['content-type'] ?? 'application/json', 'cache-control': 'no-store' })
+    r.pipe(res)
+  })
+  up.on('error', () => { if (!res.headersSent) say(res, 502, 'machine_down', 'The agent on the Ola machine isn’t answering.') })
+  up.end(data)
+}
+
 const server = http.createServer(async (req, res) => {
   const addr = req.socket.remoteAddress ?? ''
   const m = misses.get(addr)
@@ -129,9 +165,10 @@ const server = http.createServer(async (req, res) => {
     const cur = misses.get(addr)
     misses.set(addr, cur && cur.until > Date.now() ? { n: cur.n + 1, until: cur.until } : { n: 1, until: Date.now() + 60_000 })
   }
-  if (url.pathname === '/ola/permissions' && auth.startsWith('Basic ')) {
+  const answer = req.method === 'POST' ? REPLY.exec(url.pathname) : null
+  if ((url.pathname === '/ola/permissions' || answer) && auth.startsWith('Basic ')) {
     if (!sameBasic(auth)) { miss(); return say(res, 401, 'wrong_password', 'Wrong password.') }
-    return permissions(req, res)
+    return answer ? reply(req, res, answer[1], answer[2]) : permissions(req, res)
   }
   if (!key) { miss(); return say(res, 401, 'signed_out', 'Sign in again.') }
   const w = await who(key)
@@ -139,6 +176,7 @@ const server = http.createServer(async (req, res) => {
   if (!w.signedIn) { miss(); return say(res, 401, 'signed_out', 'Sign in again.') }
   if (!w.ok) return say(res, 403, 'not_allowed', 'This account can’t work on the Ola machine from a phone.')
   if (url.pathname === '/ola/permissions') return permissions(req, res)
+  if (answer) return reply(req, res, answer[1], answer[2])
   if (!allowed(req.method ?? 'GET', url.pathname)) return say(res, 403, 'not_allowed', 'Not available from the phone.')
 
   const headers = { authorization: BASIC, host: upstream }

@@ -11,7 +11,11 @@
 //   - Lots: a request that lists, reads, runs a command and writes a file finishes with every
 //     question answered by the machine; a web search (`ola-search`) goes ahead too;
 //   - Ask: the command waits for a person (still waiting after 4 s);
-//   - switching back to Lots answers the waiting one at once; a refused step stays refused.
+//   - switching back to Lots answers the waiting one at once; a refused step stays refused;
+//   - OLA-142, under Ask: "yes for the rest of this session" to a piped web search, through the
+//     door, covers a second search, a download and a lookup in that session; a command still asks;
+//     a new session asks again. `OLA_CHECK_SESSION_YES_VIA=opencode` sends opencode's own "always"
+//     instead (what the apps did before): the download, the lookup and the new session fail.
 // Only made-up data. Exits 0 only if every line passes.
 import { spawn } from 'node:child_process'
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -171,6 +175,61 @@ try {
   await sleep(1500)
   line(waiting[0] && replied.some((r) => r.requestID === waiting[0].id && r.reply === 'once'), 'switching to Lots answered the step that was waiting')
   line(await idle(sid) && existsSync(path.join(project, 'rows.md')), 'and the request finished')
+
+  // OLA-142, "yes for this session" on a web search (Ask before each step). Bart, Nov 18: "I had to
+  // approve like 10 different times, even when I said approve always in this session." The open
+  // model wraps the search (`2>&1 | head -20`); a session yes must cover the next one, whatever
+  // its words, in this session only, and must leave no lasting rule in opencode.
+  line((await req(DOOR, 'PUT', '/ola/permissions', { mode: 'ask' })).json?.mode === 'ask', 'session yes: Ask before each step')
+  const SY = process.env.OLA_CHECK_SESSION_YES_VIA ?? 'door' // 'opencode' replays what the apps sent before the fix
+  const ask1 = async (sid, text) => {
+    const before = asked.length
+    await ocCall('POST', `/api/session/${sid}/prompt`, { text })
+    for (let i = 0; i < 40; i++) {
+      const w = (await pending(sid))[0]
+      if (w) return w
+      if (asked.slice(before).some((a) => a.sessionID === sid && replied.some((r) => r.requestID === a.id))) return null
+      await sleep(400)
+    }
+    return null
+  }
+  const s1 = (await ocCall('POST', '/api/session', { title: 'session yes check', location: { directory: project } })).json
+  const sy = s1?.id ?? s1?.data?.id
+  const q1 = await ask1(sy, 'Please search the web, piped, for made-up tenant union meetings')
+  line(!!q1 && (q1.resources ?? []).some((r) => r.includes('ola-search')), 'session yes: the first piped search asks')
+  if (q1) {
+    const r = SY === 'opencode'
+      ? await ocCall('POST', `/api/session/${sy}/permission/${q1.id}/reply`, { decision: 'always' })
+      : await req(DOOR, 'POST', `/api/session/${sy}/permission/${q1.id}/reply`, { decision: 'always' })
+    line(r.status >= 200 && r.status < 300, `session yes: answered "yes, for the rest of this session" (${SY === 'opencode' ? 'straight to opencode, as before the fix' : 'through the door, as the apps do'})`, String(r.status))
+  }
+  await idle(sy)
+  const q2 = await ask1(sy, 'Please search the web, piped, for made-up rent board hearings')
+  await sleep(1500)
+  const still = await pending(sy)
+  line(!still.length, 'session yes: a second piped search with other words in the same session goes ahead without asking', JSON.stringify(still.map((p) => p.resources)))
+  if (still.length) for (const p of still) await ocCall('POST', `/api/session/${sy}/permission/${p.id}/reply`, { decision: 'reject' })
+  await idle(sy)
+  for (const [text, what] of [['Please download https://example.org/made-up-report.pdf', 'a download'], ['Please look up the paper doi:10.1234/made-up.5678', 'a lookup']]) {
+    await ask1(sy, text)
+    await sleep(1500)
+    const w = await pending(sy)
+    line(!w.length, `session yes: ${what} in the same session goes ahead without asking`, JSON.stringify(w.map((p) => p.resources)))
+    for (const p of w) await ocCall('POST', `/api/session/${sy}/permission/${p.id}/reply`, { decision: 'reject' })
+    await idle(sy)
+  }
+  // A command that is not a web step still asks: the yes was for the web.
+  const q4 = await ask1(sy, 'How many rows are in survey.csv? Write the number to rows.md.')
+  line(!!q4 && !(q4.resources ?? []).some((r) => /ola-(search|fetch|lookup)/.test(r)), `session yes: a ${q4?.action ?? 'command'} that is not a web step still asks`)
+  if (q4) await ocCall('POST', `/api/session/${sy}/permission/${q4.id}/reply`, { decision: 'reject' })
+  await idle(sy)
+  const s2 = (await ocCall('POST', '/api/session', { title: 'another session', location: { directory: project } })).json
+  const sy2 = s2?.id ?? s2?.data?.id
+  const q3 = await ask1(sy2, 'Please search the web, piped, for made-up tenant union meetings')
+  line(!!q3, 'session yes: a new session asks again (the yes was for that session only)')
+  if (q3) await ocCall('POST', `/api/session/${sy2}/permission/${q3.id}/reply`, { decision: 'reject' })
+  await idle(sy2)
+  rmSync(permFile, { force: true })
 
   // A garbled file is not Lots.
   writeFileSync(permFile, 'sure\n')

@@ -344,6 +344,10 @@ public final class MacRelay: @unchecked Sendable {
   /// a change made here and on the Ola machine (PermissionSettings.set). Unset: the routes are 404.
   public var permissions: (@Sendable () -> String)?
   public var setPermissions: (@Sendable (String) async -> String)?
+  /// "Yes, for the rest of this session" from the phone (OLA-142): an answer `always` on the reply
+  /// route goes to the Mac app (OlaStore.answerForSession for the store on the relay's server),
+  /// never to opencode as its own lasting "always". Returns an HTTP status. Unset: refused (409).
+  public var sessionYes: (@Sendable (_ session: String, _ request: String) async -> Int)?
   private let lock = NSLock()
   private var upstreamConfig: ServerConfig?
   private var mode = "machine"
@@ -475,6 +479,14 @@ public final class MacRelay: @unchecked Sendable {
     }
     guard Self.allowed(req.method, req.path) else { return await res.json(403, "That is not something the phone may ask for.") }
     guard let upstream else { return await res.json(503, "The Mac app is not connected to a server right now.") }
+    // The allow list already checked the shape: /api/session/<s>/permission/<r>/reply.
+    let parts = req.path.split(separator: "/").map(String.init)
+    if req.method == "POST", parts.count == 6, parts[3] == "permission", parts[5] == "reply",
+       (JSON.parse(req.body) ?? .null)["decision"].string == "always" {
+      guard let sessionYes else { return await res.json(409, "This Mac cannot keep a yes for the session.") }
+      let status = await sessionYes(parts[2], parts[4])
+      return (200..<300).contains(status) ? await res.send(204) : await res.json(status == 404 ? 404 : 502, "Your answer did not reach Ola. Try again.")
+    }
     var url = upstream.url.absoluteString
     if url.hasSuffix("/") { url.removeLast() }
     url += req.path + (req.query.map { "?\($0)" } ?? "")

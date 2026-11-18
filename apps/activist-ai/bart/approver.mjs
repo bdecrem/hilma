@@ -20,6 +20,92 @@ import { chmodSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 
 export const LOTS_ACTIONS = new Set(['shell', 'bash', 'edit', 'write', 'apply_patch', 'patch'])
+
+// "Yes, for the rest of this session" (OLA-142, 2026-11-18). Bart: "I had to approve like 10
+// different times, even when I said approve always in this session." The apps used to send
+// opencode its own "always", which saves a lasting rule for the whole project from each command's
+// head (`ola-search *`, `head *`): a download or a lookup after a yes to a search asked again, and
+// the yes outlived the session, every later session included. Now the yes is kept here, for that
+// session only, by kind: a web step (a search, download or lookup, however the model wraps it: the
+// apps' WebAsk.question) covers every later web step in the session; any other step covers later
+// steps of the same action. opencode only ever hears "once".
+const WEB_TOOLS = { 'ola-search': 'search', '/opt/ola/bin/ola-search': 'search', 'ola-fetch': 'fetch', '/opt/ola/bin/ola-fetch': 'fetch', 'ola-lookup': 'lookup', '/opt/ola/bin/ola-lookup': 'lookup' }
+
+/** The shell words of a simple command (words, quotes, backslash escapes), or null. */
+export function shellWords(cmd) {
+  if (typeof cmd !== 'string' || cmd.length > 8192) return null
+  const words = []
+  let cur = ''
+  let has = false
+  for (let i = 0; i < cmd.length; i++) {
+    const c = cmd[i]
+    if (c === "'") {
+      const end = cmd.indexOf("'", i + 1)
+      if (end < 0) return null
+      cur += cmd.slice(i + 1, end)
+      has = true
+      i = end
+    } else if (c === '"') {
+      i++
+      for (; i < cmd.length && cmd[i] !== '"'; i++) {
+        if (cmd[i] === '$' || cmd[i] === '`') return null
+        if (cmd[i] === '\\' && i + 1 < cmd.length && '"\\$`\n'.includes(cmd[i + 1])) i++
+        cur += cmd[i]
+      }
+      if (i >= cmd.length) return null
+      has = true
+    } else if (c === '\\') {
+      if (i + 1 >= cmd.length) return null
+      cur += cmd[++i]
+      has = true
+    } else if (c === ' ' || c === '\t') {
+      if (has) words.push(cur), (cur = ''), (has = false)
+    } else if ('$`;&|<>()\n\r{}'.includes(c)) return null
+    else (cur += c), (has = true)
+  }
+  if (has) words.push(cur)
+  return words
+}
+
+/** `2>&1`, `2>/dev/null`, `>/dev/null 2>&1` at the end of a command, removed. */
+export function stripRedirects(cmd) {
+  let c = String(cmd ?? '').trim()
+  for (;;) {
+    const n = c.replace(/\s+(?:[12]?>&[12]|[12]?>\s*\/dev\/null)$/, '')
+    if (n === c) return c
+    c = n
+  }
+}
+
+/** A command that only shows or trims output (OlaKit WebAsk.isPlumbing, word for word). */
+export function isPlumbing(cmd) {
+  const w = shellWords(stripRedirects(cmd))
+  if (!w?.length) return false
+  const rest = w.slice(1)
+  switch (w[0]) {
+    case 'head': case 'tail': case 'wc': case 'sort': case 'uniq': return rest.every((x) => x.startsWith('-') || /^\d+$/.test(x))
+    case 'cat': return w.length === 1
+    case 'echo': case 'true': case 'which': case 'type': return true
+    case 'grep': return rest.filter((x) => !x.startsWith('-')).length <= 1
+    default: return false
+  }
+}
+
+/** Whether a permission is a web step: every command an Ola web command or plumbing, one at least. */
+export function isWebStep(action, resources) {
+  if (action !== 'shell' && action !== 'bash') return false
+  const list = Array.isArray(resources) ? resources : []
+  let web = 0
+  for (const r of list) {
+    const first = stripRedirects(r).split(/\s+/)[0]
+    if (WEB_TOOLS[first]) web++
+    else if (!isPlumbing(r)) return false
+  }
+  return web > 0
+}
+
+/** What a session yes is about: 'web' for a web step, else the action. */
+export const kindOf = (action, resources) => (isWebStep(action, resources) ? 'web' : String(action ?? ''))
 export const MODES = ['lots', 'ask']
 
 /** The machine's choice. No file: `lots`. Anything but the two words: `ask` (said in the log). */
@@ -63,6 +149,10 @@ export function startApprover({ upstream, basic, file, log = () => {}, retryMs =
   let req = null
   let answered = 0
   const inFlight = new Set()
+  // sessionID -> the kinds the person said "yes, for the rest of this session" to. In memory: a
+  // restart of the door asks again, never the other way round.
+  const sessionYes = new Map()
+  const covered = (p) => sessionYes.get(p.sessionID)?.has(kindOf(p.action, p.resources)) === true
 
   function call(method, path, body) {
     return new Promise((resolve) => {
@@ -88,7 +178,8 @@ export function startApprover({ upstream, basic, file, log = () => {}, retryMs =
   async function answer(p) {
     if (!p || typeof p.id !== 'string' || typeof p.sessionID !== 'string') return
     if (!/^[A-Za-z0-9_-]{1,80}$/.test(p.id) || !/^[A-Za-z0-9_-]{1,80}$/.test(p.sessionID)) return
-    if (!goesAhead(p.action) || readMode(file, log) !== 'lots' || inFlight.has(p.id)) return
+    const lots = goesAhead(p.action) && readMode(file, log) === 'lots'
+    if ((!lots && !covered(p)) || inFlight.has(p.id)) return
     inFlight.add(p.id)
     const r = await call('POST', `/api/session/${p.sessionID}/permission/${p.id}/reply`, { decision: 'once' })
     inFlight.delete(p.id)
@@ -98,12 +189,35 @@ export function startApprover({ upstream, basic, file, log = () => {}, retryMs =
   }
 
   async function sweep() {
-    if (readMode(file, log) !== 'lots') return 0
+    const lots = readMode(file, log) === 'lots'
     const r = await call('GET', '/api/permission/request')
     const list = Array.isArray(r.json) ? r.json : Array.isArray(r.json?.data) ? r.json.data : []
-    const mine = list.filter((p) => goesAhead(p?.action))
+    const mine = list.filter((p) => p && ((lots && goesAhead(p.action)) || covered(p)))
     await Promise.all(mine.map(answer))
     return mine.length
+  }
+
+  /**
+   * "Yes, for the rest of this session" to one waiting request: kept for its session and kind, the
+   * request answered "once", and anything else of that kind waiting in the session too. Returns
+   * the HTTP status for the app (404 when no such request is waiting).
+   */
+  async function sayYesForSession(sessionID, requestID) {
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(sessionID) || !/^[A-Za-z0-9_-]{1,80}$/.test(requestID)) return 400
+    const r = await call('GET', `/api/session/${sessionID}/permission`)
+    const list = Array.isArray(r.json) ? r.json : Array.isArray(r.json?.data) ? r.json.data : []
+    const p = list.find((x) => x?.id === requestID)
+    if (!p) return r.status === 0 ? 502 : 404
+    const kind = kindOf(p.action, p.resources)
+    if (!sessionYes.has(sessionID)) sessionYes.set(sessionID, new Set())
+    sessionYes.get(sessionID).add(kind)
+    if (sessionYes.size > 5000) sessionYes.delete(sessionYes.keys().next().value)
+    log(`permissions: yes for the rest of a session to ${kind === 'web' ? 'web steps' : kind}`)
+    inFlight.add(p.id)
+    const res = await call('POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'once' })
+    inFlight.delete(p.id)
+    for (const other of list) if (other?.id !== requestID && other?.sessionID === sessionID && covered(other)) await answer(other)
+    return res.status === 0 ? 502 : res.status
   }
 
   function connect() {
@@ -146,6 +260,8 @@ export function startApprover({ upstream, basic, file, log = () => {}, retryMs =
 
   return {
     sweep,
+    sayYesForSession,
+    yesFor: (sessionID) => [...(sessionYes.get(sessionID) ?? [])],
     answered: () => answered,
     stop() {
       stopped = true

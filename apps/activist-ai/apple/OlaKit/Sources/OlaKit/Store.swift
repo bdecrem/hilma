@@ -61,6 +61,17 @@ public final class OlaStore {
   public var serverGrace: TimeInterval = 4
   /// How many approvals went ahead without asking (checks).
   public private(set) var wentAhead = 0
+  /// "Yes, for the rest of this session" (OLA-142): session id -> the kinds said yes to
+  /// (SessionYes.kind). Kept here for every runtime, so the card stays away; answered here only
+  /// where the store answers ("On this Mac"), by the machine's approver on the Ola machine.
+  private var sessionYes: [String: Set<String>] = [:]
+  /// The yes kinds kept for a session (checks).
+  public func yesKinds(_ session: String) -> Set<String> { sessionYes[session] ?? [] }
+  func covered(_ session: String, _ action: String, _ resources: [String]) -> Bool {
+    sessionYes[session]?.contains(SessionYes.kind(action: action, resources: resources)) == true
+  }
+  /// The runtime this store works in now.
+  public var runtime: Runtime? { Runtime.of(config) }
 
   private var client: OpenCodeClient?
   private var stream: Task<Void, Never>?
@@ -93,6 +104,12 @@ public final class OlaStore {
     if fixture.claudeOn { claudeUnavailable = nil }
     previews = fixture.previews
     fixtureFiles = fixture.fileData
+  }
+
+  /// A fixture store only: shows it as the given runtime (screenshots of both runtimes' lists).
+  public func previewAs(_ r: Runtime) {
+    guard !live else { return }
+    config = r == .cloud ? ServerConfig(url: URL(string: ServerConfig.defaultAddress)!, password: "", account: true) : ServerConfig(url: URL(string: ServerConfig.defaultAddress)!, password: "", viaMac: true, macName: "Bart\u{2019}s iMac")
   }
 
   /// A fixture store only: replaces a conversation, for frame-by-frame renders of a made-up run.
@@ -260,14 +277,14 @@ public final class OlaStore {
 
   // MARK: the stream
 
-  private func handle(_ ev: JSON, ahead: Bool = true) {
+  func handle(_ ev: JSON, ahead: Bool = true) {
     let type = ev["type"].str
     let d = ev["data"]
     let sid = d["sessionID"].str
     let at = ev["created"].date ?? .now
     // Lots of permissions: no card, no notification. Answered "once" here at once, or by the
     // server itself (serverAnswers). Should the step still wait, the card is shown after all.
-    if ahead, type == "permission.asked", let goesAhead, goesAhead(d["action"].str, d["resources"].array.map(\.str)) {
+    if ahead, type == "permission.asked", (goesAhead?(d["action"].str, d["resources"].array.map(\.str)) ?? false) || covered(sid, d["action"].str, d["resources"].array.map(\.str)) {
       wentAhead += 1
       let rid = d["id"].str
       if serverAnswers() {
@@ -353,7 +370,8 @@ public final class OlaStore {
       if directory == nil { directory = (try? await client.session(id))?.directory }
       var c = Conversation(sessionID: id, directory: directory, turns: Conversation.turns(fromMessages: try await client.messages(id), directory: directory))
       if let p = try await client.pendingPermissions(id).first {
-        if let goesAhead, !serverAnswers(), goesAhead(p["action"].str, p["resources"].array.map(\.str)), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
+        let res = p["resources"].array.map(\.str)
+        if !serverAnswers(), (goesAhead?(p["action"].str, res) ?? false) || covered(id, p["action"].str, res), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
           wentAhead += 1
         } else {
           let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)
@@ -483,11 +501,49 @@ public final class OlaStore {
       claudeInputs[a.id] = nil
       return
     }
-    guard let client else { return }
+    guard client != nil else { return }
+    if decision == .always {
+      let status = await answerForSession(session: id, request: a.id)
+      if !(200..<300).contains(status) { problem = Problem(text: "Your answer did not reach Ola. Try again.", detail: "\(status)") }
+      return
+    }
     do {
-      try await client.reply(session: id, request: a.id, decision: decision)
+      try await client?.reply(session: id, request: a.id, decision: decision)
     } catch {
       note(error, "Your answer did not reach the machine. Try again.")
+    }
+  }
+
+  /// "Yes, for the rest of this session" to one waiting request (OLA-142), wherever it was given
+  /// (this app's card, or the phone's through the relay, `MacRelay.sessionYes`). Returns an HTTP
+  /// status. Never opencode's own "always" (a lasting rule for the whole project):
+  /// - On this Mac (loopback): kept here by kind, answered "once", and anything else of that kind
+  ///   waiting in the session too; later ones are answered as they come (`handle`).
+  /// - The Mac on the Ola machine: sent to the machine's door, whose approver keeps it.
+  /// - The phone: sent as `always` to its door or its Mac's relay, which keep it the same way.
+  @discardableResult
+  public func answerForSession(session: String, request: String) async -> Int {
+    guard let client, let config else { return 503 }
+    let waiting = (try? await client.pendingPermissions(session)) ?? []
+    guard let p = waiting.first(where: { $0["id"].str == request }) else { return 404 }
+    sessionYes[session, default: []].insert(SessionYes.kind(action: p["action"].str, resources: p["resources"].array.map(\.str)))
+    do {
+      if config.account || config.viaMac {
+        try await client.reply(session: session, request: request, decision: .always)
+      } else if Runtime.of(config) == .cloud {
+        try await OpenCodeClient(MachinePermissions.door(for: config)).reply(session: session, request: request, decision: .always)
+      } else {
+        try await client.reply(session: session, request: request, decision: .once)
+        for o in waiting where o["id"].str != request && covered(session, o["action"].str, o["resources"].array.map(\.str)) {
+          try? await client.reply(session: session, request: o["id"].str, decision: .once)
+          wentAhead += 1
+        }
+      }
+      return 204
+    } catch OlaError.server(let s, _) {
+      return s
+    } catch {
+      return 502
     }
   }
 

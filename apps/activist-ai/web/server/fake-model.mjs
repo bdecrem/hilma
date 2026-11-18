@@ -117,14 +117,31 @@ export function startFakeModel({ hosted = false } = {}) {
       if (glob && done < Number(slow[1])) return send(200, reply({ tool: { id: `call_${calls}_${done}`, name: glob, args: glob === 'glob' ? { pattern: '*' } : { path: '.' } } }))
       return send(200, reply({ content: `Done after ${done} slow steps.` }))
     }
+    // "download <https address>" and "look up the paper <reference>": one ola-fetch or ola-lookup,
+    // wrapped as the open model writes them, then an answer (OLA-142's session-yes check).
+    const fetchOrLookup = /^(?:please )?(download|look up the paper) (.{1,200})$/i.exec(lastUserText(messages).trim())
+    if (fetchOrLookup) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const done = messages.slice(since + 1).filter((m) => m.role === 'tool').length
+      const bash = pick(body.tools, 'shell', 'bash')
+      const what = fetchOrLookup[2].replace(/["\\$`]/g, '')
+      const command = /^download$/i.test(fetchOrLookup[1]) ? `ola-fetch "${what}" 2>&1 | tail -5` : `ola-lookup "${what}" 2>&1`
+      if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command, description: 'Get it from the web' } } }))
+      return send(200, reply({ content: 'Done.' }))
+    }
     // "search the web for <words>": one ola-search (which asks the person first), then an answer.
-    const web = /search the web for (.{1,120})$/i.exec(lastUserText(messages).trim())
+    // "search the web, piped, for <words>": the same search wrapped the way the open model often
+    // writes it (`2>&1 | head -20`), which is how a real run met the session-yes bug (OLA-142).
+    const web = /search the web(, piped,)? for (.{1,120})$/i.exec(lastUserText(messages).trim())
     if (web) {
       let since = -1
       messages.forEach((m, i) => m.role === 'user' && (since = i))
       const done = messages.slice(since + 1).filter((m) => m.role === 'tool').length
       const bash = pick(body.tools, 'shell', 'bash')
-      if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command: `ola-search "${web[1].replace(/["\\$`]/g, '')}"`, description: 'Search the web' } } }))
+      const words = web[2].replace(/["\\$`]/g, '')
+      const command = web[1] ? `ola-search "${words}" 2>&1 | head -20` : `ola-search "${words}"`
+      if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command, description: 'Search the web' } } }))
       return send(200, reply({ content: 'I did not search the web, so I worked from your files only.' }))
     }
     // "draw the delta": the drawing run (Open for every kind). Writes two SVG drawings (one of them
