@@ -70,6 +70,10 @@ export const DEFAULTS = {
   DISK_VOLUME: '/System/Volumes/Data',
   DISK_WARN_GB: 20,
   DISK_ALARM_GB: 8,
+  // Bart, Nov 17: "I get constant texts about the mini drive being full and then not. Stop sending
+  // those to me." Disk is measured and shown on the status page and the board, never texted; the
+  // lead keeps it clear (OLA-135).
+  DISK_TEXTS: false,
   SIZES_EVERY_MIN: 60,
   CONTAINER_STORE: path.join(HOME, 'Library/Application Support/com.apple.container'),
   // 2 memory
@@ -140,6 +144,7 @@ export function settings() {
   }
   for (const k of Object.keys(DEFAULTS)) if (process.env[`OLA_WATCH_${k}`] !== undefined) S[k] = process.env[`OLA_WATCH_${k}`]
   for (const [k, v] of Object.entries(DEFAULTS)) if (typeof v === 'number') S[k] = Number(S[k])
+  for (const [k, v] of Object.entries(DEFAULTS)) if (typeof v === 'boolean') S[k] = S[k] === true || S[k] === '1' || S[k] === 'true'
   // The services' own ports, from their settings (only the port numbers are taken).
   const fd = envIf(path.join(OLA, 'frontdesk.env'))
   const origin = new URL(fd.OLA_FD_ORIGIN || 'http://localhost:4700')
@@ -637,7 +642,7 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   const drop = conds.find((c) => c.id === 'vm-drop' && c.drop && c.level === 'warn')
   if (drop && !dry) drop.evidence = await saveDropEvidence(S, drop.drop, { ...readings, memory: readings.memory ?? readings.memoryForEvidence, prevMemory: state.memory }, now)
   const muted = state.muteUntil && Date.parse(state.muteUntil) > now
-  const d = decide(S, state, conds.filter((c) => c.level !== 'test'), now, { muted })
+  const d = decide(S, state, conds.filter((c) => c.level !== 'test' && !(c.id === 'disk' && !S.DISK_TEXTS)), now, { muted })
   let text = d.text
   if (force.includes('test')) text = 'Ola: test of the new alarm. Nothing is wrong.'
   let sent = null

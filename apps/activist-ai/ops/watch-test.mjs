@@ -165,7 +165,7 @@ const all = { out: '' }
 function watch(now, args = [], extra = {}) {
   return new Promise((resolve) => {
     const before = texts.length
-    const c = spawn(process.execPath, [path.join(HERE, 'watch.mjs'), '--once', ...args], { env: { ...ENV(), OLA_WATCH_NOW: now, ...extra } })
+    const c = spawn(process.execPath, [path.join(HERE, 'watch.mjs'), '--once', ...args], { env: { ...ENV(), OLA_WATCH_NOW: now, OLA_WATCH_DISK_TEXTS: '1', ...extra } }  /* the disk is the tests' handiest trigger; off in production */)
     let out = ''
     c.stdout.on('data', (d) => (out += d))
     c.stderr.on('data', (d) => (out += d))
@@ -490,4 +490,9 @@ test('no secret in any output, state or log; no engineer words in any text', asy
     assert.doesNotMatch(t, BANNED, t)
     assert.ok(t.length <= 320, `too long for a phone: ${t}`)
   }
+})
+
+test('the disk is never texted in production (Bart, Nov 17), still shown in the daily note', async () => {
+  const r = await watch('2026-11-20T15:00:00Z', [], { OLA_WATCH_DISK_TEXTS: '0', OLA_WATCH_DISK_ALARM_GB: '100000', OLA_WATCH_DISK_WARN_GB: '200000' })
+  assert.equal(r.sent.length, 0, `a disk text went out: ${JSON.stringify(r.sent)}`)
 })
