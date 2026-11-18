@@ -27,7 +27,7 @@ enum Main {
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
   static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--render-selftest", "--import-secret", "--secret-status", "--forget-secret",
-                                          "--permissions-selftest", "--shots", "--token-file", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
+                                          "--permissions-selftest", "--shots", "--token-file", "--model-url", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
 
   static func refuseUnknownOptions() {
     let args = Array(CommandLine.arguments.dropFirst())
@@ -40,7 +40,9 @@ enum Main {
 
 struct OlaMacApp: App {
   /// The machine's password is read only when Ola works on the machine (once per launch).
-  @State private var store = OlaStore(config: LocalSettings.onThisMac ? nil : Credentials.load())
+  /// The runtime on screen; `peer` holds the other one's sessions (WhereOlaWorks, OLA-143).
+  @State private var store = OlaStore(config: LocalSettings.onThisMac || Credentials.savedAddress == nil ? nil : Credentials.load())
+  @State private var peer = OlaStore(config: nil)
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
   @State private var phonePush: PhonePush?
@@ -58,7 +60,7 @@ struct OlaMacApp: App {
           guard whereOla == nil else { return }
           // ola-page for the agent "On this Mac" (bart/ola-page-mac): rendered here, off screen.
           PageRender.shared.start()
-          let w = WhereOlaWorks(store: store, account: account)
+          let w = WhereOlaWorks(store: store, peer: peer, account: account)
           whereOla = w
           account.onSignedIn = { [weak w] in
             // A Mac set up for nothing else goes straight to working here.
@@ -67,25 +69,31 @@ struct OlaMacApp: App {
           }
           if account.signedIn { account.refreshUsage() }
           delegate.store = store
+          delegate.peer = peer
           delegate.whereOla = w
-          Notifier.wire(store)
-          // Lots of permissions (Settings, General): the ask-first steps answered here "On this Mac",
-          // by the machine itself on the Ola machine, whose choice this Mac takes at launch.
-          PermissionSettings.wire(store)
+          // Both runtimes, live: notifications, and Lots of permissions, each store by its own
+          // runtime's switch (answered here "On this Mac", by the machine itself in the cloud,
+          // whose switch this Mac reads at launch).
+          for s in [store, peer] {
+            Notifier.wire(s)
+            PermissionSettings.wire(s)
+          }
           Task { await PermissionSettings.pull() }
           w.configureClaude()
-          let link = PhoneLink(store: store)
+          let link = PhoneLink(store: store, whereOla: w)
           phoneLink = link
           let push = PhonePush(link: link)
           phonePush = push
           store.onNotify = { e in push.notify(e) }
+          peer.onNotify = { e in push.notify(e) }
           delegate.phoneLink = link
           Task { await link.apply() }
-          if LocalSettings.onThisMac { Task { await w.apply() } } else { store.start() }
+          store.start()
+          Task { await w.apply() }
         }
     }
     .defaultSize(width: 1280, height: 820)
-    .commands { OlaCommands(store: store) }
+    .commands { OlaCommands(store: store, chooser: NewSessionChooser.shared) }
 
     WindowGroup("Page", id: "page", for: String.self) { $path in
       if let path { PageWindow(store: store, path: path) }
@@ -121,7 +129,7 @@ struct MacGate: View {
       } else if mode == "mac", let w = whereOla, w.installing || w.installProblem != nil {
         InstallScreen(fraction: w.installFraction, problem: w.installProblem) { Task { await w.apply() } }
       } else {
-        MacRoot(store: store)
+        MacRoot(store: store, whereOla: whereOla)
       }
     }
     .animation(.easeOut(duration: 0.18), value: needsSignIn)
@@ -146,6 +154,7 @@ struct MacGate: View {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
   var store: OlaStore?
+  var peer: OlaStore?
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -161,14 +170,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
   func applicationDidBecomeActive(_ notification: Notification) {
     MainActor.assumeIsolated {
-      store?.isActive = true
-      if case .lost = store?.connection { store?.reconnect() }
+      for s in [store, peer].compactMap({ $0 }) {
+        s.isActive = true
+        if case .lost = s.connection { s.reconnect() }
+      }
     }
     // A change made on the phone shows here when Bart comes back.
     Task { await PermissionSettings.pull() }
   }
   func applicationDidResignActive(_ notification: Notification) {
-    MainActor.assumeIsolated { store?.isActive = false }
+    MainActor.assumeIsolated { store?.isActive = false; peer?.isActive = false }
   }
 }
 
@@ -202,6 +213,7 @@ enum Notifier {
 
 struct OlaCommands: Commands {
   var store: OlaStore
+  var chooser: NewSessionChooser
   @FocusedValue(\.olaDraft) private var draft
 
   var body: some Commands {
@@ -209,7 +221,8 @@ struct OlaCommands: Commands {
       Button("Check for Updates…") { Task { await UpdateCheck.check(userAsked: true) } }
     }
     CommandGroup(replacing: .newItem) {
-      Button("New Session") { store.newSession() }.keyboardShortcut("n")
+      // Where the session works is chosen first: cloud or local (OLA-143).
+      Button("New Session\u{2026}") { chooser.shown = true }.keyboardShortcut("n")
     }
     CommandMenu("Session") {
       Button("Send") {

@@ -25,18 +25,42 @@ final class PhoneLink {
   private var watcher: Timer?
   private var last: ServerConfig?
 
-  init(store: OlaStore) {
+  /// Both runtimes (the app's); nil in checks that drive one store.
+  weak var whereOla: WhereOlaWorks?
+  /// The runtime the relay serves now, for the routes answered off the main actor.
+  private let served = RuntimeBox()
+
+  init(store: OlaStore, whereOla: WhereOlaWorks? = nil) {
     self.store = store
+    self.whereOla = whereOla
     let book = PairingBook(file: LocalServer.support.appendingPathComponent("phones.json"))
     relay = MacRelay(book: book, macName: Host.current().localizedName ?? "this Mac")
     relay.claudeBase = LocalServer.support
-    // The phone's Permissions switch, through its Mac: this Mac's choice, changed here and on the machine.
-    relay.permissions = { PermissionSettings.mode.rawValue }
+    // The phone's Permissions switch through its Mac: the switch of the runtime the relay serves
+    // (OLA-142: one per runtime), changed there.
+    let served = served
+    relay.permissions = { PermissionSettings.mode(served.get).rawValue }
     relay.setPermissions = { m in
-      await PermissionSettings.set(PermissionMode(rawValue: m) ?? .ask)
-      return PermissionSettings.mode.rawValue
+      let r = served.get
+      let mode = PermissionMode(rawValue: m) ?? .ask
+      if r == .cloud { await PermissionSettings.setCloud(mode) } else { await PermissionSettings.set(mode) }
+      return PermissionSettings.mode(r).rawValue
     }
+    // "Yes, for the rest of this session" from the phone: kept by the store on the relay's server.
+    relay.sessionYes = { [weak self] s, r in await self?.sessionYes(s, r) ?? 503 }
     phones = book.list
+  }
+
+  func sessionYes(_ session: String, _ request: String) async -> Int {
+    guard let s = whereOla?.store(on: last) ?? (store.config == last ? store : nil) else { return 503 }
+    return await s.answerForSession(session: session, request: request)
+  }
+
+  /// What the relay serves: the local runtime when this Mac has one running ("Local: through your
+  /// Mac" on the phone), else the Ola machine, this Mac's only runtime then.
+  var upstream: ServerConfig? {
+    guard let w = whereOla else { return store.config }
+    return w.localConfig ?? w.store(.cloud).config
   }
 
   var enabled: Bool { LocalSettings.defaults.bool(forKey: "ola.phone.enabled") }
@@ -72,13 +96,14 @@ final class PhoneLink {
     }
   }
 
-  /// The phone follows whatever the Mac app uses, including a switch of "Where Ola works".
+  /// The phone follows the Mac's local runtime (and the machine on a Mac without one).
   func follow() {
-    let c = store.config
+    let c = upstream
     relay.setClaudeLine(store.claudeOn ? "On" : (store.claudeUnavailable == nil ? "Off" : (store.claudeUnavailable!.hasPrefix("Not yet") ? "Not available on the Ola machine yet" : "Off")))
     guard c != last else { return }
     last = c
-    relay.setUpstream(c, mode: c?.url.host() == "127.0.0.1" ? "mac" : "machine")
+    served.set(Runtime.of(c) ?? .cloud)
+    relay.setUpstream(c, mode: Runtime.of(c) == .local ? "mac" : "machine")
   }
 
   /// Pair a Phone: a new secret, and the code on screen. Says why when it cannot.
@@ -186,6 +211,14 @@ struct PairingSheet: View {
 }
 
 extension UInt16 { var nonZero: UInt16? { self == 0 ? nil : self } }
+
+/// A runtime read from any thread (the relay's routes run off the main actor).
+final class RuntimeBox: @unchecked Sendable {
+  private let lock = NSLock()
+  private var r: Runtime = .cloud
+  var get: Runtime { lock.withLock { r } }
+  func set(_ v: Runtime) { lock.withLock { r = v } }
+}
 
 /// The pairing code in a window of its own, brought to the front (a sheet on the Settings window
 /// is not something the app could check was showing). A self-test opens it off every display.

@@ -561,7 +561,13 @@ for (const [engine, launcher] of [['Chromium', null], ['WebKit', webkit]]) {
     assert((await p2.locator('.lots-perms .switch').innerText()) === (was ? 'Off' : 'On'), 'the On/Off did not change')
     assert((await p2.locator('.lots-perms .autonomy-hint').innerText()) !== hint0, 'the line under the switch did not change')
     await snap(p2, 'phone-3-switch')
+    // The choice stays with the project (OLA-142): the page opened again, a new conversation, start from it.
+    await p2.reload()
+    await p2.waitForSelector('.drawer.open #ask-input')
+    await p2.getByRole('button', { name: 'New conversation' }).click({ timeout: 2000 }).catch(() => {}) // not shown when the page opened on a new one
+    assert((await sw.isChecked()) === !was, 'the choice was forgotten when the page was opened again')
     await p2.locator('label.lots-toggle').click()
+    assert((await sw.isChecked()) === was, 'the switch did not flip back')
     // What Ola made: its things; the downloaded page is not among them.
     await p2.getByRole('tab', { name: /Made by Ola/ }).click()
     await p2.waitForSelector('.thing-group')

@@ -6,7 +6,7 @@ laid in the page under three tabs: Conversation, Made by Ola, and Sources (what 
 the web into `sources/`, each with the address it came from, never shown as something Ola made).
 Everything else (What Ola has of yours, Data, Jobs, Settings, Quality, On this machine, your
 projects, your account, Sign out) is in one Menu; a laptop shows them as one quiet row of links
-under the name and keeps the things with the bar at the bottom. "Lots of permissions" is one switch.
+under the name and keeps the things with the bar at the bottom. "Lots of permissions" is one switch, and the choice stays with the project in that browser (a new conversation and a reload start from it; OLA-142).
 `#/projects` always shows the list of projects, even with one, and an admin makes a new project
 there (POST /api/projects, the same code as `admin.mjs create-workspace`). Screens:
 `node scripts/project-shots.mjs <dir>`.

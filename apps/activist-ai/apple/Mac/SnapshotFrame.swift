@@ -10,6 +10,8 @@ struct SnapshotFrame: View {
   var treatment: Treatment
   var sidebarWidth: CGFloat = 232
   var filesWidth: CGFloat = 248
+  /// The other runtime's sessions, for the list's second section (OLA-143).
+  var peer: OlaStore? = nil
   @State private var draft = ""
 
   var body: some View {
@@ -17,7 +19,7 @@ struct SnapshotFrame: View {
       VStack(spacing: 0) {
         HStack(spacing: 8) { ForEach(0..<3, id: \.self) { _ in Circle().fill(Ola.dim.opacity(0.45)).frame(width: 12, height: 12) } }
           .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).frame(height: 52)
-        Sidebar(store: store)
+        Sidebar(store: store, peerPreview: peer)
       }
       .frame(width: sidebarWidth)
       .background(Ola.room)

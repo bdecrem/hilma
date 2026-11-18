@@ -111,6 +111,13 @@ struct PhoneShell: View {
 
 // MARK: Sessions, the home
 
+/// One runtime's sessions in the list (OLA-143: the list says which runtime each session is on).
+struct PhoneRuntimeSection: Identifiable {
+  let runtime: Runtime
+  let store: OlaStore
+  var id: Runtime { runtime }
+}
+
 struct SessionsHome: View {
   @Bindable var store: OlaStore
   var gear: Bool
@@ -119,10 +126,30 @@ struct SessionsHome: View {
   @State private var renaming: SessionInfo?
   @State private var newTitle = ""
   @State private var deleting: SessionInfo?
+  /// The store a rename or a delete is for (a session of either runtime).
+  @State private var target: OlaStore?
+  @Bindable private var place = PhoneWhereState.shared
 
-  var shown: [SessionInfo] {
+  /// The runtimes that are set up, cloud first, each with the store holding its sessions now.
+  var sections: [PhoneRuntimeSection] {
+    Runtime.allCases.compactMap { r in
+      guard let s = place.store(r, store), s.config != nil else { return nil }
+      return PhoneRuntimeSection(runtime: r, store: s)
+    }
+  }
+
+  func shown(_ st: OlaStore) -> [SessionInfo] {
     let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-    return q.isEmpty ? store.sessions : store.sessions.filter { $0.title.lowercased().contains(q) || (store.previews[$0.id] ?? "").lowercased().contains(q) }
+    return q.isEmpty ? st.sessions : st.sessions.filter { $0.title.lowercased().contains(q) || (st.previews[$0.id] ?? "").lowercased().contains(q) }
+  }
+
+  var allEmpty: Bool { sections.allSatisfy { $0.store.sessions.isEmpty } }
+
+  /// A session of the runtime on screen opens as it is; one of the other runtime brings that
+  /// runtime on screen first.
+  func open(_ r: Runtime, _ s: SessionInfo, in st: OlaStore) {
+    if st !== store { place.open(r, id: s.id, store: store) }
+    open(s.id)
   }
 
   var body: some View {
@@ -132,19 +159,36 @@ struct SessionsHome: View {
       } else if store.connection == .refused, store.onMachine {
         Section { SignedOutRow(store: store) }
       }
-      ForEach(shown) { s in
-        Button { open(s.id) } label: {
-          SessionRow(session: s, preview: store.previews[s.id], running: store.running.contains(s.id), unseen: store.unseen.contains(s.id), needsYou: store.needsYou(s.id))
-        }
-        .listRowBackground(Ola.paper)
-        .task { await store.loadPreview(s.id) }
-        .swipeActions {
-          Button("Delete", systemImage: "trash") { deleting = s }.tint(Ola.vermilion)
-          Button("Rename", systemImage: "pencil") { newTitle = s.title; renaming = s }.tint(Ola.ink3)
-        }
-        .contextMenu {
-          Button("Rename", systemImage: "pencil") { newTitle = s.title; renaming = s }
-          Button("Delete", systemImage: "trash", role: .destructive) { deleting = s }
+      ForEach(sections) { sec in
+        let r = sec.runtime, st = sec.store
+        Section {
+          ForEach(shown(st)) { s in
+            Button { open(r, s, in: st) } label: {
+              SessionRow(session: s, preview: st.previews[s.id], running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
+            }
+            .listRowBackground(Ola.paper)
+            .task { await st.loadPreview(s.id) }
+            .swipeActions {
+              Button("Delete", systemImage: "trash") { target = st; deleting = s }.tint(Ola.vermilion)
+              Button("Rename", systemImage: "pencil") { target = st; newTitle = s.title; renaming = s }.tint(Ola.ink3)
+            }
+            .contextMenu {
+              Button("Rename", systemImage: "pencil") { target = st; newTitle = s.title; renaming = s }
+              Button("Delete", systemImage: "trash", role: .destructive) { target = st; deleting = s }
+            }
+          }
+          if st.sessions.isEmpty, !allEmpty || st !== store {
+            Text(emptyLine(r, st)).font(.subheadline).foregroundStyle(Ola.ink2).listRowBackground(Ola.paper)
+          }
+        } header: {
+          // Which runtime: "Cloud  on the Ola machine", "Local  through your Mac".
+          HStack(spacing: 6) {
+            Image(systemName: r.symbol)
+            Text(r.name).fontWeight(.semibold)
+            Text(r.place(phone: true))
+          }
+          .font(.footnote).foregroundStyle(Ola.ink2).textCase(nil)
+          .accessibilityElement(children: .combine)
         }
       }
     }
@@ -152,18 +196,18 @@ struct SessionsHome: View {
     .scrollContentBackground(.hidden)
     .background(Ola.paper)
     .overlay {
-      if store.sessions.isEmpty {
+      if allEmpty {
         switch store.connection {
         case .connecting: ProgressView("Loading")
-        case .open: ContentUnavailableView { Label("No sessions yet", systemImage: "bubble.left.and.text.bubble.right") } description: { Text(store.onMachine ? "Start one and Ola gets to work on the Ola machine." : "Start one and Ola gets to work on your Mac.") } actions: { Button("New Session") { store.newSession(); open("") }.buttonStyle(.borderedProminent) }
+        case .open: ContentUnavailableView { Label("No sessions yet", systemImage: "bubble.left.and.text.bubble.right") } description: { Text("Start one, and choose where Ola works on it: on the Ola machine, or through your Mac.") } actions: { Button("New Session") { place.chooserShown = true }.buttonStyle(.borderedProminent) }
         default: EmptyView()
         }
-      } else if shown.isEmpty {
+      } else if !query.isEmpty, sections.allSatisfy({ shown($0.store).isEmpty }) {
         ContentUnavailableView.search(text: query)
       }
     }
     .searchable(text: $query, prompt: "Search")
-    .refreshable { await store.refresh() }
+    .refreshable { for sec in sections { await sec.store.refresh() } }
     .navigationTitle("Ola")
     .navigationBarTitleDisplayMode(.large)
     .toolbar {
@@ -173,20 +217,32 @@ struct SessionsHome: View {
         }
       }
       ToolbarItem(placement: .topBarTrailing) {
-        Button { store.newSession(); open("") } label: { Image(systemName: "square.and.pencil") }
+        // Where the session works is chosen first: cloud or local (OLA-143).
+        Button { place.chooserShown = true } label: { Image(systemName: "square.and.pencil") }
           .accessibilityLabel("New session")
           .sensoryFeedback(.impact(weight: .light), trigger: store.selectedID)
       }
     }
+    .sheet(isPresented: $place.chooserShown) { PhoneNewSessionSheet(store: store) { open("") } }
     .alert("Rename", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
       TextField("Name", text: $newTitle)
-      Button("Rename") { if let s = renaming { Task { await store.rename(s.id, to: newTitle) } } }
+      Button("Rename") { if let s = renaming { Task { await (target ?? store).rename(s.id, to: newTitle) } } }
       Button("Cancel", role: .cancel) {}
     }
     .confirmationDialog("Delete \u{201C}\(deleting?.title ?? "")\u{201D}?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-      Button("Delete", role: .destructive) { if let s = deleting { Task { await store.delete(s.id) } } }
+      Button("Delete", role: .destructive) { if let s = deleting { Task { await (target ?? store).delete(s.id) } } }
     } message: {
-      Text(store.onMachine ? "This deletes it on the Ola machine, for your Mac too. Files stay." : "This deletes it on your Mac too. Files stay.")
+      Text((target ?? store).runtime == .cloud ? "This deletes it on the Ola machine, for your Mac too. Files stay." : "This deletes it on your Mac too. Files stay.")
+    }
+  }
+
+  /// The one line in a runtime's section that has no sessions to show.
+  func emptyLine(_ r: Runtime, _ st: OlaStore) -> String {
+    switch st.connection {
+    case .open: return "No sessions here yet."
+    case .connecting: return "Connecting\u{2026}"
+    case .refused: return r == .cloud ? "Signed out. Sign in again in Settings." : "Pair with your Mac again in Settings."
+    default: return r == .cloud ? "The Ola machine is not answering." : "Your Mac is not reachable."
     }
   }
 }
@@ -275,8 +331,14 @@ struct SettingsScreen: View {
   @State private var signingOut = false
   @Bindable private var place = PhoneWhereState.shared
 
+  /// The store holding each runtime's sessions (on screen, or the other one), when it is set up.
+  var cloud: OlaStore? { place.store(.cloud, store) }
+  var local: OlaStore? { place.store(.local, store) }
+  var cloudReady: Bool { place.fixture ? cloud != nil : PhoneWhere.signedIn }
+  var localReady: Bool { place.fixture ? local != nil : PhoneWhere.paired }
+
   var macState: String {
-    switch store.connection {
+    switch local?.connection ?? .notSetUp {
     case .open: return "Connected"
     case .connecting: return "Connecting"
     case .lost: return "Not reachable"
@@ -286,7 +348,7 @@ struct SettingsScreen: View {
   }
 
   var machineState: String {
-    switch store.connection {
+    switch cloud?.connection ?? .notSetUp {
     case .open: return "Connected"
     case .connecting: return "Connecting"
     case .lost: return !PhoneWhere.tailscaleOn && !place.fixture ? "Tailscale is off on this phone" : "Not answering"
@@ -297,26 +359,32 @@ struct SettingsScreen: View {
 
   var body: some View {
     Form {
-      WhereSection(store: store)
-      PermissionsSection(store: store)
-      if place.mode == .machine {
-        Section("Ola machine") {
+      // The setup of each runtime. Which one a session works in is chosen in New Session (OLA-143).
+      Section {
+        if cloudReady {
           LabeledContent("Signed in as", value: place.shownName)
           LabeledContent("Status", value: machineState)
           Button("Sign Out", role: .destructive) { signingOut = true }
+        } else {
+          Button("Sign In to the Ola Machine\u{2026}") { place.setup = .machine }
         }
-      } else {
-        Section("My Mac") {
-          LabeledContent("Mac", value: store.config?.macName ?? "Not paired")
+      } header: { Text("Cloud: on the Ola machine") } footer: {
+        Text(cloudReady ? "Works with your Mac off." : "Your phone works with the Ola machine directly, even when your Mac is off.")
+      }
+      Section {
+        if localReady {
+          LabeledContent("Mac", value: local?.config?.macName ?? "Not paired")
           LabeledContent("Status", value: macState)
-          if let mode = store.macHello?["mode"].string {
-            LabeledContent("Ola works", value: mode == "mac" ? "On the Mac" : "On the Ola machine")
-          }
           Button("Pair Again") { pairAgain = true }
           Button("Forget This Mac", role: .destructive) { forgetting = true }
+        } else {
+          Button("Pair with Your Mac\u{2026}") { place.setup = .mac }
         }
+      } header: { Text("Local: through your Mac") } footer: {
+        Text(localReady ? "Ola works on your Mac, in its folder. Your Mac needs to be on." : "Scan the code in Ola on your Mac (Settings, Phone).")
       }
-      if place.mode != .machine { Section {
+      PermissionsSection(store: store)
+      if localReady { Section {
         if push.allowed && push.token != nil {
           Toggle("Finished", isOn: Binding(get: { push.finished }, set: { push.finished = $0 }))
           Toggle("Needs me", isOn: Binding(get: { push.needs }, set: { push.needs = $0 }))
@@ -350,9 +418,9 @@ struct SettingsScreen: View {
         }
         .pickerStyle(.segmented)
       }
-      if place.mode != .machine {
+      if localReady {
         Section {
-          LabeledContent("Fallback to Claude", value: store.macHello?["claude"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown")
+          LabeledContent("Fallback to Claude", value: local?.macHello?["claude"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown")
         } footer: { Text("Set on your Mac.") }
       }
       Section("Admin") {
@@ -376,8 +444,8 @@ struct SettingsScreen: View {
       }
     }
     .navigationTitle("Settings")
-    .task { await store.loadMacHello(); await push.refreshAllowed() }
-    .sheet(isPresented: $pairAgain) { PairScreen(store: store) { pairAgain = false } }
+    .task { await local?.loadMacHello(); await push.refreshAllowed() }
+    .sheet(isPresented: $pairAgain) { WhereSetupSheet(mode: .mac, store: store) }
     .sheet(isPresented: $signingIn) { AdminSignIn { signingIn = false } }
     .sheet(item: $place.setup) { m in WhereSetupSheet(mode: m, store: store) }
     .confirmationDialog("Forget this Mac?", isPresented: $forgetting, titleVisibility: .visible) {

@@ -25,6 +25,34 @@ apple/
 `web/src/lib/steps.ts` and `conversation.ts`; change both together. `swift test` in `OlaKit` folds the
 web app's recorded runs (`web/test/fixtures/*.jsonl`) and checks the result.
 
+## Two runtimes: New Session picks one, settings follow it (2026-11-18, OLA-142, OLA-143)
+
+Bart's words: "four products across two different runtimes", "settings ... should always try to
+follow the runtime, not the product". The products are the web app, `ola`, the Mac app and the
+iPhone app; the runtimes are **cloud** (the Ola machine) and **local** (this Mac; for the phone,
+through its Mac). `OlaKit/Runtime.swift` has the words every screen uses.
+
+- **New Session** (the Mac's sidebar button and Cmd-N, the phone's pencil) opens a chooser: Cloud or
+  Local, one line each, the last choice ticked. A runtime that is not set up says so and offers the
+  setup. `Mac/NewSession.swift`, `iOS/PhoneWhereViews.swift` (`PhoneNewSessionSheet`).
+- **Both runtimes are live at once.** Each app holds two stores: the runtime on screen and the other
+  one (`WhereOlaWorks.store/peer`, `PhoneWhereState.peer`). The session list has a section per
+  runtime; opening a session of the other runtime brings it on screen (a swap, no restart).
+- **Settings keeps only the setup**: the machine's address and the folder on the Mac; the sign-in
+  and the pairing on the phone. No "Where Ola works" choice there any more.
+- **Lots of permissions is one switch per runtime.** Cloud: kept and applied on the machine
+  (`../bart/approver.mjs`, through its phone door). Local: this Mac's (`ola.permissions`), used by
+  the app, `ola` and the phone through this Mac. Every product shows the switch of each runtime.
+- **"Yes, for the rest of this session"** is kept per session and by kind by whoever answers for the
+  runtime (`SessionYes`, `OlaStore.answerForSession`, the approver), never sent to opencode as its
+  own lasting "always". A web step (a search, a download, a lookup, however wrapped) is one kind,
+  so one yes covers the session's later web steps.
+- **Checks:** `swift test` (`SessionYesTests`), `node ../bart/permissions-check.mjs` (the machine),
+  `tools/permissions-selftest.sh` (the Mac, real requests; `OLA_MODEL_URL` reaches the model
+  through an ssh tunnel on a Mac without Tailscale), `Ola -OlaSnapshot <dir> -OlaOnly runtimes`
+  (the chooser and the two-section list), and on the phone `-OlaFixture main -OlaBoth` with
+  `-OlaNewSession` or `-OlaTab settings`.
+
 ## Build
 
 ```bash

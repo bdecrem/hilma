@@ -67,7 +67,18 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export function createOla({ baseUrl = new URL('/oc', location.origin).href, live = true }: { baseUrl?: string; live?: boolean } = {}) {
   // The workspace and the CSRF token ride on every request; the front desk checks both.
   const client = OpenCode.make({ baseUrl, headers: deskHeaders() })
-  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false })
+  // "Lots of permissions" stays as the person left it in this project (OLA-142: the setting follows
+  // the runtime, not the conversation): a new conversation, and the page opened again, start from
+  // the last choice. An older conversation still opens on its own.
+  const lotsKey = `ola.permissions.${new URLSearchParams(location.search).get('w') ?? ''}`
+  const rememberedAutonomy = (): Autonomy => {
+    try {
+      return localStorage.getItem(lotsKey) === 'ask' ? 'ask' : 'go'
+    } catch {
+      return 'go'
+    }
+  }
+  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false })
   let disposed = false
   let streamAbort: AbortController | null = null
 
@@ -312,6 +323,11 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
 
   async function setAutonomy(autonomy: Autonomy) {
     setState('autonomy', autonomy)
+    try {
+      localStorage.setItem(lotsKey, autonomy)
+    } catch {
+      /* a browser that keeps nothing: the choice lasts for this page */
+    }
     if (!state.sessionID) return
     try {
       await client.session.update({ sessionID: state.sessionID, metadata: { autonomy } })
@@ -532,7 +548,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
 
   function newConversation() {
     if (state.sessionID) void refreshEarlier()
-    setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [], said: null, help: false })
+    setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [], said: null, help: false, autonomy: rememberedAutonomy() })
   }
 
   // ------------------------------------------------------------ what the person typed: a request or a slash command

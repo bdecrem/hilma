@@ -38,6 +38,24 @@ enum Snapshot {
       let root = SnapshotFrame(store: store, treatment: treatment).environment(\.treatment, treatment)
       write(root, size: size, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false)
     }
+    // New Session (OLA-143): the list with both runtimes' sessions, and the chooser in its states.
+    if only == nil || "mac-runtimes".contains(only!) || only == "runtimes" {
+      let cloud = OlaStore(fixture: Fixture.main)
+      cloud.previewAs(.cloud)
+      let local = OlaStore(fixture: Fixture.named("results"))
+      local.previewAs(.local)
+      write(SnapshotFrame(store: cloud, treatment: chosen, peer: local).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: .aqua, to: dir.appendingPathComponent("mac-runtimes-sessions.png"), titled: false)
+      let states: [(String, [Runtime: String?])] = [
+        ("mac-runtimes-chooser", [.cloud: nil, .local: nil]),
+        ("mac-runtimes-chooser-local-not-set-up", [.cloud: nil, .local: "Choose the folder Ola works in first."]),
+      ]
+      for (name, preview) in states {
+        for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+          let sheet = NewSessionSheet(whereOla: WhereOlaWorks(store: cloud), done: {}, preview: preview)
+          write(sheet, size: CGSize(width: 440, height: 240), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)
+        }
+      }
+    }
     // Settings, in each of its states, at the window's own width. Its own defaults suite, so the
     // app's real setting is never read or written.
     let defaults = UserDefaults(suiteName: "cx.ola.mac.snapshot")!

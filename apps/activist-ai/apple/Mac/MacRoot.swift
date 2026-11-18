@@ -57,17 +57,22 @@ extension EnvironmentValues {
 
 struct MacRoot: View {
   @Bindable var store: OlaStore
+  /// Both runtimes (the app); nil for a still picture of one store.
+  var whereOla: WhereOlaWorks? = nil
+  /// Screenshots: the other runtime's sessions, for the list's second section.
+  var peerPreview: OlaStore? = nil
   @SceneStorage("selected") private var savedSelection: String?
   @SceneStorage("filesShown") private var filesShown = true
   @State private var draft = ""
   @State private var connectShown = false
   @State private var viewed: URL?
+  @Bindable private var chooser = NewSessionChooser.shared
   @Environment(\.openWindow) private var openWindow
   @Environment(\.treatment) private var treatment
 
   var body: some View {
     NavigationSplitView {
-      Sidebar(store: store)
+      Sidebar(store: store, whereOla: whereOla, peerPreview: peerPreview)
         .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 320)
     } detail: {
       VStack(spacing: 0) {
@@ -101,8 +106,11 @@ struct MacRoot: View {
     .toolbarBackground(.visible, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
     .quickLookPreview($viewed)
-    .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac) || connectShown }, set: { connectShown = $0 })) {
-      ConnectForm(store: store) { connectShown = false }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
+    .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac && whereOla?.readiness(.local).ready != true) || connectShown }, set: { connectShown = $0 })) {
+      ConnectForm(store: store) { connectShown = false; Task { await whereOla?.apply() } }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
+    }
+    .sheet(isPresented: Binding(get: { chooser.shown && whereOla != nil }, set: { chooser.shown = $0 })) {
+      if let whereOla { NewSessionSheet(whereOla: whereOla) { chooser.shown = false } }
     }
     .onChange(of: store.connection) { _, c in if c == .refused { connectShown = true } }
     .onAppear {
@@ -118,7 +126,7 @@ struct MacRoot: View {
   static func subtitle(_ store: OlaStore) -> String {
     switch store.connection {
     case .open:
-      let place = store.config?.url.host() == "127.0.0.1" ? "On this Mac" : "On the machine"
+      let place = store.runtime == .local ? "Local, on this Mac" : "Cloud, on the Ola machine"
       return store.running.isEmpty ? place : "\(place) \u{00B7} \(store.running.count) working"
     case .connecting: return "Connecting"
     case .lost: return "Not answering"
@@ -133,16 +141,39 @@ struct MacRoot: View {
 /// The sidebar, at the system's own density: 13-point rows 28 points tall, 11-point labels.
 struct Sidebar: View {
   @Bindable var store: OlaStore
+  var whereOla: WhereOlaWorks? = nil
+  var peerPreview: OlaStore? = nil
   @State private var renaming: SessionInfo?
   @State private var newTitle = ""
   @State private var deleting: SessionInfo?
   @FocusState private var focused: Bool
 
+  /// The runtimes to list (OLA-143: the list shows which runtime each session is on), cloud
+  /// first, each with the store holding its sessions now; a runtime not set up is left out.
+  var sections: [RuntimeSection] {
+    var out: [RuntimeSection] = []
+    if let w = whereOla {
+      for r in Runtime.allCases {
+        let s = w.store(r)
+        if r == w.shown || s.config != nil { out.append(RuntimeSection(runtime: r, store: s)) }
+      }
+    } else {
+      if let r = store.runtime { out.append(RuntimeSection(runtime: r, store: store)) }
+      if let p = peerPreview, let r = p.runtime { out.append(RuntimeSection(runtime: r, store: p)) }
+      out.sort { $0.runtime == .cloud && $1.runtime == .local }
+    }
+    return out
+  }
+
+  func open(_ r: Runtime, _ s: SessionInfo, in st: OlaStore) {
+    if st === store { store.selectedID = s.id } else { whereOla?.show(r, select: s.id) }
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       ScrollView {
         VStack(alignment: .leading, spacing: 1) {
-          Button { store.newSession() } label: {
+          Button { if whereOla != nil { NewSessionChooser.shared.shown = true } else { store.newSession() } } label: {
             HStack(spacing: 6) {
               Image(systemName: "square.and.pencil").font(.system(size: Metrics.ui - 1, weight: .medium)).frame(width: SessionRow.markColumn)
               Text("New session").font(OlaFont.sans(Metrics.ui, .medium))
@@ -155,19 +186,33 @@ struct Sidebar: View {
             .hoverFill(Ola.roomHover, radius: 6, selected: store.selectedID == nil ? Ola.roomRaised : nil)
           }
           .buttonStyle(.plain)
-          .help("Start a new session (\u{2318}N)")
-          Text("Sessions").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.dim)
+          .help("Start a new session, in the cloud or on this Mac (\u{2318}N)")
+          ForEach(sections) { sec in
+            let r = sec.runtime, st = sec.store
+            HStack(spacing: 5) {
+              Image(systemName: r.symbol).font(.system(size: Metrics.meta, weight: .semibold))
+              Text(r.name).font(OlaFont.sans(Metrics.meta, .semibold))
+              Text(r.place(phone: false)).font(OlaFont.sans(Metrics.meta))
+            }
+            .foregroundStyle(Ola.dim)
             .padding(.horizontal, Space.s).padding(.top, Space.l).padding(.bottom, Space.xs)
-          ForEach(store.sessions) { s in
-            SessionRow(session: s, selected: store.selectedID == s.id, running: store.running.contains(s.id), unseen: store.unseen.contains(s.id), needsYou: store.needsYou(s.id))
-              .onTapGesture { store.selectedID = s.id }
-              .contextMenu {
-                Button("Rename\u{2026}") { newTitle = s.title; renaming = s }
-                Button("Delete\u{2026}", role: .destructive) { deleting = s }
-              }
-          }
-          if store.sessions.isEmpty, store.connection == .open {
-            Text("No sessions yet.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(.horizontal, Space.s).padding(.vertical, 6)
+            .help(r.detail(phone: false))
+            ForEach(st.sessions) { s in
+              SessionRow(session: s, selected: st === store && store.selectedID == s.id, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
+                .onTapGesture { open(r, s, in: st) }
+                .contextMenu {
+                  if st === store {
+                    Button("Rename\u{2026}") { newTitle = s.title; renaming = s }
+                    Button("Delete\u{2026}", role: .destructive) { deleting = s }
+                  } else {
+                    Button("Open") { open(r, s, in: st) }
+                  }
+                }
+            }
+            if st.sessions.isEmpty {
+              Text(st.connection == .open ? "No sessions yet." : st.connection == .connecting ? "Connecting\u{2026}" : r == .local ? "Starting\u{2026}" : "Not answering.")
+                .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(.horizontal, Space.s).padding(.vertical, 6)
+            }
           }
         }
         .padding(.horizontal, Space.s).padding(.top, Space.xs).padding(.bottom, Space.s)
@@ -199,6 +244,12 @@ struct Sidebar: View {
     store.selectedID = store.sessions[max(0, min(store.sessions.count - 1, i + by))].id
     return .handled
   }
+}
+
+struct RuntimeSection: Identifiable {
+  let runtime: Runtime
+  let store: OlaStore
+  var id: Runtime { runtime }
 }
 
 struct SessionRow: View {

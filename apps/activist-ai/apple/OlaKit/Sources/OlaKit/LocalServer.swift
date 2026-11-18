@@ -448,6 +448,8 @@ public enum LocalSettings {
   nonisolated(unsafe) public static var defaults = UserDefaults.standard
   /// A self-test passes the token in a file instead of the Keychain.
   nonisolated(unsafe) public static var tokenOverride: String?
+  /// A self-test's stand-in model (with `tokenOverride`), never set by the app.
+  nonisolated(unsafe) public static var modelURLOverride: String?
   public static var onThisMac: Bool { defaults.string(forKey: modeKey) == "mac" }
   public static var folder: URL? { defaults.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
 

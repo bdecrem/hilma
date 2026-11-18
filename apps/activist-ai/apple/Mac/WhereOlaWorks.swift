@@ -2,17 +2,26 @@ import AppKit
 import OlaKit
 import SwiftUI
 
-/// "Where Ola works", one setting for the whole app:
-/// - On the Ola machine (the default): the agent and the files are on the machine; the phone follows.
-/// - On this Mac: the agent runs here in a folder Bart picks (the Claude Code arrangement); only
-///   the model requests go to the machine. The app starts and stops that local server itself.
+/// The two runtimes, both at once (OLA-143, meeting of 2026-11-18):
+/// - **Cloud**, on the Ola machine: the agent and the files are on the machine; the phone follows.
+/// - **Local**, on this Mac: the agent runs here in a folder Bart picks (the Claude Code
+///   arrangement); only the model requests go to the machine. Its server runs whenever it is set up
+///   (a folder, and a way to the model), so its sessions are listed and the phone can reach it.
+/// Which one a session is in is chosen in New Session (`startSession`); the session list shows both
+/// (`store` is the runtime on screen, `peer` the other one), and opening a session of the other
+/// runtime brings that runtime on screen (`show`). `LocalSettings.onThisMac` says which is on screen.
 @MainActor
 @Observable
 final class WhereOlaWorks {
+  /// The runtime on screen: the conversation, the files, the commands.
   let store: OlaStore
+  /// The other runtime: its session list, its approvals and finishes, live.
+  let peer: OlaStore
   /// Signed in, "On this Mac" reaches the model through the account's door.
   let account: AccountController?
   private(set) var local: LocalServer?
+  /// The local runtime's server, while it runs.
+  private(set) var localConfig: ServerConfig?
   var problem: String?
   var starting = false
   /// While opencode is being fetched on a Mac that has none: how far (nil before the first byte).
@@ -20,10 +29,68 @@ final class WhereOlaWorks {
   private(set) var installFraction: Double?
   private(set) var installProblem: String?
 
-  init(store: OlaStore, account: AccountController? = nil) {
+  init(store: OlaStore, peer: OlaStore? = nil, account: AccountController? = nil) {
     self.store = store
+    self.peer = peer ?? OlaStore(config: nil)
     self.account = account
   }
+
+  /// The runtime on screen.
+  var shown: Runtime { LocalSettings.onThisMac ? .local : .cloud }
+
+  /// The store that holds a runtime's sessions now.
+  func store(_ r: Runtime) -> OlaStore { r == shown ? store : peer }
+
+  /// The store on a server, if either is (the relay's session yes, `PhoneLink`).
+  func store(on c: ServerConfig?) -> OlaStore? {
+    guard let c else { return nil }
+    return store.config == c ? store : peer.config == c ? peer : nil
+  }
+
+  /// The machine, when this Mac has the owner's setup for it (its address and password). Reads the
+  /// password (once per launch) only when an address is saved.
+  var cloudConfig: ServerConfig? { Self.cloudOverride ?? (Credentials.savedAddress == nil ? nil : Credentials.load()) }
+  /// A self-test's stand-in for the Ola machine (never set by the app).
+  nonisolated(unsafe) static var cloudOverride: ServerConfig?
+
+  /// Whether a runtime can start a session now, and if not, what New Session says.
+  func readiness(_ r: Runtime) -> (ready: Bool, why: String?) {
+    switch r {
+    case .cloud:
+      if Self.cloudOverride != nil || (Credentials.savedAddress != nil && !Credentials.disabled) { return (true, nil) }
+      if account?.signedIn == true { return (false, "Not yet for your account.") }
+      return (false, "Not set up on this Mac yet.")
+    case .local:
+      if LocalSettings.folder == nil { return (false, "Choose the folder Ola works in first.") }
+      if account?.signedIn != true, (LocalSettings.tokenOverride ?? (LocalSettings.defaults.bool(forKey: LocalSettings.tokenSavedKey) ? "saved" : nil)) == nil {
+        return (false, "Sign in to Ola first.")
+      }
+      if installProblem != nil || (problem != nil && localConfig == nil && !starting) { return (false, problem ?? installProblem) }
+      return (true, nil)
+    }
+  }
+
+  /// Brings a runtime on screen (both stores keep their servers: a swap, no restart), and opens one
+  /// of its sessions, or a new one.
+  func show(_ r: Runtime, select id: String? = nil) {
+    if r != shown {
+      LocalSettings.defaults.set(r == .local ? "mac" : "machine", forKey: LocalSettings.modeKey)
+      let front = store.config, back = peer.config
+      store.attach(back, orSaved: false)
+      peer.attach(front, orSaved: false)
+      configureClaude()
+    }
+    if let id { store.selectedID = id } else { store.newSession() }
+  }
+
+  /// New Session's choice: the runtime remembered as the next default, then a new session there.
+  func startSession(in r: Runtime) {
+    RuntimeChoice.remember(r, LocalSettings.defaults)
+    show(r)
+  }
+
+  /// The last runtime chosen in New Session, else the one on screen.
+  var defaultRuntime: Runtime { RuntimeChoice.last(LocalSettings.defaults) ?? shown }
 
   /// The folder and token the running local server was started with.
   private var localKey: String?
@@ -36,21 +103,21 @@ final class WhereOlaWorks {
   /// dead one's address).
   private var generation = 0
 
-  /// At launch and after every change of the setting. Safe to call any number of times, at once.
+  /// At launch and after every change of the setup. Safe to call any number of times, at once.
+  /// The cloud runtime is attached at once; the local runtime's server is started when it is set
+  /// up (it keeps running while the cloud is on screen) and stopped when it no longer is.
   func apply() async {
     defer { configureClaude() }
     generation += 1
     let mine = generation
     problem = nil
-    guard LocalSettings.onThisMac else {
-      local?.stop()
-      local = nil
-      localKey = nil
-      if store.config?.url.host() == "127.0.0.1" || store.config == nil { store.attach(nil) }
+    attachBoth()
+    guard let folder = LocalSettings.folder else {
+      stopLocal()
+      if shown == .local { problem = "Choose the folder Ola should work in." }
       return
     }
-    guard let folder = LocalSettings.folder else { problem = "Choose the folder Ola should work in."; return }
-    if let p = Self.touch(folder) { problem = p; return }
+    if let p = Self.touch(folder) { problem = p; stopLocal(); return }
     let route: ModelRoute
     if let account, account.signedIn {
       do { route = try await account.route() } catch {
@@ -59,20 +126,19 @@ final class WhereOlaWorks {
       }
     } else if let token = LocalSettings.token, !token.isEmpty {
       // The pasted-token path: the owner's own setup, kept.
-      route = .pasted(token: token)
+      route = .pasted(token: token, modelURL: LocalSettings.modelURLOverride ?? LocalServer.defaultModelURL)
     } else {
-      problem = account == nil ? "Add the model token (on the machine: ola-bart.sh model-token)." : "Sign in to Ola (Settings, Account) to work on this Mac."
+      stopLocal()
+      if shown == .local { problem = account == nil ? "Add the model token (on the machine: ola-bart.sh model-token)." : "Sign in to Ola (Settings, Account) to work on this Mac." }
       return
     }
     guard await ensureOpencode(), mine == generation else { return }
     let key = "\(folder.path)\n\(route.token)\n\(route.baseURL)"
-    // Already running for this folder and token, and the app is using it: nothing to do.
-    if let local, local.isRunning, localKey == key, store.config?.url.port == local.port, store.config?.url.host() == "127.0.0.1" { return }
+    // Already running for this folder and token: only the stores to attach.
+    if let local, local.isRunning, localKey == key, localConfig != nil { attachBoth(); return }
     starting = true
     defer { if mine == generation { starting = false } }
-    local?.stop()
-    local = nil
-    localKey = nil
+    stopLocal()
     let server = LocalServer(folder: folder)
     do {
       let config = try await server.start(route: route, timeout: 45)
@@ -83,13 +149,32 @@ final class WhereOlaWorks {
       }
       local = server
       localKey = key
+      localConfig = config
       self.route = route
-      store.attach(config)
+      attachBoth()
       Task { await refreshHosted() }
     } catch {
       guard mine == generation else { return }
       problem = error.localizedDescription
-      store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription)
+      if shown == .local { store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription) }
+    }
+  }
+
+  /// The runtime on screen to `store`, the other to `peer`; a store already there is left alone.
+  private func attachBoth() {
+    let cloud = cloudConfig
+    let (front, back) = shown == .local ? (localConfig, cloud) : (cloud, localConfig)
+    if store.config != front { store.attach(front, orSaved: false) }
+    if peer.config != back { peer.attach(back, orSaved: false) }
+  }
+
+  private func stopLocal() {
+    local?.stop()
+    local = nil
+    localKey = nil
+    if localConfig != nil {
+      localConfig = nil
+      attachBoth()
     }
   }
 
@@ -140,7 +225,7 @@ final class WhereOlaWorks {
   /// For Settings: "Agent on this Mac: running", never an address.
   var localState: String {
     if starting { return "Starting" }
-    if let local, local.isRunning, store.config?.url.port == local.port { return store.connection == .open ? "Running" : "Running, connecting" }
+    if let local, local.isRunning, localConfig != nil { return store(.local).connection == .open ? "Running" : "Running, connecting" }
     return problem == nil ? "Not running" : "Did not start"
   }
 
@@ -320,25 +405,12 @@ struct WhereSettings: View {
   var shortFolder: String { (folder as NSString).abbreviatingWithTildeInPath }
   var signedIn: Bool { controller.account?.signedIn ?? false }
 
+  /// Since OLA-143 Settings keeps only the setup: which runtime a session works in is chosen in New
+  /// Session. This group is the local runtime's setup (its folder, the owner's pasted token, its
+  /// agent); the cloud's is `MachineSetup`.
   var body: some View {
-    SettingsGroup(title: "Where Ola works") {
-      if signedIn && machineAddress.isEmpty {
-        // Someone signed in with their own account (not the owner's machine setup): not in this round.
-        ChoiceRow("On the Ola machine", detail: "Not yet. For now, Ola works in a folder on this Mac with your account.", selected: false) {
-          DeskMark(lit: false, working: false)
-        } choose: {}
-        .disabled(true)
-        .onAppear(perform: loadTokenState)
-      } else {
-        ChoiceRow("On the Ola machine", detail: "The agent and your files are on the machine. Your phone can follow along.", selected: mode == "machine") {
-          DeskMark(lit: true, working: false)
-        } choose: { set("machine") }
-        .onAppear(perform: loadTokenState)
-      }
-      ChoiceRow("On this Mac", detail: signedIn ? "The agent works in a folder on this Mac. Only the model runs at Ola." : "The agent works in a folder on this Mac. Only the model runs on the machine.", selected: mode == "mac") {
-        MacMark()
-      } choose: { set("mac") }
-      if mode == "mac" {
+    SettingsGroup(title: "Local: on this Mac") {
+      Group {
         LabeledContent("Folder") {
           HStack(spacing: Space.s) {
             Text(folder.isEmpty ? "None chosen" : shortFolder).foregroundStyle(folder.isEmpty ? .secondary : .primary)
@@ -375,9 +447,10 @@ struct WhereSettings: View {
               Button("Restart the Agent") { Task { await controller.restart() } }.disabled(controller.starting)
             }
           }
-          SettingNote("Sessions here stay on this Mac. Whether Ola asks before commands and file changes: Permissions, below.")
+          SettingNote("Sessions here stay on this Mac. Choose where each session works in New Session (\u{2318}N).")
         }
       }
+      .onAppear(perform: loadTokenState)
     }
   }
 
@@ -388,12 +461,6 @@ struct WhereSettings: View {
     case "Did not start": .problem
     default: .off
     }
-  }
-
-  func set(_ m: String) {
-    guard m != mode else { return }
-    mode = m
-    Task { await controller.apply() }
   }
 
   /// Never reads the Keychain just to draw Settings: a flag says a token was saved.

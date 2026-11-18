@@ -430,7 +430,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       if (ev.type === 'permission.asked' && typeof d.sessionID === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID) && /^[A-Za-z0-9_-]{1,80}$/.test(d.id)) {
         const allowed = forConversation.get(`${slug}:${d.sessionID}`)
         const web = webRequests(d.action, d.resources).length > 0
-        if (web && autonomyOf.get(`${slug}:${d.sessionID}`) === 'go') {
+        // A web step goes ahead without a question under Lots of permissions, and in a project
+        // that said "Always in this project" whatever the conversation's switch (OLA-142: the
+        // card promises "without asking again", and a conversation under "Ask before each step"
+        // asked again at its next search, its rules having been written before the yes).
+        if (web && (autonomyOf.get(`${slug}:${d.sessionID}`) === 'go' || webModeOf(slug) === 'always')) {
           onGoWeb(slug, workspaceId, d.sessionID, d.id, runBy.get(`${slug}:${d.sessionID}`) ?? null).catch((e) => log(`${slug}: a web search under Lots of permissions was not answered (${e?.message ?? e})`))
           return
         }

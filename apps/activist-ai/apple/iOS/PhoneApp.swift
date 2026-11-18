@@ -5,7 +5,9 @@ import SwiftUI
 @main
 struct OlaPhoneApp: App {
   @UIApplicationDelegateAdaptor(PhoneAppDelegate.self) private var appDelegate
+  /// The runtime on screen; `peer` holds the other one's sessions (PhoneWhereState, OLA-143).
   @State private var store: OlaStore
+  @State private var peer: OlaStore
   @Environment(\.scenePhase) private var phase
 
   init() {
@@ -25,10 +27,25 @@ struct OlaPhoneApp: App {
       PhoneWhereState.shared.set(PhoneWhere.mode)
     }
     if let i = args.firstIndex(of: "-OlaFixture"), i + 1 < args.count {
-      _store = State(initialValue: OlaStore(fixture: Fixture.named(args[i + 1])))
+      let front = OlaStore(fixture: Fixture.named(args[i + 1]))
+      // `-OlaBoth`: both runtimes set up, each with its sessions (the list's two sections).
+      if args.contains("-OlaBoth") {
+        let back = OlaStore(fixture: Fixture.named("results"))
+        let shown = PhoneWhere.mode?.runtime ?? .local
+        front.previewAs(shown)
+        back.previewAs(shown == .local ? .cloud : .local)
+        _peer = State(initialValue: back)
+      } else {
+        if let m = PhoneWhere.mode { front.previewAs(m.runtime) }
+        _peer = State(initialValue: OlaStore(config: nil))
+      }
+      _store = State(initialValue: front)
     } else {
-      // The place this phone works in: its Mac (the pairing), or the Ola machine (the sign-in).
-      _store = State(initialValue: OlaStore(config: PhoneWhere.mode.flatMap(PhoneWhere.config)))
+      // The runtime on screen: its Mac (the pairing), or the Ola machine (the sign-in). The other
+      // one, when it is set up too, is live beside it.
+      let m = PhoneWhere.mode
+      _store = State(initialValue: OlaStore(config: m.flatMap(PhoneWhere.config)))
+      _peer = State(initialValue: OlaStore(config: m.flatMap { PhoneWhere.ready($0.other) ? PhoneWhere.config($0.other) : nil }))
     }
   }
 
@@ -52,17 +69,22 @@ struct OlaPhoneApp: App {
           }
           DebugHooks.run(store)
           #endif
-          PhonePermissions.wire(store)
-          store.start()
+          PhoneWhereState.shared.peer = peer
+          for s in [store, peer] {
+            PhonePermissions.wire(s)
+            s.start()
+          }
         }
-        // The choice of the place the phone works in, read again whenever that place changes.
-        .task(id: store.config?.url) { if !PhoneWhereState.shared.fixture { await PhonePermissions.shared.refresh(store) } }
+        // Each runtime's switch, read again whenever the runtime on screen changes.
+        .task(id: store.config?.url) { if !PhoneWhereState.shared.fixture { await PhonePermissions.shared.refresh() } }
         .onChange(of: phase) { _, p in
-          store.isActive = p == .active
+          for s in [store, peer] {
+            s.isActive = p == .active
+            if p == .active, case .lost = s.connection { s.reconnect() }
+            if p == .active, s.connection == .connecting { s.start() }
+          }
           if p != .active { PhonePushState.shared.setViewing(nil) }
-          if p == .active, case .lost = store.connection { store.reconnect() }
-          if p == .active, store.connection == .connecting { store.start() }
-          if p == .active, !PhoneWhereState.shared.fixture { Task { await PhonePermissions.shared.refresh(store) } }
+          if p == .active, !PhoneWhereState.shared.fixture { Task { await PhonePermissions.shared.refresh() } }
         }
     }
   }
@@ -122,7 +144,8 @@ struct PhoneRoot: View {
 /// Launch hooks for driving the app headlessly in the simulator (there is no window to tap):
 ///   -OlaAsk "<request>"          once connected, a new session with that request
 ///   -OlaSwitchAfter <s> <mode>   after s seconds, the Settings switch to mac or machine
-///   -OlaPermissions lots|ask     once connected, the Settings switch "Lots of permissions"
+///   -OlaPermissions lots|ask     once connected, "Lots of permissions" for the runtime on screen
+///   -OlaNewSession               the New Session chooser, open
 @MainActor
 enum DebugHooks {
   static func run(_ store: OlaStore) {
@@ -143,9 +166,12 @@ enum DebugHooks {
     if let i = a.firstIndex(of: "-OlaPermissions"), i + 1 < a.count, let m = PermissionMode(rawValue: a[i + 1]) {
       Task {
         for _ in 0..<120 where store.connection != .open { try? await Task.sleep(nanoseconds: 500_000_000) }
-        await PhonePermissions.shared.set(m, store: store)
+        // The switch of the runtime on screen (one per runtime, OLA-142).
+        await PhonePermissions.shared.set(m, store.runtime ?? .cloud)
       }
     }
+    // -OlaNewSession: the New Session chooser on screen (a screenshot).
+    if a.contains("-OlaNewSession") { PhoneWhereState.shared.chooserShown = true }
     if let i = a.firstIndex(of: "-OlaSwitchAfter"), i + 2 < a.count, let s = Double(a[i + 1]), let m = PhoneMode(rawValue: a[i + 2]) {
       Task {
         try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000))

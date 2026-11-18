@@ -1602,7 +1602,9 @@ if (!LIVE) {
     await A.page.goto('about:blank')
     await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
     await A.page.waitForSelector('.project-title')
-    await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
+    // A phone opens on the conversation itself (OLA-128); a laptop has the Ask Ola bar.
+    await A.page.locator('.drawer.open #ask-input, .askbar, .askdock').locator('visible=true').first().waitFor({ timeout: 30_000 })
+    if (!(await A.page.locator('.drawer.open').count())) await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
     await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
     await A.page.locator('#lots-switch').setChecked(how === 'Lots of permissions')
     await A.page.fill('#ask-input', `Please search the web for ${Q}`)

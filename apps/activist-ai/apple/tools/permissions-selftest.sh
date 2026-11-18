@@ -10,6 +10,8 @@ APP="$1"; FOLDER="$2"; TOKEN="$3"; SHOTS="${4:-}"; LOG="${5:-$(mktemp -t ola-per
 mkdir -p "$FOLDER"
 args=(--permissions-selftest --folder "$FOLDER" --token-file "$TOKEN")
 [ -n "$SHOTS" ] && args+=(--shots "$SHOTS")
+# OLA_MODEL_URL: another way to the model (an ssh tunnel to the machine's model door on a Mac without Tailscale).
+[ -n "${OLA_MODEL_URL:-}" ] && args+=(--model-url "$OLA_MODEL_URL")
 open -n -g -W --stdout "$LOG" --stderr "$LOG" "$APP" --args "${args[@]}"
 grep -E "PASS|FAIL|ALL PASSED|FAILED|shot " "$LOG"
 grep -q "ALL PASSED" "$LOG"

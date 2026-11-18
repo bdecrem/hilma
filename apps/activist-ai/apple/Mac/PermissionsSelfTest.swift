@@ -2,7 +2,7 @@ import AppKit
 import OlaKit
 import SwiftUI
 
-/// `Ola --permissions-selftest --folder <dir> --token-file <file> [--shots <dir>]`: Permissions
+/// `Ola --permissions-selftest --folder <dir> --token-file <file> [--shots <dir>] [--model-url <url>]`: Permissions
 /// (Settings, General) as Bart meets them, in a hidden instance with its own settings suite and
 /// scratch Application Support (run it through LaunchServices: tools/permissions-selftest.sh).
 /// "On this Mac" in <dir>, the app's own store wired the way the app wires it, real requests to the
@@ -36,6 +36,9 @@ enum PermissionsSelfTest {
     let suite = "cx.ola.mac.permcheck.\(getpid())"
     LocalSettings.defaults = UserDefaults(suiteName: suite)!
     LocalSettings.tokenOverride = token
+    // --model-url <http://host:port/v1>: another way to the model (a Mac without Tailscale reaches
+    // the machine's model door through an ssh tunnel).
+    if let u = after("--model-url") { LocalSettings.modelURLOverride = u }
     Credentials.disabled = true
     let d = LocalSettings.defaults
     d.set("mac", forKey: LocalSettings.modeKey)
