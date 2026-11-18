@@ -155,6 +155,28 @@ enum Snapshot {
         let store = OlaStore(fixture: Fixture.named(fixture))
         write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 1100), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
       }
+      // The engine pull-down beside the send button (OLA-155) with one, two and three engines on,
+      // one with Claude chosen, and "Try again with" under Ola's answer (OLA-156).
+      let engines: [(String, Bool, Bool, Turn.Engine)] = [
+        ("mac-engines-1-ola-only", false, false, .ola), ("mac-engines-2-ola-claude", true, false, .ola),
+        ("mac-engines-3-all", true, true, .ola), ("mac-engines-3-claude-chosen", true, true, .claude),
+      ]
+      for (name, claude, hosted, next) in engines where only == nil || name.contains(only!) {
+        let store = OlaStore(fixture: Fixture.named("fallbacks"))
+        store.suggestion = nil
+        store.claudeOn = claude
+        store.hostedOn = hosted
+        store.nextEngine = next
+        write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
+      }
+      // The working figure on the Mac: always the comma (OLA-154), on the run line and large.
+      for (name, large) in [("mac-working-comma-line", false), ("mac-working-comma-large", true)] where only == nil || name.contains(only!) {
+        let store = OlaStore(fixture: Fixture.named("approval"))
+        if var c = store.conversation { c.approval = nil; store.previewSet("s1", c, running: true) }
+        let view = SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen)
+          .environment(\.workingClock, 2.4).environment(\.workingLarge, large)
+        write(view, size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
+      }
       defaults.set("mac", forKey: LocalSettings.modeKey)
       defaults.set(true, forKey: "ola.phone.enabled")
       defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)

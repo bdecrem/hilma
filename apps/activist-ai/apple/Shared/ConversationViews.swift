@@ -39,15 +39,11 @@ struct TurnView: View {
         if let e = turn.error { ProblemView(problem: e) }
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
         if turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
-          HStack(spacing: Space.l) {
-            if let askHosted {
-              Button(action: askHosted) { Label("Ask the hosted model instead", systemImage: "arrow.uturn.right") }
-            }
-            if let askClaude {
-              Button(action: askClaude) { Label("Ask Claude instead", systemImage: "arrow.uturn.right") }
-            }
+          // One small, quiet pull-down (OLA-156), in the style of the one in the box.
+          QuietMenu(label: "Try again with", help: "Send this request again to another model") {
+            if let askHosted { Button("Hosted", action: askHosted) }
+            if let askClaude { Button("Claude", action: askClaude) }
           }
-          .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta + 0.5, .medium)).foregroundStyle(Ola.blue)
         }
       }
     }
@@ -385,6 +381,8 @@ struct Composer: View {
   var enabled: Bool
   var send: () -> Void
   var stop: () -> Void
+  /// Beside the send button: the engine pull-down (OLA-155), when more than Ola is on.
+  var accessory: AnyView? = nil
   @FocusState private var focused: Bool
 
   var empty: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -405,6 +403,7 @@ struct Composer: View {
         .focused($focused)
         .onSubmit { if !running { send() } }
         .padding(.vertical, 3)
+      if let accessory { accessory.frame(height: button) }
       if running {
         Button(action: stop) { Image(systemName: "stop.fill").font(.system(size: button * 0.38, weight: .bold)).frame(width: button, height: button) }
           .buttonStyle(.plain).foregroundStyle(Ola.paper).background(Circle().fill(Ola.ink2))
@@ -424,6 +423,53 @@ struct Composer: View {
     #if os(macOS)
     .onAppear { focused = true }
     #endif
+  }
+}
+
+/// A small, quiet pull-down: the label in small grey type with a chevron, the system menu under it.
+/// The engine choice in the box and "Try again with" under an answer (OLA-155, OLA-156).
+struct QuietMenu<Items: View>: View {
+  var label: String
+  var help: String
+  @ViewBuilder var items: Items
+
+  var body: some View {
+    Menu { items } label: {
+      HStack(spacing: 3) {
+        Text(label)
+        Image(systemName: "chevron.down").font(.system(size: Metrics.meta - 3, weight: .semibold))
+      }
+      .font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+      .contentShape(Rectangle())
+    }
+    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+    .controlSize(.small).fixedSize()
+    .help(help)
+  }
+}
+
+/// Who works on the next message, beside the send button: Ola unless chosen otherwise. Only the
+/// engines that are on (and the current choice) are listed.
+struct EngineMenu: View {
+  @Bindable var store: OlaStore
+
+  static func name(_ e: Turn.Engine) -> String {
+    switch e {
+    case .ola: "Ola"
+    case .hosted: "Hosted"
+    case .claude: "Claude"
+    }
+  }
+
+  var body: some View {
+    QuietMenu(label: Self.name(store.nextEngine), help: "Who works on your next message") {
+      Picker("Who works on this", selection: $store.nextEngine) {
+        Text("Ola").tag(Turn.Engine.ola)
+        if store.hostedOn || store.nextEngine == .hosted { Text("Hosted").tag(Turn.Engine.hosted) }
+        if store.claudeOn || store.nextEngine == .claude { Text("Claude").tag(Turn.Engine.claude) }
+      }
+      .pickerStyle(.inline).labelsHidden()
+    }
   }
 }
 
@@ -497,19 +543,8 @@ struct ConversationPane: View {
       SlashMenu(draft: $draft)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding)
-      HStack(alignment: .bottom, spacing: 8) {
-        if store.claudeOn || store.hostedOn || store.nextEngine != .ola {
-          Picker("Who works on this", selection: $store.nextEngine) {
-            Text("Ola").tag(Turn.Engine.ola)
-            if store.hostedOn || store.nextEngine == .hosted { Text("Hosted").tag(Turn.Engine.hosted) }
-            if store.claudeOn || store.nextEngine == .claude { Text("Claude").tag(Turn.Engine.claude) }
-          }
-          .pickerStyle(.segmented).labelsHidden().fixedSize()
-          .padding(.bottom, 10)
-          .help("Who works on your next message")
-        }
-        Composer(text: $draft, running: (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } })
-      }
+      Composer(text: $draft, running: (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } },
+               accessory: store.claudeOn || store.hostedOn || store.nextEngine != .ola ? AnyView(EngineMenu(store: store)) : nil)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding).padding(.top, Space.s).padding(.bottom, Space.l)
     }
