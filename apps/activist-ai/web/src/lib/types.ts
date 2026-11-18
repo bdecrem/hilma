@@ -265,6 +265,15 @@ export interface ClaudeInfo {
   running: { run: string; conversation: string | null } | null
 }
 
+/** A question Ola asks the person (opencode's `question` tool raises a form): choices, and its own words. */
+export interface Question {
+  id: string
+  sessionID: string
+  fields: { key: string; title: string; text: string; options: { value: string; label: string; description: string | null }[]; custom: boolean; multiple: boolean }[]
+  /** The step it belongs to (the `question` tool call), if known. */
+  stepID: string | null
+}
+
 export interface Approval {
   id: string
   sessionID: string

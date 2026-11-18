@@ -92,7 +92,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const lastTurn = () => ola.state.turns[ola.state.turns.length - 1]
 
   // A question from Ola opens the drawer, so the answer it waits for is in view.
-  createEffect(() => ola.state.approval && setDrawer(true))
+  createEffect(() => (ola.state.approval || ola.state.question) && setDrawer(true))
   // Things Ola made appear on the home when a run finishes.
   createEffect((prev: string | undefined) => {
     const status = lastTurn()?.status
@@ -385,13 +385,13 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
             <Icon name="up" />
           </button>
         </form>
-          <Show when={working() || ola.state.connection === 'lost' || ola.state.approval}>
+          <Show when={working() || ola.state.connection === 'lost' || ola.state.approval || ola.state.question}>
             <p class="askbar-status" role="status">
               <Show when={ola.state.connection === 'lost'} fallback={
-                <Show when={ola.state.approval} fallback={<>
+                <Show when={ola.state.approval || ola.state.question} fallback={<>
                   <span class="lamp-dot" aria-hidden="true" /> Ola is working on your request · {count(lastTurn()?.steps.length ?? 0, 'step')} so far ·{' '}
                 </>}>
-                  <span class="mark-dot" aria-hidden="true" /> Ola is waiting for your yes ·{' '}
+                  <span class="mark-dot" aria-hidden="true" /> {ola.state.question && !ola.state.approval ? 'Ola is asking you something' : 'Ola is waiting for your yes'} ·{' '}
                 </Show>
               }>
                 <span class="mark-dot" aria-hidden="true" /> Lost the connection to Ola’s computer. Trying again ·{' '}

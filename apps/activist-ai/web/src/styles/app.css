@@ -2586,6 +2586,101 @@ code {
   }
 }
 
+/* ------------------------------------------------------------ Ola's question to you
+   The stretch card's sibling: Ola stopped to ask, and nothing moves until the person answers. The
+   vermilion mark says "this waits for you", the choices are full-width rows a thumb can hit, and
+   the person's own words sit under them. */
+.question-card {
+  margin-top: var(--s5);
+  padding: var(--s5);
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-top: 5px solid var(--vermilion);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(20, 28, 51, 0.08);
+  animation: sheet-in var(--t-sheet) ease-out;
+}
+.question-kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.question-field + .question-field {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+.question-text {
+  margin-top: var(--s3);
+  font-family: var(--font-read);
+  font-size: calc(var(--fs-read) + 2px);
+  line-height: 1.45;
+  color: var(--ink);
+}
+.question-options {
+  margin-top: var(--s4);
+  display: grid;
+  gap: var(--s2);
+}
+.question-option {
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: var(--s3) var(--s4);
+  background: #fbf7ee;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink);
+}
+.question-option:hover:not(:disabled),
+.question-option.on {
+  border-color: var(--room);
+  background: #fff;
+}
+.question-option.on {
+  box-shadow: inset 4px 0 0 var(--room);
+}
+.question-option-label {
+  font-weight: 680;
+  font-size: 16px;
+}
+.question-option-more {
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+}
+.question-own {
+  margin-top: var(--s3);
+  display: flex;
+  gap: var(--s2);
+}
+.question-own input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: 1.5px solid var(--rule);
+  background: #fbf7ee;
+  border-radius: var(--radius);
+  padding: 0 var(--s3);
+  font-family: var(--font-read);
+  font-size: 16px;
+  color: var(--ink);
+}
+.question-own input::placeholder {
+  color: var(--ink-3);
+}
+.question-actions {
+  margin-top: var(--s4);
+}
+@media (max-width: 760px) {
+  .question-card {
+    padding: var(--s4);
+  }
+}
+
 /* ---------------------------------------------------------------- reactions and slash commands
    README, "Slash commands and reactions (all surfaces)". A reaction is a small chip at the trailing
    edge under the person's message, set on the end of its line like the Mac app's: the system emoji

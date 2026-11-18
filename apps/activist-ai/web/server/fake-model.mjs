@@ -127,6 +127,18 @@ export function startFakeModel({ hosted = false } = {}) {
       if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command: `ola-search "${web[1].replace(/["\\$`]/g, '')}"`, description: 'Search the web' } } }))
       return send(200, reply({ content: 'I did not search the web, so I worked from your files only.' }))
     }
+    // "ask me which one": opencode's own `question` tool (a question to the person, with choices),
+    // then an answer that names what came back. The page must show the question and send the answer.
+    if (/ask me which one/i.test(lastUserText(messages))) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const results = messages.slice(since + 1).filter((m) => m.role === 'tool')
+      const q = pick(body.tools, 'question')
+      if (q && !results.length)
+        return send(200, reply({ tool: { id: `call_${calls}_q`, name: q, args: { questions: [{ question: 'Which made-up town should the page be about?', header: 'Which town', options: [{ label: 'Springfield', description: 'The river town' }, { label: 'Shelbyville', description: 'The one across the river' }] }] } } }))
+      const got = results.map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? ''))).join(' ')
+      return send(200, reply({ content: q ? `You answered: ${got.replace(/\s+/g, ' ').slice(0, 300)}` : 'I had no way to ask you, so I picked Springfield.' }))
+    }
     // "draw the delta": the drawing run (Open for every kind). Writes two SVG drawings (one of them
     // hostile: a script, an onload, an outside picture), a table and a note, then answers with a
     // citation in the agreed form, so the page shows the pictures inline, Open for the rest, and

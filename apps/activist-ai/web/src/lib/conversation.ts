@@ -2,7 +2,7 @@
 // answer, an approval waiting for the person. Pure functions over a plain object, so the same
 // code runs in the page (inside a Solid store's `produce`) and in the tests against recorded
 // events (test/fixtures/*.jsonl). The event shapes are opencode 2.3.0's V2 events.
-import type { Approval, Problem, Step, Turn } from './types.ts'
+import type { Approval, Problem, Question, Step, Turn } from './types.ts'
 import { shown } from './commands.ts'
 import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
 
@@ -12,12 +12,14 @@ export interface ConversationState {
   directory: string | null
   turns: Turn[]
   approval: Approval | null
+  /** A question Ola asked and waits on (a form from opencode's `question` tool). */
+  question: Question | null
   /** The assistant message whose text is the current answer. */
   answerMessage: string | null
 }
 
 export function emptyConversation(): ConversationState {
-  return { sessionID: null, directory: null, turns: [], approval: null, answerMessage: null }
+  return { sessionID: null, directory: null, turns: [], approval: null, question: null, answerMessage: null }
 }
 
 /** A loose event: what the stream yields, typed only as far as we read it. */
@@ -104,7 +106,9 @@ function pretty(input: unknown): string {
 export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
   const d = ev.data ?? {}
   const at = ev.created ?? Date.now()
-  if (d.sessionID && state.sessionID && d.sessionID !== state.sessionID) return false
+  // A form (a question to the person) carries its session inside it.
+  const sid: string | undefined = d.sessionID ?? d.form?.sessionID
+  if (sid && state.sessionID && sid !== state.sessionID) return false
   if (ev.type === 'session.created') {
     if (d.sessionID !== state.sessionID) return false
     state.directory = d.location?.directory ?? state.directory
@@ -112,7 +116,7 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
   }
   const turn = current(state)
   // A Claude turn is fed by its own run (applyClaudeEvent), never by opencode's stream.
-  if (!turn || !d.sessionID || turn.engine === 'claude') return false
+  if (!turn || !sid || turn.engine === 'claude') return false
   switch (ev.type) {
     case 'session.inbox.delivered':
     case 'session.execution.started':
@@ -166,6 +170,24 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       }
       return true
     }
+    case 'form.created': {
+      const q = questionOf(d.form)
+      if (!q) return false
+      state.question = q
+      const step = q.stepID ? stepFor(turn, q.stepID) : undefined
+      if (step) step.status = 'waiting'
+      return true
+    }
+    case 'form.replied':
+    case 'form.cancelled': {
+      const q = state.question
+      if (!q || q.id !== d.id) return false
+      const stepID = q.stepID
+      state.question = null
+      const step = stepID ? stepFor(turn, stepID) : turn.steps.find((s) => s.status === 'waiting')
+      if (step && step.status === 'waiting') step.status = 'running'
+      return true
+    }
     case 'session.text.delta': {
       if (state.answerMessage !== d.assistantMessageID) {
         if (turn.answer.trim()) turn.notes.push(turn.answer.trim())
@@ -209,6 +231,7 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       turn.ended = at
       turn.notice = null
       state.approval = null
+      state.question = null
       settleSteps(turn, at)
       return true
     case 'session.execution.interrupted':
@@ -216,6 +239,7 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       turn.ended = at
       turn.notice = null
       state.approval = null
+      state.question = null
       if (d.reason && d.reason !== 'user') turn.error = { text: d.reason === 'shutdown' ? 'Ola’s computer restarted your project, so this stopped. Ask again to carry on.' : 'This stopped before it finished.', detail: `interrupted: ${d.reason}` }
       settleSteps(turn, at)
       return true
@@ -433,4 +457,21 @@ export function runSummary(turn: Turn, now = Date.now()): string {
   const failed = turn.steps.filter((s) => s.status === 'failed').length
   if (failed) parts.push(`${failed} did not work`)
   return parts.join(' · ')
+}
+
+/** A form from opencode as the question the page shows, or null when it is not one we can show. */
+export function questionOf(form: any): Question | null {
+  if (!form || typeof form.id !== 'string' || !Array.isArray(form.fields)) return null
+  const fields = form.fields
+    .filter((f: any) => f && typeof f.key === 'string' && (f.type === 'string' || f.type === 'multiselect'))
+    .map((f: any) => ({
+      key: f.key,
+      title: String(f.title ?? ''),
+      text: String(f.description ?? f.title ?? ''),
+      options: (Array.isArray(f.options) ? f.options : []).filter((o: any) => o && typeof o.value === 'string').map((o: any) => ({ value: o.value, label: String(o.label ?? o.value), description: o.description ? String(o.description) : null })),
+      custom: f.custom !== false,
+      multiple: f.type === 'multiselect',
+    }))
+  if (!fields.length) return null
+  return { id: form.id, sessionID: String(form.sessionID ?? ''), fields, stepID: form.metadata?.tool?.id ?? null }
 }
