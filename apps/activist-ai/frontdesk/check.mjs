@@ -2633,8 +2633,13 @@ async function seedStudies(dir, n, spec) {
   const files = Object.fromEntries(names.map((f) => [f, readFileSync(path.join(tmp, 'f', f), 'utf8')]))
   const truth = JSON.parse(readFileSync(path.join(tmp, 'truth.json'), 'utf8'))
   rmSync(tmp, { recursive: true, force: true })
+  // The seed stands in for the agent, whose commands run inside a run the front desk counts as
+  // active. A bare `container exec` is not a request, so with the 3 s idle stop the sweep stopped the
+  // VM in the middle of the 60 `ola-db add`s (about 1.5 to 3 s) whenever they ran long: the deploy of
+  // 818e86e2 failed on "no job proposed: Traceback" (OLA-138). Keep it awake while the seed runs.
   await wake()
-  const r = await pyInVm(SEED, JSON.stringify({ dir, files, spec }))
+  const awake = setInterval(() => wake().catch(() => {}), 1000)
+  const r = await pyInVm(SEED, JSON.stringify({ dir, files, spec })).finally(() => clearInterval(awake))
   return { job: /Proposed job ([0-9a-f]{12})/.exec(r.out)?.[1] ?? null, out: r.out || r.err, truth }
 }
 // The idle stop is 3 s here: a request first, so the VM is up for an exec.
@@ -2648,7 +2653,7 @@ await check('batch jobs: the agent proposes a job over 60 studies in the sealed 
   const s = await seedStudies('studies', 60, SPEC)
   job60 = s.job
   truth60 = s.truth
-  assert(job60, `no job proposed: ${s.out.slice(0, 300)}`)
+  assert(job60, `no job proposed: ${s.out.slice(-1500)}`)
   const list = (await api('/api/jobs', { cookie: a.cookie, ws: FA })).json
   const j = list.jobs.find((x) => x.id === job60)
   assert(j && j.state === 'proposed' && j.progress.total === 60 && j.progress.trial_total === 15 && j.estimate.tokens > 0 && j.estimate.weekShare > 0, JSON.stringify(j).slice(0, 300))
