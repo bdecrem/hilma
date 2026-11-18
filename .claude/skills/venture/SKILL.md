@@ -76,6 +76,10 @@ gone, every link in Bart's iMessage thread carries it.
 
 Whatever he decided or asked for goes into LOG.md in his words, and into
 NOW.md's next actions, before anything else.
+Anything he says he did (in a text, a voice note, a call or the terminal) closes or
+updates its tracker issue the same turn: `node scripts/venture/issues.mjs done <id>
+--proof "Bart: <his words>; checked: …"`. A hook (`.claude/hooks/bart-done.py`) puts
+this rule and the issues waiting on him in front of every prompt.
 
 ## 3. Restart the watchers
 

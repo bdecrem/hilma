@@ -53,6 +53,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bart-done.py",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
