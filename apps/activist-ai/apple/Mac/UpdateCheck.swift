@@ -3,7 +3,7 @@ import AppKit
 /// The signed download's update check (testflight/README.md, "The Mac app: a signed download").
 /// `testflight/ship-via-mini.sh mac` publishes the notarized disk image and `latest.json` beside
 /// it; this reads that file and, when its build is newer than this one, offers the download in
-/// the browser. Ola, Check for Updates… asks now and always answers; at launch it asks at most
+/// the browser. Settings, General, Check for Updates… asks now and always answers; at launch it asks at most
 /// once a day and says something only when there is a newer build it has not offered before.
 /// Nothing is installed by the app itself: the person opens the disk image and drags Ola over.
 @MainActor

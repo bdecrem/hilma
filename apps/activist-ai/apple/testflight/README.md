@@ -31,7 +31,7 @@ DRY=1 apps/activist-ai/apple/testflight/ship-via-mini.sh both                   
   - **mac**: signs with Developer ID and the hardened runtime, makes `Ola-<version>-<build>.dmg`,
     notarizes it (usually 2 to 10 minutes), staples it, checks Gatekeeper accepts it, and publishes it
     with `latest.json` to `public/ola-site/mac/` (commit and push; live at
-    `https://ola.cx/ola-site/mac/Ola-<version>-<build>.dmg` about 3 minutes later). The app's Ola menu,
+    `https://ola.cx/ola-site/mac/Ola-<version>-<build>.dmg` about 3 minutes later). The app's Settings, General,
     Check for Updates… reads `latest.json` (`Mac/UpdateCheck.swift`), and the app looks once a day on
     its own, speaking only when a newer build is out.
 - **Export compliance:** both apps use only HTTPS and the system's encryption, so both Info.plists say
