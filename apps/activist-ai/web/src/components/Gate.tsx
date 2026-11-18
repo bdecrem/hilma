@@ -1,16 +1,19 @@
 // The way in: who is signed in decides what this tab shows.
 //   - signed out: the sign-in screen (look A, after the mock in 7-letter-and-desk/b2: the room,
-//     the brushed "Ola," greeting, the study at night): a name and a password, or a passkey;
-//     from an invitation link (#/invite/<token>), the same screen choosing a password (or making a
-//     passkey); from the admin's link (#/reset/<token>), choosing a new password.
+//     the brushed "Ola," greeting, the study at night): a name and a password, nothing else
+//     (2026-11-17: "normal login with an optional passkey"); a quiet "Use a passkey instead" only
+//     in a browser that has used a passkey for Ola before. From an invitation link
+//     (#/invite/<token>), the same screen choosing a password; from the admin's link
+//     (#/reset/<token>), choosing a new password. Passkeys are added in Your account only.
 //   - #/device?…: the Ola app on a Mac asks to sign in; signed in, the person says yes or not now.
 //   - #/account: the person's own account (password, passkeys, the switch, their Macs).
 //   - signed in, no workspace in the address: the person's projects (one opens directly).
 //   - signed in, a workspace in the address that is theirs: the app.
-// WebAuthn options are fetched before the button is pressed, so the browser's passkey prompt runs
+// WebAuthn options are fetched before the link is pressed, so the browser's passkey prompt runs
 // straight from the click (Safari requires that); the passkey after a right password is its own click.
+// Nothing asks the browser for a passkey on page load.
 import { createResource, createSignal, For, Match, onCleanup, Show, Switch } from 'solid-js'
-import { account, desk, DeskError, passkeys, setCsrf, setMaxUpload, workspace, type AccountInfo, type Prepared } from '../lib/api.ts'
+import { account, desk, DeskError, passkeys, passkeyUsedHere, setCsrf, setMaxUpload, workspace, type AccountInfo, type Prepared } from '../lib/api.ts'
 import type { Me, Problem } from '../lib/types.ts'
 import { App } from '../App.tsx'
 import { DeviceSignIn, deviceRequestOf, YourDevices } from './Device.tsx'
@@ -198,16 +201,37 @@ function SignIn(props: { invite: string | null; device?: ReturnType<typeof devic
   const [password, setPassword] = createSignal('')
   // After a right password, for a person who asks for their passkey too: their passkey, by a click.
   const [step, setStep] = createSignal<Prepared | null>(null)
-  // The ceremony is prepared ahead and refreshed before the server's five minutes run out.
-  const [prepared, { refetch }] = createResource(async () => {
-    try {
-      return props.invite ? await passkeys.prepareRegister(props.invite) : await passkeys.prepareSignIn()
-    } catch (e) {
-      setProblem(problemOf(e, 'Ola’s computer did not answer. Reload to try again.'))
-      return null
-    }
-  })
-  const timer = setInterval(() => !busy() && void refetch(), 4 * 60_000)
+  // An invitation: whose it is (the greeting, the rule, the name to sign in with) and its kind. A
+  // first invitation is answered with a password only; a `device` one (one more passkey, made only
+  // by an explicit admin action) is the one page that makes a passkey.
+  const [invite] = createResource(
+    () => props.invite,
+    async (t) => {
+      try {
+        return await account.inviteInfo(t)
+      } catch (e) {
+        setProblem(problemOf(e, 'Ola’s computer did not answer. Reload to try again.'))
+        return null
+      }
+    },
+  )
+  const forDevice = () => invite()?.kind === 'device'
+  // "Use a passkey instead" exists only for a browser that has used a passkey for Ola before, and
+  // only as a quiet link: never a button, never a prompt on load (no conditional WebAuthn UI). Its
+  // ceremony is fetched ahead, so the passkey prompt runs straight from the click (Safari requires it).
+  const quiet = !props.invite && passkeyUsedHere()
+  const [prepared, { refetch }] = createResource(
+    () => (quiet ? 'login' : forDevice() ? props.invite : null),
+    async (k) => {
+      try {
+        return k === 'login' ? await passkeys.prepareSignIn() : await passkeys.prepareRegister(k)
+      } catch (e) {
+        if (k !== 'login') setProblem(problemOf(e, 'Ola’s computer did not answer. Reload to try again.'))
+        return null
+      }
+    },
+  )
+  const timer = setInterval(() => !busy() && (quiet || forDevice()) && void refetch(), 4 * 60_000)
   onCleanup(() => clearInterval(timer))
 
   const finish = async () => {
@@ -224,7 +248,7 @@ function SignIn(props: { invite: string | null; device?: ReturnType<typeof devic
       await finish()
     } catch (e) {
       setProblem(problemOf(e, 'Your passkey could not be used just now.'))
-      if (!register || props.invite) void refetch() // a ceremony is good once, right or wrong
+      if (p === prepared()) void refetch() // a ceremony is good once, right or wrong
       setStep(null)
     } finally {
       setBusy(false)
@@ -234,7 +258,7 @@ function SignIn(props: { invite: string | null; device?: ReturnType<typeof devic
     e.preventDefault()
     if (busy()) return
     setProblem(null)
-    if (!props.invite && !handle().trim()) return setProblem({ text: 'Type your name for Ola.', detail: null })
+    if (!props.invite && !handle().trim()) return setProblem({ text: 'Type your name.', detail: null })
     if (!password()) return setProblem({ text: props.invite ? 'Choose a password.' : 'Type your password.', detail: null })
     setBusy(true)
     try {
@@ -253,64 +277,75 @@ function SignIn(props: { invite: string | null; device?: ReturnType<typeof devic
     }
   }
   // "Ola, Maria.": the greeting ends the sentence, so a name that ends in a period keeps just one.
-  const name = () => ((prepared() as any)?.name as string | undefined)?.replace(/\.+$/, '')
-  const inviteHandle = () => (prepared() as any)?.options?.user?.name as string | undefined
-  const min = () => ((prepared() as any)?.min as number | undefined) ?? 15
+  const name = () => invite()?.name?.replace(/\.+$/, '')
+  const inviteHandle = () => invite()?.handle
 
   return (
     <Letter name={props.invite ? name() : undefined}>
       <p class="gate-lede">
-        {props.invite ? 'Bart invited you to the computer in his office. Choose a password, and you are in.' : props.device && props.device !== 'bad' ? `Sign in here first. Then you can let Ola on ${props.device.name} in.` : 'Sign in to the computer in Bart’s office.'}
+        {props.invite
+          ? forDevice()
+            ? 'This link adds a passkey for this device to your account.'
+            : 'Bart invited you to Ola. Choose a password, and you are in.'
+          : props.device && props.device !== 'bad'
+            ? `Sign in here first. Then you can let Ola on ${props.device.name} in.`
+            : 'Sign in to Ola'}
       </p>
       <Show when={problem()}>{(p) => <GateProblem problem={p()} />}</Show>
-      <Show
-        when={!step()}
-        fallback={
+      <Switch>
+        <Match when={step()}>
           <div class="gate-step">
             <p class="gate-how">Your account asks for your passkey too. Use it now to finish signing in.</p>
             <button type="button" class="paper-button" onClick={() => withPasskey(step(), false)} disabled={busy()}>
               {busy() ? 'Waiting for your passkey…' : 'Use my passkey'}
             </button>
           </div>
-        }
-      >
-        <form class="gate-form" onSubmit={submit} novalidate>
-          <Show
-            when={!props.invite}
-            fallback={
-              // For password managers: the name this password goes with.
-              <input type="text" name="username" autocomplete="username" value={inviteHandle() ?? ''} hidden readOnly />
-            }
-          >
-            <div class="gate-field">
-              <label for="gate-handle">Your name for Ola</label>
-              <input id="gate-handle" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck={false} value={handle()} onInput={(e) => setHandle(e.currentTarget.value)} />
-            </div>
-          </Show>
-          <PasswordField
-            id="gate-password"
-            label={props.invite ? 'Choose a password' : 'Password'}
-            autocomplete={props.invite ? 'new-password' : 'current-password'}
-            value={password()}
-            onInput={setPassword}
-            hint={props.invite ? `At least ${min()} characters. A few words in a row works well.${inviteHandle() ? ` You sign in as ${inviteHandle()}.` : ''}` : undefined}
-          />
-          <button type="submit" class="paper-button" disabled={busy()}>
-            {busy() ? (props.invite ? 'Making your account…' : 'Signing in…') : props.invite ? 'Make my account' : 'Sign in'}
-          </button>
-        </form>
-        <div class="gate-or">
-          <span class="gate-or-word">{props.invite ? 'Or use a passkey instead' : 'Or'}</span>
-          <button type="button" class="ghost-button on-room" onClick={() => withPasskey(prepared(), !!props.invite)} disabled={busy() || !prepared()} aria-describedby="gate-how">
-            {props.invite ? 'Make my passkey' : 'Sign in with your passkey'}
-          </button>
-        </div>
-        <p id="gate-how" class="gate-how">
-          {props.invite
-            ? 'A passkey stays on this device, behind Face ID, Touch ID, Windows Hello or your device’s PIN. You can add the other way later in Your account. This link works once.'
-            : 'Forgot your password? Ask Bart for a link to choose a new one. A passkey is on the device you set it up on.'}
-        </p>
-      </Show>
+        </Match>
+        <Match when={props.invite && forDevice()}>
+          <div class="gate-step">
+            <button type="button" class="paper-button" onClick={() => withPasskey(prepared(), true)} disabled={busy() || !prepared()}>
+              {busy() ? 'Waiting for your passkey…' : 'Make my passkey'}
+            </button>
+            <p class="gate-how">This link works once.</p>
+          </div>
+        </Match>
+        <Match when={props.invite && !invite()}>{null}</Match>
+        <Match when={true}>
+          <form class="gate-form" onSubmit={submit} novalidate>
+            <Show
+              when={!props.invite}
+              fallback={
+                // For password managers: the name this password goes with.
+                <input type="text" name="username" autocomplete="username" value={inviteHandle() ?? ''} hidden readOnly />
+              }
+            >
+              <div class="gate-field">
+                <label for="gate-handle">Your name for Ola</label>
+                <input id="gate-handle" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck={false} value={handle()} onInput={(e) => setHandle(e.currentTarget.value)} />
+              </div>
+            </Show>
+            <PasswordField
+              id="gate-password"
+              label={props.invite ? 'Choose a password' : 'Password'}
+              autocomplete={props.invite ? 'new-password' : 'current-password'}
+              value={password()}
+              onInput={setPassword}
+              hint={props.invite ? `At least ${invite()?.min ?? 8} characters.${inviteHandle() ? ` You sign in as ${inviteHandle()}.` : ''}` : undefined}
+            />
+            <button type="submit" class="paper-button" disabled={busy()}>
+              {busy() ? (props.invite ? 'Making your account…' : 'Signing in…') : props.invite ? 'Make my account' : 'Sign in'}
+            </button>
+            <Show when={!props.invite}>
+              <Show when={quiet}>
+                <button type="button" class="gate-link" onClick={() => withPasskey(prepared(), false)} disabled={busy() || !prepared()}>
+                  Use a passkey instead
+                </button>
+              </Show>
+              <p class="gate-how">Forgot your password? Ask Bart for a link to choose a new one.</p>
+            </Show>
+          </form>
+        </Match>
+      </Switch>
     </Letter>
   )
 }
@@ -351,11 +386,13 @@ function ResetPassword(props: { token: string; onSignedIn: () => void }) {
         {(i) => (
           <form class="gate-form" onSubmit={submit} novalidate>
             <input type="text" name="username" autocomplete="username" value={i().handle} hidden readOnly />
-            <PasswordField id="reset-password" label={i().hasPassword ? 'New password' : 'Choose a password'} autocomplete="new-password" value={password()} onInput={setPassword} hint={`At least ${i().min} characters. A few words in a row works well. You sign in as ${i().handle}.`} />
+            <PasswordField id="reset-password" label={i().hasPassword ? 'New password' : 'Choose a password'} autocomplete="new-password" value={password()} onInput={setPassword} hint={`At least ${i().min} characters. You sign in as ${i().handle}.`} />
             <button type="submit" class="paper-button" disabled={busy()}>
               {busy() ? 'Saving…' : 'Save my password'}
             </button>
-            <p class="gate-how">{i().hasPassword ? 'This link works once. Saving signs you out everywhere else, the Ola app on your Macs too. Your passkeys keep working.' : 'This link works once. Your passkeys keep working.'}</p>
+            <Show when={i().hasPassword}>
+              <p class="gate-how">Saving signs you out everywhere else, the Ola app on your Macs too.</p>
+            </Show>
           </form>
         )}
       </Show>
@@ -389,7 +426,7 @@ function AccountView(props: { me: Me; onSignOut: () => void }) {
   }
   const savePassword = async (e: Event, a: AccountInfo) => {
     e.preventDefault()
-    if ((await act(() => account.setPassword(current(), next()), a.hasPassword ? 'Your password is changed. Every other sign-in was ended, the Ola app on your Macs too.' : 'Your password is saved. You can now sign in with it or with your passkey.')) === true) {
+    if ((await act(() => account.setPassword(current(), next()), a.hasPassword ? 'Your password is changed. Every other sign-in was ended, the Ola app on your Macs too.' : 'Your password is saved.')) === true) {
       setCurrent('')
       setNext('')
     }
@@ -411,16 +448,16 @@ function AccountView(props: { me: Me; onSignOut: () => void }) {
           <div class="account-cards">
             <section class="account-card" aria-labelledby="acct-password">
               <h2 id="acct-password">Password</h2>
-              <p class="account-note">{a().hasPassword ? `Set on ${day(a().passwordSetAt!)}.` : 'You have no password yet. Choose one to sign in without your passkey.'}</p>
+              <p class="account-note">{a().hasPassword ? `Set on ${day(a().passwordSetAt!)}.` : 'You have no password yet. Choose one.'}</p>
               <Show when={!a().hasPassword && !a().fresh}>
-                <p class="account-note">For your safety, sign out and sign in again with your passkey, then choose a password within 15 minutes.</p>
+                <p class="account-note">For your safety, sign out and sign in again, then choose a password within 15 minutes.</p>
               </Show>
               <form class="account-form" onSubmit={(e) => savePassword(e, a())} novalidate>
                 <input type="text" name="username" autocomplete="username" value={props.me.person.handle} hidden readOnly />
                 <Show when={a().hasPassword}>
                   <PasswordField paper id="acct-current" label="Current password" autocomplete="current-password" value={current()} onInput={setCurrent} />
                 </Show>
-                <PasswordField paper id="acct-new" label={a().hasPassword ? 'New password' : 'Choose a password'} autocomplete="new-password" value={next()} onInput={setNext} hint={`At least ${a().minLength} characters. A few words in a row works well.`} />
+                <PasswordField paper id="acct-new" label={a().hasPassword ? 'New password' : 'Choose a password'} autocomplete="new-password" value={next()} onInput={setNext} hint={`At least ${a().minLength} characters.`} />
                 <div>
                   <button type="submit" class="primary-button ghost-button" disabled={busy() || !next()}>
                     {a().hasPassword ? 'Change my password' : 'Save my password'}
@@ -431,14 +468,15 @@ function AccountView(props: { me: Me; onSignOut: () => void }) {
 
             <section class="account-card" aria-labelledby="acct-passkeys">
               <h2 id="acct-passkeys">Passkeys</h2>
-              <Show when={a().passkeys.length} fallback={<p class="account-note">No passkey yet. A passkey signs you in with Face ID, Touch ID, Windows Hello or your device’s PIN, and nobody can guess it.</p>}>
+              <p class="account-note">Optional. A passkey lets this device sign you in with Face ID, Touch ID or its PIN instead of your password.</p>
+              <Show when={a().passkeys.length}>
                 <ul class="account-list">
                   <For each={a().passkeys}>{(k) => <li>A passkey added {day(k.added)}{k.lastUsed ? `, last used ${day(k.lastUsed)}` : ''}</li>}</For>
                 </ul>
               </Show>
               <div class="account-row">
                 <button type="button" class="ghost-button on-paper" disabled={busy() || (a().hasPassword && !current())} onClick={() => act(() => account.addPasskey(current()), 'Your passkey is added. Your other devices will be told once.')}>
-                  Add a passkey on this device
+                  Add a passkey
                 </button>
                 <Show when={a().hasPassword}>
                   <span class="account-note">Type your current password above first.</span>

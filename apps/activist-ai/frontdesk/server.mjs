@@ -979,6 +979,7 @@ export function makeFrontDesk(cfg = config()) {
       else if (p === '/api/auth/login/verify') r = await auth.loginVerify(body.ceremony, body.response)
       // Passwords: sign in, choose one from an invitation, set one from the admin's link.
       else if (p === '/api/auth/password') r = await auth.passwordSignIn(body, clientOf(req), parseCookie(req.headers.cookie ?? '')[auth.knownCookieName] ?? null)
+      else if (p === '/api/auth/invite/info') r = auth.inviteInfo(body.invite)
       else if (p === '/api/auth/invite/password') r = await auth.invitePassword(body.invite, body.password)
       else if (p === '/api/auth/reset/info') r = auth.resetInfo(body.token)
       else if (p === '/api/auth/reset') r = await auth.reset(body.token, body.password)

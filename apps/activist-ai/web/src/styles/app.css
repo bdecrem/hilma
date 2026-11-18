@@ -1629,7 +1629,7 @@ code {
 
 /* ---------------------------------------------------------------- the way in (Gate.tsx)
    The room, the brushed greeting, the study at night: the sign-in mock in
-   ~/Desktop/ola-brand/7-letter-and-desk/b2 ("It travels"), with a passkey in place of the
+   ~/Desktop/ola-brand/7-letter-and-desk/b2 ("It travels"), with a name and a password in place of the
    email and passcode fields. */
 .gate {
   min-height: 100dvh;

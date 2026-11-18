@@ -3,7 +3,7 @@
 // owns the platform database and the workspaces, on the machine itself.
 //
 //   node admin.mjs add-person <handle> --name "Maria L." [--admin] [--link]   with --link, also prints
-//                  the one-time setup link (as invite): they choose a password, or make a passkey
+//                  the one-time setup link (as invite): they choose a password
 //   node admin.mjs reset-password <handle> [--hours 24]  prints a one-time link to set a password (no
 //                  outbound email yet: send it yourself). Someone with a password already is signed
 //                  out everywhere, their Macs too, when they use it. Their passkeys keep working.
@@ -175,11 +175,11 @@ switch (cmd) {
     const r = db.prepare("INSERT INTO people (handle, display_name, status, is_admin, webauthn_user_id, created_at) VALUES (?, ?, 'invited', ?, ?, ?)").run(handle, name, flags.admin ? 1 : 0, randomBytes(32), now)
     admin({ action: 'person_added', subject: Number(r.lastInsertRowid) })
     if (flags.link) {
-      // The account and its one-time setup link at once (they choose a password, or a passkey).
+      // The account and its one-time setup link at once (they choose a password).
       const { raw } = makeInvite(db, Number(r.lastInsertRowid), 72 * 3600_000, 'first')
       admin({ action: 'invited', subject: Number(r.lastInsertRowid) })
       console.log(`${cfg.origin}/#/invite/${raw}`)
-      console.error(`added ${handle}; the link lets them choose a password (or make a passkey). Single use, expires in 72 h. Send it only to ${name}.`)
+      console.error(`added ${handle}; the link lets them choose a password. Single use, expires in 72 h. Send it only to ${name}.`)
     } else console.log(`added ${handle}; next: node admin.mjs invite ${handle}`)
     break
   }
@@ -231,7 +231,7 @@ switch (cmd) {
     const { raw, voided } = makePasswordLink(db, p.id, hours * 3600_000)
     admin({ action: 'password_reset_issued', subject: p.id })
     console.log(`${cfg.origin}/#/reset/${raw}`)
-    console.error(`sets ${p.handle}'s password; single use, expires in ${hours} h. Send it only to ${p.display_name}.${p.password_hash ? ' Using it signs them out everywhere, their Macs too.' : ' Their passkeys keep working.'}${voided ? ` ${voided} earlier unused link(s) no longer work.` : ''}`)
+    console.error(`sets ${p.handle}'s password; single use, expires in ${hours} h. Send it only to ${p.display_name}.${p.password_hash ? ' Using it signs them out everywhere, their Macs too.' : ''}${voided ? ` ${voided} earlier unused link(s) no longer work.` : ''}`)
     break
   }
   case 'require-passkey': {

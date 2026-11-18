@@ -245,7 +245,8 @@ export async function moreJourneys(h) {
     admin('add-member', run.team, m.who, 'member')
     await step(m.run, 'H', 'a second member: invited, lands in the shared project', 40, async () => {
       await m.page.goto(admin('invite', m.who))
-      await m.page.getByRole('button', { name: 'Make my passkey' }).click()
+      await m.page.getByLabel('Choose a password').fill('a member walks in')
+      await m.page.getByRole('button', { name: 'Make my account' }).click()
       await m.page.waitForSelector('.project-title', { timeout: 30_000 })
       await sleep(1500)
       return (await m.page.locator('.project-head').innerText()).replace(/\s+/g, ' ')
@@ -333,10 +334,12 @@ export async function moreJourneys(h) {
       const back = (await page.locator('body').innerText()).replace(/\s+/g, ' ')
       return `offline: ${/connection/i.test(off) ? off.match(/[^.]*connection[^.]*\./i)?.[0] : 'NOTHING SAID'}; back: ${/connection/i.test(back) ? 'still says lost' : 'recovered'}`
     })
-    await step(run, 'I', 'a passkey this machine does not know', 30, async () => {
+    await step(run, 'I', 'a passkey this machine does not know (a browser that used one before, so the quiet link shows)', 30, async () => {
       const o = await newPerson('stranger')
       await o.page.goto(`${ORIGIN}/`)
-      await o.page.getByRole('button', { name: 'Sign in with your passkey' }).click()
+      await o.page.evaluate(() => localStorage.setItem('ola.passkey-used', '1'))
+      await o.page.reload()
+      await o.page.getByRole('button', { name: 'Use a passkey instead' }).click()
       await sleep(3000)
       const said = (await o.page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 300)
       await o.page.screenshot({ path: path.join(h.SHOTS, `${run.label}-I-wrong-passkey.png`) })

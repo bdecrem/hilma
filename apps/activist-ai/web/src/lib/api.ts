@@ -311,11 +311,28 @@ function passkeyProblem(e: unknown): DeskError {
     name === 'NotAllowedError'
       ? 'The passkey step was cancelled or timed out. Nothing was changed; try again when you are ready.'
       : name === 'InvalidStateError'
-        ? 'This device already has a passkey for Ola. Use “Sign in with your passkey” instead.'
+        ? 'This device already has a passkey for Ola. Sign in with it from the sign-in page.'
         : name === 'NotSupportedError' || !window.PublicKeyCredential
           ? 'This browser cannot use passkeys. Try a current Safari, Chrome, Edge or Firefox.'
           : 'Your passkey could not be used just now. Nothing was changed.'
   return new DeskError({ text, detail: String(e) }, 0)
+}
+
+// This browser has used a passkey for Ola (made one, or signed in with one): only then does the
+// sign-in page offer "Use a passkey instead". Browser storage can be blocked or empty: then it is
+// simply not offered, and the name and password work as ever.
+const PASSKEY_FLAG = 'ola.passkey-used'
+export const passkeyUsedHere = (): boolean => {
+  try {
+    return localStorage.getItem(PASSKEY_FLAG) === '1'
+  } catch {
+    return false
+  }
+}
+const notePasskeyUsed = () => {
+  try {
+    localStorage.setItem(PASSKEY_FLAG, '1')
+  } catch {}
 }
 
 export interface Prepared {
@@ -354,6 +371,7 @@ export const passkeys = {
           response: { clientDataJSON: toB64(r.clientDataJSON), attestationObject: toB64(r.attestationObject), transports: r.getTransports?.() ?? [] },
         },
       })
+      notePasskeyUsed()
     } catch (e) {
       throw passkeyProblem(e)
     }
@@ -377,6 +395,7 @@ export const passkeys = {
           response: { clientDataJSON: toB64(r.clientDataJSON), authenticatorData: toB64(r.authenticatorData), signature: toB64(r.signature), userHandle: toB64(r.userHandle) },
         },
       })
+      notePasskeyUsed()
     } catch (e) {
       throw passkeyProblem(e)
     }
@@ -385,7 +404,8 @@ export const passkeys = {
 
 // ---------------------------------------------------------------- passwords and the account
 //
-// A normal sign-in: a name and a password (frontdesk/auth.mjs); a passkey as an option. When the
+// A normal sign-in: a name and a password (frontdesk/auth.mjs); a passkey as an option, added in
+// Your account. When the
 // person asks for their passkey too, a right password comes back as a passkey ceremony for them.
 
 export interface AccountInfo {
@@ -407,6 +427,7 @@ export const account = {
     const r = await post<{ ok?: boolean; passkey?: boolean; ceremony?: string; options?: any }>('/api/auth/password', { handle, password })
     return r.passkey && r.ceremony ? { ceremony: r.ceremony, options: r.options } : null
   },
+  inviteInfo: (invite: string) => post<{ name: string; handle: string; kind: 'first' | 'device'; min: number }>('/api/auth/invite/info', { invite }),
   invitePassword: (invite: string, password: string) => post<{ ok: boolean }>('/api/auth/invite/password', { invite, password }),
   resetInfo: (token: string) => post<{ name: string; handle: string; hasPassword: boolean; min: number }>('/api/auth/reset/info', { token }),
   reset: (token: string, password: string) => post<{ ok: boolean }>('/api/auth/reset', { token, password }),

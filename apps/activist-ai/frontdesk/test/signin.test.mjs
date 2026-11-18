@@ -9,15 +9,20 @@ import http from 'node:http'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, before, test } from 'node:test'
-import { hashPassword, needsRehash, passwordProblem, verifyPassword, SCRYPT } from '../passwords.mjs'
+import { hashPassword, minLength, needsRehash, passwordProblem, verifyPassword, SCRYPT } from '../passwords.mjs'
 import { PasswordGuard, handleKey } from '../auth.mjs'
 import { validDeviceName } from '../devices.mjs'
 import { SoftAuthn } from '../review/softauthn.mjs'
 import { spawnSync } from 'node:child_process'
 
 // ---------------------------------------------------------------- the rules, alone
-test('a password: 15 characters, any kind, not common, not the name, not one character', () => {
-  assert.match(passwordProblem('short one', { handle: 'maria' }), /at least 15/)
+test('a password: 8 characters by default (OLA_FD_PASSWORD_MIN raises it, never below 8), any kind, not common, not the name, not one character', () => {
+  assert.equal(minLength({}), 8)
+  assert.equal(minLength({ OLA_FD_PASSWORD_MIN: '15' }), 15)
+  for (const bad of ['7', '0', '65', 'eight', '8.5']) assert.throws(() => minLength({ OLA_FD_PASSWORD_MIN: bad }), /8 to 64/, bad)
+  assert.match(passwordProblem('short 7', { handle: 'maria' }), /at least 8/)
+  assert.equal(passwordProblem('blue tram', { handle: 'maria' }), null)
+  assert.match(passwordProblem('blue tram', { handle: 'maria', min: 15 }), /at least 15/)
   assert.equal(passwordProblem('a quiet orange tram at noon', { handle: 'maria' }), null)
   assert.equal(passwordProblem('ŝtrange ünicode wörds here', { handle: 'maria' }), null)
   assert.equal(passwordProblem('nouppercaseordigitsneeded', { handle: 'maria' }), null) // no composition rules
@@ -151,6 +156,14 @@ const PW = 'a quiet orange tram at noon'
 let mariaCookie, mariaCsrf, mariaKnown
 test('an invitation lets the person choose a password, and they are in; it works once', async () => {
   const inv = inviteFor(1)
+  // The page learns whose invitation it is and the rule, with no passkey ceremony started.
+  const info = await call('/api/auth/invite/info', { body: { invite: inv } })
+  assert.equal(info.status, 200)
+  assert.deepEqual(info.json, { name: info.json.name, handle: 'maria', kind: 'first', min: 8 })
+  assert.equal((await call('/api/auth/invite/info', { body: { invite: 'A'.repeat(43) } })).status, 404)
+  const short = await call('/api/auth/invite/password', { body: { invite: inv, password: 'seven c' } })
+  assert.equal(short.status, 400)
+  assert.match(short.json.message, /at least 8/)
   const weak = await call('/api/auth/invite/password', { body: { invite: inv, password: 'password1' } })
   assert.equal(weak.status, 400)
   assert.equal(weak.json.error, 'weak_password')
@@ -164,6 +177,7 @@ test('an invitation lets the person choose a password, and they are in; it works
   assert.equal(me.status, 200)
   mariaCsrf = me.json.csrf
   assert.equal((await call('/api/auth/invite/password', { body: { invite: inv, password: PW } })).status, 404)
+  assert.equal((await call('/api/auth/invite/info', { body: { invite: inv } })).status, 404, 'a used invitation still answers')
   const row = db.prepare("SELECT password_hash, status FROM people WHERE handle = 'maria'").get()
   assert.equal(row.status, 'active')
   assert.ok(!row.password_hash.includes(PW))
@@ -205,7 +219,7 @@ test('guessing: a stranger slows one name down, never the person on a device tha
   for (let i = 0; i < 5; i++) await call('/api/auth/password', { body: { handle: 'maria', password: `guess number ${i} for her` } })
   const held = await call('/api/auth/password', { body: { handle: 'maria', password: PW } })
   assert.equal(held.status, 429)
-  assert.match(held.json.message, /Wait .*passkey/)
+  assert.match(held.json.message, /Wait .*try again/)
   assert.ok(Number(held.headers.get('retry-after')) >= 1)
   // The same right password from her own browser (the known-device cookie) goes straight through.
   const mine = await call('/api/auth/password', { body: { handle: 'maria', password: PW }, cookie: `ola-known-local=${mariaKnown}` })

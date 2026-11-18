@@ -300,16 +300,20 @@ async function signedIn(p) {
   const me = await api('/api/me', { cookie: c?.value })
   return { cookie: c?.value, csrf: me.json?.csrf, me }
 }
-async function register(p, link) {
+// Made-up passwords for this run's people (8 characters is the rule's floor; none has the person's
+// name in it, which the rule refuses).
+const PW = { alice: 'walks the dog', bob: 'tram9ride', vera: 'reads late', dina: 'draws maps', wade: 'red kites', wanda: 'quiet tea' }
+/** An invitation, answered as a person would: choose a password, Make my account, the project opens. */
+async function register(p, link, password) {
   await p.page.goto(link)
-  const btn = p.page.getByRole('button', { name: 'Make my passkey' })
-  await until(() => btn.isEnabled(), 10_000, 'the passkey button')
-  await btn.click()
+  await p.page.getByLabel('Choose a password').fill(password)
+  await p.page.getByRole('button', { name: 'Make my account' }).click()
   await p.page.waitForSelector('.project-title', { timeout: 60_000 })
 }
+/** The quiet link under Sign In: there only in a browser that has used a passkey for Ola before. */
 async function signInWithPasskey(p) {
   await p.page.goto(`${ORIGIN}/`)
-  const btn = p.page.getByRole('button', { name: 'Sign in with your passkey' })
+  const btn = p.page.getByRole('button', { name: 'Use a passkey instead' })
   await until(() => btn.isEnabled(), 10_000, 'the sign-in button')
   await btn.click()
   await p.page.waitForSelector('.project-title', { timeout: 60_000 })
@@ -322,22 +326,38 @@ const B = await person()
 const V = await person()
 let a, b, v
 
-await check('alice: invitation link → passkey made → her project opens', async () => {
+await check('alice: invitation link → a password chosen (the page says nothing of passkeys) → her project opens; then she adds a passkey in Your account', async () => {
   await A.page.goto(invites.alice)
   await A.page.waitForSelector('.gate-name')
   const greet = await A.page.locator('.gate-name').innerText()
   assert(greet === 'Alice A.', `greeting: ${greet}`)
+  await A.page.getByLabel('Choose a password').waitFor()
+  const said = await A.page.locator('.gate-letter').innerText()
+  assert(!/passkey/i.test(said) && /At least 8 characters/.test(said), `the invitation page says: ${said}`)
   if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'invite-1280.png') })
-  await register(A, invites.alice)
+  await register(A, invites.alice, PW.alice)
   a = await signedIn(A)
   assert(a.me.status === 200 && a.me.json.workspaces.length === 1 && a.me.json.workspaces[0].slug === FA, JSON.stringify(a.me.json))
   assert(new URL(A.page.url()).search === `?w=${FA}`, A.page.url())
   await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent !== 'Your project')
-  return `project "${await A.page.locator('.project-title').innerText()}"`
+  const title = await A.page.locator('.project-title').innerText()
+  // A passkey is an option, in Your account (she uses it later in these checks).
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/account`)
+  await A.page.waitForSelector('.account-card')
+  await A.page.getByLabel('Current password', { exact: true }).fill(PW.alice)
+  await A.page.getByRole('button', { name: 'Add a passkey', exact: true }).click()
+  await A.page.waitForFunction(() => document.body.innerText.includes('A passkey added'))
+  // A real load (about:blank first: a goto that changes only the hash is no load): her session hears
+  // of the passkey once, as every other session of hers will.
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+  await A.page.waitForSelector('.project-title', { timeout: 30_000 })
+  if (await A.page.locator('.notice-bar').count()) await A.page.getByRole('button', { name: 'I have read this' }).click()
+  return `project "${title}"; a passkey added in Your account`
 })
 await check('bob and vera register from their own invitations', async () => {
-  await register(B, invites.bob)
-  await register(V, invites.vera)
+  await register(B, invites.bob, PW.bob)
+  await register(V, invites.vera, PW.vera)
   b = await signedIn(B)
   v = await signedIn(V)
   assert(b.me.json.workspaces.map((w) => w.slug).join() === FB, 'bob sees ' + JSON.stringify(b.me.json.workspaces))
@@ -346,37 +366,27 @@ await check('bob and vera register from their own invitations', async () => {
 await check('an invitation works once', async () => {
   const token = invites.alice.split('/').pop()
   const r = await api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: token }), headers: { 'content-type': 'application/json' } })
-  assert(r.status === 404, `second use answered ${r.status}`)
-  const rows = JSON.parse(admin('audit', '--limit', '500', '--json')).filter((x) => x.action === 'passkey_registered')
-  assert(rows.length === 3, `${rows.length} passkeys registered`)
+  const info = await api('/api/auth/invite/info', { method: 'POST', body: JSON.stringify({ invite: token }), headers: { 'content-type': 'application/json' } })
+  assert(r.status === 404 && info.status === 404, `second use answered ${r.status} / ${info.status}`)
+  const rows = JSON.parse(admin('audit', '--limit', '500', '--json')).filter((x) => x.action === 'password_set')
+  assert(rows.length === 3, `${rows.length} passwords set`)
 })
 // Safari did not keep the Secure session cookie over http://localhost, so Bart's first sign-in
 // went in circles (2026-11-16). WebKit (Playwright's build, not Safari itself) makes a passkey from
 // an invitation and makes an authenticated request. WebKit has no virtual authenticator, so the
 // page's navigator.credentials is answered by the software passkey through an exposed function;
 // everything else, the cookie above all, is WebKit's own.
-await check('in WebKit, an invitation makes a passkey, the sign-in sticks, and an authenticated request works', async () => {
+await check('in WebKit, an invitation makes an account with an 8-character password, the sign-in sticks, and an authenticated request works', async () => {
   const { webkit } = await import('playwright')
   const wk = await webkit.launch()
   try {
     admin('add-person', 'wanda', '--name', 'Wanda W.')
     const link = admin('invite', 'wanda')
-    const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
     const ctx = await wk.newContext()
     const page = await ctx.newPage()
-    await page.exposeFunction('__softCreate', (o) => device.create(o))
-    await page.addInitScript(() => {
-      const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-      const bin = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)).buffer
-      navigator.credentials.create = async ({ publicKey: o }) => {
-        const r = await window.__softCreate({ ...o, challenge: b64(o.challenge), user: { ...o.user, id: b64(o.user.id) }, excludeCredentials: [] })
-        return { id: r.id, rawId: bin(r.rawId), type: r.type, authenticatorAttachment: 'platform', getClientExtensionResults: () => ({}), response: { clientDataJSON: bin(r.response.clientDataJSON), attestationObject: bin(r.response.attestationObject), getTransports: () => ['internal'] } }
-      }
-    })
     await page.goto(link)
-    const btn = page.getByRole('button', { name: 'Make my passkey' })
-    await until(() => btn.isEnabled(), 10_000, 'the passkey button')
-    await btn.click()
+    await page.getByLabel('Choose a password').fill(PW.wanda)
+    await page.getByRole('button', { name: 'Make my account' }).click()
     await until(async () => (await page.evaluate(() => fetch('/api/me').then((r) => r.status))) === 200, 15_000, 'an authenticated request from WebKit')
     const me = await page.evaluate(() => fetch('/api/me').then((r) => r.json()))
     const c = (await ctx.cookies(ORIGIN)).find((x) => x.name === CK)
@@ -437,7 +447,8 @@ await check('passwords: sign out, then in with name and password in Chromium and
       const nobody = await page.locator('.gate-problem').innerText()
       assert(wrong === nobody && /did not match/.test(wrong), `${engine}: "${wrong}" / "${nobody}"`)
       if (SHOTS && engine === 'webkit') await page.screenshot({ path: path.join(SHOTS, 'signin-wrong-webkit-1280.png') })
-      await passwordSignIn(page, 'nell', PIA_PW)
+      // A capitalized name, as a phone types it: the same account.
+      await passwordSignIn(page, engine === 'webkit' ? 'Nell' : 'nell', PIA_PW)
       await page.waitForSelector('.gate-title', { timeout: 30_000 })
       const c = (await ctx.cookies(ORIGIN)).find((k) => k.name === CK)
       const me = await api('/api/me', { cookie: c?.value })
@@ -459,11 +470,49 @@ await check('passwords: sign out, then in with name and password in Chromium and
   return 'chromium and webkit'
 })
 
+await check('the sign-in page, in a fresh browser (Chromium and WebKit, phone size): a name, a password, Sign in and the forgot line; nothing about passkeys; nothing asks for a passkey on load; the name field does not fight a phone', async () => {
+  const { webkit } = await import('playwright')
+  const wk = await webkit.launch()
+  const out = []
+  try {
+    for (const [engine, b] of [['chromium', browser], ['webkit', wk]]) {
+      const ctx = await b.newContext({ viewport: { width: 390, height: 844 } })
+      const page = await ctx.newPage()
+      // Count every passkey request the page makes (none is allowed on load, conditional UI included).
+      await page.addInitScript(() => {
+        window.__asked = 0
+        if (navigator.credentials) {
+          const get = navigator.credentials.get.bind(navigator.credentials)
+          navigator.credentials.get = (o) => (window.__asked++, get(o))
+        }
+      })
+      const posted = []
+      page.on('request', (r) => /\/api\/auth\/(login|register)\//.test(r.url()) && posted.push(r.url()))
+      await page.goto(`${ORIGIN}/`)
+      await page.waitForSelector('.gate-form')
+      await page.waitForTimeout(800)
+      const text = await page.locator('.gate-letter').innerText()
+      const buttons = await page.locator('.gate-letter button').allInnerTexts()
+      const field = await page.locator('#gate-handle').evaluate((e) => ({ cap: e.getAttribute('autocapitalize'), cor: e.getAttribute('autocorrect'), spell: e.getAttribute('spellcheck'), auto: e.getAttribute('autocomplete') }))
+      const asked = await page.evaluate(() => window.__asked)
+      assert(/Sign in to Ola/.test(text) && /Forgot your password\? Ask Bart/.test(text) && !/passkey/i.test(text), `${engine}: the page says: ${text}`)
+      assert(buttons.map((x) => x.trim()).join('|') === 'Show|Sign in', `${engine}: buttons ${buttons.join('|')}`)
+      assert(field.cap === 'none' && field.cor === 'off' && field.spell === 'false' && field.auto === 'username', `${engine}: name field ${JSON.stringify(field)}`)
+      assert(asked === 0 && posted.length === 0, `${engine}: ${asked} passkey request(s) on load`)
+      await ctx.close()
+      out.push(engine)
+    }
+  } finally {
+    await wk.close()
+  }
+  return out.join(' and ')
+})
+
 await check('passwords: in Your account nell adds a passkey and turns on “Ask for my passkey too”; then her password is followed by her passkey', async () => {
   await P.page.goto(`${ORIGIN}/#/account`)
   await P.page.waitForSelector('.account-card')
   await P.page.getByLabel('Current password', { exact: true }).fill(PIA_PW)
-  await P.page.getByRole('button', { name: 'Add a passkey on this device' }).click()
+  await P.page.getByRole('button', { name: 'Add a passkey', exact: true }).click()
   await P.page.waitForSelector('.account-said')
   await P.page.waitForFunction(() => document.body.innerText.includes('A passkey added'))
   await P.page.getByLabel('Ask for my passkey too').check()
@@ -477,10 +526,10 @@ await check('passwords: in Your account nell adds a passkey and turns on “Ask 
   if (SHOTS) await P.page.screenshot({ path: path.join(SHOTS, 'signin-passkey-step-1280.png') })
   await P.page.getByRole('button', { name: 'Use my passkey' }).click()
   await P.page.waitForSelector('.gate-title', { timeout: 30_000 })
-  // And the passkey alone still works (the passkey path stays covered).
+  // And the passkey alone still works, from the quiet link this browser now shows (it has used one).
   await api('/api/signout', { method: 'POST', cookie: (await cookieOf(P.ctx)).value, csrf: (await signedIn(P)).csrf })
   await P.page.goto(`${ORIGIN}/`)
-  const pk = P.page.getByRole('button', { name: 'Sign in with your passkey' })
+  const pk = P.page.getByRole('button', { name: 'Use a passkey instead' })
   await until(() => pk.isEnabled(), 10_000, 'the passkey button')
   await pk.click()
   await P.page.waitForSelector('.gate-title', { timeout: 30_000 })
@@ -545,10 +594,10 @@ await check('the session cookie is HttpOnly, SameSite=Strict, Path=/ (ola-local 
   assert(c && c.name === 'ola-local' && c.httpOnly && !c.secure && c.sameSite === 'Strict' && c.path === '/' && !c.domain?.startsWith('.'), JSON.stringify({ ...c, value: '…' }))
   assert(!(await A.page.evaluate(() => document.cookie)).includes(CK), 'the page script can read the cookie')
 })
-await check('sign out, then sign in again with the passkey', async () => {
+await check('sign out, then sign in again with the passkey (the quiet link, shown because this browser has used one)', async () => {
   const before = a.cookie
   await A.page.getByRole('button', { name: 'Sign out' }).click()
-  await A.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor()
+  await A.page.getByRole('button', { name: 'Use a passkey instead' }).waitFor()
   assert((await api('/api/me', { cookie: before })).status === 401, 'the signed-out cookie still works')
   if (SHOTS) {
     for (const [w, h] of [[1440, 900], [390, 844]]) {
@@ -664,25 +713,25 @@ async function chromiumContext() {
 }
 let dina = null
 let dinaToken = null
-await check('devices, in Chromium: from the app’s link a signed-out person signs in with their passkey, is asked "Sign in to Ola on <name>?" (the name as text), says yes, and lands on the app’s loopback with a code the app redeems', async () => {
+await check('devices, in Chromium: from the app’s link a signed-out person signs in with their name and password, is asked "Sign in to Ola on <name>?" (the name as text), says yes, and lands on the app’s loopback with a code the app redeems', async () => {
   admin('add-person', 'dina', '--name', 'Dina D.')
   dina = await chromiumContext()
   await dina.page.goto(admin('invite', 'dina'))
-  const make = dina.page.getByRole('button', { name: 'Make my passkey' })
-  await until(() => make.isEnabled(), 10_000, 'the passkey button')
-  await make.click()
+  await dina.page.getByLabel('Choose a password').fill(PW.dina)
+  await dina.page.getByRole('button', { name: 'Make my account' }).click()
   await dina.page.getByRole('button', { name: 'Sign out' }).click()
-  await dina.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor()
+  await dina.page.getByRole('button', { name: 'Sign in', exact: true }).waitFor()
   const app = await madeUpApp()
   try {
     const name = 'Dina’s <b>Mac</b>'
     await dina.page.goto(app.link(name))
-    const signIn = dina.page.getByRole('button', { name: 'Sign in with your passkey' })
-    await until(() => signIn.isEnabled(), 10_000, 'the sign-in button')
+    await dina.page.getByLabel('Your name for Ola').waitFor()
     const lede = await dina.page.locator('.gate-lede').innerText()
     assert(lede.includes(`let Ola on ${name} in`), `signed out, the page said: ${lede}`)
     if (SHOTS) await dina.page.screenshot({ path: path.join(SHOTS, 'device-signin-first-1280.png') })
-    await signIn.click()
+    await dina.page.getByLabel('Your name for Ola').fill('dina')
+    await dina.page.getByLabel('Password', { exact: true }).fill(PW.dina)
+    await dina.page.getByRole('button', { name: 'Sign in', exact: true }).click()
     await dina.page.waitForSelector('.device-title', { timeout: 30_000 })
     const title = await dina.page.locator('.device-title').innerText()
     assert(title === `Sign in to Ola on ${name}?` && (await dina.page.locator('.device-title b').count()) === 0, `title ${title}`)
@@ -722,22 +771,11 @@ await check('devices, in WebKit: the same question, yes lands on the app’s loo
   try {
     admin('add-person', 'wade', '--name', 'Wade W.')
     const link = admin('invite', 'wade')
-    const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
     const ctx = await wk.newContext()
     const page = await ctx.newPage()
-    await page.exposeFunction('__softCreate', (o) => device.create(o))
-    await page.addInitScript(() => {
-      const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-      const bin = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)).buffer
-      navigator.credentials.create = async ({ publicKey: o }) => {
-        const r = await window.__softCreate({ ...o, challenge: b64(o.challenge), user: { ...o.user, id: b64(o.user.id) }, excludeCredentials: [] })
-        return { id: r.id, rawId: bin(r.rawId), type: r.type, authenticatorAttachment: 'platform', getClientExtensionResults: () => ({}), response: { clientDataJSON: bin(r.response.clientDataJSON), attestationObject: bin(r.response.attestationObject), getTransports: () => ['internal'] } }
-      }
-    })
     await page.goto(link)
-    const btn = page.getByRole('button', { name: 'Make my passkey' })
-    await until(() => btn.isEnabled(), 10_000, 'the passkey button')
-    await btn.click()
+    await page.getByLabel('Choose a password').fill(PW.wade)
+    await page.getByRole('button', { name: 'Make my account' }).click()
     await until(async () => (await page.evaluate(() => fetch('/api/me').then((r) => r.status))) === 200, 15_000, 'signed in in WebKit')
     await page.goto(app.link('Wade’s laptop', 'cli'))
     await page.waitForSelector('.device-title', { timeout: 15_000 })
@@ -754,7 +792,7 @@ await check('devices, in WebKit: the same question, yes lands on the app’s loo
     await until(() => app2.hits.length > 0, 15_000, 'Cancel at the app’s loopback')
     assert(app2.hits[0] === '/?error=cancelled' && JSON.parse(admin('devices', 'wade', '--json')).length === before, `cancel: ${app2.hits[0]}`)
     await ctx.close()
-    return 'yes: the code reached 127.0.0.1 and redeemed (cli); Cancel: ?error=cancelled, no device. WebKit has no virtual authenticator: its passkey was a software one at registration, so the signed-out branch (passkey sign-in, then the question) is proved in Chromium only'
+    return 'yes: the code reached 127.0.0.1 and redeemed (cli); Cancel: ?error=cancelled, no device'
   } finally {
     app.close()
     app2.close()
@@ -876,7 +914,7 @@ await check('devices and the hosted open model: refused until the admin lets the
   return `off 403, p-${pid} ${served}, off again 403`
 })
 
-await check('devices, as in production: behind the real TLS front (https, the door passcode, the PROXY protocol) the code and the token pass the door as X-Ola-Pass and nowhere else; a bearer sent straight to the front desk is not read; Chromium and WebKit approve on https and land on http://127.0.0.1', async () => {
+await check('devices, behind the real TLS front with its gate switched on (https, a site passcode, the PROXY protocol; the gate is off by default) the code and the token pass the door as X-Ola-Pass and nowhere else; a bearer sent straight to the front desk is not read; Chromium and WebKit approve on https and land on http://127.0.0.1', async () => {
   // A second front desk on the same database, on the PROXY protocol, behind ops/tls.mjs serving
   // app.localhost with a made-up CA: the same path a device takes from outside.
   const dir = mkdtempSync(path.join(run, 'tls-'))
@@ -896,7 +934,7 @@ await check('devices, as in production: behind the real TLS front (https, the do
   const O2 = `https://app.localhost:${TLSP}`
   const door = randomBytes(18).toString('base64url') // a made-up door passcode for this run
   const fd2 = start('frontdesk-tls', 'frontdesk/server.mjs', { OLA_FD_ORIGIN: O2, OLA_FD_PORT: String(FD2), OLA_FD_PROXY_PROTOCOL: '1', OLA_FD_IDLE_STOP_MIN: '0' })
-  const front = start('tls', 'ops/tls.mjs', { OLA_TLS_LISTEN: `127.0.0.1:${TLSP}`, OLA_TLS_UPSTREAM: `127.0.0.1:${FD2}`, OLA_TLS_CERT_DIR: dir, OLA_TLS_SERVERNAME: 'app.localhost', OLA_TLS_PROXY_IN: '0', OLA_TLS_GATE_PASSCODE: door })
+  const front = start('tls', 'ops/tls.mjs', { OLA_TLS_LISTEN: `127.0.0.1:${TLSP}`, OLA_TLS_UPSTREAM: `127.0.0.1:${FD2}`, OLA_TLS_CERT_DIR: dir, OLA_TLS_SERVERNAME: 'app.localhost', OLA_TLS_PROXY_IN: '0', OLA_TLS_GATE: '1', OLA_TLS_GATE_PASSCODE: door })
   const CA = readFileSync(path.join(dir, 'ca.pem'))
   const { default: https } = await import('node:https')
   const viaFront = (p, { method = 'GET', headers = {}, body } = {}) =>
@@ -1747,7 +1785,7 @@ await check('a stolen cookie works until revoked, then fails', async () => {
   // The open page notices on its next request and goes back to the sign-in screen.
   await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.evaluate(() => (location.hash = '#/files'))
-  await A.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor({ timeout: 15_000 })
+  await A.page.getByRole('button', { name: 'Use a passkey instead' }).waitFor({ timeout: 15_000 })
   await signInWithPasskey(A)
   a = await signedIn(A)
   return 'refused on 4 routes and the open stream cut; alice signed in again'

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The TLS front: where encryption ends, on our own machine, and the door's passcode.
+// The TLS front: where encryption ends, on our own machine (and, only when switched on, a gate).
 //
 // It holds app.ola.cx's certificate and takes each connection from the relay in front of it
 // (Tailscale serve on stage 1, the ngrok agent's TLS pass-through on stage 2; both send a PROXY v1
@@ -20,7 +20,8 @@
 //   OLA_TLS_SERVERNAME    app.ola.cx       the only name served; any other SNI is refused
 //   OLA_TLS_PROXY_IN      1                a connection must start with a PROXY v1 line (else refused)
 //   OLA_TLS_PROXY_OUT     1                send a PROXY v1 line to the front desk (OLA_FD_PROXY_PROTOCOL=1 there)
-//   OLA_TLS_GATE          1                the door passcode is required (0: off, the day the review is done)
+//   OLA_TLS_GATE          0                1: a site-wide passcode is required before the sign-in page (off
+//                                          since 2026-11-17: people sign in with their name and password)
 //   OLA_TLS_GATE_PASSCODE                  the passcode, 20 to 200 printable characters (required with the gate)
 //   OLA_TLS_CONNECTIONS_PER_ADDRESS 128, OLA_TLS_MAX_CONNECTIONS 512 (the front desk's own caps)
 //
@@ -95,7 +96,7 @@ export function config(env = process.env) {
   }
   const servername = env.OLA_TLS_SERVERNAME ?? 'app.ola.cx'
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(servername)) throw new Error('OLA_TLS_SERVERNAME must be a lower-case host name')
-  const gate = flag('OLA_TLS_GATE', '1')
+  const gate = flag('OLA_TLS_GATE', '0')
   const pass = env.OLA_TLS_GATE_PASSCODE ?? ''
   if (gate && !/^[\x21-\x7e]{20,200}$/.test(pass)) throw new Error('OLA_TLS_GATE_PASSCODE must be 20 to 200 printable characters while OLA_TLS_GATE=1')
   return {
@@ -157,7 +158,7 @@ export function addressKey(a) {
 }
 const LOOPBACK = new Set(['127.0.0.1', '::1'])
 
-const PAGE_401 = '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Ola is private. Ask Bart for the door passcode.</p>\n'
+const PAGE_401 = '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Ola is private. Ask Bart how to reach it.</p>\n'
 const PAGE_429 = '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Too many wrong passcodes from here. Try again in 15 minutes.</p>\n'
 
 export function makeTlsFront(cfg = config()) {

@@ -76,19 +76,29 @@
 .gate-form .paper-button {
   align-self: flex-start;
 }
-.gate-or {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  flex-wrap: wrap;
-  padding-top: var(--s4);
-  border-top: 1px solid rgba(201, 210, 234, 0.28);
-  width: 100%;
-  max-width: 420px;
-}
-.gate-or-word {
+/* "Use a passkey instead": a quiet text link under the button, only in a browser that has used a
+   passkey for Ola before. A button (it starts the passkey step), drawn as a link. */
+.gate-link {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: var(--s1) 0;
   color: var(--mist);
+  font-family: var(--font-ui);
   font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.gate-link:hover:not(:disabled) {
+  color: var(--on-room);
+}
+.gate-link:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.gate-form .gate-how {
+  margin: 0;
 }
 .gate-step {
   display: flex;
@@ -211,8 +221,7 @@
   gap: var(--s1);
 }
 @media (max-width: 720px) {
-  .gate-form,
-  .gate-or {
+  .gate-form {
     max-width: none;
   }
   .account-card {

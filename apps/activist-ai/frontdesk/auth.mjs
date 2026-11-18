@@ -153,7 +153,7 @@ export function addressKey(addr) {
 
 // ---------------------------------------------------------------- the auth service
 
-export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, passwordMin = 15, onAppKeysRevoked = () => {}, log = () => {} }) {
+export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, passwordMin = 8, onAppKeysRevoked = () => {}, log = () => {} }) {
   const rpID = new URL(origin).hostname
   const jar = sessionCookie(origin)
   const knownJar = knownCookieName(origin)
@@ -282,7 +282,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
     if (!pwAddress.take(a) || (!isKnown && !ceiling())) return { status: 429, body: { error: 'slow_down', message: 'Too many tries. Wait a minute and try again.' }, headers: { 'retry-after': '60' } }
     if (!isKnown) {
       const w = guard.wait(h)
-      if (w > 0) return { status: 429, body: { error: 'slow_down', message: `Too many wrong tries for this name. Wait ${minutes(w)}, or sign in with your passkey.` }, headers: { 'retry-after': String(Math.ceil(w / 1000)) } }
+      if (w > 0) return { status: 429, body: { error: 'slow_down', message: `Too many wrong tries for this name. Wait ${minutes(w)}, then try again.` }, headers: { 'retry-after': String(Math.ceil(w / 1000)) } }
     }
     const right = await verifyPassword(password, p?.status === 'active' ? p.password_hash : null)
     if (!right) {
@@ -527,7 +527,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       if (!inv) return { status: 404, body: { error: 'invite_invalid', message: 'This invitation has expired or was already used. Ask Bart for a new one.' } }
       if (inv.kind !== 'first') return { status: 400, body: { error: 'invite_kind', message: 'This link adds a passkey for another device. Use the passkey button.' } }
       const p = db.prepare('SELECT password_hash FROM people WHERE id = ?').get(inv.person_id)
-      if (p.password_hash || passkeyCount(inv.person_id)) return { status: 409, body: { error: 'has_account', message: 'You can already sign in to Ola. Use your password or your passkey.' } }
+      if (p.password_hash || passkeyCount(inv.person_id)) return { status: 409, body: { error: 'has_account', message: 'You can already sign in to Ola. Sign in with your name and password.' } }
       const problem = passwordProblem(password, { handle: inv.handle, min: passwordMin })
       if (problem) return { status: 400, body: { error: 'weak_password', message: problem } }
       const hash = await hashPassword(password)
@@ -545,6 +545,17 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       }
       audit(db, { actor: inv.person_id, action: 'signed_in' })
       return { status: 200, body: { ok: true }, cookies: [startSession(inv.person_id, null).cookie, knownCookie(inv.person_id)] }
+    },
+
+    /**
+     * An invitation's person (for the greeting and the password rule), or 404. Nothing is started:
+     * a first invitation is answered with a password (the page asks for nothing else); a `device`
+     * invitation (one more passkey, made only by an explicit admin action) is the passkey page.
+     */
+    inviteInfo(raw) {
+      const inv = inviteFor(raw)
+      if (!inv) return { status: 404, body: { error: 'invite_invalid', message: 'This invitation has expired or was already used. Ask Bart for a new one.' } }
+      return { status: 200, body: { name: inv.display_name, handle: inv.handle, kind: inv.kind, min: passwordMin } }
     },
 
     /** A reset link's person (for the greeting), or 404. */

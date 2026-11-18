@@ -8,8 +8,9 @@
 // At most two hashes run at once (each holds 128 MiB); the rest wait their turn, so a burst of
 // sign-ins cannot take the machine's memory.
 //
-// What a password must be (NIST SP 800-63B-4, 3.1.1.2): at least 15 characters (the floor for a
-// password used alone; OLA_FD_PASSWORD_MIN may lower it to 8, never below), at most 256; any
+// What a password must be (NIST SP 800-63B-4, 3.1.1.2): at least 8 characters by default (the
+// owner's choice, 2026-11-17; NIST's floor for a password used alone is 15, and OLA_FD_PASSWORD_MIN
+// may raise it to anything from 8 to 64, never below 8), at most 256; any
 // characters, spaces included, compared after Unicode NFKC normalization; no rules about kinds of
 // characters; not one of the most common passwords (common-passwords.txt, bundled), nor such a
 // word repeated or with digits and signs around it, nor the person's own handle, nor one character
@@ -23,9 +24,9 @@ export const SCRYPT = { log2N: 17, r: 8, p: 1, keylen: 32, saltlen: 16 }
 export const MAX_LENGTH = 256
 const MAXMEM = 288 * 1024 * 1024 // 128 * N * r = 128 MiB, with room
 
-/** The shortest password allowed: OLA_FD_PASSWORD_MIN (8 to 64), 15 by default. */
+/** The shortest password allowed: OLA_FD_PASSWORD_MIN (8 to 64), 8 by default. */
 export function minLength(env = process.env) {
-  const v = env.OLA_FD_PASSWORD_MIN === undefined ? 15 : Number(env.OLA_FD_PASSWORD_MIN)
+  const v = env.OLA_FD_PASSWORD_MIN === undefined ? 8 : Number(env.OLA_FD_PASSWORD_MIN)
   if (!Number.isInteger(v) || v < 8 || v > 64) throw new Error('OLA_FD_PASSWORD_MIN must be a whole number from 8 to 64')
   return v
 }

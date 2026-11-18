@@ -15,7 +15,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 65 checks); see [The workspace](#the-workspace) |
 | **Front desk and page** | `frontdesk/`: the one service a browser talks to. Passkey sign-in by invitation, the platform database (one SQLite file), roles, the audit log, files and the opencode door to each sealed workspace; serves `web/` (look A) from the same origin | built and proven on the mini (`frontdesk/check.mjs`); see [The front desk](#the-front-desk) |
 | **Start at boot** | `ops/`: launchd user agents for the gateway, the front desk and Apple's container system, the doors and desks as jobs while their workspace runs, one `status` command | installed and proven on the mini; see [Start at boot](#start-at-boot-launchd) |
-| **Way in** | `https://app.ola.cx`: a Let's Encrypt certificate, TLS ending on our machine in `ops/tls.mjs`, which also asks for a door passcode; stage 1 over Tailscale (`:8443`, Bart's devices), stage 2 through an ngrok TLS pass-through tunnel (`:443`, public) | stage 1 live 2026-11-16 (in front of a stub; staging's origin not switched yet); stage 2 written, not on; see [The address](#the-address-appolacx) |
+| **Way in** | `https://app.ola.cx`: a Let's Encrypt certificate, TLS ending on our machine in `ops/tls.mjs` (its site-wide passcode gate is off since 2026-11-17); stage 1 over Tailscale (`:8443`, Bart's devices), stage 2 through an ngrok TLS pass-through tunnel (`:443`, public) | stage 1 live 2026-11-16 (in front of a stub; staging's origin not switched yet); stage 2 written, not on; see [The address](#the-address-appolacx) |
 | **Evaluations** | `evals/`: 24 checkable tasks in six families shaped like the first users' work (made-up data), a runner that scores a named configuration (model + serving + harness) into SQLite, an Opus baseline through the Claude Agent SDK, and a readout per family; see `evals/README.md` | first measured run 2026-11-16 (GLM-5.3-Flash and Opus 5.5, 2 seeds each) |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
@@ -413,16 +413,23 @@ own log, with names matched back from the files still there.
 
 **Sign-in: a name and a password, the passkey optional (2026-11-17).** Bart: "we should have
 normal login with an optional passkey. That's normal." A person signs in with their **handle** (the
-name `admin.mjs add-person` gives them) and a password, or with a passkey; either works. Still by
-invitation only: the invitation link now lets the person choose a password (or make a passkey);
+name `admin.mjs add-person` gives them) and a password. The sign-in page is a name, a password and
+Sign in, with one line saying to ask Bart for a forgotten password; nothing about passkeys (Bart,
+the night of 2026-11-17: "passkey can be optional"). A browser that has used a passkey for Ola before
+(made one or signed in with one: a localStorage flag, `ola.passkey-used`) also shows a quiet "Use a
+passkey instead" link under the button; no other browser does, and no page asks for a passkey on
+load (no conditional WebAuthn UI). Passkeys are added only in Your account. Still by invitation
+only: the invitation link lets the person choose a password, and the page asks for nothing else
+(`POST /api/auth/invite/info` gives it the name, the handle and the rule without starting a passkey
+ceremony); an `--add-device` invitation is the one page that makes a passkey.
 `add-person <handle> --name … --link` makes the account and prints that link at once. Details:
 
 - **The hash** (`frontdesk/passwords.mjs`): scrypt from Node's own crypto (no new dependency),
   N=2^17, r=8, p=1, 16-byte salt, 32-byte key: OWASP's Password Storage Cheat Sheet setting (128 MiB
   per hash). Measured on the mini: 180 to 220 ms a hash. At most two hashes at once (256 MiB), the
   rest wait. The stored string names its parameters, so they can be raised later.
-- **The rules** (NIST SP 800-63B-4): at least 15 characters (the floor for a password used alone;
-  `OLA_FD_PASSWORD_MIN`, 8 to 64), at most 256, any characters (NFKC-normalized), no composition
+- **The rules**: at least 8 characters (Bart's choice; NIST SP 800-63B-4's floor for a password
+  used alone is 15, and `OLA_FD_PASSWORD_MIN`, 8 to 64, raises it), at most 256, any characters (NFKC-normalized), no composition
   rules, not one of the bundled common passwords (`frontdesk/common-passwords.txt`) or such a word
   repeated or wrapped in digits and signs, not a run of keys, not containing the handle. Refusals
   are one plain sentence.
@@ -441,7 +448,7 @@ invitation only: the invitation link now lets the person choose a password (or m
   tries in a day, `password_set`, `password_changed`, `password_reset_issued`.
 - **Your account** (`#/account`, from the projects list and from Settings): change the password
   (needs the current one; a person with none yet sets one within 15 minutes of a passkey sign-in),
-  add a passkey on this device (needs the current password), "Ask for my passkey too" (off by
+  add a passkey (an option, "Add a passkey", needs the current password), "Ask for my passkey too" (off by
   default; on needs a passkey; off needs the password), the person's Macs with Sign out, and Sign
   out everywhere (every session and every Mac). Changing the password ends every other session and
   every Mac. With "Ask for my passkey too", a right password answers with a passkey ceremony limited
@@ -959,7 +966,7 @@ registration, so WebKit's signed-out branch is not proved; both browsers land on
 127.0.0.1 and the code redeems; Cancel; every refusal above; the gateway route against the check's
 gateway and fake model, streaming, cut 0.5 s after Remove; the token refused outside `/api/device/`;
 the production path: a second front desk on the PROXY protocol behind the real `ops/tls.mjs` on
-`https://app.localhost` with a made-up CA and door passcode, where the code and the token pass the door
+`https://app.localhost` with a made-up CA and its gate switched on, where the code and the token pass the door
 with no passcode, a client's `X-Ola-Pass` is removed, a bearer sent straight to the front desk is not
 read, and Chromium and WebKit approve on https and land on `http://127.0.0.1`; `add-device` writes one
 line; the people file 600, by rename, untouched by a `ws.mjs` rewrite of the tokens file). The apps'
@@ -979,7 +986,7 @@ machine: the certificate's key is made on the mini and never leaves it.
 stage 1  Bart's device ─ tailnet ─► Tailscale serve tcp :8443 ─ PROXY v1 ─┐
 stage 2  anyone ─ ngrok edge, TLS passed through ─► ngrok agent ─ PROXY v1 ─┤
                                                                            ▼
-          ops/tls.mjs on 127.0.0.1:4743: TLS (app.ola.cx, LE) ─ door passcode ─ PROXY v1 ─► front desk 127.0.0.1:4700
+          ops/tls.mjs on 127.0.0.1:4743: TLS (app.ola.cx, LE) ─ PROXY v1 ─► front desk 127.0.0.1:4700
 ```
 
 **DNS** (Namecheap BasicDNS, ola.cx): `app` A `100.95.51.98` (the mini's tailnet address: a private
@@ -1015,15 +1022,15 @@ HSTS and the other headers are the front desk's (it already sends HSTS on every 
 certificate is read again on `SIGHUP` and whenever its files change (checked every 10 s); a pair that
 does not load is not used. 128 connections per client address, 512 in all.
 
-**The door passcode** (`OLA_TLS_GATE=1`, the default; `OLA_TLS_GATE_PASSCODE`, 20 to 200 printable
-characters; on the mini 24 from an alphabet without 0/O/1/l/I, made there, never printed). Until the
-review of the front desk is done, nothing reaches it without the passcode: HTTP Basic auth, any user
-name. Without credentials: 401 with `WWW-Authenticate: Basic realm="Ola"` and a one-line page (not a
+**The gate, off by default** (`OLA_TLS_GATE=0` since 2026-11-17: people sign in with a name and a
+password, nothing in front of that). Switched on (`OLA_TLS_GATE=1`, with `OLA_TLS_GATE_PASSCODE`, 20
+to 200 printable characters), nothing reaches the front desk without a site-wide passcode: HTTP
+Basic auth, any user name; `ops/tls-test.mjs` keeps proving all of it with the gate switched on. Without credentials: 401 with `WWW-Authenticate: Basic realm="Ola"` and a one-line page (not a
 failure: browsers ask first without). A wrong passcode: the n-th in a row from an address (an IPv6 one
 by its /64, the PROXY address) is answered after min(250 ms × 2^(n−1), 8 s), and the 10th within 15
 minutes blocks the address for 15 minutes (429, the right passcode too). The check compares SHA-256
 digests in constant time. `Authorization` is removed before the front desk. `/api/health` passes
-without the passcode from loopback only. `OLA_TLS_GATE=0` turns the gate off.
+without the passcode from loopback only.
 
 **Device passes** (2026-11-17, see [Signing in from the Mac app and the command
 line](#signing-in-from-the-mac-app-and-the-command-line-2026-11-17)). With `OLA_GATE_PASS_KEY` set (64
@@ -1458,8 +1465,8 @@ the browser way stays, and the app gains a sign-in with a name and password.
 - **`POST /api/device/login/passkey`** `{ceremony, response}`: the passkey's answer; the device, as above.
   A device ceremony is answered only here, a web one only at `/api/auth/login/verify`.
 - **`POST /api/device/passkey/options`, `/verify`** with the device's pass, only in the first 15 minutes
-  after that device signed in (then 403 `not_fresh`): the app's "Add a passkey? Next time, sign in with
-  Touch ID." right after the first sign-in. **`GET /.well-known/apple-app-site-association`** says the
+  after that device signed in (then 403 `not_fresh`): the app's "Add a Passkey" in Settings (an
+  option; there is no passkey step after signing in). **`GET /.well-known/apple-app-site-association`** says the
   Mac app (`274T5WCVD2.cx.ola.mac`) may use app.ola.cx's passkeys.
 - **The door** (`ops/tls.mjs`): exactly `POST /api/device/login`, `POST /api/device/login/passkey` and
   `GET /.well-known/apple-app-site-association` (each the raw request line, no query), with no

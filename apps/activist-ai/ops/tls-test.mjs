@@ -92,10 +92,13 @@ function startStub() {
 
 // ------------------------------------------------------------------ the program under test
 const kids = []
+// The gate is off by default since 2026-11-17; these tests start it switched on (OLA_TLS_GATE=1),
+// so everything they prove about it holds the day it is turned back on. A key given as undefined is
+// left out of the environment (to start the front with its own defaults).
 function startFront(env = {}) {
   return new Promise((resolve, reject) => {
     const c = spawn(process.execPath, [path.join(HERE, 'tls.mjs')], {
-      env: { PATH: process.env.PATH, HOME: process.env.HOME, OLA_TLS_LISTEN: '127.0.0.1:0', OLA_TLS_UPSTREAM: `127.0.0.1:${STUB_PORT}`, OLA_TLS_CERT_DIR: LIVE, OLA_TLS_GATE_PASSCODE: PASS, ...env },
+      env: Object.fromEntries(Object.entries({ PATH: process.env.PATH, HOME: process.env.HOME, OLA_TLS_LISTEN: '127.0.0.1:0', OLA_TLS_UPSTREAM: `127.0.0.1:${STUB_PORT}`, OLA_TLS_CERT_DIR: LIVE, OLA_TLS_GATE: '1', OLA_TLS_GATE_PASSCODE: PASS, ...env }).filter(([, v]) => v !== undefined)),
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     kids.push(c)
@@ -275,7 +278,7 @@ test('settings: refuses a non-loopback listen address, an unknown setting, and a
   for (const env of [{ OLA_TLS_LISTEN: '0.0.0.0:4743' }, { OLA_TLS_LISTEN: '100.95.51.98:443' }, { OLA_TLS_PROXYIN: '1' }, { OLA_TLS_CERT_DIR: path.join(T, 'wrong') }, { OLA_TLS_UPSTREAM: '10.0.0.1:4700' }]) {
     await assert.rejects(startFront(env), /exited 78/, JSON.stringify(env))
   }
-  // The gate is on unless switched off, and it wants a real passcode.
+  // Switched on, the gate wants a real passcode.
   for (const env of [{ OLA_TLS_GATE_PASSCODE: '' }, { OLA_TLS_GATE_PASSCODE: 'short' }, { OLA_TLS_GATE_PASSCODE: 'has a space in it 1234567' }, { OLA_TLS_GATE: 'yes' }]) {
     await assert.rejects(startFront(env), /exited 78/, JSON.stringify(env))
   }
@@ -320,6 +323,14 @@ test('the gate: /api/health passes without the passcode from loopback only; OLA_
   assert.equal((await get(f.port, '/api/health?x', { auth: null, from: '127.0.0.1' })).status, 401)
   const open = await startFront({ OLA_TLS_GATE: '0', OLA_TLS_GATE_PASSCODE: '' })
   assert.equal((await get(open.port, '/who', { auth: null })).status, 200)
+})
+
+test('the gate is off unless switched on: with no OLA_TLS_GATE and no passcode, the sign-in page and the API answer without one', async () => {
+  const f = await startFront({ OLA_TLS_GATE: undefined, OLA_TLS_GATE_PASSCODE: undefined })
+  assert.equal((await get(f.port, '/who', { auth: null })).status, 200)
+  assert.equal((await get(f.port, '/api/health', { auth: null, from: '100.64.3.4' })).status, 200)
+  const r = await get(f.port, '/who', { auth: null })
+  assert.ok(!r.headers['www-authenticate'], 'a passcode challenge with the gate off')
 })
 
 test('the gate: wrong passcodes get slower, then the address is blocked (the right passcode too); others are not', async () => {
