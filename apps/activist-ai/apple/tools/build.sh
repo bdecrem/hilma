@@ -77,6 +77,13 @@ case "${1:-}" in
     echo "$DD/Build/Products/Debug-iphoneos/Ola.app"
     ;;
   install-mac)
+    # Never replace Ola while it is open (2026-11-18: an install quit the app while Claude was
+    # finishing Bart's app; "DO NOT ... QUIT MY APP WHEN I'M WORKING ON IT"). Nothing here quits it,
+    # and there is no flag to force it: Bart quits Ola himself, then this runs.
+    if pgrep -f "/Applications/Ola.app/Contents/MacOS/Ola" >/dev/null; then
+      echo "NOT INSTALLING: Ola is open. It is never quit for an install. Ask Bart to quit Ola when he is at a stopping point, then run this again." >&2
+      exit 3
+    fi
     node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not installing: the built app's skills are not apps/activist-ai/skills at HEAD (build again)" >&2; exit 1; }
     ../opencode-fork/stage.sh verify "$APP" >/dev/null || { echo "FAIL: not installing: the built app's opencode is not ../opencode-fork's (build again)" >&2; exit 1; }
     rm -rf /Applications/Ola.app
