@@ -478,7 +478,7 @@ extension WhereOlaWorks {
 
   /// Why the switch cannot be used here, or nil.
   var claudeUnavailable: String? {
-    if !LocalSettings.onThisMac { return "Not yet on the Ola machine. Switch Where Ola works to On this Mac to use Claude." }
+    if !LocalSettings.onThisMac { return "Not yet in cloud sessions. Start a Local session (New Session) to use Claude." }
     return ClaudeRunner.unavailable()
   }
 
@@ -489,7 +489,7 @@ extension WhereOlaWorks {
 
   /// Why the hosted open model cannot be used here, or nil.
   var hostedUnavailable: String? {
-    if !LocalSettings.onThisMac { return "Not yet on the Ola machine. Switch Where Ola works to On this Mac to use it." }
+    if !LocalSettings.onThisMac { return "Not yet in cloud sessions. Start a Local session (New Session) to use it." }
     return hostedStatus.unavailable
   }
 

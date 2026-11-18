@@ -120,11 +120,22 @@ enum SettingsSelfTest {
       d.set(true, forKey: WhereOlaWorks.claudeKey); whereOla.configureClaude()
       check(store.claudeOn, "turning it on offers Claude beside the composer")
 
-      // 3. Back to the machine: the agent stops, and Claude is not offered there yet.
-      d.set("machine", forKey: LocalSettings.modeKey); await whereOla.apply()
+      // 3. Both runtimes stay live (OLA-143): the cloud on screen keeps the local agent running and
+      // its sessions listed in the other store; Claude is not offered in the cloud yet.
+      let agents = children().count
+      whereOla.show(.cloud)
       settle(1)
-      check(children().isEmpty, "switching to the Ola machine stops the local agent")
-      check(!store.claudeOn && whereOla.claudeUnavailable?.hasPrefix("Not yet on the Ola machine") == true, "on the Ola machine the switch is disabled, and says why", whereOla.claudeUnavailable ?? "")
+      check(whereOla.shown == .cloud && children().count == agents && agents == 1, "the cloud on screen keeps the local agent running", "\(children().count) agent(s)")
+      check(whereOla.store(.local).runtime == .local && whereOla.store(.local) !== store, "the local runtime's sessions stay listed, in the other store")
+      check(!store.claudeOn && whereOla.claudeUnavailable?.hasPrefix("Not yet in cloud sessions") == true, "in a cloud session the switch is disabled, and says why", whereOla.claudeUnavailable ?? "")
+
+      // 4. New Session, Local: that runtime is on screen again, with the same agent (a swap, no
+      // restart), a new session, and Local as the next default.
+      whereOla.startSession(in: .local)
+      for _ in 0..<60 where store.connection != .open { try? await Task.sleep(nanoseconds: 250_000_000) }
+      check(whereOla.shown == .local && store.runtime == .local && store.connection == .open, "New Session, Local: the local runtime is on screen and connected", "\(store.connection)")
+      check(children().count == agents, "with the same agent, not a new one", "\(children().count) agent(s)")
+      check(store.selectedID == nil && whereOla.defaultRuntime == .local, "on a new session, and Local is the next default")
 
       link.stop()
       UserDefaults.standard.removePersistentDomain(forName: suite)
