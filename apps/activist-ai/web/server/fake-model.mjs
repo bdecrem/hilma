@@ -16,6 +16,8 @@
 // A request whose text contains "slow <steps>x<ms>" (say "slow 5x2000") is a long run instead:
 // <steps> folder listings, each reply held <ms> first, then a one-line answer. The front desk's
 // checks use it for runs longer than the idle limit, and longer than the run ceiling.
+// A request whose text contains "a long answer of <n> KB" gets one plain-text answer that long (the
+// front desk's checks use it for a conversation larger than one opencode reply used to be read, OLA-131).
 import http from 'node:http'
 import { batchAnswer, isBatchRequest, newBatchState } from './fake-batch.mjs'
 import { isTwinRequest, twinAnswer } from './fake-twin.mjs'
@@ -102,6 +104,8 @@ export function startFakeModel({ hosted = false } = {}) {
     if (!body.tools?.length) return send(200, reply({ content: 'Counting the survey rows' }))
     if (/great job|thank you/i.test(lastUserText(messages))) return send(200, reply({ content: '[[ola:react thanks]]' }))
     if (/say hi on one line/i.test(lastUserText(messages))) return send(200, reply({ content: '[[ola:react ok]] Hello!' }))
+    const long = /\ba long answer of (\d{1,4}) KB\b/i.exec(lastUserText(messages))
+    if (long) return send(200, reply({ content: 'The made-up survey has thirty rows. '.repeat(Math.ceil((Number(long[1]) * 1024) / 36)) }))
     const slow = /\bslow (\d{1,3})x(\d{1,6})\b/.exec(lastUserText(messages))
     if (slow) {
       let since = -1

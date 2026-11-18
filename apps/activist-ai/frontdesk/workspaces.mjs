@@ -17,6 +17,11 @@ import { webRequests } from '../web/server/webask.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const WS_CLI = path.join(HERE, '../workspace/ws.mjs')
+// The most of one opencode reply the front desk reads (oc below): most replies, and a conversation's
+// message list, which a long run's tool steps make large (OLA-131).
+export const OC_MAX = 256 * 1024
+export const MESSAGES_MAX = 32 * 1024 * 1024
+const MESSAGES = /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/message(\?|$)/
 // The desk takes 16 connections per workspace; keep a few for ws.mjs's own checks.
 const MAX_SOCKETS = 12
 // "Read by a run" rows a prompt may add (see watch).
@@ -320,9 +325,12 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   /**
    * One request to the workspace's opencode from the front desk itself, never from the page (the
    * hosted model's run: switching a session's model, its prompt). Resolves { status, json }; the
-   * reply is the workspace's word, capped and only parsed.
+   * reply is the workspace's word, capped and only parsed. A conversation's message list is capped
+   * far higher than the rest (OLA-131): a design run's list passed 256 KB, the one cap there was,
+   * and the cut reply read as "that request is not in this conversation", so "Just this once" on
+   * Compare with Claude was refused. A reply cut at its cap resolves { status: 0, json: null, cut: true }.
    */
-  function oc(slug, method, pathname, body = null) {
+  function oc(slug, method, pathname, body = null, max = MESSAGES.test(pathname) ? MESSAGES_MAX : OC_MAX) {
     return new Promise((resolve) => {
       let auth
       try {
@@ -332,12 +340,16 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       }
       const data = body === null ? null : Buffer.from(JSON.stringify(body))
       const headers = { authorization: auth, accept: 'application/json', ...(data ? { 'content-type': 'application/json', 'content-length': String(data.length) } : { 'content-length': '0' }) }
+      let cut = false
       const req = http.request({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), method, path: pathname, headers, timeout: 20_000 }, (res) => {
         let t = ''
         res.setEncoding('utf8')
         res.on('data', (d) => {
           t += d
-          if (t.length > 256 * 1024) req.destroy()
+          if (t.length > max) {
+            cut = true
+            req.destroy()
+          }
         })
         res.on('end', () => {
           let json = null
@@ -348,7 +360,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
         })
         res.on('error', () => resolve({ status: 0, json: null }))
       })
-      req.on('error', () => resolve({ status: 0, json: null }))
+      req.on('error', () => resolve({ status: 0, json: null, ...(cut ? { cut: true } : {}) }))
       req.on('timeout', () => req.destroy())
       req.end(data ?? undefined)
     })

@@ -1196,6 +1196,45 @@ async function compareChecks(engine, label) {
       await sheet().getByRole('button', { name: 'Close' }).last().click()
       return 'sent once'
     })
+    // OLA-131: on a phone, "Send it this once" was refused and the reason sat at the top of the
+    // sheet, out of sight: the tap seemed to do nothing. A refusal is said under the buttons, in view.
+    await check(`${label}: on a phone, a refused "Send it this once" says why in plain words, in view, beside the buttons; the next try goes`, async () => {
+      const phone = await b.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, isMobile: true })
+      const mp = await phone.newPage()
+      try {
+        await mp.goto(`${d.url}#/`)
+        await mp.waitForSelector('.thing')
+        await mp.getByRole('button', { name: 'Ask Ola' }).click()
+        await mp.fill('#ask-input', 'Count survey.csv a third time.')
+        await mp.press('#ask-input', 'Enter')
+        await waitDone(mp)
+        await lastTurn(mp).getByRole('button', { name: 'Compare with Claude' }).tap()
+        const sh = mp.locator('dialog.compare-sheet[open]')
+        await sh.getByRole('button', { name: 'Just this once: the real task' }).tap()
+        await mp.evaluate(() => fetch('/__dev/compare?refuse=1', { method: 'POST' }))
+        await sh.getByRole('button', { name: 'Send it this once' }).tap()
+        const problem = sh.locator('.problem')
+        await problem.waitFor({ timeout: 10_000 })
+        const said = await problem.locator('p').first().innerText()
+        const inView = await problem.evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          return r.top >= 0 && r.bottom <= innerHeight
+        })
+        const after = await sh.evaluate((el) => {
+          const p = el.querySelector('.problem')
+          const btn = [...el.querySelectorAll('button')].find((x) => x.textContent?.trim() === 'Send it this once')
+          return !!(p && btn && btn.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING)
+        })
+        assert(said === 'Ola could not read this conversation just now, so nothing was sent. Try again in a moment.', `said: ${said}`)
+        assert(inView && after, `in view: ${inView}, under the buttons: ${after}`)
+        if (SHOTS) await mp.screenshot({ path: path.join(SHOTS, `${label}-compare-refused-phone.png`) })
+        await sh.getByRole('button', { name: 'Send it this once' }).tap()
+        await sh.locator('.compare-sides').waitFor({ timeout: 20_000 })
+        return 'refused: said in view; again: sent'
+      } finally {
+        await phone.close()
+      }
+    })
     await check(`${label}: Settings: "Compare the real task" is off, turns on only after its consent text, off again; "A few each day, on their own" with a daily number and a budget`, async () => {
       await pg.goto(`${d.url}#/settings`)
       const sw = pg.getByRole('switch', { name: 'Compare the real task' })

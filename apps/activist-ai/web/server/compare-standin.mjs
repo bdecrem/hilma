@@ -76,6 +76,8 @@ export function makeCompareStandin({ dir, role }) {
   async function handle(req, res, p, url) {
     if (p === '/__dev/compare' && req.method === 'POST' && process.env.OLA_DEV_CONTROLS === '1') {
       st.nextHeld = url.searchParams.get('held') === '1'
+      // ?refuse=1: the next start is refused as the front desk refuses one whose conversation it could not read.
+      st.nextRefused = url.searchParams.get('refuse') === '1'
       return json(res, 200, { ok: true, items: st.items.size }), true
     }
     if (p === '/api/quality' || p === '/api/quality/weekly') {
@@ -119,6 +121,7 @@ export function makeCompareStandin({ dir, role }) {
       const mode = body.mode === 'real' ? 'real' : 'twin'
       if (mode === 'real' && !st.real && body.once !== true) return json(res, 403, { error: 'real_off', message: 'Comparing the real task is off for this project. A made-up copy of this task can be compared instead.' }), true
       if (mode === 'real' && !st.real && body.consent !== true) return json(res, 400, { error: 'consent', message: 'Read the note and confirm to send this once.' }), true
+      if (st.nextRefused) return (st.nextRefused = false), json(res, 502, { error: 'unreadable', message: 'Ola could not read this conversation just now, so nothing was sent. Try again in a moment.' }), true
       const x = { id: randomBytes(6).toString('hex'), conversation: body.conversation, message: body.message, mode, state: mode === 'real' ? 'ready' : 'making', verdict: null }
       st.items.set(x.id, x)
       db.prepare("INSERT INTO comparisons (id, workspace_id, session, message, mode, trigger, state, created_at, ola_model) VALUES (?, 1, ?, ?, ?, 'asked', ?, ?, 'general')").run(x.id, String(body.conversation).slice(0, 80), String(body.message).slice(0, 80), mode, x.state, Date.now())

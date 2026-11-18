@@ -208,6 +208,8 @@ export function CompareSheet(props: { open: boolean; info: CompareInfo | null; c
       props.onChanged()
     } catch (e) {
       setProblem(e instanceof DeskError ? e.problem : { text: 'That did not reach Ola’s computer. Nothing was sent.', detail: String(e) })
+      // Said where the person is looking: beside the button they pressed, brought into view (OLA-131).
+      queueMicrotask(() => dialog?.querySelector('.problem')?.scrollIntoView({ block: 'nearest' }))
     } finally {
       setBusy(false)
     }
@@ -221,8 +223,8 @@ export function CompareSheet(props: { open: boolean; info: CompareInfo | null; c
         <h2 id="compare-title" class="sheet-title">
           Compare with Claude
         </h2>
-        <Show when={problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
-        {/* Not started yet: the choice. */}
+        <Show when={id() && problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
+        {/* Not started yet: the choice. A refusal is said under the buttons, where the tap was. */}
         <Show when={!id()}>
           <Show
             when={props.info?.configured}
@@ -267,6 +269,7 @@ export function CompareSheet(props: { open: boolean; info: CompareInfo | null; c
                 </div>
               </div>
             </Show>
+            <Show when={problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
           </Show>
         </Show>
 

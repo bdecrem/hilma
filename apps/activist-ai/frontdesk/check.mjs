@@ -2140,6 +2140,22 @@ if (!LIVE) {
     assert(!existsSync(path.join(env.OLA_HOME, 'compare', held.json.id)), 'a held copy reached the host')
     return 'refused, held, changed refused, not sent'
   })
+  // OLA-131: a design run's conversation passed 256 KB, the front desk read only that much of it, and
+  // Compare with Claude refused the owner's "Just this once" as "not in this conversation".
+  await check('Compare with Claude finds the request in a conversation larger than 256 KB', async () => {
+    const big = await conversation('Give me a long answer of 300 KB about the made-up survey.')
+    const m = await api(`/oc/api/session/${big.conversation}/message?limit=200`, { cookie: a.cookie, ws: FA })
+    assert(m.text.length > 300 * 1024, `the conversation is only ${m.text.length} bytes`)
+    const r = await cpost(a, '/api/compare/start', { ...big, mode: 'twin' })
+    assert(r.status === 200 && ['ready', 'held', 'refused'].includes(r.json?.state), `start: ${r.status} ${r.text.slice(0, 200)}`)
+    if (r.json.state !== 'refused') assert((await cpost(a, '/api/compare/discard', { id: r.json.id })).status === 200, 'discard')
+    assert(!/compare start refused \((404|502)/.test(fd.log), 'this start was refused')
+    // A refused start leaves a line with its status and code, and nothing of the request.
+    assert((await cpost(a, '/api/compare/start', { ...big, mode: 'real' })).status === 403, 'the real task with its switch off')
+    await sleep(300)
+    assert(fd.log.includes(`${FA}: compare start refused (403 real_off)`) && !fd.log.includes('long answer'), 'the refusal left no line, or its words')
+    return `${Math.round(m.text.length / 1024)} KB, ${r.json.state}; refusals logged by code`
+  })
 }
 
 // ---------------------------------------------------------------- Fallback to a hosted open model

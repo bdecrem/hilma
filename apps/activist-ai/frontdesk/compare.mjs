@@ -465,6 +465,8 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
   /** The request, Ola's answer, the files it read and wrote, and the conversation before it. */
   async function turnOf(slug, session, message) {
     const r = await workspaces.oc(slug, 'GET', `/api/session/${session}/message?limit=200`)
+    // A conversation that could not be read is not one without this request (OLA-131).
+    if (r.status < 200 || r.status > 299) return { unreadable: true }
     const list = (Array.isArray(r.json?.data) ? r.json.data : Array.isArray(r.json) ? r.json : []).slice().sort((a, b) => (a.time?.created ?? 0) - (b.time?.created ?? 0))
     const i = list.findIndex((m) => m?.type === 'user' && m.id === message)
     if (i < 0) return null
@@ -746,6 +748,7 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     if (once && body?.consent !== true) return { status: 400, body: { error: 'consent', message: 'Read the note and confirm to send this once.' } }
     await workspaces.ensureRunning(ws.slug)
     const turn = await turnOf(ws.slug, session, message)
+    if (turn?.unreadable) return { status: 502, body: { error: 'unreadable', message: 'Ola could not read this conversation just now, so nothing was sent. Try again in a moment.' } }
     if (!turn) return { status: 404, body: { error: 'not_found', message: 'That request is not in this conversation.' } }
     if (!turn.finished && !turn.answer) return { status: 409, body: { error: 'not_finished', message: MSG.notFinished } }
     const id = randomBytes(6).toString('hex')

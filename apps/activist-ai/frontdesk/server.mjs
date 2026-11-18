@@ -198,6 +198,10 @@ export function makeFrontDesk(cfg = config()) {
   const originHost = new URL(cfg.origin).host
   const release = releaseVersion()
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
+  // A refused start of something that would leave this machine (Claude, the hosted model, Compare
+  // with Claude) is logged by its status and error code only, never its words: before, a refusal
+  // left no trace and "it did nothing" could not be traced (OLA-131).
+  const refused = (ws, what, r) => r && r.status >= 400 && log(`${ws.slug}: ${what} refused (${r.status} ${String(r.body?.error ?? '').slice(0, 40)})`)
   let devices = null
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, passwordMin: cfg.passwordMin, onAppKeysRevoked: () => devices?.sync(), log })
   const web = makeWeb({ db, file: cfg.webFile, providerName: () => cfg.searchProvider, log })
@@ -476,6 +480,7 @@ export function makeFrontDesk(cfg = config()) {
       }
       if (!canRun) return json(res, 403, readOnly)
       const r = await hosted.start(ws, sess.personId, body)
+      refused(ws, 'hosted run', r)
       return json(res, r.status, r.body)
     }
     if (p.startsWith('/api/claude/')) {
@@ -499,6 +504,7 @@ export function makeFrontDesk(cfg = config()) {
       if (what === 'run') {
         hold()
         const r = await claude.start(ws, sess.personId, body, res, req)
+        if (r) refused(ws, 'Claude run', r)
         return r ? json(res, r.status, r.body) : undefined
       }
       const r = what === 'answer' ? claude.answer(ws, body) : claude.stop(ws, body.run)
@@ -518,6 +524,7 @@ export function makeFrontDesk(cfg = config()) {
       const body = await readJson(req, 16 * 1024)
       if (!body) return json(res, 400, { error: 'bad_json' })
       const r = what === 'settings' ? await compare.setSettings(ws, sess.personId, body) : what === 'start' ? await compare.start(ws, sess.personId, body) : what === 'send' ? await compare.send(ws, sess.personId, body) : compare.discard(ws, body)
+      refused(ws, `compare ${what}`, r)
       return json(res, r.status, r.body)
     }
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
