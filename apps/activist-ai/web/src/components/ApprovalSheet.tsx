@@ -2,7 +2,7 @@
 // exactly, and three answers. A native modal <dialog>: focus stays inside, Escape does not answer
 // for the person (it would be a silent "no"), the page behind is inert.
 //
-// Two kinds of question. Under "Ask me first": a command or a change to files ("Yes, this once" /
+// Two kinds of question. Under "Ask before each step": a command or a change to files ("Yes, this once" /
 // "Yes, for the rest of this conversation" / "No, don't"). Always, the first time in a project: a
 // web search or a download ("Allow once" / "Always in this project" / "Not now"), with one line on
 // what leaves the machine. "Always in this project" is kept by the front desk for the project,
@@ -15,13 +15,23 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
   let first: HTMLButtonElement | undefined
   const a = () => props.ola.state.approval
   const [busy, setBusy] = createSignal(false)
+  // Under "Lots of permissions" the front desk answers a web search itself (OLA-139): its question
+  // is shown only if it is still waiting a moment later, so nothing flashes on the screen.
+  let wait: ReturnType<typeof setTimeout> | undefined
+  const show = () => {
+    if (!dialog || dialog.open) return
+    dialog.showModal()
+    setBusy(false)
+    queueMicrotask(() => first?.focus())
+  }
   createEffect(() => {
     if (!dialog) return
-    if (a() && !dialog.open) {
-      dialog.showModal()
-      setBusy(false)
-      queueMicrotask(() => first?.focus())
-    } else if (!a() && dialog.open) dialog.close()
+    const ap = a()
+    clearTimeout(wait)
+    if (ap && !dialog.open) {
+      if (ap.web && props.ola.state.autonomy === 'go') wait = setTimeout(() => a()?.id === ap.id && show(), 2500)
+      else show()
+    } else if (!ap && dialog.open) dialog.close()
   })
   const reply = async (d: 'once' | 'always' | 'reject') => {
     setBusy(true)

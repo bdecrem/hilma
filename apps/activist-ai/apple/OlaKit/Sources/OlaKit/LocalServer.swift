@@ -194,12 +194,11 @@ public final class LocalServer: @unchecked Sendable {
   }
 
   /// `askFirst` false is "Lots of permissions" written into the config (the `ola` command, whose
-  /// one-shot runs cannot ask): commands and edits allowed, Ola's web commands still asked. The app
+  /// one-shot runs cannot ask): commands, edits and so Ola's web commands allowed (OLA-139). The app
   /// keeps it true and answers those approvals itself (OlaStore.goesAhead), so its setting applies
   /// to the next step without a restart.
   static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "", askFirst: Bool = true) -> String {
     let first = askFirst ? "ask" : "allow"
-    let web = askFirst ? "" : "\n" + PermissionSettings.webCommands.map { #"    { "action": "shell", "resource": "*\#($0)*", "effect": "ask" },"# }.joined(separator: "\n")
     let allow = { (action: String) in skills.map { #"    { "action": "\#(action)", "resource": "\#($0)", "effect": "allow" },"# }.joined(separator: "\n") }
     let deny = ["*GAMI*", "*hilma-*", "*ola-staging*", "*launchctl*", "*sudo *", "*.ola/*"]
       .map { #"    { "action": "shell", "resource": "\#($0)", "effect": "deny" }"# }.joined(separator: ",\n")
@@ -248,7 +247,7 @@ public final class LocalServer: @unchecked Sendable {
         { "action": "bash", "resource": "*", "effect": "\(first)" },
         { "action": "edit", "resource": "*", "effect": "\(first)" },
         { "action": "write", "resource": "*", "effect": "\(first)" },
-        { "action": "apply_patch", "resource": "*", "effect": "\(first)" },\(web)
+        { "action": "apply_patch", "resource": "*", "effect": "\(first)" },
         // opencode's own web search has no provider here (it waits a minute, then says "Web search
         // cancelled"); its page fetch works, but the model reached for it instead of searching (a
         // search engine's results page, a guessed address). The web goes through Ola's gateway:

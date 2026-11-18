@@ -28,12 +28,58 @@ final class PermissionsTests: XCTestCase {
   }
 
   func testOnlyTheAskFirstStepsGoAhead() {
-    for a in ["shell", "bash", "edit", "write", "apply_patch"] { XCTAssertTrue(PermissionSettings.goesAhead(action: a, resources: ["mkdir notes"]), a) }
+    for a in ["shell", "bash", "edit", "write", "apply_patch", "patch"] { XCTAssertTrue(PermissionSettings.goesAhead(action: a, resources: ["mkdir notes"]), a) }
     // Refused today, still refused (they never ask), and anything else that asks still asks.
     for a in ["webfetch", "websearch", "execute", "external_directory", "skill", "question"] { XCTAssertFalse(PermissionSettings.goesAhead(action: a, resources: ["x"]), a) }
-    // A web search or download through Ola's own commands is still Bart's call.
-    XCTAssertFalse(PermissionSettings.goesAhead(action: "shell", resources: ["ola-search \"rent strike\""]))
-    XCTAssertFalse(PermissionSettings.goesAhead(action: "shell", resources: ["cd x && ola-fetch https://example.org"]))
+    // A web search or download through Ola's own commands goes ahead too under Lots (OLA-139).
+    XCTAssertTrue(PermissionSettings.goesAhead(action: "shell", resources: ["ola-search \"rent strike\""]))
+    XCTAssertTrue(PermissionSettings.goesAhead(action: "shell", resources: ["cd x && ola-fetch https://example.org"]))
+  }
+
+  /// The machine's choice through the Mac's phone door port, and the phone's own configs as they are.
+  func testWhereTheMachinesChoiceIsAsked() {
+    let mac = ServerConfig(url: URL(string: "http://admins-mac-mini.tailde799a.ts.net:4310")!, password: "pw")
+    let door = MachinePermissions.door(for: mac)
+    XCTAssertEqual(door.url.absoluteString, "http://admins-mac-mini.tailde799a.ts.net:4312")
+    XCTAssertEqual(door.password, "pw")
+    XCTAssertFalse(door.account || door.viaMac)
+    let phone = ServerConfig(url: URL(string: "http://admins-mac-mini.tailde799a.ts.net:4312")!, password: "key", account: true)
+    XCTAssertEqual(MachinePermissions.door(for: phone), phone)
+    let relay = ServerConfig(url: URL(string: "http://imac.tailde799a.ts.net:4330")!, password: "s", viaMac: true)
+    XCTAssertEqual(MachinePermissions.door(for: relay), relay)
+  }
+
+  /// The phone through its Mac: the relay answers with the Mac's choice and takes a change.
+  func testThePhoneReadsAndSetsItThroughTheRelay() async throws {
+    let book = PairingBook(file: nil)
+    let secret = PairingCode.newSecret()
+    book.add(secret: secret)
+    let relay = MacRelay(book: book, macName: "Test Mac")
+    let box = ModeBox()
+    relay.permissions = { box.get() }
+    relay.setPermissions = { m in box.set(m); return box.get() }
+    let port = try await relay.start(host: "127.0.0.1", port: 0)
+    defer { relay.stop() }
+    let c = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: secret, viaMac: true)
+    let first = try await MachinePermissions.get(c)
+    XCTAssertEqual(first, .lots)
+    let changed = try await MachinePermissions.set(.ask, c)
+    XCTAssertEqual(changed, .ask)
+    XCTAssertEqual(box.get(), "ask")
+    let again = try await MachinePermissions.get(c)
+    XCTAssertEqual(again, .ask)
+    // Without the pairing secret: refused.
+    do {
+      _ = try await MachinePermissions.get(ServerConfig(url: c.url, password: "WRONG-WRONG-WRONG-WRONG", viaMac: true))
+      XCTFail("a wrong secret read the choice")
+    } catch OlaError.unauthorized {}
+  }
+
+  final class ModeBox: @unchecked Sendable {
+    let lock = NSLock()
+    var mode = "lots"
+    func get() -> String { lock.withLock { mode } }
+    func set(_ m: String) { lock.withLock { mode = m } }
   }
 
   func testTheConfigUnderLotsAndUnderAsk() {
@@ -45,13 +91,8 @@ final class PermissionsTests: XCTestCase {
     for a in ["shell", "bash", "edit", "write", "apply_patch"] {
       XCTAssertTrue(lots.contains(#"{ "action": "\#(a)", "resource": "*", "effect": "allow" }"#), a)
     }
-    // Still asked (later rules win, so after the allow) and still refused.
-    let allowAt = lots.range(of: #"{ "action": "shell", "resource": "*", "effect": "allow" }"#)!.lowerBound
-    for w in ["ola-search", "ola-fetch", "ola-lookup"] {
-      let r = lots.range(of: #"{ "action": "shell", "resource": "*\#(w)*", "effect": "ask" }"#)
-      XCTAssertNotNil(r, w)
-      XCTAssertTrue(r!.lowerBound > allowAt, w)
-    }
+    // Ola's web commands are not asked about under Lots (OLA-139); the refusals stay.
+    for w in ["ola-search", "ola-fetch", "ola-lookup"] { XCTAssertFalse(lots.contains(#""resource": "*\#(w)*", "effect": "ask""#), w) }
     for d in ["webfetch", "execute", "websearch", "external_directory"] { XCTAssertTrue(lots.contains(#"{ "action": "\#(d)", "resource": "*", "effect": "deny" }"#), d) }
     XCTAssertTrue(lots.contains(#"{ "action": "provider.use", "resource": "*", "effect": "deny" }"#))
     XCTAssertTrue(lots.contains(#"{ "action": "shell", "resource": "*sudo *", "effect": "deny" }"#))
@@ -77,7 +118,7 @@ final class PermissionsTests: XCTestCase {
     XCTAssertFalse(ok("Bash", ["command": "cd .. && rm -rf x"]))
     XCTAssertFalse(ok("Bash", ["command": "cat $HOME/.netrc"]))
     XCTAssertFalse(ok("Bash", ["command": "sudo ls"]))
-    XCTAssertFalse(ok("Bash", ["command": "ola-search \"tenant union\""]))
+    XCTAssertTrue(ok("Bash", ["command": "ola-search \"tenant union\""]))
     XCTAssertFalse(ok("WebFetch", ["url": "https://example.org"]))
     XCTAssertFalse(ok("WebSearch", ["query": "x"]))
   }

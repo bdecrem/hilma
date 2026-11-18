@@ -61,3 +61,31 @@ test('the home leaves out Ola’s own check screenshots; Files keeps them (first
   assert.deepEqual(otherFiles(list, []).map((f) => f.path), ['shots/mine.png', 'notes.txt', 'shots/deep/x.png'])
   assert.equal(otherCount(list, []), 3)
 })
+
+// "Lots of permissions" (OLA-139): the front desk's own record of a conversation's autonomy comes
+// from its rewrite of the create and the update, with the id opencode gave the new conversation.
+test('the proxy tells which conversations are under Lots of permissions', async () => {
+  const http = await import('node:http')
+  const { makeProxy } = await import('../server/proxy.mjs')
+  const up = http.createServer((req, res) => {
+    req.resume()
+    req.on('end', () => {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify(req.method === 'POST' ? { data: { id: 'ses_new1' } } : { data: { id: 'ses_old1' } }))
+    })
+  })
+  await new Promise((r) => up.listen(0, '127.0.0.1', r))
+  const told = []
+  const proxy = makeProxy({ target: `http://127.0.0.1:${up.address().port}`, authorization: 'Basic x', work: '/work', onAutonomy: (id, a) => told.push([id, a]) })
+  const front = http.createServer((req, res) => proxy(req, res, new URL(req.url, 'http://x').pathname, ''))
+  await new Promise((r) => front.listen(0, '127.0.0.1', r))
+  const base = `http://127.0.0.1:${front.address().port}`
+  const send = (method, p, body) => fetch(`${base}${p}`, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.text())
+  await send('POST', '/api/session', { metadata: { autonomy: 'go' } })
+  await send('PATCH', '/api/session/ses_old1', { metadata: { autonomy: 'ask' } })
+  await send('PATCH', '/api/session/ses_old1', { title: 'only a title' })
+  await new Promise((r) => setTimeout(r, 50))
+  assert.deepEqual(told, [['ses_new1', 'go'], ['ses_old1', 'ask']])
+  front.close()
+  up.close()
+})

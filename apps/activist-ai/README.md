@@ -1820,6 +1820,19 @@ agent: ola-search "coastal adaptation Kenya"     (a command of its own)
   └─ the VM's door → gateway POST /web/search (gateway/web.mjs): refused 403 unless granted (the gateway decides, not the app)
 ```
 
+**Under "Lots of permissions"** (the conversation's switch, autonomy `go`, the default; it was "Go
+ahead" before OLA-139, and "Ask before each step" was "Ask me first"), a web search or download
+goes ahead with no question too. The session rules still make opencode ask; the front desk's event
+watcher (`frontdesk/workspaces.mjs`) answers it itself, through the same path as **Allow once**: a
+one-time grant for exactly that search or address, then "once" (`server.mjs` onGoWeb). Which
+conversations are under Lots is the front desk's own record, from its rewrite of each create and
+update (`web/server/proxy.mjs` onAutonomy), never opencode's word; it is kept in memory, so after a
+front desk restart a conversation the page has not touched since asks again until its switch is
+used. The page holds a web question in a Lots conversation back 2.5 s (`ApprovalSheet.tsx`), so
+nothing flashes, and shows it if it is still waiting. Under "Ask before each step" a web search asks
+as before, even with "Always in this project". Proof: `frontdesk/check.mjs`, "Lots of permissions:
+a web search goes ahead with no question".
+
 "Always" is sent to opencode as "once": opencode 2's own "always" saves a durable rule for the
 project (opencode.ai/docs/permissions: "Saved approvals are durable, project-scoped allow rules"),
 which Settings could not take back. Ours is the only one that lasts: it lives in the platform

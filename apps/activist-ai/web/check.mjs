@@ -157,7 +157,7 @@ await check('what Ola made appears among the things', async () => {
 await check('an approval can be answered, yes and then no', async () => {
   await page.getByRole('button', { name: 'Ask Ola' }).click()
   await page.getByRole('button', { name: 'New conversation' }).click()
-  await page.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+  await page.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
   await send(page, 'Count the rows in survey.csv with a short program and write the number to rows.md.')
   const dialog = page.locator('dialog.approval[open]')
   await dialog.waitFor({ timeout: 30_000 })
@@ -642,9 +642,9 @@ async function claudeChecks(engine, label) {
       assert(files.files.some((f) => f.path === 'hello-claude.txt'), 'the file is not in the folder')
       await shot('drawer-claude')
     })
-    await check(`${label}: under "Ask me first" Claude's write waits for a yes in the same sheet as Ola's, and a no is honored`, async () => {
+    await check(`${label}: under "Ask before each step" Claude's write waits for a yes in the same sheet as Ola's, and a no is honored`, async () => {
       await pg.getByRole('button', { name: 'New conversation' }).click()
-      await pg.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+      await pg.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
       await pg.locator('fieldset.engine label', { hasText: 'Claude' }).click()
       await pg.fill('#ask-input', 'write asked.txt saying yes')
       await pg.press('#ask-input', 'Enter')
@@ -661,7 +661,7 @@ async function claudeChecks(engine, label) {
       assert(/You said no, so Claude did not do this/.test(err), `the refused step says: ${err}`)
       const files = await pg.evaluate(() => fetch('/api/files').then((r) => r.json()))
       assert(!files.files.some((f) => f.path === 'asked.txt'), 'the refused file was written')
-      await pg.locator('.autonomy label', { hasText: 'Go ahead' }).click()
+      await pg.locator('.autonomy label', { hasText: 'Lots of permissions' }).click()
     })
     await check(`${label}: "Ask Claude instead" on Ola's finished reply runs the same request with Claude`, async () => {
       await pg.getByRole('button', { name: 'New conversation' }).click()
@@ -1583,7 +1583,7 @@ if (LIVE) {
       await lp.goto(live.url)
       await lp.waitForSelector('.thing')
       await send(lp, 'How many respondents are in survey.csv? Count them by running a short program, and say the number in one sentence.')
-      // Under "Go ahead" nothing should ask; if it does, the check says yes once.
+      // Under "Lots of permissions" nothing should ask; if it does, the check says yes once.
       const deadline = Date.now() + 240_000
       while (Date.now() < deadline) {
         const st = await lastTurn(lp).getAttribute('data-status').catch(() => null)

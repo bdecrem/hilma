@@ -53,6 +53,12 @@ public final class OlaStore {
   /// An approval that goes ahead without asking (the Mac's "Lots of permissions",
   /// PermissionSettings.wire): asked at each approval, so a change applies to the next step.
   public var goesAhead: ((_ action: String, _ resources: [String]) -> Bool)?
+  /// Whether the server answers those steps itself (OLA-139: Bart's opencode on the machine keeps
+  /// "Lots of permissions" and answers them there, `../bart/approver.mjs`). Then the store does not
+  /// answer: it only keeps the card and the notification away, and shows them after all should the
+  /// step still be waiting `serverGrace` seconds later. False: the store answers ("On this Mac").
+  public var serverAnswers: () -> Bool = { false }
+  public var serverGrace: TimeInterval = 4
   /// How many approvals went ahead without asking (checks).
   public private(set) var wentAhead = 0
 
@@ -254,18 +260,28 @@ public final class OlaStore {
 
   // MARK: the stream
 
-  private func handle(_ ev: JSON) {
+  private func handle(_ ev: JSON, ahead: Bool = true) {
     let type = ev["type"].str
     let d = ev["data"]
     let sid = d["sessionID"].str
     let at = ev["created"].date ?? .now
-    // Lots of permissions: answered "once" at once, and no card, no notification. Should the
-    // answer not arrive, the card is shown after all.
-    if type == "permission.asked", let goesAhead, goesAhead(d["action"].str, d["resources"].array.map(\.str)) {
+    // Lots of permissions: no card, no notification. Answered "once" here at once, or by the
+    // server itself (serverAnswers). Should the step still wait, the card is shown after all.
+    if ahead, type == "permission.asked", let goesAhead, goesAhead(d["action"].str, d["resources"].array.map(\.str)) {
       wentAhead += 1
       let rid = d["id"].str
-      Task {
-        do { try await client?.reply(session: sid, request: rid, decision: .once) } catch { _ = conversations[sid]?.apply(ev) }
+      if serverAnswers() {
+        let grace = serverGrace
+        Task { [weak self] in
+          try? await Task.sleep(for: .seconds(grace))
+          guard let self, let client = self.client, let list = try? await client.pendingPermissions(sid), list.contains(where: { $0["id"].str == rid }) else { return }
+          self.wentAhead -= 1
+          self.handle(ev, ahead: false)
+        }
+      } else {
+        Task {
+          do { try await client?.reply(session: sid, request: rid, decision: .once) } catch { _ = conversations[sid]?.apply(ev) }
+        }
       }
       return
     }
@@ -337,7 +353,7 @@ public final class OlaStore {
       if directory == nil { directory = (try? await client.session(id))?.directory }
       var c = Conversation(sessionID: id, directory: directory, turns: Conversation.turns(fromMessages: try await client.messages(id), directory: directory))
       if let p = try await client.pendingPermissions(id).first {
-        if let goesAhead, goesAhead(p["action"].str, p["resources"].array.map(\.str)), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
+        if let goesAhead, !serverAnswers(), goesAhead(p["action"].str, p["resources"].array.map(\.str)), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
           wentAhead += 1
         } else {
           let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)

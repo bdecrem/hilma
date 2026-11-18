@@ -69,8 +69,10 @@ struct OlaMacApp: App {
           delegate.store = store
           delegate.whereOla = w
           Notifier.wire(store)
-          // Lots of permissions (Settings, General): the ask-first steps answered here.
+          // Lots of permissions (Settings, General): the ask-first steps answered here "On this Mac",
+          // by the machine itself on the Ola machine, whose choice this Mac takes at launch.
           PermissionSettings.wire(store)
+          Task { await PermissionSettings.pull() }
           w.configureClaude()
           let link = PhoneLink(store: store)
           phoneLink = link
@@ -162,6 +164,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       store?.isActive = true
       if case .lost = store?.connection { store?.reconnect() }
     }
+    // A change made on the phone shows here when Bart comes back.
+    Task { await PermissionSettings.pull() }
   }
   func applicationDidResignActive(_ notification: Notification) {
     MainActor.assumeIsolated { store?.isActive = false }

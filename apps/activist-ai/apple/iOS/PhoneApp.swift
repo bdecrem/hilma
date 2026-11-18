@@ -52,13 +52,17 @@ struct OlaPhoneApp: App {
           }
           DebugHooks.run(store)
           #endif
+          PhonePermissions.wire(store)
           store.start()
         }
+        // The choice of the place the phone works in, read again whenever that place changes.
+        .task(id: store.config?.url) { if !PhoneWhereState.shared.fixture { await PhonePermissions.shared.refresh(store) } }
         .onChange(of: phase) { _, p in
           store.isActive = p == .active
           if p != .active { PhonePushState.shared.setViewing(nil) }
           if p == .active, case .lost = store.connection { store.reconnect() }
           if p == .active, store.connection == .connecting { store.start() }
+          if p == .active, !PhoneWhereState.shared.fixture { Task { await PhonePermissions.shared.refresh(store) } }
         }
     }
   }

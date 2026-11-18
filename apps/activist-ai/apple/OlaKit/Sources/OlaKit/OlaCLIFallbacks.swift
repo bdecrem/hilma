@@ -192,15 +192,18 @@ extension OlaCLI.Runner {
       case ("claude", "off"): s.claude = false
       case ("stretch", let m) where StretchMode(rawValue: m) != nil: s.stretch = StretchMode(rawValue: m)!
       case ("stretch-to", let f) where Fallback(rawValue: f) != nil: s.stretchTo = Fallback(rawValue: f)!
-      case ("permissions", let m) where PermissionMode(rawValue: m) != nil: PermissionSettings.mode = PermissionMode(rawValue: m)!
+      case ("permissions", let m) where PermissionMode(rawValue: m) != nil:
+        // Here and on the Ola machine, when one is set up (one setting for every app).
+        if let line = await PermissionSettings.set(PermissionMode(rawValue: m)!) { OlaCLI.say(line) }
       default:
         OlaCLI.say("Say one of: ola settings permissions lots|ask, hosted on|off, claude on|off, stretch suggest|handover|never, stretch-to hosted|claude.")
         return 2
       }
       FallbackSettings.save(s, for: folderKey)
     }
+    if a.isEmpty { await PermissionSettings.pull() }
     let status = await hostedStatus()
-    print("Permissions (this Mac, also in the app): \(PermissionSettings.mode.label)")
+    print("Permissions (the same in the app and on the Ola machine): \(PermissionSettings.mode.label)")
     print("Folder:   \((folder.path as NSString).abbreviatingWithTildeInPath)")
     print("Fallback to Claude:                    \(s.claude ? "on" : "off") (\(ClaudeRunner.unavailable() ?? "Claude Code on this Mac, with your own Claude login"))")
     print("Fallback to the hosted open model:     \(s.hosted ? "on" : "off") (\(status.unavailable ?? "at \(status.provider ?? "an outside company")\(status.monthLine.map { ", \($0)" } ?? "")"))")

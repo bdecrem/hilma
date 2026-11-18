@@ -78,6 +78,78 @@ final class PhoneWhereState {
 
 extension PhoneMode: Identifiable { public var id: String { rawValue } }
 
+/// "Lots of permissions" on the phone (OLA-139): the choice of the place the phone works in, read
+/// from there and changed there: the Ola machine's own (its phone door; the machine goes ahead by
+/// itself, Mac off) or, through the Mac, the Mac's (which it also passes to the machine). The phone
+/// never answers a step itself; under Lots it only keeps the card away while the place answers it
+/// (OlaStore.serverAnswers), and shows it should the step still wait.
+@MainActor
+@Observable
+final class PhonePermissions {
+  static let shared = PhonePermissions()
+  /// The last answer from the current place, kept for the store's check (read off the main actor too).
+  static let key = "ola.phone.permissions"
+  nonisolated static var lots: Bool { (UserDefaults.standard.string(forKey: key) ?? PermissionMode.lots.rawValue) == PermissionMode.lots.rawValue }
+
+  private(set) var mode: PermissionMode = PhonePermissions.lots ? .lots : .ask
+  private(set) var known = false
+  var problem: String?
+
+  /// The store asks at each step, so a change applies to the next one.
+  static func wire(_ store: OlaStore) {
+    store.goesAhead = { action, resources in PhonePermissions.lots && PermissionSettings.goesAhead(action: action, resources: resources) }
+    store.serverAnswers = { true }
+  }
+
+  private func keep(_ m: PermissionMode) {
+    mode = m
+    known = true
+    UserDefaults.standard.set(m.rawValue, forKey: Self.key)
+  }
+
+  /// Reads the choice from where the phone works now (at launch, a switch, back in front, Settings).
+  func refresh(_ store: OlaStore) async {
+    guard let c = store.config else { known = false; return }
+    do {
+      keep(try await MachinePermissions.get(c))
+      problem = nil
+    } catch {
+      known = false
+    }
+  }
+
+  func set(_ m: PermissionMode, store: OlaStore) async {
+    guard let c = store.config else { return }
+    let was = mode
+    mode = m
+    do {
+      keep(try await MachinePermissions.set(m, c))
+      problem = nil
+    } catch {
+      mode = was
+      problem = "That didn\u{2019}t reach \(c.viaMac ? "your Mac" : "the Ola machine"). Try again when it\u{2019}s connected."
+    }
+  }
+}
+
+struct PermissionsSection: View {
+  @Bindable var store: OlaStore
+  @Bindable private var perms = PhonePermissions.shared
+  @Bindable private var place = PhoneWhereState.shared
+  var body: some View {
+    Section {
+      Toggle("Lots of permissions", isOn: Binding(get: { perms.mode == .lots }, set: { on in
+        Task { await perms.set(on ? .lots : .ask, store: store) }
+      }))
+      .disabled(store.config == nil && !place.fixture)
+      if let p = perms.problem { Text(p).font(.footnote).foregroundStyle(Ola.vermilionText) }
+    } header: { Text("Permissions") } footer: {
+      Text(perms.mode.note + (place.mode == .machine ? " Kept on the Ola machine, so it works with your Mac off." : " The same on your Mac."))
+    }
+    .task(id: store.config?.url) { if !place.fixture { await perms.refresh(store) } }
+  }
+}
+
 extension OlaStore {
   /// On the Ola machine directly (not through the Mac).
   var onMachine: Bool { config?.account == true || (config == nil && PhoneWhereState.shared.mode == .machine) || (ProcessInfo.processInfo.arguments.contains("-OlaFixture") && PhoneWhereState.shared.mode == .machine) }

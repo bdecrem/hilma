@@ -1579,12 +1579,15 @@ if (!LIVE) {
   // in the sealed workspace) and the made-up search provider behind the gateway.
   const Q = 'made-up flood maps for Springfield'
   const searchLines = () => gateway.log.split('\n').filter((l) => l.includes(`"caller":"ws-${FA}"`) && l.includes('"route":"search"')).map((l) => JSON.parse(l))
-  async function webAsk() {
+  // `how`: the conversation's switch, "Ask before each step" or "Lots of permissions" (OLA-139:
+  // under Lots a web search goes ahead with no question, on a one-time grant the front desk writes).
+  async function webAsk(how = 'Ask before each step') {
     await A.page.goto('about:blank')
     await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
     await A.page.waitForSelector('.project-title')
     await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
     await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
+    await A.page.locator('.autonomy label', { hasText: how }).click()
     await A.page.fill('#ask-input', `Please search the web for ${Q}`)
     await A.page.press('#ask-input', 'Enter')
   }
@@ -1604,6 +1607,17 @@ if (!LIVE) {
     assert(l.status === 200 && l.grant === 'once', JSON.stringify(l))
     assert((await api('/api/settings', { cookie: a.cookie, ws: FA })).json.web.always === false, 'once was remembered as always')
   })
+  await check('Lots of permissions: a web search goes ahead with no question, on a one-time grant for exactly it, and nothing is remembered', async () => {
+    const n = searchLines().length
+    await webAsk('Lots of permissions')
+    const asked = A.page.locator('dialog.approval[open]').waitFor({ timeout: 25_000 }).then(() => true, () => false)
+    await done()
+    await until(() => searchLines().length > n, 10_000, 'the search at the gateway')
+    assert(!(await asked) && !(await A.page.locator('dialog.approval[open]').count()), 'a question was shown under Lots of permissions')
+    const l = searchLines().at(-1)
+    assert(l.status === 200 && l.grant === 'once', JSON.stringify(l))
+    assert((await api('/api/settings', { cookie: a.cookie, ws: FA })).json.web.always === false, 'Lots turned on Always in this project')
+  })
   await check('Always in this project: remembered across conversations (no second question), shown in Settings, revoked there, and then asked again; Not now searches nothing', async () => {
     await webAsk()
     let dialog = A.page.locator('dialog.approval[open]')
@@ -1613,7 +1627,7 @@ if (!LIVE) {
     assert(searchLines().at(-1)?.grant === 'always' || searchLines().at(-1)?.grant === 'once', 'the search ran')
     // A new conversation: no question this time, and the gateway lets it through as "always".
     const n = searchLines().length
-    await webAsk()
+    await webAsk('Lots of permissions')
     await done()
     assert(!(await A.page.locator('dialog.approval[open]').count()), 'asked again after Always')
     await until(() => searchLines().length > n, 10_000, 'the second search')
@@ -1665,7 +1679,7 @@ if (!LIVE) {
         await A.page.waitForSelector('.project-title')
         await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
         await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
-        await A.page.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+        await A.page.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
       }
       await A.page.fill('#ask-input', 'Count the rows of survey.csv (made up)')
       await A.page.press('#ask-input', 'Enter')
@@ -1918,7 +1932,7 @@ await check('a request handed to Claude runs Claude Code inside the sealed VM th
   assert(log.length >= 2 && log.every((l) => l.includes(`"caller":"ws-${FA}"`) && !l.includes('claude-go')), `${log.length} gateway lines`)
   return `${r.lines.length} lines; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${log.length} gateway requests`
 })
-await check('under "Ask me first" Claude Code stops for a yes: no means no file, yes means the file', async () => {
+await check('under "Ask before each step" Claude Code stops for a yes: no means no file, yes means the file', async () => {
   const no = await claudeRun(a, { request: 'write claude-no.txt saying no', autonomy: 'ask' }, { decide: 'reject' })
   const asked = no.lines.find((e) => e.ola === 'approval')
   assert(asked?.tool_name === 'Write' && no.ended?.reason === 'done', `no: ${JSON.stringify(asked)} ${JSON.stringify(no.ended)}`)
@@ -2329,7 +2343,7 @@ if (LIVE) {
     await A.page.waitForSelector('.project-title')
     await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
     if (await A.page.getByRole('button', { name: 'New conversation' }).count()) await A.page.getByRole('button', { name: 'New conversation' }).click()
-    await A.page.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+    await A.page.locator('.autonomy label', { hasText: 'Ask before each step' }).click()
     await A.page.fill('#ask-input', 'Make a hello world web page')
     await A.page.press('#ask-input', 'Enter')
     const last = A.page.locator('.drawer .turn').last()

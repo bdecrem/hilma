@@ -30,6 +30,12 @@ final class PhoneLink {
     let book = PairingBook(file: LocalServer.support.appendingPathComponent("phones.json"))
     relay = MacRelay(book: book, macName: Host.current().localizedName ?? "this Mac")
     relay.claudeBase = LocalServer.support
+    // The phone's Permissions switch, through its Mac: this Mac's choice, changed here and on the machine.
+    relay.permissions = { PermissionSettings.mode.rawValue }
+    relay.setPermissions = { m in
+      await PermissionSettings.set(PermissionMode(rawValue: m) ?? .ask)
+      return PermissionSettings.mode.rawValue
+    }
     phones = book.list
   }
 

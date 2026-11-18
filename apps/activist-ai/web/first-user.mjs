@@ -401,11 +401,13 @@ try {
 
     if (ONLY.has('D')) {
       failedJourney = null
-      await step(run, 'D', 'a request that needs the web: the search card, Allow once', 360, async () => {
+      // Under "Lots of permissions", the default, the search and the download go ahead with no card
+      // (OLA-139); a card that still comes is answered Allow once and named in the result.
+      await step(run, 'D', 'a request that needs the web: under Lots of permissions, no search card', 360, async () => {
         await ask(run, 'Search the web for the Universal Declaration of Human Rights, download the official PDF, and tell me what Article 1 says.')
         const cards = []
         const r = await finishRun(run, 350_000, (title) => (cards.push(title), 'Allow once'))
-        if (!cards.some((c) => /search the web/.test(c))) throw new Error(`no search card (cards: ${cards.join('; ') || 'none'})`)
+        if (cards.some((c) => /search the web|download/i.test(c))) throw new Error(`a web card under Lots of permissions (cards: ${cards.join('; ')})`)
         if (r.status !== 'done') throw new Error(`the run ended "${r.status}"`)
         const reply = await answerText(page)
         return `cards: ${cards.join('; ')}; Article 1 ${/born free|equal in dignity/i.test(reply) ? 'quoted' : 'NOT quoted'}`

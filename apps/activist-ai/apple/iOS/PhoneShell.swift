@@ -298,6 +298,7 @@ struct SettingsScreen: View {
   var body: some View {
     Form {
       WhereSection(store: store)
+      PermissionsSection(store: store)
       if place.mode == .machine {
         Section("Ola machine") {
           LabeledContent("Signed in as", value: place.shownName)

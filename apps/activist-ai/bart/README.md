@@ -132,16 +132,44 @@ node bart/skills-check.mjs --opencode $PWD/node_modules/.bin/opencode --state /t
 
 Later rules win. Everything is allowed, except:
 
-- **Asks Bart first:** every shell command, every file edit or new file (`edit`; a write asks as
-  `edit` in opencode 2), web fetches and searches. The apps show these as approvals.
+- **Asks first:** every shell command, every file edit or new file (`edit`; a write asks as
+  `edit` in opencode 2), and so Ola's web searches and downloads. Under "Ask before each step" the
+  apps show these as approvals; under "Lots of permissions" the machine answers them (below).
 - **Refused:** anything outside `~/ola-bart` through the agent's own file tools
   (`external_directory`), and any shell command naming what serves real people on this machine:
   `GAMI`, the Almanac, `hilma-*` checkouts, `ola-staging`, `~/.ola`, the front desk's data,
   BlueBubbles, `launchctl`, `container`, `tunn3l`, `sudo`, venture.
 
-Bart's Mac app answers the "asks first" commands and edits itself when its Permissions setting is
-"Lots of permissions" (the default; `../apple/README.md`, "Permissions"), so this config is left as
-it is; web commands still ask. The phone alone still asks.
+Under **Lots of permissions** (the default here) the machine answers those questions itself, so
+no app needs to be open (next section); this config is left as it is.
+
+## Lots of permissions, kept and applied on the machine (OLA-139, 2026-11-17)
+
+Bart: "All apps and all modes should have a toggle to remove most permission requests." The choice
+is a file, `~/.ola-bart/permissions` (`lots` or `ask`; no file is `lots`; anything else is `ask`,
+said in the log). `approver.mjs`, run inside the phone door's process, keeps its own subscription to
+opencode's event stream and, under `lots`, answers each `permission.asked` for shell, bash, edit,
+write, apply_patch or patch "once" (never opencode's durable "always"), so a command, a file change
+and a web search or download (Ola's web commands are shell commands; the gateway's standing `bart`
+grant lets them out) go ahead with the Mac off. When the choice becomes `lots`, and at each
+(re)connect to the stream, it also answers the steps already waiting (`GET /api/permission/request`).
+Nothing refused is ever asked, so nothing refused can become a yes.
+
+The apps read and set it through the door: `GET /ola/permissions` says `{"mode": …}`, `PUT` with
+the same body changes it. The phone uses its Ola device key (as for every door route); the Mac uses
+opencode's own password as Basic auth, accepted on these two routes only. On the machine:
+
+```bash
+bash ~/.ola-bart/src/apps/activist-ai/bart/ola-bart.sh permissions          # show it
+bash ~/.ola-bart/src/apps/activist-ai/bart/ola-bart.sh permissions ask      # or lots
+```
+
+`status` shows it too. Check (real opencode 2.3.0, the scripted model, a scratch state, no app):
+
+```bash
+OLA_BART_STATE=/tmp/ob/state OLA_BART_PROJECT=/tmp/ob/project OLA_BART_HOST=127.0.0.1 bart/ola-bart.sh files
+node bart/permissions-check.mjs --opencode <opencode> --state /tmp/ob/state --project /tmp/ob/project
+```
 
 These are the agent's defaults, not a wall. A shell command Bart approves runs as `admin` and can
 reach anything that account can; the deny patterns only match the command's text.

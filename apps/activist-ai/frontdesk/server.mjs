@@ -219,7 +219,14 @@ export function makeFrontDesk(cfg = config()) {
     void ask()
     setInterval(ask, 10 * 60_000).unref()
   }
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug) })
+  // Under "Lots of permissions" a web search or download goes ahead without a question (OLA-139):
+  // the same one-time grant for exactly that search as the person's "Allow once", then "once".
+  const onGoWeb = async (slug, workspaceId, sessionID, requestID, personId) => {
+    const ask = (m, pathname, b) => workspaces.ocCall(slug, m, pathname, b)
+    const decision = await web.onReply({ slug, id: workspaceId }, personId, sessionID, requestID, 'once', ask)
+    await ask('POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision })
+  }
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log })
 

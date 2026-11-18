@@ -55,9 +55,12 @@ browser ──── same origin only ────► front desk (dev.mjs today)
 - **The door to opencode** (`server/proxy.mjs`) forwards eleven routes (events, sessions, prompt,
   interrupt, messages, permissions) and refuses the rest with 403 (providers, credentials,
   shells, ptys, MCP, config). It rewrites session creation and updates: the folder and the
-  permission rules are decided server-side from the autonomy the page asked for ("Go ahead" or
-  "Ask me first"); `webfetch`, `websearch` and `external_directory` are always denied, last, so
-  they win. The opencode password never reaches the browser.
+  permission rules are decided server-side from the autonomy the page asked for ("Lots of
+  permissions", `go`, or "Ask before each step", `ask`; the names Bart's apps use, OLA-139);
+  `webfetch`, `websearch` and `external_directory` are always denied, last, so they win. Under
+  Lots the front desk also answers a web search or download itself, with a one-time grant for
+  exactly it (README, "Web search and downloads"), so nothing asks. The opencode password never
+  reaches the browser.
 - **Plain words** (`src/lib/steps.ts`) is the one place that knows opencode's tool names
   (`glob`, `read`, `write`, `edit`, `shell`, …) and turns a call into a sentence from the
   design's verb table, with a short result on the right ("printed 56", "57 lines"). Unknown

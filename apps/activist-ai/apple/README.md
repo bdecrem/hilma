@@ -722,41 +722,58 @@ account"); `tools/install-local-opencode.sh` (npm, the same pinned 2.3.0, into
 `~/Library/Application Support/Ola/opencode`) still works and is found too. Proved with
 `OLA_LOCAL_FOLDER=<scratch> OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` (14 of 14).
 
-## Permissions: "Lots of permissions" (2026-11-17)
+## Permissions: "Lots of permissions" (2026-11-17; everywhere since OLA-139)
 
-Bart: "add a Lots Of Permissions options in the settings on the cli and macos app: too many nags".
-Settings, General, **Permissions**: "Ask before each step" or "Lots of permissions: Ola goes ahead
-without asking" (**the default**). One value for the Mac app and `ola` (the same executable and
-defaults: `ola.permissions`, `OlaKit/Permissions.swift`); `ola settings` shows it and
-`ola settings permissions lots|ask` changes it.
+Bart: "add a Lots Of Permissions options in the settings on the cli and macos app: too many nags",
+then "All apps and all modes should have a toggle to remove most permission requests." One switch
+with one name everywhere, **Lots of permissions** (on, the default for Bart's own Ola; off is "Ask
+before each step"): Mac Settings, General (both places Ola works), the iPhone's Settings (both
+places), `ola settings permissions lots|ask`, and the web app's switch in each conversation
+(`../README.md`, "Web search and downloads").
 
-Under Lots only the ask-first steps go ahead: shell, bash, edit, write, apply_patch. Everything
+Under Lots the ask-first steps go ahead: shell, bash, edit, write, apply_patch, patch, and so Ola's
+web commands (`ola-search`, `ola-fetch`, `ola-lookup`: shell commands like any other). Everything
 refused stays refused (opencode's webfetch, websearch, code mode `execute`, `external_directory`, so
-"On this Mac" still works only in its folder; skills not Ola's; models not Ola's), and a web search
-or download through Ola's own commands (`ola-search`, `ola-fetch`, `ola-lookup`) still asks.
+work stays in its folder; skills not Ola's; models not Ola's; the shell patterns naming what serves
+real people), because a refusal is never asked.
 
-- **The app** answers those approvals itself (`OlaStore.goesAhead`, wired by
-  `PermissionSettings.wire`): "once", at once, with no card and no notification, asked at each
-  approval, so a change applies to the next step with no restart. The config keeps "ask". This
-  works the same against the app's agent on this Mac and against **Bart's opencode on the
-  machine** (`../bart/`): its config is unchanged, the Mac app's store answers for it while it is
-  connected. The phone alone (Mac app not running) still gets the card.
-- **`ola`** writes the choice into its own config at each start (`LocalServer.askFirst`: the five
-  rules become allow, the three web commands ask), since a one-shot run cannot ask and the terminal
-  interface is opencode's. A change applies the next time `ola` starts.
+**Where it is applied, and where it is kept** (`OlaKit/Permissions.swift`):
+
+- **On the Ola machine** (Bart's opencode, `../bart/`): kept and applied on the machine. The phone
+  door's process watches opencode's events and answers each of those steps "once" under Lots
+  (`../bart/approver.mjs`; the choice in `~/.ola-bart/permissions`, no file is Lots), so the phone
+  alone, the Mac off, gets no card. The apps read and set it through the door, `GET|PUT
+  /ola/permissions` (`MachinePermissions`): the phone with its Ola device key, the Mac with the
+  machine's password at the same host, port 4312. The apps never answer these steps here: under Lots
+  they keep the card and the notification away (`OlaStore.serverAnswers`) and show them after all if
+  the step is still waiting 4 s later.
+- **On this Mac**: the app answers them itself, "once", as they come (`OlaStore.goesAhead`), so a
+  change applies to the next step with no restart; the config keeps "ask".
+- **`ola`** writes the choice into its own config at each start (`LocalServer.askFirst`: the six
+  rules become allow), since a one-shot run cannot ask and the terminal interface is opencode's.
+- **The phone through its Mac**: the Mac's relay answers `/ola/permissions` with the Mac's choice
+  and takes a change (`MacRelay.permissions`); the Mac's agent or the machine answers the steps.
+
+**One value:** the Mac keeps a copy (`ola.permissions`, shared with `ola`). With the Ola machine set
+up (its saved address and password), a change from the Mac, `ola settings permissions` or the phone
+through its Mac goes to the machine too (`PermissionSettings.set`), and the Mac takes the machine's
+value at launch, when it comes to the front and when Settings opens (`pull`). A self-test's own
+settings suite never reads or writes the machine's.
+
 - **Claude Code** (Fallback to Claude, `ClaudeRunner.goesAhead`): still `--permission-mode manual`;
   under Lots the runner answers itself, at each question, what acceptEdits would allow (Read, Write,
   Edit, Glob, Grep... on a path inside the folder) plus commands that name nothing outside it (no
-  absolute path, `~`, `..` or `$` outside the folder, no sudo, no Ola web command). Anything else
-  asks as before. A check of the words, not a wall, as opencode's own patterns are.
+  absolute path, `~`, `..` or `$` outside the folder, no sudo); Ola's web commands go ahead too.
+  Anything else asks as before. A check of the words, not a wall, as opencode's own patterns are.
 
-Proofs: `swift test --filter PermissionsTests` (the rules, both configs, a stand-in Claude Code under
-both settings); `tools/permissions-selftest.sh <Ola.app> <scratch folder> <token-file> [shots]`, a
-hidden instance with real requests: Lots, a folder and three files, 5 steps, no card at any moment;
-Ask, the card ("Ola wants to write a file"), allowed once; Lots again in the same session, no card
-(11 of 11, 2026-11-17, shots in `~/Desktop/Ola/permissions/`). `ola run` under Lots wrote the three
-files with no terminal; under Ask it refused. `ola /claude` with no terminal: wrote its file under
-Lots, refused under Ask.
+Proofs: `swift test --filter PermissionsTests` (the rules, both configs, the machine's door address,
+the phone reading and setting it through a relay, a stand-in Claude Code under both settings);
+`node bart/permissions-check.mjs` (the machine: real opencode 2.3.0, the scripted model, no app
+open; Lots answers a command, a file and a web search, Ask leaves the step waiting, back to Lots
+answers it, 14 of 14); `tools/permissions-selftest.sh <Ola.app> <scratch folder> <token-file>
+[shots]`, a hidden instance with real requests "On this Mac" (11 of 11, 2026-11-17, shots in
+`~/Desktop/Ola/permissions/`). The phone, both places, Mac app not running: shots in
+`~/Desktop/Ola/permissions-all/`.
 
 ## Pages the agent built
 

@@ -33,7 +33,14 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask' }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {} }) {
+  // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
+  // create and update (web/server/proxy.mjs onAutonomy), never from opencode: `${slug}:${sessionID}`
+  // -> 'go' | 'ask'. A web search or download asked in a `go` conversation is answered by the
+  // watcher, through `onGoWeb` (server.mjs: a one-time grant for exactly that search, then "once"),
+  // so the person sees no question (OLA-139). In memory: after a front desk restart a conversation
+  // the page has not touched since asks again, until its switch is used.
+  const autonomyOf = new Map()
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
   const refused = new Map() // slug -> { e, at }: the last start refused, for 2 s
@@ -300,6 +307,10 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
             const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
             if (method === 'POST' && m) watch(slug, workspaceId)
           },
+          onAutonomy: (sessionID, a) => {
+            autonomyOf.set(`${slug}:${sessionID}`, a)
+            if (autonomyOf.size > 20_000) autonomyOf.delete(autonomyOf.keys().next().value)
+          },
         }),
       )
     }
@@ -418,7 +429,12 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       if (!d || typeof d.id !== 'string' || d.id.length > 120) return
       if (ev.type === 'permission.asked' && typeof d.sessionID === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID) && /^[A-Za-z0-9_-]{1,80}$/.test(d.id)) {
         const allowed = forConversation.get(`${slug}:${d.sessionID}`)
-        if (allowed?.has(d.action) && !webRequests(d.action, d.resources).length) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
+        const web = webRequests(d.action, d.resources).length > 0
+        if (web && autonomyOf.get(`${slug}:${d.sessionID}`) === 'go') {
+          onGoWeb(slug, workspaceId, d.sessionID, d.id, runBy.get(`${slug}:${d.sessionID}`) ?? null).catch((e) => log(`${slug}: a web search under Lots of permissions was not answered (${e?.message ?? e})`))
+          return
+        }
+        if (allowed?.has(d.action) && !web) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
         return
       }
       if (ev.type === 'session.tool.input.started' && typeof d.name === 'string') {

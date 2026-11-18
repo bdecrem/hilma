@@ -340,6 +340,10 @@ public final class MacRelay: @unchecked Sendable {
   public let macName: String
   /// Where the Mac app keeps Claude turns: the phone reads them through `/ola/claude/<session>`.
   public var claudeBase: URL?
+  /// "Lots of permissions" for the phone (`GET|PUT /ola/permissions`, OLA-139): the Mac's choice, and
+  /// a change made here and on the Ola machine (PermissionSettings.set). Unset: the routes are 404.
+  public var permissions: (@Sendable () -> String)?
+  public var setPermissions: (@Sendable (String) async -> String)?
   private let lock = NSLock()
   private var upstreamConfig: ServerConfig?
   private var mode = "machine"
@@ -460,6 +464,14 @@ public final class MacRelay: @unchecked Sendable {
       guard id.range(of: #"^[A-Za-z0-9_-]{1,80}$"#, options: .regularExpression) != nil, let base = claudeBase else { return await res.send(200, Data("[]".utf8)) }
       let data = (try? Data(contentsOf: ClaudeTurns.file(id, base: base))) ?? Data("[]".utf8)
       return await res.send(200, data)
+    }
+    if req.path == "/ola/permissions" {
+      guard let get = permissions else { return await res.json(404, "This Mac keeps no permissions setting.") }
+      if req.method == "GET" { return await res.send(200, JSON.object(["mode": .string(get())]).data) }
+      guard req.method == "PUT", let set = setPermissions, let m = (JSON.parse(req.body) ?? .null)["mode"].string, m == "lots" || m == "ask" else {
+        return await res.json(400, "The mode is lots or ask.")
+      }
+      return await res.send(200, JSON.object(["mode": .string(await set(m))]).data)
     }
     guard Self.allowed(req.method, req.path) else { return await res.json(403, "That is not something the phone may ask for.") }
     guard let upstream else { return await res.json(503, "The Mac app is not connected to a server right now.") }

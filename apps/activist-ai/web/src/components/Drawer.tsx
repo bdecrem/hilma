@@ -284,11 +284,11 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
           <legend class="sr-only">How Ola works</legend>
           <label classList={{ on: s().autonomy === 'go' }}>
             <input type="radio" name="autonomy" value="go" checked={s().autonomy === 'go'} onChange={() => props.ola.setAutonomy('go')} />
-            Go ahead
+            Lots of permissions
           </label>
           <label classList={{ on: s().autonomy === 'ask' }}>
             <input type="radio" name="autonomy" value="ask" checked={s().autonomy === 'ask'} onChange={() => props.ola.setAutonomy('ask')} />
-            Ask me first
+            Ask before each step
           </label>
           <span class="autonomy-hint">
             {s().engine === 'claude' && s().claude?.enabled
@@ -301,7 +301,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                   : 'The hosted open model works inside this project without asking. It cannot reach the internet from here.'
                 : s().autonomy === 'ask'
                 ? 'Ola asks before it runs code or writes a file.'
-                : 'Ola works inside this project without asking. A web search or download still asks you first.'}
+                : 'Ola works inside this project without asking, web searches and downloads included.'}
           </span>
         </fieldset>
         <Show when={s().said && !menuOpen()}>

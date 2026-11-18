@@ -9,6 +9,7 @@
 #   bart/ola-bart.sh start|stop  load or unload the launchd job cx.ola.bart
 #   bart/ola-bart.sh token       put the bart caller back in the gateway's tokens file (see README)
 #   bart/ola-bart.sh web         give the bart caller its standing web grant, and check it (see README)
+#   bart/ola-bart.sh permissions [lots|ask]   the machine's "Lots of permissions" (approver.mjs): show or set it
 #   bart/ola-bart.sh password    print the password ONCE, for the apps' Keychain (on the machine only)
 #   bart/ola-bart.sh uninstall   remove the job and the token; keeps ~/ola-bart and the password file
 #   bart/ola-bart.sh files       only (re)write the skills, the tools and the config (a check uses it with
@@ -298,7 +299,9 @@ cd "$PROJECT"
 # and opencode. If one stops, all stop, and launchd starts them again.
 node "$STATE/bin/forward.mjs" "$HOST" "$FPORT" 4180 &
 fwd=\$!
-OLA_BART_PHONE_HANDLES="$PHONE_HANDLES" node "$STATE/bin/phone-door.mjs" "$HOST" "$DPORT" "$HOST:$PORT" &
+# The door also answers the ask-first steps under "Lots of permissions" (approver.mjs, the choice in
+# $STATE/permissions), so no app has to be open for them to go ahead.
+OLA_BART_PHONE_HANDLES="$PHONE_HANDLES" OLA_BART_PERMISSIONS="$STATE/permissions" node "$STATE/bin/phone-door.mjs" "$HOST" "$DPORT" "$HOST:$PORT" &
 door=\$!
 "$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT" &
 oc=\$!
@@ -309,6 +312,7 @@ exit 1
 SH
   cp "$HERE/forward.mjs" "$STATE/bin/forward.mjs"
   cp "$HERE/phone-door.mjs" "$STATE/bin/phone-door.mjs"
+  cp "$HERE/approver.mjs" "$STATE/bin/approver.mjs"
   chmod 700 "$STATE/bin/run.sh"
 }
 
@@ -391,7 +395,16 @@ case "${1:-}" in
     lsof -nP -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print "listening:", $9}'
     grep -q 'bart:' "$TOKENS" && echo "gateway token: present" || echo "gateway token: MISSING (run: ola-bart.sh token)"
     grep -q '"bart"' "$WEBHOSTS" 2>/dev/null && echo "web grant: present" || echo "web grant: MISSING (run: ola-bart.sh web)"
+    echo "permissions: $(cat "$STATE/permissions" 2>/dev/null || echo 'lots (the default)')"
     probe
+    ;;
+  permissions)
+    # The same file the door reads at each step; the apps change it through the door.
+    case "${2:-}" in
+      lots|ask) umask 077; printf '%s\n' "$2" > "$STATE/permissions.tmp" && mv "$STATE/permissions.tmp" "$STATE/permissions"; echo "permissions: $2" ;;
+      "") echo "permissions: $(cat "$STATE/permissions" 2>/dev/null || echo 'lots (the default)')" ;;
+      *) die "permissions lots|ask" ;;
+    esac
     ;;
   password)
     # For putting it into the apps' Keychain. Run it in your own terminal on the machine.

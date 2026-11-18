@@ -43,10 +43,14 @@ const ASK_FIRST = ['shell', 'bash', 'edit', 'write', 'apply_patch', 'patch']
 
 /**
  * opencode permission rules for an autonomy choice and the project's web choice. Later rules win,
- * so the denials go last. `ola-search` and `ola-fetch` ask the person (the approval says what would
- * be searched or downloaded) unless the project said "Always in this project" and the person did
- * not choose "Ask me first". These rules only carry the question: the gateway is what refuses a
- * web request the project did not approve (gateway/web.mjs).
+ * so the denials go last. `ola-search` and `ola-fetch` ask (the approval says what would be
+ * searched or downloaded) unless the project said "Always in this project" and the person did not
+ * choose "Ask before each step". Under "Lots of permissions" (autonomy `go`, OLA-139) without
+ * "Always" they still ask opencode, but the front desk answers that
+ * question itself with a one-time grant for exactly that search (workspaces.mjs, the event
+ * watcher), so the person sees no question and the gateway still sees a grant. These rules only
+ * carry the question: the gateway is what refuses a web request the project did not approve
+ * (gateway/web.mjs).
  */
 export function permissionsFor(autonomy, web = 'ask') {
   const rules = [{ action: '*', resource: '*', effect: 'allow' }]
@@ -120,7 +124,7 @@ const MAX_REPLY = 32 * 1024 * 1024
  * `onForward({ method, pathname })` is told about each request that reached opencode with a 2xx.
  * `webMode()` says the project's web choice ('ask' or 'always') for new or changed sessions.
  */
-export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {}, webMode = () => 'ask' }) {
+export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {}, onAutonomy = () => {}, webMode = () => 'ask' }) {
   const upstream = target ? new URL(target) : null
   return async function proxy(req, res, pathname, search) {
     if (!allowed(req.method, pathname)) {
@@ -128,6 +132,10 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
       return
     }
     let body = null
+    // The autonomy this request gave a conversation (decided here, never opencode's word), told to
+    // `onAutonomy(sessionID, autonomy)` once opencode took it: the front desk's own record of which
+    // conversations are under "Lots of permissions" (OLA-139).
+    let autonomy = null
     if (req.method !== 'GET') {
       // Over MAX_BODY: the 413 with a lingering close, so the page reads it (./linger.mjs).
       body = await readUpTo(req, MAX_BODY)
@@ -144,6 +152,7 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
           return
         }
         body = Buffer.from(JSON.stringify(rewritten))
+        autonomy = rewritten.metadata.autonomy
       }
       if (req.method === 'PATCH') {
         const rewritten = rewriteSessionUpdate(body.toString('utf8'), webMode())
@@ -152,6 +161,7 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
           return
         }
         body = Buffer.from(JSON.stringify(rewritten))
+        autonomy = rewritten.metadata?.autonomy ?? null
       }
     }
     const headers = { authorization: typeof authorization === 'function' ? authorization() : authorization, accept: req.headers.accept ?? '*/*' }
@@ -175,14 +185,26 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
       res.writeHead(upRes.statusCode ?? 502, out)
       if (stream) res.flushHeaders?.()
       let seen = 0
+      const kept = autonomy && req.method === 'POST' ? [] : null // the new conversation's id
       upRes.on('data', (c) => {
         seen += c.length
         if (!stream && seen > MAX_REPLY) return res.destroy(), upRes.destroy()
+        kept?.push(c)
         res.write(c)
       })
       upRes.on('end', () => {
         res.end()
-        if ((upRes.statusCode ?? 500) < 300) onForward({ method: req.method, pathname })
+        if ((upRes.statusCode ?? 500) >= 300) return
+        onForward({ method: req.method, pathname })
+        if (!autonomy) return
+        let id = /^\/api\/session\/([A-Za-z0-9_-]{1,80})$/.exec(pathname)?.[1] ?? null
+        if (kept) {
+          try {
+            const j = JSON.parse(Buffer.concat(kept).toString('utf8'))
+            id = j?.data?.id ?? j?.id ?? null
+          } catch {}
+        }
+        if (typeof id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(id)) onAutonomy(id, autonomy)
       })
       // opencode went away mid-stream: end the page's stream too, so it notices at once.
       upRes.on('aborted', () => res.destroy())

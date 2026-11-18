@@ -12,10 +12,17 @@
 // only Content-Type and Accept from the phone. Eight wrong keys from one address in a minute and
 // that address waits a minute. No dependencies.
 //
+// It also carries the machine's "Lots of permissions" (OLA-139, approver.mjs): `GET /ola/permissions`
+// says `{ "mode": "lots" | "ask" }`, `PUT` with the same body changes it, and this process answers
+// the ask-first steps under `lots`. Those two routes also take opencode's own Basic password (the
+// Mac app's credential for this machine), and only those: the Mac sets the same choice here.
+//
 //   OPENCODE_PASSWORD=… node phone-door.mjs <listen-host> <listen-port> <opencode-host:port>
-//   env: OLA_BART_PHONE_HANDLES (comma list), OLA_ACCOUNT_BASE (default https://app.ola.cx)
-import { createHash } from 'node:crypto'
+//   env: OLA_BART_PHONE_HANDLES (comma list), OLA_ACCOUNT_BASE (default https://app.ola.cx),
+//        OLA_BART_PERMISSIONS (the choice's file; without it no approver runs and the routes are 404)
+import { createHash, timingSafeEqual } from 'node:crypto'
 import http from 'node:http'
+import { MODES, readMode, startApprover, writeMode } from './approver.mjs'
 
 const [host, port, upstream] = process.argv.slice(2)
 const PASSWORD = process.env.OPENCODE_PASSWORD ?? ''
@@ -28,6 +35,12 @@ const HANDLES = new Set((process.env.OLA_BART_PHONE_HANDLES ?? 'bart').split(','
 const BASE = (process.env.OLA_ACCOUNT_BASE ?? 'https://app.ola.cx').replace(/\/$/, '')
 const BASIC = 'Basic ' + Buffer.from(`opencode:${PASSWORD}`).toString('base64')
 const KEEP_MS = 60_000
+const PERMS = process.env.OLA_BART_PERMISSIONS ?? ''
+const approver = PERMS ? startApprover({ upstream, basic: BASIC, file: PERMS, log: (l) => console.log(l) }) : null
+const sameBasic = (h) => {
+  const a = Buffer.from(h), b = Buffer.from(BASIC)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
 
 export const ALLOW = [
   ['GET', /^\/api\/info$/],
@@ -80,6 +93,31 @@ function say(res, status, error, message) {
   res.end(JSON.stringify({ error, message }))
 }
 
+/** The machine's "Lots of permissions": read it, or set it (a body of { "mode": "lots" | "ask" }). */
+async function permissions(req, res) {
+  if (!approver) return say(res, 404, 'not_here', 'This machine keeps no permissions setting.')
+  const send = () => {
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' })
+    res.end(JSON.stringify({ mode: readMode(PERMS) }))
+  }
+  if (req.method === 'GET') return send()
+  if (req.method !== 'PUT') return say(res, 405, 'method', 'GET or PUT.')
+  let raw = ''
+  for await (const c of req) {
+    raw += c
+    if (raw.length > 1024) return say(res, 413, 'too_large', 'Too long.')
+  }
+  let mode
+  try {
+    mode = JSON.parse(raw)?.mode
+  } catch {}
+  if (!MODES.includes(mode)) return say(res, 400, 'bad_mode', 'The mode is lots or ask.')
+  writeMode(PERMS, mode)
+  console.log(`permissions: ${mode}`)
+  if (mode === 'lots') await approver.sweep().catch(() => 0)
+  send()
+}
+
 const server = http.createServer(async (req, res) => {
   const addr = req.socket.remoteAddress ?? ''
   const m = misses.get(addr)
@@ -91,11 +129,16 @@ const server = http.createServer(async (req, res) => {
     const cur = misses.get(addr)
     misses.set(addr, cur && cur.until > Date.now() ? { n: cur.n + 1, until: cur.until } : { n: 1, until: Date.now() + 60_000 })
   }
+  if (url.pathname === '/ola/permissions' && auth.startsWith('Basic ')) {
+    if (!sameBasic(auth)) { miss(); return say(res, 401, 'wrong_password', 'Wrong password.') }
+    return permissions(req, res)
+  }
   if (!key) { miss(); return say(res, 401, 'signed_out', 'Sign in again.') }
   const w = await who(key)
   if (w.down) return say(res, 503, 'sign_in_down', 'Ola’s sign-in isn’t answering just now. Try again in a minute.')
   if (!w.signedIn) { miss(); return say(res, 401, 'signed_out', 'Sign in again.') }
   if (!w.ok) return say(res, 403, 'not_allowed', 'This account can’t work on the Ola machine from a phone.')
+  if (url.pathname === '/ola/permissions') return permissions(req, res)
   if (!allowed(req.method ?? 'GET', url.pathname)) return say(res, 403, 'not_allowed', 'Not available from the phone.')
 
   const headers = { authorization: BASIC, host: upstream }

@@ -142,23 +142,25 @@ struct SettingsView: View {
   }
 }
 
-/// Permissions: one choice for the whole app and the `ola` command (PermissionSettings). Lots of
-/// permissions, the default, answers the ask-first steps itself, from the next step on.
+/// Permissions: one switch, "Lots of permissions", for the whole app (both places it works), the
+/// `ola` command, the phone and the Ola machine (PermissionSettings; OLA-139). Off is "Ask before
+/// each step". On the machine the machine itself goes ahead, so the phone needs no Mac for it.
 struct PermissionsSettings: View {
   @AppStorage(PermissionSettings.key) private var mode = PermissionMode.lots.rawValue
+  @State private var problem: String?
 
   var body: some View {
+    let lots = mode == PermissionMode.lots.rawValue
     SettingsGroup(title: "Permissions") {
-      Picker("Permissions", selection: $mode) {
-        Text("Ask before each step").tag(PermissionMode.ask.rawValue)
-        Text("Lots of permissions: Ola goes ahead without asking").tag(PermissionMode.lots.rawValue)
-      }
-      .pickerStyle(.radioGroup)
-      .labelsHidden()
-      SettingNote(mode == PermissionMode.lots.rawValue
-        ? "Ola runs commands and changes files in its folder without asking. It still asks before a web search or download, and never works outside its folder. The same for the ola command."
-        : "Ola asks before every command and every new or changed file. The same for the ola command.")
+      Toggle("Lots of permissions", isOn: Binding(get: { lots }, set: { on in
+        let m: PermissionMode = on ? .lots : .ask
+        mode = m.rawValue
+        Task { problem = await PermissionSettings.set(m) }
+      }))
+      SettingNote((lots ? PermissionMode.lots.note : PermissionMode.ask.note) + " The same on your phone, in the ola command and on the Ola machine.")
+      if let problem { SettingNote(problem) }
     }
+    .task { await PermissionSettings.pull() }
   }
 }
 
