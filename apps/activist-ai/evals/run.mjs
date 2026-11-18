@@ -42,7 +42,7 @@ const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'))
 // carry the hash of the skills folder, so a score always names the exact skills.
 const skillsMode = args.skills === undefined ? null : String(args.skills)
 if (skillsMode !== null) {
-  if (!['on', 'off'].includes(skillsMode) || cfg.harness !== 'opencode-ws') { console.error('--skills on|off needs an opencode-ws configuration'); process.exit(2) }
+  if (!['on', 'off'].includes(skillsMode) || !['opencode-ws', 'claude-agent-sdk'].includes(cfg.harness)) { console.error('--skills on|off needs an opencode-ws or claude-agent-sdk configuration'); process.exit(2) }
   cfg.name = `${cfg.name}-skills-${skillsMode}`
   cfg.skills = skillsMode
   cfg.skills_hash = skillsHash(path.join(here, '../skills'))
@@ -195,6 +195,48 @@ async function runOpencode(run, prompts) {
   return s
 }
 
+// claude-agent-sdk with --skills (the design comparison, OLA-141): Ola's skills as the workspace has
+// them, given to Claude Code the way it takes skills: a local plugin `ola` outside the agent's folder
+// holding a copy of each skill named in cfg.skill_names, with the image's path /opt/ola/skills/<name>
+// rewritten to the copy's own path (nothing else in the files changes). --skills off loads none.
+// cfg.page_tool: the image's `ola-page` on the agent's PATH (macOS Python and Playwright's headless
+// shell); cfg.append_system: a file appended to Claude Code's system prompt (the workspace AGENTS.md
+// lines about pages), for both arms, as AGENTS.md is in both of the open model's arms.
+function claudeExtras(run) {
+  const o = { plugins: [], env: {} }
+  if (cfg.page_tool) {
+    const bin = path.join(run.home, 'bin')
+    mkdirSync(bin, { recursive: true })
+    const chromium = path.join(homedir(), 'Library/Caches/ms-playwright', cfg.page_tool, 'chrome-headless-shell-mac-arm64/chrome-headless-shell')
+    if (!existsSync(chromium)) throw new Error('no headless shell at ' + chromium)
+    writeFileSync(path.join(bin, 'ola-page'), `#!/bin/sh\nOLA_PAGE_CHROMIUM='${chromium}' exec /usr/bin/python3 '${path.join(here, '../workspace/ola-page')}' "$@"\n`, { mode: 0o755 })
+    o.binDir = bin
+  }
+  if (cfg.append_system) o.append = readFileSync(path.resolve(here, cfg.append_system), 'utf8')
+  if (skillsMode === 'on') {
+    const plug = path.join(run.dir, 'plugin')
+    mkdirSync(path.join(plug, '.claude-plugin'), { recursive: true })
+    writeFileSync(path.join(plug, '.claude-plugin/plugin.json'), JSON.stringify({ name: 'ola', description: "Ola's skills", version: '1.0.0' }))
+    for (const name of cfg.skill_names || []) {
+      const dst = path.join(plug, 'skills', name)
+      const copy = (src, d) => {
+        mkdirSync(d, { recursive: true })
+        for (const e of readdirSync(src, { withFileTypes: true })) {
+          if (e.name === '__pycache__' || e.name === '.DS_Store') continue
+          const s = path.join(src, e.name), t = path.join(d, e.name)
+          if (e.isDirectory()) copy(s, t)
+          else if (/\.(md|py|html|css|txt|json)$/.test(e.name)) writeFileSync(t, readFileSync(s, 'utf8').replaceAll(`/opt/ola/skills/${name}`, dst))
+          else writeFileSync(t, readFileSync(s))
+        }
+      }
+      copy(path.join(here, '../skills', name), dst)
+    }
+    o.plugins = [{ type: 'local', path: plug }]
+    o.skills = (cfg.skill_names || []).map((n) => `ola:${n}`)
+  } else if (skillsMode === 'off') o.skills = []
+  return o
+}
+
 let sdk = null
 let anthropicKey = null
 async function runClaude(run, prompts) {
@@ -213,14 +255,21 @@ async function runClaude(run, prompts) {
   const P = cfg.price_per_mtok
   let resume = null
   const texts = []
+  const x = claudeExtras(run)
+  // --tokens for this harness too: every request's input (fresh, cache read and cache write) plus its
+  // output, counted once per message id as the stream reports it, the way the gateway counts the open
+  // model's requests; over the limit, the run is stopped (token_limit)
+  const seenMsg = new Map()
+  let streamTokens = 0
   try {
    for (const instruction of prompts) {
     if (s.end_reason !== 'done') break
     for await (const m of sdk.query({ prompt: instruction, options: { ...(resume ? { resume } : {}),
-      cwd: run.work, model: cfg.model, effort: cfg.effort, systemPrompt: { type: 'preset', preset: 'claude_code' },
+      cwd: run.work, model: cfg.model, effort: cfg.effort, systemPrompt: { type: 'preset', preset: 'claude_code', ...(x.append ? { append: x.append } : {}) },
       settingSources: [], permissionMode: 'bypassPermissions', allowDangerouslySkipPermissions: true,
+      ...(x.plugins.length ? { plugins: x.plugins } : {}), ...(x.skills ? { skills: x.skills } : {}),
       disallowedTools: ['WebFetch', 'WebSearch'], maxBudgetUsd: cfg.max_usd_per_run, abortController: ac,
-      env: isolatedEnv(run.home, { ...(cfg.tool_path ? { PATH: cfg.tool_path } : {}),
+      env: isolatedEnv(run.home, { ...(cfg.tool_path ? { PATH: (x.binDir ? x.binDir + ':' : '') + cfg.tool_path } : {}),
         // round two: the agent's shell gets no web (a dead proxy) while the SDK's own API calls go direct
         ...(cfg.dead_proxy ? { HTTP_PROXY: 'http://127.0.0.1:9', HTTPS_PROXY: 'http://127.0.0.1:9', ALL_PROXY: 'http://127.0.0.1:9', http_proxy: 'http://127.0.0.1:9', https_proxy: 'http://127.0.0.1:9', all_proxy: 'http://127.0.0.1:9', NO_PROXY: 'api.anthropic.com', no_proxy: 'api.anthropic.com' } : {}),
         ANTHROPIC_API_KEY: anthropicKey, CLAUDE_CONFIG_DIR: path.join(run.home, '.claude'), DISABLE_AUTOUPDATER: '1',
@@ -230,7 +279,16 @@ async function runClaude(run, prompts) {
       if (m.type === 'system' && m.subtype === 'init' && m.apiKeySource !== 'ANTHROPIC_API_KEY') {
         s.end_reason = 'harness_error'; s.why = 'not on the evals API key'; ac.abort(); break
       }
+      if (m.type === 'system' && m.subtype === 'init') s.init_skills = m.skills
       if (m.type === 'assistant') {
+        const u = m.message?.usage, mid = m.message?.id
+        if (u && mid) {
+          const c = { i: u.input_tokens || 0, r: u.cache_read_input_tokens || 0, w: u.cache_creation_input_tokens || 0, o: u.output_tokens || 0 }
+          const n = c.i + c.r + c.w + c.o
+          const prev = seenMsg.get(mid)
+          streamTokens += n - (prev ? prev.i + prev.r + prev.w + prev.o : 0); seenMsg.set(mid, c)
+          if (streamTokens > tokenLimit && s.end_reason === 'done') { s.end_reason = 'token_limit'; ac.abort() }
+        }
         s.requests++
         for (const b of m.message?.content || []) {
           if (b.type === 'tool_use') { ids.set(b.id, b.name); (s.tools[b.name] ||= { calls: 0, errors: 0 }).calls++ }
@@ -257,6 +315,13 @@ async function runClaude(run, prompts) {
     if (s.end_reason === 'done') { s.end_reason = 'harness_error'; s.why = String(e?.message || e).slice(0, 200) }
   }
   s.all_text = texts.join('\n\n')
+  // a run stopped before its result message (token limit, timeout) is counted from the stream
+  if (s.tokens_in + s.tokens_out < streamTokens) {
+    const all = [...seenMsg.values()]
+    const sum = (k) => all.reduce((a, c) => a + c[k], 0)
+    s.tokens_in = sum('i') + sum('r') + sum('w'); s.tokens_out = sum('o')
+    s.cost_usd = Math.max(s.cost_usd, (sum('i') * P.input + sum('o') * P.output + sum('r') * P.cache_read + sum('w') * P.cache_write) / 1e6)
+  }
   if (s.turn_requests) s.requests = s.turn_requests
   clearTimeout(timer); out.end()
   return s
@@ -289,7 +354,7 @@ async function runOne({ task, seed }) {
   const s = cfg.harness === 'replay' ? replay(task, run) : cfg.harness === 'opencode' ? await runOpencode(run, prompts) : cfg.harness === 'opencode-ws' ? await runWs(run, prompts) : await runClaude(run, prompts)
   if (stopping) return // cut short: record nothing, it runs again next time
   const duration = (Date.now() - started) / 1000
-  writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ final_text: s.final_text, all_text: s.all_text || s.final_text, turns: s.turns }, null, 1))
+  writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ final_text: s.final_text, all_text: s.all_text || s.final_text, turns: s.turns, ...(s.init_skills ? { skills: s.init_skills } : {}) }, null, 1))
   const c = spawnSync('python3', [path.join(here, 'lib/task.py'), 'check', task.dir, run.work, truth, path.join(dir, 'session.json')], { encoding: 'utf8', timeout: 300_000 })
   let check
   try { check = JSON.parse(c.stdout.trim().split('\n').pop()) } catch { check = { checks: [], passed: 0, total: 0, all: false } }

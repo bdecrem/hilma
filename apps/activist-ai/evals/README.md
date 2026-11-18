@@ -219,6 +219,31 @@ steps at about 25,000 tokens each, as in Calm); two were cut off mid-rewrite. Th
 `~/Desktop/Ola/designer-bold/` on the iMac. `results/summary-bold.json` has the rows,
 `results/bold-judge.json` the verdicts.
 
+## Four ways: Nemotron and Opus, with and without the designer (2026-11-18, OLA-141)
+
+The same three page requests (`u10-youth-strike`, `u2-results-page`, `u9-block-party`, seed 1) made by
+Nemotron with and without the designer skill (`configs/nemotron-3.5-super-vl-ws-4way.json`,
+`run-4way.sh` on the mini) and by Opus 5.5 in Claude Code with and without it
+(`configs/opus-5.5-claude-code-4way.json`, `run-4way-opus.sh` on an iMac that holds the evals key).
+`run.mjs --skills on|off` now takes the claude-agent-sdk harness: on gives the skill as a local plugin
+`ola` (`ola:designer`, `/opt/ola/skills/designer` rewritten to the copy), off loads no plugin and
+`skills: []`; both arms get `configs/opus-4way-system.md` appended (the AGENTS.md lines about pages,
+including the line that says to call `designer`, as both Nemotron arms have it). The page checker needs
+Playwright reachable from `lib/page.mjs`; in a bare copy of apps/activist-ai without it every page check
+fails as `page_reader_failed`. Checks out of 20, seconds, tokens:
+
+| Arm | u10 youth strike | u2 results page | u9 block party |
+|---|---|---|---|
+| Nemotron with | 20, 180 s, 392k | 19, 306 s, 874k | 18, 268 s, 423k |
+| Nemotron without | 15, 51 s, 111k | 19, 56 s, 279k | 16, 47 s, 170k |
+| Opus with | 19, 91 s, 224k, $0.46 | 20, 87 s, 321k, $0.44 | 17, 125 s, 642k, $0.61 |
+| Opus without | 16, 98 s, 269k, $0.34 | 19, 50 s, 130k, $0.19 | 17, 94 s, 214k, $0.33 |
+
+Bart judges the twelve pages blind from `four-way-sheets.mjs` (one sheet per request, columns A to D,
+laptop 1280x800 over phone 390x844, letters shuffled per request with a recorded seed, the key in
+`key.json`). Sheets, pages and key: `~/Desktop/Ola/four-way/` on the M4 iMac; run folders in
+`~/Desktop/Ola/four-way-runs/`.
+
 ## Round five: the sound skill, with and without (2026-11-17)
 
 Six tasks for `sound` (code in `lib/r5_sound.py`, folders by `lib/mk_r3.py`, proved by `task.py selftest`
