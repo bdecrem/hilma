@@ -52,8 +52,9 @@ browser ──── same origin only ────► front desk (dev.mjs today)
   and `/oc/api/*`. The real front desk (sign-in, accounts, the platform database, one workspace
   VM per person via `../workspace/ws.mjs`) replaces `dev.mjs` and keeps those paths, adding a
   session cookie. Nothing in `src/` changes.
-- **The door to opencode** (`server/proxy.mjs`) forwards eleven routes (events, sessions, prompt,
-  interrupt, messages, permissions) and refuses the rest with 403 (providers, credentials,
+- **The door to opencode** (`server/proxy.mjs`) forwards thirteen routes (events, sessions, prompt,
+  interrupt, messages, permissions, and Ola's questions: opencode's `question` tool raises a form,
+  which the drawer shows as a card of choices plus the person's own words, and answers) and refuses the rest with 403 (providers, credentials,
   shells, ptys, MCP, config). It rewrites session creation and updates: the folder and the
   permission rules are decided server-side from the autonomy the page asked for ("Go ahead" or
   "Ask me first"); `webfetch`, `websearch` and `external_directory` are always denied, last, so

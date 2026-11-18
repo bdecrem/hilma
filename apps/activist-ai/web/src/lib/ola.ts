@@ -4,7 +4,7 @@
 // drawer never shows a stale "working" after the network comes back.
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
-import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
+import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, questionOf, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval, handoffWords, precheck, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
@@ -170,6 +170,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const pending = await client.permission.list({ sessionID })
       const p = (pending as any[])[0]
       setState('approval', p ? { id: p.id, sessionID, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null } : null)
+      await loadQuestion(sessionID)
     } catch {
       /* the stream will retry; the lost banner stays until it does */
     }
@@ -280,6 +281,32 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       await client.permission.reply({ sessionID: a.sessionID, requestID: a.id, decision })
     } catch (e) {
       setState('problem', { text: 'Your answer did not reach Ola’s computer. Try again.', detail: String((e as any)?.message ?? e) })
+    }
+  }
+
+  /** A question Ola is waiting on in this conversation (after a reload or a lost connection). */
+  async function loadQuestion(sessionID: string) {
+    try {
+      const forms = (await client.session.form.list({ sessionID })) as any
+      const list: any[] = Array.isArray(forms) ? forms : (forms?.data ?? [])
+      if (state.sessionID !== sessionID) return
+      setState('question', list.map(questionOf).find(Boolean) ?? null)
+    } catch {
+      /* the stream brings the next one; the lost banner reports real outages */
+    }
+  }
+
+  /** The person's answer to Ola's question: one value per field (a choice's value, or their own words). */
+  async function answerQuestion(answer: Record<string, string | string[]>) {
+    const q = state.question
+    if (!q) return false
+    try {
+      await client.session.form.reply({ sessionID: q.sessionID, formID: q.id, answer } as any)
+      if (state.question?.id === q.id) setState('question', null)
+      return true
+    } catch (e) {
+      setState('problem', { text: 'Your answer did not reach Ola’s computer. Try again.', detail: String((e as any)?.message ?? e) })
+      return false
     }
   }
 
@@ -577,6 +604,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const pending = (await client.permission.list({ sessionID: id })) as any[]
       const p = pending[0]
       if (p) setState('approval', { id: p.id, sessionID: id, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null })
+      await loadQuestion(id)
       void refreshEarlier()
     } catch (e) {
       setState('problem', { text: 'That conversation could not be opened.', detail: String((e as any)?.message ?? e) })
@@ -611,6 +639,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     loadFallback,
     stop,
     answer,
+    answerQuestion,
     setAutonomy,
     newConversation,
     open,

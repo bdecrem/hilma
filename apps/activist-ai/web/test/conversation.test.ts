@@ -82,6 +82,27 @@ test('a failed run and a rejected approval are said out loud', () => {
   assert.match(state.turns[0].error!.text, /could not take this request/)
 })
 
+test('a question from Ola (opencode raises a form) waits on its step, and the answer lets the run go on', () => {
+  const state = emptyConversation()
+  state.sessionID = 's'
+  startTurn(state, 'Make a page, ask me which one', 1)
+  applyEvent(state, { type: 'session.tool.input.started', created: 2, data: { sessionID: 's', id: 'call_q', name: 'question' } })
+  applyEvent(state, { type: 'session.tool.called', created: 3, data: { sessionID: 's', id: 'call_q', input: { questions: [{ question: 'Which town?', header: 'Town', options: [{ label: 'A', description: 'a' }] }] } } })
+  // The form carries its session inside it, not at the top of the event.
+  applyEvent(state, { type: 'form.created', created: 4, data: { form: { id: 'frm_1', sessionID: 's', title: 'Questions', metadata: { kind: 'question', tool: { id: 'call_q' } }, fields: [{ key: 'q0', title: 'Town', description: 'Which town?', type: 'string', options: [{ value: 'A', label: 'A', description: 'a' }], custom: true }] } } })
+  assert.equal(state.question?.id, 'frm_1')
+  assert.equal(state.question?.fields[0].text, 'Which town?')
+  assert.deepEqual(state.question?.fields[0].options.map((o) => o.label), ['A'])
+  assert.equal(state.turns[0].steps[0].status, 'waiting')
+  assert.equal(`${state.turns[0].steps[0].verb} ${state.turns[0].steps[0].object}`, 'Asked you Which town?')
+  // Another session's form is not ours.
+  applyEvent(state, { type: 'form.created', created: 5, data: { form: { id: 'frm_2', sessionID: 'other', fields: [{ key: 'q0', type: 'string' }] } } })
+  assert.equal(state.question?.id, 'frm_1')
+  applyEvent(state, { type: 'form.replied', created: 6, data: { id: 'frm_1', sessionID: 's', answer: { q0: 'A' } } })
+  assert.equal(state.question, null)
+  assert.equal(state.turns[0].steps[0].status, 'running')
+})
+
 test('words for common commands and tools', () => {
   assert.equal(describeCommand('python3 clean.py --in survey.csv').object, 'clean.py')
   assert.equal(describeCommand("python3 -c 'print(1)'").verb, 'Ran a short program')

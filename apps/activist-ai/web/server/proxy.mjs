@@ -26,6 +26,9 @@ export const ALLOWED = [
   ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/context$/, 'read'],
   ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission$/, 'read'],
   ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission\/[A-Za-z0-9_-]{1,80}\/reply$/, 'run'],
+  // Ola's questions to the person (opencode's `question` tool raises a form): list and answer.
+  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/form$/, 'read'],
+  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/form\/frm_[A-Za-z0-9_-]{1,80}\/reply$/, 'run'],
 ]
 
 /** What a route needs ('read' or 'run'), or null when the page may not use it. */

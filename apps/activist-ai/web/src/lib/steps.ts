@@ -113,6 +113,8 @@ export function describeTool(tool: string, input: Input, dir: string | null): Wo
     case 'shell':
     case 'bash':
       return describeCommand(str(input.command))
+    case 'question':
+      return { icon: 'think', verb: 'Asked you', object: str((input.questions as any)?.[0]?.question ?? (input.questions as any)?.[0]?.header) }
     case 'todowrite':
     case 'todoread':
       return { icon: 'think', verb: 'Planned the next steps', object: '' }
