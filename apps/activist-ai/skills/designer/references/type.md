@@ -18,6 +18,7 @@ ones you use beside the page with `fonts.py add`, which also writes `fonts/fonts
 | Source Serif 4 | a working serif, sharp at large sizes (has italics) | headlines and numbers of reports, research pages |
 | Literata | a calm reading serif (has italics) | long reading text, reports, letters |
 | JetBrains Mono | monospaced | code and ids only, never labels or decoration |
+| Anton, Bowlby One, Fraunces, Space Grotesk | display faces with character | the Bold register only; its scale is in `bold.md` |
 
 Without files: the system stack `system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
 Arial, sans-serif`. It looks different on every device (inside this computer it renders as DejaVu

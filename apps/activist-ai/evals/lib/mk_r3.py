@@ -15,6 +15,8 @@ for mod, rnd in ((r3_skills, 3), (r4_design, 4), (r5_sound, 5)):
         d = root / tid
         d.mkdir(parents=True, exist_ok=True)
         meta = {"id": tid, "family": T["family"], "skill": T["skill"], "level": T["level"], "honesty": False, "version": VERSIONS.get(tid, 1), "round": rnd, "outputs": T["outputs"]}
+        if T.get("register"):
+            meta["register"] = T["register"]  # the designer's Bold register: design-judge.mjs judges these as fun, colorful pages
         (d / "task.json").write_text(json.dumps(meta) + "\n")
         (d / "instruction.md").write_text(T["instruction"] + "\n")
         (d / "task.py").write_text(f"# Round {['three', 'four', 'five'][rnd - 3]} (skills): the code is in lib/{mod.__name__}.py\nimport {mod.__name__} as M\nT = M.TASKS[{tid!r}]\n"

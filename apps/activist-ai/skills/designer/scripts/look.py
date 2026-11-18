@@ -3,6 +3,14 @@
 
     python3 /opt/ola/skills/designer/scripts/look.py index.html --name round1
     python3 /opt/ola/skills/designer/scripts/look.py index.html --name round2 --dark
+    python3 /opt/ola/skills/designer/scripts/look.py index.html --name check --register bold
+
+Two registers (references/bold.md). Calm, the default, holds a page to one accent, no gradients, no
+rounded cards and a title of 40 to 48 px. Bold (a page with <meta name="ola-register" content="bold">,
+or --register bold) allows three to five colors, gradients behind shapes, big rounded shapes, overlap
+and very large display type, and instead calls a Bold page bare when it is timid: too few colors, type
+not much bigger than the text. In both: no glows, glass, emoji, placeholder text, low contrast or
+sideways scroll.
 
 For each width (390 and 1280 unless --widths), runs `ola-page` (screenshot + measurements) and saves
 shots/<page>-<name>-<width>.png beside the page. Prints, in plain words with what to do instead:
@@ -17,8 +25,15 @@ Then, when `ola-see` exists, one model looks at a sheet of the laptop view, the 
 laptop view blurred (as if squinting) and says what it sees first and what is wrong. Without it, it
 says so in one line. Writes shots/<page>-<name>.json with the counts, so rounds can be compared.
 """
-import argparse, html, json, shutil, subprocess, sys
+import argparse, html, json, re, shutil, subprocess, sys
 from pathlib import Path
+
+QUESTION_BOLD = ("This sheet shows one web page meant to be bold, fun and colorful: the laptop view (left), the phone view (middle), and the laptop view blurred as if squinting (right). "
+                 "First, from the blurred view: what is the one thing that stands out first, and does anything compete with it? "
+                 "Then list each visual defect you can see in the sharp views: overlap or cut-off text, hard-to-read text (on a color or a gradient), cramped or uneven spacing, "
+                 "a timid look (few colors, small type, no shape or picture from the subject), chaos (colors with no system, everything loud), "
+                 "decoration that says nothing about the subject (blobs, waves, sparkles, glows, emoji, a default purple-pink gradient), or areas that look empty or unfinished. "
+                 "For each: where it is, and one concrete fix. Do not praise. If nothing is wrong, answer: No defects found.")
 
 QUESTION = ("This sheet shows one web page: the laptop view (left), the phone view (middle), and the laptop view blurred as if squinting (right). "
             "First, from the blurred view: what is the one thing that stands out first, and does anything compete with it? "
@@ -45,7 +60,7 @@ def broken(r, w):
     return out
 
 
-def readable(r, w):
+def readable(r, w, bold=False):
     out = []
     for x in r.get("low_contrast", [])[:8]:
         out.append(f"low contrast {x['ratio']}:1 (needs {x['needs']}) in {x['where']} \"{x['text'][:30]}\": {x['color']} on {x['background']}; use --ink-2 or --ink-3 from palette.py")
@@ -56,21 +71,25 @@ def readable(r, w):
     rp = (r.get("taste") or {}).get("reading_px") or r.get("body_text_px")
     if rp and rp < 15 and r.get("texts", 0) > 5:
         out.append(f"the reading text is {rp} px; use your scale's reading size (15 to 17 px)")
-    if rp and rp > 19 and r.get("texts", 0) > 5:
+    if rp and rp > (20 if bold else 19) and r.get("texts", 0) > 5:
         out.append(f"the reading text is {rp} px: too big for a professional page; use 16 or 17 px")
     if r.get("long_lines"):
         out.append(f"{r['long_lines']} paragraphs run longer than about 90 characters a line: max-width: 66ch")
     fams = [f for f in r.get("font_families", {}) if f]
     if len(fams) > 2:
         out.append(f"{len(fams)} fonts in use ({', '.join(fams[:5])}): one or two, from fonts.py")
-    if len(r.get("text_sizes", {})) > 7:
-        out.append(f"{len(r['text_sizes'])} different text sizes ({', '.join(sorted(r['text_sizes'], key=float))}): keep to your scale's six or seven")
+    # in Bold the display sizes (40 px and up) are the point; the scale is held below them
+    sizes = [k for k in r.get("text_sizes", {}) if not bold or float(k) < 40]
+    if len(sizes) > 7:
+        out.append(f"{len(sizes)} different text sizes{' under 40 px' if bold else ''} ({', '.join(sorted(sizes, key=float))}): keep to your scale's " + ("sizes (bold.md)" if bold else "six or seven"))
+    if bold and r.get("contrast_unknown", 0) > 3:
+        out.append(f"{r['contrast_unknown']} texts sit on a gradient or a picture, where contrast cannot be checked: put text on a flat field (--cN with --on-cN) and keep the gradient behind shapes")
     if r.get("h1_count", 1) != 1:
         out.append(f"{r.get('h1_count')} main headings (h1): a page has one")
     return out
 
 
-def order(t, w):
+def order(t, w, bold=False):
     out = []
     first = t.get("first_screen") or []
     if first and t.get("rivals", 0) > 2:
@@ -78,28 +97,30 @@ def order(t, w):
         out.append(f"{t['rivals']} things compete to be seen first ({names}): make the one idea clearly the largest, quiet the rest")
     if w >= 1000 and t.get("contrast_of_sizes") and t["contrast_of_sizes"] < 1.8:
         out.append(f"the largest text on the first screen is only {t['contrast_of_sizes']} times the reading size: no clear first thing; give the idea your scale's display size")
-    if w >= 1000 and t.get("h1_px") and t["h1_px"] > 64:
+    if w >= 1000 and t.get("h1_px") and t["h1_px"] > 64 and not bold:
         out.append(f"the main heading is {t['h1_px']:g} px: too big for a professional page; 40 to 48 px on a laptop")
     return out
 
 
-def decorated(t):
+def decorated(t, bold=False):
+    """Calm: every item below. Bold: gradients, shadows, rounded shapes, pills, a colored phrase in the
+    title and up to six colors are part of the system; glows, glass, emoji, placeholder text stay out."""
     out = []
-    if t.get("gradients"):
+    if t.get("gradients") and not bold:
         out.append(f"gradient backgrounds on {', '.join(t['gradients'][:3])}: use a flat --paper or --surface")
     if t.get("glows"):
         out.append(f"glows or soft shadows on {', '.join(t['glows'][:3])}: remove; separate things with space or a hairline")
-    if t.get("shadows", 0) > 3:
+    if t.get("shadows", 0) > 3 and not bold:
         out.append(f"{t['shadows']} boxes have shadows: only something that floats (a menu, a dialog) gets one")
-    if t.get("round_boxes", 0) > 3:
+    if t.get("round_boxes", 0) > 3 and not bold:
         out.append(f"{t['round_boxes']} rounded boxes (cards): a list of facts is a list; use rules and space, and a radius of 2 to 6 px if any")
-    if t.get("pills", 0) > 3:
+    if t.get("pills", 0) > (12 if bold else 3):
         out.append(f"{t['pills']} pill-shaped chips: write them as plain text, or a small label with no fill")
     if t.get("glass"):
         out.append("blurred glass panels: use a flat surface")
     if t.get("emoji"):
         out.append(f"{t['emoji']} emoji: no emoji as icons or decoration; words, or a small drawn icon if it carries meaning")
-    if t.get("h1_accent"):
+    if t.get("h1_accent") and not bold:
         out.append("a colored or italic phrase inside the main heading: set the whole heading in one ink")
     if t.get("tiny_caps_labels", 0) > 2:
         out.append(f"{t['tiny_caps_labels']} small capital labels: sentence case at 13 px or more")
@@ -107,13 +128,24 @@ def decorated(t):
         out.append(f"{t['centered_long_text']} long centered paragraphs: align reading text left")
     if t.get("placeholder"):
         out.append(f"placeholder text ({', '.join(t['placeholder'][:4])}): replace with the real content, or a marked draft line")
-    if len(t.get("accent_hues", [])) > 2:
+    if bold and len(t.get("accent_hues", [])) > 6:
+        out.append(f"{len(t['accent_hues'])} different colors: a Bold page has three to five inks that work together (palette.py --bold)")
+    if not bold and len(t.get("accent_hues", [])) > 2:
         out.append(f"{len(t['accent_hues'])} different colors ({', '.join(str(h) + ' deg' for h in t['accent_hues'][:4])}): one accent; a second only to mean something")
     return out
 
 
-def bare(t, r, w):
+def bare(t, r, w, bold=False):
     out = []
+    if bold:
+        # timid: the Bold version of 'too plain'
+        if w >= 1000 and len(t.get("accent_hues", [])) < 2:
+            out.append(f"a Bold page with {len(t.get('accent_hues', []))} color(s): timid; give each of the palette's inks a field (a hero, a band, stickers); palette.py --bold")
+        if w >= 1000 and t.get("contrast_of_sizes") and t["contrast_of_sizes"] < 3:
+            out.append(f"the largest text is only {t['contrast_of_sizes']} times the reading size: timid; in Bold the title or the giant date is 4 to 15 times it (bold.md, type)")
+        if w >= 1000 and (t.get("background") or "").lower() in ("#ffffff", "#fff") and not t.get("pictures"):
+            out.append("a white page with no shape or picture: timid; give the first screen a full-bleed field and the subject's shape (bold.md)")
+        return out
     if w >= 1000 and (t.get("background") or "").lower() in ("#ffffff", "#fff") and len(t.get("accent_hues", [])) <= 1 and not t.get("pictures"):
         out.append("a white page with at most one accent and no picture: the 'too plain' look; warm or cool the paper (palette.py) and give the page's idea a picture or a display size")
     if len(r.get("text_sizes", {})) <= 2 and r.get("texts", 0) > 6:
@@ -155,11 +187,17 @@ def main():
     ap.add_argument("--widths", default="390,1280")
     ap.add_argument("--dark", action="store_true", help="also look at it in dark mode")
     ap.add_argument("--no-see", action="store_true", help="skip the model's look (faster)")
+    ap.add_argument("--register", choices=["auto", "calm", "bold"], default="auto", help='auto reads <meta name="ola-register" content="bold"> from the page')
     a = ap.parse_args()
     page = Path(a.page)
     if not page.is_file():
         print(f"look: no such page: {a.page}")
         return 2
+    reg = a.register
+    if reg == "auto":
+        reg = "bold" if re.search(r"""<meta[^>]+name=["']?ola-register["']?[^>]+content=["']?bold""", page.read_text(errors="replace"), re.I) else "calm"
+    bold = reg == "bold"
+    print(f"Register: {reg}" + (" (Bold rules, references/bold.md)" if bold else ""))
     shots = page.parent / "shots"
     shots.mkdir(exist_ok=True)
     see = None if a.no_see else shutil.which("ola-see")
@@ -176,8 +214,8 @@ def main():
             made[tag] = shot
             r = json.loads(js.read_text())
             t = r.get("taste") or {}
-            groups = [("broken", broken(r, w)), ("readable", readable(r, w)), ("order", order(t, w)), ("decorated", decorated(t)),
-                      ("bare", bare(t, r, w)), ("usable", usable(t, w))]
+            groups = [("broken", broken(r, w)), ("readable", readable(r, w, bold)), ("order", order(t, w, bold)), ("decorated", decorated(t, bold)),
+                      ("bare", bare(t, r, w, bold)), ("usable", usable(t, w))]
             n = sum(len(g) for _, g in groups)
             total += n
             summary["widths"][tag] = {"defects": n, "shot": str(shot.relative_to(page.parent)), "found": {k: v for k, v in groups if v}}
@@ -196,13 +234,14 @@ img{{display:block;background:#fff}} .l{{width:1000px}} .p{{width:300px}} .s{{wi
         out = shots / f"{page.stem}-{a.name}-sheet.png"
         p = subprocess.run(["ola-page", str(sheet), "--width", "2400", "--height", "820", "--viewport", "--out", str(out)], capture_output=True, text=True, timeout=200)
         if p.returncode == 0:
-            s = subprocess.run([see, str(out), QUESTION], capture_output=True, text=True, timeout=300)
+            s = subprocess.run([see, str(out), QUESTION_BOLD if bold else QUESTION], capture_output=True, text=True, timeout=300)
             seen = (s.stdout or s.stderr).strip()
             summary["seen"] = seen[:4000]
             print("What ola-see saw (laptop, phone, and the laptop blurred):\n" + "\n".join("    " + l for l in seen.splitlines()[:40]))
     elif not see:
         print("I could not look at the page itself (no ola-see here); these are only the checks a program can make. Open the shots to judge the rest.")
     summary["defects"] = total
+    summary["register"] = reg
     summary["looked"] = bool(see)
     (shots / f"{page.stem}-{a.name}.json").write_text(json.dumps(summary, indent=1))
     print(f"In all: {total} things a program can find. Fix the [broken] and [readable] ones first, then [order], [decorated], [bare], [usable].")

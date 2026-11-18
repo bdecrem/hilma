@@ -3,6 +3,13 @@
 The default. Read this file only, build the page, look once, fix, hand off. Keep it short: no
 directions, no extra rounds, no reading the other files unless something below sends you there.
 
+## 0. Calm or Bold
+
+If the person asked for fun, colorful, gorgeous, playful, bold, loud, modern or "make it pop", or the
+page is for a party, festival, celebration, fundraiser party or a campaign aimed at young people: read
+`/opt/ola/skills/designer/references/bold.md` and follow its "Quick Bold" steps instead of 3 and 4
+below (steps 1, 2 and 5 still hold). Otherwise, and when unsure, Calm: this file.
+
 ## 1. Brief (two lines in your head, not a file)
 
 Who opens it, and the one thing it must do. Open the person's files and copy the real facts:
@@ -30,7 +37,7 @@ largest and darkest on the first screen. Everything else is quiet.
 - Start from `/opt/ola/skills/designer/assets/base.css` (copy it beside the page; it has the focus
   style and reduced motion) and the recipes in `assets/components.html` (table, figures, chart, form).
 
-## 4. Never
+## 4. Never (in Calm; bold.md section 8 lists what stays out of Bold)
 
 Gradients, glows or soft shadows, rounded cards for everything, pill chips, emoji, a colored or
 italic phrase in the headline, small capital labels, more than one accent color, a slogan instead of

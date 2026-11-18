@@ -3,6 +3,15 @@
 The owner of this service corrected both many times. Avoid each without falling into the other.
 `look.py` finds the ones marked (program); look at the shots for the rest.
 
+These tables are the **Calm** register's. In the **Bold** register (`bold.md`; a page with
+`<meta name="ola-register" content="bold">`) three to five colors, gradients behind shapes (with a
+reason), big rounded shapes, stickers, a colored word in the title and very large display type are
+part of the system, and `look.py` does not count them. What stays banned in both registers:
+decoration that says nothing (blobs, waves, sparkles, glows, glassy panels), a slogan instead of the
+facts, placeholder or invented content, emoji as icons, low contrast, sideways scroll at 390 px. And
+Bold has its own "bare": **timid** (one color, type barely bigger than the text, no shape from the
+subject), and its own slop: rainbow everything, teal with hot pink, a default purple-to-pink gradient.
+
 ## Decorated ("ai slop"): remove, and do this instead
 
 | Remove | Do instead |

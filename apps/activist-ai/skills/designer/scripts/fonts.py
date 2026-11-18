@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """The fonts that come with the designer skill, copied beside a page so it never loads one from the web.
+Six for the Calm register and four display faces for the Bold one (Anton, Bowlby One, Fraunces, Space Grotesk).
 
     python3 /opt/ola/skills/designer/scripts/fonts.py list
     python3 /opt/ola/skills/designer/scripts/fonts.py add "Source Serif 4" "Public Sans" --to .
@@ -26,6 +27,15 @@ FAMILIES = {
                            fallback=SERIF, note="a working serif, sharp when large: report headlines and numbers"),
     "Literata": dict(files=[("Literata.woff2", "normal"), ("Literata-Italic.woff2", "italic")], weight="200 900", license="OFL-Literata.txt",
                      fallback=SERIF, note="a calm reading serif: long text, letters, reports"),
+    # Bold register display faces (references/bold.md): for big type with character, never for reading text.
+    "Anton": dict(files=[("Anton.woff2", "normal")], weight="400", license="OFL-Anton.txt",
+                  fallback='Impact, "Arial Narrow", sans-serif', note="Bold display: tall condensed poster capitals; dates, one-line headlines"),
+    "Bowlby One": dict(files=[("BowlbyOne.woff2", "normal")], weight="400", license="OFL-BowlbyOne.txt",
+                       fallback='"Arial Black", sans-serif', note="Bold display: fat, round, friendly; block parties, kids, fun"),
+    "Fraunces": dict(files=[("Fraunces.woff2", "normal"), ("Fraunces-Italic.woff2", "italic")], weight="100 900", license="OFL-Fraunces.txt",
+                     fallback=SERIF, note="Bold display: a soft, wonky old-style serif with italics; gorgeous dinners, galas, culture"),
+    "Space Grotesk": dict(files=[("SpaceGrotesk.woff2", "normal")], weight="300 700", license="OFL-SpaceGrotesk.txt",
+                          fallback=SANS, note="Bold: a modern grotesque with quirks; campaigns, youth, tech-forward; display or text"),
     "JetBrains Mono": dict(files=[("JetBrainsMono.woff2", "normal")], weight="100 800", license="OFL-JetBrainsMono.txt",
                            fallback='ui-monospace, Menlo, Consolas, monospace', note="monospaced: code and ids only"),
 }

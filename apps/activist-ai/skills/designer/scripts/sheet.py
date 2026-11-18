@@ -108,6 +108,14 @@ def same_layouts(laptops):
     maps = [(lab, ink_map(p)) for lab, p in laptops]
     return [(x[0], y[0], round(alike(x[1], y[1]), 2)) for x, y in itertools.combinations(maps, 2) if alike(x[1], y[1]) >= SAME_LAYOUT]
 
+
+ASK_BOLD = ("These are {n} versions of the first screen of the same web page, meant to be bold, fun and colorful, side by side, labeled {letters}; "
+            "in each column the laptop view is above the phone view. Judge them as a senior designer who makes gorgeous festival and campaign posters. "
+            "For each version write one line: its main visual idea, and its biggest weakness. Count for it: a confident system of three to five colors, "
+            "big display type with character, full-bleed color fields, a shape or picture taken from the subject (the date, the place, the thing), "
+            "an obvious first thing, readable text. Count against it: timid (one color, small type), chaos (colors with no system), decoration that says "
+            "nothing (blobs, sparkles, glows, emoji, a default purple-pink gradient), a slogan instead of the facts. End with one line exactly like: Best: A")
+
 ASK = ("These are {n} versions of the first screen of the same web page, side by side, labeled {letters}; in each column the laptop view "
        "is above the phone view. Judge them as a senior designer with restrained, independent taste. For each version write one line: "
        "its main visual idea, and its biggest weakness. Count against a version: decoration that says nothing about the subject (gradients, "
@@ -132,6 +140,7 @@ def main():
     ap.add_argument("--phone", default="390x844")
     ap.add_argument("--laptop", default="1280x800")
     ap.add_argument("--ask", action="store_true", help="ask ola-see which is strongest")
+    ap.add_argument("--register", choices=["calm", "bold"], default="calm", help="bold: judge them as fun, colorful pages (references/bold.md)")
     a = ap.parse_args()
     if not 1 <= len(a.items) <= 4:
         print("sheet.py: one to four items")
@@ -190,7 +199,7 @@ img.phone {{ width: 58%; }}
         if not see:
             print("No ola-see on this computer: judge the sheet from the rules in references/directions.md.")
         else:
-            s = subprocess.run([see, str(out), ASK.format(n=len(cols), letters=", ".join(c[0] for c in cols))], capture_output=True, text=True, timeout=300)
+            s = subprocess.run([see, str(out), (ASK_BOLD if a.register == "bold" else ASK).format(n=len(cols), letters=", ".join(c[0] for c in cols))], capture_output=True, text=True, timeout=300)
             print("What ola-see said (a second opinion, not a verdict):")
             print("\n".join("  " + l for l in (s.stdout or s.stderr).strip().splitlines()[:30]))
     return 0

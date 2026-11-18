@@ -1,0 +1,149 @@
+<!doctype html>
+<!-- EXAMPLE for the designer skill's Bold register (references/bold.md). The union, the hall, the
+     amounts and the bands are made up. Preset riso (the owner's approved palette), Bricolage
+     Grotesque 800 for display, Space Grotesk for text.
+     The idea: a rent party is a ticket and a goal, so the page is a riso-printed ticket stub on a
+     full-bleed vermillion field, and the fund's progress is ten blocks of ink, one per $1,000. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ola-register" content="bold">
+<title>Rent Party for the Tenant Defense Fund, Friday October 9</title>
+<style>
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/BricolageGrotesque.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+/* palette.py --bold --preset riso */
+:root {
+  --paper: #f7efdf; --surface: #eee3cf; --ink: #16121c; --ink-2: #57525f; --rule: #c5bfb0;
+  --c1: #ff4b1f; --on-c1: #16121c; --c2: #3d3bff; --on-c2: #f7efdf; --c3: #ffc31f; --on-c3: #16121c; --c4: #b6f23a; --on-c4: #16121c;
+  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --text: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 18px/1.55 var(--text); }
+a { color: var(--c2); text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--c2); outline-offset: 3px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 760px) { .wrap { padding: 0 40px; } }
+
+/* First screen: a full-bleed vermillion field, the ticket laid on it, slightly turned. */
+.hero { background: var(--c1); color: var(--on-c1); padding: 32px 0 56px; position: relative; overflow: hidden; }
+.hero .wrap { position: relative; display: grid; gap: 32px; align-items: center; }
+@media (min-width: 900px) { .hero .wrap { grid-template-columns: 1.15fr 1fr; gap: 48px; } }
+.org { font: 700 16px/1.3 var(--text); margin: 0 0 12px; }
+h1 { font: 800 clamp(52px, 10vw, 112px)/0.9 var(--display); letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+.lede { font-size: 20px; line-height: 1.45; margin: 20px 0 0; max-width: 30ch; font-weight: 500; }
+/* two flat circles of ink in the corner, cut by the page edge (no multiply here: on vermillion it prints mud) */
+/* the svg sits inside the edge; its circles run past its own box and are cut there, so they bleed off the page */
+.dots { position: absolute; right: 0; top: 0; width: min(46vw, 300px); height: auto; pointer-events: none; }
+
+.ticket { background: var(--paper); color: var(--ink); transform: rotate(-2.5deg); display: grid; grid-template-columns: 1fr 108px;
+  box-shadow: 10px 10px 0 var(--ink); max-width: 520px; }
+.ticket .main { padding: 24px 24px 22px; border-right: 3px dashed var(--ink); }
+.ticket .mon { font: 700 18px/1 var(--text); margin: 0; }
+.ticket .num { font: 800 clamp(96px, 22vw, 168px)/0.82 var(--display); letter-spacing: -0.05em; color: var(--c2); margin: 6px 0 10px; }
+.ticket .det { margin: 0; font-size: 18px; line-height: 1.4; }
+.ticket .stub { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--c3); color: var(--on-c3); padding: 12px; text-align: center; }
+.ticket .stub b { font: 800 32px/1 var(--display); }
+.ticket .stub span { font: 600 14px/1.2 var(--text); }
+
+/* The goal: blocks of ink, one per $1,000; raised ones are filled, the current one in part. */
+section { padding: 64px 0; }
+h2 { font: 800 clamp(32px, 5vw, 52px)/1 var(--display); letter-spacing: -0.03em; margin: 0 0 20px; text-wrap: balance; }
+.goal { display: grid; gap: 32px; align-items: end; }
+@media (min-width: 900px) { .goal { grid-template-columns: 1fr 1.2fr; gap: 64px; } }
+.big { font: 800 clamp(64px, 12vw, 128px)/0.9 var(--display); letter-spacing: -0.04em; margin: 0; color: var(--c2); }
+.of { font: 600 20px/1.3 var(--text); margin: 8px 0 0; }
+.blocks { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.blocks i { aspect-ratio: 1 / 2.2; border: 3px solid var(--ink); }
+.blocks i.on { background: var(--c2); }
+.blocks i.part { background: linear-gradient(to top, var(--c2) 24%, transparent 24%); }
+.blocks-cap { font-size: 14px; color: var(--ink-2); margin: 10px 0 0; }
+
+.band { background: var(--c2); color: var(--on-c2); }
+.band .wrap { padding-top: 56px; padding-bottom: 56px; display: grid; gap: 28px; }
+@media (min-width: 900px) { .band .wrap { grid-template-columns: repeat(3, 1fr); } }
+.band h3 { font: 800 28px/1.05 var(--display); margin: 0 0 8px; letter-spacing: -0.02em; }
+.band p { margin: 0; max-width: 34ch; }
+.band .t { display: inline-block; font: 700 16px/1 var(--text); background: var(--c4); color: var(--on-c4); padding: 8px 12px; margin-bottom: 14px; transform: rotate(-3deg); }
+
+.cta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; min-height: 54px; padding: 0 28px; background: var(--ink); color: var(--paper); font: 700 18px/1 var(--text);
+  text-decoration: none; box-shadow: 5px 5px 0 var(--c1); }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 7px 7px 0 var(--c1); }
+p { max-width: 62ch; margin: 0 0 14px; }
+.note { font-size: 14px; color: var(--ink-2); }
+footer { border-top: 3px solid var(--ink); padding: 24px 0 40px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <svg class="dots" viewBox="0 0 300 300" aria-hidden="true">
+    <circle cx="150" cy="110" r="120" fill="#ffc31f"/><circle cx="240" cy="40" r="120" fill="#3d3bff"/>
+  </svg>
+  <div class="wrap">
+    <div>
+      <p class="org">Linden Place Tenants Union</p>
+      <h1>Rent party for the Tenant Defense Fund</h1>
+      <p class="lede">Dance, eat, and pay for the lawyer who keeps 14 families in their homes this winter.</p>
+    </div>
+    <div class="ticket" role="img" aria-label="Ticket: Friday October 9, 8 pm to 1 am, Mercer Street Union Hall, 15 dollars or what you can pay">
+      <div class="main">
+        <p class="mon">Friday, October</p>
+        <p class="num">9</p>
+        <p class="det"><b>8 pm to 1 am</b><br>Mercer Street Union Hall, 212 Mercer Street</p>
+      </div>
+      <div class="stub"><b>$15</b><span>or what you can pay</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap goal">
+      <div>
+        <h2>The fund so far</h2>
+        <p class="big">$6,240</p>
+        <p class="of">raised of $10,000 for this winter's cases</p>
+      </div>
+      <div>
+        <!-- ten blocks, one per $1,000: 6 full, the 7th filled 24% ($240 of $1,000), 3 empty -->
+        <div class="blocks" role="img" aria-label="6,240 dollars raised of 10,000, drawn as ten blocks of 1,000 dollars">
+          <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="part"></i><i></i><i></i><i></i>
+        </div>
+        <p class="blocks-cap">One block is $1,000. Every ticket at the door goes into the fund.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="band">
+    <div class="wrap">
+      <div><span class="t">8 pm</span><h3>Potluck and the open mic</h3><p>Bring a dish to share. Tenants tell the story of their building, five minutes each.</p></div>
+      <div><span class="t">10 pm</span><h3>The Mercer Street Horns</h3><p>Ten pieces, salsa and second-line. Childcare in the back room until 11.</p></div>
+      <div><span class="t">11:30 pm</span><h3>DJ Fernanda until close</h3><p>Old soul, cumbia and house. The bar is run by volunteers; all of it goes to the fund.</p></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>Can't come? Chip in anyway.</h2>
+      <p>The fund pays for a housing lawyer for tenants of Linden Place and the four buildings around it. Last winter it stopped 9 evictions.</p>
+      <div class="cta">
+        <a class="btn" href="#give">Give to the fund</a>
+        <a href="#volunteer">Work a two-hour shift at the door or the bar</a>
+      </div>
+      <p class="note" style="margin-top:24px">The hall has a ramp at the side door and a step-free restroom.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="note">Example page for the designer skill (Bold register). The union, the hall, the amounts and the bands are made up.</p>
+  </div>
+</footer>
+</body>
+</html>

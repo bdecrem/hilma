@@ -41,6 +41,16 @@ const RUBRIC = `You are judging two versions, A and B, of the same {kind}, built
 6. Not bare: not a default-looking white page with one plain blue and a table.
 7. It works and reads well on the phone.
 Write one short line about A and one about B. Then a final line exactly "Better: A" or "Better: B" or "Better: same".`
+// The Bold register's tasks (task.json "register": "bold"): the person asked for fun, colorful, gorgeous.
+const BOLD_RUBRIC = `You are judging two versions, A and B, of the same web page, built from the same content, shown side by side. In each column the laptop view is above the phone view. The person asked for a fun, colorful, gorgeous, modern page. Judge as a senior designer who makes great festival, party and campaign posters:
+1. Is it genuinely fun and gorgeous: would people stop scrolling for it?
+2. A confident color system of three to five colors that work together, used as full fields, not scattered.
+3. Big display type with character; an obvious first thing (the event, the date).
+4. A shape or picture taken from the subject (the date as a giant numeral, the place, the thing itself), not generic decoration.
+5. No empty decoration: blobs, sparkles, glows, emoji, glassy cards, a default purple-to-pink gradient, a slogan instead of the facts.
+6. Not timid: not a plain page with one color and small type.
+7. Text is readable, and it works on the phone.
+Write one short line about A and one about B. Then a final line exactly "Better: A" or "Better: B" or "Better: same".`
 const APP_RUBRIC = RUBRIC.replace('In each column the laptop view is above the phone view.', 'Each is the first screen of a phone app prototype.')
   .replace('7. It works and reads well on the phone.', '7. It looks like a normal, finished iPhone app (navigation bar, tab bar or back button, standard sizes), not a web page.')
 
@@ -118,7 +128,7 @@ try {
       const v = []
       for (const [first, second] of [[on, off], [off, on]]) {
         await sheet(browser, [['A', first], ['B', second]], tmp, app)
-        v.push(await ask(readFileSync(tmp).toString('base64'), app ? APP_RUBRIC : RUBRIC.replace('{kind}', 'web page')))
+        v.push(await ask(readFileSync(tmp).toString('base64'), app ? APP_RUBRIC : t.register === 'bold' ? BOLD_RUBRIC : RUBRIC.replace('{kind}', 'web page')))
       }
       const pick = (x, aIsOn) => (x.verdict === 'SAME' ? 'same' : x.verdict === '?' ? '?' : (x.verdict === 'A') === aIsOn ? 'with' : 'without')
       const p1 = pick(v[0], true), p2 = pick(v[1], false)

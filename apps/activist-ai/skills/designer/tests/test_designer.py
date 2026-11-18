@@ -84,6 +84,41 @@ p = subprocess.run(["ola-page", str(d / "typed.html"), "--out", str(d / "typed.p
 fams = json.loads((d / "typed.json").read_text()).get("font_families", {}) if p.returncode == 0 else {}
 case("a page renders in the bundled fonts with no outside request", {"Public Sans", "Source Serif 4"} <= set(fams), str(fams))
 
+# The Bold register (references/bold.md).
+for p in ("riso", "night-neon", "candy", "duotone"):
+    r = run(HERE / "scripts" / "palette.py", "--bold", "--preset", p, "--css", d / f"bold-{p}.css")
+    case(f"palette.py --bold preset {p} passes its text contrast", r.returncode == 0, r.stdout[-400:])
+r = run(HERE / "scripts" / "palette.py", "--bold", "--preset", "riso")
+case("the riso preset keeps the approved colors", all(c in r.stdout for c in ("#ff4b1f", "#3d3bff", "#ffc31f", "#b6f23a", "#f7efdf", "#16121c")))
+case("it says which colors may not carry text on the ground", "fields and shapes only" in r.stdout)
+bad = [f"{s} {g} {h}" for s in ("complementary", "triadic", "analogous-clash", "split") for g in ("light", "dark") for h in range(0, 360, 45)
+       if run(HERE / "scripts" / "palette.py", "--bold", "--scheme", s, "--hue", h, "--ground", g).returncode != 0]
+case("palette.py --bold schemes pass contrast for every hue, light and dark", not bad, str(bad[:4]))
+r = run(HERE / "scripts" / "fonts.py", "add", "Anton", "Space Grotesk", "--to", d / "boldfonts")
+case("fonts.py adds the Bold display faces with their licenses", r.returncode == 0 and (d / "boldfonts/fonts/OFL-Anton.txt").exists() and (d / "boldfonts/fonts/SpaceGrotesk.woff2").exists(), r.stdout + r.stderr)
+shutil.copytree(HERE / "assets" / "fonts", d / "fonts", dirs_exist_ok=True)
+for ex in sorted((HERE / "assets").glob("bold-*.html")):
+    shutil.copy(ex, d / ex.name)
+    r = run(*look, d / ex.name, "--name", "ex", "--no-see")
+    s = json.loads((d / f"shots/{ex.stem}-ex.json").read_text()) if (d / f"shots/{ex.stem}-ex.json").exists() else {}
+    case(f"the Bold example {ex.name} is read as Bold and has no defects", s.get("register") == "bold" and s.get("defects") == 0, r.stdout[-700:])
+# Bold allows a color system, a gradient behind a shape and rounded stickers ...
+(d / "boldok.html").write_text("""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name="ola-register" content="bold"><title>B</title>
+<style>body{margin:0;background:#f7efdf;color:#16121c;font:18px/1.5 system-ui,sans-serif} .hero{background:#ff4b1f;padding:24px 16px} h1{font-size:96px;line-height:.9;margin:0}
+.sky{width:300px;height:120px;background:linear-gradient(#ffc31f,#ff4b1f)} .st{display:inline-block;border-radius:24px;padding:20px;width:300px;height:170px;margin:6px}
+.a{background:#3d3bff;color:#f7efdf}.b{background:#ffc31f}.c{background:#b6f23a}.e{background:#3d3bff;color:#f7efdf} :focus-visible{outline:3px solid #3d3bff}</style></head><body>
+<div class=hero><h1>Block party June 14</h1></div><div class=sky aria-hidden=true></div><p>Music, food and games on Willow Lane from noon to 8 pm.</p>
+<div class="st a">12 grills</div><div class="st b">3 bands</div><div class="st c">1 bouncy castle</div><div class="st e">40 tables</div></body></html>""")
+r = run(*look, d / "boldok.html", "--name", "b", "--no-see")
+case("in Bold, a color system, a gradient behind a shape and rounded stickers are not decoration", "Register: bold" in r.stdout and "- [decorated]" not in r.stdout and "- [bare]" not in r.stdout, r.stdout[-700:])
+r = run(*look, d / "boldok.html", "--name", "c", "--no-see", "--register", "calm")
+case("the same page under Calm is still called decorated", "[decorated] gradient" in r.stdout and "rounded boxes" in r.stdout and "too big" in r.stdout, r.stdout[-700:])
+# ... but not glows, emoji or placeholder text, and a timid page is called out.
+r = run(*look, d / "bad.html", "--name", "badbold", "--no-see", "--register", "bold")
+case("in Bold, glows, emoji and placeholder text are still decoration", all(x in r.stdout for x in ("[decorated] glows", "emoji", "placeholder text")), r.stdout[-700:])
+r = run(*look, d / "plain.html", "--name", "plainbold", "--no-see", "--register", "bold")
+case("in Bold, a white page with one blue and small type is called timid", r.stdout.count("timid") >= 2, r.stdout[-700:])
+
 # sheet.py: two pages side by side in one picture.
 r = run(HERE / "scripts" / "sheet.py", d / "plain.html", d / "components.html", "--out", d / "sheet.png")
 case("sheet.py puts two directions side by side", r.returncode == 0 and (d / "sheet.png").stat().st_size > 20000, r.stdout + r.stderr)

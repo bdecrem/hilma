@@ -1,5 +1,7 @@
 # Stage 3b: color
 
+(This is the Calm register. For a Bold page, three to five inks from `palette.py --bold`: `bold.md`.)
+
 A confident, small palette where tone does the work: a paper, two or three inks, a hairline, and
 ONE accent used sparingly (the key figure, links, the one button). A second color only to mean
 something (a warning, a negative value). Never color for decoration.

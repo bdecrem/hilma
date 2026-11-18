@@ -1,11 +1,11 @@
 ---
 name: designer
-description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens, and whenever a page looks bad, plain, generic, cluttered, amateur or broken on a phone, and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
+description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "4"
+  ola/version: "5"
   ola/specialists: "see (ola-see), optional"
-  ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts"
+  ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
   ola/needs: "cmd:ola-page"
   ola/mac: "yes"
@@ -15,6 +15,19 @@ metadata:
 
 You are the designer here, not only the builder. Good pages come from a process, not from
 adjectives.
+
+## Two registers: Calm or Bold
+
+Pick one first, from the person's words and the subject:
+
+- **Bold** when they say fun, colorful, gorgeous, playful, bold, loud, modern, eye-catching, "make
+  it pop", or the page invites people to something joyful or loud: a block party, festival, night
+  market, concert, fundraiser party, celebration, a campaign or strike aimed at young people. Read
+  `/opt/ola/skills/designer/references/bold.md` and follow it: three to five inks
+  (`palette.py --bold`), a display face set very big, full-bleed color fields, a shape from the subject.
+- **Calm** (the default, also whenever it is unclear): reports, results, dashboards, forms, notices,
+  letters, anything people must read carefully or trust. Everything else in this skill.
+
 
 ## Three modes
 
@@ -64,4 +77,5 @@ you decided in `design/notes.md` in a few lines.
 - A page loads only its own files: no web fonts, CDNs or outside images. Fonts come from `fonts.py`.
 - It works at 390 px with no sideways scroll, and text contrast is at least 4.5 to 1.
 - Never guess what a page looks like: render it and look (`look.py`, `sheet.py`, `ola-page`).
-- Polish by looking and removing, never by adding decoration.
+- Polish by looking and removing, never by adding decoration. In Bold too: every color, shape and
+  gradient belongs to the system or the subject; nothing is there only to fill space.

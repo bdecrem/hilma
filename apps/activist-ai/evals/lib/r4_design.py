@@ -7,6 +7,9 @@
     u5-signup-flow     designer: a volunteer sign-up flow in a few steps, then a thank-you
     u6-phone-screens   app-designer: three screens of a tool library's phone app, clickable, with pictures
     u7-app-unfinished  app-designer: a two-screen notes prototype that "feels unfinished", made a normal app
+    u9-block-party        designer, Bold: "a fun, colorful page" for a block party, from party.md
+    u10-youth-strike       designer, Bold: "a bold, modern page" for a youth climate strike, from strike.md
+    u11-garden-fundraiser designer, Bold: "a gorgeous page" for a garden's harvest dinner, from dinner.md
 
 The program checks hold every page to what a careful designer would never ship: broken on a phone,
 unreadable, decorated (gradients, glows, emoji, pills, a colored phrase in the headline, placeholder
@@ -381,6 +384,196 @@ def u7_check(work, truth, session, C):
     C.add("empty_state", re.search(r"no (notes|meetings)|nothing here|empty", low) is not None, "missed_items")
 
 
+# ------------------------------------------------------------------ u9 to u11: the Bold register (designer 5)
+# The person asks for fun, colorful, bold, gorgeous. The checks hold the page to Bold's rules
+# (skills/designer/references/bold.md): no sideways scroll, contrast, nothing from outside, no glows,
+# glass, emoji or placeholder text, AND not timid: a color system of at least two hues, a first thing
+# at least three times the reading size, a ground that is not plain white (or a drawn picture).
+
+BOLD_COMMON = ["page_loads", "no_sideways_scroll_on_a_phone", "no_sideways_scroll_on_a_laptop", "text_contrast_passes", "no_tiny_text",
+               "one_or_two_fonts", "nothing_from_other_addresses", "no_clipped_text", "type_on_a_scale", "no_empty_decoration", "a_color_system",
+               "no_placeholder_text", "a_big_first_thing", "not_a_plain_white_page", "headings_and_alt_text", "focus_is_visible"]
+
+
+def bold_checks(C, work, rel):
+    phone = page(work, {"path": rel, "width": 390, "audit": True})
+    lap = page(work, {"path": rel, "width": 1280, "audit": True})
+    a, b = phone.get("audit") or {}, lap.get("audit") or {}
+    ta, tb = a.get("taste") or {}, b.get("taste") or {}
+    C.add("page_loads", phone.get("ok") and lap.get("ok") and not phone.get("errors"), "page_broken", (phone.get("error") or "") + str(phone.get("errors", ""))[:200])
+    C.add("no_sideways_scroll_on_a_phone", phone.get("scroll", 1) <= 0 and a.get("past_right_edge_count", 1) == 0, "page_broken",
+          f"scroll {phone.get('scroll')}, past edge {a.get('past_right_edge_count')} {str(a.get('past_right_edge', ''))[:120]}")
+    C.add("no_sideways_scroll_on_a_laptop", lap.get("scroll", 1) <= 0, "page_broken", f"scroll {lap.get('scroll')}")
+    C.add("text_contrast_passes", a.get("low_contrast_count", 1) == 0 and b.get("low_contrast_count", 1) == 0, "page_broken",
+          f"{a.get('low_contrast_count')} at 390, {b.get('low_contrast_count')} at 1280: {str(a.get('low_contrast') or b.get('low_contrast') or '')[:160]}")
+    C.add("no_tiny_text", (a.get("smallest_text_px") or 0) >= 12 and (b.get("smallest_text_px") or 0) >= 12, "page_broken", f"smallest {a.get('smallest_text_px')} px")
+    C.add("one_or_two_fonts", 0 < len(fams(b)) <= 2, "design_slop", f"{list((b.get('font_families') or {}).keys())}")
+    C.add("nothing_from_other_addresses", not phone.get("external") and not lap.get("external"), "page_broken", f"{phone.get('external')} outside requests")
+    C.add("no_clipped_text", a.get("clipped_count", 1) == 0 and b.get("clipped_count", 1) == 0, "page_broken", str(a.get("clipped") or b.get("clipped") or "")[:160])
+    small = [k for k in (b.get("text_sizes") or {}) if float(k) < 40]
+    body = (tb.get("reading_px") or b.get("body_text_px") or 0)
+    C.add("type_on_a_scale", len(small) <= 8 and 14 <= body <= 20, "design_slop", f"{len(small)} sizes under 40 px {sorted(small, key=float)}, reading {body} px")
+    deco = {k: tb.get(k) for k in ("glows", "glass", "emoji") if tb.get(k)}
+    C.add("no_empty_decoration", not deco, "design_slop", str(deco)[:200])
+    hues = tb.get("accent_hues") or []
+    C.add("a_color_system", 2 <= len(hues) <= 6, "weak_hierarchy" if len(hues) < 2 else "design_slop", str(hues))
+    C.add("no_placeholder_text", not (ta.get("placeholder") or tb.get("placeholder")), "design_slop", str(ta.get("placeholder") or tb.get("placeholder")))
+    C.add("a_big_first_thing", (tb.get("rivals") or 9) <= 2 and (tb.get("contrast_of_sizes") or 0) >= 3, "weak_hierarchy",
+          f"rivals {tb.get('rivals')}, largest/reading {tb.get('contrast_of_sizes')}: {str(tb.get('first_screen'))[:160]}")
+    C.add("not_a_plain_white_page", (tb.get("background") or "").lower() not in ("#ffffff", "#fff") or (tb.get("pictures") or 0) > 0, "weak_hierarchy", str(tb.get("background")))
+    C.add("headings_and_alt_text", b.get("h1_count") == 1 and not tb.get("heading_skips") and not tb.get("images_without_alt") and not tb.get("unlabeled_pictures"),
+          "not_accessible", f"h1 {b.get('h1_count')}, skips {tb.get('heading_skips')}, no alt {tb.get('images_without_alt')}, unlabeled pictures {tb.get('unlabeled_pictures')}")
+    C.add("focus_is_visible", not tb.get("interactive") or (tb.get("focus_rules") or 0) > 0, "not_accessible", f"{tb.get('interactive')} interactive, {tb.get('focus_rules')} focus rules")
+    return phone, lap
+
+
+def bold_start(C, work, rel, extra):
+    C.exists(work, rel)
+    if not (Path(work) / rel).exists():
+        C.skip(BOLD_COMMON + extra, "stopped_early")
+        return False
+    return True
+
+
+def bold_check(work, truth, session, C):
+    extra = ["facts_kept", "date_on_the_first_screen"]
+    if not bold_start(C, work, "index.html", extra):
+        return
+    phone, lap = bold_checks(C, work, "index.html")
+    lost = has_all(phone.get("text") or "", truth["facts"])
+    C.add("facts_kept", not lost, "missed_items", f"lost {lost[:4]}")
+    first = " ".join(x.get("text", "") for x in ((lap.get("audit") or {}).get("taste") or {}).get("first_screen", []))
+    day = truth["date"].split()[1]
+    C.add("date_on_the_first_screen", re.search(rf"\b{day}\b", first) is not None and (truth["date"].split()[0][:3].lower() in first.lower() or truth["date"] in first),
+          "weak_hierarchy", first[:200])
+
+
+def party_generate(work, seed, rng):
+    street = rng.choice(["Willow Lane", "Orchard Row", "Linden Place", "Mercer Court"])
+    a, b = rng.sample(["2nd Street", "3rd Street", "Elm Street", "Park Avenue", "Bay Street"], 2)
+    date = rng.choice(["June 14", "June 21", "July 12", "August 9"])
+    bands = rng.sample(["The Porch Lights", "Banda del Barrio", "Second Line Kids", "DJ Lupe", "The Stoop Sisters"], 2)
+    grills = rng.randint(6, 14)
+    phone = f"(555) 01{rng.randint(10, 99)}-{rng.randint(1000, 9999)}"
+    (Path(work) / "party.md").write_text(f"""# {street} Block Party
+
+When: Saturday, {date}, noon to 8 pm
+Where: {street}, between {a} and {b} (closed to cars all day)
+Who: everyone on the block, their friends, their kids, their dogs
+
+What's happening
+- A potluck at 1 pm: {grills} grills going, bring a dish if you can
+- Live music from 3 pm: {bands[0]}, then {bands[1]}
+- Kids' games all afternoon: chalk drawing, a water balloon toss, face painting
+- A table for the new tenants' association: come meet your neighbors
+
+Bring: a chair, a dish to share, sunscreen.
+Rain date: the next Saturday.
+Questions: text Marta at {phone}.
+""")
+    return {"facts": [date, street, a, b, *bands, phone, str(grills)], "date": date}
+
+
+def strike_generate(work, seed, rng):
+    city = rng.choice(["Riverton", "Lakeview", "Millbrook", "Easton"])
+    date = rng.choice(["September 25", "October 2", "March 20", "April 22"])
+    day = rng.choice(["Friday", "Friday", "Wednesday"])
+    schools = rng.randint(9, 23)
+    demands = ["Solar panels on every public school roof by 2030", "Free bus passes for every student", "A youth seat on the city's climate commission"]
+    rng.shuffle(demands)
+    phone = f"(555) 01{rng.randint(10, 99)}-{rng.randint(1000, 9999)}"
+    (Path(work) / "strike.md").write_text(f"""# {city} Youth Climate Strike
+
+When: {day}, {date}. We walk out of class at 11 am.
+Where: we meet on the steps of {city} City Hall at 11:30 am, then march down Main Street to the river park.
+Who: high school students from {schools} schools so far. Middle schoolers welcome with an adult.
+
+Our three demands to the city council
+1. {demands[0]}
+2. {demands[1]}
+3. {demands[2]}
+
+Bring: water, a sign (markers and cardboard at the steps), a friend.
+Missing class: we have a letter for parents and teachers at the sign-up link.
+Organizers: the {city} Student Climate Coalition. Text us at {phone}.
+""")
+    return {"facts": [date, f"{city} City Hall", "11 am", *[" ".join(d.split()[:3]) for d in demands], phone, str(schools)], "date": date}
+
+
+def dinner_generate(work, seed, rng):
+    garden = rng.choice(["Halsey Street Community Garden", "Riverbend Commons Garden", "Northside Growers' Garden"])
+    date = rng.choice(["October 17", "September 19", "October 3"])
+    goal = rng.choice([12000, 15000, 18000])
+    raised = rng.randint(30, 70) * goal // 100
+    price = rng.choice([35, 40, 45])
+    dishes = rng.sample(["Roasted squash soup with sage", "Tomato and bean stew", "Garden greens with pickled onion", "Corn bread from the garden's own corn",
+                         "Apple and pear crumble", "Collards with smoked chili"], 4)
+    (Path(work) / "dinner.md").write_text(f"""# Harvest Dinner for the {garden}
+
+A long-table dinner in the garden, cooked from what we grew this year.
+When: Saturday, {date}, 6 pm to 9:30 pm
+Where: in the garden, under the lights (indoors at the library hall if it rains)
+Tickets: ${price}, or pay what you can. Kids under 12 eat free.
+
+What the dinner pays for: a new tool shed and a rain-water tank, ${goal:,} in all. Raised so far: ${raised:,}.
+
+The menu
+- {dishes[0]}
+- {dishes[1]}
+- {dishes[2]}
+- {dishes[3]}
+
+Music by the garden's own string trio. Bring a warm layer.
+""")
+    return {"facts": [date, f"${price}", f"{goal:,}", f"{raised:,}", *dishes[:3]], "date": date}
+
+
+BOLD_GOOD = """<style>
+:root { --paper:#f7efdf; --ink:#16121c; --c1:#ff4b1f; --c2:#3d3bff; --c3:#ffc31f; }
+* { box-sizing: border-box; } body { margin:0; background:var(--paper); color:var(--ink); font:400 18px/1.55 system-ui, sans-serif; }
+.hero { background: var(--c1); padding: 32px 16px 48px; } .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+h1 { font-size: clamp(48px, 9vw, 96px); line-height: .92; margin: 0 0 16px; letter-spacing: -0.03em; }
+.giant { font-size: clamp(110px, 30vw, 260px); line-height: .8; font-weight: 800; margin: 0; color: var(--ink); }
+.band { background: var(--c2); color: var(--paper); padding: 32px 16px; } .band p { margin: 0; }
+.stk { display:inline-block; background: var(--c3); padding: 16px 20px; border-radius: 24px; margin: 6px; transform: rotate(-2deg); }
+h2 { font-size: 36px; line-height: 1; margin: 40px 0 16px; } p, li { max-width: 62ch; } a { color: var(--c2); } .band a { color: var(--paper); }
+:focus-visible { outline: 3px solid var(--c2); outline-offset: 2px; }
+</style>"""
+
+
+def bold_shell(title, hero, body):
+    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title>{BOLD_GOOD}</head>'
+            f'<body><header class="hero"><div class="wrap">{hero}</div></header><main class="wrap">{body}</main></body></html>')
+
+
+def bold_solve(src):
+    def solve(work, truth, wrong=False):
+        md = (Path(work) / src).read_text()
+        lines = [l.strip("- ") for l in md.splitlines() if l.strip() and not l.startswith("#")]
+        title = md.splitlines()[0][2:]
+        month, day = truth["date"].split()
+        if wrong:  # timid: white, one blue, the title at reading size and no giant date
+            html = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title>'
+                    f'<style>body{{font:17px/1.6 system-ui,sans-serif;margin:16px;background:#fff;color:#111}} h1{{font-size:20px}} a{{color:#0645ad}}</style></head><body>'
+                    f'<h1>{title}</h1>' + "".join(f"<p>{l}</p>" for l in lines) + "</body></html>")
+        else:
+            hero = f'<h1>{title}</h1><p class="giant">{day}</p><p><b>{month} {day}</b></p>'
+            body = '<div class="band"><p>' + lines[0] + '</p></div>' + "".join(f'<span class="stk">{l}</span>' if len(l) < 40 else f"<p>{l}</p>" for l in lines[1:])
+            html = bold_shell(title, hero, body)
+        (Path(work) / "index.html").write_text(html)
+        return "Made index.html."
+    return solve
+
+
+def bold_slop(src):
+    def solve(work, truth):
+        md = (Path(work) / src).read_text()
+        lines = [l for l in md.splitlines() if l.strip() and not l.startswith("#")]
+        (Path(work) / "index.html").write_text(SLOP.replace("{body}", "".join(f"<div class=card><p>{l} 🎉</p></div>" for l in lines)))
+        return "Made index.html."
+    return solve
+
+
 # ------------------------------------------------------------------ reference solutions and wrong outputs
 
 GOOD = """<style>
@@ -618,6 +811,11 @@ INSTR = {
     "u7-app-unfinished": "prototype.html is the phone app for our meeting notes. People who tried it say it feels unfinished, like a web page, not a real app. "
                          "Fix the design so it feels like a normal, finished iPhone app. Keep our notes in it.",
     "u8-three-concepts": "person.md has what we found about this professor. Now make a nice new personal homepage for her and give me 3 design concepts.",
+    "u9-block-party": "Make a fun, colorful page for our neighborhood block party, from party.md, as index.html. Most people will open it on their phones.",
+    "u10-youth-strike": "Make a bold, modern page for our youth climate strike, from strike.md, as index.html. It's for high school students, "
+                       "and most of them will open it on their phones from Instagram.",
+    "u11-garden-fundraiser": "Make a gorgeous page for our community garden's harvest dinner fundraiser, from dinner.md, as index.html. "
+                             "We want people to buy tickets.",
 }
 
 TASKS = {
@@ -630,7 +828,11 @@ TASKS = {
     "u7-app-unfinished": dict(skill="app-designer", level="medium", outputs=["prototype.html"], generate=u7_generate, check=u7_check, solve=lambda w, t: u7_solve(w, t), wrong=W(u7_solve)),
     "u8-three-concepts": dict(skill="designer", level="medium", outputs=[], generate=u8_generate, check=u8_check, solve=lambda w, t: u8_solve(w, t), wrong=W(u8_solve)),
 }
+for tid, src, gen in (("u9-block-party", "party.md", party_generate), ("u10-youth-strike", "strike.md", strike_generate), ("u11-garden-fundraiser", "dinner.md", dinner_generate)):
+    TASKS[tid] = dict(skill="designer", register="bold", level="medium", outputs=["index.html"], generate=gen, check=bold_check,
+                      solve=(lambda s: lambda w, t: bold_solve(s)(w, t))(src), wrong=(lambda s: lambda w, t: bold_solve(s)(w, t, wrong=True))(src))
 for k, v in TASKS.items():
     v["family"] = "skills"
     v["instruction"] = INSTR[k]
-    v["wrong2"] = (lambda w, t: "I could not do it.")
+    v["wrong2"] = bold_slop({"u9-block-party": "party.md", "u10-youth-strike": "strike.md", "u11-garden-fundraiser": "dinner.md"}[k]) if v.get("register") == "bold" \
+        else (lambda w, t: "I could not do it.")

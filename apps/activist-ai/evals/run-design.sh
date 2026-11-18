@@ -3,7 +3,7 @@
 # one task per take of the machine-wide suite lock (both arms in one take, about 10 to 20 minutes), so
 # other suites can run between tasks. Resumable: a run already in the database is skipped.
 #
-#   evals/run-design.sh [tasks...]   (default: u1 to u7; s7 and s8 can be added)
+#   evals/run-design.sh [tasks...]   (default: u1 to u7; s7 and s8 can be added; the Bold register: u9-block-party u10-youth-strike u11-garden-fundraiser)
 #
 # Needs the evals' own gateway with `see` first (the weekly quota per slot is the spending ceiling):
 #   OLA_EVALS_ROOT=~/ola-ds/evals evals/start-gateway-ws.sh nemods 4399 nvidia/NVIDIA-Nemotron-3.5-Super-VL 9500000 see=meta-models/Muse-Glimmer-30B
