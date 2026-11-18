@@ -64,7 +64,7 @@ protection answer changed; eight implementation ratings moved half a step, seven
 | 10 implementation ratings | No source the coder opened shows practice. | Source check | Evidence rebuilt in the recode |
 | 77, 85, 87, 89, 97, 99, 109 | Ratings of "Effectively Always" or close to it that rested on guidance or on evidence not about migrants. Practice sources read in the recode show gaps: same-sex couples who cannot marry at home, the Ombud's findings at the Trandum detention centre, low union membership and employer resistance among labour migrants, refugees afraid to attend demonstrations, a growing family-permit backlog. | Source check and second reader | Changed: each lowered half a step |
 
-## Philippines (checks run 2026-11-17: 54 verified as they were, 6 changed, 4 in a repair round; $260)
+## Philippines (checks finished 2026-11-17: 57 verified as they were, 6 changed, 1 waiting; $281)
 
 The source check failed 26 of 64 answers, the second reader objected to 15, 5 were low confidence.
 Two protection answers changed.
@@ -79,8 +79,8 @@ Two protection answers changed.
 | 63 | "Effectively Always" rested on the absence of cases. | Source check | Changed: "Usually; Effectively Always" |
 | 39 | Rating rebuilt on recent evidence that interpreters are provided. | Recode | Changed: "Sometimes" to "Sometimes; Usually" |
 | 15 implementation ratings | No source the coder opened shows practice. | Source check | Evidence rebuilt in the recode |
-| 73, 75, 109 | The recode itself cited one instrument each from a summary (a law-school yearbook, the Court's description of a circular, a law firm's note). | Source check on the recode | Second recode running; a person is asked only if that fails too |
-| 111, unemployment benefits | No source shows a foreign member claiming, getting or being refused the benefit. | Source check on the recode | Second recode running; likely to end with a person, because the evidence may not exist |
+| 73, 75, 109 | The recode itself cited one instrument each from a summary (a law-school yearbook, the Court's description of a circular, a law firm's note). | Source check on the recode | Fixed by the second recode: the instruments read themselves; answers unchanged |
+| 111, unemployment benefits | No source shows a foreign member claiming, getting or being refused the benefit. | Source check on the recode | Waiting for a person: the second recode found no such evidence either |
 
 ## When a check was wrong
 
