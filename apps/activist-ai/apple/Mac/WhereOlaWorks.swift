@@ -375,7 +375,7 @@ struct WhereSettings: View {
               Button("Restart the Agent") { Task { await controller.restart() } }.disabled(controller.starting)
             }
           }
-          SettingNote("Commands and file changes still ask first. Sessions here stay on this Mac.")
+          SettingNote("Sessions here stay on this Mac. Whether Ola asks before commands and file changes: Permissions, below.")
         }
       }
     }

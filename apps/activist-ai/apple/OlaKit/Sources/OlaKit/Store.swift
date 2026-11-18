@@ -50,6 +50,11 @@ public final class OlaStore {
   public var onApproval: ((_ session: SessionInfo, _ approval: Approval) -> Void)?
   /// Every finish and every wait for Bart, wherever he is looking (the Mac app sends them to the phone).
   public var onNotify: ((NotifyEvent) -> Void)?
+  /// An approval that goes ahead without asking (the Mac's "Lots of permissions",
+  /// PermissionSettings.wire): asked at each approval, so a change applies to the next step.
+  public var goesAhead: ((_ action: String, _ resources: [String]) -> Bool)?
+  /// How many approvals went ahead without asking (checks).
+  public private(set) var wentAhead = 0
 
   private var client: OpenCodeClient?
   private var stream: Task<Void, Never>?
@@ -251,6 +256,16 @@ public final class OlaStore {
     let d = ev["data"]
     let sid = d["sessionID"].str
     let at = ev["created"].date ?? .now
+    // Lots of permissions: answered "once" at once, and no card, no notification. Should the
+    // answer not arrive, the card is shown after all.
+    if type == "permission.asked", let goesAhead, goesAhead(d["action"].str, d["resources"].array.map(\.str)) {
+      wentAhead += 1
+      let rid = d["id"].str
+      Task {
+        do { try await client?.reply(session: sid, request: rid, decision: .once) } catch { _ = conversations[sid]?.apply(ev) }
+      }
+      return
+    }
     switch type {
     case "session.created":
       if !sessions.contains(where: { $0.id == sid }) {
@@ -319,8 +334,12 @@ public final class OlaStore {
       if directory == nil { directory = (try? await client.session(id))?.directory }
       var c = Conversation(sessionID: id, directory: directory, turns: Conversation.turns(fromMessages: try await client.messages(id), directory: directory))
       if let p = try await client.pendingPermissions(id).first {
-        let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)
-        c.approval = Approval(id: p["id"].str, sessionID: id, action: p["action"].str, title: words.title, items: words.items, stepID: p["source"]["id"].string)
+        if let goesAhead, goesAhead(p["action"].str, p["resources"].array.map(\.str)), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
+          wentAhead += 1
+        } else {
+          let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)
+          c.approval = Approval(id: p["id"].str, sessionID: id, action: p["action"].str, title: words.title, items: words.items, stepID: p["source"]["id"].string)
+        }
       }
       if running.contains(id), var last = c.turns.last, !last.isRunning, last.status == .failed, last.error?.detail?.hasPrefix("outcome") == true {
         last.status = .working

@@ -59,6 +59,16 @@ enum Snapshot {
       let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), tokenKnown: true, look: look).defaultAppStorage(defaults)
       write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
     }
+    // Permissions (General pane), each choice: apple-shots/permissions.
+    for (name, mode) in [("mac-settings-permissions-lots", PermissionMode.lots), ("mac-settings-permissions-ask", .ask)] where only == nil || name.contains(only!) {
+      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(mode.rawValue, forKey: PermissionSettings.key)
+      let store = OlaStore(fixture: Fixture.main)
+      var view = SettingsView(store: store, whereOla: WhereOlaWorks(store: store), tokenKnown: true)
+      view.only = .general
+      write(view.defaultAppStorage(defaults), size: SettingsView.snapshotSize, appearance: .aqua, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
+    }
+    defaults.removeObject(forKey: PermissionSettings.key)
     // Ola's skills in Settings (apple-shots/skills), light and dark, from the bundled skills' own
     // files when the app carries them, the states made up so every kind shows.
     let other = OlaSkills.Version(hash: "0123456789abcdef", commit: "fedcba9876543210")

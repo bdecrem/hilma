@@ -540,7 +540,7 @@ struct EmptyConversation: View {
   var body: some View {
     VStack(alignment: .leading, spacing: Space.s) {
       Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
-      Text("It works in \(folder) on the machine, and asks before it runs a command or changes a file. Sessions you start here are on your phone too.")
+      Text("It works in \(folder) on the machine. Sessions you start here are on your phone too.")
         .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(Metrics.readingLeading).fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: 480, alignment: .leading)
     }

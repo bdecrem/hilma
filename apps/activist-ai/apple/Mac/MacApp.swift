@@ -13,6 +13,7 @@ enum Main {
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
     if SettingsSelfTest.requested { SettingsSelfTest.run() }
+    if PermissionsSelfTest.requested { MainActor.assumeIsolated { PermissionsSelfTest.run() } }
     if RenderSelfTest.requested { MainActor.assumeIsolated { RenderSelfTest.run() } }
     if MotionRender.cpuRequested { MotionRender.measureCPU() }
     if let dir = MotionRender.outputDirectory { MotionRender.run(to: dir) }
@@ -26,7 +27,7 @@ enum Main {
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
   static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--render-selftest", "--import-secret", "--secret-status", "--forget-secret",
-                                          "--token-file", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
+                                          "--permissions-selftest", "--shots", "--token-file", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
 
   static func refuseUnknownOptions() {
     let args = Array(CommandLine.arguments.dropFirst())
@@ -68,6 +69,8 @@ struct OlaMacApp: App {
           delegate.store = store
           delegate.whereOla = w
           Notifier.wire(store)
+          // Lots of permissions (Settings, General): the ask-first steps answered here.
+          PermissionSettings.wire(store)
           w.configureClaude()
           let link = PhoneLink(store: store)
           phoneLink = link

@@ -26,6 +26,7 @@ final class ClaudeRunnerTests: XCTestCase {
     chmod(fake.path, 0o755)
 
     let runner = ClaudeRunner(binary: fake, folder: dir)
+    runner.goesAhead = { _, _ in false }   // this test answers the question itself
     let asked = expectation(description: "asked")
     let ended = expectation(description: "ended")
     runner.onApproval = { rid, tool, input in

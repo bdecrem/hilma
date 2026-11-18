@@ -5,7 +5,10 @@ import Foundation
 /// one in the environment is removed from the child's). The request goes in, and Claude Code's
 /// events come out, as stream-json. Writes and commands ask through Claude Code's own permission
 /// prompt (`--permission-mode manual --permission-prompt-tool stdio`): each can_use_tool question
-/// waits for Bart's answer, the same as the web app's builder (frontdesk/claude.mjs).
+/// waits for Bart's answer, the same as the web app's builder (frontdesk/claude.mjs). Under "Lots of
+/// permissions" (PermissionSettings) the runner answers itself what acceptEdits would allow, plus
+/// commands that name nothing outside the folder; everything else still asks. Decided at each
+/// question, so a change in Settings applies to the next step.
 public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
   /// Where Claude Code is on this Mac. A GUI app's PATH is minimal, so the usual places are looked
   /// at first, then a login shell is asked.
@@ -52,6 +55,8 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
   /// A can_use_tool question: request id, Claude Code's tool name, its input.
   public var onApproval: @Sendable (String, String, JSON) -> Void = { _, _, _ in }
   public var onEnd: @Sendable (Int32) -> Void = { _ in }
+  /// Whether a question goes ahead without asking (default: Lots of permissions, in this folder).
+  public var goesAhead: @Sendable (String, JSON) -> Bool
   private var process: Process?
   private var stdin: FileHandle?
   private let lock = NSLock()
@@ -67,6 +72,7 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
   public init(binary: URL, folder: URL, request: String? = nil, context: String = "") {
     self.binary = binary
     self.folder = folder
+    goesAhead = { tool, input in PermissionSettings.lots && PermissionSettings.claudeGoesAhead(tool: tool, input: input, folder: folder) }
     if let request { queued = (request, context) }
   }
 
@@ -151,6 +157,7 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
         return
       }
       lock.withLock { _ = pending.insert(rid) }
+      if goesAhead(q["tool_name"].str, q["input"]) { answer(rid, allow: true, input: q["input"]); return }
       onApproval(rid, q["tool_name"].str, q["input"])
       return
     }

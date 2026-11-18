@@ -90,6 +90,7 @@ struct SettingsView: View {
     switch p {
     case .general:
       if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
+      PermissionsSettings()
       if mode != "mac" { machine }
     case .account:
       if let account { AccountSettings(account: account, cli: cli) }
@@ -137,6 +138,26 @@ struct SettingsView: View {
     case .lost: "Not answering"
     case .refused: "Password refused"
     case .notSetUp: "Not set up"
+    }
+  }
+}
+
+/// Permissions: one choice for the whole app and the `ola` command (PermissionSettings). Lots of
+/// permissions, the default, answers the ask-first steps itself, from the next step on.
+struct PermissionsSettings: View {
+  @AppStorage(PermissionSettings.key) private var mode = PermissionMode.lots.rawValue
+
+  var body: some View {
+    SettingsGroup(title: "Permissions") {
+      Picker("Permissions", selection: $mode) {
+        Text("Ask before each step").tag(PermissionMode.ask.rawValue)
+        Text("Lots of permissions: Ola goes ahead without asking").tag(PermissionMode.lots.rawValue)
+      }
+      .pickerStyle(.radioGroup)
+      .labelsHidden()
+      SettingNote(mode == PermissionMode.lots.rawValue
+        ? "Ola runs commands and changes files in its folder without asking. It still asks before a web search or download, and never works outside its folder. The same for the ola command."
+        : "Ola asks before every command and every new or changed file. The same for the ola command.")
     }
   }
 }

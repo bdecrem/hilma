@@ -62,11 +62,15 @@ public enum OlaCLI {
     ola /hosted "a request"   hand this one request to the hosted open model (it leaves Ola)
     ola /claude "a request"   hand this one request to Claude Code on this Mac, in this folder
     ola /ola "a request"      Ola's own model (the same as ola "a request")
-    ola settings              this folder's fallbacks, and how to change them
+    ola settings              this folder's fallbacks and the permissions, and how to change them
+    ola settings permissions lots|ask
+                              lots: Ola goes ahead without asking (the default); ask: before each step
   In the conversation, /hosted and /ola work the same way; /claude says how to reach Claude Code.
 
-  Ola asks before it runs a command or changes a file. Conversations here also show in the Ola
-  app, in "On this Mac". Ctrl-C stops.
+  Permissions are one setting for this Mac, shared with the Ola app: with lots of permissions Ola
+  runs commands and changes files in this folder without asking; it still asks before a web search
+  or download, and never works outside the folder. Conversations here also show in the Ola app, in
+  "On this Mac". Ctrl-C stops.
   """
 
   /// The app's entry point calls this first: `--cli …` never returns, and neither does
@@ -344,6 +348,8 @@ public enum OlaCLI {
         s.configBase = cfg
         s.pidFileName = nil
         s.tiedToThisProcess = true
+        // Permissions (ola settings permissions, the app's General pane): read at each start.
+        s.askFirst = !PermissionSettings.lots
         server = s
         let route: ModelRoute
         if let pasted { route = .pasted(token: pasted) } else { route = .door(try await openDoor()) }

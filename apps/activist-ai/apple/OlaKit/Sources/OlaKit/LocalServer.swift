@@ -141,6 +141,8 @@ public final class LocalServer: @unchecked Sendable {
   public private(set) var skillStates: [OlaSkills.State] = []
   /// For checks: a different HOME and the like for the child only.
   public var extraEnvironment: [String: String] = [:]
+  /// Commands and edits ask first in the config (the app: it answers them itself under Lots).
+  public var askFirst = true
   private var process: Process?
   private var lifeline: Pipe?
   private var pidFile: URL?
@@ -191,7 +193,13 @@ public final class LocalServer: @unchecked Sendable {
     }
   }
 
-  static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "") -> String {
+  /// `askFirst` false is "Lots of permissions" written into the config (the `ola` command, whose
+  /// one-shot runs cannot ask): commands and edits allowed, Ola's web commands still asked. The app
+  /// keeps it true and answers those approvals itself (OlaStore.goesAhead), so its setting applies
+  /// to the next step without a restart.
+  static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "", askFirst: Bool = true) -> String {
+    let first = askFirst ? "ask" : "allow"
+    let web = askFirst ? "" : "\n" + PermissionSettings.webCommands.map { #"    { "action": "shell", "resource": "*\#($0)*", "effect": "ask" },"# }.joined(separator: "\n")
     let allow = { (action: String) in skills.map { #"    { "action": "\#(action)", "resource": "\#($0)", "effect": "allow" },"# }.joined(separator: "\n") }
     let deny = ["*GAMI*", "*hilma-*", "*ola-staging*", "*launchctl*", "*sudo *", "*.ola/*"]
       .map { #"    { "action": "shell", "resource": "\#($0)", "effect": "deny" }"# }.joined(separator: ",\n")
@@ -235,11 +243,12 @@ public final class LocalServer: @unchecked Sendable {
       ],
       "permissions": [
         { "action": "*", "resource": "*", "effect": "allow" },
-        { "action": "shell", "resource": "*", "effect": "ask" },
-        { "action": "bash", "resource": "*", "effect": "ask" },
-        { "action": "edit", "resource": "*", "effect": "ask" },
-        { "action": "write", "resource": "*", "effect": "ask" },
-        { "action": "apply_patch", "resource": "*", "effect": "ask" },
+        // Commands and edits: asked first, or allowed under Lots of permissions (PermissionSettings).
+        { "action": "shell", "resource": "*", "effect": "\(first)" },
+        { "action": "bash", "resource": "*", "effect": "\(first)" },
+        { "action": "edit", "resource": "*", "effect": "\(first)" },
+        { "action": "write", "resource": "*", "effect": "\(first)" },
+        { "action": "apply_patch", "resource": "*", "effect": "\(first)" },\(web)
         // opencode's own web search has no provider here (it waits a minute, then says "Web search
         // cancelled"); its page fetch works, but the model reached for it instead of searching (a
         // search engine's results page, a guessed address). The web goes through Ola's gateway:
@@ -300,7 +309,7 @@ public final class LocalServer: @unchecked Sendable {
     }
     try notes.write(to: instructions, atomically: true, encoding: .utf8)
     let offered = installed.isEmpty ? [] : skillStates.filter(\.ready).map(\.skill.name)
-    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
+    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, askFirst: askFirst).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
     var env: [String: String] = [:]
     let mine = ProcessInfo.processInfo.environment

@@ -192,13 +192,15 @@ extension OlaCLI.Runner {
       case ("claude", "off"): s.claude = false
       case ("stretch", let m) where StretchMode(rawValue: m) != nil: s.stretch = StretchMode(rawValue: m)!
       case ("stretch-to", let f) where Fallback(rawValue: f) != nil: s.stretchTo = Fallback(rawValue: f)!
+      case ("permissions", let m) where PermissionMode(rawValue: m) != nil: PermissionSettings.mode = PermissionMode(rawValue: m)!
       default:
-        OlaCLI.say("Say one of: ola settings hosted on|off, claude on|off, stretch suggest|handover|never, stretch-to hosted|claude.")
+        OlaCLI.say("Say one of: ola settings permissions lots|ask, hosted on|off, claude on|off, stretch suggest|handover|never, stretch-to hosted|claude.")
         return 2
       }
       FallbackSettings.save(s, for: folderKey)
     }
     let status = await hostedStatus()
+    print("Permissions (this Mac, also in the app): \(PermissionSettings.mode.label)")
     print("Folder:   \((folder.path as NSString).abbreviatingWithTildeInPath)")
     print("Fallback to Claude:                    \(s.claude ? "on" : "off") (\(ClaudeRunner.unavailable() ?? "Claude Code on this Mac, with your own Claude login"))")
     print("Fallback to the hosted open model:     \(s.hosted ? "on" : "off") (\(status.unavailable ?? "at \(status.provider ?? "an outside company")\(status.monthLine.map { ", \($0)" } ?? "")"))")

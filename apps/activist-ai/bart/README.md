@@ -128,5 +128,9 @@ Later rules win. Everything is allowed, except:
   `GAMI`, the Almanac, `hilma-*` checkouts, `ola-staging`, `~/.ola`, the front desk's data,
   BlueBubbles, `launchctl`, `container`, `tunn3l`, `sudo`, venture.
 
+Bart's Mac app answers the "asks first" commands and edits itself when its Permissions setting is
+"Lots of permissions" (the default; `../apple/README.md`, "Permissions"), so this config is left as
+it is; web commands still ask. The phone alone still asks.
+
 These are the agent's defaults, not a wall. A shell command Bart approves runs as `admin` and can
 reach anything that account can; the deny patterns only match the command's text.
