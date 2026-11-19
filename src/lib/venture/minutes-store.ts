@@ -110,7 +110,9 @@ export async function sweepMinutes(deps: MinutesDeps, now = Date.now()): Promise
     await minutesAfter('meeting', session, deps, !!grew)
     written.push(`meeting ${session}`)
   }
-  const { data: notes, error: e2 } = await f2Supabase().from('venture_messages').select('id').eq('direction', 'in').like('text', `${MEMO_MARK}%`).gte('at', since)
+  // A note younger than 20 seconds waits for the next pass: a check's note (memo-check.mjs) is deleted
+  // within seconds, and minutes of it would send the runner after a made-up request.
+  const { data: notes, error: e2 } = await f2Supabase().from('venture_messages').select('id').eq('direction', 'in').like('text', `${MEMO_MARK}%`).gte('at', since).lte('at', new Date(now - 20e3).toISOString())
   if (e2) throw new Error(`venture notes read failed: ${e2.message}`)
   const ids = (notes ?? []).map((n) => String(n.id))
   const hadNotes = await minutesFor('note', ids)
