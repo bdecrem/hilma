@@ -1,40 +1,43 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit: when Bart says he did something, the tracker is updated the same turn.
+"""UserPromptSubmit: when Bart says he did something, the tracker is updated the same turn; and
+what Bart wrote on the board is in front of every session.
 
 Bart, 2026-11-17: "ola-81 and ola-122 have been closed - i signed the dev agreement and freed
 up space. also i told the agent but somehow they did not update the tickets -> MAKE SURE THAT
 DOES NOT HAPPEN AGAIN."
 
-Every prompt in this repo gets a short note with the issues waiting on Bart (cached for two
-minutes) and the rule: if his message reports any issue done (or anything on the tracker as
-done, changed or no longer wanted), run scripts/venture/issues.mjs done/edit/drop for it
-before replying, and say so in one line. Silent if the tracker cannot be read.
+Every prompt in this repo gets a short note with the issues waiting on Bart, the rule (if his
+message reports any issue done, changed or no longer wanted, run scripts/venture/issues.mjs
+done/edit/drop for it before replying, and say so in one line), and, since 2026-11-18 (OLA-163),
+what Bart wrote on the board that Kit has not read yet: comments, edits, status changes and new
+issues from app.kochitolabs.com (`issues.mjs inbox`; mark them read with `inbox --mark`).
+One node call (`issues.mjs hook`), cached for two minutes. Silent if the tracker cannot be read.
 """
 import json, os, subprocess, sys, time
 
 root = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-cache = os.path.expanduser("~/.claude/bart-done-cache.txt")
+cache = os.path.expanduser("~/.claude/bart-done-cache.json")
 try:
     json.load(sys.stdin)
 except Exception:
     pass
 
-waiting = None
+data = None
 try:
     if time.time() - os.path.getmtime(cache) < 120:
-        waiting = open(cache).read()
-except OSError:
-    pass
-if waiting is None:
+        data = json.load(open(cache))
+except Exception:
+    data = None
+if data is None:
     try:
-        out = subprocess.run(["node", "scripts/venture/issues.mjs", "list", "--status", "waiting"],
+        out = subprocess.run(["node", "scripts/venture/issues.mjs", "hook"],
                              cwd=root, capture_output=True, text=True, timeout=6)
         if out.returncode == 0:
-            waiting = "\n".join(l for l in out.stdout.splitlines() if l.startswith("OLA-"))
-            open(cache, "w").write(waiting)
+            data = json.loads(out.stdout.strip().splitlines()[-1])
+            json.dump(data, open(cache, "w"))
     except Exception:
-        waiting = None
-if waiting is None:
+        data = None
+if not isinstance(data, dict):
     sys.exit(0)
 
 note = ("Tracker rule (Bart, Nov 17): if this message says Bart did something, or that an issue is "
@@ -42,6 +45,11 @@ note = ("Tracker rule (Bart, Nov 17): if this message says Bart did something, o
         "done <id> --proof \"Bart: <his words>; checked: <what you verified>\"` (or edit/drop), "
         "then reply, saying in one line which issues you closed. This applies to things he says "
         "he did in voice transcripts and texts too.")
-if waiting.strip():
-    note += "\nWaiting on Bart right now:\n" + waiting
+waiting = [l for l in data.get("waiting") or [] if isinstance(l, str)]
+unread = [l for l in data.get("unread") or [] if isinstance(l, str)]
+if waiting:
+    note += "\nWaiting on Bart right now:\n" + "\n".join(waiting)
+if unread:
+    note += ("\nBart wrote on the board and Kit has not read it yet (act on it, answer with "
+             "`issues.mjs comment <id> \"...\"`, then `issues.mjs inbox --mark`):\n" + "\n".join(unread[:20]))
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": note}}))
