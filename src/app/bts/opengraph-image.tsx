@@ -20,7 +20,11 @@ export default function Image() {
           fontFamily: 'sans-serif',
         }}
       >
-        <div style={{ fontSize: 110, marginBottom: 10 }}>💜</div>
+        {/* A drawn heart, not the emoji: next/og fetches emoji pictures from a CDN while the site
+            builds, and a timeout there failed a whole deploy on 2026-11-18. */}
+        <svg width="120" height="110" viewBox="0 0 24 22" style={{ marginBottom: 14 }}>
+          <path fill="#a66bff" d="M12 21.2 2.3 11.6a5.9 5.9 0 0 1 0-8.4 5.9 5.9 0 0 1 8.4 0L12 4.5l1.3-1.3a5.9 5.9 0 0 1 8.4 0 5.9 5.9 0 0 1 0 8.4z" />
+        </svg>
         <div style={{ fontSize: 84, fontWeight: 800, letterSpacing: -2 }}>
           BTS Bias Check
         </div>
