@@ -149,13 +149,16 @@ for (const [path, name] of [['/plan', 'Plan'], ['/notes', 'Notes'], ['/learning'
 }
 // Learning: the headline figures, the daily sweep as dated updates, and the old address
 await p.goto(at('/learning'), { waitUntil: 'networkidle' })
-check((await p.locator('.bd-learn.three .bd-learn-fig').count()) === 3, 'Learning shows three headline figures: Kit, Ola and the daily sweep')
+check((await p.locator('.bd-learn.three .bd-learn-fig').count()) === 3, 'Learning shows three headline figures: Kit, Ola and the weaknesses')
 const swept = await p.locator('.bd-sweeps > li:not(.line)').count()
 const owed = await p.locator('.bd-sweeps > li.line.bd-amber').count()
 check(swept >= 1, `the daily sweep has ${swept} dated ${swept === 1 ? 'update' : 'updates'}`)
 check(owed === 0, owed ? `${owed} ${owed === 1 ? 'day is' : 'days are'} not swept` : 'no day is waiting for its sweep')
 check((await p.locator('.bd-sweeps > li:not(.line) .bd-changes > li').count()) >= 1, 'the newest update names what it changed')
-for (const id of ['sweep-h', 'ind-h', 'other-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Learning has its section ${id.replace('-h', '')}`)
+const weak = await p.locator('.bd-weak > li:not(.head)').count()
+check(weak >= 5, `the weaknesses are listed (${weak}), each with what prevents it and whether that is holding`)
+check((await p.locator('.bd-sweeps > li:not(.line) .bd-sweep-build').count()) >= 1, 'the newest update says what to build next')
+for (const id of ['weak-h', 'sweep-h', 'ind-h', 'other-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Learning has its section ${id.replace('-h', '')}`)
 await p.goto(at('/numbers'), { waitUntil: 'networkidle' })
 check(new URL(p.url()).pathname.endsWith('/learning'), 'the old Numbers address opens Learning')
 await p.goto(at('/notes'), { waitUntil: 'networkidle' })

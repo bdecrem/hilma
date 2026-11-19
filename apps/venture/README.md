@@ -208,8 +208,8 @@ page). Bart: "a new daily 'agentic sweep' where the agent (you) take a look at
 all the things that happened that day and, from that, improves its memory and
 other systems". The page shows three headline figures (Kit: the share of his
 corrections that were new, not repeats; Ola: its own model's score as a share of
-Claude's; the sweep: how many changes it has made and how many the system now
-enforces), then one dated update per day, then the measures with their history.
+Claude's; the weaknesses guarded and holding), the weaknesses table, then one
+dated update per day, then the measures with their history.
 The two percentages are venture_state `learning` (`scripts/venture/learning.mjs`,
 run by every `sync.mjs push`). The updates are venture_state `sweeps`, written by
 `node scripts/venture/sweep.mjs post <entry.json>`; **the procedure an agent
@@ -217,6 +217,19 @@ follows is `apps/venture/SWEEP.md`** (`sweep.mjs gather` prints everything that
 happened that day; `sweep.mjs due` names the days owed). A terminal session is
 told by the prompt hook when a day is owed; the runner on the mini does it after
 9 pm when no session did. A day with no entry shows on the page in amber.
+
+**The weaknesses ledger** (the same evening; Bart: "a system that gets smarter and
+better each day by studying what it did wrong, how to prevent that same
+mistake/weakness, and what else can be learned, generalized, built"). Every
+correction and every fault a sweep finds is filed under one named weakness, for
+Kit or for Ola, in `apps/venture/private/data/weaknesses.json` (shape and the
+status rule in `scripts/venture/_weak.mjs`): how often it was seen, its guards,
+and whether the newest enforced guard has held (`guarded`), was followed by
+another occurrence (`back`), or does not exist yet (`open`). `learning.mjs` puts
+the ledger in venture_state `learning` and says when a correction is not filed;
+the page's third headline figure is "weaknesses guarded and holding, of all
+known". Each sweep files its findings there, writes the day's pattern, and names
+the one thing to build next (`build`).
 
 **Bart's writes on the tracker reach an agent** (OLA-172): a ticket he creates,
 reopens or comments on is listed by `issues.mjs inbox` until it is marked read.

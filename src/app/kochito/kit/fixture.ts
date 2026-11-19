@@ -94,6 +94,12 @@ export function fixture(): BoardData {
       at: T('2026-11-18', 10, 30),
       kit: { percent: 74, label: 'of your corrections were new ones, not repeats (43 so far, 11 repeats)', corrections: 43, repeats: 11, latest_day: { day: '2026-11-18', corrections: 7, repeats: 4 }, by_day: days.map((day, n) => ({ day, corrections: 5 + n, repeats: n % 3 })), steers: { day: '2026-11-17', rate: 38 }, goal: 100 },
       ola: { percent: 79, label: "of Claude's score on our test tasks (73% against 92%, a made-up model, Nov 17)", model: 'a made-up model', own: { passed: 35, runs: 48, rate: 73 }, claude: { passed: 44, runs: 48, rate: 92 }, measured: '2026-11-17', rounds: [{ date: '2026-11-16', model: 'a made-up model', rate: 61, share: 66 }, { date: '2026-11-17', model: 'a made-up model', rate: 73, share: 79 }], open: ['Scanned pages still fail half the time.', 'Charts from spreadsheets need the new skill.'], goal: 100 },
+      weaknesses: [
+        { id: 'a', side: 'kit', name: 'A made-up weakness that came back', what: 'Made up.', seen: 4, first: '2026-11-13', last: '2026-11-17', by_day: {}, came_back: 2, guard: { day: '2026-11-15', what: 'a made-up check before every send', enforced: true }, guards: 2, status: 'back', held_days: null, quiet_days: 1, bet: { text: 'a made-up thing to build', issue: 'OLA-212' } },
+        { id: 'b', side: 'kit', name: 'A made-up weakness with only a rule', what: 'Made up.', seen: 6, first: '2026-11-13', last: '2026-11-18', by_day: {}, came_back: 3, guard: { day: '2026-11-16', what: 'a made-up rule to look before building', enforced: false }, guards: 1, status: 'open', held_days: null, quiet_days: 0, bet: null },
+        { id: 'c', side: 'ola', name: 'A made-up weakness of Ola with nothing yet', what: 'Made up.', seen: 2, first: '2026-11-17', last: '2026-11-17', by_day: {}, came_back: 0, guard: null, guards: 0, status: 'open', held_days: null, quiet_days: 1, bet: { text: 'a made-up skill, measured before and after', issue: 'OLA-219' } },
+        { id: 'd', side: 'kit', name: 'A made-up weakness that is holding', what: 'Made up.', seen: 3, first: '2026-11-14', last: '2026-11-15', by_day: {}, came_back: 0, guard: { day: '2026-11-15', what: 'a made-up guard that refuses the command', enforced: true }, guards: 1, status: 'guarded', held_days: 3, quiet_days: 3, bet: null },
+      ],
       doc: 'how-we-learn',
     },
     sweeps: {
@@ -105,6 +111,8 @@ export function fixture(): BoardData {
           at: T('2026-11-17', 21, 10),
           by: 'Kit',
           summary: 'A made-up day: two corrections were about the same thing, a file sent before it was checked, so the check now runs by itself. Ola lost three requests to Claude on charts.',
+          pattern: 'A made-up pattern: both corrections came from sending before checking.',
+          build: { text: 'A made-up thing to build that would remove the whole weakness.', issue: 'OLA-212' },
           read: [
             { n: '63', what: 'messages from you' },
             { n: '5', what: 'corrections, 2 repeats' },
@@ -113,7 +121,7 @@ export function fixture(): BoardData {
             { n: '3', what: 'requests handed to Claude' },
           ],
           kit: [
-            { saw: 'You corrected a file sent unchecked twice in one day (made up).', changed: 'A file cannot be sent to you until its check has passed in the same turn.', where: 'a hook before every send', enforced: true },
+            { weakness: 'a', saw: 'You corrected a file sent unchecked twice in one day (made up).', changed: 'A file cannot be sent to you until its check has passed in the same turn.', where: 'a hook before every send', enforced: true },
             { saw: 'A note you made in passing on a call was not ticketed (made up).', changed: 'Every aside in a call becomes a ticket before the call notes are filed.', where: 'rule 48' },
           ],
           ola: [{ saw: 'Three chart requests were handed to Claude after Ola tried (made up).', changed: 'The chart skill now checks its axes against the data before it answers; each of the three requests is a test.', where: 'the chart skill and three new tests', enforced: true, issue: 'OLA-212' }],

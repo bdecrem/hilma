@@ -19,6 +19,7 @@
 // Run it at every checkpoint (sync.mjs push calls it).
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { loadWeaknesses, weaknessStatus } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dry = process.argv.includes('--dry')
@@ -77,9 +78,15 @@ const ola = {
   goal: '100: Ola’s own model does as well as Claude on the work people bring.',
 }
 
-const value = { at: new Date().toISOString(), kit, ola, doc: 'how-we-learn' }
+// The weaknesses ledger (scripts/venture/_weak.mjs): every correction and sweep finding filed under
+// a named weakness, with whether its guard is holding.
+const weaknesses = weaknessStatus(loadWeaknesses(root), new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }))
+const filed = loadWeaknesses(root).flatMap((w) => w.seen.map((s) => s.ref)).filter((r) => /^correction \d+$/.test(r)).length
+if (weaknesses.length && filed !== entries.length) console.log(`weaknesses: ${entries.length - filed} correction(s) are not filed under a weakness yet (apps/venture/private/data/weaknesses.json)`)
+const value = { at: new Date().toISOString(), kit, ola, weaknesses, doc: 'how-we-learn' }
 console.log(`Kit: ${kit.percent}% of ${kit.corrections} corrections were new (${kit.repeats} repeats); latest day ${kit.latest_day?.day}: ${kit.latest_day?.corrections} corrections, ${kit.latest_day?.repeats} repeats`)
 if (apps) console.log(`Apps: Ola's own model ${apps.own.passed} of ${apps.own.run}; Claude Code ${apps.claude.passed} of ${apps.claude.run}`)
+if (weaknesses.length) console.log(`Weaknesses: ${weaknesses.length} known; ${weaknesses.filter((w) => w.status === 'guarded').length} guarded and holding, ${weaknesses.filter((w) => w.status === 'back').length} came back, ${weaknesses.filter((w) => w.status === 'open').length} open`)
 console.log(`Ola: ${ola.percent}% of Claude's score (${ola.own.passed} of ${ola.own.runs} = ${ola.own.rate}%, Claude ${ola.claude.rate}%), measured ${ola.measured}`)
 if (!dry) {
   const env = Object.fromEntries(

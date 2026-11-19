@@ -1,12 +1,16 @@
-import type { BoardData, Learning, Sweep, SweepChange, Sweeps } from '@/lib/venture/board'
+import type { BoardData, Learning, Sweep, SweepChange, Sweeps, Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
 
 // Learning (app.kochitolabs.com/learning; Bart, Nov 18: "Instead of numbers, make it Learning").
 // Top: the headline numbers, Kit (the share of his corrections that were new, not repeats), Ola
-// (its own model's score as a share of Claude's) and the daily sweep (how many changes it has
-// made, and how many of those the system now enforces). Then the sweep itself, one dated update
+// (its own model's score as a share of Claude's) and the weaknesses (how many of the known ones
+// have a guard the system enforces that is holding). Then the weaknesses themselves (Bart, the
+// same evening: "a system that gets smarter and better each day by studying what it did wrong, how
+// to prevent that same mistake/weakness, and what else can be learned, generalized, built"): every
+// correction and sweep finding filed under a named weakness, how often it was seen, its guard,
+// whether the guard held, and what to build next. Then the sweep itself, one dated update
 // per day, newest first: what Kit read that day, what it changed in how the project is run (Kit)
 // and in how Ola's agents, skills and orchestration work (Ola), and what it found and has not
 // fixed. Then the measures with their history (what the Numbers page held).
@@ -56,27 +60,82 @@ export function LearningFigures({ l, now, sweeps }: { l: Learning | null; now: s
     <div className={`bd-learn${sweeps ? ' three' : ''}`}>
       {k && <Fig name="Kit" what="the system that works with you" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />}
       {o && <Fig name="Ola" what="models and skills" big={`${Math.round(o.percent)}%`} pct={o.percent} label={`${Math.round(o.percent)} of 100`} line={o.label} small={o.own && o.claude ? `${Math.round(o.own.rate)}% against Claude's ${Math.round(o.claude.rate)}%, ${o.model}${o.measured ? `, ${o.measured}` : ''}` : ''} />}
-      {sweeps &&
-        (sweeps.latest ? (
-          <Fig
-            name="Daily sweep"
-            what="what each day changed"
-            big={String(sweeps.n)}
-            pct={sweeps.n ? (sweeps.enforced / sweeps.n) * 100 : 0}
-            label={`${sweeps.enforced} of ${sweeps.n} enforced`}
-            line={`${sweeps.n === 1 ? 'change' : 'changes'} to how Kit and Ola work, from ${sweeps.swept} ${sweeps.swept === 1 ? 'day' : 'days'} swept (${sweeps.kit} for Kit, ${sweeps.ola} for Ola)`}
-            small={sweeps.missed.length ? `not swept: ${sweeps.missed.slice(0, 3).map(dayShort).join(', ')}${sweeps.missed.length > 3 ? ` and ${sweeps.missed.length - 3} more` : ''}` : `${sweeps.enforced} of ${sweeps.n} are enforced by the system, not left to memory`}
-            amber={sweeps.missed.length > 0}
-          />
-        ) : (
-          <div className="bd-learn-fig">
-            <p className="who">
-              Daily sweep <span>what each day changed</span>
-            </p>
-            <p className="line" style={{ marginTop: 6 }}>Not swept yet.</p>
-          </div>
-        ))}
+      {sweeps && <WeakFig l={l} sweeps={sweeps} />}
     </div>
+  )
+}
+
+// The third headline figure: of the known weaknesses, how many have a guard the system enforces
+// that has held. The sweep's own count (changes made) is the small line under it.
+function WeakFig({ l, sweeps }: { l: Learning | null; sweeps: ReturnType<typeof sweepStats> }) {
+  const w = l?.weaknesses ?? []
+  const held = w.filter((x) => x.status === 'guarded').length
+  const back = w.filter((x) => x.status === 'back').length
+  const sweepLine = sweeps.latest ? `${sweeps.n} ${sweeps.n === 1 ? 'change' : 'changes'} from ${sweeps.swept} ${sweeps.swept === 1 ? 'sweep' : 'sweeps'}` : 'not swept yet'
+  if (!w.length)
+    return (
+      <div className="bd-learn-fig">
+        <p className="who">
+          Weaknesses <span>guarded and holding</span>
+        </p>
+        <p className="line" style={{ marginTop: 6 }}>Not filed yet. {sweepLine}.</p>
+      </div>
+    )
+  return (
+    <Fig
+      name="Weaknesses"
+      what="guarded and holding"
+      big={`${held} of ${w.length}`}
+      pct={(held / w.length) * 100}
+      label={`${held} of ${w.length}`}
+      line={`known weaknesses have a guard the system enforces and have not come back since`}
+      small={sweeps.missed.length ? `not swept: ${sweeps.missed.slice(0, 3).map(dayShort).join(', ')}` : `${back ? `${back} came back after a guard · ` : ''}${w.length - held - back} still rest on a rule · ${sweepLine}`}
+      amber={sweeps.missed.length > 0}
+    />
+  )
+}
+
+const ORDER = { back: 0, open: 1, guarded: 2 } as const
+function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; base: string }) {
+  const rows = [...list].sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.seen - a.seen)
+  const days = (n: number | null) => (n === null ? '' : n === 0 ? 'since today' : n === 1 ? '1 day' : `${n} days`)
+  return (
+    <ol className="bd-weak">
+      <li className="head">
+        <span>Weakness</span>
+        <span>Seen</span>
+        <span>What prevents it now</span>
+        <span>Holding?</span>
+      </li>
+      {rows.map((w) => (
+        <li key={w.id} className={w.status} title={w.what}>
+          <span className="name">
+            <b>{w.name}</b>
+            <span className="who">{w.side === 'kit' ? 'Kit' : 'Ola'}</span>
+          </span>
+          <span className="seen">
+            <b>{w.seen}</b> {w.seen === 1 ? 'time' : 'times'}
+            {w.last && <span className="faint">, last {w.last === today ? 'today' : dayShort(w.last).replace(/^[A-Za-z]+, /, '')}</span>}
+          </span>
+          <span className="guard">
+            {w.guard ? (
+              <>
+                {w.guard.what}
+                <span className={w.guard.enforced ? 'enf' : 'rule'}>{w.guard.enforced ? 'enforced by the system' : 'a rule, not enforced'}</span>
+              </>
+            ) : (
+              <span className="rule">nothing yet</span>
+            )}
+            {w.bet && w.status !== 'guarded' && (
+              <span className="bet">
+                To build: {w.bet.text} {w.bet.issue && <a href={`${href(base, '/issues')}/${w.bet.issue}`} className="m">{w.bet.issue}</a>}
+              </span>
+            )}
+          </span>
+          <span className={`st ${w.status}`}>{w.status === 'guarded' ? `holding ${days(w.held_days)}` : w.status === 'back' ? 'came back after its guard' : w.quiet_days !== null && w.quiet_days >= 2 ? `open, quiet ${days(w.quiet_days)}` : 'open'}</span>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -100,7 +159,7 @@ function Bars({ items }: { items: { key: string; v: number | null; rep?: number;
   )
 }
 
-function Changes({ name, what, items, base }: { name: string; what: string; items: SweepChange[]; base: string }) {
+function Changes({ name, what, items, base, weak }: { name: string; what: string; items: SweepChange[]; base: string; weak: Weakness[] }) {
   return (
     <div>
       <h4>
@@ -117,6 +176,7 @@ function Changes({ name, what, items, base }: { name: string; what: string; item
               <p className="where">
                 <span className={c.enforced ? 'enf' : ''}>{c.enforced ? 'Enforced by the system' : 'A note Kit follows'}</span>
                 <span>{c.where}</span>
+                {c.weakness && weak.find((w) => w.id === c.weakness) && <span className="wk">Weakness: {weak.find((w) => w.id === c.weakness)!.name.replace(/^./, (x) => x.toLowerCase())}</span>}
                 {c.issue && <a href={`${href(base, '/issues')}/${c.issue}`} className="m">{c.issue}</a>}
               </p>
             </li>
@@ -127,7 +187,7 @@ function Changes({ name, what, items, base }: { name: string; what: string; item
   )
 }
 
-function Day({ s, now, base }: { s: Sweep; now: string; base: string }) {
+function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak: Weakness[] }) {
   return (
     <>
       <div className="bd-sweep-head">
@@ -137,6 +197,11 @@ function Day({ s, now, base }: { s: Sweep; now: string; base: string }) {
         </span>
       </div>
       <p className="bd-sweep-sum">{inline(s.summary)}</p>
+      {s.pattern && (
+        <p className="bd-sweep-sum pattern">
+          <b>The pattern.</b> {inline(s.pattern)}
+        </p>
+      )}
       {s.read.length > 0 && (
         <p className="bd-sweep-read">
           <span className="faint">Read:</span>
@@ -148,9 +213,14 @@ function Day({ s, now, base }: { s: Sweep; now: string; base: string }) {
         </p>
       )}
       <div className="bd-sweep-cols">
-        <Changes name="Kit" what="how the project is run" items={s.kit} base={base} />
-        <Changes name="Ola" what="agents, skills, orchestration" items={s.ola} base={base} />
+        <Changes name="Kit" what="how the project is run" items={s.kit} base={base} weak={weak} />
+        <Changes name="Ola" what="agents, skills, orchestration" items={s.ola} base={base} weak={weak} />
       </div>
+      {s.build && (
+        <p className="bd-sweep-build">
+          <b>To build next.</b> {inline(s.build.text)} {s.build.issue && <a href={`${href(base, '/issues')}/${s.build.issue}`} className="m">{s.build.issue}</a>}
+        </p>
+      )}
       {s.open.length > 0 && (
         <div className="bd-sweep-open">
           <h4>
@@ -194,12 +264,22 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
 
       <LearningFigures l={l} now={now} sweeps={st} />
 
+      <section className="bd-sec" aria-labelledby="weak-h">
+        <h2 id="weak-h">
+          Weaknesses <span className="m faint">{(l?.weaknesses ?? []).length} known</span>
+        </h2>
+        <p className="bd-p" style={{ margin: '0 0 8px' }}>
+          Every correction you make and every fault the sweep finds is filed under one of these. A weakness is closed when the system itself prevents it and it stops coming back; a rule I have to remember does not count.
+        </p>
+        {l?.weaknesses?.length ? <Weaknesses list={l.weaknesses} today={d.today} base={base} /> : <p className="bd-empty">Not filed yet.</p>}
+      </section>
+
       <section className="bd-sec" aria-labelledby="sweep-h">
         <h2 id="sweep-h">
           Daily sweep {st.latest && <span className="m faint">last swept {at(st.latest.at, now)}</span>}
         </h2>
         <p className="bd-p" style={{ margin: '0 0 10px' }}>
-          Once a day Kit goes through everything that happened (what you wrote and said, the corrections, the tracker, the code, Ola&rsquo;s tests and requests) and changes how it works: its rules and guards for running the project, and Ola&rsquo;s skills, instructions and choice of model.
+          Once a day Kit goes through everything that happened (what you wrote and said, the corrections, the tracker, the code, Ola&rsquo;s tests and requests). For each thing that went wrong: which weakness it belongs to, whether an earlier guard failed, what now prevents it, where else the same cause bites, and what to build so the whole weakness goes away.
         </p>
         {rows.length === 0 ? (
           <p className="bd-empty">Not swept yet.</p>
@@ -221,7 +301,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
               shown++
               return shown <= OPEN ? (
                 <li key={day} id={`d-${day}`}>
-                  <Day s={s} now={now} base={base} />
+                  <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} />
                 </li>
               ) : (
                 <li key={day} id={`d-${day}`} className="fold">
@@ -233,7 +313,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
                         {s.kit.length + s.ola.length} {s.kit.length + s.ola.length === 1 ? 'change' : 'changes'}
                       </span>
                     </summary>
-                    <Day s={s} now={now} base={base} />
+                    <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} />
                   </details>
                 </li>
               )

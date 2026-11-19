@@ -97,8 +97,14 @@ export type Learning = {
   at: string
   kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number }
   ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number }
+  weaknesses?: Weakness[]
   doc: string
 }
+/** One named weakness of Kit or of Ola (scripts/venture/_weak.mjs; Bart, Nov 18: "a system that gets
+ *  smarter and better each day by studying what it did wrong, how to prevent that same
+ *  mistake/weakness"). Every correction and sweep finding is filed under one. open: no guard the
+ *  system enforces; guarded: an enforced guard and not seen since; back: seen again after it. */
+export type Weakness = { id: string; side: 'kit' | 'ola'; name: string; what: string; seen: number; first: string | null; last: string | null; by_day: Record<string, number>; came_back: number; guard: { day: string; what: string; enforced: boolean } | null; guards: number; status: 'open' | 'guarded' | 'back'; held_days: number | null; quiet_days: number | null; bet: { text: string; issue?: string | null } | null }
 
 /** The daily sweep (Bart, Nov 18: "a new daily 'agentic sweep' where the agent (you) take a look at
  *  all the things that happened that day and, from that, improves its memory and other systems for
@@ -107,7 +113,7 @@ export type Learning = {
  *  One entry per day, newest first; the procedure is apps/venture/SWEEP.md. A change names what was
  *  seen, what was changed and where; "enforced" means the system now does it (a hook, a check, a
  *  test, code), as opposed to a note Kit has to remember. */
-export type SweepChange = { saw: string; changed: string; where: string; enforced?: boolean; issue?: string }
+export type SweepChange = { saw: string; changed: string; where: string; enforced?: boolean; issue?: string; weakness?: string }
 export type Sweep = {
   day: string // Pacific
   at: string
@@ -118,6 +124,8 @@ export type Sweep = {
   kit: SweepChange[]
   ola: SweepChange[]
   open: { text: string; issue?: string }[] // found, not fixed that day
+  pattern?: string // what the day's findings have in common, and what that says
+  build?: { text: string; issue?: string } // the one thing to build next that would remove a whole weakness
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 

@@ -349,6 +349,28 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-sweep-line:hover { background: var(--hover); text-decoration: none !important; }
 .bd-sweep-line .m { color: var(--ink-3); }
 .bd-sweep-line.owed .m:first-child { color: var(--amber); }
+/* the weaknesses: one row each; what came back first, then open, then holding */
+.bd-weak { border-top: 1px solid var(--line); }
+.bd-weak > li { display: grid; grid-template-columns: minmax(0, 1.25fr) 150px minmax(0, 1.6fr) 170px; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.bd-weak > li.head { padding: 5px 0; font-size: 12px; color: var(--ink-3); }
+.bd-weak .name b { font-weight: 600; }
+.bd-weak .name .who { margin-left: 8px; font-size: 12px; color: var(--ink-3); }
+.bd-weak .seen { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bd-weak .seen b { color: var(--ink); font-weight: 650; }
+.bd-weak .guard { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.bd-weak .guard .enf, .bd-weak .guard .rule { display: inline-block; margin-left: 8px; font-size: 12px; white-space: nowrap; }
+.bd-weak .guard > .rule:first-child { margin-left: 0; }
+.bd-weak .guard .enf { color: var(--green); }
+.bd-weak .guard .rule { color: var(--ink-3); }
+.bd-weak .guard .bet { display: block; margin-top: 2px; color: var(--ink); }
+.bd-weak .st { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+.bd-weak .st.guarded { color: var(--green); }
+.bd-weak .st.back { color: var(--red); font-weight: 600; }
+.bd-weak .st.open { color: var(--ink-2); }
+.bd-sweep-sum.pattern { margin-top: 6px; }
+.bd-sweep-sum.pattern b, .bd-sweep-build b { font-weight: 650; }
+.bd-sweep-build { margin-top: 12px; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); line-height: 1.45; }
+.bd-changes .where .wk { color: var(--ink-2); }
 .bd-sweeps { border-top: 1px solid var(--line); }
 .bd-sweeps > li { padding: 14px 0 16px; border-bottom: 1px solid var(--line); }
 .bd-sweeps > li.line { padding: 7px 0; color: var(--ink-2); display: flex; gap: 12px; }
@@ -517,6 +539,11 @@ input.bd-title-edit { border-color: var(--acc); }
   .bd-learn.three { grid-template-columns: 1fr; }
   .bd-learn.three .bd-learn-fig + .bd-learn-fig { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
   .bd-sweep-cols { grid-template-columns: minmax(0, 1fr); gap: 14px 0; }
+  .bd-weak > li { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+  .bd-weak > li.head { display: none; }
+  .bd-weak .seen { grid-column: 1; grid-row: 2; }
+  .bd-weak .guard { grid-column: 1 / -1; grid-row: 3; }
+  .bd-weak .st { grid-column: 2; grid-row: 1; }
   .bd-sweeps > li.fold summary { grid-template-columns: 84px minmax(0, 1fr); }
   .bd-sweeps > li.fold summary .m { display: none; }
   .bd-sweeps .day { width: 84px; }

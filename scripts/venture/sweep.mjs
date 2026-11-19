@@ -14,6 +14,8 @@
 //   node scripts/venture/sweep.mjs post <entry.json>    check the entry and store it; the Learning page
 //                                                       of app.kochitolabs.com shows it at once
 //   node scripts/venture/sweep.mjs show [--day D]       what is stored
+//   node scripts/venture/sweep.mjs weaknesses           the ledger: every weakness, how often it was seen,
+//                                                       its guard and whether the guard is holding
 // Days are Pacific. Entries live in venture_state "sweeps" ({ at, since, days: [newest first] });
 // the shape is Sweep in src/lib/venture/board.ts. Keep the posted file in
 // apps/venture/private/data/sweeps/<day>.json (private, backed up by sync.mjs).
@@ -22,6 +24,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
+import { loadWeaknesses, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = Object.fromEntries(
@@ -42,6 +45,9 @@ const priv = (f) => root + 'apps/venture/private/' + f
 const offset = new Date(`${day}T12:00:00Z`).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' }).match(/GMT([+-]\d+)/)?.[1] ?? '-8'
 const from = new Date(Date.parse(`${day}T00:00:00Z`) - Number(offset) * 3600e3).toISOString()
 const to = new Date(Date.parse(from) + 86400e3).toISOString()
+const rootUrl = new URL('../../', import.meta.url)
+const ledger = () => weaknessStatus(loadWeaknesses(rootUrl), pacificDay())
+const ledgerLines = () => ledger().sort((a, b) => ['back', 'open', 'guarded'].indexOf(a.status) - ['back', 'open', 'guarded'].indexOf(b.status) || b.seen - a.seen).map((w) => `${w.status === 'back' ? 'CAME BACK' : w.status === 'open' ? 'open     ' : `holding ${String(w.held_days).padStart(2)}d`}  ${w.id.padEnd(15)} ${w.side}  seen ${w.seen}x (last ${w.last})  ${w.name}${w.guard ? `  | guard: ${w.guard.what}${w.guard.enforced ? '' : ' (a rule only)'}` : '  | no guard'}${w.bet ? `  | to build: ${w.bet.text}${w.bet.issue ? ` (${w.bet.issue})` : ''}` : ''}`)
 const long = new Date(`${day}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 
 // ---------------------------------------------------------------- what happened that day
@@ -135,6 +141,7 @@ async function facts() {
 // ---------------------------------------------------------------- the entry
 function checkEntry(e) {
   const bad = []
+  const known = new Set(loadWeaknesses(rootUrl).map((w) => w.id))
   const str = (v) => typeof v === 'string' && v.trim().length > 0
   if (!/^\d{4}-\d{2}-\d{2}$/.test(e.day ?? '')) bad.push('day must be YYYY-MM-DD')
   if (!str(e.summary)) bad.push('summary: one or two sentences in plain words')
@@ -144,9 +151,11 @@ function checkEntry(e) {
     e[side].forEach((c, n) => {
       for (const k of ['saw', 'changed', 'where']) if (!str(c[k])) bad.push(`${side}[${n}].${k} is missing`)
       if (c.issue && !/^OLA-\d+$/.test(c.issue)) bad.push(`${side}[${n}].issue must look like OLA-171`)
+      if (known.size && !known.has(c.weakness)) bad.push(`${side}[${n}].weakness must be the id of a weakness in ${WEAK_FILE} (${c.weakness ? `"${c.weakness}" is not there` : 'missing'}): add the day to its "seen" and the fix to its "guards" there first`)
     })
   }
   if (!Array.isArray(e.open) || e.open.some((o) => !str(o.text))) bad.push('open: [{ text, issue? }]')
+  if (!e.quiet && known.size && (!e.build || !str(e.build.text))) bad.push('build: { text, issue? }: the one thing to build next that would remove a whole weakness, not one instance (or say why nothing is worth building)')
   if (!e.quiet && Array.isArray(e.read) && e.read.length === 0) bad.push('read is empty: say what the sweep looked at, or mark the day quiet')
   if (/[—]/.test(JSON.stringify(e))) bad.push('no em dashes: Bart reads this page')
   return bad
@@ -168,18 +177,19 @@ if (cmd === '--wait') {
   const f = await facts()
   console.log(`# The day to sweep: ${long} (${day}, Pacific)\n`)
   console.log(`Counts for the entry's "read": ${f.counts.map((c) => `${c.n} ${c.what}`).join(' · ')}\n`)
+  console.log(`## The weaknesses so far (${WEAK_FILE}); file every finding of the day under one of these, or add one\n${ledgerLines().join('\n')}\n`)
   for (const s of f.sections) console.log(`## ${s.title}\n${s.lines.length ? s.lines.join('\n') : '(none)'}\n`)
   console.log('Now follow apps/venture/SWEEP.md.')
 } else if (cmd === 'template') {
   const f = await facts()
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, kit: [{ saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }] }, null, 2))
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' } }, null, 2))
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   const bad = checkEntry(e)
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}) }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
@@ -187,7 +197,12 @@ if (cmd === '--wait') {
   const all = days.flatMap((d) => [...d.kit, ...d.ola])
   console.log(`stored ${entry.day}: ${entry.kit.length} for Kit, ${entry.ola.length} for Ola, ${entry.open.length} open`)
   console.log(`so far: ${all.length} changes from ${days.filter((d) => !d.quiet).length} day(s) swept, ${all.filter((c) => c.enforced).length} enforced by the system`)
+  // the ledger and the two percentages ride along, so the page is whole at once
+  const learn = spawnSync('node', [root + 'scripts/venture/learning.mjs'], { encoding: 'utf8' })
+  console.log(learn.status === 0 ? learn.stdout.trim().split('\n').filter((l) => /^Weaknesses/.test(l)).join('\n') : `learning numbers NOT refreshed: ${(learn.stderr || learn.stdout).trim().split('\n').pop()}`)
   console.log('https://app.kochitolabs.com/learning')
+} else if (cmd === 'weaknesses') {
+  console.log(ledgerLines().join('\n'))
 } else if (cmd === 'show') {
   const s = (await getState(db, 'sweeps'))?.value
   if (!s) die('no sweeps yet')
@@ -198,5 +213,5 @@ if (cmd === '--wait') {
     for (const o of d.open) console.log(`  OPEN ${o.text}${o.issue ? ` ${o.issue}` : ''}`)
   }
 } else {
-  die('usage: sweep.mjs --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')
+  die('usage: sweep.mjs weaknesses | --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')
 }
