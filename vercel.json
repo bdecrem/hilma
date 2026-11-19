@@ -21,10 +21,6 @@
       "schedule": "5 * * * *"
     },
     {
-      "path": "/api/venture/minutes/sweep",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/venture/commits/sync",
       "schedule": "*/30 * * * *"
     },

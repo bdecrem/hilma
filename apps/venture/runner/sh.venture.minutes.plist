@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- On the Mac mini, once a minute: write the minutes of every voice call that is over and every
+     voice note that has none yet (scripts/venture/minutes.ts), on the Claude login saved for the
+     runner (CLAUDE_CODE_OAUTH_TOKEN in ~/.venture-runner.env), never the API key (OLA-186).
+     Silent when there is nothing to write. Install: cp to ~/Library/LaunchAgents/ and
+     launchctl bootstrap gui/501 <plist>. The checkout is kept current by the runner's own pull. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>sh.venture.minutes</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-lc</string>
+    <string>set -a; . $HOME/.venture-runner.env; set +a; unset ANTHROPIC_API_KEY; cd $HOME/hilma-venture &amp;&amp; exec ./node_modules/.bin/tsx scripts/venture/minutes.ts --sweep</string>
+  </array>
+  <key>StartInterval</key><integer>60</integer>
+  <key>RunAtLoad</key><true/>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/admin</string>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/admin/Library/Logs/venture-runner/minutes.log</string>
+  <key>StandardErrorPath</key><string>/Users/admin/Library/Logs/venture-runner/minutes.log</string>
+</dict></plist>

@@ -433,15 +433,18 @@ it" and recorded as decided.
   he thinks out loud; Kit asks "Decided, or thinking out loud?" once when something sounds like a
   decision, never says "got it, I'll do that" to an idea, and recaps when he says goodbye.
 - **Minutes** (`src/lib/venture/minutes.ts`, table `venture_minutes`, schema 010): one Claude call
-  after every meeting (every way it ends), every voice note (phone or memo page), and from a
-  five-minute cron (`/api/venture/minutes/sweep`) for anything missed, the talk page included.
+  for every meeting that is over (an end marker, or quiet for five minutes), every voice note
+  (phone or memo page) and the talk page. Since 2026-11-19 (OLA-186) the call runs on the Mac
+  mini on the Claude login, the Max plan, never the API key: `scripts/venture/minutes.ts --sweep`
+  once a minute (launchd `sh.venture.minutes`, `apps/venture/runner/`), so minutes appear within
+  about two minutes. The Vercel server reads them and stores his corrections; it cannot write them.
   `decided` holds only what he confirmed, with his words quoted (a quote that is not in his own
   lines makes it `to_decide`), then `to_decide`, `kit_will_do`, `facts`, a summary. He corrects
   them from the phone; a corrected line is marked his and the minutes count as unread again.
 - **Who reads them**: `transcript.mjs --minutes [session]`; `--wait phone` prints them after a call
   or a note; the runner wakes on unread minutes, gets them in its prompt with the order to put
   them on the board (`## Decided`, `## To be decided`) and do `kit_will_do`.
-  `npx tsx scripts/venture/minutes.ts --session <id> | --note <id> [--force] | --sweep` by hand.
+  `npx tsx scripts/venture/minutes.ts --session <id> | --note <id> [--force]` rewrites one by hand.
 
 ## Independence: the steer count and the replay suite
 
@@ -466,12 +469,16 @@ Supabase, never in this repo):
   "steers" (a map by date) and `private/STEERS.md`. launchd
   `apps/venture/runner/sh.venture.steers.plist` runs it on the iMac at 9:40 for
   yesterday (the transcripts are only there); `morning.mjs` puts one line in
-  the 10 am text; app.kochitolabs.com shows the "Independence" block.
+  the 10 am text; app.kochitolabs.com shows the "Independence" block. The
+  grader runs on the machine's Claude login, the Max plan, not the API key
+  (`scripts/venture/_claude.mjs`, since 2026-11-19, OLA-186: one headless
+  Claude Code call with no tools, no settings and an empty folder).
 - **The replay suite.** `node scripts/venture/steer-replay.mjs [--tries N]
   [--only ids] [--dry]` turns past steers into tests
   (`private/steer-cases/*.json`: the situation just before the mistake and a
   must / must-not rubric), gives each to a fresh Opus 5.5 three times with
-  RULES.md and three times without, and grades each answer. Pass rate with the
+  RULES.md and three times without, and grades each answer (all on the Claude
+  login, the Max plan, through `_claude.mjs`, four calls at a time). Pass rate with the
   rules says whether the learning is written down well enough; the lift over
   no rules says whether the rules do the work. Cases that fail with the rules
   name the rules that are too weak. Stored in `venture_state` "steer_replay"

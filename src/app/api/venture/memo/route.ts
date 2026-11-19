@@ -1,5 +1,4 @@
-import { after, NextResponse } from 'next/server'
-import { minutesAfter } from '@/lib/venture/minutes-store'
+import { NextResponse } from 'next/server'
 import { keyOk } from '@/lib/venture/interview'
 import { recentMemos, saveMemo, transcribe } from '@/lib/venture/memo'
 
@@ -25,8 +24,7 @@ export async function POST(req: Request) {
     if (!text) return NextResponse.json({ error: 'I could not make out any words. Try again.' }, { status: 400 })
     const test = form.get('test') === '1'
     const memo = await saveMemo(text, test)
-    // Every note gets its minutes (src/lib/venture/minutes.ts); a check's note does not.
-    if (!test) after(() => minutesAfter('note', String(memo.id)))
+    // Every note gets its minutes within about two minutes, written on the mini (minutes-store.ts).
     return NextResponse.json({ memo })
   } catch (e) {
     console.error('[venture/memo] failed:', e)

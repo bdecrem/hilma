@@ -29,7 +29,7 @@ import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from '
 import { homedir, hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
-import Anthropic from '@anthropic-ai/sdk'
+import { askClaude } from './_claude.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState } from './_state.mjs'
 
@@ -44,7 +44,6 @@ const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { pe
 const priv = (f) => new URL(`apps/venture/private/${f}`, root)
 const TZ = 'America/Los_Angeles'
 const MODEL = 'claude-opus-5-5'
-const PRICE = { in: 4, write: 5, read: 0.2, out: 20 } // $ per million tokens, Opus 5.5
 const CONTEXT = 1500
 
 const args = process.argv.slice(2)
@@ -288,32 +287,22 @@ const SCHEMA = {
   },
 }
 
-const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
-const cost = { in: 0, write: 0, read: 0, out: 0 }
-const dollars = () => (cost.in * PRICE.in + cost.write * PRICE.write + cost.read * PRICE.read + cost.out * PRICE.out) / 1e6
+// The grader runs on this machine's Claude login (the Max plan), not the API key (OLA-186).
+// The tokens are counted; `equiv` is what Claude Code says the same calls would cost on a key.
+const cost = { in: 0, write: 0, read: 0, out: 0, equiv: 0 }
 
 async function gradeChunk(day, msgs, earlier) {
   const fmt = (m) =>
     `### Message ${m.id} · ${new Date(m.at).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })} · ${m.source}${m.where ? ` (${m.where})` : ''}\nKIT SAID JUST BEFORE:\n${m.kit || '(nothing yet in this conversation)'}\n\nBART WROTE:\n${m.text.slice(0, 4000)}`
   const user = `Day: ${day} (Pacific time).\n\nEarlier steers (earlier days and earlier today), for classes and repeats:\n${earlier.length ? earlier.map((s) => `- ${s.day} ${s.time} [${s.class}] "${s.quote}"`).join('\n') : '(none)'}\n\nLabel every one of these ${msgs.length} messages (ids ${msgs[0].id} to ${msgs[msgs.length - 1].id}), one label per id.\n\n${msgs.map(fmt).join('\n\n')}`
-  const stream = anthropic.beta.messages.stream({
-    model: MODEL,
-    max_tokens: 64000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: 'high', format: { type: 'json_schema', schema: SCHEMA } },
-    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: user }],
-  })
-  const res = await stream.finalMessage()
+  const res = await askClaude({ system: SYSTEM, user, schema: SCHEMA, effort: 'high', model: MODEL })
   const u = res.usage
   cost.in += u.input_tokens ?? 0
   cost.write += u.cache_creation_input_tokens ?? 0
   cost.read += u.cache_read_input_tokens ?? 0
   cost.out += u.output_tokens ?? 0
-  if (res.stop_reason !== 'end_turn') throw new Error(`grader stopped with ${res.stop_reason}`)
-  const text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('')
-  const labels = JSON.parse(text).labels
+  cost.equiv += res.apiEquivalentUsd
+  const labels = res.json.labels
   const byId = new Map(labels.map((l) => [l.id, l]))
   const missing = msgs.filter((m) => !byId.has(m.id))
   if (missing.length) throw new Error(`grader skipped messages ${missing.map((m) => m.id).join(', ')}`)
@@ -411,7 +400,7 @@ for (const day of days) {
     .filter((d) => d.day < day)
     .flatMap((d) => d.items.filter((s) => s.label === 'steer').map((s) => ({ day: d.day, time: s.time, class: s.class, quote: s.quote })))
   const d = await gradeDay(day, earlier)
-  console.log(`${day}: ${d.messages} messages, ${d.steers} steers (${d.repeats} repeats), ${d.maybes} maybe, rate ${d.rate}  [$${dollars().toFixed(2)} so far]`)
+  console.log(`${day}: ${d.messages} messages, ${d.steers} steers (${d.repeats} repeats), ${d.maybes} maybe, rate ${d.rate}`)
   for (const s of d.items) console.log(`  ${s.time} ${s.label.padEnd(5)} ${s.class.padEnd(22)} ${s.repeat ? 'REPEAT' : 'new   '} "${s.quote}"`)
   if (dry) {
     if (flag('--all')) for (const g of d.graded) console.log(`    #${g.id} ${g.time} ${g.label}: ${g.text.slice(0, 120).replace(/\n/g, ' ')} — ${g.reason}`)
@@ -421,6 +410,5 @@ for (const day of days) {
   await setState(db, 'steers', stored)
   writeMd(stored.days)
 }
-const spent = { ...cost, dollars: Math.round(dollars() * 100) / 100 }
-console.log(`grader: ${JSON.stringify(spent)}`)
+console.log(`grader, on the Max plan (no charge on the API key): ${cost.in + cost.write + cost.read} tokens in, ${cost.out} out; the same calls on a key would be about $${cost.equiv.toFixed(2)}`)
 if (!dry) console.log(`stored in venture_state "steers" and apps/venture/private/STEERS.md`)

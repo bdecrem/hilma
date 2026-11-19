@@ -5,7 +5,7 @@ import { readAppToken } from '@/lib/kochito/app-auth'
 import { addTurn, sessionTurns } from './interview'
 import { recentMemos, saveMemo, transcribe } from './memo'
 import { PHONE, PHONE_LEAD, type PhoneDeps } from './phone'
-import { minutesAfter, minutesDeps, minutesFor } from './minutes-store'
+import { minutesDeps, minutesFor } from './minutes-store'
 import { talkStream, talkSystem, warmCache } from './talk'
 
 // The real services behind src/lib/venture/phone.ts (the tests in scripts/venture/phone-test.ts
@@ -38,7 +38,8 @@ export const phoneDeps: PhoneDeps = {
   saveMemo: (text) => saveMemo(text),
   memos: (limit) => recentMemos(limit),
   now: () => Date.now(),
-  minutesAfter: (source, ref) => minutesAfter(source, ref),
+  // The mini writes the minutes within about two minutes of the end (minutes-store.ts); this server does not call Claude for them.
+  minutesAfter: async () => {},
   minutesFor: (source, refs) => minutesFor(source, refs),
   minutes: minutesDeps,
 }

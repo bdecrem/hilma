@@ -1,12 +1,15 @@
-import { completedText } from '@/lib/anthropic-response'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { MEMO_MARK } from './memo'
-import { SCHEMA, writeMinutes, type Line, type Minutes, type MinutesDeps } from './minutes'
-import { recordUse, VENTURE_MODEL, ventureAnthropic } from './talk'
+import { writeMinutes, type Line, type Minutes, type MinutesDeps } from './minutes'
 
-// The real database and Claude behind minutes.ts. The table may not exist yet (schema 010 is
-// applied by hand): then reads find nothing and writes are skipped with a log line, so a call or a
-// note never fails because of its minutes.
+// The real database behind minutes.ts. The table may not exist yet (schema 010 is applied by
+// hand): then reads find nothing and writes are skipped with a log line.
+//
+// Who writes minutes (2026-11-19, OLA-186): not this server. The Claude call runs on the Mac mini
+// on the Claude login (the Max plan), from scripts/venture/minutes.ts, every minute (launchd
+// sh.venture.minutes). Bart, Nov 18: "all the agent work should be oauth using our max plan".
+// The server reads minutes and stores his corrections; `ask` here refuses, so nothing on Vercel
+// can spend the API key on minutes again.
 
 const TABLE = 'venture_minutes'
 const missing = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|could not find the table/i.test(e.message ?? '')
@@ -28,16 +31,8 @@ export const minutesDeps: MinutesDeps = {
       throw new Error(`venture minutes write failed: ${error.message}`)
     }
   },
-  async ask(system, user) {
-    const res = await ventureAnthropic().messages.create({
-      model: VENTURE_MODEL,
-      max_tokens: 16000,
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA } },
-      system,
-      messages: [{ role: 'user', content: user }],
-    } as never)
-    await recordUse('minutes', (res as { usage?: Parameters<typeof recordUse>[1] }).usage)
-    return completedText(res as never)
+  async ask() {
+    throw new Error('minutes are written on the Mac mini, on the Claude login (scripts/venture/minutes.ts), not by this server')
   },
 }
 
@@ -78,21 +73,21 @@ export async function tableReady(): Promise<boolean> {
   throw new Error(`venture minutes check failed: ${error.message}`)
 }
 
-/// Write the minutes of one meeting or note; never throws (it runs after the response).
-export async function minutesAfter(source: Minutes['source'], ref: string, force = false): Promise<void> {
+/// Write the minutes of one meeting or note with the given Claude call; never throws.
+export async function minutesAfter(source: Minutes['source'], ref: string, deps: MinutesDeps, force = false): Promise<void> {
   try {
     if (!(await tableReady())) return
     const lines = source === 'meeting' ? await meetingLines(ref) : await noteLines(ref)
-    await writeMinutes(source, ref, lines, minutesDeps, force)
+    await writeMinutes(source, ref, lines, deps, force)
   } catch (e) {
     console.error('[venture/minutes] failed:', source, ref, e)
   }
 }
 
-/// The catch-all, every five minutes: calls of the last day that are over (an end marker, or
-/// quiet for five minutes) and voice notes of the last day, without minutes yet. Covers a phone
-/// that never said the meeting ended and the talk page, which has no end route.
-export async function sweepMinutes(now = Date.now()): Promise<{ written: string[] }> {
+/// Every minute, on the mini: calls of the last day that are over (an end marker, or quiet for
+/// five minutes) and voice notes of the last day, without minutes yet. Covers a phone that never
+/// said the meeting ended and the talk page, which has no end route.
+export async function sweepMinutes(deps: MinutesDeps, now = Date.now()): Promise<{ written: string[] }> {
   const since = new Date(now - 24 * 3600e3).toISOString()
   const written: string[] = []
   if (!(await tableReady())) return { written }
@@ -112,7 +107,7 @@ export async function sweepMinutes(now = Date.now()): Promise<{ written: string[
     // A talk that went on after its minutes were written gets them again, unless Bart corrected them.
     const grew = had && !had.edited_at && had.at && new Date(rows[rows.length - 1].at) > new Date(had.at)
     if (had && !grew) continue
-    await minutesAfter('meeting', session, !!grew)
+    await minutesAfter('meeting', session, deps, !!grew)
     written.push(`meeting ${session}`)
   }
   const { data: notes, error: e2 } = await f2Supabase().from('venture_messages').select('id').eq('direction', 'in').like('text', `${MEMO_MARK}%`).gte('at', since)
@@ -121,7 +116,7 @@ export async function sweepMinutes(now = Date.now()): Promise<{ written: string[
   const hadNotes = await minutesFor('note', ids)
   for (const id of ids) {
     if (hadNotes.has(id)) continue
-    await minutesAfter('note', id)
+    await minutesAfter('note', id, deps)
     written.push(`note ${id}`)
   }
   return { written }
