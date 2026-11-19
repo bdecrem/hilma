@@ -241,6 +241,25 @@ texts Bart the two (`ideas.told` records it; a repost sends nothing, `--no-text`
 skips it). The Learning page lists them by day under "Daily ideas" with each
 ticket's status (`Ideas` in `views/Learning.tsx`).
 
+**What keeps the rules in use** (2026-11-19; Bart: "25 out of 30 does not sound
+great"). (1) `.claude/hooks/venture-rules.py` (SessionStart, via
+`venture-rules.sh`) prints a digest of the private RULES.md, every rule's number
+and bold lead sentence: Claude Code gives a session at most 10,000 characters
+from a hook and shows the first 2,000 of anything longer, which is what happened
+to the whole file once it reached 34,000. `sync.mjs push` runs
+`venture-rules.py --size` and refuses to save when the digest is over 9,000
+characters or a rule has no lead sentence (OLA-183). (2) `bart-done.py`
+(UserPromptSubmit) adds the five weaknesses corrected most in the last three
+days, each with its `now` line from `data/weaknesses.json`. (3)
+`.claude/hooks/reply-check.py` (Stop) sends a reply back once when it breaks the
+limits in `scripts/venture/reply-rules.json`; `imsg.mjs send` refuses such a
+text (`--long` when he asked for a full answer) (OLA-180). (4) `sync.mjs push`
+keeps the version it replaces in the bucket `venture-history`, one per file per
+hour; `sync.mjs history <file> [stamp]` lists and prints (OLA-184). (5) From Nov
+19 to Nov 25 a sweep entry must carry `learning`, one improvement to the
+learning system made that day, and the Nov 26 entry `learningReview` (`TRIAL` in
+`sweep.mjs`, OLA-182).
+
 **Bart's writes on the tracker reach an agent** (OLA-172): a ticket he creates,
 reopens or comments on is listed by `issues.mjs inbox` until it is marked read.
 Every session runs `issues.mjs --wait` beside the other watchers and sees unread

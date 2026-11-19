@@ -281,6 +281,21 @@ function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak
         <Changes name="Kit" what="how the project is run" items={s.kit} base={base} weak={weak} />
         <Changes name="Ola" what="agents, skills, orchestration" items={s.ola} base={base} weak={weak} />
       </div>
+      {s.learning && (
+        <p className="bd-sweep-build">
+          <b>Learning system.</b> {inline(s.learning.changed)} <span className="faint">{inline(s.learning.why)}</span>{' '}
+          <span className="m faint">
+            {s.learning.where}
+            {s.learning.enforced ? ', enforced' : ''}
+          </span>{' '}
+          {s.learning.issue && <a href={`${href(base, '/issues')}/${s.learning.issue}`} className="m">{s.learning.issue}</a>}
+        </p>
+      )}
+      {s.learningReview && (
+        <p className="bd-sweep-build">
+          <b>Review of the week of daily improvements.</b> {inline(s.learningReview.text)} {s.learningReview.issue && <a href={`${href(base, '/issues')}/${s.learningReview.issue}`} className="m">{s.learningReview.issue}</a>}
+        </p>
+      )}
       {s.build && (
         <p className="bd-sweep-build">
           <b>To build next.</b> {inline(s.build.text)} {s.build.issue && <a href={`${href(base, '/issues')}/${s.build.issue}`} className="m">{s.build.issue}</a>}

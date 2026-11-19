@@ -142,6 +142,11 @@ async function facts() {
 
 // ---------------------------------------------------------------- the entry
 const IDEA_MAX = 220 // characters of an idea's one sentence
+// A one-week daily task (Bart, 2026-11-19, 6:31 am: "add a daily task for the next week, then review
+// if useful: improvements to the learning system"; OLA-182). From `from` to `to` every entry names
+// one improvement made that day to the learning system itself (`learning`); the entry of `review`
+// carries the review (`learningReview`) and its ticket goes to Bart to keep or stop.
+const TRIAL = { from: '2026-11-19', to: '2026-11-25', review: '2026-11-26', issue: 'OLA-182' }
 function checkEntry(e) {
   const bad = []
   const known = new Set(loadWeaknesses(rootUrl).map((w) => w.id))
@@ -172,11 +177,15 @@ function checkEntry(e) {
     if (!/^OLA-\d+$/.test(i.issue ?? '')) bad.push(`ideas.${side}.issue: open a ticket for the idea (issues.mjs add) and name it here, like OLA-180`)
   }
   if (e.ideas?.kit?.issue && e.ideas.kit.issue === e.ideas?.ola?.issue) bad.push('ideas: the two ideas need a ticket each')
+  if (e.day >= TRIAL.from && e.day <= TRIAL.to && (!str(e.learning?.changed) || !str(e.learning?.why) || !str(e.learning?.where)))
+    bad.push(`learning: { changed, why, where, enforced? }: the one improvement made today to the learning system itself (how corrections are stored, loaded, enforced, counted or shown), finished today; a daily task until ${TRIAL.to} (${TRIAL.issue})`)
+  if (e.day === TRIAL.review && (!str(e.learningReview?.text) || !/^OLA-\d+$/.test(e.learningReview?.issue ?? '')))
+    bad.push(`learningReview: { text, issue }: the review of the week of daily improvements to the learning system (what each day changed, what the figures did, keep or stop), with ${TRIAL.issue} set to waiting on Bart for his answer`)
   if (/[—]/.test(JSON.stringify(e))) bad.push('no em dashes: Bart reads this page')
   // Bart, 2026-11-18: "I don't love the writing style on the learning section ... write it like a
   // factual straight description of our evolving learning system". An entry is a description of the
   // system, not Kit's account of itself: no first person outside a direct quote of his words.
-  const texts = [e.summary, e.pattern, e.build?.text, e.ideas?.kit?.text, e.ideas?.kit?.why, e.ideas?.ola?.text, e.ideas?.ola?.why, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
+  const texts = [e.summary, e.pattern, e.build?.text, e.ideas?.kit?.text, e.ideas?.kit?.why, e.ideas?.ola?.text, e.ideas?.ola?.why, e.learning?.changed, e.learning?.why, e.learning?.where, e.learningReview?.text, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
   const first = [...new Set(texts.flatMap((t) => t.replace(/"[^"]*"/g, '').replace(/“[^”]*”/g, '').match(/\b(I|I'm|I've|I'd|my|me|myself|we|our|us)\b/g) ?? []))]
   if (first.length) bad.push(`written in the first person (${first.join(', ')}): describe what the system does and what happened, with Kit, Ola, Bart or the mechanism as the subject (apps/venture/SWEEP.md, "Rules for the entry")`)
   return bad
@@ -200,10 +209,12 @@ if (cmd === '--wait') {
   console.log(`Counts for the entry's "read": ${f.counts.map((c) => `${c.n} ${c.what}`).join(' · ')}\n`)
   console.log(`## The weaknesses so far (${WEAK_FILE}); file every finding of the day under one of these, or add one\n${ledgerLines().join('\n')}\n`)
   for (const s of f.sections) console.log(`## ${s.title}\n${s.lines.length ? s.lines.join('\n') : '(none)'}\n`)
+  if (day >= TRIAL.from && day <= TRIAL.to) console.log(`## A daily task until ${TRIAL.to} (${TRIAL.issue})\nOne improvement to the learning system itself, made and finished today, goes in the entry's "learning" (SWEEP.md, "One improvement to the learning system, every day until Nov 25").\n`)
+  if (day === TRIAL.review) console.log(`## Today: the review of the week of daily improvements to the learning system (${TRIAL.issue})\nIt goes in the entry's "learningReview", and the ticket goes to Bart (issues.mjs wait ${TRIAL.issue}).\n`)
   console.log('Now follow apps/venture/SWEEP.md.')
 } else if (cmd === 'template') {
   const f = await facts()
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } } }, null, 2))
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
@@ -232,7 +243,7 @@ if (cmd === '--wait') {
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}) }
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
   await setState(db, 'sweeps', value)

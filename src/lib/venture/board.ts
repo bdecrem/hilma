@@ -134,6 +134,11 @@ export type Sweep = {
   pattern?: string // what the day's findings have in common, and what that says
   build?: { text: string; issue?: string } // the one thing to build next that would remove a whole weakness
   ideas?: { kit: SweepIdea; ola: SweepIdea; told?: string }
+  /** Nov 19 to Nov 25, 2026 (OLA-182; Bart: "add a daily task for the next week, then review if
+   *  useful: improvements to the learning system"): the day's one improvement to the learning
+   *  system itself, and on Nov 26 the review. */
+  learning?: { changed: string; why: string; where: string; enforced?: boolean; issue?: string }
+  learningReview?: { text: string; issue?: string }
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 

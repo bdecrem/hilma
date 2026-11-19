@@ -1,0 +1,12 @@
+{
+  "about": "What a reply or a text to Bart may not contain, and how long it may be. Read by .claude/hooks/reply-check.py (terminal replies) and scripts/venture/imsg.mjs (texts). Source: his own instructions (4 sentences unless he asks for depth; no label before a point; no praise opener; no offer in place of the work; no wrapped links).",
+  "maxSentences": 4,
+  "textMaxSentences": 6,
+  "textMaxChars": 700,
+  "banned": [
+    ["a label before the point", "\\b(to be (honest|candid|clear|fair|straight)|honestly|the honest (truth|answer|bottom line)|bottom line|one (honest )?(caveat|gap|thing|note)\\s*:|two (things|notes)|worth (flagging|noting)|heads[- ]up|here'?s the thing|let me be clear|that said,|caveat:)"],
+    ["an opener of agreement or praise", "^(good (call|catch|point|question)|great (question|point|idea)|you'?re (absolutely )?right|makes sense|fair (point|enough)|absolutely|exactly)\\b"],
+    ["an offer in place of the work", "\\b(want me to|would you like me to|should i (keep going|continue|proceed)|let me know (if|when|and)|say the word|happy to)\\b"],
+    ["a link wrapped in markdown", "(\\*\\*|`|\\]\\()https?://"]
+  ]
+}

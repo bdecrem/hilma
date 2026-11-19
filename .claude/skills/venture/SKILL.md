@@ -34,7 +34,9 @@ Read the LOG lines starting "runner:" to see what it did while you were away.
 
 Read, in this order:
 
-0. `apps/venture/private/RULES.md` — the standing rules, each one distilled
+0. `apps/venture/private/RULES.md`, in full: the start-of-session hook gives a session only a
+   digest (each rule's lead sentence; the whole file does not fit what a hook may add). It holds
+   the standing rules, each one distilled
    from a correction Bart had to make, with the checklists to run before he or
    a customer sees anything. (A SessionStart hook, `.claude/hooks/venture-rules.sh`,
    also injects this file into every session in the repo on this machine;

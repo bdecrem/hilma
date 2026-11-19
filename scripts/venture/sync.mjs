@@ -71,6 +71,29 @@ async function listAll(prefix = '') {
   }
   return out
 }
+// History (2026-11-19). Bart: "how / where do you store things you learn and how solid a system is
+// that ?" A push used to replace a document's row and a data file's copy, so a note overwritten by
+// mistake (or by a machine holding an older folder) was gone. Now the version being replaced is
+// kept first, in its own bucket, one per file per hour (the file as it stood when that hour's
+// first change arrived): docs/<FILE.md>/<YYYY-MM-DDTHH> and data/<path>/<YYYY-MM-DDTHH>, UTC.
+//   node scripts/venture/sync.mjs history RULES.md                  the versions kept
+//   node scripts/venture/sync.mjs history RULES.md 2026-11-19T14    print that version
+const HISTORY = 'venture-history'
+const HISTORY_MAX = 400 * 1024 // bytes; larger data files (lead lists, scans) are not kept
+let historyReady = false
+async function keep(path, body) {
+  if (!historyReady) {
+    const { data } = await db.storage.getBucket(HISTORY)
+    if (!data) {
+      const { error } = await db.storage.createBucket(HISTORY, { public: false })
+      if (error && !/exists/i.test(error.message)) throw new Error(`history bucket: ${error.message}`)
+    }
+    historyReady = true
+  }
+  const { error } = await db.storage.from(HISTORY).upload(`${path}/${new Date().toISOString().slice(0, 13)}`, Buffer.from(body), { upsert: false, contentType: 'text/plain' })
+  if (error && !/exists|duplicate/i.test(error.message)) throw new Error(`history ${path}: ${error.message}`) // no history, no overwrite
+  return !error
+}
 const REMOTE_MANIFEST = '.manifest.json'
 async function remoteManifest() {
   const found = await db.storage.from(BUCKET).list('', { limit: 1000 })
@@ -112,6 +135,17 @@ if (cmd === 'push') {
   const only = process.argv[3] === '--only' ? process.argv[4] : null
   // A time in today's journal that is later than the clock was written from memory (2026-11-18: a
   // note said "5:10 pm" at 4:33 pm). The push refuses it: read the time with `date`, then write it.
+  // The rules must fit in a session's context (2026-11-19: the start-of-session hook printed all of
+  // RULES.md, Claude Code cut it to its first 2,000 characters, and sessions started without the
+  // rules). The hook now prints a digest; a push is refused when the digest no longer fits or a
+  // rule has no lead sentence to put in it.
+  if (!only) {
+    const fit = spawnSync('python3', [fileURLToPath(new URL('.claude/hooks/venture-rules.py', root)), '--size'], { encoding: 'utf8' })
+    if (fit.status !== 0) {
+      console.error(`RULES.md does not fit a session's context: ${fit.stderr.trim() || fit.stdout.trim()}`)
+      process.exit(1)
+    }
+  }
   if (!only) {
     const late = journalAhead(readFileSync(new URL('JOURNAL.md', dir), 'utf8'))
     if (late.length) {
@@ -129,6 +163,8 @@ if (cmd === 'push') {
     if (!title) throw new Error(`${f} must start with "# Title"`)
     const slug = slugOf(f)
     if (have.get(slug)?.body === body && have.get(slug)?.source === f) continue
+    // the terminal conversation (--only, after every message) is a transcript, not a note: no history
+    if (!only && have.get(slug)?.body) await keep(`docs/${f}`, have.get(slug).body)
     const { error } = await db.from('venture_docs').upsert({ slug, title, body, source: f, updated_at: new Date().toISOString() })
     if (error) throw new Error(error.message)
     console.log(`pushed ${f} → ${slug}`)
@@ -146,6 +182,10 @@ if (cmd === 'push') {
     if (remote[rel] && remote[rel] !== manifest[rel]) {
       console.log(`conflict ${rel}: changed here and on another machine; not uploaded (compare by hand, then delete one side)`)
       continue
+    }
+    if (remote[rel] && buf.length <= HISTORY_MAX) {
+      const was = await db.storage.from(BUCKET).download(rel)
+      if (!was.error && was.data.size <= HISTORY_MAX) await keep(`data/${rel}`, Buffer.from(await was.data.arrayBuffer()))
     }
     const { error } = await db.storage.from(BUCKET).upload(rel, buf, { upsert: true, contentType: 'application/octet-stream' })
     if (error) throw new Error(`upload ${rel}: ${error.message}`)
@@ -224,6 +264,20 @@ if (cmd === 'push') {
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 1))
   console.log('pull done')
+} else if (cmd === 'history') {
+  const [file, stamp] = process.argv.slice(3)
+  if (!file) { console.error('usage: sync.mjs history <FILE.md | data/path> [YYYY-MM-DDTHH]'); process.exit(1) }
+  const path = file.endsWith('.md') && !file.includes('/') ? `docs/${file}` : `data/${file}` // a data file is named as under private/: data/weaknesses.json
+  if (stamp) {
+    const { data, error } = await db.storage.from(HISTORY).download(`${path}/${stamp}`)
+    if (error) { console.error(`no version ${stamp} of ${file}`); process.exit(1) }
+    process.stdout.write(Buffer.from(await data.arrayBuffer()))
+  } else {
+    const { data, error } = await db.storage.from(HISTORY).list(path, { limit: 1000, sortBy: { column: 'name', order: 'desc' } })
+    if (error) throw new Error(error.message)
+    if (!data.length) console.log(`no earlier version of ${file} is kept (history started 2026-11-19)`)
+    for (const o of data) console.log(`${o.name}  ${(((o.metadata?.size ?? 0)) / 1024).toFixed(0)} KB`)
+  }
 } else if (cmd === 'status') {
   const have = new Map((await rows()).map((r) => [r.source, r]))
   for (const f of files()) {
@@ -234,6 +288,6 @@ if (cmd === 'push') {
   }
   for (const [source, r] of have) console.log(`row only   ${source ?? '(no source)'}  [${r.slug}]`)
 } else {
-  console.error('usage: sync.mjs push | pull | status')
+  console.error('usage: sync.mjs push | pull | status | history <file> [stamp]')
   process.exit(1)
 }

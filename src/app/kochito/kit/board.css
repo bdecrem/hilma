@@ -387,6 +387,7 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-ideas-more .bd-ideas { margin-top: 6px; }
 .bd-sweep-sum.pattern { margin-top: 6px; }
 .bd-sweep-sum.pattern b, .bd-sweep-build b { font-weight: 650; }
+.bd-sweep-build + .bd-sweep-build { margin-top: 0; border-top: 0; }
 .bd-sweep-build { margin-top: 12px; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); line-height: 1.45; }
 .bd-changes .where .wk { color: var(--ink-2); }
 .bd-sweeps { border-top: 1px solid var(--line); }

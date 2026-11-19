@@ -89,6 +89,23 @@ The first post of the day texts Bart the two ideas (`sweep.mjs post` does it and
 repost sends nothing). The Learning page lists them by day under "Daily ideas", with each
 ticket's status.
 
+### One improvement to the learning system, every day until Nov 25
+
+Bart, Nov 19: "add a daily task for the next week, then review if useful: improvements to the
+learning system" (OLA-182). From Nov 19 to Nov 25 every entry carries `learning`: the one
+improvement made that day to the learning system itself, meaning how corrections and rules are
+stored, loaded into a session, enforced, counted or shown. It is made and finished that day, not
+proposed; `changed` says what is different from tomorrow on, `why` what showed it was needed,
+`where` names the place in words Bart understands. Posting refuses an entry without it. Where to
+look: a rule-only weakness that could get a guard; a rule that was in the notes and was broken
+anyway (was it in front of the agent?); a count on the Learning page that nothing checks; what
+the reply check sent back that day (`~/.claude/reply-check.log`).
+
+The entry of Nov 26 carries `learningReview`: what each of the seven days changed, what the
+figures did over the week (corrections a day, the share under a known weakness, weaknesses
+holding), and a recommendation to keep or stop. That day OLA-182 goes to Bart
+(`issues.mjs wait OLA-182 --what "keep or stop the daily improvement to the learning system"`).
+
 ### Every correction is an error
 
 Bart, Nov 18: "the learning agents need to treat every correction I make as an error the agent

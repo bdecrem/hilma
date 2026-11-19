@@ -38,7 +38,33 @@ if data is None:
             json.dump(data, open(cache, "w"))
     except Exception:
         data = None
+
+def most_seen():
+    """The weaknesses Bart corrected most in the last three days, each with the one line to act on
+    (`now` in apps/venture/private/data/weaknesses.json). Since 2026-11-19: on Nov 18, 25 of his 30
+    corrections fell under a weakness that was already written down, and a rule read once at the
+    start of a session was not in front of the agent when the reply was written. This puts the few
+    that matter most in front of every prompt, where a compaction cannot drop them."""
+    try:
+        from datetime import date, timedelta
+        ws = json.load(open(os.path.join(root, "apps/venture/private/data/weaknesses.json")))
+        since = (date.today() - timedelta(days=3)).isoformat()
+        rows = sorted(((sum(1 for x in w.get("seen", []) if x.get("day", "") >= since), w) for w in ws if w.get("now")),
+                      key=lambda r: -r[0])
+        rows = [r for r in rows if r[0] > 0][:5]
+        if not rows:
+            return ""
+        return ("Bart's corrections of the last three days, by weakness, most frequent first. Each one is an error "
+                "the agent already made; check this turn's work and reply against each line before stopping:\n"
+                + "\n".join(f"- {w['name']} ({n}x): {w['now']}" for n, w in rows))
+    except Exception:
+        return ""
+
+
+remind = most_seen()
 if not isinstance(data, dict):
+    if remind:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": remind}}))
     sys.exit(0)
 
 note = ("Tracker rule (Bart, Nov 17): if this message says Bart did something, or that an issue is "
@@ -58,4 +84,6 @@ if sweep:
     note += ("\nThe daily sweep has not been done for " + ", ".join(sweep) + ": when the work in hand allows, and "
              "before this session ends, follow apps/venture/SWEEP.md (it ends with `sweep.mjs post`). "
              "Do not tell Bart about it; the Learning page is where he reads it.")
+if remind:
+    note += "\n\n" + remind
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": note}}))

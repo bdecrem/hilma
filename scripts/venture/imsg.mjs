@@ -49,7 +49,23 @@ async function patient(fn) {
 
 const [cmd, arg] = process.argv.slice(2)
 if (cmd === 'send') {
-  if (!arg?.trim()) throw new Error('usage: imsg.mjs send "text"')
+  if (!arg?.trim()) throw new Error('usage: imsg.mjs send "text" [--long]')
+  // A text is checked before it leaves (OLA-180, rule 52): his limits for what reaches his phone,
+  // from scripts/venture/reply-rules.json. Unlike a terminal reply, a refused text is never seen.
+  // --long is for a text he asked to be long ("tell me what the updated system is"); the banned
+  // phrases are refused either way.
+  {
+    const rules = JSON.parse(readFileSync(new URL('./reply-rules.json', import.meta.url), 'utf8'))
+    const body = arg.replace(/https?:\/\/\S+/g, 'link')
+    const n = body.split('\n').map((l) => l.trim()).filter(Boolean).reduce((a, l) => a + Math.max((l.match(/[.!?](?=\s|$|["')\]])/g) ?? []).length, 1), 0)
+    const bad = []
+    if (!process.argv.includes('--long')) {
+      if (n > rules.textMaxSentences) bad.push(`${n} sentences (at most ${rules.textMaxSentences})`)
+      if (arg.length > rules.textMaxChars) bad.push(`${arg.length} characters (at most ${rules.textMaxChars})`)
+    }
+    for (const [what, rx] of rules.banned) { const m = new RegExp(rx, 'im').exec(arg); if (m) bad.push(`${what}: "${m[0].trim()}"`) }
+    if (bad.length) { console.error(`not sent: ${bad.join('; ')}. Shorten it to what he must know or do; add --long only when he asked for a full answer.`); process.exit(1) }
+  }
   const base = process.env.VENTURE_BASE || 'https://ola.cx'
   const res = await fetch(`${base}/api/venture/imsg`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key(), text: arg }) })
   if (!res.ok) throw new Error(`send failed (${res.status}): ${await res.text()}`)
