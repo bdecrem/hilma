@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- On the Mac mini, always running: answers Bart's texts ("v …") within seconds on the Claude
+     login saved for the runner (CLAUDE_CODE_OAUTH_TOKEN in ~/.venture-runner.env), never the API
+     key (scripts/venture/text-reply.ts, OLA-187). It ends by itself when the checkout moves to a
+     new commit and launchd starts it again. Install: cp to ~/Library/LaunchAgents/ and
+     launchctl bootstrap gui/501 <plist>. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>sh.venture.texts</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-lc</string>
+    <string>set -a; . $HOME/.venture-runner.env; set +a; unset ANTHROPIC_API_KEY; cd $HOME/hilma-venture &amp;&amp; exec /opt/homebrew/bin/node node_modules/tsx/dist/cli.mjs scripts/venture/text-reply.ts</string>
+  </array>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>RunAtLoad</key><true/>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/admin</string>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/admin/Library/Logs/venture-runner/texts.log</string>
+  <key>StandardErrorPath</key><string>/Users/admin/Library/Logs/venture-runner/texts.log</string>
+</dict></plist>

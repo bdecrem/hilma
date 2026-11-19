@@ -568,10 +568,18 @@ CLAUDE.md); the thread is the table `venture_messages`
   carry it.
 - **In.** A text from one of Bart's paired handles that starts with `v` or
   `venture` is Venture's: `dispatchInbound` hands it to
-  `src/lib/venture/messages.ts` before Onething or Dodo see it. It is stored,
-  and Claude (Opus 5.5, with every `venture_docs` row as notes and the last 40
-  messages) answers at once; an acknowledgment gets no answer. That reply
-  cannot act; the working session reads the thread when it runs
+  `src/lib/venture/messages.ts` before Onething or Dodo see it. It is stored;
+  the server does not answer it. Since 2026-11-19 (OLA-187) the answer is
+  written on the Mac mini on the Claude login, the Max plan, never the API key:
+  `scripts/venture/text-reply.ts` (launchd `sh.venture.texts`, always running)
+  looks every 5 seconds, gives Opus 5.5 the instructions in
+  `src/lib/venture/texter.ts`, the loaded `venture_docs` notes and the last 40
+  messages, and sends the answer through `imsg.mjs send --reply`, so his limits
+  for a text are checked first. About ten seconds from his text to the answer;
+  several texts in a row get one answer; an acknowledgment gets none. `--try
+  "text"` prints an answer and its timings without sending; `--dry` runs the
+  job without sending. Log on the mini: `~/Library/Logs/venture-runner/texts.log`.
+  That reply cannot act; the working session reads the thread when it runs
   (`imsg.mjs inbox`, or `imsg.mjs --wait` as a background task).
 
 ## The company's site: kochitolabs.com

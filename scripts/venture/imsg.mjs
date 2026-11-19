@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 // Venture's iMessage thread with Bart (apps/venture/README.md).
-//   node scripts/venture/imsg.mjs send "text"     text him (through ola.cx → the Mac mini bridge)
+//   node scripts/venture/imsg.mjs send "text"     text him (through ola.cx → the Mac mini bridge); --long when he
+//                                                asked for a full answer; --reply marks the automatic answer
+//                                                to one of his texts (text-reply.ts on the mini); --check
+//                                                runs his limits for a text and sends nothing
 //   node scripts/venture/imsg.mjs inbox           what he texted that no session has read; marks it read
 //   node scripts/venture/imsg.mjs thread [n=20]   the last n messages, both directions
 //   node scripts/venture/imsg.mjs --wait          block until he texts, print it with what was answered, mark it read
@@ -66,8 +69,9 @@ if (cmd === 'send') {
     for (const [what, rx] of rules.banned) { const m = new RegExp(rx, 'im').exec(arg); if (m) bad.push(`${what}: "${m[0].trim()}"`) }
     if (bad.length) { console.error(`not sent: ${bad.join('; ')}. Shorten it to what he must know or do; add --long only when he asked for a full answer.`); process.exit(1) }
   }
+  if (process.argv.includes('--check')) { console.log('would send'); process.exit(0) } // the limits only; nothing leaves
   const base = process.env.VENTURE_BASE || 'https://ola.cx'
-  const res = await fetch(`${base}/api/venture/imsg`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key(), text: arg }) })
+  const res = await fetch(`${base}/api/venture/imsg`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key(), text: arg, ...(process.argv.includes('--reply') ? { author: 'reply' } : {}) }) })
   if (!res.ok) throw new Error(`send failed (${res.status}): ${await res.text()}`)
   console.log('sent')
 } else if (cmd === 'inbox') {

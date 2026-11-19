@@ -3,7 +3,7 @@
 // any of these can be easily routed differently so they are processed through our Max plan".
 // What is not time-critical goes through here: the steer count, the replay test, the minutes.
 //
-//   const { text, json, usage } = await askClaude({ system, user, schema, effort: 'high' })
+//   const { text, json, usage, ms, firstWordMs } = await askClaude({ system, user, schema, effort: 'high' })
 //
 // It starts Claude Code once, headless, with no tools, no settings, no hooks, no CLAUDE.md and no
 // saved session, in an empty folder: the model sees the system text and the question and nothing
@@ -41,7 +41,7 @@ export function askClaude({ system, user, schema = null, effort = 'medium', mode
       try { r = JSON.parse(out) } catch { return reject(new Error(`claude exit ${code}: ${(err || out).trim().slice(0, 400)}`)) }
       if (code !== 0 || r.is_error || r.subtype !== 'success') return reject(new Error(`claude failed (${r.subtype ?? code}): ${String(r.result ?? err).slice(0, 400)}`))
       if (schema && r.structured_output == null) return reject(new Error(`claude gave no structured answer: ${String(r.result).slice(0, 400)}`))
-      resolve({ text: typeof r.result === 'string' ? r.result : '', json: r.structured_output ?? null, usage: r.usage ?? {}, apiEquivalentUsd: r.total_cost_usd ?? 0 })
+      resolve({ text: typeof r.result === 'string' ? r.result : '', json: r.structured_output ?? null, usage: r.usage ?? {}, apiEquivalentUsd: r.total_cost_usd ?? 0, ms: r.duration_ms ?? 0, firstWordMs: r.ttft_ms ?? 0 })
     })
     p.stdin.end(user)
   })

@@ -5,15 +5,16 @@ import { sendVenture } from '@/lib/venture/messages'
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-// POST /api/venture/imsg  { key, text }
-// The working session texts Bart (scripts/venture/imsg.mjs send "…").
+// POST /api/venture/imsg  { key, text, [author] }
+// The working session texts Bart (scripts/venture/imsg.mjs send "…"); author "reply" marks the
+// automatic answer to one of his texts, written on the Mac mini (scripts/venture/text-reply.ts).
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as { key?: unknown; text?: unknown } | null
+  const body = (await req.json().catch(() => null)) as { key?: unknown; text?: unknown; author?: unknown } | null
   if (!body || !keyOk(body.key)) return NextResponse.json({ error: 'not found' }, { status: 404 })
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 4000) : ''
   if (!text) return NextResponse.json({ error: 'empty' }, { status: 400 })
   try {
-    await sendVenture(text, 'session')
+    await sendVenture(text, body.author === 'reply' ? 'reply' : 'session')
   } catch (e) {
     console.error('[venture/imsg] send failed:', e)
     return NextResponse.json({ error: 'the iMessage bridge did not take it' }, { status: 502 })
