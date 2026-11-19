@@ -147,6 +147,12 @@ struct Sidebar: View {
   @State private var newTitle = ""
   @State private var deleting: SessionInfo?
   @FocusState private var focused: Bool
+  /// A click or a double click on "Cloud" or "Local" hides or shows that runtime's sessions
+  /// (OLA-167; Bart, 2026-11-18). Kept across launches.
+  @AppStorage("ola.sessions.hidden.cloud") private var cloudHidden = false
+  @AppStorage("ola.sessions.hidden.local") private var localHidden = false
+  func hidden(_ r: Runtime) -> Bool { r == .cloud ? cloudHidden : localHidden }
+  func toggle(_ r: Runtime) { if r == .cloud { cloudHidden.toggle() } else { localHidden.toggle() } }
 
   /// The runtimes to list (OLA-143: the list shows which runtime each session is on), cloud
   /// first, each with the store holding its sessions now; a runtime not set up is left out.
@@ -193,10 +199,20 @@ struct Sidebar: View {
               Image(systemName: r.symbol).font(.system(size: Metrics.meta, weight: .semibold))
               Text(r.name).font(OlaFont.sans(Metrics.meta, .semibold))
               Text(r.place(phone: false)).font(OlaFont.sans(Metrics.meta))
+              Spacer(minLength: 4)
+              if hidden(r) { Text("\(st.sessions.count)").font(OlaFont.sans(Metrics.meta)).monospacedDigit() }
+              Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).rotationEffect(.degrees(hidden(r) ? -90 : 0))
             }
             .foregroundStyle(Ola.dim)
             .padding(.horizontal, Space.s).padding(.top, Space.l).padding(.bottom, Space.xs)
-            .help(r.detail(phone: false))
+            .contentShape(Rectangle())
+            // One toggle for a double click, one for a single click.
+            .onTapGesture(count: 2) { toggle(r) }
+            .onTapGesture { toggle(r) }
+            .help(hidden(r) ? "Show the \(r.name.lowercased()) sessions" : "Hide the \(r.name.lowercased()) sessions")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel("\(r.name) sessions, \(hidden(r) ? "hidden" : "shown")")
+            if !hidden(r) {
             ForEach(st.sessions) { s in
               SessionRow(session: s, selected: st === store && store.selectedID == s.id, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
                 .onTapGesture { open(r, s, in: st) }
@@ -212,6 +228,7 @@ struct Sidebar: View {
             if st.sessions.isEmpty {
               Text(st.connection == .open ? "No sessions yet." : st.connection == .connecting ? "Connecting\u{2026}" : r == .local ? "Starting\u{2026}" : "Not answering.")
                 .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(.horizontal, Space.s).padding(.vertical, 6)
+            }
             }
           }
         }

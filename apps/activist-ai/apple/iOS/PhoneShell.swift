@@ -144,6 +144,11 @@ struct SessionsHome: View {
   @State private var deleting: SessionInfo?
   /// The store a rename or a delete is for (a session of either runtime).
   @State private var target: OlaStore?
+  /// A tap or a double tap on "Cloud" or "Local" hides or shows that runtime's sessions (OLA-167).
+  @AppStorage("ola.sessions.hidden.cloud") private var cloudHidden = false
+  @AppStorage("ola.sessions.hidden.local") private var localHidden = false
+  func hidden(_ r: Runtime) -> Bool { r == .cloud ? cloudHidden : localHidden }
+  func toggle(_ r: Runtime) { if r == .cloud { cloudHidden.toggle() } else { localHidden.toggle() } }
   @Bindable private var place = PhoneWhereState.shared
 
   /// The runtimes that are set up, cloud first, each with the store holding its sessions now.
@@ -178,7 +183,7 @@ struct SessionsHome: View {
       ForEach(sections) { sec in
         let r = sec.runtime, st = sec.store
         Section {
-          ForEach(shown(st)) { s in
+          ForEach(hidden(r) ? [] : shown(st)) { s in
             Button { open(r, s, in: st) } label: {
               SessionRow(session: s, preview: st.previews[s.id], running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
             }
@@ -193,7 +198,7 @@ struct SessionsHome: View {
               Button("Delete", systemImage: "trash", role: .destructive) { target = st; deleting = s }
             }
           }
-          if st.sessions.isEmpty, !allEmpty || st !== store {
+          if !hidden(r), st.sessions.isEmpty, !allEmpty || st !== store {
             Text(emptyLine(r, st)).font(.subheadline).foregroundStyle(Ola.ink2).listRowBackground(Ola.paper)
           }
         } header: {
@@ -202,9 +207,17 @@ struct SessionsHome: View {
             Image(systemName: r.symbol)
             Text(r.name).fontWeight(.semibold)
             Text(r.place(phone: true))
+            Spacer(minLength: 4)
+            if hidden(r) { Text("\(st.sessions.count)").monospacedDigit() }
+            Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).rotationEffect(.degrees(hidden(r) ? -90 : 0))
           }
           .font(.footnote).foregroundStyle(Ola.ink2).textCase(nil)
+          .contentShape(Rectangle())
+          .onTapGesture(count: 2) { withAnimation { toggle(r) } }
+          .onTapGesture { withAnimation { toggle(r) } }
           .accessibilityElement(children: .combine)
+          .accessibilityAddTraits(.isButton)
+          .accessibilityLabel("\(r.name) sessions, \(hidden(r) ? "hidden" : "shown")")
         }
       }
     }
