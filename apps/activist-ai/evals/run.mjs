@@ -247,6 +247,11 @@ async function runClaude(run, prompts) {
     if (!m) throw new Error(`${cfg.key_var} not in ${cfg.key_file}`)
     anthropicKey = m[1].trim().replace(/^['"]|['"]$/g, '')
   }
+  // cfg.auth "login" (2026-11-19, OLA-187; Bart: "whatever we CAN switch"): the value read above is a
+  // Claude login token (the Max plan), not an API key, so the baseline costs nothing on the key.
+  // Claude Code keeps that token out of every shell it starts (checked on 2.1.327: a control
+  // variable was visible to the agent's shell, CLAUDE_CODE_OAUTH_TOKEN was not).
+  const onLogin = cfg.auth === 'login'
   const s = { final_text: '', requests: 0, tokens_in: 0, tokens_out: 0, cost_usd: 0, tools: {}, errors: 0, end_reason: 'done' }
   const ac = new AbortController()
   const timer = setTimeout(() => { s.end_reason = 'timeout'; ac.abort() }, timeLimit * 1000)
@@ -272,12 +277,12 @@ async function runClaude(run, prompts) {
       env: isolatedEnv(run.home, { ...(cfg.tool_path ? { PATH: (x.binDir ? x.binDir + ':' : '') + cfg.tool_path } : {}),
         // round two: the agent's shell gets no web (a dead proxy) while the SDK's own API calls go direct
         ...(cfg.dead_proxy ? { HTTP_PROXY: 'http://127.0.0.1:9', HTTPS_PROXY: 'http://127.0.0.1:9', ALL_PROXY: 'http://127.0.0.1:9', http_proxy: 'http://127.0.0.1:9', https_proxy: 'http://127.0.0.1:9', all_proxy: 'http://127.0.0.1:9', NO_PROXY: 'api.anthropic.com', no_proxy: 'api.anthropic.com' } : {}),
-        ANTHROPIC_API_KEY: anthropicKey, CLAUDE_CONFIG_DIR: path.join(run.home, '.claude'), DISABLE_AUTOUPDATER: '1',
+        ...(onLogin ? { CLAUDE_CODE_OAUTH_TOKEN: anthropicKey } : { ANTHROPIC_API_KEY: anthropicKey }), CLAUDE_CONFIG_DIR: path.join(run.home, '.claude'), DISABLE_AUTOUPDATER: '1',
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1', DISABLE_TELEMETRY: '1', DISABLE_ERROR_REPORTING: '1' }),
     } })) {
       out.write(JSON.stringify(m) + '\n')
-      if (m.type === 'system' && m.subtype === 'init' && m.apiKeySource !== 'ANTHROPIC_API_KEY') {
-        s.end_reason = 'harness_error'; s.why = 'not on the evals API key'; ac.abort(); break
+      if (m.type === 'system' && m.subtype === 'init' && (m.apiKeySource === 'ANTHROPIC_API_KEY') === onLogin) {
+        s.end_reason = 'harness_error'; s.why = onLogin ? 'on an API key, not the Claude login' : 'not on the evals API key'; ac.abort(); break
       }
       if (m.type === 'system' && m.subtype === 'init') s.init_skills = m.skills
       if (m.type === 'assistant') {

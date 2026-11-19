@@ -371,10 +371,15 @@ caller, not from the agent's events. A load throttle (`--max-load`, `--load-pati
 mini is busy and stops the run if it stays busy. `opencode`: opencode run with the spike's config (web denied, nothing outside the
 folder) through our gateway, with an empty home and an emptied environment. `claude-agent-sdk`: Claude
 Code's engine through the Claude Agent SDK (Claude Code's system prompt and tools, web tools removed,
-no settings files, an empty config folder, telemetry off); the key is read from the ops vault in
-process, and a run that does not report `apiKeySource: ANTHROPIC_API_KEY` is stopped, so the baseline
-can never fall back to a personal login. Cost is the larger of the SDK's estimate and our own count
-from its token usage at list price.
+no settings files, an empty config folder, telemetry off). Since 2026-11-19 (OLA-187; Bart: "whatever
+we CAN switch") the baseline runs on the Claude login, the Max plan, not an API key: the
+configuration says `"auth": "login"`, the login token is read in process from
+`~/.config/ops/claude-login.env` (`CLAUDE_CODE_OAUTH_TOKEN=…`, chmod 600, on the machine that runs the
+round), and a run that reports `apiKeySource: ANTHROPIC_API_KEY` is stopped. Claude Code keeps that
+token out of every shell it starts, so the agent under test cannot read it from its environment.
+Without `"auth": "login"` a configuration is on an API key as before and a run not on that key is
+stopped. Cost is the larger of the SDK's estimate and our own count from its token usage at list
+price: on the login it is what a key would have charged, and nothing is billed.
 
 **Departures from the flywheel design.** The runs are not inside the sealed workspace VM: on the iMac
 the agent runs as a local process in a throwaway folder (the spike's setup). The baseline is the Agent
