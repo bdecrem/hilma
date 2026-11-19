@@ -57,6 +57,8 @@
 .bd-side { position: sticky; top: 0; height: 100dvh; overflow: auto; background: var(--side); border-right: 1px solid var(--line); padding: 12px 8px 16px; display: flex; flex-direction: column; gap: 14px; }
 .bd-brand { display: flex; align-items: baseline; gap: 6px; padding: 2px 8px; font-weight: 600; font-size: 14px; color: var(--ink) !important; }
 .bd-brand span { font-weight: 400; color: var(--ink-3); font-size: 12.5px; }
+.bd-brand b { font-weight: 600; }
+.bd-mark { display: none; } /* Ola's mark: shown by the looks of looks.css */
 .bd-pulse { display: flex; align-items: center; gap: 7px; padding: 4px 8px; font-size: 12.5px; color: var(--ink-2) !important; border-radius: 3px; }
 .bd-pulse:hover { background: var(--hover); text-decoration: none !important; }
 .bd-pulse b { font-weight: 600; color: var(--ink); }

@@ -2,6 +2,10 @@ import type { Frame } from '@/lib/venture/board'
 import { quick, talk, type SideLink } from './links'
 import { reading } from './health'
 import './board.css'
+import './looks.css'
+import { cookies } from 'next/headers'
+import LookSwitch from './LookSwitch'
+import { LOOKS, type Look } from './looks'
 
 // The frame of every board page (round three, 2026-11-18, OLA-162): the menu on the left (208px; a
 // Menu button on a phone) and the page on the right. The menu lists five pages, one item each,
@@ -61,7 +65,7 @@ function Out({ title, links }: { title: string; links: SideLink[] }) {
   )
 }
 
-function Menu({ base, q, f, current, user }: { base: string; q: string; f: Frame; current: Page; user: string }) {
+function Menu({ base, q, f, current, user, look }: { base: string; q: string; f: Frame; current: Page; user: string; look: Look }) {
   return (
     <>
       <nav className="bd-nav" aria-label="Pages">
@@ -80,6 +84,7 @@ function Menu({ base, q, f, current, user }: { base: string; q: string; f: Frame
         <Out title="Talk to Kit" links={talk(q)} />
         <Out title="Quick links" links={quick(f.mac)} />
       </div>
+      <LookSwitch look={look} />
       <form method="post" action="/api/kochito/app/logout" className="bd-who">
         <span>Signed in as {user}.</span> <button>Sign out</button>
       </form>
@@ -87,23 +92,28 @@ function Menu({ base, q, f, current, user }: { base: string; q: string; f: Frame
   )
 }
 
-export default function Shell({ base, q, user, f, current, children }: { base: string; q: string; user: string; f: Frame; current: Page; children: React.ReactNode }) {
+// The look (OLA-170): the cookie bd_look, set by the Look switch in the menu. "plain" or no cookie
+// is board.css as it stands; "lamp" and "desk" are looks.css.
+export default async function Shell({ base, q, user, f, current, children }: { base: string; q: string; user: string; f: Frame; current: Page; children: React.ReactNode }) {
+  const said = (await cookies()).get('bd_look')?.value as Look | undefined
+  const look: Look = said && LOOKS.includes(said) ? said : 'plain'
   return (
-    <div className="bd">
+    <div className="bd" data-look={look === 'plain' ? undefined : look}>
       <div className="bd-app">
         <aside className="bd-side">
           <a className="bd-brand" href={href(base, '/')}>
-            Ola <span>Kochito Labs</span>
+            <i className="bd-mark" aria-hidden="true" />
+            <b>Ola</b> <span>Kochito Labs</span>
           </a>
           <Pulse f={f} base={base} />
-          <Menu base={base} q={q} f={f} current={current} user={user} />
+          <Menu base={base} q={q} f={f} current={current} user={user} look={look} />
         </aside>
         <header className="bd-top">
           <Pulse f={f} base={base} />
           <details>
             <summary>Menu</summary>
             <div className="panel">
-              <Menu base={base} q={q} f={f} current={current} user={user} />
+              <Menu base={base} q={q} f={f} current={current} user={user} look={look} />
             </div>
           </details>
         </header>

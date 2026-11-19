@@ -21,6 +21,8 @@ const pages = (process.env.BOARD_PAGES ?? 'home=/,issues=/issues,done=/issues?ta
 const b = await chromium.launch()
 for (const [tag, w, h] of [['1440', 1440, 900], ['390', 390, 844]]) {
   const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
+  // BOARD_LOOK=lamp|desk: the look of looks.css (the cookie the menu's Look switch writes)
+  if (process.env.BOARD_LOOK) await ctx.addCookies([{ name: 'bd_look', value: process.env.BOARD_LOOK, url: new URL(base).origin }])
   const p = await ctx.newPage()
   if (real) {
     await p.goto(`${base}/`, { waitUntil: 'networkidle' })
