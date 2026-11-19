@@ -153,6 +153,30 @@ if (cmd === 'push') {
       process.exit(1)
     }
   }
+  // What the dashboard's Home shows Bart to act on comes from the journal: the check-in agenda
+  // ("## Check-in list") and "## To be decided". Bart, Nov 19, 2026, at the check-in: "it should
+  // have a link to each item so I can read up on it during the call" and "everything needs to
+  // have clickable stuff in it". A line there with no link and no ticket number is refused, and
+  // so is an agenda whose tickets differ from the ones the voice call is given (call-checkin.md).
+  if (!only) {
+    const journal = readFileSync(new URL('JOURNAL.md', dir), 'utf8')
+    const section = (t) => (journal.split(/^## /m).find((x) => x.startsWith(t + '\n')) ?? '').split('\n').filter((l) => l.startsWith('- '))
+    const bare = [...section('Check-in list'), ...section('To be decided')].filter((l) => !/^- nothing/i.test(l) && !/\bOLA-\d+\b|\]\(https?:\/\//.test(l))
+    if (bare.length) {
+      console.error(`JOURNAL.md: ${bare.length} line(s) under "Check-in list" or "To be decided" have nothing to click on Home. Give each its ticket number (OLA-n) or a link:\n${bare.map((l) => '  ' + l.slice(0, 110)).join('\n')}`)
+      process.exit(1)
+    }
+    const idsOf = (text) => [...new Set(text.match(/\bOLA-\d+\b/g) ?? [])].sort()
+    const call = existsSync(new URL('call-checkin.md', dir)) ? readFileSync(new URL('call-checkin.md', dir), 'utf8').split(/^## For information/m)[0] : null
+    if (call !== null) {
+      const a = idsOf(section('Check-in list').join('\n'))
+      const b = idsOf(call)
+      if (a.join() !== b.join()) {
+        console.error(`The check-in agenda on Home (JOURNAL.md, "Check-in list": ${a.join(', ') || 'no tickets'}) and the agenda the voice call is given (call-checkin.md: ${b.join(', ') || 'no tickets'}) name different tickets. Make them match, then publish the call's: node scripts/venture/put.mjs call checkin apps/venture/private/call-checkin.md`)
+        process.exit(1)
+      }
+    }
+  }
   for (const f of files().filter((f) => !only || f === only)) {
     const body = readFileSync(new URL(f, dir), 'utf8').trim()
     if (!body) {

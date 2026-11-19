@@ -109,8 +109,19 @@ const menu = await side.locator('.bd-nav a').allTextContents()
 check(menu.length === 5 && ['Home', 'Issue Tracker', 'Plan', 'Notes', 'Learning'].every((w, n) => menu[n].startsWith(w)), `the menu lists the five pages: ${menu.map((x) => x.replace(/\d+$/, '').trim()).join(', ')}`)
 check((await side.locator('.bd-nav a[aria-current=page]').count()) === 1, 'the current page is marked in the menu')
 // Home: needs you, now, health, the week, learning; no issue list but Needs you
-for (const id of ['needs-h', 'now-h', 'health-h', 'week-h', 'learn-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
+for (const id of ['agenda-h', 'needs-h', 'now-h', 'health-h', 'week-h', 'learn-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
 check((await p.locator('.bd-table').count()) === 0, 'Home lists no issues outside Needs you')
+// Bart, Nov 19: the check-in agenda is on Home "with a link to each item", and in Needs you
+// "everything needs to have clickable stuff in it"; no item is on both lists
+{
+  const rows = (sel) => p.locator(sel).evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 60), links: e.querySelectorAll('a[href]').length + (e.matches('a[href]') ? 1 : 0), ids: e.textContent.match(/OLA-\d+/g) ?? [] })))
+  const agenda = await rows('.bd-agenda > li > .row')
+  const needsRows = await rows('ol.bd-needs:not(.bd-agenda) > li > a, ol.bd-needs:not(.bd-agenda) > li > .row')
+  const bare = [...agenda, ...needsRows].filter((r) => r.links === 0)
+  check(bare.length === 0, `every one of the ${agenda.length} agenda item(s) and ${needsRows.length} Needs you line(s) has something to click${bare.length ? `; without: ${bare.map((r) => r.text).join(' | ')}` : ''}`)
+  const twice = needsRows.flatMap((r) => r.ids).filter((id) => agenda.some((a) => a.ids.includes(id)))
+  check(twice.length === 0, `nothing is on both the agenda and Needs you${twice.length ? `: ${twice.join(', ')}` : ''}`)
+}
 check((await p.locator('.bd-now a').count()) === 5, 'Now shows five counts that link into the tracker')
 const health = p.locator('dl.bd-health')
 check((await health.locator('dd.read').count()) === 1, `Health is one reading with one time (${(await health.locator('dd.read').textContent())?.trim()})`)

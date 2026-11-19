@@ -1,12 +1,16 @@
 import type { BoardData } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { Health } from '../health'
-import { inline } from '../inline'
+import { firstLink, inline } from '../inline'
 import { ago, clock, dayShort, pday, shiftDay, since } from '../time'
 import { LearningFigures, sweepStats } from './Learning'
 
 // Home (app.kochitolabs.com/): what needs Bart and the state of things, on one screen at 1440 x 900.
-// Top to bottom: Needs you; Now (counts that open the tracker filtered, and Kit's latest "Now");
+// Top to bottom: Check-in agenda (the journal's "Check-in list": what the next daily check-in goes
+// through, each item with a link to read up on it during the call; Bart, Nov 19, 2026: "the agenda
+// for the check-in list should be on the app homepage, and it should have a link to each item");
+// Needs you (everything else that waits on him, nothing that is already on the agenda, every line
+// with something to click); Now (counts that open the tracker filtered, and Kit's latest "Now");
 // Health (the one reading) and This week in the plan beside Learning (the two headline figures
 // and the latest daily sweep in a line; the rest is on the Learning page). No issue list
 // other than Needs you: every issue is listed in the Issue Tracker only.
@@ -20,14 +24,19 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
   const today = d.today
   const issues = d.issues ?? []
   const T = (qs: string) => `${href(base, '/issues')}?${qs}`
-  const waiting = issues.filter((i) => i.status === 'waiting').sort((a, b) => a.priority.localeCompare(b.priority))
-  const toDecide = d.journal.toDecide
-  const checkin = d.journal.checkin.filter((x) => !/^nothing/i.test(x))
-  const needs = waiting.length + toDecide.length + checkin.length
+  const issueHref = (id: string) => `${href(base, '/issues')}/${id}`
+  const L = (text: string) => inline(text, issueHref)
+  const ids = (text: string) => text.match(/\bOLA-\d+\b/g) ?? []
+  const agenda = d.journal.checkin.filter((x) => !/^nothing/i.test(x))
+  const onAgenda = new Set(agenda.flatMap(ids))
+  // Needs you: what waits on him and is not already on the agenda (no item is shown twice)
+  const waiting = issues.filter((i) => i.status === 'waiting' && !onAgenda.has(i.id)).sort((a, b) => a.priority.localeCompare(b.priority))
+  const toDecide = d.journal.toDecide.filter((x) => !ids(x.text).some((id) => onAgenda.has(id)))
+  const needs = waiting.length + toDecide.length
   const count = {
     doing: issues.filter((i) => i.status === 'in_progress').length,
     next: issues.filter((i) => i.status === 'open').length,
-    waiting: waiting.length,
+    waiting: issues.filter((i) => i.status === 'waiting').length,
     doneToday: issues.filter((i) => i.status === 'done' && i.day === today).length,
     openedToday: issues.filter((i) => pday(i.opened_at) === today).length,
   }
@@ -51,17 +60,41 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
         <p className="m">{new Date(now).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/Los_Angeles' })}, {clock(now)}</p>
       </div>
 
-      <section className="bd-sec" style={{ marginTop: 0 }} aria-labelledby="needs-h">
+      <section className="bd-sec" style={{ marginTop: 0 }} aria-labelledby="agenda-h">
+        <h2 id="agenda-h">
+          Check-in agenda <span className="bd-n">{agenda.length}</span>
+        </h2>
+        {agenda.length === 0 ? (
+          <p className="bd-empty">Nothing is on the agenda for the next check-in.</p>
+        ) : (
+          <ol className="bd-rows bd-needs bd-agenda">
+            {agenda.map((x, n) => {
+              const to = firstLink(x, issueHref)
+              return (
+                <li key={n}>
+                  <div className="row">
+                    <span className="kind">{n + 1}</span>
+                    <span className="what">{L(x)}</span>
+                    <span className="since">{to && <a href={to.href}>{to.label}</a>}</span>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        )}
+      </section>
+
+      <section className="bd-sec" aria-labelledby="needs-h">
         <h2 id="needs-h">
           Needs you <span className={`bd-n${needs ? ' red' : ''}`}>{needs}</span>
         </h2>
         {needs === 0 ? (
-          <p className="bd-empty">Nothing needs you.</p>
+          <p className="bd-empty">{agenda.length ? 'Nothing else needs you.' : 'Nothing needs you.'}</p>
         ) : (
           <ol className="bd-rows bd-needs">
             {waiting.map((i) => (
               <li key={i.id}>
-                <a href={`${href(base, '/issues')}/${i.id}`}>
+                <a href={issueHref(i.id)}>
                   <span className="kind">{i.id}</span>
                   <span className="bd-cut" title={`${i.title}${i.what ? ` — ${i.what}` : ''}`}>
                     {i.title}
@@ -71,30 +104,21 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
                 </a>
               </li>
             ))}
-            {toDecide.map((x, n) => (
-              <li key={`d${n}`}>
-                <div className="row">
-                  <span className="kind">decide</span>
-                  <span className="bd-cut" title={plain(x.text)}>
-                    {inline(x.text)}
-                    <span className="do">settle it on a call or by text</span>
-                  </span>
-                  <span className="since">{/\d/.test(x.tag) ? `since ${x.tag}` : x.tag.replace(/:$/, '')}</span>
-                </div>
-              </li>
-            ))}
-            {checkin.map((x, n) => (
-              <li key={`c${n}`}>
-                <div className="row">
-                  <span className="kind">check-in</span>
-                  <span className="bd-cut" title={plain(x)}>
-                    {inline(x)}
-                    <span className="do">for the next call</span>
-                  </span>
-                  <span className="since" />
-                </div>
-              </li>
-            ))}
+            {toDecide.map((x, n) => {
+              const to = firstLink(x.text, issueHref)
+              return (
+                <li key={`d${n}`}>
+                  <div className="row">
+                    <span className="kind">decide</span>
+                    <span className="bd-cut" title={plain(x.text)}>
+                      {L(x.text)}
+                      <span className="do">settle it on a call or by text</span>
+                    </span>
+                    <span className="since">{to ? <a href={to.href}>{to.label}</a> : /\d/.test(x.tag) ? `since ${x.tag}` : x.tag.replace(/:$/, '')}</span>
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         )}
       </section>

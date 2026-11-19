@@ -142,6 +142,11 @@
 .bd-needs .kind { font-family: var(--mono); font-size: 12px; color: var(--red); }
 .bd-needs .do { color: var(--ink-3); font-size: 12.5px; margin-left: 10px; }
 .bd-needs .since { font-family: var(--mono); font-size: 12px; color: var(--ink-3); text-align: right; white-space: nowrap; }
+/* the check-in agenda: numbered, the whole sentence shown (he reads it during the call), a link to open on the right */
+.bd-agenda > li > .row { grid-template-columns: 22px minmax(0, 1fr) 92px; align-items: baseline; padding: 6px; }
+.bd-agenda .kind { color: var(--ink-3); }
+.bd-agenda .what { min-width: 0; }
+.bd-needs .since a, .bd-agenda .what a, .bd-needs .bd-cut a { text-decoration: underline; text-underline-offset: 2px; }
 .bd-now { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 3px; }
 .bd-now a { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 7px 12px; color: var(--ink); border-left: 1px solid var(--line); }
 .bd-now a:first-child { border-left: 0; }
@@ -533,6 +538,7 @@ input.bd-title-edit { border-color: var(--acc); }
   .bd-main { padding: 14px 16px 32px; }
   .bd-needs > li > a, .bd-needs > li > .row { grid-template-columns: 64px minmax(0, 1fr); row-gap: 0; }
   .bd-needs .since, .bd-needs .do { grid-column: 2; text-align: left; font-size: 12px; }
+  .bd-agenda > li > .row { grid-template-columns: 22px minmax(0, 1fr); }
   .bd-now { grid-template-columns: 1fr 1fr; }
   .bd-now a { border-left: 0; border-top: 1px solid var(--line); }
   .bd-now a:nth-child(-n + 2) { border-top: 0; }
