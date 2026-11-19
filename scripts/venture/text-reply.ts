@@ -59,7 +59,12 @@ async function thread(): Promise<TextMsg[]> {
 }
 
 async function write(msgs: TextMsg[], pending: number[], again = ''): Promise<{ text: string; ms: number; firstWordMs: number; usd: number }> {
-  const r = await askClaude({ system: TEXTER + (await notes()), user: threadText(msgs, pending) + again, effort: 'low', timeoutMs: 4 * 60e3 })
+  const system = TEXTER + (await notes())
+  const user = threadText(msgs, pending) + again
+  const r = await askClaude({ system, user, effort: 'low', timeoutMs: 4 * 60e3 })
+  // What the model counted for these notes, for the notes size check (notes-check.ts), which has no API key.
+  const tokens = (r.usage.input_tokens ?? 0) + (r.usage.cache_creation_input_tokens ?? 0) + (r.usage.cache_read_input_tokens ?? 0)
+  if (tokens > 0 && !dry) await setState(db, 'notes_size', { chars: system.length + user.length, tokens }).catch(() => {})
   return { text: String(r.text).trim(), ms: r.ms, firstWordMs: r.firstWordMs, usd: r.apiEquivalentUsd }
 }
 
