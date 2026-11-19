@@ -32,7 +32,23 @@ export type Issue = {
   day: string | null
   links: { label: string; url?: string; doc?: string }[]
   proof: string
+  updated_at: string
   commits: Commit[]
+}
+/** One line of an issue's Activity (schema 012): a comment, a status change or an edit, by a board
+ *  account (via 'board', new for Kit until seen_by_kit_at is set) or by Kit's command line ('cli'). */
+export type Activity = {
+  id: number
+  issue_id: string
+  at: string
+  who: string
+  via: 'board' | 'cli'
+  kind: 'comment' | 'status' | 'edit' | 'opened'
+  field: string | null
+  old_value: string | null
+  new_value: string | null
+  body: string
+  seen_by_kit_at: string | null
 }
 export type LiveStatus = {
   at: string
@@ -71,6 +87,16 @@ export type BoardData = {
   independence: { days: SteerDay[]; replay: Replay | null }
   plan: { slug: string; title: string; start: string; end: string; weeks: PlanWeek[] } | null
   notes: NoteLink[]
+  learning: Learning | null // venture_state "learning", written by scripts/venture/learning.mjs
+}
+/** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
+ *  the share of Bart's corrections that were new, not repeats; Ola, its own model's score on the
+ *  test tasks as a share of Claude's. Missing or older than a day: the board says so. */
+export type Learning = {
+  at: string
+  kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number }
+  ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number }
+  doc: string
 }
 
 export const PLAN_SLUG = 'ola-30-day-plan-2026-11-16'
@@ -162,7 +188,7 @@ export async function loadBoard(): Promise<BoardData> {
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
   ])
@@ -192,6 +218,7 @@ export async function loadBoard(): Promise<BoardData> {
     },
     plan: planRow ? parsePlan(PLAN_SLUG, planRow.title, planRow.body, planRow.updated_at) : null,
     notes: await loadNotes(journalRow?.body ?? ''),
+    learning: (st('learning')?.value ?? null) as Learning | null,
   }
 }
 
@@ -213,7 +240,7 @@ export async function loadIssues(): Promise<Issue[] | null> {
   return (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => ({ ...i, links: i.links ?? [], commits: byIssue.get(i.id) ?? [] }))
 }
 
-export type NoteLink = { slug: string; title: string; label: string; at: string }
+export type NoteLink = { slug: string; title: string; label: string; at: string; what?: string }
 /** The notes the sidebar lists: the journal's "Active project" links that point at a note (the lead
  *  edits that list in JOURNAL.md), then the newest security review and the builders' rules. Titles and
  *  dates come from venture_docs; the notes are shown by /notes/<slug> behind the sign-in. */
@@ -228,22 +255,98 @@ export async function loadNotes(journalBody: string): Promise<NoteLink[]> {
   const wanted = [...fromJournal]
   if (reviews[0] && !wanted.some((w) => w.slug === reviews[0].slug)) wanted.push({ slug: reviews[0].slug, label: 'The latest security review' })
   if (!wanted.some((w) => w.slug === 'ola-builder-rules')) wanted.push({ slug: 'ola-builder-rules', label: "The builders' rules" })
-  const { data: docs, error: e2 } = await db.from('venture_docs').select('slug, title, updated_at').in('slug', wanted.map((w) => w.slug))
+  const { data: docs, error: e2 } = await db.from('venture_docs').select('slug, title, body, updated_at').in('slug', wanted.map((w) => w.slug))
   if (e2) throw new Error(`venture_docs read failed: ${e2.message}`)
   return wanted.flatMap((w) => {
     const d = docs.find((x) => x.slug === w.slug)
-    return d ? [{ slug: w.slug, label: w.label, title: d.title, at: d.updated_at }] : []
+    return d ? [{ slug: w.slug, label: w.label, title: d.title, at: d.updated_at, what: firstLine(d.body ?? '') }] : []
   })
 }
 
-/** What every board page's frame needs: the notes for the sidebar and how many issues are open. */
-export async function loadFrame(): Promise<{ notes: NoteLink[]; open: number | null }> {
+/** What every board page's frame needs: the menu's count of open issues, the machine's reading for
+ *  the compact status at the top of the menu, and the Mac app's current download for Quick links. */
+export type Frame = { now: string; open: number | null; status: LiveStatus | null; mac: { url: string; version: string } | null }
+export async function loadFrame(): Promise<Frame> {
   const db = f2Supabase()
-  const [journal, open] = await Promise.all([
-    db.from('venture_docs').select('body').eq('slug', 'journal').maybeSingle(),
+  const [open, st, mac] = await Promise.all([
     db.from('venture_issues').select('id', { count: 'exact', head: true }).eq('project', 'ola').in('status', ['open', 'in_progress', 'waiting']),
+    db.from('venture_state').select('value').eq('key', 'ola_status').maybeSingle(),
+    macLatest(),
   ])
-  if (journal.error) throw new Error(`venture_docs read failed: ${journal.error.message}`)
   if (open.error && !missing(open.error)) throw new Error(`venture_issues read failed: ${open.error.message}`)
-  return { notes: await loadNotes(journal.data?.body ?? ''), open: open.error ? null : (open.count ?? 0) }
+  if (st.error) throw new Error(`venture_state read failed: ${st.error.message}`)
+  return { now: new Date().toISOString(), open: open.error ? null : (open.count ?? 0), status: (st.data?.value ?? null) as LiveStatus | null, mac }
+}
+
+/** A note's one line for the Notes index: the first sentence of its first paragraph, in plain words. */
+export function firstLine(body: string): string {
+  const para = body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .find((p) => p && !/^(#|\||```|>|-{3,}|Last checked against)/.test(p) && !/^[-*] /.test(p))
+  if (!para) return ''
+  const text = para
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\s+/g, ' ')
+  const first = text.split(/(?<=[.!?])\s+(?=[A-Z])/)[0]
+  return first.length > 160 ? `${first.slice(0, 157).trimEnd()}…` : first
+}
+
+// ---------------------------------------------------------------- one issue and its thread (round three)
+/** One issue with its commits and its Activity (null when schema 012 is not applied yet). */
+export async function loadIssue(id: string): Promise<{ issue: Issue; activity: Activity[] | null } | null> {
+  const db = f2Supabase()
+  const [issueR, commitsR, actR] = await Promise.all([
+    db.from('venture_issues').select('*').eq('id', id).maybeSingle(),
+    db.from('venture_commits').select('sha, subject, at, issue_id').eq('issue_id', id).order('at'),
+    db.from('venture_issue_activity').select('*').eq('issue_id', id).order('at'),
+  ])
+  if (issueR.error) {
+    if (missing(issueR.error)) return null
+    throw new Error(`venture_issues read failed: ${issueR.error.message}`)
+  }
+  if (!issueR.data) return null
+  if (commitsR.error) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
+  if (actR.error && !missing(actR.error)) throw new Error(`venture_issue_activity read failed: ${actR.error.message}`)
+  const i = issueR.data as Omit<Issue, 'commits'>
+  return { issue: { ...i, links: i.links ?? [], commits: (commitsR.data ?? []) as Commit[] }, activity: actR.error ? null : (actR.data as Activity[]) }
+}
+
+// ---------------------------------------------------------------- the status panel (OLA-164)
+/** The alarm sentences a reading may show: never one that the same reading contradicts. The mini's
+ *  watcher (apps/activist-ai/ops/watch.mjs) writes them; before Nov 18 it repeated a disk alarm
+ *  from an earlier run beside a healthy disk. Here a disk sentence must name the free space this
+ *  reading measured, and a "not answering" sentence must match a part this reading has down. */
+export function alarmSays(s: LiveStatus): { says: string[]; dropped: number } {
+  const parts = Object.fromEntries(Object.entries(s.parts ?? {}).map(([k, v]) => [k.toLowerCase(), v]))
+  const PART: [RegExp, string][] = [
+    [/web app is not answering/i, 'web app'],
+    [/model connection/i, 'model connection'],
+    [/does not answer from the internet/i, 'public address'],
+    [/Frances's service/i, 'almanac'],
+  ]
+  const keep = (t: string) => {
+    const disk = t.match(/disk is almost full \((\d+(?:\.\d+)?) GB/)
+    if (disk) return !!s.disk && Number(disk[1]) === s.disk.freeGB
+    for (const [re, name] of PART) if (re.test(t)) return parts[name] !== true
+    return true
+  }
+  const all = s.alarm?.says ?? []
+  const says = all.filter(keep)
+  return { says, dropped: all.length - says.length }
+}
+
+/** The Mac app's current download, read from the landing page's own manifest (never typed here). */
+export async function macLatest(): Promise<{ url: string; version: string } | null> {
+  try {
+    const res = await fetch('https://ola.cx/ola-site/mac/latest.json', { next: { revalidate: 600 }, signal: AbortSignal.timeout(3000) })
+    if (!res.ok) return null
+    const j = (await res.json()) as { version?: string; build?: string; url?: string }
+    return j.url ? { url: j.url, version: `${j.version ?? ''}${j.build ? ` (${j.build})` : ''}`.trim() } : null
+  } catch {
+    return null
+  }
 }

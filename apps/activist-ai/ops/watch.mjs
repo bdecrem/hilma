@@ -532,7 +532,12 @@ export function boardStatus(S, state, r, conds, now) {
     const d = JSON.parse(readFileSync(path.join(S.STAGING, 'deployed.json'), 'utf8'))
     deployed = { commit: String(d.commit ?? ''), at: d.at ?? null, suites: d.suites ?? {} }
   } catch {}
-  const alarms = Object.values(state.active ?? {}).filter((a) => a.say)
+  // The alarm sentences come from this run's own readings: a condition that is in alarm now and
+  // has been for long enough to text (state.active), or a disk alarm, which is shown but never
+  // texted. Never from state.active alone: an entry there keeps the sentence of the run that set
+  // it, and one left behind (the disk, after DISK_TEXTS went off on Nov 17, was no longer passed
+  // to decide() and so never cleared) showed "almost full (n GB left)" beside 73 GB free (OLA-164).
+  const alarms = conds.filter((c) => c.level === 'alarm' && c.say && (state.active?.[c.id] || (c.id === 'disk' && !S.DISK_TEXTS)))
   const warns = conds.filter((c) => c.level === 'warn').map((c) => c.note).filter(Boolean)
   const parts = {}
   const names = { fd: 'web app', gw: 'model connection', tls: 'secure front', tunnel: 'tunnel' }
@@ -642,6 +647,9 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   const drop = conds.find((c) => c.id === 'vm-drop' && c.drop && c.level === 'warn')
   if (drop && !dry) drop.evidence = await saveDropEvidence(S, drop.drop, { ...readings, memory: readings.memory ?? readings.memoryForEvidence, prevMemory: state.memory }, now)
   const muted = state.muteUntil && Date.parse(state.muteUntil) > now
+  // The disk is not texted (DISK_TEXTS off): forget any alarm or all-clear for it that an earlier
+  // run left in the state, so nothing downstream can repeat its old sentence (OLA-164).
+  if (!S.DISK_TEXTS) for (const k of ['active', 'clears', 'streak']) if (state[k]) delete state[k].disk
   const d = decide(S, state, conds.filter((c) => c.level !== 'test' && !(c.id === 'disk' && !S.DISK_TEXTS)), now, { muted })
   let text = d.text
   if (force.includes('test')) text = 'Ola: test of the new alarm. Nothing is wrong.'

@@ -13,7 +13,13 @@
 //   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--who …] [--week …] [--proof …]
 //   node scripts/venture/issues.mjs commit <id> <hash>…                          attach commits by hand
 //   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
-//   node scripts/venture/issues.mjs show <id>
+//   node scripts/venture/issues.mjs show <id>                                    the issue and its whole thread
+//   node scripts/venture/issues.mjs comment <id> "text" [--who kit]               Kit's reply on the issue's page
+//   node scripts/venture/issues.mjs inbox [--mark]                               what Bart wrote on the board that Kit has not read
+//                                                                                (comments, edits, status changes, new issues);
+//                                                                                --mark marks the listed ones read ("seen by Kit")
+//   node scripts/venture/issues.mjs --wait [--every 20]                          waits until Bart writes something on the board,
+//                                                                                prints it and exits (like imsg.mjs --wait)
 //   node scripts/venture/issues.mjs plate                                         the plate, as the board shows it
 //   node scripts/venture/issues.mjs unsorted                                      Ola commits that name no issue
 //   node scripts/venture/issues.mjs place <sha> <id|none>                         file one under an issue, or mark it as needing none
@@ -23,14 +29,18 @@
 // body, and the cron /api/venture/commits/sync attaches it within 30 minutes. Areas: web (the web app),
 // apps (Mac and phone apps), model (the model and skills), security, ops (operations), voice, design,
 // board (this board). Statuses: open, in_progress, waiting (on Bart), done, dropped. Days are Pacific.
-// Prints no secrets: the database key is read from .env.local and used, never shown.
+// The board's thread (schema 012, venture_issue_activity): what Bart does on an issue's page is new
+// for Kit until `inbox --mark`; the hook .claude/hooks/bart-done.py lists it before every prompt
+// (through `issues.mjs hook`). Kit's own changes from here are recorded too, already read.
+// Prints no secrets: the database key is read from .env.local (or, where there is no such file, from
+// the environment) and used, never shown.
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const env = Object.fromEntries(
+const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
   readFileSync(root + '.env.local', 'utf8')
     .split('\n')
     .filter((l) => /^[A-Z0-9_]+=/.test(l))
@@ -45,7 +55,7 @@ const pacificDay = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', {
 const shiftDay = (d, n) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400e3).toISOString().slice(0, 10)
 
 const argv = process.argv.slice(2)
-const cmd = argv[0]
+const cmd = argv[0] === '--wait' ? 'wait-board' : argv[0]
 const pos = []
 const opt = {}
 for (let i = 1; i < argv.length; i++) {
@@ -76,11 +86,44 @@ async function get(id) {
   if (!row) die(`no issue ${id}`)
   return row
 }
+const missing = (e) => !!e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? ''))
+const KIT = () => (typeof one('who') === 'string' && cmd === 'comment' ? one('who') : 'kit')
+/** Kit's own change, in the issue's thread, already read. Silent when schema 012 is not applied. */
+async function record(rows) {
+  if (!rows.length) return
+  const now = new Date().toISOString()
+  const r = await db.from('venture_issue_activity').insert(rows.map((x) => ({ at: now, who: KIT(), via: 'cli', seen_by_kit_at: now, body: '', ...x })))
+  if (r.error && !missing(r.error)) die(`activity: ${r.error.message}`)
+}
 async function patch(id, fields) {
+  const before = check(await db.from('venture_issues').select('*').eq('id', id).maybeSingle(), 'read')
   const row = check(await db.from('venture_issues').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id).select().single(), 'update')
+  const lines = []
+  if (before && fields.status && fields.status !== before.status) lines.push({ issue_id: id, kind: 'status', field: 'status', old_value: before.status, new_value: fields.status, body: fields.status === 'done' || fields.status === 'dropped' ? (fields.proof ?? '') : '' })
+  for (const k of ['title', 'what', 'priority', 'area', 'who', 'week']) if (before && k in fields && fields[k] !== before[k] && !(k === 'what' && fields.status)) lines.push({ issue_id: id, kind: 'edit', field: k, old_value: before[k] === null ? null : String(before[k]), new_value: fields[k] === null ? null : String(fields[k]) })
+  await record(lines)
   console.log(line(row))
   return row
 }
+const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
+const STATUS_WORD = { open: 'next up', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
+/** One thread line in words: "Nov 18, 3:52 PM  bart  moved this to done: proof". */
+function says(a) {
+  if (a.kind === 'comment') return a.body
+  if (a.kind === 'opened') return `opened a new issue: ${a.body}`
+  if (a.kind === 'status') return `moved this to ${STATUS_WORD[a.new_value] ?? a.new_value}${a.body ? ` (proof: ${a.body})` : ''}`
+  if (a.field === 'what') return `edited the description to: ${a.new_value ?? ''}`
+  return `changed ${a.field} from "${a.old_value ?? ''}" to "${a.new_value ?? ''}"`
+}
+async function unread() {
+  const r = await db.from('venture_issue_activity').select('*').is('seen_by_kit_at', null).eq('via', 'board').order('at')
+  if (r.error) {
+    if (missing(r.error)) return null
+    die(`inbox: ${r.error.message}`)
+  }
+  return r.data
+}
+const inboxLine = (a) => `${a.issue_id.padEnd(8)} ${when(a.at).padEnd(20)} ${a.who.padEnd(8)} ${a.kind === 'comment' ? 'comment: ' : ''}${says(a).replace(/\s+/g, ' ')}`
 function validate(f) {
   if (f.area !== undefined && !AREAS[f.area]) die(`area must be one of: ${Object.keys(AREAS).join(', ')}`)
   if (f.priority !== undefined && !/^P[012]$/.test(f.priority)) die('priority must be P0, P1 or P2')
@@ -177,6 +220,44 @@ if (cmd === 'add') {
   if (r.proof) console.log(`proof: ${r.proof}`)
   for (const l of r.links ?? []) console.log(`link: ${l.label} ${l.url ?? `note ${l.doc}`}`)
   for (const c of commits) console.log(`commit ${c.sha.slice(0, 8)} ${c.subject}`)
+  const act = await db.from('venture_issue_activity').select('*').eq('issue_id', r.id).order('at')
+  if (act.error && !missing(act.error)) die(`activity: ${act.error.message}`)
+  if (act.data?.length) {
+    console.log('\nthread:')
+    for (const a of act.data) console.log(`  ${when(a.at).padEnd(20)} ${a.who.padEnd(8)} ${a.via === 'board' ? (a.seen_by_kit_at ? '' : '[new] ') : ''}${says(a)}`)
+  } else if (act.error) console.log('\n(no thread: schema 012 is not applied)')
+} else if (cmd === 'comment') {
+  const id = normId(pos[0])
+  const text = pos.slice(1).join(' ').trim()
+  if (!text) die('usage: issues.mjs comment <id> "text" [--who kit]')
+  await get(id)
+  const now = new Date().toISOString()
+  const r = await db.from('venture_issue_activity').insert({ issue_id: id, at: now, who: KIT(), via: 'cli', kind: 'comment', body: text, seen_by_kit_at: now })
+  if (r.error) die(missing(r.error) ? 'comments are not set up yet (apply apps/venture/schema/012_issue_activity.sql)' : `comment: ${r.error.message}`)
+  check(await db.from('venture_issues').update({ updated_at: now }).eq('id', id), 'update')
+  console.log(`${id} comment by ${KIT()}: ${text}`)
+} else if (cmd === 'inbox') {
+  const rows = await unread()
+  if (rows === null) die('the inbox is not set up yet (apply apps/venture/schema/012_issue_activity.sql)')
+  for (const a of rows) console.log(inboxLine(a))
+  console.log(rows.length ? `${rows.length} new from the board${one('mark') ? ', marked read' : '; mark them read with: issues.mjs inbox --mark'}` : 'nothing new from the board')
+  if (one('mark') && rows.length) check(await db.from('venture_issue_activity').update({ seen_by_kit_at: new Date().toISOString() }).in('id', rows.map((a) => a.id)), 'mark')
+} else if (cmd === 'wait-board') {
+  const every = Number(one('every') ?? 20) * 1000
+  for (;;) {
+    const rows = await unread()
+    if (rows === null) die('the inbox is not set up yet (apply apps/venture/schema/012_issue_activity.sql)')
+    if (rows.length) {
+      for (const a of rows) console.log(inboxLine(a))
+      console.log(`${rows.length} new from the board; read them with issues.mjs inbox --mark`)
+      process.exit(0)
+    }
+    await new Promise((res) => setTimeout(res, every))
+  }
+} else if (cmd === 'hook') {
+  // for .claude/hooks/bart-done.py: one quick read, two lists, JSON; silent and empty on failure
+  const [w, u] = await Promise.all([db.from('venture_issues').select('*').eq('project', 'ola').eq('status', 'waiting').order('num'), db.from('venture_issue_activity').select('*').is('seen_by_kit_at', null).eq('via', 'board').order('at')])
+  console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine) }))
 } else if (cmd === 'plate') {
   const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting']), 'plate')
   const order = { in_progress: 0, open: 1, waiting: 2 }
@@ -210,6 +291,6 @@ if (cmd === 'add') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 22).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 28).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }

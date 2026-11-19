@@ -175,7 +175,82 @@ source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
 section per day with `- **time** what`), so it changes with a `sync.mjs push`
 and no deploy.
 
+### The board, round three: a working tool (2026-11-18, OLA-162 to 164)
+
+Bart: "less cute and more functional ... I want it to actually be an issue
+tracker ... This is where I live." The design is the private note
+`BOARD-DESIGN-2026-11-18` (his words at the top). Five pages, one menu item
+each, the page heading the same words as the item, nothing listed twice:
+
+| Page | Address on app.kochitolabs.com | Page file | View |
+| --- | --- | --- | --- |
+| Home | `/` | `src/app/kochito/kit/page.tsx` | `views/Home.tsx` (Needs you, Now, Health, Agent learning, this week, Numbers; fits 1440 x 900) |
+| Issue Tracker | `/issues`, `/issues/OLA-150` (or `/issues/150`), `/issues/new` | `issues/page.tsx`, `issues/[id]/`, `issues/new/` | `views/Tracker.tsx`, `IssueView.tsx`, `NewIssue.tsx` |
+| Plan | `/plan` | `plan/page.tsx` | `views/Plan.tsx` |
+| Notes | `/notes`, `/notes/<slug>`, `/overview` (Ola in one page) | `notes/`, `overview/` | `views/Notes.tsx` |
+| Numbers | `/numbers` | `numbers/page.tsx` | `views/Numbers.tsx` |
+
+The frame and the menu (with Talk to Kit and Quick links under a rule, and
+the machine's reading in compact form at the top) are `Shell.tsx`; the links
+out are `links.ts` (the Mac app's address is read from
+`https://ola.cx/ola-site/mac/latest.json`); the status panel is `health.tsx`;
+Agent learning is `views/Learning.tsx` (venture_state `learning`, written by
+`scripts/venture/learning.mjs`). **Styles: `src/app/kochito/kit/board.css`**,
+the design rules at its top (Public Sans and JetBrains Mono only, 14 px body,
+20 px maximum, 30 px rows, one green accent, color only for state); the public
+company pages' CSS is not used by the board. `next.config.ts` rewrites
+`/issues`, `/notes`, `/plan`, `/numbers`, `/overview` on that host.
+
+**Look at it without signing in**: `pnpm dev -p 3377`, then
+`http://localhost:3377/kochito/kit/mock` and the same paths under it
+(`/mock/issues?tab=done`, `/mock/issues/OLA-210`, `/mock/plan` ...), made-up
+data from `fixture.ts`, nothing saved. Pictures of every page at 1440 and 390:
+`node scripts/venture/board-pages.mjs <dir>` (mock) or, signed in against a dev
+server started with a made-up account (`KOCHITO_APP_USERS=dev:<passcode>
+KOCHITO_APP_SECRET=<32 chars>` in that shell only, next to the loaded
+`.env.local`), `BOARD_PASS=<passcode> node scripts/venture/board-pages.mjs <dir>
+http://localhost:3377/kochito/kit --real`. A dev server with no `VENTURE_KEY`
+works; the voice links then carry no key.
+
+**The tracker writes.** On an issue's page Bart edits the title and the
+description by clicking them, changes Status (Done asks for a line of proof),
+Priority, Area, Who and Plan week, and comments (Cmd-Return); New issue makes
+one. Every write goes through `src/app/api/kochito/app/issues/` (POST new,
+PATCH `<id>`, POST `<id>/comments`), which checks the board's session cookie
+and the origin, and is recorded as the signed-in account by
+`src/lib/venture/issue-writes.ts`. Each change adds a line to the issue's
+Activity: table `venture_issue_activity`, `schema/012_issue_activity.sql`
+(applied 2026-11-18 with the same management-API command as 011 below, from
+the M1 iMac where the ops vault is). What a board account writes is new for
+Kit until Kit reads it:
+
+    node scripts/venture/issues.mjs inbox            # what Bart wrote that Kit has not read
+    node scripts/venture/issues.mjs inbox --mark     # mark those read: the page then says "seen by Kit"
+    node scripts/venture/issues.mjs --wait           # exits when something new arrives (like imsg.mjs --wait)
+    node scripts/venture/issues.mjs comment OLA-150 "the answer"
+    node scripts/venture/issues.mjs show OLA-150     # the issue and its whole thread
+
+`.claude/hooks/bart-done.py` lists the unread items before every prompt
+(`issues.mjs hook`, one call, cached two minutes). The CLI's own status
+changes and edits are recorded in the thread too, already read. Without the
+table the page says "Comments are not set up yet" and fields still save.
+`scripts/venture/tracker-check.mjs <dir>` walks every write as a signed-in
+person on a throwaway "TEST (delete me)" issue, takes pictures, then drops it
+and deletes its rows.
+
+**The status panel (OLA-164).** One reading, one time. The old corner said
+"the mini's disk is almost full" beside 73 GB free: the watcher took its alarm
+sentences from `state.active`, and the disk entry left there before disk texts
+were turned off (Nov 17) was never cleared, because the disk no longer reached
+`decide()`. `apps/activist-ai/ops/watch.mjs` now builds the sentences from the
+run's own readings and forgets that entry (test in `ops/watch-test.mjs`; live
+with the next deploy on the mini), and the board's `alarmSays()` in
+`src/lib/venture/board.ts` never shows a sentence its reading contradicts.
+
 ### The board, built around Ola, and the issue tracker (2026-11-17)
+
+Round three above replaced this page's layout; what follows is still true of
+the data, the tracker's tables and the commands.
 
 Bart: "reorganize app.kochitolabs.com, to center the project, OLA ... make it a
 better more useful dashboard", "make sure it is updated at least every few

@@ -496,3 +496,21 @@ test('the disk is never texted in production (Bart, Nov 17), still shown in the 
   const r = await watch('2026-11-20T15:00:00Z', [], { OLA_WATCH_DISK_TEXTS: '0', OLA_WATCH_DISK_ALARM_GB: '100000', OLA_WATCH_DISK_WARN_GB: '200000' })
   assert.equal(r.sent.length, 0, `a disk text went out: ${JSON.stringify(r.sent)}`)
 })
+
+test('the board never repeats an old alarm sentence its own reading contradicts (OLA-164)', async () => {
+  // The state of Nov 18: a disk alarm left from before the disk stopped being texted, 73 GB free now.
+  writeFileSync(path.join(OLA, 'watch-state.json'), JSON.stringify({ active: { disk: { since: Date.parse(at('09:00')), item: 1, sentAt: Date.parse(at('09:00')), lastSentAt: Date.parse(at('09:00')), say: "the mini's disk is almost full (3 GB left)." } }, clears: {}, streak: { disk: 4 }, lastDigest: '2026-11-17' }))
+  fakes({ freeGB: 73 })
+  const board = { OLA_WATCH_PUSH_EVERY_MIN: '10', OLA_WATCH_DISK_TEXTS: '0' }
+  const r = await watch(at('16:00'), [], board)
+  assert.equal(r.sent.length, 0)
+  const s = statuses.at(-1)
+  assert.equal(s.disk.freeGB, 73)
+  assert.equal(s.alarm.state, 'ok')
+  assert.deepEqual(s.alarm.says, [])
+  assert.equal(state().active.disk, undefined, 'the old disk alarm is still in the state')
+  // A disk that is really under the alarm level is shown on the board with today's number.
+  fakes({ freeGB: 5 })
+  await watch(at('16:12'), [], board)
+  assert.deepEqual(statuses.at(-1).alarm.says, ["the mini's disk is almost full (5 GB left)."])
+})
