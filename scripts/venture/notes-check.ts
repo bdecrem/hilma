@@ -29,12 +29,21 @@ async function main() {
     for (const d of picked.loaded) console.log(`loaded  ${String(d.body.length).padStart(7)}  ${d.slug}`)
     for (const d of picked.listed) console.log(`listed  ${String(d.body.length).padStart(7)}  ${d.slug}`)
   }
-  const count = await new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }).messages.countTokens({
-    model: 'claude-opus-5-5',
-    system: text,
-    messages: [{ role: 'user', content: 'x' }],
-  })
-  const tokens = count.input_tokens
+  // The exact count comes from the API. When the API refuses the key (2026-11-18: the monthly
+  // spending limit was reached), the check must not stop every notes checkpoint: it estimates from
+  // the characters (the measured ratio is about 2.7 characters a token) and says so.
+  let tokens: number
+  try {
+    const count = await new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }).messages.countTokens({
+      model: 'claude-opus-5-5',
+      system: text,
+      messages: [{ role: 'user', content: 'x' }],
+    })
+    tokens = count.input_tokens
+  } catch (e) {
+    tokens = Math.round(text.length / 2.69)
+    console.log(`token count is an estimate: the API did not answer (${String((e as Error).message).slice(0, 110)})`)
+  }
   console.log(
     `voice and text notes: ${picked.loaded.length} documents loaded, ${picked.listed.length} listed only, ${text.length.toLocaleString('en-US')} characters (budget ${NOTES_BUDGET.toLocaleString('en-US')}), ${tokens.toLocaleString('en-US')} tokens of ${LIMIT.toLocaleString('en-US')}`,
   )
