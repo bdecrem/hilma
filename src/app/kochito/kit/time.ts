@@ -1,6 +1,9 @@
 // Times on the board, always in Pacific time (Bart reads it in California).
 const TZ = 'America/Los_Angeles'
-export const clock = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).replace(' AM', ' am').replace(' PM', ' pm')
+// Some runtimes put a narrow no-break space before AM/PM and some a plain one. The same words must
+// come out on the server and in the browser, or an issue page that shows a time fails to hydrate
+// (seen on the live walk of 2026-11-18).
+export const clock = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).replace(/[\s\u202f\u00a0]*([AP])M$/, (_, x: string) => ` ${x.toLowerCase()}m`)
 export const dayLong = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })
 export const dayShort = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
 export const pday = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ })

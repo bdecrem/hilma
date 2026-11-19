@@ -64,7 +64,7 @@ if (live) {
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2, userAgent: 'kochito app-check headless check' })
 const p = await ctx.newPage()
-p.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
+p.on('pageerror', (e) => problems.push(`page error on ${new URL(p.url()).pathname}: ${e.message.slice(0, 200)}`))
 const shut = async (pg) => (await pg.locator('input[name=passcode]').count()) === 1 && (await pg.locator('.bd-nav').count()) === 0
 const open = async (pg) => (await pg.getByRole('heading', { name: 'Home', exact: true, level: 1 }).count()) === 1 && (await pg.locator('input[name=passcode]').count()) === 0
 const shoot = async (pg, file) => {
