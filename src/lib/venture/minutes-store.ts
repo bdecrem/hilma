@@ -98,8 +98,13 @@ export async function sweepMinutes(deps: MinutesDeps, now = Date.now()): Promise
   const over = [...sessions].filter(([, rows]) => {
     if (rows.some((r) => r.role === 'event' && r.text === 'test')) return false
     if (!rows.some((r) => r.role === 'bart')) return false
+    const quiet = now - new Date(rows[rows.length - 1].at).getTime()
+    // A call that ended less than 30 seconds ago waits for the next pass: a check's call
+    // (talk-check.mjs) is marked "test" a moment after it ends, and on 2026-11-19 the once-a-minute
+    // pass wrote minutes of one in that moment.
+    if (quiet < 30e3) return false
     const ended = rows.some((r) => r.role === 'event' && r.text.startsWith('ended'))
-    return ended || now - new Date(rows[rows.length - 1].at).getTime() > 5 * 60e3
+    return ended || quiet > 5 * 60e3
   })
   const hadMeetings = await minutesFor('meeting', over.map(([s]) => s))
   for (const [session, rows] of over) {

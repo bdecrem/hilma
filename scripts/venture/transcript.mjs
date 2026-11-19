@@ -4,7 +4,7 @@
 //   node scripts/venture/transcript.mjs            the latest session, as text
 //   node scripts/venture/transcript.mjs --list     every session, one line each
 //   node scripts/venture/transcript.mjs <session>  one session
-//   node scripts/venture/transcript.mjs --wait [call]   block until a real call
+//   node scripts/venture/transcript.mjs --wait [call]   block until a real call (no call named: any call, or a voice note)
 //       (of that call slug, when given) has ended (the interviewer's "ended" marker, or three minutes of silence
 //       after a hang-up or drop), then print it and its minutes. Ignores sessions marked test.
 //       With `phone` it also wakes for a new voice note, and a phone call needs only one answer.
@@ -109,7 +109,10 @@ if (arg === '--minutes') {
   const only = process.argv[3]
   const since = Date.now()
   for (;;) {
-    if (only === 'phone') {
+    // With no call named, every kind is watched: the talk page, the check-in, the phone and voice
+    // notes. On Nov 19, 2026 a session watched only "talk"; Bart started the check-in on the phone at
+    // 10:20 am, the voice answered that it was broken, and no session saw it for two hours.
+    if (!only || only === 'phone') {
       const note = (await patient(() => notesSince(since)))[0]
       if (note) {
         console.log(`# voice note ${note.id} · ${note.at}\n\nBART: ${note.text.slice(MEMO_MARK.length)}\n`)
@@ -117,8 +120,8 @@ if (arg === '--minutes') {
         process.exit(0)
       }
     }
-    const need = only === 'phone' ? 1 : 3
-    const real = (await patient(all)).filter((s) => !s.test && s.answers >= need && (!only || s.call === only) && new Date(s.last).getTime() > since)
+    const need = (s) => (s.call === 'phone' ? 1 : 3)
+    const real = (await patient(all)).filter((s) => !s.test && s.answers >= need(s) && (!only || s.call === only) && new Date(s.last).getTime() > since)
     const s = real[real.length - 1]
     if (s) {
       const lastEvent = [...s.turns].reverse().find((t) => t.role === 'event')?.text ?? ''

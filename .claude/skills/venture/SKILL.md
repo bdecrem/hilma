@@ -93,14 +93,14 @@ Run both as background tasks; each exits when there is something to read, and
 is restarted after it has been handled:
 
     node scripts/venture/imsg.mjs --wait
-    node scripts/venture/transcript.mjs --wait talk
+    node scripts/venture/transcript.mjs --wait      (every call: the talk page, the check-in, the phone, and voice notes)
     node scripts/venture/mail.mjs --wait        (mail to the company's domains)
     node scripts/venture/leads.mjs --wait       (sign-ups on the sites)
     node scripts/venture/issues.mjs --wait      (what Bart writes on the board's tracker)
     node scripts/venture/sweep.mjs --wait       (6 pm Pacific: the day's sweep is owed)
 
-Add `transcript.mjs --wait <slug>` while an agenda call is open; `checkin`
-(the five-minute interview linked from his page) is always open.
+Never name one call (`--wait talk`): on 2026-11-19 a session did, and a check-in Bart
+started on the phone went unseen for two hours.
 
 **The tracker is a way Bart gives instructions** (his words, 2026-11-18: "make sure the issues
 tracker is actually used: if I create a new ticket, or reopen one, or leave a comment on an open
