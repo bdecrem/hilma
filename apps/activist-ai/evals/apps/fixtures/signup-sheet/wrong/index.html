@@ -1,0 +1,12 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Park cleanup sign-up</title></head>
+<body>
+<!-- A plausible mistake: the list lives only in memory, so a reload forgets everyone. -->
+<h1>Volunteer park cleanup</h1>
+<input id="name" placeholder="Your name"> <button id="add">Sign up</button>
+<ul id="list"></ul>
+<script>
+const n = document.getElementById('name')
+add.onclick = () => { const li = document.createElement('li'); li.textContent = n.value; list.append(li); n.value = '' }
+</script>
+</body></html>

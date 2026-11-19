@@ -1,0 +1,48 @@
+{
+  "problem": "memory-game",
+  "column": "claude",
+  "model": "Fable 5.2",
+  "date": "2026-11-18",
+  "seconds": 37,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "tiles",
+      "pass": true
+    },
+    {
+      "name": "face_down_start",
+      "pass": true
+    },
+    {
+      "name": "flip_shows",
+      "pass": true
+    },
+    {
+      "name": "mismatch_turns_back",
+      "pass": true
+    },
+    {
+      "name": "match_stays",
+      "pass": true
+    },
+    {
+      "name": "win_message",
+      "pass": true
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "pass": true,
+  "failure": "success",
+  "notes": [
+    "memory: 16 of 16 tiles matched, 8 face groups"
+  ],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/memory-game-claude-2026-11-18T23-26-47/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/memory-game-claude-2026-11-18T23-26-47"
+}

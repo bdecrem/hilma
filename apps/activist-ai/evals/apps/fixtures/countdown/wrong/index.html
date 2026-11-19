@@ -1,0 +1,12 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Rally countdown</title></head>
+<body>
+<!-- A plausible mistake: counts once at load and never moves; the share button does nothing. -->
+<h1>Neighborhood rally, March 14, 2027, 10am</h1>
+<p id="left"></p>
+<button>Share</button>
+<script>
+const t = Math.floor((new Date(2027, 2, 14, 10) - Date.now()) / 1000)
+left.textContent = `${Math.floor(t / 86400)} days ${Math.floor(t % 86400 / 3600)} hours to go`
+</script>
+</body></html>

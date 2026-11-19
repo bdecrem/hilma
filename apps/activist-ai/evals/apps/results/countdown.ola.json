@@ -1,0 +1,40 @@
+{
+  "problem": "countdown",
+  "column": "ola",
+  "model": "Nemotron 3.5 Super VL",
+  "date": "2026-11-18",
+  "seconds": 610,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "shows_10_days",
+      "pass": false
+    },
+    {
+      "name": "ticks",
+      "pass": false
+    },
+    {
+      "name": "share_button",
+      "pass": true
+    },
+    {
+      "name": "share_does_something",
+      "pass": false
+    }
+  ],
+  "passed": 2,
+  "total": 5,
+  "pass": false,
+  "failure": "shows_10_days",
+  "notes": [
+    "page errors: Cannot set properties of null (setting 'textContent')"
+  ],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/countdown-ola-2026-11-18T23-27-23/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/countdown-ola-2026-11-18T23-27-23"
+}

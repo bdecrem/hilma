@@ -1,0 +1,48 @@
+{
+  "problem": "memory-game",
+  "column": "ola",
+  "model": "Nemotron 3.5 Super VL",
+  "date": "2026-11-18",
+  "seconds": 23,
+  "timedOut": false,
+  "page": "memory-game.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "tiles",
+      "pass": true
+    },
+    {
+      "name": "face_down_start",
+      "pass": false
+    },
+    {
+      "name": "flip_shows",
+      "pass": true
+    },
+    {
+      "name": "mismatch_turns_back",
+      "pass": true
+    },
+    {
+      "name": "match_stays",
+      "pass": true
+    },
+    {
+      "name": "win_message",
+      "pass": true
+    }
+  ],
+  "passed": 6,
+  "total": 7,
+  "pass": false,
+  "failure": "face_down_start",
+  "notes": [
+    "memory: 16 of 16 tiles matched, 8 face groups"
+  ],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/memory-game-ola-2026-11-18T23-33-10/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/memory-game-ola-2026-11-18T23-33-10"
+}

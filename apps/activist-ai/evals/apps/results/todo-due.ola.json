@@ -1,0 +1,38 @@
+{
+  "problem": "todo-due",
+  "column": "ola",
+  "model": "Nemotron 3.5 Super VL",
+  "date": "2026-11-18",
+  "seconds": 25,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "add_task",
+      "pass": true
+    },
+    {
+      "name": "shows_due_date",
+      "pass": false
+    },
+    {
+      "name": "mark_done",
+      "pass": true
+    },
+    {
+      "name": "second_task",
+      "pass": true
+    }
+  ],
+  "passed": 4,
+  "total": 5,
+  "pass": false,
+  "failure": "shows_due_date",
+  "notes": [],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/todo-due-ola-2026-11-18T23-37-54/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/todo-due-ola-2026-11-18T23-37-54"
+}

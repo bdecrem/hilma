@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Rally countdown</title></head>
+<body>
+<h1>Neighborhood rally, March 14, 2027, 10am</h1>
+<p><span id="d">0</span> days <span id="h">0</span> hours <span id="m">0</span> minutes <span id="s">0</span> seconds</p>
+<button id="share">Share</button>
+<script>
+const end = new Date(2027, 2, 14, 10, 0, 0)
+function tick() {
+  let t = Math.max(0, Math.floor((end - Date.now()) / 1000))
+  d.textContent = Math.floor(t / 86400); h.textContent = Math.floor(t % 86400 / 3600)
+  m.textContent = Math.floor(t % 3600 / 60); s.textContent = t % 60
+}
+tick(); setInterval(tick, 1000)
+share.onclick = () => navigator.share({ title: 'Rally', text: 'Neighborhood rally, March 14, 2027', url: location.href })
+</script>
+</body></html>

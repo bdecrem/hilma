@@ -1,0 +1,42 @@
+{
+  "problem": "tip-split",
+  "column": "claude",
+  "model": "Fable 5.2",
+  "date": "2026-11-18",
+  "seconds": 49,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "bill_input",
+      "pass": true
+    },
+    {
+      "name": "people_input",
+      "pass": true
+    },
+    {
+      "name": "tip_20",
+      "pass": true
+    },
+    {
+      "name": "each_of_4",
+      "pass": true
+    },
+    {
+      "name": "each_of_5",
+      "pass": true
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "pass": true,
+  "failure": "success",
+  "notes": [],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/tip-split-claude-2026-11-18T23-28-17/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/tip-split-claude-2026-11-18T23-28-17"
+}

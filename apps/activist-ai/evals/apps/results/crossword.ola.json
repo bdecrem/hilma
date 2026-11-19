@@ -1,0 +1,48 @@
+{
+  "problem": "crossword",
+  "column": "ola",
+  "model": "Nemotron 3.5 Super VL",
+  "date": "2026-11-18",
+  "seconds": 449,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "grid_5x5",
+      "pass": false
+    },
+    {
+      "name": "numbered_starts",
+      "pass": false
+    },
+    {
+      "name": "clue_list",
+      "pass": false
+    },
+    {
+      "name": "uses_ai",
+      "pass": false
+    },
+    {
+      "name": "new_puzzle_differs",
+      "pass": false
+    },
+    {
+      "name": "typing_fills",
+      "pass": false
+    }
+  ],
+  "passed": 1,
+  "total": 7,
+  "pass": false,
+  "failure": "grid_5x5",
+  "notes": [
+    "page errors: Cannot read properties of undefined (reading '1') | Cannot read properties of undefined (reading '10')"
+  ],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/crossword-ola-2026-11-18T23-23-56/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/crossword-ola-2026-11-18T23-23-56"
+}

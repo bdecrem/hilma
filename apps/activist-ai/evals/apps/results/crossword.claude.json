@@ -1,0 +1,48 @@
+{
+  "problem": "crossword",
+  "column": "claude",
+  "model": "Fable 5.2",
+  "date": "2026-11-18",
+  "seconds": 144,
+  "timedOut": false,
+  "page": "public/index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "grid_5x5",
+      "pass": true
+    },
+    {
+      "name": "numbered_starts",
+      "pass": true
+    },
+    {
+      "name": "clue_list",
+      "pass": true
+    },
+    {
+      "name": "uses_ai",
+      "pass": true
+    },
+    {
+      "name": "new_puzzle_differs",
+      "pass": true
+    },
+    {
+      "name": "typing_fills",
+      "pass": true
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "pass": true,
+  "failure": "success",
+  "notes": [
+    "ran the model's server server.js with AI calls stubbed"
+  ],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/crossword-claude-2026-11-18T23-23-55/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/crossword-claude-2026-11-18T23-23-55"
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Memory</title>
+<style>
+#board { display: grid; grid-template-columns: repeat(4, 80px); gap: 8px }
+.tile { width: 80px; height: 80px; border: 0; border-radius: 8px; background: #345; color: #fff; font: 36px sans-serif }
+.tile.up { background: #eee; color: #222 }
+</style></head>
+<body>
+<h1>Memory</h1>
+<div id="board"></div>
+<p id="msg"></p>
+<script>
+const faces = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+const deck = [...faces, ...faces].sort(() => Math.random() - 0.5)
+let open = [], done = 0
+deck.forEach((f, i) => {
+  const b = document.createElement('button'); b.className = 'tile'; b.textContent = ''
+  b.onclick = () => {
+    if (b.classList.contains('up') || open.length === 2) return
+    b.classList.add('up'); b.textContent = f; open.push(b)
+    if (open.length === 2) {
+      const [x, y] = open
+      if (x.textContent === y.textContent) { open = []; done += 2; if (done === deck.length) msg.textContent = 'You won!' }
+      else setTimeout(() => { for (const t of open) { t.classList.remove('up'); t.textContent = '' } open = [] }, 900)
+    }
+  }
+  board.append(b)
+})
+</script>
+</body></html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Memory</title>
+<style>
+#board { display: grid; grid-template-columns: repeat(4, 80px); gap: 8px }
+.tile { width: 80px; height: 80px; border: 0; border-radius: 8px; background: #eee; font: 36px sans-serif }
+</style></head>
+<body>
+<!-- A plausible mistake: the tiles are drawn face up and clicking does nothing. -->
+<h1>Memory</h1>
+<div id="board"></div>
+<script>
+const faces = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+for (const f of [...faces, ...faces].sort(() => Math.random() - 0.5)) {
+  const b = document.createElement('button'); b.className = 'tile'; b.textContent = f; board.append(b)
+}
+</script>
+</body></html>

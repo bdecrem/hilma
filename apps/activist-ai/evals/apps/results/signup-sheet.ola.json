@@ -1,0 +1,38 @@
+{
+  "problem": "signup-sheet",
+  "column": "ola",
+  "model": "Nemotron 3.5 Super VL",
+  "date": "2026-11-18",
+  "seconds": 70,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "name_input",
+      "pass": true
+    },
+    {
+      "name": "adds_name",
+      "pass": true
+    },
+    {
+      "name": "survives_reload",
+      "pass": true
+    },
+    {
+      "name": "second_name",
+      "pass": true
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "pass": true,
+  "failure": "success",
+  "notes": [],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/signup-sheet-ola-2026-11-18T23-31-56/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/signup-sheet-ola-2026-11-18T23-31-56"
+}
