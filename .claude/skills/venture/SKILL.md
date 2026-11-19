@@ -94,9 +94,19 @@ is restarted after it has been handled:
     node scripts/venture/transcript.mjs --wait talk
     node scripts/venture/mail.mjs --wait        (mail to the company's domains)
     node scripts/venture/leads.mjs --wait       (sign-ups on the sites)
+    node scripts/venture/issues.mjs --wait      (what Bart writes on the board's tracker)
 
 Add `transcript.mjs --wait <slug>` while an agenda call is open; `checkin`
 (the five-minute interview linked from his page) is always open.
+
+**The tracker is a way Bart gives instructions** (his words, 2026-11-18: "make sure the issues
+tracker is actually used: if I create a new ticket, or reopen one, or leave a comment on an open
+ticket, the agent should handle all that"). When `issues.mjs --wait` fires, or the prompt hook
+lists something he wrote on the board: `issues.mjs inbox`, then for each item the same turn: read
+the thread (`issues.mjs show <id>`), answer on the ticket (`issues.mjs comment <id> "…"`: what
+will happen and when, or the answer), start the work or put it in its place in the queue
+(`issues.mjs start <id>`), and only then `issues.mjs inbox --mark`. A reopened ticket goes back
+to doing with what is still wrong in his words. Restart the watcher.
 
 ## 3b. A correction from Bart is a failure of the system
 
@@ -198,6 +208,15 @@ his, money moved, something sent to a stranger, research returned):
 A session that dies right after a checkpoint has lost nothing. A session that
 dies without one has lost whatever it had not written down, so checkpoint
 before long-running work, not only after.
+
+## 6b. The daily sweep
+
+Once a day, from 6 pm Pacific, the day is swept: everything that happened is read and turned
+into changes to how Kit runs the project and how Ola's agents, skills and orchestration work,
+posted as a dated entry on the board's Learning page. The procedure is `apps/venture/SWEEP.md`;
+`node scripts/venture/sweep.mjs due` names the days owed, and the prompt hook says so too. A
+session that is open in the evening does it before it ends; the runner does it after 9 pm
+otherwise.
 
 ## 7. Review, at the end of every cycle
 

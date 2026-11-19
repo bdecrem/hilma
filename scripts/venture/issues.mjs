@@ -38,6 +38,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
+import { sweepDue } from './_state.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -257,7 +258,8 @@ if (cmd === 'add') {
 } else if (cmd === 'hook') {
   // for .claude/hooks/bart-done.py: one quick read, two lists, JSON; silent and empty on failure
   const [w, u] = await Promise.all([db.from('venture_issues').select('*').eq('project', 'ola').eq('status', 'waiting').order('num'), db.from('venture_issue_activity').select('*').is('seen_by_kit_at', null).eq('via', 'board').order('at')])
-  console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine) }))
+  const sweep = await sweepDue(db).catch(() => [])
+  console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine), sweep }))
 } else if (cmd === 'plate') {
   const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting']), 'plate')
   const order = { in_progress: 0, open: 1, waiting: 2 }

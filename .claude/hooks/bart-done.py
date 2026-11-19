@@ -11,6 +11,7 @@ message reports any issue done, changed or no longer wanted, run scripts/venture
 done/edit/drop for it before replying, and say so in one line), and, since 2026-11-18 (OLA-163),
 what Bart wrote on the board that Kit has not read yet: comments, edits, status changes and new
 issues from app.kochitolabs.com (`issues.mjs inbox`; mark them read with `inbox --mark`).
+Since 2026-11-18 (OLA-171) also the days whose daily sweep is still owed (apps/venture/SWEEP.md).
 One node call (`issues.mjs hook`), cached for two minutes. Silent if the tracker cannot be read.
 """
 import json, os, subprocess, sys, time
@@ -52,4 +53,9 @@ if waiting:
 if unread:
     note += ("\nBart wrote on the board and Kit has not read it yet (act on it, answer with "
              "`issues.mjs comment <id> \"...\"`, then `issues.mjs inbox --mark`):\n" + "\n".join(unread[:20]))
+sweep = [d for d in data.get("sweep") or [] if isinstance(d, str)]
+if sweep:
+    note += ("\nThe daily sweep has not been done for " + ", ".join(sweep) + ": when the work in hand allows, and "
+             "before this session ends, follow apps/venture/SWEEP.md (it ends with `sweep.mjs post`). "
+             "Do not tell Bart about it; the Learning page is where he reads it.")
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": note}}))

@@ -6,7 +6,10 @@
 //   node scripts/venture/steers.mjs --day 2026-11-16     one day
 //   node scripts/venture/steers.mjs --backfill 2026-11-13 2026-11-16
 //   node scripts/venture/steers.mjs --dry [--day …]      grade and print, store nothing
-//   node scripts/venture/steers.mjs --collect [--day …]  print what he wrote, no model call
+//   node scripts/venture/steers.mjs --collect [--day …]  print what he wrote, no model call (--full: whole messages)
+//   node scripts/venture/steers.mjs --export              store what he typed on THIS machine today and
+//                                                        yesterday (venture_state "typed_<host>"), so the
+//                                                        count on another machine includes it
 // Collects every message Bart wrote that day: what he typed into this project's Claude Code
 // sessions on this iMac (~/.claude/projects/<this project>/*.jsonl, including messages sent
 // mid-turn; never tool results, reminders, notifications, hook output, compaction summaries or
@@ -23,7 +26,8 @@
 // live here. The rubric, the rules and his words stay out of git: they are read from
 // apps/venture/private/ at run time.
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, hostname } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
@@ -64,8 +68,11 @@ const clean = (s) => s.replace(/<pasted_content[^>]*>([\s\S]*?)(<\/pasted_conten
 
 // What he typed into Claude Code. origin.kind "human" marks his own messages, on user lines
 // and on mid-turn (queued_command) attachments; everything else in a transcript is the machine.
+// The transcripts of this checkout on this machine (Claude Code names the folder after the path).
+// Until Nov 18 this was the M1's folder, typed out: a day worked on the M4 was counted as empty.
 function fromTranscripts(day) {
-  const dir = join(homedir(), '.claude/projects', '-Users-bart-Documents-code-hilma')
+  const dir = join(homedir(), '.claude/projects', fileURLToPath(root).replace(/\/$/, '').replace(/[^A-Za-z0-9]/g, '-'))
+  if (!existsSync(dir)) return []
   const lo = Date.parse(`${addDays(day, -1)}T00:00:00Z`)
   const out = []
   const seen = new Set()
@@ -175,8 +182,25 @@ async function fromCalls(day) {
   return out
 }
 
+// What he typed on the other machines: each one stores its own with --export (sync.mjs push runs it).
+const HOST = hostname().replace(/\..*$/, '').replace(/[^A-Za-z0-9]/g, '_')
+async function fromOtherMachines(day) {
+  const { data, error } = await db.from('venture_state').select('key, value').like('key', 'typed_%')
+  if (error) throw new Error(`venture_state: ${error.message}`)
+  return data.filter((r) => r.key !== `typed_${HOST}`).flatMap((r) => r.value?.days?.[day] ?? [])
+}
+async function exportTyped() {
+  const today = laDay(new Date().toISOString())
+  const old = (await getState(db, `typed_${HOST}`))?.value?.days ?? {}
+  const days = { ...old }
+  for (const day of [addDays(today, -1), today]) days[day] = fromTranscripts(day)
+  for (const k of Object.keys(days).sort().slice(0, -7)) delete days[k]
+  await setState(db, `typed_${HOST}`, { host: HOST, days })
+  console.log(`typed on ${HOST}: ${Object.keys(days).sort().slice(-2).map((d) => `${d} ${days[d].length}`).join(', ')}`)
+}
+
 async function collect(day) {
-  const all = [...fromTranscripts(day), ...(await fromTexts(day)), ...(await fromCalls(day))].sort((a, b) => a.at.localeCompare(b.at))
+  const all = [...fromTranscripts(day), ...(await fromOtherMachines(day)), ...(await fromTexts(day)), ...(await fromCalls(day))].sort((a, b) => a.at.localeCompare(b.at))
   // the same words sent twice within ten minutes (two terminals, a resubmit, a "/btw" side
   // question) are one message
   const norm = (t) => t.replace(/^\/btw\s+/i, '').toLowerCase().replace(/\s+/g, ' ').trim()
@@ -367,11 +391,15 @@ function writeMd(daysMap) {
 
 // ---------- run ----------
 
+if (flag('--export')) {
+  await exportTyped()
+  process.exit(0)
+}
 if (collectOnly) {
   for (const day of days) {
     const msgs = await collect(day)
     console.log(`\n=== ${day}: ${msgs.length} messages`)
-    for (const m of msgs) console.log(`#${m.id} ${hhmm(m.at)} ${m.source} (${m.where}): ${m.text.slice(0, 160).replace(/\n/g, ' ')}`)
+    for (const m of msgs) console.log(`#${m.id} ${hhmm(m.at)} ${m.source} (${m.where}): ${(flag('--full') ? m.text : m.text.slice(0, 160)).replace(/\n/g, ' ')}`)
   }
   process.exit(0)
 }

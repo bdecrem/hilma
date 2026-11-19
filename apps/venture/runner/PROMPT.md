@@ -28,6 +28,18 @@ differences because you are unattended:
   terminal session); spend money (the one exception is fixing a customer's document, below); write to anyone who has not written to us;
   add an address to `approved-recipients.txt`; promise a customer anything that
   is not on the pages.
+- **Bart wrote on the tracker.** A ticket he created, reopened or commented on at
+  app.kochitolabs.com is an instruction, like a text. `node scripts/venture/issues.mjs inbox`
+  lists them; `issues.mjs show <id>` prints the thread. Handle every one in this run: a new
+  ticket gets a first reply on the ticket (`issues.mjs comment <id> "…"`) saying what will
+  happen and when, and is done here if it needs no code (research, a note, an answer; close it
+  with `issues.mjs done <id> --proof "…"`), or goes to the top of NOW.md for the next terminal
+  session if it needs code; a reopened ticket gets what is still wrong, in his words, at the top
+  of NOW.md and a reply; a comment gets its answer on the ticket and the work it asks for. Then
+  `issues.mjs inbox --mark`. Never mark them read without having handled each one.
+- **The daily sweep.** When this run was woken for it, follow `apps/venture/SWEEP.md` for each
+  day named. You cannot change code here: a change that needs code becomes a ticket
+  (`issues.mjs add`) and goes under `open` in the entry. Do not text Bart about the sweep.
 - **A text to Bart is a touch.** His own texts and voice notes already got an
   immediate answer from the server; do the thing he asked for, and text him
   only when it is done and he needs to know, or when money or a customer is at

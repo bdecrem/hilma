@@ -35,7 +35,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir, hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
-import { getState, setState } from './_state.mjs'
+import { sweepDue, getState, setState } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -98,8 +98,16 @@ async function look() {
   const ph = pacificHour()
   const stale = ph >= BOARD_HOURS[0] && ph < BOARD_HOURS[1] && age(journal?.updated_at) > BOARD_STALE && age(lastEnd) > 60 * MIN
   const fresh = (n, k) => n > (left[k] ?? 0)
-  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, fresh(minutes.length, 'minutes') && `${minutes.length} new minutes of a voice call or note`, stale && `the board is stale (the journal was last written ${mins(age(journal?.updated_at))}): refresh it first, as PROMPT.md says under "The board is stale"`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
-  return { session, runner, why, minutes, counts: { texts, mail, leads, minutes: minutes.length } }
+  // What Bart wrote on the board's tracker and no one has read (a new ticket, a reopened one, a
+  // comment). Bart, 2026-11-18: "make sure the issues tracker is actually used: if I create a new
+  // ticket, or reopen one, or leave a comment on an open ticket, the agent should handle all that".
+  const board = await count('venture_issue_activity', (q) => q.eq('via', 'board').is('seen_by_kit_at', null)).catch(() => 0)
+  // The daily sweep (apps/venture/SWEEP.md): owed from 9 pm Pacific when no session did it.
+  const owed = await sweepDue(db).catch(() => [])
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  const sweep = owed.length > 0 && (ph >= 21 || owed.some((d) => d < today)) && age(lastEnd) > 60 * MIN
+  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(board, 'board') && `${board} thing(s) Bart wrote on the board's tracker (a new ticket, a reopened one or a comment): handle each as PROMPT.md says under "Bart wrote on the tracker"`, sweep && `the daily sweep is owed for ${owed.join(', ')}: do it as PROMPT.md says under "The daily sweep"`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, fresh(minutes.length, 'minutes') && `${minutes.length} new minutes of a voice call or note`, stale && `the board is stale (the journal was last written ${mins(age(journal?.updated_at))}): refresh it first, as PROMPT.md says under "The board is stale"`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
+  return { session, runner, why, minutes, counts: { texts, mail, leads, minutes: minutes.length, board } }
 }
 
 function claude(prompt, { readOnly = false, limit = RUN_LIMIT } = {}) {
