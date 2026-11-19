@@ -102,6 +102,7 @@ export function fixture(): BoardData {
       ],
       doc: 'how-we-learn',
     },
+    apiUse: { '2026-11-18': { text: { calls: 6, in: 900, write: 1500000, read: 750000, out: 2400 }, voice: { calls: 21, in: 4000, write: 375000, read: 7500000, out: 9000 } } },
     sweeps: {
       at: T('2026-11-17', 21, 10),
       since: '2026-11-15',

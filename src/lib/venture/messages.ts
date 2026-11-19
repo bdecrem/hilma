@@ -1,7 +1,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
-import { VENTURE_MODEL, ventureAnthropic, ventureNotes } from './talk'
+import { recordUse, VENTURE_MODEL, ventureAnthropic, ventureNotes } from './talk'
 
 // Venture over iMessage (2026-11-13): Bart asked Claude to reach him by text
 // through the bridge on the Mac mini. Two directions, one table
@@ -98,6 +98,7 @@ export async function ventureInbound(raw: string): Promise<void> {
     await sendVenture(SORRY, 'reply')
     return
   }
+  await recordUse('text', res.usage)
   if (res.stop_reason !== 'end_turn') {
     console.error('[venture/imsg] no reply:', res.stop_reason)
     await sendVenture(SORRY, 'reply')

@@ -89,6 +89,7 @@ export type BoardData = {
   notes: NoteLink[]
   learning: Learning | null // venture_state "learning", written by scripts/venture/learning.mjs
   sweeps: Sweeps | null // venture_state "sweeps", written by scripts/venture/sweep.mjs post
+  apiUse: Record<string, Record<string, { calls: number; in: number; write: number; read: number; out: number }>> | null // venture_state "api_use" (the meter in talk.ts), by day and kind
 }
 /** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
  *  the share of Bart's corrections that were new, not repeats; Ola, its own model's score on the
@@ -218,7 +219,7 @@ export async function loadBoard(): Promise<BoardData> {
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
   ])
@@ -250,6 +251,7 @@ export async function loadBoard(): Promise<BoardData> {
     notes: await loadNotes(journalRow?.body ?? ''),
     learning: (st('learning')?.value ?? null) as Learning | null,
     sweeps: (st('sweeps')?.value ?? null) as Sweeps | null,
+    apiUse: ((st('api_use')?.value as { days?: BoardData['apiUse'] } | undefined)?.days ?? null) as BoardData['apiUse'],
   }
 }
 

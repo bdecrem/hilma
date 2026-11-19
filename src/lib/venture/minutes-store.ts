@@ -2,7 +2,7 @@ import { completedText } from '@/lib/anthropic-response'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { MEMO_MARK } from './memo'
 import { SCHEMA, writeMinutes, type Line, type Minutes, type MinutesDeps } from './minutes'
-import { VENTURE_MODEL, ventureAnthropic } from './talk'
+import { recordUse, VENTURE_MODEL, ventureAnthropic } from './talk'
 
 // The real database and Claude behind minutes.ts. The table may not exist yet (schema 010 is
 // applied by hand): then reads find nothing and writes are skipped with a log line, so a call or a
@@ -36,6 +36,7 @@ export const minutesDeps: MinutesDeps = {
       system,
       messages: [{ role: 'user', content: user }],
     } as never)
+    await recordUse('minutes', (res as { usage?: Parameters<typeof recordUse>[1] }).usage)
     return completedText(res as never)
   },
 }

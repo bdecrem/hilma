@@ -14,6 +14,37 @@ import { notesText, pickNotes, type Doc } from './notes'
 export const TALK = 'talk'
 export const VENTURE_MODEL = 'claude-opus-5-5'
 
+// The meter (2026-11-18). Bart: "what were api calls used for today. I'm confused - all the agent
+// work should be oauth using our max plan". Agent work is on the Max login; these server-side
+// replies cannot be, and until this day nothing recorded what they used. Every call here adds its
+// tokens to venture_state "api_use", by Pacific day and kind (text reply, voice reply, cache
+// warm-up, call minutes); the board shows the day's use with an estimate in dollars. Reading and
+// writing one row is not exact when two replies end in the same second; it is a meter, not a bill.
+export type ApiUse = { calls: number; in: number; write: number; read: number; out: number }
+export type ApiUseState = { days: Record<string, Record<string, ApiUse>> }
+type Usage = { input_tokens?: number | null; output_tokens?: number | null; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null }
+export async function recordUse(kind: 'text' | 'voice' | 'warm' | 'minutes', usage: Usage | null | undefined): Promise<void> {
+  if (!usage) return
+  try {
+    const db = f2Supabase()
+    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+    const { data, error } = await db.from('venture_state').select('value').eq('key', 'api_use').maybeSingle()
+    if (error) throw new Error(error.message)
+    const v = ((data?.value as ApiUseState | null) ?? { days: {} }) as ApiUseState
+    const d = ((v.days[day] ??= {})[kind] ??= { calls: 0, in: 0, write: 0, read: 0, out: 0 })
+    d.calls += 1
+    d.in += usage.input_tokens ?? 0
+    d.write += usage.cache_creation_input_tokens ?? 0
+    d.read += usage.cache_read_input_tokens ?? 0
+    d.out += usage.output_tokens ?? 0
+    for (const k of Object.keys(v.days).sort().slice(0, -60)) delete v.days[k]
+    const up = await db.from('venture_state').upsert({ key: 'api_use', value: v, at: new Date().toISOString() })
+    if (up.error) throw new Error(up.error.message)
+  } catch (e) {
+    console.error('[venture/meter] not recorded:', e) // a reply never fails over its meter
+  }
+}
+
 let _anthropic: Anthropic | null = null
 export function ventureAnthropic() {
   if (!_anthropic) _anthropic = new Anthropic()
@@ -93,7 +124,8 @@ function talkRequest(system: string, messages: Anthropic.MessageParam[], maxToke
 
 /// Write the system prompt into the prompt cache before the first turn needs it.
 export async function warmCache(system: string): Promise<void> {
-  await ventureAnthropic().beta.messages.create(talkRequest(system, [{ role: 'user', content: '(The call just connected.)' }], 64) as never)
+  const res = (await ventureAnthropic().beta.messages.create(talkRequest(system, [{ role: 'user', content: '(The call just connected.)' }], 64) as never)) as { usage?: Usage }
+  await recordUse('warm', res.usage)
 }
 
 export async function* talkStream(system: string, messages: Anthropic.MessageParam[], signal?: AbortSignal): AsyncGenerator<string> {
@@ -106,6 +138,7 @@ export async function* talkStream(system: string, messages: Anthropic.MessagePar
     }
   }
   const final = await stream.finalMessage()
+  await recordUse('voice', final.usage)
   if (final.stop_reason === 'refusal' || !said) {
     console.error('[venture/talk] no reply:', final.stop_reason)
     yield "I can't answer that one. Put it another way?"

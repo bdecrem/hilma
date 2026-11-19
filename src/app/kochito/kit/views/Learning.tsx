@@ -432,6 +432,32 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
       <section className="bd-sec" aria-labelledby="other-h">
         <h2 id="other-h">Other figures</h2>
         <ol className="bd-kv">
+          {(() => {
+            // The API key's use by the text and voice replies, from the meter (talk.ts). Dollars are an
+            // estimate at the Opus 5.5 rates the steer counter assumes ($4 in, $5 cache write, $0.20
+            // cache read, $20 out, per million tokens).
+            const days = Object.keys(d.apiUse ?? {}).sort()
+            const day = days[days.length - 1]
+            if (!day) return (
+              <li>
+                <b>–</b>
+                <span>API use by the text and voice replies: metered from Nov 18, no call recorded yet. Agent work (terminal sessions, helpers, the runner, Ola&rsquo;s Claude fallback) runs on the Max login, not on the API key.</span>
+                <span className="t">–</span>
+              </li>
+            )
+            const kinds = d.apiUse![day]
+            const sum = Object.values(kinds).reduce((a, k) => ({ calls: a.calls + k.calls, in: a.in + k.in, write: a.write + k.write, read: a.read + k.read, out: a.out + k.out }), { calls: 0, in: 0, write: 0, read: 0, out: 0 })
+            const usd = (sum.in * 4 + sum.write * 5 + sum.read * 0.2 + sum.out * 20) / 1e6
+            return (
+              <li>
+                <b>${usd < 10 ? usd.toFixed(2) : Math.round(usd)}</b>
+                <span>
+                  estimated API use by the text and voice replies {day === d.today ? 'today' : `on ${dayShort(day)}`}: {sum.calls} {sum.calls === 1 ? 'call' : 'calls'} ({Object.entries(kinds).map(([k, x]) => `${x.calls} ${k}`).join(', ')}). Agent work runs on the Max login, not on the API key.
+                </span>
+                <span className="t">{day === d.today ? 'today' : dayShort(day)}</span>
+              </li>
+            )
+          })()}
           {d.status?.checks && (
             <li>
               <b>
