@@ -92,7 +92,7 @@ export function fixture(): BoardData {
     },
     learning: {
       at: T('2026-11-18', 10, 30),
-      kit: { percent: 74, label: 'of your corrections were new ones, not repeats (43 so far, 11 repeats)', corrections: 43, repeats: 11, latest_day: { day: '2026-11-18', corrections: 7, repeats: 4 }, by_day: days.map((day, n) => ({ day, corrections: 5 + n, repeats: n % 3 })), steers: { day: '2026-11-17', rate: 38 }, goal: 100 },
+      kit: { percent: 74, label: 'of your corrections were new ones, not repeats (43 so far, 11 repeats)', corrections: 43, repeats: 11, latest_day: { day: '2026-11-18', corrections: 7, repeats: 4 }, errors: { day: '2026-11-18', n: 7, repeats: 4, total: 43, since: '2026-11-13' }, by_day: days.map((day, n) => ({ day, corrections: 5 + n, repeats: n % 3 })), steers: { day: '2026-11-17', rate: 38 }, goal: 100 },
       ola: { percent: 79, label: "of Claude's score on our test tasks (73% against 92%, a made-up model, Nov 17)", model: 'a made-up model', own: { passed: 35, runs: 48, rate: 73 }, claude: { passed: 44, runs: 48, rate: 92 }, measured: '2026-11-17', rounds: [{ date: '2026-11-16', model: 'a made-up model', rate: 61, share: 66 }, { date: '2026-11-17', model: 'a made-up model', rate: 73, share: 79 }], open: ['Scanned pages still fail half the time.', 'Charts from spreadsheets need the new skill.'], goal: 100 },
       weaknesses: [
         { id: 'a', side: 'kit', name: 'A made-up weakness that came back', what: 'Made up.', seen: 4, first: '2026-11-13', last: '2026-11-17', by_day: {}, came_back: 2, guard: { day: '2026-11-15', what: 'a made-up check before every send', enforced: true }, guards: 2, status: 'back', held_days: null, quiet_days: 1, bet: { text: 'a made-up thing to build', issue: 'OLA-212' } },

@@ -194,6 +194,20 @@ if (cmd === '--wait') {
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   const bad = checkEntry(e)
+  // Rule 50 (Bart, Nov 18: "the learning agents need to treat every correction I make as an error the
+  // agent made"): every correction written down is filed under a weakness, and the grader's count
+  // of corrections in his messages (when it has graded the day) is not larger than what was written.
+  {
+    const heads = readFileSync(priv('CORRECTIONS.md'), 'utf8').split(/^## (?=\d+\. )/m).slice(1).map((p) => p.split('\n')[0])
+    const filed = new Set(loadWeaknesses(rootUrl).flatMap((w) => w.seen.map((x) => x.ref)))
+    const unfiled = heads.map((h) => Number(/^\d+/.exec(h)[0])).filter((n) => !filed.has(`correction ${n}`))
+    if (unfiled.length) bad.push(`corrections not filed under a weakness in ${WEAK_FILE}: ${unfiled.join(', ')}`)
+    const dayLong = new Date(`${e.day}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    const written = heads.filter((h) => h.includes(dayLong)).length
+    const graded = (await getState(db, 'steers'))?.value?.days?.[e.day]
+    if (graded && graded.steers > written) bad.push(`the grader found ${graded.steers} corrections in Bart's messages on ${e.day} and CORRECTIONS.md has ${written} for that day: write down and file the others (node scripts/venture/steers.mjs --dry --day ${e.day} lists them)`)
+    if (!graded) console.log(`note: ${e.day} is not graded yet (steers.mjs), so the count of corrections rests on the sweep's own re-read of the messages`)
+  }
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
   const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}) }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }

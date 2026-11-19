@@ -95,7 +95,7 @@ export type BoardData = {
  *  test tasks as a share of Claude's. Missing or older than a day: the board says so. */
 export type Learning = {
   at: string
-  kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number }
+  kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number; errors?: { day: string; n: number; repeats: number; total: number; since: string } | null }
   ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number }
   weaknesses?: Weakness[]
   doc: string

@@ -36,16 +36,18 @@ export function sweepStats(s: Sweeps | null, today: string) {
   return { days, n: all.length, kit: days.reduce((n, d) => n + d.kit.length, 0), ola: days.reduce((n, d) => n + d.ola.length, 0), enforced: all.filter((c) => c.enforced).length, swept: days.filter((d) => !d.quiet).length, latest: days[0] ?? null, missed }
 }
 
-const Fig = ({ name, what, big, pct, label, line, small, amber }: { name: string; what: string; big: string; pct: number; label: string; line: string; small: string; amber?: boolean }) => (
+const Fig = ({ name, what, big, pct, label, line, small, amber }: { name: string; what: string; big: string; pct?: number; label?: string; line: string; small: string; amber?: boolean }) => (
   <div className="bd-learn-fig">
     <p className="who">
       {name} <span>{what}</span>
     </p>
     <b>{big}</b>
     <p className="line">{line}</p>
-    <span className="bar" role="img" aria-label={label}>
-      <i style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
-    </span>
+    {pct !== undefined && (
+      <span className="bar" role="img" aria-label={label}>
+        <i style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+      </span>
+    )}
     {small && <p className={`small${amber ? ' bd-amber' : ''}`}>{small}</p>}
   </div>
 )
@@ -58,7 +60,19 @@ export function LearningFigures({ l, now, sweeps }: { l: Learning | null; now: s
   const today = k?.latest_day ? `${k.latest_day.day === pday(now) ? 'today' : dayShort(k.latest_day.day)}: ${k.latest_day.corrections} corrections, ${k.latest_day.repeats} repeats` : ''
   return (
     <div className={`bd-learn${sweeps ? ' three' : ''}`}>
-      {k && <Fig name="Kit" what="the agent system that works with Bart" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />}
+      {k &&
+        (k.errors ? (
+          // every correction from Bart counts as one error by the agent (rule 50): the day's count, no bar
+          <Fig
+            name="Kit"
+            what="the agent system that works with Bart"
+            big={String(k.errors.n)}
+            line={`${k.errors.n === 1 ? 'error' : 'errors'} ${k.errors.day === pday(now) ? 'today' : `on ${dayShort(k.errors.day)}`}. Each correction from Bart counts as one error by the agent.`}
+            small={[`${k.errors.repeats} of them under a weakness seen before`, `${k.errors.total} since ${dayShort(k.errors.since).replace(/^[A-Za-z]+, /, '')}`, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(', ')}
+          />
+        ) : (
+          <Fig name="Kit" what="the agent system that works with Bart" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />
+        ))}
       {o && <Fig name="Ola" what="models, skills and orchestration" big={`${Math.round(o.percent)}%`} pct={o.percent} label={`${Math.round(o.percent)} of 100`} line={o.label} small={o.own && o.claude ? `${Math.round(o.own.rate)}% against Claude's ${Math.round(o.claude.rate)}%, ${o.model}${o.measured ? `, ${o.measured}` : ''}` : ''} />}
       {sweeps && <WeakFig l={l} sweeps={sweeps} />}
     </div>
@@ -371,7 +385,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
           <div className="bd-home-grid">
             <div>
               <h3 className="bd-h3">
-                Kit: corrections by day <span className="faint">repeats in red</span>
+                Kit: errors by day <span className="faint">in red: under a weakness seen before. Before Nov 18 only corrections written down at the time were counted.</span>
               </h3>
               {l.kit.by_day?.length ? (
                 <Bars

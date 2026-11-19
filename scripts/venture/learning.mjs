@@ -33,7 +33,8 @@ const MONTHS = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, J
 const entries = parts.map((p) => {
   const head = p.split('\n')[0]
   const m = /(January|February|March|April|May|June|July|August|September|October|November|December) (\d{1,2}), (\d{4})/.exec(head)
-  const day = m ? `${m[3]}-${String(MONTHS[m[1]]).padStart(2, '0')}-${m[2].padStart(2, '0')}` : null
+  const m2 = m ? null : /\((\d{1,2})\/(\d{1,2})[,)]/.exec(head) // the first entries: "(11/13, voice)"
+  const day = m ? `${m[3]}-${String(MONTHS[m[1]]).padStart(2, '0')}-${m[2].padStart(2, '0')}` : m2 ? `2026-${m2[1].padStart(2, '0')}-${m2[2].padStart(2, '0')}` : null
   const repeat = /\bREPEAT\b/.test(p) || /(third|second|three|two) times?|asked (three|twice)/i.test(head)
   return { n: Number(/^\d+/.exec(head)[0]), day, repeat, title: head.replace(/^\d+\.\s*/, '').slice(0, 140) }
 })
@@ -49,6 +50,9 @@ const kit = {
   repeats,
   latest_day: last ? { day: last, ...byDay[last] } : null,
   by_day: days.map((d) => ({ day: d, ...byDay[d] })),
+  // Bart, Nov 18: "the learning agents need to treat every correction I make as an error the agent
+  // made". The headline is the count of errors on the latest day; the total since the first one.
+  errors: last ? { day: last, n: byDay[last].corrections, repeats: byDay[last].repeats, total: entries.length, since: days[0] } : null,
   goal: 'No repeats: Bart never makes the same correction twice.',
 }
 

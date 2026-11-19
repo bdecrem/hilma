@@ -65,6 +65,19 @@ Then two questions for the day as a whole:
   It gets a ticket and goes in the entry's `build`, and in the weakness's `bet`. Before naming a
   new one, look at the last one named: is it built, and did the weakness stop?
 
+### Every correction is an error
+
+Bart, Nov 18: "the learning agents need to treat every correction I make as an error the agent
+made". Before anything else, re-read every message of the day (`gather` prints them in full) and
+list each one in which he corrects, redirects, rejects, narrows, redoes or has to add to something
+an agent did, said or proposed. That includes a question that shows the work fell short, and a
+correction of an automatic reply. None is set aside as a change of mind, a preference, a new
+requirement or something the agent could not have known. Each one gets an entry in
+`CORRECTIONS.md` (his words, what the agent had done, the cause) and a line in its weakness's
+`seen`. The grader (`steers.mjs`) makes the same count independently; posting is refused while a
+correction is unfiled, or while the grader counted more corrections than were written down. On
+Nov 18 the ledger held 9 corrections for the day and the re-read found 27.
+
 ### What to look at for Kit (how the project is run)
 
 - A correction, a steer, or anything he had to say twice.
