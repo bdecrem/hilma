@@ -1,7 +1,8 @@
-import type { BoardData, Learning, Sweep, SweepChange, Sweeps, Weakness } from '@/lib/venture/board'
+import type { BoardData, Issue, Learning, Sweep, SweepChange, SweepIdea, Sweeps, Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
+import { STATUS } from './common'
 
 // Learning (app.kochitolabs.com/learning; Bart, Nov 18: "Instead of numbers, make it Learning").
 // Top: the headline numbers, Kit (the share of his corrections that were new, not repeats), Ola
@@ -14,6 +15,10 @@ import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
 // per day, newest first: what Kit read that day, what it changed in how the project is run (Kit)
 // and in how Ola's agents, skills and orchestration work (Ola), and what it found and has not
 // fixed. Then the measures with their history (what the Numbers page held).
+// Daily ideas (Bart, Nov 18, 11:13 pm: "daily loop for kit and Ola each to think of one idea or
+// improvement to make the overall system and the code engine work better. Notify me each day when
+// that happened. Document on the learning page"): each sweep carries one idea for Kit and one for
+// Ola, each with its evidence and a ticket; the list shows them by day with the ticket's status.
 // Data: venture_state "learning" (scripts/venture/learning.mjs) and "sweeps" (scripts/venture/
 // sweep.mjs post; the procedure is apps/venture/SWEEP.md). Missing: "not measured yet", "not
 // swept"; older than a day: "as of <when>" in amber. Never a made-up number.
@@ -201,6 +206,52 @@ function Changes({ name, what, items, base, weak }: { name: string; what: string
   )
 }
 
+function Idea({ who, i, base, issues }: { who: string; i: SweepIdea; base: string; issues: Issue[] | null }) {
+  const st = i.issue ? issues?.find((x) => x.id === i.issue)?.status : undefined
+  return (
+    <div className="idea">
+      <span className="who">{who}</span>
+      <p>{inline(i.text)}</p>
+      <p className="why">{inline(i.why)}</p>
+      {i.issue && (
+        <p className="tk">
+          <a href={`${href(base, '/issues')}/${i.issue}`} className="m">{i.issue}</a>
+          {st && <span className={`st ${st}`}>{STATUS[st].toLowerCase().replace('bart', 'Bart')}</span>}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function Ideas({ days, base, issues }: { days: Sweep[]; base: string; issues: Issue[] | null }) {
+  const row = (s: Sweep) => (
+    <li key={s.day} id={`i-${s.day}`}>
+      <span className="day">{dayShort(s.day)}</span>
+      <Idea who="Kit" i={s.ideas!.kit} base={base} issues={issues} />
+      <Idea who="Ola" i={s.ideas!.ola} base={base} issues={issues} />
+    </li>
+  )
+  const SHOWN = 7 // a week is shown, older days fold
+  return (
+    <>
+      <ol className="bd-ideas">
+        <li className="head">
+          <span>Day</span>
+          <span>Kit: how the project is run</span>
+          <span>Ola: the code engine</span>
+        </li>
+        {days.slice(0, SHOWN).map(row)}
+      </ol>
+      {days.length > SHOWN && (
+        <details className="bd-ideas-more">
+          <summary>{days.length - SHOWN} earlier {days.length - SHOWN === 1 ? 'day' : 'days'}</summary>
+          <ol className="bd-ideas">{days.slice(SHOWN).map(row)}</ol>
+        </details>
+      )}
+    </>
+  )
+}
+
 function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak: Weakness[] }) {
   return (
     <>
@@ -266,6 +317,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
   // the days, newest first: every sweep, and every day owed
   const rows = [...st.days.map((s) => ({ day: s.day, s: s as Sweep | null })), ...st.missed.map((day) => ({ day, s: null as Sweep | null }))].sort((a, b) => b.day.localeCompare(a.day))
   const OPEN = 2 // the newest sweeps are shown whole, older ones fold
+  const ideaDays = st.days.filter((x) => x.ideas?.kit && x.ideas?.ola).sort((a, b) => b.day.localeCompare(a.day))
   let shown = 0
   return (
     <>
@@ -284,6 +336,16 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
       )}
 
       <LearningFigures l={l} now={now} sweeps={st} />
+
+      <section className="bd-sec" aria-labelledby="ideas-h">
+        <h2 id="ideas-h">
+          Daily ideas {ideaDays.length > 0 && <span className="m faint">{ideaDays.length * 2} so far</span>}
+        </h2>
+        <p className="bd-p" style={{ margin: '0 0 8px' }}>
+          Each daily sweep ends with two ideas: one for Kit, about how the project is run, and one for Ola, about the code engine (its agents, skills and orchestration). Each idea states the evidence it comes from and how it would be measured, and gets its own ticket. Bart receives the two ideas by text on the day they are written.
+        </p>
+        {ideaDays.length ? <Ideas days={ideaDays} base={base} issues={d.issues} /> : <p className="bd-empty">No ideas recorded yet.</p>}
+      </section>
 
       <section className="bd-sec" aria-labelledby="weak-h">
         <h2 id="weak-h">

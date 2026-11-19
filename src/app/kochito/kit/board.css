@@ -369,6 +369,22 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-weak .st.guarded { color: var(--green); }
 .bd-weak .st.back { color: var(--red); font-weight: 600; }
 .bd-weak .st.open { color: var(--ink-2); }
+/* Daily ideas: one row per day, the idea for Kit beside the idea for Ola.
+   Columns: 96px day (the sweep list's day width) + two equal columns, 24px apart. */
+.bd-ideas { border-top: 1px solid var(--line); }
+.bd-ideas > li { display: grid; grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 10px 0 12px; border-bottom: 1px solid var(--line); align-items: start; }
+.bd-ideas > li.head { padding: 5px 0; font-size: 12px; color: var(--ink-3); }
+.bd-ideas .day { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.bd-ideas .idea p { line-height: 1.45; }
+.bd-ideas .idea .who { display: none; font-size: 12px; color: var(--ink-3); }
+.bd-ideas .idea .why { margin-top: 3px; font-size: 13px; color: var(--ink-2); }
+.bd-ideas .idea .tk { margin-top: 4px; font-size: 12.5px; display: flex; gap: 10px; align-items: baseline; }
+.bd-ideas .idea .st { color: var(--ink-3); }
+.bd-ideas .idea .st.done { color: var(--green); }
+.bd-ideas .idea .st.waiting { color: var(--need); }
+.bd-ideas-more { margin-top: 8px; }
+.bd-ideas-more summary { cursor: pointer; font-size: 13px; color: var(--ink-2); padding: 4px 0; }
+.bd-ideas-more .bd-ideas { margin-top: 6px; }
 .bd-sweep-sum.pattern { margin-top: 6px; }
 .bd-sweep-sum.pattern b, .bd-sweep-build b { font-weight: 650; }
 .bd-sweep-build { margin-top: 12px; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); line-height: 1.45; }
@@ -542,6 +558,9 @@ input.bd-title-edit { border-color: var(--acc); }
   .bd-learn-intro a { white-space: normal; }
   .bd-learn.three .bd-learn-fig + .bd-learn-fig { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
   .bd-sweep-cols { grid-template-columns: minmax(0, 1fr); gap: 14px 0; }
+  .bd-ideas > li { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .bd-ideas > li.head { display: none; }
+  .bd-ideas .idea .who { display: block; }
   .bd-weak > li { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
   .bd-weak > li.head { display: none; }
   .bd-weak .seen { grid-column: 1; grid-row: 2; }

@@ -159,7 +159,14 @@ check((await p.locator('.bd-learn-intro').count()) === 1 && /\/notes\/how-we-lea
 const weak = await p.locator('.bd-weak > li:not(.head)').count()
 check(weak >= 5, `the weaknesses are listed (${weak}), each with what prevents it and whether that is holding`)
 check((await p.locator('.bd-sweeps > li:not(.line) .bd-sweep-build').count()) >= 1, 'the newest update says what to build next')
-for (const id of ['weak-h', 'sweep-h', 'ind-h', 'other-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Learning has its section ${id.replace('-h', '')}`)
+{
+  // one idea a day for each side, each with its reason and a ticket
+  const days = await p.locator('.bd-ideas > li:not(.head)').count()
+  const cells = await p.locator('.bd-ideas > li:not(.head) .idea').count()
+  check(days >= 1 && cells === days * 2, `Daily ideas lists ${days} ${days === 1 ? 'day' : 'days'}, an idea for Kit and one for Ola on each`)
+  check((await p.locator('.bd-ideas > li:not(.head) .idea .tk a').count()) === cells, 'every idea links to its ticket')
+}
+for (const id of ['ideas-h', 'weak-h', 'sweep-h', 'ind-h', 'other-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Learning has its section ${id.replace('-h', '')}`)
 await p.goto(at('/numbers'), { waitUntil: 'networkidle' })
 check(new URL(p.url()).pathname.endsWith('/learning'), 'the old Numbers address opens Learning')
 await p.goto(at('/notes'), { waitUntil: 'networkidle' })

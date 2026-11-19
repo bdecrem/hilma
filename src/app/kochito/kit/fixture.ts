@@ -115,6 +115,7 @@ export function fixture(): BoardData {
           summary: 'A made-up day: two corrections were about the same thing, a file sent before it was checked, so the check now runs by itself. Ola lost three requests to Claude on charts.',
           pattern: 'A made-up pattern: both corrections came from sending before checking.',
           build: { text: 'A made-up thing to build that would remove the whole weakness.', issue: 'OLA-212' },
+          ideas: { kit: { text: 'A made-up idea for Kit: a check that runs before every reply.', why: 'Made up: the weakness seen most often rests on a rule; the count of that correction per day is the measure.', issue: 'OLA-213' }, ola: { text: 'A made-up idea for Ola: keep each finished request as a worked example for the next one.', why: 'Made up: the own model built 2 of 7 app requests; the same seven are run again with examples.', issue: 'OLA-214' }, told: T('2026-11-17', 21, 11) },
           read: [
             { n: '63', what: 'messages from you' },
             { n: '5', what: 'corrections, 2 repeats' },
@@ -135,6 +136,7 @@ export function fixture(): BoardData {
           at: T('2026-11-15', 22, 5),
           by: 'Kit',
           summary: 'A made-up first sweep: one rule sharpened after a repeat about texts.',
+          ideas: { kit: { text: 'A made-up earlier idea for Kit.', why: 'Made up.', issue: 'OLA-201' }, ola: { text: 'A made-up earlier idea for Ola.', why: 'Made up.', issue: 'OLA-202' } },
           read: [{ n: '40', what: 'messages from you' }],
           kit: [{ saw: 'A text about housekeeping reached your phone (made up).', changed: 'Texts are only for things you must act on.', where: 'rule 12' }],
           ola: [],

@@ -231,6 +231,16 @@ the page's third headline figure is "weaknesses guarded and holding, of all
 known". Each sweep files its findings there, writes the day's pattern, and names
 the one thing to build next (`build`).
 
+**Daily ideas** (2026-11-18, OLA-179). Bart: "daily loop for kit and Ola each to
+think of one idea or improvement to make the overall system and the code engine
+work better. Notify me each day when that happened. Document on the learning
+page". Every sweep entry carries `ideas: { kit, ola }`, each `{ text, why,
+issue }` with a ticket of its own; `sweep.mjs post` refuses an entry without
+them, or with a ticket that was already an idea, and on the day's first post
+texts Bart the two (`ideas.told` records it; a repost sends nothing, `--no-text`
+skips it). The Learning page lists them by day under "Daily ideas" with each
+ticket's status (`Ideas` in `views/Learning.tsx`).
+
 **Bart's writes on the tracker reach an agent** (OLA-172): a ticket he creates,
 reopens or comments on is listed by `issues.mjs inbox` until it is marked read.
 Every session runs `issues.mjs --wait` beside the other watchers and sees unread

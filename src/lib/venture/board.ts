@@ -116,6 +116,11 @@ export type Weakness = { id: string; side: 'kit' | 'ola'; name: string; what: st
  *  seen, what was changed and where; "enforced" means the system now does it (a hook, a check, a
  *  test, code), as opposed to a note Kit has to remember. */
 export type SweepChange = { saw: string; changed: string; where: string; enforced?: boolean; issue?: string; weakness?: string }
+/** One idea a day for each side (Bart, 2026-11-18: "daily loop for kit and Ola each to think of one
+ *  idea or improvement to make the overall system and the code engine work better. Notify me each
+ *  day when that happened. Document on the learning page"). Each has its own ticket; `told` is when
+ *  the day's two ideas were texted to Bart. */
+export type SweepIdea = { text: string; why: string; issue?: string }
 export type Sweep = {
   day: string // Pacific
   at: string
@@ -128,6 +133,7 @@ export type Sweep = {
   open: { text: string; issue?: string }[] // found, not fixed that day
   pattern?: string // what the day's findings have in common, and what that says
   build?: { text: string; issue?: string } // the one thing to build next that would remove a whole weakness
+  ideas?: { kit: SweepIdea; ola: SweepIdea; told?: string }
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 

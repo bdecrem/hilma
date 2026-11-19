@@ -12,7 +12,9 @@
 //   node scripts/venture/sweep.mjs gather [--day D]     everything that happened that day, printed to read
 //   node scripts/venture/sweep.mjs template [--day D]   an empty entry (JSON) for that day
 //   node scripts/venture/sweep.mjs post <entry.json>    check the entry and store it; the Learning page
-//                                                       of app.kochitolabs.com shows it at once
+//                                                       of app.kochitolabs.com shows it at once. The first
+//                                                       post of a day also texts Bart the day's two ideas
+//                                                       (one for Kit, one for Ola); --no-text skips that
 //   node scripts/venture/sweep.mjs show [--day D]       what is stored
 //   node scripts/venture/sweep.mjs weaknesses           the ledger: every weakness, how often it was seen,
 //                                                       its guard and whether the guard is holding
@@ -139,6 +141,7 @@ async function facts() {
 }
 
 // ---------------------------------------------------------------- the entry
+const IDEA_MAX = 220 // characters of an idea's one sentence
 function checkEntry(e) {
   const bad = []
   const known = new Set(loadWeaknesses(rootUrl).map((w) => w.id))
@@ -157,11 +160,23 @@ function checkEntry(e) {
   if (!Array.isArray(e.open) || e.open.some((o) => !str(o.text))) bad.push('open: [{ text, issue? }]')
   if (!e.quiet && known.size && (!e.build || !str(e.build.text))) bad.push('build: { text, issue? }: the one thing to build next that would remove a whole weakness, not one instance (or say why nothing is worth building)')
   if (!e.quiet && Array.isArray(e.read) && e.read.length === 0) bad.push('read is empty: say what the sweep looked at, or mark the day quiet')
+  // Bart, 2026-11-18, 11:13 pm: "daily loop for kit and Ola each to think of one idea or improvement to
+  // make the overall system and the code engine work better. Notify me each day when that happened.
+  // Document on the learning page". One idea for each side, every day (a quiet day too), each with
+  // the evidence it comes from and its own ticket, so the page can show what became of it.
+  for (const side of ['kit', 'ola']) {
+    const i = e.ideas?.[side]
+    const what = side === 'kit' ? 'how the project is run' : 'the code engine: agents, skills, orchestration'
+    if (!i || !str(i.text) || !str(i.why)) { bad.push(`ideas.${side}: { text, why, issue }: one idea or improvement for ${what} (text: one sentence saying what would be built; why: what in the record points to it and how it would be measured)`); continue }
+    if (i.text.length > IDEA_MAX) bad.push(`ideas.${side}.text is ${i.text.length} characters: at most ${IDEA_MAX}, it goes to Bart's phone`)
+    if (!/^OLA-\d+$/.test(i.issue ?? '')) bad.push(`ideas.${side}.issue: open a ticket for the idea (issues.mjs add) and name it here, like OLA-180`)
+  }
+  if (e.ideas?.kit?.issue && e.ideas.kit.issue === e.ideas?.ola?.issue) bad.push('ideas: the two ideas need a ticket each')
   if (/[—]/.test(JSON.stringify(e))) bad.push('no em dashes: Bart reads this page')
   // Bart, 2026-11-18: "I don't love the writing style on the learning section ... write it like a
   // factual straight description of our evolving learning system". An entry is a description of the
   // system, not Kit's account of itself: no first person outside a direct quote of his words.
-  const texts = [e.summary, e.pattern, e.build?.text, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
+  const texts = [e.summary, e.pattern, e.build?.text, e.ideas?.kit?.text, e.ideas?.kit?.why, e.ideas?.ola?.text, e.ideas?.ola?.why, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
   const first = [...new Set(texts.flatMap((t) => t.replace(/"[^"]*"/g, '').replace(/“[^”]*”/g, '').match(/\b(I|I'm|I've|I'd|my|me|myself|we|our|us)\b/g) ?? []))]
   if (first.length) bad.push(`written in the first person (${first.join(', ')}): describe what the system does and what happened, with Kit, Ola, Bart or the mechanism as the subject (apps/venture/SWEEP.md, "Rules for the entry")`)
   return bad
@@ -188,7 +203,7 @@ if (cmd === '--wait') {
   console.log('Now follow apps/venture/SWEEP.md.')
 } else if (cmd === 'template') {
   const f = await facts()
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' } }, null, 2))
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } } }, null, 2))
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
@@ -208,9 +223,16 @@ if (cmd === '--wait') {
     if (graded && graded.steers > written) bad.push(`the grader found ${graded.steers} corrections in Bart's messages on ${e.day} and CORRECTIONS.md has ${written} for that day: write down and file the others (node scripts/venture/steers.mjs --dry --day ${e.day} lists them)`)
     if (!graded) console.log(`note: ${e.day} is not graded yet (steers.mjs), so the count of corrections rests on the sweep's own re-read of the messages`)
   }
-  if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}) }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
+  // an idea is new: its ticket was not the idea of another day
+  for (const side of ['kit', 'ola']) {
+    const again = old.days.find((d) => d.day !== e.day && [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(e.ideas?.[side]?.issue))
+    if (again && e.ideas?.[side]?.issue) bad.push(`ideas.${side}: ${e.ideas[side].issue} was already the idea of ${again.day}; think of a new one`)
+  }
+  if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
+  const told = old.days.find((d) => d.day === e.day)?.ideas?.told
+  const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas }
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
   await setState(db, 'sweeps', value)
@@ -220,6 +242,21 @@ if (cmd === '--wait') {
   // the ledger and the two percentages ride along, so the page is whole at once
   const learn = spawnSync('node', [root + 'scripts/venture/learning.mjs'], { encoding: 'utf8' })
   console.log(learn.status === 0 ? learn.stdout.trim().split('\n').filter((l) => /^Weaknesses/.test(l)).join('\n') : `learning numbers NOT refreshed: ${(learn.stderr || learn.stdout).trim().split('\n').pop()}`)
+  // "Notify me each day when that happened": one text per day, on the day's first post. A repost
+  // (after a correction is added) changes the page and sends nothing.
+  if (!told && !args.includes('--no-text')) {
+    const d = new Date(`${entry.day}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+    const text = `Daily ideas, ${d}.\nKit, for how the project is run: ${ideas.kit.text} (${ideas.kit.issue})\nOla, for the code engine: ${ideas.ola.text} (${ideas.ola.issue})\nhttps://app.kochitolabs.com/learning`
+    const sent = spawnSync('node', [root + 'scripts/venture/imsg.mjs', 'send', text], { encoding: 'utf8' })
+    if (sent.status === 0) {
+      entry.ideas.told = new Date().toISOString()
+      await setState(db, 'sweeps', { ...value, at: new Date().toISOString() })
+      console.log(`texted Bart the two ideas of ${entry.day}`)
+    } else {
+      console.log(`Bart was NOT texted the ideas (${(sent.stderr || sent.stdout).trim().split('\n').pop()}): post the entry again to retry`)
+      process.exitCode = 1
+    }
+  }
   console.log('https://app.kochitolabs.com/learning')
 } else if (cmd === 'weaknesses') {
   console.log(ledgerLines().join('\n'))
@@ -231,6 +268,7 @@ if (cmd === '--wait') {
     console.log(`\n${d.day} (swept ${d.at} by ${d.by}): ${d.summary}`)
     for (const side of ['kit', 'ola']) for (const c of d[side]) console.log(`  ${side.toUpperCase().padEnd(3)} ${c.enforced ? '[enforced]' : '[note]    '} ${c.changed}  (${c.where})`)
     for (const o of d.open) console.log(`  OPEN ${o.text}${o.issue ? ` ${o.issue}` : ''}`)
+    for (const side of ['kit', 'ola']) if (d.ideas?.[side]) console.log(`  IDEA ${side.toUpperCase().padEnd(3)} ${d.ideas[side].text} ${d.ideas[side].issue}${d.ideas.told ? '' : '  (Bart not texted yet)'}`)
   }
 } else {
   die('usage: sweep.mjs weaknesses | --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')

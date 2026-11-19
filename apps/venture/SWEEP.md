@@ -65,6 +65,30 @@ Then two questions for the day as a whole:
   It gets a ticket and goes in the entry's `build`, and in the weakness's `bet`. Before naming a
   new one, look at the last one named: is it built, and did the weakness stop?
 
+### One idea for each side, every day
+
+Bart, Nov 18: "daily loop for kit and Ola each to think of one idea or improvement to make the
+overall system and the code engine work better. Notify me each day when that happened. Document
+on the learning page". Every entry, a quiet day's too, carries two ideas in `ideas`:
+
+- **`kit`**: one idea or improvement for how the project is run (the overall system: the rules,
+  hooks, checks, the tracker, the notes, the runner, how sessions hand over).
+- **`ola`**: one for the code engine (Ola's agents, skills, instructions, tools, the model ladder,
+  the orchestration around the model).
+
+An idea is not the day's `build` again and not an earlier day's idea (posting refuses a ticket
+that was already an idea). It starts from something in the day's record or the ledger, and it is
+checked against the open tickets first (`issues.mjs list --status open,in_progress,waiting`): an
+idea that is already a ticket is not new. `text` is one sentence of at most 220 characters that
+says what would be built, in words Bart understands; `why` says what in the record points to it
+and how it would be measured. Each idea gets its own ticket (`issues.mjs add … --pri P2`, area
+`ops` or `board` for Kit, `model`, `apps` or `web` for Ola), opened as next up: the idea is a
+proposal, and building it follows the plate like any other ticket.
+
+The first post of the day texts Bart the two ideas (`sweep.mjs post` does it and records it; a
+repost sends nothing). The Learning page lists them by day under "Daily ideas", with each
+ticket's status.
+
 ### Every correction is an error
 
 Bart, Nov 18: "the learning agents need to treat every correction I make as an error the agent
@@ -114,7 +138,8 @@ One paragraph in the entry's `pattern`.
 
     node scripts/venture/sweep.mjs template --day 2026-11-18 > apps/venture/private/data/sweeps/2026-11-18.json
 
-Fill it in and post it (posting also refreshes the ledger on the page):
+Fill it in and post it (posting also refreshes the ledger on the page, and the day's first post
+texts Bart the two ideas):
 
     node scripts/venture/sweep.mjs post apps/venture/private/data/sweeps/2026-11-18.json
 
@@ -128,7 +153,9 @@ The shape (`Sweep` in `src/lib/venture/board.ts`):
                   "where": "rule 48; the prompt hook", "enforced": true, "issue": "OLA-171" }],
       "ola":   [ … the same … ],
       "open":  [{ "text": "found, not fixed today", "issue": "OLA-175" }],
-      "build": { "text": "the one thing to build next that removes a whole weakness", "issue": "OLA-175" } }
+      "build": { "text": "the one thing to build next that removes a whole weakness", "issue": "OLA-175" },
+      "ideas": { "kit": { "text": "one sentence: what would be built", "why": "the evidence, and the measure", "issue": "OLA-180" },
+                 "ola": { … the same … } } }
 
 Rules for the entry:
 

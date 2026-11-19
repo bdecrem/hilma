@@ -39,7 +39,9 @@ differences because you are unattended:
   `issues.mjs inbox --mark`. Never mark them read without having handled each one.
 - **The daily sweep.** When this run was woken for it, follow `apps/venture/SWEEP.md` for each
   day named. You cannot change code here: a change that needs code becomes a ticket
-  (`issues.mjs add`) and goes under `open` in the entry. Do not text Bart about the sweep.
+  (`issues.mjs add`) and goes under `open` in the entry. The entry carries one idea for Kit and
+  one for Ola, each with its own new ticket (SWEEP.md, "One idea for each side, every day").
+  `sweep.mjs post` texts Bart those two ideas once; send no other text about the sweep.
 - **A text to Bart is a touch.** His own texts and voice notes already got an
   immediate answer from the server; do the thing he asked for, and text him
   only when it is done and he needs to know, or when money or a customer is at

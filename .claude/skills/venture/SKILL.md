@@ -218,6 +218,10 @@ posted as a dated entry on the board's Learning page. The procedure is `apps/ven
 `node scripts/venture/sweep.mjs due` names the days owed, and the prompt hook says so too. A
 session that is open in the evening does it before it ends; the runner does it after 9 pm
 otherwise.
+Each entry also carries one idea for Kit (how the project is run) and one for Ola (the code
+engine), each with its own ticket; the day's first `sweep.mjs post` texts Bart the two, and the
+Learning page lists them under "Daily ideas" (Bart, Nov 18: "Notify me each day when that
+happened. Document on the learning page").
 
 ## 7. Review, at the end of every cycle
 
