@@ -1,36 +1,54 @@
-/* The board at app.kochitolabs.com: a working tool (round three, 2026-11-18, OLA-162).
-   Bart: "less cute and more functional ... these fonts are too playful ... The spacing is a little
-   bit too generous ... a highly functional dashboard that still has good design taste and great
-   usability." The design is the lead's note BOARD-DESIGN-2026-11-18 (private); its rules, here:
-   - one sans (Public Sans) for everything, one mono (JetBrains Mono) for IDs, numbers and times;
-     both from src/fonts through the /kochito layout (--kl-sans, --kl-mono). No display face.
-   - sizes: body and tables 14px, secondary 12.5px, page title 20px semibold, section titles 13px
-     semibold uppercase; nothing larger than 20px.
-   - density: table rows 30 to 32px, sections 20 to 24px apart, the menu 208px wide with 28px rows,
+/* The board at app.kochitolabs.com: a working tool (round three, 2026-11-18, OLA-162), in the
+   look Bart picked the same day (OLA-170, "Go with LAMP").
+   Bart on the structure: "less cute and more functional ... The spacing is a little bit too generous
+   ... a highly functional dashboard that still has good design taste and great usability." On the
+   look: "Think like a designer and work on fonts, color and visual appeal - without sacrificing
+   functionality." The structure is the lead's note BOARD-DESIGN-2026-11-18 (private). The rules:
+   - type: Instrument Sans for everything a person reads, numbers and times included (tabular
+     figures); JetBrains Mono only for identifiers (OLA-150, a version). Faces from src/fonts
+     (--bd-instrument in kit/layout.tsx, --kl-mono in the /kochito layout).
+   - sizes: body and tables 14px, secondary 12.5px, page title 22px, section titles 15px in
+     sentence case. The five counts under "Now" on Home are the one loud thing (28px).
+   - density: table rows 30 to 32px, sections 20 to 24px apart, the menu 208px wide with 30px rows,
      content up to 1180px.
-   - color: a neutral page, near-black text, grey for secondary, hairline rules, one accent (the
-     deep green of kochitolabs.com) for links and the current menu item. Otherwise color is state
-     only: red needs you / alarm, amber stale / waiting, green OK / done.
-   - no decoration: no pills, no shadows, no giant numerals; hairlines; corners square or 3px.
+   - color: Ola's "paper under the lamp" (apps/activist-ai/apple/Shared/Theme.swift): the menu is
+     the room in shadow, the page is paper one tone lifted. Navy for links. Two colors carry
+     meaning and are used for nothing else: lamp yellow (--now) marks work in progress, vermilion
+     (--need) marks what waits on Bart. Green is OK and done, amber is stale.
+   - no decoration: no pills, no shadows; hairlines; corners 6px. Ola's icon beside the name.
+   The first sections below are the structure; "the look: Lamp" near the end restates type, color
+   and weight.
    Scoped under .bd; the public company pages (company.css, kochito.css) are not touched. */
 .bd {
-  --bg: #ffffff;
-  --side: #f7f7f5;
-  --ink: #18191b;
-  --ink-2: #5d6064;
-  --ink-3: #868a8f;
-  --line: #e5e5e2;
-  --line-2: #d4d4d0;
-  --hover: #f3f4f2;
-  --acc: #0f5a43;
-  --acc-soft: #e7f1ec;
-  --red: #b42318;
-  --red-soft: #fdf0ee;
-  --amber: #a15c07;
-  --amber-soft: #fdf5e6;
-  --green: #18794e;
-  --sans: var(--kl-sans), -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --bg: #fbf8f2;
+  --card: #fffdf9;
+  --side: #ebe6dd;
+  --ink: #1d1b18;
+  --ink-2: #57514a;
+  --ink-3: #746d62;
+  --line: #e6dfd3;
+  --line-2: #d3cabb;
+  --hover: #f3eee5;
+  --acc: #25407a;
+  --acc-soft: #e3e8f1;
+  --cur: #dcd5c8;
+  --cur-ink: #1d1b18;
+  --btn: #2b2824;
+  --btn-ink: #fbf8f2;
+  --btn-hover: #14120f;
+  --now: #d9a940;
+  --now-soft: #f6eccf;
+  --need: #d2532c;
+  --red: #ad4220;
+  --red-soft: #f8e9e1;
+  --amber: #86600d;
+  --amber-soft: #f6eccf;
+  --green: #3f7a3a;
+  --r: 6px;
+  --sans: var(--bd-instrument), -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --mono: var(--kl-mono), ui-monospace, Menlo, monospace;
+  --num: var(--sans);
+  font-feature-settings: 'tnum' 0;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
@@ -41,11 +59,11 @@
 }
 .bd *, .bd *::before, .bd *::after { box-sizing: border-box; }
 /* the company layout (.kl, kochito.css) sets a serif display face and large sizes on h1 to h3; reset them here */
-.kl .bd :where(h1, h2, h3) { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: 0; line-height: 1.35; margin: 0; text-wrap: wrap; color: inherit; }
+.kl .bd :where(h1, h2, h3, h4) { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: 0; line-height: 1.35; margin: 0; text-wrap: wrap; color: inherit; }
 .bd a { color: var(--acc); text-decoration: none; }
 .bd a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .bd :focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; border-radius: 3px; }
-.bd h1, .bd h2, .bd h3, .bd p, .bd ol, .bd ul, .bd dl, .bd dd { margin: 0; padding: 0; }
+.bd h1, .bd h2, .bd h3, .bd h4, .bd p, .bd ol, .bd ul, .bd dl, .bd dd { margin: 0; padding: 0; }
 .bd ol, .bd ul { list-style: none; }
 .bd .m { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .bd .sub { color: var(--ink-2); font-size: 12.5px; }
@@ -58,7 +76,6 @@
 .bd-brand { display: flex; align-items: baseline; gap: 6px; padding: 2px 8px; font-weight: 600; font-size: 14px; color: var(--ink) !important; }
 .bd-brand span { font-weight: 400; color: var(--ink-3); font-size: 12.5px; }
 .bd-brand b { font-weight: 600; }
-.bd-mark { display: none; } /* Ola's mark: shown by the looks of looks.css */
 .bd-pulse { display: flex; align-items: center; gap: 7px; padding: 4px 8px; font-size: 12.5px; color: var(--ink-2) !important; border-radius: 3px; }
 .bd-pulse:hover { background: var(--hover); text-decoration: none !important; }
 .bd-pulse b { font-weight: 600; color: var(--ink); }
@@ -150,12 +167,6 @@
 .bd-week-line:hover { background: var(--hover); text-decoration: none !important; }
 .bd-week-line .bar { flex: 0 0 120px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .bd-week-line .bar i { display: block; height: 100%; background: var(--acc); }
-.bd-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.bd-figs a { display: block; padding: 8px 12px 8px 0; color: var(--ink); }
-.bd-figs a + a { padding-left: 12px; border-left: 1px solid var(--line); }
-.bd-figs a:hover { background: var(--hover); text-decoration: none; }
-.bd-figs b { display: block; font-family: var(--mono); font-size: 16px; font-weight: 600; line-height: 1.3; }
-.bd-figs span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; }
 
 .bd-learn { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .bd-learn-fig { padding: 8px 12px 10px 0; min-width: 0; }
@@ -301,7 +312,7 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-more { margin-top: 8px; }
 .bd-more summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
 
-/* ---------------------------------------------------------------- Numbers */
+/* ---------------------------------------------------------------- Learning: the measures */
 .bd-ind { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: end; padding: 10px 0 12px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .bd-ind .now b { font-family: var(--mono); font-size: 20px; font-weight: 600; }
 .bd-ind .now p { color: var(--ink-2); font-size: 12.5px; margin-top: 2px; }
@@ -326,6 +337,148 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-steers .c.rep { color: var(--red); }
 .bd-p { color: var(--ink-2); max-width: 70em; margin-top: 8px; }
 
+/* ---------------------------------------------------------------- Learning: the daily sweep
+   One dated update per day. A day is a title, one or two sentences, what was read (counts), then
+   two columns: what changed for Kit and what changed for Ola. Each change leads with what was
+   changed; what was seen is the second line; where it lives and whether the system enforces it is
+   the third. */
+.bd-learn.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bd .bd-h3 { display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 650; margin-bottom: 6px; }
+.bd-h3 span { font-weight: 400; font-size: 12.5px; }
+.bd-sweep-line { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: baseline; margin-top: 8px; padding: 6px 0; color: var(--ink) !important; font-size: 13.5px; }
+.bd-sweep-line:hover { background: var(--hover); text-decoration: none !important; }
+.bd-sweep-line .m { color: var(--ink-3); }
+.bd-sweep-line.owed .m:first-child { color: var(--amber); }
+.bd-sweeps { border-top: 1px solid var(--line); }
+.bd-sweeps > li { padding: 14px 0 16px; border-bottom: 1px solid var(--line); }
+.bd-sweeps > li.line { padding: 7px 0; color: var(--ink-2); display: flex; gap: 12px; }
+.bd-sweeps > li.line.bd-amber { color: var(--amber); }
+.bd-sweeps .day { flex: none; width: 96px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.bd-sweeps > li.line.bd-amber .day { color: var(--amber); }
+.bd-sweeps > li.fold { padding: 0; }
+.bd-sweeps > li.fold summary { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 7px 0; cursor: pointer; list-style: none; }
+.bd-sweeps > li.fold summary::-webkit-details-marker { display: none; }
+.bd-sweeps > li.fold summary:hover { background: var(--hover); }
+.bd-sweeps > li.fold details[open] { padding-bottom: 16px; }
+.bd-sweeps > li.fold details[open] summary { margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.bd-sweep-head { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 16px; flex-wrap: wrap; }
+.bd .bd-sweep-head h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.005em; }
+.bd-sweep-sum { margin-top: 4px; max-width: 78em; line-height: 1.5; }
+.bd-sweep-read { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 8px; color: var(--ink-2); font-size: 12.5px; }
+.bd-sweep-read b { color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+.bd-sweep-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 32px; margin-top: 14px; align-items: start; }
+.bd .bd-sweep-cols h4, .bd .bd-sweep-open h4 { display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 650; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.bd-sweep-cols h4 span:not(.bd-n), .bd-sweep-open h4 span:not(.bd-n) { font-weight: 400; color: var(--ink-3); font-size: 12.5px; }
+.bd-sweep-cols h4 .bd-n, .bd-sweep-open h4 .bd-n { margin-left: auto; }
+.bd-sweep-cols .none { color: var(--ink-3); padding: 7px 0; }
+.bd-changes > li { padding: 7px 0 8px; border-bottom: 1px solid var(--line); }
+.bd-changes > li:last-child { border-bottom: 0; }
+.bd-changes .did { color: var(--ink); line-height: 1.45; }
+.bd-changes .saw { color: var(--ink-2); font-size: 12.5px; line-height: 1.45; margin-top: 2px; }
+.bd-changes .where { display: flex; flex-wrap: wrap; gap: 0 12px; color: var(--ink-3); font-size: 12px; margin-top: 3px; }
+.bd-changes .where .enf { color: var(--green); }
+.bd-sweep-open { margin-top: 12px; }
+.bd-sweep-open ul { list-style: none; }
+.bd-sweep-open li { padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+.bd-sweep-open li:last-child { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- the look: Lamp (OLA-170)
+   Bart picked it on Nov 18 from two looks tried on the real board ("Go with LAMP"). These rules sit
+   after the structure above and restate type, color and weight only; each selector starts with
+   .bd so it wins over the rule it restates. */
+.bd .bd-brand { align-items: center; gap: 8px; padding: 4px 8px 2px; font-size: 15px; }
+.bd .bd-brand b { font-weight: 650; letter-spacing: -0.01em; }
+.bd .bd-mark { display: block; flex: none; width: 20px; height: 20px; border-radius: 5px; background: url(/ola-site/favicon.svg) center / cover no-repeat; }
+.bd .bd-brand span { font-size: 12.5px; margin-left: -2px; }
+
+.bd .bd-head h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.018em; }
+.bd .bd-sec > h2, .bd .bd-h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.005em; text-transform: none; color: var(--ink); margin-bottom: 7px; }
+.bd .bd-out h2 { font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+
+/* numbers and times in the text face, tabular; the mono stays on identifiers */
+.bd .m,
+.bd .bd-n,
+.bd .bd-needs .since,
+.bd .bd-table .upd,
+.bd .bd-thread > li .t,
+.bd .bd-weeks .when,
+.bd .bd-road .d,
+.bd .bd-health dd.read,
+.bd .bd-notes .upd,
+.bd .bd-kv b,
+.bd .bd-kv .t,
+.bd .bd-bars .v,
+.bd .bd-bars .d,
+.bd .bd-ind .now b,
+.bd .bd-steers .t,
+.bd .bd-steers .c,
+.bd .bd-weeks .tally b,
+.bd .bd-badge { font-family: var(--num); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.bd .bd-table .id, .bd .bd-needs .kind, .bd .bd-thread .sha, .bd .bd-crumb .m { font-family: var(--mono); }
+.bd .bd-table .upd, .bd .bd-needs .since, .bd .bd-notes .upd { font-size: 12.5px; }
+
+/* the menu */
+.bd .bd-nav a, .bd .bd-nav span.soon { height: 30px; border-radius: var(--r); padding: 0 9px; }
+.bd .bd-nav a[aria-current='page'] { background: var(--cur); color: var(--cur-ink); font-weight: 600; }
+.bd .bd-pulse, .bd .bd-out a { border-radius: var(--r); }
+
+/* controls */
+.bd .bd-btn,
+.bd .bd-chip,
+.bd .bd-filter input[type='search'],
+.bd .bd-filter select,
+.bd .bd-select,
+.bd .bd-fields select,
+.bd .bd-fields input,
+.bd .bd-form select,
+.bd .bd-form input[type='text'],
+.bd .bd-proof,
+.bd .bd-proof input,
+.bd .bd-desc textarea,
+.bd .bd-comment textarea,
+.bd .bd-form textarea { border-radius: var(--r); }
+.bd .bd-btn.primary { background: var(--btn); border-color: var(--btn); color: var(--btn-ink) !important; }
+.bd .bd-btn.primary:hover { background: var(--btn-hover); }
+.bd .bd-tabs a { height: 32px; }
+.bd .bd-tabs a[aria-current='page'] { border-bottom-color: var(--ink); }
+
+/* signals */
+.bd .bd-dot { width: 8px; height: 8px; }
+.bd .bd-dot.in_progress { background: var(--now); box-shadow: 0 0 0 3px var(--now-soft); }
+.bd .bd-dot.alarm, .bd .bd-dot.waiting { background: var(--need); }
+.bd .bd-pri.p0 { color: var(--red); }
+.bd .bd-rows > li > a { min-height: 32px; }
+
+/* Home: the five counts are the loud thing */
+.bd .bd-now { border-radius: 8px; overflow: hidden; background: var(--card); }
+.bd .bd-now a { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 1px; padding: 9px 14px 10px; color: var(--ink-2); font-size: 13px; position: relative; }
+.bd .bd-now a b { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 28px; font-weight: 650; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
+.bd .bd-now a::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: transparent; }
+.bd .bd-now a:first-child::before { background: var(--now); }
+.bd .bd-now a.hot::before { background: var(--need); }
+.bd .bd-now a.hot b { color: var(--red); }
+.bd .bd-lead { margin-top: 11px; color: var(--ink-2); }
+.bd .bd-learn-fig b { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.2; }
+.bd .bd-learn-fig .bar, .bd .bd-week-line .bar { height: 5px; border-radius: 3px; background: var(--line); }
+.bd .bd-week-line .bar i { background: var(--now); border-radius: 3px; }
+.bd .bd-learn-fig .bar i { background: var(--ink); border-radius: 3px; }
+.bd .bd-health dd { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+.bd .bd-health dd.state { font-size: 14px; }
+
+/* Learning: the measures follow the figures */
+.bd .bd-ind .now b { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; }
+.bd .bd-kv b { font-size: 15px; font-weight: 650; }
+.bd .bd-kv .t, .bd .bd-steers .t, .bd .bd-steers .c { font-size: 12.5px; }
+.bd .bd-bars li.last .stack i:not(.rep) { background: var(--ink); }
+
+/* Plan: done days in ink, today ringed in the "now" color */
+.bd .bd-road .cell { border-radius: 3px; }
+.bd .bd-road .cell i { background: var(--ink); opacity: 0.9; }
+.bd .bd-road li.today .cell { box-shadow: 0 0 0 2px var(--now); }
+
+.bd .bd-side { --hover: #e3ddd3; --line: #d9d1c4; --ink-3: #69635a; }
+.bd .bd-filter input[type='search'], .bd .bd-filter select, .bd .bd-fields select, .bd .bd-fields input, .bd textarea, .bd .bd-form input[type='text'], .bd .bd-form select, .bd .bd-btn:not(.primary) { background: var(--card); }
+
 /* ---------------------------------------------------------------- the phone */
 @media (max-width: 860px) {
   .bd-app { display: block; background: var(--bg); }
@@ -345,9 +498,6 @@ input.bd-title-edit { border-color: var(--acc); }
   .bd-now a:nth-child(even) { border-left: 1px solid var(--line); }
   .bd-home-grid { grid-template-columns: minmax(0, 1fr); }
   .bd-week-line .bar { display: none; }
-  .bd-figs { grid-template-columns: 1fr 1fr; }
-  .bd-figs a, .bd-figs a + a { padding: 8px 10px 8px 0; border-left: 0; }
-  .bd-figs a:nth-child(even) { padding-left: 10px; border-left: 1px solid var(--line); }
   .bd-road { gap: 1px; }
   .bd-health { grid-template-columns: 92px minmax(0, 1fr); }
   .bd-table > li > a, .bd-table > li.head { grid-template-columns: 54px 22px minmax(0, 1fr) 112px; gap: 7px; }
@@ -364,6 +514,12 @@ input.bd-title-edit { border-color: var(--acc); }
   .bd-notes > li > a { grid-template-columns: minmax(0, 1fr) 84px; row-gap: 0; }
   .bd-notes .what { grid-column: 1 / -1; grid-row: 2; white-space: normal; }
   .bd-ind { grid-template-columns: 1fr; }
+  .bd-learn.three { grid-template-columns: 1fr; }
+  .bd-learn.three .bd-learn-fig + .bd-learn-fig { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .bd-sweep-cols { grid-template-columns: minmax(0, 1fr); gap: 14px 0; }
+  .bd-sweeps > li.fold summary { grid-template-columns: 84px minmax(0, 1fr); }
+  .bd-sweeps > li.fold summary .m { display: none; }
+  .bd-sweeps .day { width: 84px; }
   .bd-kv > li { grid-template-columns: 1fr; gap: 2px; }
   .bd-kv .t { text-align: left; }
   .bd-steers > li { grid-template-columns: 64px minmax(0, 1fr); }

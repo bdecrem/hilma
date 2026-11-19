@@ -8,7 +8,7 @@ import '../company.css'
 
 // app.kochitolabs.com: the board for Bart. Round three (2026-11-18, OLA-162): a working tool of five
 // pages, one menu item each. This file is Home; the others are issues/ (the Issue Tracker, with
-// issues/[id] and issues/new), plan/, notes/ (with notes/[slug] and overview/), numbers/. Each page
+// issues/[id] and issues/new), plan/, notes/ (with notes/[slug] and overview/), learning/. Each page
 // loads its data and hands it to a view in views/; the frame and menu are Shell.tsx; the styles and
 // the design rules are board.css. Made-up data for every page, without signing in, on a dev
 // server: /kochito/kit/mock (mock/[[...path]]). What it reads: src/lib/venture/board.ts; what it

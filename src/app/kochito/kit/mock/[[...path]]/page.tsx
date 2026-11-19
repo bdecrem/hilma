@@ -6,14 +6,14 @@ import Home from '../../views/Home'
 import IssueView from '../../views/IssueView'
 import NewIssue from '../../views/NewIssue'
 import { NoteView, NotesIndex, OverviewNote } from '../../views/Notes'
-import Numbers from '../../views/Numbers'
+import Learning from '../../views/Learning'
 import Plan from '../../views/Plan'
 import Tracker, { type TrackerParams } from '../../views/Tracker'
 import '../../../company.css'
 
 // Every board page with made-up data, without signing in, for design work on a dev server only:
 // /kochito/kit/mock (Home), /mock/issues (?tab=done…), /mock/issues/OLA-210, /mock/issues/new,
-// /mock/plan, /mock/notes, /mock/notes/plan, /mock/overview, /mock/numbers. Every link inside stays
+// /mock/plan, /mock/notes, /mock/notes/plan, /mock/overview, /mock/learning. Every link inside stays
 // in the mock. Writes on the issue page change only the page in the browser. Not served in
 // production. Data: ../../fixture.ts.
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,7 @@ export default async function Mock({ params, searchParams }: { params: Promise<{
     current = 'issues'
     body = <IssueView issue={i} activity={i.num === 210 ? fixtureActivity(i.id) : []} base={BASE} now={d.now} user="bart" mock />
   } else if (a === 'plan') ((current = 'plan'), (body = <Plan d={d} base={BASE} />))
-  else if (a === 'numbers') ((current = 'numbers'), (body = <Numbers d={d} base={BASE} />))
+  else if (a === 'learning') ((current = 'learning'), (body = <Learning d={d} base={BASE} />))
   else if (a === 'notes' && !b) ((current = 'notes'), (body = <NotesIndex notes={d.notes} o={fixtureOverview()} base={BASE} now={d.now} />))
   else if (a === 'notes') {
     const n = d.notes.find((x) => x.slug === b)

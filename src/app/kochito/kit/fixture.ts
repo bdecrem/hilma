@@ -96,6 +96,42 @@ export function fixture(): BoardData {
       ola: { percent: 79, label: "of Claude's score on our test tasks (73% against 92%, a made-up model, Nov 17)", model: 'a made-up model', own: { passed: 35, runs: 48, rate: 73 }, claude: { passed: 44, runs: 48, rate: 92 }, measured: '2026-11-17', rounds: [{ date: '2026-11-16', model: 'a made-up model', rate: 61, share: 66 }, { date: '2026-11-17', model: 'a made-up model', rate: 73, share: 79 }], open: ['Scanned pages still fail half the time.', 'Charts from spreadsheets need the new skill.'], goal: 100 },
       doc: 'how-we-learn',
     },
+    sweeps: {
+      at: T('2026-11-17', 21, 10),
+      since: '2026-11-15',
+      days: [
+        {
+          day: '2026-11-17',
+          at: T('2026-11-17', 21, 10),
+          by: 'Kit',
+          summary: 'A made-up day: two corrections were about the same thing, a file sent before it was checked, so the check now runs by itself. Ola lost three requests to Claude on charts.',
+          read: [
+            { n: '63', what: 'messages from you' },
+            { n: '5', what: 'corrections, 2 repeats' },
+            { n: '14', what: 'issues done, 6 opened' },
+            { n: '41', what: 'commits' },
+            { n: '3', what: 'requests handed to Claude' },
+          ],
+          kit: [
+            { saw: 'You corrected a file sent unchecked twice in one day (made up).', changed: 'A file cannot be sent to you until its check has passed in the same turn.', where: 'a hook before every send', enforced: true },
+            { saw: 'A note you made in passing on a call was not ticketed (made up).', changed: 'Every aside in a call becomes a ticket before the call notes are filed.', where: 'rule 48' },
+          ],
+          ola: [{ saw: 'Three chart requests were handed to Claude after Ola tried (made up).', changed: 'The chart skill now checks its axes against the data before it answers; each of the three requests is a test.', where: 'the chart skill and three new tests', enforced: true, issue: 'OLA-212' }],
+          open: [{ text: 'Design work still loses to Claude; a better skill is being tried (made up).', issue: 'OLA-212' }],
+        },
+        { day: '2026-11-16', at: T('2026-11-16', 21, 30), by: 'Kit', summary: 'A made-up quiet day: nothing to learn from.', quiet: true, read: [], kit: [], ola: [], open: [] },
+        {
+          day: '2026-11-15',
+          at: T('2026-11-15', 22, 5),
+          by: 'Kit',
+          summary: 'A made-up first sweep: one rule sharpened after a repeat about texts.',
+          read: [{ n: '40', what: 'messages from you' }],
+          kit: [{ saw: 'A text about housekeeping reached your phone (made up).', changed: 'Texts are only for things you must act on.', where: 'rule 12' }],
+          ola: [],
+          open: [],
+        },
+      ],
+    },
     plan: {
       slug: 'plan',
       title: '30 days',

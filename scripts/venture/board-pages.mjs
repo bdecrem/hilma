@@ -15,14 +15,12 @@ const real = process.argv.includes('--real')
 const base = baseIn ?? 'http://localhost:3377/kochito/kit/mock'
 if (!out) (console.error('usage: board-pages.mjs <out-dir> [base] [--real]'), process.exit(1))
 mkdirSync(out, { recursive: true })
-const pages = (process.env.BOARD_PAGES ?? 'home=/,issues=/issues,done=/issues?tab=done,issue=/issues/OLA-210,new=/issues/new,plan=/plan,notes=/notes,note=/notes/plan,overview=/overview,numbers=/numbers')
+const pages = (process.env.BOARD_PAGES ?? 'home=/,issues=/issues,done=/issues?tab=done,issue=/issues/OLA-210,new=/issues/new,plan=/plan,notes=/notes,note=/notes/plan,overview=/overview,learning=/learning')
   .split(',')
   .map((x) => [x.slice(0, x.indexOf('=')), x.slice(x.indexOf('=') + 1)])
 const b = await chromium.launch()
 for (const [tag, w, h] of [['1440', 1440, 900], ['390', 390, 844]]) {
   const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
-  // BOARD_LOOK=lamp|desk: the look of looks.css (the cookie the menu's Look switch writes)
-  if (process.env.BOARD_LOOK) await ctx.addCookies([{ name: 'bd_look', value: process.env.BOARD_LOOK, url: new URL(base).origin }])
   const p = await ctx.newPage()
   if (real) {
     await p.goto(`${base}/`, { waitUntil: 'networkidle' })

@@ -235,7 +235,7 @@ const nextConfig: NextConfig = {
         { source: '/overview', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/overview' },
         { source: '/notes', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/notes' },
         { source: '/plan', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/plan' },
-        { source: '/numbers', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/numbers' },
+        { source: '/learning', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/learning' },
         // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
         {
           source: '/',
@@ -472,6 +472,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // the board's Numbers page became Learning (2026-11-18); old links and bookmarks follow
+      { source: '/numbers', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/learning', permanent: false },
+      { source: '/kochito/kit/numbers', destination: '/kochito/kit/learning', permanent: false },
       // www.decremental.com/anything → decremental.com/anything (except root which rewrites above)
       {
         source: '/:path+',

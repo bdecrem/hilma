@@ -184,22 +184,45 @@ each, the page heading the same words as the item, nothing listed twice:
 
 | Page | Address on app.kochitolabs.com | Page file | View |
 | --- | --- | --- | --- |
-| Home | `/` | `src/app/kochito/kit/page.tsx` | `views/Home.tsx` (Needs you, Now, Health, Agent learning, this week, Numbers; fits 1440 x 900) |
+| Home | `/` | `src/app/kochito/kit/page.tsx` | `views/Home.tsx` (Needs you, Now, Health, this week, Learning; fits 1440 x 900) |
 | Issue Tracker | `/issues`, `/issues/OLA-150` (or `/issues/150`), `/issues/new` | `issues/page.tsx`, `issues/[id]/`, `issues/new/` | `views/Tracker.tsx`, `IssueView.tsx`, `NewIssue.tsx` |
 | Plan | `/plan` | `plan/page.tsx` | `views/Plan.tsx` |
 | Notes | `/notes`, `/notes/<slug>`, `/overview` (Ola in one page) | `notes/`, `overview/` | `views/Notes.tsx` |
-| Numbers | `/numbers` | `numbers/page.tsx` | `views/Numbers.tsx` |
+| Learning | `/learning` (`/numbers` redirects) | `learning/page.tsx` | `views/Learning.tsx` |
 
 The frame and the menu (with Talk to Kit and Quick links under a rule, and
 the machine's reading in compact form at the top) are `Shell.tsx`; the links
 out are `links.ts` (the Mac app's address is read from
 `https://ola.cx/ola-site/mac/latest.json`); the status panel is `health.tsx`;
-Agent learning is `views/Learning.tsx` (venture_state `learning`, written by
-`scripts/venture/learning.mjs`). **Styles: `src/app/kochito/kit/board.css`**,
-the design rules at its top (Public Sans and JetBrains Mono only, 14 px body,
-20 px maximum, 30 px rows, one green accent, color only for state); the public
+Learning is `views/Learning.tsx` (see "Learning and the daily sweep" below).
+**Styles: `src/app/kochito/kit/board.css`**, the design rules at its top. The
+look is Lamp, which Bart picked on Nov 18 from two tried on the real board
+(OLA-170): Ola's "paper under the lamp" colors, Instrument Sans for everything a
+person reads, JetBrains Mono only for identifiers, lamp yellow for work in
+progress and vermilion for what waits on him, used for nothing else. The public
 company pages' CSS is not used by the board. `next.config.ts` rewrites
-`/issues`, `/notes`, `/plan`, `/numbers`, `/overview` on that host.
+`/issues`, `/notes`, `/plan`, `/learning`, `/overview` on that host.
+
+**Learning and the daily sweep** (2026-11-18, OLA-171; it replaced the Numbers
+page). Bart: "a new daily 'agentic sweep' where the agent (you) take a look at
+all the things that happened that day and, from that, improves its memory and
+other systems". The page shows three headline figures (Kit: the share of his
+corrections that were new, not repeats; Ola: its own model's score as a share of
+Claude's; the sweep: how many changes it has made and how many the system now
+enforces), then one dated update per day, then the measures with their history.
+The two percentages are venture_state `learning` (`scripts/venture/learning.mjs`,
+run by every `sync.mjs push`). The updates are venture_state `sweeps`, written by
+`node scripts/venture/sweep.mjs post <entry.json>`; **the procedure an agent
+follows is `apps/venture/SWEEP.md`** (`sweep.mjs gather` prints everything that
+happened that day; `sweep.mjs due` names the days owed). A terminal session is
+told by the prompt hook when a day is owed; the runner on the mini does it after
+9 pm when no session did. A day with no entry shows on the page in amber.
+
+**Bart's writes on the tracker reach an agent** (OLA-172): a ticket he creates,
+reopens or comments on is listed by `issues.mjs inbox` until it is marked read.
+Every session runs `issues.mjs --wait` beside the other watchers and sees unread
+items in front of every prompt (the hook); the runner wakes on them when no
+session is open (`runner.mjs`, `runner/PROMPT.md`, "Bart wrote on the tracker").
 
 **Look at it without signing in**: `pnpm dev -p 3377`, then
 `http://localhost:3377/kochito/kit/mock` and the same paths under it

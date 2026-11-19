@@ -88,6 +88,7 @@ export type BoardData = {
   plan: { slug: string; title: string; start: string; end: string; weeks: PlanWeek[] } | null
   notes: NoteLink[]
   learning: Learning | null // venture_state "learning", written by scripts/venture/learning.mjs
+  sweeps: Sweeps | null // venture_state "sweeps", written by scripts/venture/sweep.mjs post
 }
 /** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
  *  the share of Bart's corrections that were new, not repeats; Ola, its own model's score on the
@@ -98,6 +99,27 @@ export type Learning = {
   ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number }
   doc: string
 }
+
+/** The daily sweep (Bart, Nov 18: "a new daily 'agentic sweep' where the agent (you) take a look at
+ *  all the things that happened that day and, from that, improves its memory and other systems for
+ *  both (a) the management of the project ("kit") and (b) orchestration, skills and how the ola
+ *  agents work ... a page with updates on it on most date ... with one or more headline numbers").
+ *  One entry per day, newest first; the procedure is apps/venture/SWEEP.md. A change names what was
+ *  seen, what was changed and where; "enforced" means the system now does it (a hook, a check, a
+ *  test, code), as opposed to a note Kit has to remember. */
+export type SweepChange = { saw: string; changed: string; where: string; enforced?: boolean; issue?: string }
+export type Sweep = {
+  day: string // Pacific
+  at: string
+  by: string
+  summary: string
+  quiet?: boolean // nothing happened that day
+  read: { n: string; what: string }[] // what the sweep looked at
+  kit: SweepChange[]
+  ola: SweepChange[]
+  open: { text: string; issue?: string }[] // found, not fixed that day
+}
+export type Sweeps = { at: string; since: string; days: Sweep[] }
 
 export const PLAN_SLUG = 'ola-30-day-plan-2026-11-16'
 export const pacificDay = (t: number | string | Date = Date.now()) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
@@ -188,7 +210,7 @@ export async function loadBoard(): Promise<BoardData> {
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
   ])
@@ -219,6 +241,7 @@ export async function loadBoard(): Promise<BoardData> {
     plan: planRow ? parsePlan(PLAN_SLUG, planRow.title, planRow.body, planRow.updated_at) : null,
     notes: await loadNotes(journalRow?.body ?? ''),
     learning: (st('learning')?.value ?? null) as Learning | null,
+    sweeps: (st('sweeps')?.value ?? null) as Sweeps | null,
   }
 }
 

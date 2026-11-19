@@ -4,7 +4,7 @@
 // address sends you to the new one. Signed in, the board of 2026-11-18: five
 // pages with one menu item each, Home's sections (one health reading, younger
 // than 30 minutes, that does not contradict itself; Agent learning), the Issue
-// Tracker's tabs, search and an issue's page, Plan, Notes, Numbers. It reads
+// Tracker's tabs, search and an issue's page, Plan, Notes, Learning. It reads
 // only: the tracker's writes are scripts/venture/tracker-check.mjs. Takes pictures of the door and
 // the page at desktop and phone width.
 // Usage: node scripts/venture/app-check.mjs <out-dir> [url]
@@ -45,8 +45,6 @@ const problems = []
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) problems.push(what) }
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2, userAgent: 'kochito app-check headless check' })
-// BOARD_LOOK=lamp|desk walks the board in that look of looks.css (the cookie the menu's Look switch writes)
-if (process.env.BOARD_LOOK) await ctx.addCookies([{ name: 'bd_look', value: process.env.BOARD_LOOK, url: new URL(url).origin }])
 const p = await ctx.newPage()
 p.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
 const shut = async (pg) => (await pg.locator('input[name=passcode]').count()) === 1 && (await pg.locator('.bd-nav').count()) === 0
@@ -90,10 +88,10 @@ if (live || env.VENTURE_KEY) check((await p.locator('a[href*="/venture/memo?k="]
 const at = (path) => url.replace(/\/$/, '') + path
 const side = p.locator('.bd-side')
 const menu = await side.locator('.bd-nav a').allTextContents()
-check(menu.length === 5 && ['Home', 'Issue Tracker', 'Plan', 'Notes', 'Numbers'].every((w, n) => menu[n].startsWith(w)), `the menu lists the five pages: ${menu.map((x) => x.replace(/\d+$/, '').trim()).join(', ')}`)
+check(menu.length === 5 && ['Home', 'Issue Tracker', 'Plan', 'Notes', 'Learning'].every((w, n) => menu[n].startsWith(w)), `the menu lists the five pages: ${menu.map((x) => x.replace(/\d+$/, '').trim()).join(', ')}`)
 check((await side.locator('.bd-nav a[aria-current=page]').count()) === 1, 'the current page is marked in the menu')
-// Home: needs you, now, health, the week, agent learning, numbers; no issue list but Needs you
-for (const id of ['needs-h', 'now-h', 'health-h', 'week-h', 'learn-h', 'numbers-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
+// Home: needs you, now, health, the week, learning; no issue list but Needs you
+for (const id of ['needs-h', 'now-h', 'health-h', 'week-h', 'learn-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
 check((await p.locator('.bd-table').count()) === 0, 'Home lists no issues outside Needs you')
 check((await p.locator('.bd-now a').count()) === 5, 'Now shows five counts that link into the tracker')
 const health = p.locator('dl.bd-health')
@@ -102,7 +100,8 @@ check((await health.locator('dd.read.stale').count()) === 0, 'the reading is you
 const reading = ((await health.textContent()) ?? '').toLowerCase()
 check(!(reading.includes('almost full') && /\b[2-9]\d gb free/.test(reading)), 'the health block does not call a disk with room almost full')
 const figs = await p.locator('.bd-learn .bd-learn-fig').count()
-check(figs === 2 && /\d+%/.test((await p.locator('.bd-learn').textContent()) ?? ''), 'Agent learning shows two figures, Kit and Ola')
+check(figs === 2 && /\d+%/.test((await p.locator('.bd-learn').textContent()) ?? ''), 'Learning shows two figures, Kit and Ola')
+check((await p.locator('h2#learn-h a').getAttribute('href'))?.endsWith('/learning'), 'Home links to the Learning page')
 const fold = await p.evaluate(() => document.documentElement.scrollHeight)
 if (!live) console.log(`     Home is ${fold}px tall at 1280 x 800`)
 await p.evaluate(() => window.scrollTo(0, 0))
@@ -124,12 +123,23 @@ await p.waitForLoadState('networkidle')
 check(/\/issues\/OLA-\d+$/.test(p.url()) && (await p.locator('.bd-thread > li').count()) > 0, `a row opens the issue with its activity (${new URL(p.url()).pathname})`)
 check((await p.locator('dl.bd-fields select').count()) >= 3 && (await p.locator('textarea').count()) >= 1, 'the issue has its field menus and a comment box (nothing is written by this check)')
 await shoot(p, 'issue')
-// Plan, Notes, Numbers: the heading is the menu item's words
-for (const [path, name] of [['/plan', 'Plan'], ['/notes', 'Notes'], ['/numbers', 'Numbers']]) {
+// Plan, Notes, Learning: the heading is the menu item's words
+for (const [path, name] of [['/plan', 'Plan'], ['/notes', 'Notes'], ['/learning', 'Learning']]) {
   await p.goto(at(path), { waitUntil: 'networkidle' })
   check((await p.getByRole('heading', { name, level: 1, exact: true }).count()) === 1 && (await side.locator('.bd-nav a[aria-current=page]').textContent())?.startsWith(name), `${name} is its own page`)
   await shoot(p, name.toLowerCase())
 }
+// Learning: the headline figures, the daily sweep as dated updates, and the old address
+await p.goto(at('/learning'), { waitUntil: 'networkidle' })
+check((await p.locator('.bd-learn.three .bd-learn-fig').count()) === 3, 'Learning shows three headline figures: Kit, Ola and the daily sweep')
+const swept = await p.locator('.bd-sweeps > li:not(.line)').count()
+const owed = await p.locator('.bd-sweeps > li.line.bd-amber').count()
+check(swept >= 1, `the daily sweep has ${swept} dated ${swept === 1 ? 'update' : 'updates'}`)
+check(owed === 0, owed ? `${owed} ${owed === 1 ? 'day is' : 'days are'} not swept` : 'no day is waiting for its sweep')
+check((await p.locator('.bd-sweeps > li:not(.line) .bd-changes > li').count()) >= 1, 'the newest update names what it changed')
+for (const id of ['sweep-h', 'ind-h', 'other-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Learning has its section ${id.replace('-h', '')}`)
+await p.goto(at('/numbers'), { waitUntil: 'networkidle' })
+check(new URL(p.url()).pathname.endsWith('/learning'), 'the old Numbers address opens Learning')
 await p.goto(at('/notes'), { waitUntil: 'networkidle' })
 const notes = p.locator('.bd-notes > li > a')
 check((await notes.count()) >= 3, `Notes lists ${await notes.count()} documents`)

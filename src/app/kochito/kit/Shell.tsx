@@ -2,25 +2,21 @@ import type { Frame } from '@/lib/venture/board'
 import { quick, talk, type SideLink } from './links'
 import { reading } from './health'
 import './board.css'
-import './looks.css'
-import { cookies } from 'next/headers'
-import LookSwitch from './LookSwitch'
-import { LOOKS, type Look } from './looks'
 
 // The frame of every board page (round three, 2026-11-18, OLA-162): the menu on the left (208px; a
 // Menu button on a phone) and the page on the right. The menu lists five pages, one item each,
-// and the page's heading is the item's words: Home, Issue Tracker, Plan, Notes, Numbers. Under a
+// and the page's heading is the item's words: Home, Issue Tracker, Plan, Notes, Learning. Under a
 // rule, two groups that leave the board (Talk to Kit, Quick links), smaller, with an arrow. The
 // machine's reading in its compact form sits at the top of the menu on every page; the full block
 // is on Home (Health.tsx). Styles: board.css (the design rules are at its top).
 
-export type Page = 'home' | 'issues' | 'plan' | 'notes' | 'numbers'
+export type Page = 'home' | 'issues' | 'plan' | 'notes' | 'learning'
 export const PAGES: [Page, string, string][] = [
   ['home', 'Home', '/'],
   ['issues', 'Issue Tracker', '/issues'],
   ['plan', 'Plan', '/plan'],
   ['notes', 'Notes', '/notes'],
-  ['numbers', 'Numbers', '/numbers'],
+  ['learning', 'Learning', '/learning'],
 ]
 export const href = (base: string, path: string) => (base ? `${base}${path === '/' ? '' : path}` : path)
 
@@ -65,7 +61,7 @@ function Out({ title, links }: { title: string; links: SideLink[] }) {
   )
 }
 
-function Menu({ base, q, f, current, user, look }: { base: string; q: string; f: Frame; current: Page; user: string; look: Look }) {
+function Menu({ base, q, f, current, user }: { base: string; q: string; f: Frame; current: Page; user: string }) {
   return (
     <>
       <nav className="bd-nav" aria-label="Pages">
@@ -84,7 +80,6 @@ function Menu({ base, q, f, current, user, look }: { base: string; q: string; f:
         <Out title="Talk to Kit" links={talk(q)} />
         <Out title="Quick links" links={quick(f.mac)} />
       </div>
-      <LookSwitch look={look} />
       <form method="post" action="/api/kochito/app/logout" className="bd-who">
         <span>Signed in as {user}.</span> <button>Sign out</button>
       </form>
@@ -92,13 +87,9 @@ function Menu({ base, q, f, current, user, look }: { base: string; q: string; f:
   )
 }
 
-// The look (OLA-170): the cookie bd_look, set by the Look switch in the menu. "plain" or no cookie
-// is board.css as it stands; "lamp" and "desk" are looks.css.
-export default async function Shell({ base, q, user, f, current, children }: { base: string; q: string; user: string; f: Frame; current: Page; children: React.ReactNode }) {
-  const said = (await cookies()).get('bd_look')?.value as Look | undefined
-  const look: Look = said && LOOKS.includes(said) ? said : 'plain'
+export default function Shell({ base, q, user, f, current, children }: { base: string; q: string; user: string; f: Frame; current: Page; children: React.ReactNode }) {
   return (
-    <div className="bd" data-look={look === 'plain' ? undefined : look}>
+    <div className="bd">
       <div className="bd-app">
         <aside className="bd-side">
           <a className="bd-brand" href={href(base, '/')}>
@@ -106,14 +97,14 @@ export default async function Shell({ base, q, user, f, current, children }: { b
             <b>Ola</b> <span>Kochito Labs</span>
           </a>
           <Pulse f={f} base={base} />
-          <Menu base={base} q={q} f={f} current={current} user={user} look={look} />
+          <Menu base={base} q={q} f={f} current={current} user={user} />
         </aside>
         <header className="bd-top">
           <Pulse f={f} base={base} />
           <details>
             <summary>Menu</summary>
             <div className="panel">
-              <Menu base={base} q={q} f={f} current={current} user={user} look={look} />
+              <Menu base={base} q={q} f={f} current={current} user={user} />
             </div>
           </details>
         </header>

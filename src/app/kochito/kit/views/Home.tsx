@@ -3,11 +3,12 @@ import { href } from '../Shell'
 import { Health } from '../health'
 import { inline } from '../inline'
 import { ago, clock, dayShort, pday, shiftDay, since } from '../time'
-import { LearningFigures } from './Learning'
+import { LearningFigures, sweepStats } from './Learning'
 
 // Home (app.kochitolabs.com/): what needs Bart and the state of things, on one screen at 1440 x 900.
 // Top to bottom: Needs you; Now (counts that open the tracker filtered, and Kit's latest "Now");
-// Health (the one reading) beside Agent learning; This week in the plan; Numbers. No issue list
+// Health (the one reading) and This week in the plan beside Learning (the two headline figures
+// and the latest daily sweep in a line; the rest is on the Learning page). No issue list
 // other than Needs you: every issue is listed in the Issue Tracker only.
 
 const plain = (s: string) => s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -40,17 +41,8 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
   const tagged = week ? issues.filter((i) => i.week === week.n) : []
   const taggedDone = tagged.filter((i) => i.status === 'done').length
 
-  // the figures: steers, checks, then the journal's other numbers
-  const latest = d.independence.days[d.independence.days.length - 1]
-  const figs: { b: string; t: string }[] = []
-  if (latest) figs.push({ b: String(latest.rate ?? '–'), t: `steers per 100 of your messages, ${latest.day === today ? 'today' : dayShort(latest.day)}` })
-  if (d.status?.checks) figs.push({ b: `${d.status.checks.passed} of ${d.status.checks.total}`, t: 'checks passed at the last update' })
-  for (const n of d.journal.numbers) {
-    if (figs.length >= 5) break
-    const m = n.match(/^\*\*([^*]+)\*\*\s*(.*)$/)
-    if (!m || !/\d/.test(m[1]) || m[1].length > 14 || /steer|checks passed|prevented/i.test(m[2])) continue
-    figs.push({ b: m[1], t: plain(m[2]).replace(/^[:;,]\s*/, '') })
-  }
+  // learning: the two headline figures and the latest sweep in a line
+  const sweep = sweepStats(d.sweeps, today)
 
   return (
     <>
@@ -164,28 +156,25 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
           </section>
         </div>
         <section className="bd-sec" aria-labelledby="learn-h">
-          <h2 id="learn-h">Agent learning</h2>
-          <LearningFigures l={d.learning} now={now} href={`${href(base, '/notes')}/${d.learning?.doc || 'how-we-learn'}`} />
+          <h2 id="learn-h">
+            Learning <a href={href(base, '/learning')}>All learning</a>
+          </h2>
+          <LearningFigures l={d.learning} now={now} />
+          {sweep.latest ? (
+            <a className={`bd-sweep-line${sweep.missed.length ? ' owed' : ''}`} href={`${href(base, '/learning')}#d-${sweep.latest.day}`} title={plain(sweep.latest.summary)}>
+              <span className="m">Sweep, {sweep.latest.day === today ? 'today' : dayShort(sweep.latest.day)}</span>
+              <span className="bd-cut">{plain(sweep.latest.summary)}</span>
+              <span className="m faint">
+                {sweep.latest.kit.length + sweep.latest.ola.length} {sweep.latest.kit.length + sweep.latest.ola.length === 1 ? 'change' : 'changes'}
+              </span>
+            </a>
+          ) : (
+            <p className="bd-learn-foot">
+              <span className="m">The daily sweep has not run yet.</span>
+            </p>
+          )}
         </section>
       </div>
-
-      <section className="bd-sec" aria-labelledby="numbers-h">
-        <h2 id="numbers-h">
-          Numbers <a href={href(base, '/numbers')}>All numbers</a>
-        </h2>
-        {figs.length ? (
-          <div className="bd-figs">
-            {figs.map((f, n) => (
-              <a key={n} href={href(base, '/numbers')}>
-                <b>{f.b}</b>
-                <span>{f.t}</span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p className="bd-empty">No numbers yet.</p>
-        )}
-      </section>
     </>
   )
 }
