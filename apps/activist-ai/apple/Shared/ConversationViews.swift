@@ -40,9 +40,13 @@ struct TurnView: View {
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
         if turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
           // One small, quiet pull-down (OLA-156), in the style of the one in the box.
-          QuietMenu(label: "Try again with", help: "Send this request again to another model") {
-            if let askHosted { Button("Hosted", action: askHosted) }
-            if let askClaude { Button("Claude", action: askClaude) }
+          // On the right, under the answer's last line (Bart, 2026-11-18: "move it to the RIGHT side").
+          HStack {
+            Spacer(minLength: 0)
+            QuietMenu(label: "Try again with", help: "Send this request again to another model") {
+              if let askHosted { Button("Hosted", action: askHosted) }
+              if let askClaude { Button("Claude", action: askClaude) }
+            }
           }
         }
       }
@@ -50,7 +54,7 @@ struct TurnView: View {
   }
 }
 
-/// The agent's reaction on Bart's message: a small chip at its trailing edge.
+/// The agent's reaction on Bart's message: a small chip at its leading edge.
 struct ReactionChip: View {
   var reaction: Reaction
   @Environment(\.accessibilityReduceMotion) private var reduce
@@ -99,7 +103,8 @@ struct RequestView: View {
     }
     .padding(.bottom, turn.reaction == nil ? Space.m : Space.m + 8)
     .overlay(alignment: .bottom) { Rectangle().fill(Ola.rule).frame(height: 1) }
-    .overlay(alignment: .bottomTrailing) {
+    // On the left, under "You" (Bart, 2026-11-18: "put reactions on the left").
+    .overlay(alignment: .bottomLeading) {
       if let r = turn.reaction { ReactionChip(reaction: r).offset(y: 11) }
     }
   }

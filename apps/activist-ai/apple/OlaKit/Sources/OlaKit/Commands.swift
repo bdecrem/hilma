@@ -52,7 +52,7 @@ public enum Reaction: String, CaseIterable, Codable, Sendable {
     case .eyes: "\u{1F440}"
     case .thanks: "\u{1F64F}"
     case .ok: "\u{1F44D}"
-    case .done: "\u{2705}"
+    case .done: "\u{1F44D}"   // a thumbs up, not the green checkmark (Bart, 2026-11-18: "ugly and confusing")
     case .party: "\u{1F389}"
     case .think: "\u{1F914}"
     case .oops: "\u{1F605}"

@@ -2703,7 +2703,7 @@ code {
 .reaction {
   position: absolute;
   z-index: 1;
-  right: 0;
+  left: 0; /* on the left (Bart, 2026-11-18) */
   bottom: -14px;
   display: inline-grid;
   place-items: center;

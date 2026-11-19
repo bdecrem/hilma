@@ -45,7 +45,7 @@ export const REACTIONS: Record<ReactionName, { emoji: string; meaning: string }>
   eyes: { emoji: '\u{1F440}', meaning: 'on it' },
   thanks: { emoji: '\u{1F64F}', meaning: 'thanks' },
   ok: { emoji: '\u{1F44D}', meaning: 'noted' },
-  done: { emoji: '\u{2705}', meaning: 'done' },
+  done: { emoji: '\u{1F44D}', meaning: 'done' }, // a thumbs up, not the green checkmark (Bart, 2026-11-18)
   party: { emoji: '\u{1F389}', meaning: 'a win' },
   think: { emoji: '\u{1F914}', meaning: 'a question first' },
   oops: { emoji: '\u{1F605}', meaning: 'my mistake' },
