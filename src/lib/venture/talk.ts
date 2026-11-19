@@ -12,8 +12,8 @@ import { notesText, pickNotes, type Doc } from './notes'
 //
 // Who writes the reply (2026-11-19, OLA-187): not this server on the API key. Bart: "text replies
 // too, yes, whatever we CAN switch". Each reply is written on the Mac mini on the Claude login,
-// the Max plan (scripts/venture/voice-server.ts, launchd sh.venture.voice, reached through the
-// tunnel in VENTURE_VOICE_URL with VENTURE_VOICE_SECRET); this server runs the call and streams the
+// the Max plan (scripts/venture/voice-server.ts, launchd sh.venture.voice, reached at the mini's
+// Tailscale Funnel address in VENTURE_VOICE_URL with VENTURE_VOICE_SECRET); this server runs the call and streams the
 // words on. The mini puts the system text together itself (talkSystem below), so only the lead
 // and the turns travel.
 

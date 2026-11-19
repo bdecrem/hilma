@@ -2,9 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- On the Mac mini, always running: writes Kit's voice replies on the Claude login saved for the
      runner (CLAUDE_CODE_OAUTH_TOKEN in ~/.venture-runner.env), never the API key
-     (scripts/venture/voice-server.ts, OLA-187). Listens on 127.0.0.1:3931; Vercel reaches it
-     through the tunnel in sh.tunn3l.kit-voice.plist with VENTURE_VOICE_SECRET (same file).
-     Install both: cp to ~/Library/LaunchAgents/ and launchctl bootstrap gui/501 <plist>. -->
+     (scripts/venture/voice-server.ts, OLA-187). Listens on 127.0.0.1:3931; Vercel reaches it at
+     https://admins-mac-mini.tailde799a.ts.net:10000 (Tailscale Funnel, which passes a reply on as
+     it is written; our own tunnel service holds a reply until it is complete) with
+     VENTURE_VOICE_SECRET (same file). Set up once on the mini:
+       tailscale funnel --bg --https=10000 http://127.0.0.1:3931
+     Install: cp to ~/Library/LaunchAgents/ and launchctl bootstrap gui/501 <plist>. -->
 <plist version="1.0"><dict>
   <key>Label</key><string>sh.venture.voice</string>
   <key>ProgramArguments</key><array>

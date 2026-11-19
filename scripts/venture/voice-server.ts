@@ -6,7 +6,7 @@
 // asks this small server what Kit says and streams the words on (src/lib/venture/talk.ts).
 //
 //   tsx scripts/venture/voice-server.ts            the job (launchd sh.venture.voice, kept alive), 127.0.0.1:3931,
-//                                                  reached from Vercel through the tunnel kit-voice-mini.tunn3l.sh
+//                                                  reached from Vercel at the mini's Tailscale Funnel address (port 10000)
 //
 //   POST /reply  { lead, messages }   → Kit's reply as plain text, streamed as it is written
 //   POST /warm   { lead }             → puts the notes in the prompt cache while a call connects
