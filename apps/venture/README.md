@@ -412,8 +412,9 @@ Kit tab signs in with the page's accounts (`/api/kochito/app-token`) and calls
   path, so its turns reach `/api/f2/eleven/turn` like Dodo's; ids that start
   with `kit-` are handed to `kitTurn()` before anything of Dodo's runs. No
   bridge deploy or Railway variable. Claude answers with the talk page's
-  persona and notes (`talkSystem`), the greeting is fixed so it is instant,
-  and the system prompt is cached while the call connects. Turns are stored as
+  persona and notes (`talkSystem`, on the Mac mini, see "Who writes Kit's words
+  on a call" below), the greeting is fixed so it is instant, and the notes are
+  cached while the call connects. Turns are stored as
   they happen under `call = 'phone'`: `node scripts/venture/transcript.mjs`
   shows them and the runner wakes on them like any call. A token is minted
   only by a start (a person pressing Talk to Kit), at most one every 15 s and
@@ -432,6 +433,21 @@ it" and recorded as decided.
 - **In the call** (the persona in `talk.ts`, shared by the talk page and the phone): voice is where
   he thinks out loud; Kit asks "Decided, or thinking out loud?" once when something sounds like a
   decision, never says "got it, I'll do that" to an idea, and recaps when he says goodbye.
+- **Who writes Kit's words on a call** (2026-11-19, OLA-187; Bart: "text replies too, yes,
+  whatever we CAN switch"): not the Vercel server on the API key. Every voice reply, on the talk
+  page and on the phone, is written on the Mac mini on the Claude login, the Max plan:
+  `scripts/venture/voice-server.ts` (launchd `sh.venture.voice`, 127.0.0.1:3931) puts the system
+  text together (`talkSystem`: lead, persona, notes, kept in memory between replies), runs one
+  headless Claude Code call with no tools and streams the words back. Vercel reaches it at
+  `VENTURE_VOICE_URL` (the mini's Tailscale Funnel address, port 10000, set up once with
+  `tailscale funnel --bg --https=10000 http://127.0.0.1:3931`; our own tunnel service holds a
+  reply until it is complete, so it is not used here) with `VENTURE_VOICE_SECRET` (on Vercel and
+  in the mini's `~/.venture-runner.env`). First words 1 to 3 seconds after the question. When
+  the caller stops reading a reply (he started talking), the mini stops writing it. If the mini
+  cannot be reached the call says so aloud (`BROKEN_LINE`) and the reason is in the transcript.
+  Check: `node scripts/venture/talk-check.mjs <dir> https://ola.cx`. Log on the mini:
+  `~/Library/Logs/venture-runner/voice.log`. **Nothing in this project calls the Anthropic API
+  any more**; `scripts/venture/_claude.mjs` is the one way a script asks Claude a question.
 - **Minutes** (`src/lib/venture/minutes.ts`, table `venture_minutes`, schema 010): one Claude call
   for every meeting that is over (an end marker, or quiet for five minutes), every voice note
   (phone or memo page) and the talk page. Since 2026-11-19 (OLA-186) the call runs on the Mac
