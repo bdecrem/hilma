@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { realtimeModel } from '@/lib/f2/realtime'
 import type { Turn } from './interview'
@@ -10,46 +9,24 @@ import { notesText, pickNotes, type Doc } from './notes'
 // (voice activity detection, transcription, reading text aloud), and every
 // reply is written by Claude here, with everything in venture_docs loaded.
 // Turns land in venture_interview_turns under call = 'talk'.
+//
+// Who writes the reply (2026-11-19, OLA-187): not this server on the API key. Bart: "text replies
+// too, yes, whatever we CAN switch". Each reply is written on the Mac mini on the Claude login,
+// the Max plan (scripts/venture/voice-server.ts, launchd sh.venture.voice, reached through the
+// tunnel in VENTURE_VOICE_URL with VENTURE_VOICE_SECRET); this server runs the call and streams the
+// words on. The mini puts the system text together itself (talkSystem below), so only the lead
+// and the turns travel.
 
 export const TALK = 'talk'
 export const VENTURE_MODEL = 'claude-opus-5-5'
 
-// The meter (2026-11-18). Bart: "what were api calls used for today. I'm confused - all the agent
-// work should be oauth using our max plan". Agent work is on the Max login; these server-side
-// replies cannot be, and until this day nothing recorded what they used. Every call here adds its
-// tokens to venture_state "api_use", by Pacific day and kind (text reply, voice reply, cache
-// warm-up, call minutes); the board shows the day's use with an estimate in dollars. Reading and
-// writing one row is not exact when two replies end in the same second; it is a meter, not a bill.
+// The meter of 2026-11-18 counted this server's calls on the API key (text replies, voice replies,
+// cache warm-ups, call minutes) in venture_state "api_use". Since 2026-11-19 none of them is on the
+// key (OLA-186, OLA-187), so nothing writes it any more; the board still reads the days it holds.
 export type ApiUse = { calls: number; in: number; write: number; read: number; out: number }
 export type ApiUseState = { days: Record<string, Record<string, ApiUse>> }
-type Usage = { input_tokens?: number | null; output_tokens?: number | null; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null }
-export async function recordUse(kind: 'text' | 'voice' | 'warm' | 'minutes', usage: Usage | null | undefined): Promise<void> {
-  if (!usage) return
-  try {
-    const db = f2Supabase()
-    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
-    const { data, error } = await db.from('venture_state').select('value').eq('key', 'api_use').maybeSingle()
-    if (error) throw new Error(error.message)
-    const v = ((data?.value as ApiUseState | null) ?? { days: {} }) as ApiUseState
-    const d = ((v.days[day] ??= {})[kind] ??= { calls: 0, in: 0, write: 0, read: 0, out: 0 })
-    d.calls += 1
-    d.in += usage.input_tokens ?? 0
-    d.write += usage.cache_creation_input_tokens ?? 0
-    d.read += usage.cache_read_input_tokens ?? 0
-    d.out += usage.output_tokens ?? 0
-    for (const k of Object.keys(v.days).sort().slice(0, -60)) delete v.days[k]
-    const up = await db.from('venture_state').upsert({ key: 'api_use', value: v, at: new Date().toISOString() })
-    if (up.error) throw new Error(up.error.message)
-  } catch (e) {
-    console.error('[venture/meter] not recorded:', e) // a reply never fails over its meter
-  }
-}
 
-let _anthropic: Anthropic | null = null
-export function ventureAnthropic() {
-  if (!_anthropic) _anthropic = new Anthropic()
-  return _anthropic
-}
+export type TalkMsg = { role: 'user' | 'assistant'; content: string }
 
 const PERSONA = `You are Claude, on a live voice call with Bart Decrem. The two of you are partners in a project called Venture: Bart asked you to come up with a business and run it, with him holding the accounts and the money. A Claude Code session in his terminal (you, with tools) has done the work so far: the founding interview, the charter, the ideas, the research. All of it is in the notes below. That session reads this call's transcript when the call ends and acts on it.
 
@@ -86,7 +63,7 @@ export async function talkSystem(lead = ''): Promise<string> {
 
 // The stored turns as a Messages conversation. Claude speaks first on the
 // call, so a stand-in user turn opens it.
-export function talkMessages(turns: Turn[]): Anthropic.MessageParam[] {
+export function talkMessages(turns: Turn[]): TalkMsg[] {
   const out: { role: 'user' | 'assistant'; content: string }[] = [{ role: 'user', content: '(The call just connected.)' }]
   for (const t of turns) {
     const last = out[out.length - 1]
@@ -101,47 +78,49 @@ export function talkMessages(turns: Turn[]): Anthropic.MessageParam[] {
   return out
 }
 
-// Claude's reply as a stream of text. Effort is low because a person is
-// waiting on the line; the system prompt is cached between turns.
+// Claude's reply as a stream of text, written on the Mac mini (see the top of this file).
 export async function* talkReply(turns: Turn[]): AsyncGenerator<string> {
-  yield* talkStream(await talkSystem(), talkMessages(turns))
+  yield* talkStream('', talkMessages(turns))
 }
 
-// The request both calls make (the page's and the phone's). max_tokens is small only for
-// warmCache, which wants the system prompt cached and nothing else.
-function talkRequest(system: string, messages: Anthropic.MessageParam[], maxTokens = 8000) {
-  return {
-    model: VENTURE_MODEL,
-    max_tokens: maxTokens,
-    output_config: { effort: 'low' },
-    // A declined request is re-run on a fallback model in the same call.
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-    messages,
-  }
+function voiceWriter() {
+  const url = process.env.VENTURE_VOICE_URL
+  const secret = process.env.VENTURE_VOICE_SECRET
+  if (!url || !secret) throw new Error('VENTURE_VOICE_URL or VENTURE_VOICE_SECRET is not set: the voice writer on the Mac mini cannot be reached')
+  return { url: url.replace(/\/$/, ''), headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' } }
 }
 
-/// Write the system prompt into the prompt cache before the first turn needs it.
-export async function warmCache(system: string): Promise<void> {
-  const res = (await ventureAnthropic().beta.messages.create(talkRequest(system, [{ role: 'user', content: '(The call just connected.)' }], 64) as never)) as { usage?: Usage }
-  await recordUse('warm', res.usage)
+/// Put the notes in the prompt cache before the first turn needs them (while the call connects).
+/// `lead` goes before the persona: the phone meeting (phone.ts) says where the call is.
+export async function warmCache(lead: string): Promise<void> {
+  const w = voiceWriter()
+  const res = await fetch(`${w.url}/warm`, { method: 'POST', headers: w.headers, body: JSON.stringify({ lead }), signal: AbortSignal.timeout(90_000) })
+  if (!res.ok) throw new Error(`the voice writer did not warm up (${res.status})`)
 }
 
-export async function* talkStream(system: string, messages: Anthropic.MessageParam[], signal?: AbortSignal): AsyncGenerator<string> {
-  const stream = ventureAnthropic().beta.messages.stream(talkRequest(system, messages) as never, signal ? { signal } : undefined)
-  let said = false
-  for await (const event of stream) {
-    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta' && event.delta.text) {
-      said = true
-      yield event.delta.text
+export async function* talkStream(lead: string, messages: TalkMsg[], signal?: AbortSignal): AsyncGenerator<string> {
+  const w = voiceWriter()
+  const res = await fetch(`${w.url}/reply`, { method: 'POST', headers: w.headers, body: JSON.stringify({ lead, messages }), signal })
+  if (!res.ok || !res.body) {
+    const why = (await res.text().catch(() => '')).slice(0, 300)
+    if (res.status === 502 && why === 'no reply') {
+      console.error('[venture/talk] no reply')
+      yield "I can't answer that one. Put it another way?"
+      return
     }
+    throw new Error(`the voice writer on the Mac mini did not answer (${res.status})${why ? `: ${why}` : ''}`)
   }
-  const final = await stream.finalMessage()
-  await recordUse('voice', final.usage)
-  if (final.stop_reason === 'refusal' || !said) {
-    console.error('[venture/talk] no reply:', final.stop_reason)
-    yield "I can't answer that one. Put it another way?"
+  const dec = new TextDecoder()
+  const reader = res.body.getReader()
+  try {
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      const text = dec.decode(value, { stream: true })
+      if (text) yield text
+    }
+  } finally {
+    reader.cancel().catch(() => {}) // he started talking: the mini stops writing
   }
 }
 

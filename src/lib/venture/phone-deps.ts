@@ -6,7 +6,7 @@ import { addTurn, sessionTurns } from './interview'
 import { recentMemos, saveMemo, transcribe } from './memo'
 import { PHONE, PHONE_LEAD, type PhoneDeps } from './phone'
 import { minutesDeps, minutesFor } from './minutes-store'
-import { talkStream, talkSystem, warmCache } from './talk'
+import { talkStream, warmCache, type TalkMsg } from './talk'
 
 // The real services behind src/lib/venture/phone.ts (the tests in scripts/venture/phone-test.ts
 // pass stand-ins instead).
@@ -30,10 +30,11 @@ export const phoneDeps: PhoneDeps = {
     if (error) throw new Error(`venture turn revise failed: ${error.message}`)
   },
   mint: (engineId) => mintElevenConversationToken(engineId),
-  system: () => talkSystem(PHONE_LEAD),
-  warm: (system) => warmCache(system),
+  // Only the lead travels: the Mac mini, which writes every reply on the Claude login, adds the persona and the notes (talk.ts).
+  system: async () => PHONE_LEAD,
+  warm: (lead) => warmCache(lead),
   later: (fn) => after(fn),
-  reply: (system, messages, signal) => talkStream(system, messages, signal),
+  reply: (lead, messages, signal) => talkStream(lead, messages as TalkMsg[], signal),
   transcribe: (audio, filename) => transcribe(audio, filename),
   saveMemo: (text) => saveMemo(text),
   memos: (limit) => recentMemos(limit),
