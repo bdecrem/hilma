@@ -45,6 +45,8 @@ const problems = []
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) problems.push(what) }
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2, userAgent: 'kochito app-check headless check' })
+// BOARD_LOOK=lamp|desk walks the board in that look of looks.css (the cookie the menu's Look switch writes)
+if (process.env.BOARD_LOOK) await ctx.addCookies([{ name: 'bd_look', value: process.env.BOARD_LOOK, url: new URL(url).origin }])
 const p = await ctx.newPage()
 p.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
 const shut = async (pg) => (await pg.locator('input[name=passcode]').count()) === 1 && (await pg.locator('.bd-nav').count()) === 0
