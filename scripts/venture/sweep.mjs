@@ -6,6 +6,9 @@
 // or more headline numbers".
 // The sweep itself is done by an agent following apps/venture/SWEEP.md. This script is its hands:
 //   node scripts/venture/sweep.mjs due                  the days that still need a sweep, one per line
+//   node scripts/venture/sweep.mjs --wait               waits until a day is owed (6 pm Pacific), prints it
+//                                                       and exits: a clock for a session that is open but
+//                                                       idle, run beside the other watchers
 //   node scripts/venture/sweep.mjs gather [--day D]     everything that happened that day, printed to read
 //   node scripts/venture/sweep.mjs template [--day D]   an empty entry (JSON) for that day
 //   node scripts/venture/sweep.mjs post <entry.json>    check the entry and store it; the Learning page
@@ -149,7 +152,16 @@ function checkEntry(e) {
   return bad
 }
 
-if (cmd === 'due') {
+if (cmd === '--wait') {
+  for (;;) {
+    const due = await sweepDue(db).catch(() => [])
+    if (due.length) {
+      console.log(`The daily sweep is owed for ${due.join(', ')}: follow apps/venture/SWEEP.md, then start this watcher again.`)
+      process.exit(0)
+    }
+    await new Promise((r) => setTimeout(r, 5 * 60e3))
+  }
+} else if (cmd === 'due') {
   const due = await sweepDue(db)
   if (due.length) console.log(due.join('\n'))
 } else if (cmd === 'gather') {
@@ -186,5 +198,5 @@ if (cmd === 'due') {
     for (const o of d.open) console.log(`  OPEN ${o.text}${o.issue ? ` ${o.issue}` : ''}`)
   }
 } else {
-  die('usage: sweep.mjs due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')
+  die('usage: sweep.mjs --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')
 }

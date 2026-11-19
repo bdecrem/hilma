@@ -43,6 +43,24 @@ const before = (await db('?select=id&order=id.desc&limit=1'))[0]?.id ?? 0
 
 const problems = []
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) problems.push(what) }
+// On the live site the walk is only worth something if the latest push is what is live. On
+// 2026-11-18 a deploy failed on an unrelated page and a walk of the older version passed.
+if (live) {
+  const { execFileSync } = await import('node:child_process')
+  const sh = (f, a) => execFileSync(f, a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  try {
+    sh('git', ['fetch', '-q', 'origin', 'main'])
+    const sha = sh('git', ['rev-parse', 'origin/main'])
+    let state = 'pending'
+    for (let i = 0; i < 40 && state === 'pending'; i++) {
+      state = sh('gh', ['api', `repos/bdecrem/hilma/commits/${sha}/status`, '--jq', '.state'])
+      if (state === 'pending') await new Promise((r) => setTimeout(r, 15000))
+    }
+    check(state === 'success', state === 'success' ? `the latest push (${sha.slice(0, 8)}) is what is live` : `the latest push (${sha.slice(0, 8)}) did not deploy (${state}): the live site is still an older version`)
+  } catch {
+    console.log('     (could not ask whether the latest push deployed: git or gh did not answer)')
+  }
+}
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2, userAgent: 'kochito app-check headless check' })
 const p = await ctx.newPage()

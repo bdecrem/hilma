@@ -85,12 +85,40 @@ async function putRemoteManifest(m) {
   if (error) throw new Error(`manifest: ${error.message}`)
 }
 
+// The times the journal gives for today (the "Now" line, "*Wednesday, 5:15 pm.*", and today's day
+// notes, "- **10:05 am** …") that are more than three minutes ahead of the clock, Pacific.
+function journalAhead(body) {
+  const P = (o) => new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', ...o })
+  const weekday = P({ weekday: 'long' })
+  const heading = `## ${weekday}, ${P({ month: 'long' })} ${P({ day: 'numeric' })}`
+  const nowMin = Number(P({ hour: 'numeric', hourCycle: 'h23' })) * 60 + Number(P({ minute: 'numeric' }))
+  const mins = (h, m, ap) => ((Number(h) % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0)) * 60 + Number(m)
+  const found = []
+  const now = body.match(/^## Now\n+\*([A-Za-z]+), (\d{1,2}):(\d{2}) ([ap]m)/m)
+  if (now && now[1] === weekday) found.push([`Now: ${now[2]}:${now[3]} ${now[4]}`, mins(now[2], now[3], now[4])])
+  const i = body.indexOf(`\n${heading}\n`)
+  if (i >= 0) {
+    const sec = body.slice(i + heading.length + 2).split(/\n## /)[0]
+    for (const m of sec.matchAll(/^- \*\*(\d{1,2}):(\d{2}) ([ap]m)/gm)) found.push([`${m[1]}:${m[2]} ${m[3]}`, mins(m[1], m[2], m[3])])
+  }
+  return found.filter(([, t]) => t > nowMin + 3).map(([s]) => s)
+}
+
 const cmd = process.argv[2]
 if (cmd === 'push') {
   const have = new Map((await rows()).map((r) => [r.slug, r]))
   // `push --only <file.md>`: that one document and nothing else (the terminal conversation, after
   // every message: scripts/venture/chat-export.py).
   const only = process.argv[3] === '--only' ? process.argv[4] : null
+  // A time in today's journal that is later than the clock was written from memory (2026-11-18: a
+  // note said "5:10 pm" at 4:33 pm). The push refuses it: read the time with `date`, then write it.
+  if (!only) {
+    const late = journalAhead(readFileSync(new URL('JOURNAL.md', dir), 'utf8'))
+    if (late.length) {
+      console.error(`JOURNAL.md has a time later than the clock (${late.join(', ')}; it is ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })} Pacific). Read the time with \`date\` and correct it; nothing was pushed.`)
+      process.exit(1)
+    }
+  }
   for (const f of files().filter((f) => !only || f === only)) {
     const body = readFileSync(new URL(f, dir), 'utf8').trim()
     if (!body) {
@@ -148,6 +176,9 @@ if (cmd === 'push') {
   if (!only) {
     const learn = spawnSync('node', [fileURLToPath(new URL('scripts/venture/learning.mjs', root))], { encoding: 'utf8' })
     console.log(learn.status === 0 ? 'learning numbers refreshed' : `learning numbers NOT refreshed: ${(learn.stderr || learn.stdout || '').trim().split('\n').pop()}`)
+    // What Bart typed on this machine, for the steer count on the other machines (steers.mjs --export).
+    const typed = spawnSync('node', [fileURLToPath(new URL('scripts/venture/steers.mjs', root)), '--export'], { encoding: 'utf8' })
+    if (typed.status !== 0) console.log(`typed messages NOT exported: ${(typed.stderr || typed.stdout || '').trim().split('\n').pop()}`)
   }
 } else if (cmd === 'drop') {
   // `drop <slug>`: removes one document's row (a note that was renamed or replaced). The file is yours to delete.

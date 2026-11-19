@@ -82,7 +82,9 @@ async function printMinutes(source, ref, wait) {
   const m = await minutesOf(source, ref, wait)
   if (!m) return console.log(`(no minutes for ${source} ${ref} yet)`)
   console.log(minutesText(m))
-  if (wait) await markSeen(db, [m.id])
+  // Printed for a session that is about to act on them. Until 2026-11-18 only --wait marked them,
+  // so minutes read any other way stayed "new" and would have woken the runner to act on them again.
+  await markSeen(db, [m.id])
 }
 
 const MEMO_MARK = '(voice note) '

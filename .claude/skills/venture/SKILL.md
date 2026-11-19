@@ -95,6 +95,7 @@ is restarted after it has been handled:
     node scripts/venture/mail.mjs --wait        (mail to the company's domains)
     node scripts/venture/leads.mjs --wait       (sign-ups on the sites)
     node scripts/venture/issues.mjs --wait      (what Bart writes on the board's tracker)
+    node scripts/venture/sweep.mjs --wait       (6 pm Pacific: the day's sweep is owed)
 
 Add `transcript.mjs --wait <slug>` while an agenda call is open; `checkin`
 (the five-minute interview linked from his page) is always open.
