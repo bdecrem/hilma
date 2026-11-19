@@ -17,7 +17,7 @@
 // tasks as a share of Claude's score on the same tasks (apps/activist-ai/evals/results/learning.json),
 // with the rounds so far; beside it, the app problems (evals/apps/results.json when it exists).
 // Run it at every checkpoint (sync.mjs push calls it).
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 
 const root = new URL('../../', import.meta.url)
@@ -55,14 +55,14 @@ const kit = {
 const rounds = JSON.parse(read('apps/activist-ai/evals/results/learning.json')).rounds
 const r = rounds.at(-1)
 const share = (x) => pct(x.passed / x.runs, x.claude_passed / x.claude_runs)
-const appsFile = new URL('apps/activist-ai/evals/apps/results/results.json', root)
+// The app problems (evals/apps): one result file per problem and column; how many passed.
+const appsDir = new URL('apps/activist-ai/evals/apps/results/', root)
 let apps = null
-if (existsSync(appsFile)) {
-  try {
-    apps = JSON.parse(readFileSync(appsFile, 'utf8'))
-  } catch {
-    apps = null
-  }
+if (existsSync(appsDir)) {
+  const rows = readdirSync(appsDir).filter((f) => /\.(ola|claude)\.json$/.test(f)).map((f) => JSON.parse(readFileSync(new URL(f, appsDir), 'utf8')))
+  const col = (c) => rows.filter((x) => x.column === c)
+  const tally = (c) => ({ passed: col(c).filter((x) => x.pass).length, run: col(c).length, model: col(c)[0]?.model ?? null })
+  if (rows.length) apps = { note: 'real "build me an app" requests, one run each', date: rows.map((x) => x.date).sort().at(-1), own: tally('ola'), claude: tally('claude') }
 }
 const ola = {
   percent: share(r),
@@ -72,13 +72,14 @@ const ola = {
   claude: { passed: r.claude_passed, runs: r.claude_runs, rate: pct(r.claude_passed, r.claude_runs) },
   measured: r.date,
   rounds: rounds.map((x) => ({ date: x.date, model: x.model, rate: pct(x.passed, x.runs), share: share(x) })),
-  apps: apps ? { note: 'real "build me an app" requests', summary: apps.summary ?? null } : null,
+  apps,
   open: ['Design: "not even close to good enough" (Bart, Nov 18); a better skill or a design service is being researched.'],
   goal: '100: Ola’s own model does as well as Claude on the work people bring.',
 }
 
 const value = { at: new Date().toISOString(), kit, ola, doc: 'how-we-learn' }
 console.log(`Kit: ${kit.percent}% of ${kit.corrections} corrections were new (${kit.repeats} repeats); latest day ${kit.latest_day?.day}: ${kit.latest_day?.corrections} corrections, ${kit.latest_day?.repeats} repeats`)
+if (apps) console.log(`Apps: Ola's own model ${apps.own.passed} of ${apps.own.run}; Claude Code ${apps.claude.passed} of ${apps.claude.run}`)
 console.log(`Ola: ${ola.percent}% of Claude's score (${ola.own.passed} of ${ola.own.runs} = ${ola.own.rate}%, Claude ${ola.claude.rate}%), measured ${ola.measured}`)
 if (!dry) {
   const env = Object.fromEntries(
