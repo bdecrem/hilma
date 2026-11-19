@@ -1,68 +1,57 @@
-import type { LiveStatus, NoteLink, SteerDay } from '@/lib/venture/board'
-import { ALSO, CODE, OPEN, type SideLink } from './links'
-import { ago } from './time'
+import type { Frame } from '@/lib/venture/board'
+import { quick, talk, type SideLink } from './links'
+import { reading } from './health'
+import './board.css'
 
-// The frame of every board page: the top bar, the sidebar of key links (a left column on a wide
-// screen, a Menu in the top bar on a phone), the page, the footer. Bart, 2026-11-17: "key links in
-// the sidebar; a way to view closed / resolved issues". The plan behind it is the private note
-// BOARD-PLAN-2026-11-17.
+// The frame of every board page (round three, 2026-11-18, OLA-162): the menu on the left (208px; a
+// Menu button on a phone) and the page on the right. The menu lists five pages, one item each,
+// and the page's heading is the item's words: Home, Issue Tracker, Plan, Notes, Numbers. Under a
+// rule, two groups that leave the board (Talk to Kit, Quick links), smaller, with an arrow. The
+// machine's reading in its compact form sits at the top of the menu on every page; the full block
+// is on Home (Health.tsx). Styles: board.css (the design rules are at its top).
 
-const MIN = 60e3
-export const STATUS_STALE = 30 * MIN
+export type Page = 'home' | 'issues' | 'plan' | 'notes' | 'numbers'
+export const PAGES: [Page, string, string][] = [
+  ['home', 'Home', '/'],
+  ['issues', 'Issue Tracker', '/issues'],
+  ['plan', 'Plan', '/plan'],
+  ['notes', 'Notes', '/notes'],
+  ['numbers', 'Numbers', '/numbers'],
+]
+export const href = (base: string, path: string) => (base ? `${base}${path === '/' ? '' : path}` : path)
 
-/** Is everything healthy: the mini's live status and today's steer rate, one row each. */
-export function Health({ s, now, steer }: { s: LiveStatus | null; now: string; steer?: SteerDay }) {
-  const stale = !s || Date.parse(now) - Date.parse(s.at) > STATUS_STALE
+function Pulse({ f, base }: { f: Frame; base: string }) {
+  const r = reading(f.status, f.now)
   return (
-    <dl className={`kb-live ko-mono${stale ? ' stale' : ''}`} aria-label="Health">
-      <div>
-        <dt>web app</dt>
-        <dd>{s?.deployed ? `updated ${ago(s.deployed.at, now)}` : '–'}</dd>
-      </div>
-      <div>
-        <dt>checks</dt>
-        <dd>{s?.checks ? `${s.checks.passed} of ${s.checks.total} passed` : '–'}</dd>
-      </div>
-      <div>
-        <dt>alarm</dt>
-        <dd className={s?.alarm.state ?? ''}>{s ? (s.alarm.state === 'alarm' ? s.alarm.says.join(' ') || 'sounding' : s.alarm.state === 'warn' ? `quiet, ${s.alarm.warns.length} warning${s.alarm.warns.length === 1 ? '' : 's'}` : 'quiet') : '–'}</dd>
-      </div>
-      <div>
-        <dt>disk</dt>
-        <dd>{s?.disk ? `${s.disk.freeGB} GB free` : '–'}</dd>
-      </div>
-      {steer && (
-        <div>
-          <dt>steers</dt>
-          <dd>
-            {steer.rate} per 100 messages, {new Date(`${steer.day}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}
-          </dd>
-        </div>
-      )}
-      <div className="kb-live-at">
-        <dt>status</dt>
-        <dd>{s ? `${ago(s.at, now)}${stale ? ', stale' : ''}` : 'never pushed'}</dd>
-      </div>
-    </dl>
+    <a className={`bd-pulse ${r.state === 'alarm' ? 'alarm' : r.stale ? 'stale' : ''}`} href={`${href(base, '/')}#health`} title={`The Ola machine: ${r.state === 'alarm' ? r.says.join(' ') : r.state === 'none' ? 'no reading yet' : 'OK'}${r.ago ? `, read ${r.ago}` : ''}`}>
+      <span className={`bd-dot ${r.state === 'alarm' ? 'alarm' : r.stale ? 'stale' : 'ok'}`} />
+      <span className="bd-cut">
+        {r.state === 'none' ? 'No reading yet' : r.state === 'alarm' ? <><b>ALARM</b> {r.says[0]}</> : <><b>OK</b>, read {r.ago}</>}
+      </span>
+    </a>
   )
 }
 
-function Group({ title, links }: { title: string; links: (SideLink & { href?: string; current?: boolean })[] }) {
+function Out({ title, links }: { title: string; links: SideLink[] }) {
   return (
-    <div className="kb-nav-group">
-      <h2 className="ko-sub">{title}</h2>
+    <div>
+      <h2>{title}</h2>
       <ul>
         {links.map((l) => (
           <li key={l.name}>
-            {l.url || l.href ? (
-              <a href={(l.href ?? l.url) as string} aria-current={l.current ? 'page' : undefined}>
-                {l.name}
-                {l.note && <span className="ko-mono">{l.note}</span>}
+            {l.url ? (
+              <a href={l.url} rel="noopener" target="_blank">
+                <span>
+                  {l.name}
+                  {l.note && <small>{l.note}</small>}
+                </span>
               </a>
             ) : (
               <span className="soon">
-                {l.name}
-                {l.note && <span className="ko-mono">{l.note}</span>}
+                <span>
+                  {l.name}
+                  {l.note && <small>{l.note}</small>}
+                </span>
               </span>
             )}
           </li>
@@ -72,78 +61,55 @@ function Group({ title, links }: { title: string; links: (SideLink & { href?: st
   )
 }
 
-export function Nav({ base, q, notes, open, current, slug }: { base: string; q: string; notes: NoteLink[]; open: number | null; current: 'home' | 'issues' | 'note' | 'overview'; slug?: string }) {
+function Menu({ base, q, f, current, user }: { base: string; q: string; f: Frame; current: Page; user: string }) {
   return (
-    <nav className="kb-nav" aria-label="Key links">
-      <Group
-        title="The board"
-        links={[
-          { name: 'Overview', url: null, href: `${base}/` || '/', current: current === 'home' },
-          { name: 'Every issue', url: null, href: `${base}/issues`, note: open === null ? undefined : `${open} open`, current: current === 'issues' },
-          { name: 'Ola in one page', url: null, href: `${base}/overview`, current: current === 'overview' },
-        ]}
-      />
-      <Group title="Open" links={OPEN} />
-      <Group
-        title="Talk to Kit"
-        links={[
-          { name: 'Leave a voice note', url: `https://ola.cx/venture/memo${q}` },
-          { name: 'Talk it through', url: `https://ola.cx/venture/talk${q}` },
-          { name: 'Answer my questions', url: `https://ola.cx/venture/call/checkin${q}`, note: 'about five minutes' },
-        ]}
-      />
-      <Group title="Notes" links={notes.map((n) => ({ name: n.label, url: null, href: `${base}/notes/${n.slug}`, current: current === 'note' && slug === n.slug }))} />
-      <Group title="Code" links={CODE} />
-      <Group title="Ola's by link" links={ALSO} />
-    </nav>
+    <>
+      <nav className="bd-nav" aria-label="Pages">
+        <ul>
+          {PAGES.map(([id, name, path]) => (
+            <li key={id}>
+              <a href={href(base, path)} aria-current={current === id ? 'page' : undefined}>
+                <span>{name}</span>
+                {id === 'issues' && f.open !== null && <span className="m">{f.open}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="bd-out">
+        <Out title="Talk to Kit" links={talk(q)} />
+        <Out title="Quick links" links={quick(f.mac)} />
+      </div>
+      <form method="post" action="/api/kochito/app/logout" className="bd-who">
+        <span>Signed in as {user}.</span> <button>Sign out</button>
+      </form>
+    </>
   )
 }
 
-export default function Shell({
-  base,
-  q,
-  user,
-  notes,
-  open,
-  current,
-  slug,
-  aside,
-  children,
-}: {
-  base: string
-  q: string
-  user: string
-  notes: NoteLink[]
-  open: number | null
-  current: 'home' | 'issues' | 'note' | 'overview'
-  slug?: string
-  aside?: React.ReactNode
-  children: React.ReactNode
-}) {
-  const nav = <Nav base={base} q={q} notes={notes} open={open} current={current} slug={slug} />
+export default function Shell({ base, q, user, f, current, children }: { base: string; q: string; user: string; f: Frame; current: Page; children: React.ReactNode }) {
   return (
-    <div className="ko kb">
-      <div className="ko-wrap kb-wrap">
-        <header className="ko-top kb-top">
-          <a className="ko-name" href={`${base}/` || '/'}>
-            Ola<span>.</span> <small>the board</small>
+    <div className="bd">
+      <div className="bd-app">
+        <aside className="bd-side">
+          <a className="bd-brand" href={href(base, '/')}>
+            Ola <span>Kochito Labs</span>
           </a>
-          <details className="kb-menu">
+          <Pulse f={f} base={base} />
+          <Menu base={base} q={q} f={f} current={current} user={user} />
+        </aside>
+        <header className="bd-top">
+          <Pulse f={f} base={base} />
+          <details>
             <summary>Menu</summary>
-            <div className="kb-menu-panel">{nav}</div>
+            <div className="panel">
+              <Menu base={base} q={q} f={f} current={current} user={user} />
+            </div>
           </details>
         </header>
-        <aside className="kb-side">
-          {aside}
-          {nav}
-        </aside>
-        <main className="kb-main">{children}</main>
-        <footer className="ko-foot">
-          <span>Kochito Labs LLC · Wyoming</span>
-          <form method="post" action="/api/kochito/app/logout" className="ko-out">
-            <span>Signed in as {user}.</span> <button>Sign out</button>
-          </form>
-        </footer>
+        <main className="bd-main">
+          <div className="bd-page">{children}</div>
+        </main>
       </div>
     </div>
   )

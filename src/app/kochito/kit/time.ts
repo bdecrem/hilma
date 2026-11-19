@@ -25,3 +25,11 @@ export function since(iso: string | null | undefined, now: string): string {
   const a = ago(iso, now)
   return a.endsWith(' ago') ? `for ${a.slice(0, -4)}` : `since ${a}`
 }
+/** "today 3:49 pm", "yesterday 9:12 pm", "Mon, Nov 17, 3:49 pm": a moment, said plainly */
+export function at(iso: string, now: string): string {
+  const d = pday(iso)
+  const today = pday(now)
+  if (d === today) return `today ${clock(iso)}`
+  if (d === shiftDay(today, -1)) return `yesterday ${clock(iso)}`
+  return `${dayShort(d)}, ${clock(iso)}`
+}

@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     // The DRUM share card renders at request time and reads its fonts from src/fonts.
     '/drum/og': ['./src/fonts/archivo-black/ArchivoBlack-400.ttf', './src/fonts/dm-mono/DMMono-400.ttf'],
     // The board shows Ola's one-page overview, read at request time (src/lib/venture/overview.ts).
-    '/kochito/kit': ['./apps/activist-ai/OVERVIEW.md'],
+    '/kochito/kit/notes': ['./apps/activist-ai/OVERVIEW.md'],
     '/kochito/kit/overview': ['./apps/activist-ai/OVERVIEW.md'],
   },
   async rewrites() {
@@ -233,6 +233,9 @@ const nextConfig: NextConfig = {
         { source: '/issues/:id', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/issues/:id' },
         { source: '/notes/:slug', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/notes/:slug' },
         { source: '/overview', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/overview' },
+        { source: '/notes', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/notes' },
+        { source: '/plan', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/plan' },
+        { source: '/numbers', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/numbers' },
         // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
         {
           source: '/',

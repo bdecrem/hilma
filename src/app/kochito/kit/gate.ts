@@ -14,6 +14,9 @@ export async function gate(): Promise<{ user: string | null; base: string; q: st
   const base = host === APP_HOST ? '' : '/kochito/kit'
   if (!user) return { user, base, q: '' }
   const k = process.env.VENTURE_KEY
+  // a dev server on a Mac whose .env.local has no Venture key: the board works, the voice links
+  // simply carry no key. In production a missing or old key is still an error.
+  if (!k && process.env.NODE_ENV !== 'production') return { user, base, q: '' }
   if (!keyOk(k)) throw new Error('VENTURE_KEY is not set, or is not the current key')
   return { user, base, q: `?k=${encodeURIComponent(k as string)}` }
 }

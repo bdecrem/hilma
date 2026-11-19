@@ -1,4 +1,4 @@
-import type { Area, BoardData, Issue } from '@/lib/venture/board'
+import type { Activity, Area, BoardData, Frame, Issue } from '@/lib/venture/board'
 import type { Overview } from '@/lib/venture/overview'
 
 // Made-up data for designing the board (/kochito/kit/mock on a dev server only). Nothing here is
@@ -30,7 +30,7 @@ const DONE: [string, Area, string, string, number][] = [
   ['2026-11-16', 'apps', 'Your Mac app, first version', '13 of 13', 17],
   ['2026-11-15', 'design', "Ola's name and look chosen", 'your pick', 19],
 ]
-const issue = (num: number, f: Partial<Issue> & Pick<Issue, 'title' | 'area'>): Issue => ({ id: `OLA-${num}`, num, what: '', priority: 'P1', status: 'done', who: 'builders', week: null, opened_at: T('2026-11-16', 9), started_at: null, finished_at: null, day: null, links: [], proof: '', commits: [], ...f })
+const issue = (num: number, f: Partial<Issue> & Pick<Issue, 'title' | 'area'>): Issue => ({ id: `OLA-${num}`, num, what: '', priority: 'P1', status: 'done', who: 'builders', week: null, opened_at: T('2026-11-16', 9), started_at: null, finished_at: null, day: null, links: [], proof: '', commits: [], updated_at: f.finished_at ?? f.started_at ?? f.opened_at ?? T('2026-11-16', 9), ...f })
 
 export function fixture(): BoardData {
   const now = T('2026-11-18', 11, 40)
@@ -38,7 +38,7 @@ export function fixture(): BoardData {
     issue(200 - n, { title, area, proof, day, status: n === 9 ? 'dropped' : 'done', opened_at: T(day, Math.max(0, h - 3)), started_at: T(day, Math.max(0, h - 2)), finished_at: T(day, h, (n * 7) % 60), week: n % 3 === 0 ? 1 : null, what: 'Made-up example: one or two sentences on what changed and why it mattered.', commits: [{ sha: `a1b2c3d4e5f6${String(n).padStart(4, '0')}`, subject: `ola web: a made-up commit for ${title.toLowerCase()}`, at: T(day, h) }] }),
   )
   const plate = [
-    issue(210, { title: 'Sign-in with a name and a password, a passkey optional', area: 'web', priority: 'P0', status: 'in_progress', who: 'builder 1', started_at: T('2026-11-18', 8, 10), week: 1 }),
+    issue(210, { title: 'Sign-in with a name and a password, a passkey optional', what: 'Made-up example: today a person signs in with a link by email, which fails on a phone without mail set up.\nA name and a password works everywhere; a passkey is offered after. See https://ola.cx for the page.', area: 'web', priority: 'P0', status: 'in_progress', who: 'builder 1', started_at: T('2026-11-18', 8, 10), week: 1 }),
     issue(211, { title: 'The Mac app for anyone with an account, with a usage cap', area: 'apps', priority: 'P0', status: 'in_progress', who: 'builder 2', started_at: T('2026-11-18', 7, 30), week: 1 }),
     issue(212, { title: 'A designer skill for pages and app screens, measured with and without', area: 'model', priority: 'P0', status: 'in_progress', who: 'builder 3', started_at: T('2026-11-17', 21, 5) }),
     issue(213, { title: 'Accept the app store agreement so test builds can go out', area: 'apps', priority: 'P0', status: 'waiting', who: 'Bart', opened_at: T('2026-11-17', 10), what: 'Only you can do this; it unblocks test builds and notifications.' }),
@@ -90,6 +90,12 @@ export function fixture(): BoardData {
       days: days.map((day, n) => ({ day, messages: 60 + n * 3, steers: Math.round((rates[n] * (60 + n * 3)) / 100), repeats: n, maybes: 1, rate: rates[n], between: 3, items: [{ time: '9:12 am', label: 'steer' as const, class: 'own labels', repeat: n % 2 === 0, quote: 'a made-up correction, for the design' }] })),
       replay: { at: T('2026-11-17', 17), cases: 21, with_rules: { passed: 54, tries: 63 }, without_rules: { passed: 21, tries: 63 }, prevented: 18, prevented_without: 7 },
     },
+    learning: {
+      at: T('2026-11-18', 10, 30),
+      kit: { percent: 74, label: 'of your corrections were new ones, not repeats (43 so far, 11 repeats)', corrections: 43, repeats: 11, latest_day: { day: '2026-11-18', corrections: 7, repeats: 4 }, by_day: days.map((day, n) => ({ day, corrections: 5 + n, repeats: n % 3 })), steers: { day: '2026-11-17', rate: 38 }, goal: 100 },
+      ola: { percent: 79, label: "of Claude's score on our test tasks (73% against 92%, a made-up model, Nov 17)", model: 'a made-up model', own: { passed: 35, runs: 48, rate: 73 }, claude: { passed: 44, runs: 48, rate: 92 }, measured: '2026-11-17', rounds: [{ date: '2026-11-16', model: 'a made-up model', rate: 61, share: 66 }, { date: '2026-11-17', model: 'a made-up model', rate: 73, share: 79 }], open: ['Scanned pages still fail half the time.', 'Charts from spreadsheets need the new skill.'], goal: 100 },
+      doc: 'how-we-learn',
+    },
     plan: {
       slug: 'plan',
       title: '30 days',
@@ -103,10 +109,11 @@ export function fixture(): BoardData {
       ],
     },
     notes: [
-      { slug: 'plan', label: '30 days to the review', title: 'A made-up plan', at: T('2026-11-16', 17) },
-      { slug: 'scan', label: 'Who else does this', title: 'A made-up scan', at: T('2026-11-17', 7) },
-      { slug: 'review', label: 'The latest security review', title: 'A made-up review', at: T('2026-11-17', 3) },
-      { slug: 'rules', label: "The builders' rules", title: 'Made-up rules', at: T('2026-11-17', 5) },
+      { slug: 'plan', label: '30 days to the review', title: 'A made-up plan', at: T('2026-11-16', 17), what: 'What gets built each week until the review on December 16, and the Friday demos.' },
+      { slug: 'how-we-learn', label: 'How Kit and Ola learn', title: 'A made-up note on learning', at: T('2026-11-18', 9), what: 'How corrections become rules for Kit, and how test rounds pick the model and skills for Ola.' },
+      { slug: 'scan', label: 'Who else does this', title: 'A made-up scan', at: T('2026-11-17', 7), what: 'Seven services that do something like Ola, and what each costs.' },
+      { slug: 'review', label: 'The latest security review', title: 'A made-up review', at: T('2026-11-17', 3), what: 'Review six: two faults in the upload path, both fixed the same day.' },
+      { slug: 'rules', label: "The builders' rules", title: 'Made-up rules', at: T('2026-11-17', 5), what: 'What every builder does before calling something done.' },
     ],
   }
 }
@@ -119,3 +126,17 @@ export const fixtureOverview = (): Overview => ({
   lede: 'Ola is a private AI agent service for activists and community groups. This sentence is made up for the mock, to show the card at its usual length on a full board.',
   fresh: { state: 'stale', count: 3, commits: [] },
 })
+
+// the frame every page gets: the fixture's reading, the Mac app's made-up download
+export const fixtureFrame = (d: BoardData): Frame => ({ now: d.now, open: (d.issues ?? []).filter((i) => ['open', 'in_progress', 'waiting'].includes(i.status)).length, status: d.status, mac: { url: 'https://ola.cx', version: '0.1 (9)' } })
+
+// one issue's thread: an edit, Bart's comment seen by Kit, Kit's reply, Bart's comment not yet seen
+export const fixtureActivity = (id: string): Activity[] => {
+  const a = (n: number, at: string, f: Partial<Activity>): Activity => ({ id: n, issue_id: id, at, who: 'bart', via: 'board', kind: 'comment', field: null, old_value: null, new_value: null, body: '', seen_by_kit_at: null, ...f })
+  return [
+    a(1, T('2026-11-18', 8, 20), { kind: 'edit', field: 'priority', old_value: 'P1', new_value: 'P0', seen_by_kit_at: T('2026-11-18', 8, 25) }),
+    a(2, T('2026-11-18', 8, 22), { body: 'This one first, please: I want to use it tomorrow on the train.\nAnd keep the password rules simple.', seen_by_kit_at: T('2026-11-18', 8, 25) }),
+    a(3, T('2026-11-18', 8, 31), { who: 'kit', via: 'cli', body: 'Started. A name and a password, at least 12 characters, nothing else required. Passkey after.', seen_by_kit_at: T('2026-11-18', 8, 31) }),
+    a(4, T('2026-11-18', 11, 2), { body: 'Looks good on the phone. Can the sign-in page remember my name?' }),
+  ]
+}
