@@ -1,0 +1,7 @@
+{
+  "what": "The headline scores of Ola's own model against Claude on our checkable test tasks, one entry per measured round, newest last. scripts/venture/learning.mjs reads this for the dashboard's Agent learning block. Add an entry when a round is run; never edit an old one.",
+  "rounds": [
+    { "date": "2026-11-16", "model": "GLM-5.3-Flash (oversized rehearsal model)", "passed": 150, "runs": 171, "claude_passed": 134, "claude_runs": 145, "source": "evals/results/summary-run2.json" },
+    { "date": "2026-11-17", "model": "NVIDIA Nemotron 3.5 Super VL (the Studio-size model, Ola's skills on)", "passed": 46, "runs": 63, "claude_passed": 134, "claude_runs": 145, "source": "evals/README.md, the Nemotron round; the Claude baseline is round two's" }
+  ]
+}
