@@ -36,7 +36,7 @@ export function NotesIndex({ notes, o, base, now }: { notes: NoteLink[]; o: Over
         {notes.map((n) => (
           <li key={n.slug}>
             <a href={`${href(base, '/notes')}/${n.slug}`}>
-              <span className="name bd-cut">{n.label}</span>
+              <span className="name bd-cut" title={n.label}>{n.label}</span>
               <span className="what bd-cut" title={n.what || n.title}>
                 {n.what || n.title}
               </span>
