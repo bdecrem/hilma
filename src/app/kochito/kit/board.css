@@ -359,7 +359,7 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-weak .seen b { color: var(--ink); font-weight: 650; }
 .bd-weak .guard { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .bd-weak .guard .enf, .bd-weak .guard .rule { display: inline-block; margin-left: 8px; font-size: 12px; white-space: nowrap; }
-.bd-weak .guard > .rule:first-child { margin-left: 0; }
+.bd-weak .guard .none { margin-left: 0; }
 .bd-weak .guard .enf { color: var(--green); }
 .bd-weak .guard .rule { color: var(--ink-3); }
 .bd-weak .guard .bet { display: block; margin-top: 2px; color: var(--ink); }

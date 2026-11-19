@@ -124,7 +124,7 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
                 <span className={w.guard.enforced ? 'enf' : 'rule'}>{w.guard.enforced ? 'enforced by the system' : 'a rule, not enforced'}</span>
               </>
             ) : (
-              <span className="rule">nothing yet</span>
+              <span className="rule none">nothing yet</span>
             )}
             {w.bet && w.status !== 'guarded' && (
               <span className="bet">
@@ -132,7 +132,7 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
               </span>
             )}
           </span>
-          <span className={`st ${w.status}`}>{w.status === 'guarded' ? `holding ${days(w.held_days)}` : w.status === 'back' ? 'came back after its guard' : w.quiet_days !== null && w.quiet_days >= 2 ? `open, quiet ${days(w.quiet_days)}` : 'open'}</span>
+          <span className={`st ${w.status}`}>{w.status === 'guarded' ? `holding ${days(w.held_days)}` : w.status === 'back' ? 'came back after a guard' : w.quiet_days !== null && w.quiet_days >= 2 ? `open, quiet ${days(w.quiet_days)}` : 'open'}</span>
         </li>
       ))}
     </ol>
