@@ -31,7 +31,7 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
   const onAgenda = new Set(agenda.flatMap(ids))
   // Needs you: what waits on him and is not already on the agenda (no item is shown twice)
   const waiting = issues.filter((i) => i.status === 'waiting' && !onAgenda.has(i.id)).sort((a, b) => a.priority.localeCompare(b.priority))
-  const toDecide = d.journal.toDecide.filter((x) => !ids(x.text).some((id) => onAgenda.has(id)))
+  const toDecide = d.journal.toDecide.filter((x) => !/^nothing/i.test(x.text) && !ids(x.text).some((id) => onAgenda.has(id)))
   const needs = waiting.length + toDecide.length
   const count = {
     doing: issues.filter((i) => i.status === 'in_progress').length,
