@@ -158,6 +158,12 @@ function checkEntry(e) {
   if (!e.quiet && known.size && (!e.build || !str(e.build.text))) bad.push('build: { text, issue? }: the one thing to build next that would remove a whole weakness, not one instance (or say why nothing is worth building)')
   if (!e.quiet && Array.isArray(e.read) && e.read.length === 0) bad.push('read is empty: say what the sweep looked at, or mark the day quiet')
   if (/[—]/.test(JSON.stringify(e))) bad.push('no em dashes: Bart reads this page')
+  // Bart, 2026-11-18: "I don't love the writing style on the learning section ... write it like a
+  // factual straight description of our evolving learning system". An entry is a description of the
+  // system, not Kit's account of itself: no first person outside a direct quote of his words.
+  const texts = [e.summary, e.pattern, e.build?.text, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
+  const first = [...new Set(texts.flatMap((t) => t.replace(/"[^"]*"/g, '').replace(/“[^”]*”/g, '').match(/\b(I|I'm|I've|I'd|my|me|myself|we|our|us)\b/g) ?? []))]
+  if (first.length) bad.push(`written in the first person (${first.join(', ')}): describe what the system does and what happened, with Kit, Ola, Bart or the mechanism as the subject (apps/venture/SWEEP.md, "Rules for the entry")`)
   return bad
 }
 

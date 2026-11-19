@@ -44,12 +44,12 @@ const days = Object.keys(byDay).sort()
 const last = days.at(-1)
 const kit = {
   percent: pct(entries.length - repeats, entries.length),
-  label: 'of your corrections were new ones, not repeats',
+  label: 'of Bart’s corrections were new, not repeats of an earlier one',
   corrections: entries.length,
   repeats,
   latest_day: last ? { day: last, ...byDay[last] } : null,
   by_day: days.map((d) => ({ day: d, ...byDay[d] })),
-  goal: 'No repeats: you never make the same correction twice.',
+  goal: 'No repeats: Bart never makes the same correction twice.',
 }
 
 // ---- part 2: Ola
@@ -67,7 +67,7 @@ if (existsSync(appsDir)) {
 }
 const ola = {
   percent: share(r),
-  label: 'of Claude’s score on our test tasks',
+  label: 'of Claude’s score on the same test tasks',
   model: r.model,
   own: { passed: r.passed, runs: r.runs, rate: pct(r.passed, r.runs) },
   claude: { passed: r.claude_passed, runs: r.claude_runs, rate: pct(r.claude_passed, r.claude_runs) },
@@ -75,7 +75,7 @@ const ola = {
   rounds: rounds.map((x) => ({ date: x.date, model: x.model, rate: pct(x.passed, x.runs), share: share(x) })),
   apps,
   open: ['Design: "not even close to good enough" (Bart, Nov 18); a better skill or a design service is being researched.'],
-  goal: '100: Ola’s own model does as well as Claude on the work people bring.',
+  goal: '100: Ola’s own model scores as well as Claude on the work people bring.',
 }
 
 // The weaknesses ledger (scripts/venture/_weak.mjs): every correction and sweep finding filed under

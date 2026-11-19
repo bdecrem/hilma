@@ -58,8 +58,8 @@ export function LearningFigures({ l, now, sweeps }: { l: Learning | null; now: s
   const today = k?.latest_day ? `${k.latest_day.day === pday(now) ? 'today' : dayShort(k.latest_day.day)}: ${k.latest_day.corrections} corrections, ${k.latest_day.repeats} repeats` : ''
   return (
     <div className={`bd-learn${sweeps ? ' three' : ''}`}>
-      {k && <Fig name="Kit" what="the system that works with you" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />}
-      {o && <Fig name="Ola" what="models and skills" big={`${Math.round(o.percent)}%`} pct={o.percent} label={`${Math.round(o.percent)} of 100`} line={o.label} small={o.own && o.claude ? `${Math.round(o.own.rate)}% against Claude's ${Math.round(o.claude.rate)}%, ${o.model}${o.measured ? `, ${o.measured}` : ''}` : ''} />}
+      {k && <Fig name="Kit" what="the agent system that works with Bart" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />}
+      {o && <Fig name="Ola" what="models, skills and orchestration" big={`${Math.round(o.percent)}%`} pct={o.percent} label={`${Math.round(o.percent)} of 100`} line={o.label} small={o.own && o.claude ? `${Math.round(o.own.rate)}% against Claude's ${Math.round(o.claude.rate)}%, ${o.model}${o.measured ? `, ${o.measured}` : ''}` : ''} />}
       {sweeps && <WeakFig l={l} sweeps={sweeps} />}
     </div>
   )
@@ -88,8 +88,8 @@ function WeakFig({ l, sweeps }: { l: Learning | null; sweeps: ReturnType<typeof 
       big={`${held} of ${w.length}`}
       pct={(held / w.length) * 100}
       label={`${held} of ${w.length}`}
-      line={`known weaknesses have a guard the system enforces and have not come back since`}
-      small={sweeps.missed.length ? `not swept: ${sweeps.missed.slice(0, 3).map(dayShort).join(', ')}` : `${back ? `${back} came back after a guard · ` : ''}${w.length - held - back} still rest on a rule · ${sweepLine}`}
+      line={`known weaknesses have an enforced guard and have not recurred since`}
+      small={sweeps.missed.length ? `not swept: ${sweeps.missed.slice(0, 3).map(dayShort).join(', ')}` : `${back ? `${back} came back after a guard, ` : ''}${w.length - held - back} rest on a rule, ${sweepLine}`}
       amber={sweeps.missed.length > 0}
     />
   )
@@ -104,8 +104,8 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
       <li className="head">
         <span>Weakness</span>
         <span>Seen</span>
-        <span>What prevents it now</span>
-        <span>Holding?</span>
+        <span>Current guard</span>
+        <span>Status</span>
       </li>
       {rows.map((w) => (
         <li key={w.id} className={w.status} title={w.what}>
@@ -132,7 +132,7 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
               </span>
             )}
           </span>
-          <span className={`st ${w.status}`}>{w.status === 'guarded' ? `holding ${days(w.held_days)}` : w.status === 'back' ? 'came back after a guard' : w.quiet_days !== null && w.quiet_days >= 2 ? `open, quiet ${days(w.quiet_days)}` : 'open'}</span>
+          <span className={`st ${w.status}`}>{w.status === 'guarded' ? `holding ${days(w.held_days)}` : w.status === 'back' ? 'came back after a guard' : w.quiet_days !== null && w.quiet_days >= 2 ? `open, not seen for ${days(w.quiet_days)}` : 'open'}</span>
         </li>
       ))}
     </ol>
@@ -166,7 +166,7 @@ function Changes({ name, what, items, base, weak }: { name: string; what: string
         {name} <span>{what}</span> <span className="bd-n">{items.length}</span>
       </h4>
       {items.length === 0 ? (
-        <p className="none">Nothing to change today.</p>
+        <p className="none">No changes on this day.</p>
       ) : (
         <ul className="bd-changes">
           {items.map((c, n) => (
@@ -174,7 +174,7 @@ function Changes({ name, what, items, base, weak }: { name: string; what: string
               <p className="did">{inline(c.changed)}</p>
               <p className="saw">{inline(c.saw)}</p>
               <p className="where">
-                <span className={c.enforced ? 'enf' : ''}>{c.enforced ? 'Enforced by the system' : 'A note Kit follows'}</span>
+                <span className={c.enforced ? 'enf' : ''}>{c.enforced ? 'Enforced by the system' : 'A rule Kit follows, not enforced'}</span>
                 <span>{c.where}</span>
                 {c.weakness && weak.find((w) => w.id === c.weakness) && <span className="wk">Weakness: {weak.find((w) => w.id === c.weakness)!.name.replace(/^./, (x) => x.toLowerCase())}</span>}
                 {c.issue && <a href={`${href(base, '/issues')}/${c.issue}`} className="m">{c.issue}</a>}
@@ -224,7 +224,7 @@ function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak
       {s.open.length > 0 && (
         <div className="bd-sweep-open">
           <h4>
-            Found, not fixed yet <span className="bd-n">{s.open.length}</span>
+            Found and not fixed <span className="bd-n">{s.open.length}</span>
           </h4>
           <ul>
             {s.open.map((o, n) => (
@@ -269,7 +269,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
           Weaknesses <span className="m faint">{(l?.weaknesses ?? []).length} known</span>
         </h2>
         <p className="bd-p" style={{ margin: '0 0 8px' }}>
-          Every correction you make and every fault the sweep finds is filed under one of these. A weakness is closed when the system itself prevents it and it stops coming back; a rule I have to remember does not count.
+          Each correction from Bart and each fault found by the daily sweep is filed under one named weakness. A weakness counts as holding when an enforced guard (a hook, a check, a test or code) prevents it and it has not recurred on a later day. A rule that Kit has to follow does not count as a guard.
         </p>
         {l?.weaknesses?.length ? <Weaknesses list={l.weaknesses} today={d.today} base={base} /> : <p className="bd-empty">Not filed yet.</p>}
       </section>
@@ -279,7 +279,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
           Daily sweep {st.latest && <span className="m faint">last swept {at(st.latest.at, now)}</span>}
         </h2>
         <p className="bd-p" style={{ margin: '0 0 10px' }}>
-          Once a day Kit goes through everything that happened (what you wrote and said, the corrections, the tracker, the code, Ola&rsquo;s tests and requests). For each thing that went wrong: which weakness it belongs to, whether an earlier guard failed, what now prevents it, where else the same cause bites, and what to build so the whole weakness goes away.
+          Once a day, from 6 pm Pacific, an agent reads the day&rsquo;s record: Bart&rsquo;s messages, the corrections, the issue tracker, the commits, Ola&rsquo;s test results and the requests kept on the Ola machine. For each fault it identifies the cause, files it under a weakness, checks whether an earlier guard failed, adds a guard, and checks where else the same cause applies. Each entry ends with what the day&rsquo;s findings have in common and one thing to build that would remove a whole weakness.
         </p>
         {rows.length === 0 ? (
           <p className="bd-empty">Not swept yet.</p>
@@ -340,11 +340,11 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
                 })}
               />
             </div>
-            <p className="bd-p">A steer is a message where you had to correct, redirect or repeat something Kit should have known; a repeat counts twice. Lower is better.</p>
+            <p className="bd-p">A steer is a message in which Bart corrects, redirects or repeats something Kit should have known. A repeat counts twice. The target is zero.</p>
             {steers.length > 0 && (
               <details className="bd-more">
                 <summary>
-                  Your {steers.length} {steers.length === 1 ? 'steer' : 'steers'} on {dayShort(latest.day)}
+                  Bart&rsquo;s {steers.length} {steers.length === 1 ? 'steer' : 'steers'} on {dayShort(latest.day)}
                 </summary>
                 <ol className="bd-steers" style={{ marginTop: 6, borderTop: '1px solid var(--line)' }}>
                   {steers.map((x, n) => (
@@ -432,7 +432,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
               <b>
                 {ind.replay.prevented} of {ind.replay.cases}
               </b>
-              <span>past mistakes prevented by Kit&rsquo;s rules when a fresh Claude replays them ({ind.replay.prevented_without} without the rules)</span>
+              <span>past mistakes prevented when a fresh session with Kit&rsquo;s rules is replayed through them ({ind.replay.prevented_without} without the rules)</span>
               <span className="t">{at(ind.replay.at, now)}</span>
             </li>
           )}

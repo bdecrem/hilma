@@ -127,7 +127,17 @@ Rules for the entry:
   with his words where he said it.
 - What was found and not fixed goes under `open` with its ticket. Nothing is left out because it
   is unflattering.
-- Plain words, no praise of the work, no em dashes. A day with nothing to change says so.
+- The entry is a factual description of the system: what was observed, what changed, where it is
+  enforced, what is not built yet. No story, no confession, no self-assessment, no praise.
+- The subject of each sentence is the system, a part of it, or a named actor ("Kit", "Ola",
+  "Bart", "the sweep", "the steer counter"). No "I", "me", "my", "we" or "our". Bart's own words
+  appear only as a direct quote, in double quotes, where they are the evidence.
+- Present tense for how the system works, past tense for what happened. Give dates ("Nov 18"),
+  times and counts.
+- A weakness name is a neutral noun phrase of 4 to 10 words that names the cause, in sentence
+  case, with no pronouns ("Design judged without an outside reference").
+- Plain words, normal sentence length, no em dashes, no metaphors, no judging adjectives.
+- A day with nothing to change says so.
 
 ## 5. Checkpoint
 
