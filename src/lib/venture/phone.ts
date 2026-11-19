@@ -1,4 +1,4 @@
-import type Anthropic from '@anthropic-ai/sdk'
+import type Anthropic from '@anthropic-ai/sdk' // the message type only; nothing here calls the API
 import { isSession, newSession, type Turn } from './interview'
 import { talkMessages } from './talk'
 import type { Memo } from './memo'

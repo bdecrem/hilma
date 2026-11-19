@@ -40,16 +40,27 @@ const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encod
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 
-// The system text (lead + persona + notes). The notes are read from the database at most every 20
-// seconds, so a reply does not wait on a megabyte of notes each time.
-const systems = new Map<string, { at: number; text: string }>()
-async function system(lead: string): Promise<string> {
-  const had = systems.get(lead)
-  if (had && Date.now() - had.at < 20_000) return had.text
+// The system text (lead + persona + notes). A reply never waits on a megabyte of notes: it uses the
+// copy in memory, and a copy older than 15 seconds is read again in the background for the next
+// reply. Only the first reply after a start, or after ten quiet minutes, waits for the read.
+const systems = new Map<string, { at: number; text: string; reading: boolean }>()
+async function read(lead: string): Promise<string> {
   const { talkSystem } = await import('../../src/lib/venture/talk')
   const text = await talkSystem(lead)
-  systems.set(lead, { at: Date.now(), text })
+  systems.set(lead, { at: Date.now(), text, reading: false })
   return text
+}
+async function system(lead: string): Promise<string> {
+  const had = systems.get(lead)
+  if (!had || Date.now() - had.at > 10 * 60_000) return read(lead)
+  if (Date.now() - had.at > 15_000 && !had.reading) {
+    had.reading = true
+    read(lead).catch((e) => {
+      had.reading = false
+      say(`(the notes could not be read again: ${(e as Error).message.slice(0, 200)})`)
+    })
+  }
+  return had.text
 }
 
 /// The call so far as one piece of text: Claude Code takes one prompt, not a list of turns.
