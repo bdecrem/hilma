@@ -143,6 +143,12 @@ if (cmd === 'push') {
   // the notes past it and both lines went dead until Bart spoke to one).
   const check = spawnSync('npx', ['tsx', fileURLToPath(new URL('scripts/venture/notes-check.ts', root)), '--quiet'], { stdio: 'inherit' })
   if (check.status !== 0) process.exit(check.status ?? 1)
+  // Every checkpoint also refreshes the two "Agent learning" figures the dashboard shows
+  // (corrections that were new; Ola's score against Claude's). A failure here is said, not fatal.
+  if (!only) {
+    const learn = spawnSync('node', [fileURLToPath(new URL('scripts/venture/learning.mjs', root))], { encoding: 'utf8' })
+    console.log(learn.status === 0 ? 'learning numbers refreshed' : `learning numbers NOT refreshed: ${(learn.stderr || learn.stdout || '').trim().split('\n').pop()}`)
+  }
 } else if (cmd === 'drop') {
   // `drop <slug>`: removes one document's row (a note that was renamed or replaced). The file is yours to delete.
   const slug = process.argv[3]
