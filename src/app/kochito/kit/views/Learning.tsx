@@ -258,7 +258,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
   const l = d.learning
   const st = sweepStats(d.sweeps, d.today)
   const age = learningAge(l, now)
-  const note = `${href(base, '/notes')}/${l?.doc || 'how-we-learn'}`
+  const note = `${href(base, '/notes')}/${d.learnNote?.slug || l?.doc || 'how-we-learn'}`
   const ind = d.independence
   const latest = ind.days[ind.days.length - 1]
   const window14 = latest ? Array.from({ length: 14 }, (_, n) => shiftDay(latest.day, n - 13)) : []
@@ -272,9 +272,16 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
       <div className="bd-head">
         <h1>Learning</h1>
         <p>
-          <span className={`m${age.old ? ' bd-amber' : ''}`}>{age.line}</span> · <a href={note}>How Kit and Ola learn</a>
+          <span className={`m${age.old ? ' bd-amber' : ''}`}>{age.line}</span>
         </p>
       </div>
+
+      {d.learnNote?.lede && (
+        <p className="bd-learn-intro">
+          {d.learnNote.lede}{' '}
+          <a href={note}>Read the rest: {d.learnNote.title}</a>
+        </p>
+      )}
 
       <LearningFigures l={l} now={now} sweeps={st} />
 

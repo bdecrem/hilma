@@ -89,6 +89,7 @@ export type BoardData = {
   notes: NoteLink[]
   learning: Learning | null // venture_state "learning", written by scripts/venture/learning.mjs
   sweeps: Sweeps | null // venture_state "sweeps", written by scripts/venture/sweep.mjs post
+  learnNote: { slug: string; title: string; lede: string } | null // the note on the two learning loops: its title and first paragraph, shown at the top of Learning
   apiUse: Record<string, Record<string, { calls: number; in: number; write: number; read: number; out: number }>> | null // venture_state "api_use" (the meter in talk.ts), by day and kind
 }
 /** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
@@ -131,6 +132,7 @@ export type Sweep = {
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 
 export const PLAN_SLUG = 'ola-30-day-plan-2026-11-16'
+export const LEARN_SLUG = 'how-we-learn' // the note "Learning loops: the builder (Kit) and the harness (Ola)"; the address keeps its first name
 export const pacificDay = (t: number | string | Date = Date.now()) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
@@ -218,7 +220,7 @@ export async function loadBoard(): Promise<BoardData> {
   const db = f2Supabase()
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR] = await Promise.all([
-    db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG]),
+    db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG, LEARN_SLUG]),
     db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
@@ -229,6 +231,7 @@ export async function loadBoard(): Promise<BoardData> {
   if (commitsR.error && !missing(commitsR.error)) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
   const journalRow = docs.data.find((d) => d.slug === 'journal')
   const planRow = docs.data.find((d) => d.slug === PLAN_SLUG)
+  const learnRow = docs.data.find((d) => d.slug === LEARN_SLUG)
   const st = (k: string) => state.data.find((r) => r.key === k)
   const commits = (commitsR.data ?? []) as (Commit & { ignored: boolean })[]
   const byIssue = new Map<string, Commit[]>()
@@ -251,6 +254,7 @@ export async function loadBoard(): Promise<BoardData> {
     notes: await loadNotes(journalRow?.body ?? ''),
     learning: (st('learning')?.value ?? null) as Learning | null,
     sweeps: (st('sweeps')?.value ?? null) as Sweeps | null,
+    learnNote: learnRow ? { slug: LEARN_SLUG, title: learnRow.title, lede: firstParagraph(learnRow.body ?? '') } : null,
     apiUse: ((st('api_use')?.value as { days?: BoardData['apiUse'] } | undefined)?.days ?? null) as BoardData['apiUse'],
   }
 }
@@ -309,6 +313,20 @@ export async function loadFrame(): Promise<Frame> {
   if (open.error && !missing(open.error)) throw new Error(`venture_issues read failed: ${open.error.message}`)
   if (st.error) throw new Error(`venture_state read failed: ${st.error.message}`)
   return { now: new Date().toISOString(), open: open.error ? null : (open.count ?? 0), status: (st.data?.value ?? null) as LiveStatus | null, mac }
+}
+
+/** A note's first paragraph in plain words (the first block that is not a heading, a table or a list). */
+export function firstParagraph(body: string): string {
+  const para = body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .find((p) => p && !/^(#|\||```|>|-{3,})/.test(p) && !/^[-*] /.test(p))
+  return (para ?? '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\s+/g, ' ')
 }
 
 /** A note's one line for the Notes index: the first sentence of its first paragraph, in plain words. */

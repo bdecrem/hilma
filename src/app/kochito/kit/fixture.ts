@@ -102,6 +102,7 @@ export function fixture(): BoardData {
       ],
       doc: 'how-we-learn',
     },
+    learnNote: { slug: 'how-we-learn', title: 'A made-up note on the two learning loops', lede: 'A made-up first paragraph: two learning loops run in this project. One covers the agent system that builds the product, the other covers the product itself. This sentence stands where the note\'s first paragraph would be.' },
     apiUse: { '2026-11-18': { text: { calls: 6, in: 900, write: 1500000, read: 750000, out: 2400 }, voice: { calls: 21, in: 4000, write: 375000, read: 7500000, out: 9000 } } },
     sweeps: {
       at: T('2026-11-17', 21, 10),
@@ -155,7 +156,7 @@ export function fixture(): BoardData {
     },
     notes: [
       { slug: 'plan', label: '30 days to the review', title: 'A made-up plan', at: T('2026-11-16', 17), what: 'What gets built each week until the review on December 16, and the Friday demos.' },
-      { slug: 'how-we-learn', label: 'How Kit and Ola learn', title: 'A made-up note on learning', at: T('2026-11-18', 9), what: 'How corrections become rules for Kit, and how test rounds pick the model and skills for Ola.' },
+      { slug: 'how-we-learn', label: 'Learning loops: the builder (Kit) and the harness (Ola)', title: 'A made-up note on learning', at: T('2026-11-18', 9), what: 'How corrections become rules for Kit, and how test rounds pick the model and skills for Ola.' },
       { slug: 'scan', label: 'Who else does this', title: 'A made-up scan', at: T('2026-11-17', 7), what: 'Seven services that do something like Ola, and what each costs.' },
       { slug: 'review', label: 'The latest security review', title: 'A made-up review', at: T('2026-11-17', 3), what: 'Review six: two faults in the upload path, both fixed the same day.' },
       { slug: 'rules', label: "The builders' rules", title: 'Made-up rules', at: T('2026-11-17', 5), what: 'What every builder does before calling something done.' },
