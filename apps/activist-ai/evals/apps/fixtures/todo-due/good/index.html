@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>To-do</title><style>.done span{text-decoration:line-through;opacity:.5}</style></head>
+<body>
+<h1>To-do</h1>
+<form id="f"><input id="task" placeholder="New task" required> <input id="due" type="date"> <button>Add</button></form>
+<ul id="list"></ul>
+<script>
+let tasks = []
+const show = () => {
+  list.innerHTML = ''
+  tasks.forEach((t) => {
+    const li = document.createElement('li'); if (t.done) li.className = 'done'
+    const c = document.createElement('input'); c.type = 'checkbox'; c.checked = t.done; c.onchange = () => { t.done = c.checked; show() }
+    const s = document.createElement('span'); s.textContent = `${t.text} (due ${t.due ? new Date(t.due + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'no date'})`
+    li.append(c, ' ', s); list.append(li)
+  })
+}
+f.onsubmit = (e) => { e.preventDefault(); tasks.push({ text: task.value, due: due.value, done: false }); f.reset(); show() }
+</script>
+</body></html>

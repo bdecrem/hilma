@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crossword — AI generated on demand</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="crossword.css">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  body { font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+</style>
+</head>
+<body>
+
+<header class="app-bar">
+  <h1>Crossword</h1>
+  <div class="app-bar-actions">
+    <button class="icon-btn" id="btn-menu" aria-label="Menu">≡</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Menu sheet -->
+  <div class="sheet" id="sheet-menu" aria-hidden="true">
+    <div class="sheet-header">
+      <h2>Menu</h2>
+      <button class="icon-btn" id="btn-close-menu" aria-label="Close menu">✕</button>
+    </div>
+    <ul class="sheet-list">
+      <li><button class="sheet-item" id="m-new">New puzzle</button></li>
+      <li><button class="sheet-item" id="m-reveal">Reveal word</button></li>
+      <li><button class="sheet-item" id="m-check">Check puzzle</button></li>
+      <li><button class="sheet-item" id="m-timer">Timer <span class="sheet-item-sub" id="m-timer-sub">off</span></button></li>
+      <li><button class="sheet-item" id="m-settings">Settings</button></li>
+      <li><button class="sheet-item" id="m-about">About</button></li>
+    </ul>
+  </div>
+
+  <!-- Settings sheet -->
+  <div class="sheet" id="sheet-settings" aria-hidden="true">
+    <div class="sheet-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="btn-close-settings" aria-label="Close settings">✕</button>
+    </div>
+    <ul class="sheet-list">
+      <li class="sheet-row">
+        <span>Difficulty</span>
+        <select id="setting-difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </li>
+      <li class="sheet-row">
+        <span>Grid size</span>
+        <select id="setting-size">
+          <option value="9">9 × 9</option>
+          <option value="11" selected>11 × 11</option>
+          <option value="13">13 × 13</option>
+          <option value="15">15 × 15</option>
+        </select>
+      </li>
+      <li class="sheet-row">
+        <span>Theme</span>
+        <input type="text" id="setting-theme" placeholder="e.g. movies, travel, food">
+      </li>
+      <li class="sheet-actions">
+        <button class="btn btn-outline" id="settings-cancel">Cancel</button>
+        <button class="btn" id="settings-save">Save</button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- About sheet -->
+  <div class="sheet" id="sheet-about" aria-hidden="true">
+    <div class="sheet-header">
+      <h2>About</h2>
+      <button class="icon-btn" id="btn-close-about" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-list">
+      <p>Crossword AI — generate a crossword puzzle on demand.</p>
+      <p>Puzzle and clues are drafted by a local language model, then filled into a grid and checked with a word-list validator.</p>
+      <p>Version 1.0.0 · Built with vanilla HTML, CSS and JavaScript.</p>
+    </div>
+  </div>
+
+  <!-- New puzzle sheet -->
+  <div class="sheet" id="sheet-new" aria-hidden="true">
+    <div class="sheet-header">
+      <h2>New puzzle</h2>
+      <button class="icon-btn" id="btn-close-new" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-list">
+      <p>Generate a fresh crossword with AI-written clues.</p>
+      <label class="sheet-label">Theme</label>
+      <input type="text" id="new-theme" placeholder="Leave blank for a surprise theme">
+      <div class="sheet-actions">
+        <button class="btn btn-outline" id="new-cancel">Cancel</button>
+        <button class="btn" id="new-generate">Generate puzzle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reveal / check sheet -->
+  <div class="sheet" id="sheet-action" aria-hidden="true">
+    <div class="sheet-header">
+      <h2 id="action-title">Action</h2>
+      <button class="icon-btn" id="btn-close-action" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-list">
+      <p id="action-message"></p>
+      <div class="sheet-actions">
+        <button class="btn btn-outline" id="action-cancel">Cancel</button>
+        <button class="btn" id="action-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Puzzle screen -->
+  <section class="screen" id="screen-puzzle">
+    <div class="puzzle-toolbar">
+      <div class="toolbar-left">
+        <button class="icon-btn" id="btn-back-to-menu" aria-label="Menu">←</button>
+        <span class="puzzle-meta" id="puzzle-theme">Theme —</span>
+      </div>
+      <div class="toolbar-right">
+        <span id="timer-display">0:00</span>
+        <button class="icon-btn" id="btn-reveal-word" aria-label="Reveal word">?</button>
+        <button class="icon-btn" id="btn-check" aria-label="Check puzzle">✓</button>
+      </div>
+    </div>
+
+    <div class="clues-panel">
+      <div class="clues-tabs">
+        <button class="tab active" id="tab-across" data-dir="across">Across</button>
+        <button class="tab" id="tab-down" data-dir="down">Down</button>
+      </div>
+      <div class="clues-list" id="clues-across"></div>
+      <div class="clues-list" id="clues-down" style="display:none;"></div>
+    </div>
+
+    <div class="puzzle-wrap">
+      <div class="grid-container" id="grid-container"></div>
+    </div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <div class="status" id="status"></div>
+  </section>
+
+</main>
+
+<script src="crossword.js"></script>
+</body>
+</html>

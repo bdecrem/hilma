@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Park cleanup sign-up</title></head>
+<body>
+<h1>Volunteer park cleanup</h1>
+<form id="f"><input id="name" placeholder="Your name" required> <input type="email" placeholder="Email (optional)"> <button>Sign up</button></form>
+<ol id="list"></ol>
+<script>
+const KEY = 'cleanup-signups'
+const load = () => JSON.parse(localStorage.getItem(KEY) || '[]')
+const show = () => { list.innerHTML = ''; for (const n of load()) { const li = document.createElement('li'); li.textContent = n; list.append(li) } }
+f.onsubmit = (e) => { e.preventDefault(); localStorage.setItem(KEY, JSON.stringify([...load(), document.getElementById('name').value.trim()])); f.reset(); show() }
+show()
+</script>
+</body></html>

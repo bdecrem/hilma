@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>To-do</title></head>
+<body>
+<!-- A plausible mistake: a plain to-do list; the due date is never asked for or shown, and the
+     only button on a task deletes it. -->
+<h1>To-do</h1>
+<input id="task" placeholder="New task"> <button id="add">Add</button>
+<ul id="list"></ul>
+<script>
+add.onclick = () => {
+  const li = document.createElement('li'); li.textContent = task.value + ' '
+  const x = document.createElement('button'); x.textContent = 'Done'; x.onclick = () => li.remove()
+  li.append(x); list.append(li); task.value = ''
+}
+</script>
+</body></html>

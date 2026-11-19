@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Unit converter</title></head>
+<body>
+<h1>Unit converter</h1>
+<select id="cat"><option value="distance">Distance</option><option value="weight">Weight</option><option value="temperature">Temperature</option></select>
+<input id="v" type="number" value="1">
+<select id="from"></select> to <select id="to"></select>
+<p>Result: <strong id="out"></strong></p>
+<script>
+const UNITS = {
+  distance: { km: ['Kilometers', 1000], mi: ['Miles', 1609.344], m: ['Meters', 1] },
+  weight: { kg: ['Kilograms', 1], lb: ['Pounds', 0.45359237], g: ['Grams', 0.001] },
+  temperature: { c: ['Celsius'], f: ['Fahrenheit'], k: ['Kelvin'] },
+}
+const toC = { c: (x) => x, f: (x) => (x - 32) * 5 / 9, k: (x) => x - 273.15 }
+const fromC = { c: (x) => x, f: (x) => x * 9 / 5 + 32, k: (x) => x + 273.15 }
+function fill() {
+  const u = UNITS[cat.value]
+  for (const s of [from, to]) s.innerHTML = Object.entries(u).map(([k, [n]]) => `<option value="${k}">${n}</option>`).join('')
+  to.selectedIndex = 1; calc()
+}
+function calc() {
+  const x = +v.value, u = UNITS[cat.value]
+  const r = cat.value === 'temperature' ? fromC[to.value](toC[from.value](x)) : x * u[from.value][1] / u[to.value][1]
+  out.textContent = `${+r.toFixed(2)} ${u[to.value][0]}`
+}
+cat.onchange = fill; for (const e of [v, from, to]) { e.oninput = calc; e.onchange = calc }
+fill()
+</script>
+</body></html>

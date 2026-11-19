@@ -1,0 +1,65 @@
+[
+  {
+    "id": "crossword",
+    "request": "build me a smart app that uses ai to generate a crossword puzzle on demand",
+    "source": "real",
+    "from": "Bart, typed into the Mac app in a Local session, 2026-11-18. Ola's own model built something that did not show a grid; Claude Code built a working one.",
+    "needs_ai": true,
+    "keywords": ["crossword", "puzzle"],
+    "must": "A page with a crossword grid of at least 5 by 5 cells, numbers in the cells where words start, a list of clues, and a way to ask for a new puzzle that gives a different one. The words or clues come from an AI call."
+  },
+  {
+    "id": "tip-split",
+    "request": "make me a tip calculator that splits the bill between a group of people",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["tip", "split", "bill"],
+    "must": "You type the bill and the number of people and pick a tip; it shows what each person pays. A $100 bill with a 20% tip split 4 ways is $30.00 each; split 5 ways, $24.00."
+  },
+  {
+    "id": "countdown",
+    "request": "make a countdown page for our neighborhood rally on March 14, 2027 at 10am, with a button so people can share it",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["countdown", "rally"],
+    "must": "Shows the time left to 2027-03-14 10:00 (seen on 2027-03-04 06:00, that is 10 days and 4 hours), the count moves every second, and a share button shares or copies something about the event."
+  },
+  {
+    "id": "signup-sheet",
+    "request": "make a sign-up sheet page for our volunteer park cleanup where people add their name and it remembers everyone who signed up",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["sign", "volunteer", "cleanup"],
+    "must": "A person types a name and adds it; it shows in the list; it is still there after the page is reloaded; a second name adds to the list."
+  },
+  {
+    "id": "todo-due",
+    "request": "build me a to-do app where each task has a due date",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["todo", "to-do", "task"],
+    "must": "Add a task with a due date; the task and its date show; it can be marked done; a second task adds to the list."
+  },
+  {
+    "id": "memory-game",
+    "request": "make a simple memory game where you flip tiles to find matching pairs",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["memory", "match", "pairs", "game"],
+    "must": "At least 8 face-down tiles; clicking one shows its face; two that differ turn back; two that match stay up; matching them all says you won."
+  },
+  {
+    "id": "unit-converter",
+    "request": "make a unit converter for distance, weight and temperature",
+    "source": "invented",
+    "from": "Written 2026-11-18 in the spirit of the crossword request.",
+    "needs_ai": false,
+    "keywords": ["convert", "unit"],
+    "must": "100 °F gives 37.8 °C, 10 kilometers gives 6.21 miles, 1 kilogram gives 2.2 pounds, and changing the number changes the result."
+  }
+]

@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>AI Crossword</title></head>
+<body>
+<!-- A plausible wrong result: asks the AI for words and clues, lists them, never draws a grid. -->
+<h1>AI Crossword</h1>
+<input id="topic" placeholder="Topic"> <button id="go">Generate</button>
+<ol id="clues"></ol>
+<script>
+async function go() {
+  const r = await fetch('/api/crossword?topic=' + encodeURIComponent(document.getElementById('topic').value))
+  const d = await r.json()
+  document.getElementById('clues').innerHTML = d.words.map((w, i) => `<li>${i + 1}. ${w.clue} (${w.answer.length} letters)</li>`).join('')
+}
+document.getElementById('go').onclick = go
+go()
+</script>
+</body></html>

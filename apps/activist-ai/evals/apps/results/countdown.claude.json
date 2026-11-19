@@ -1,0 +1,38 @@
+{
+  "problem": "countdown",
+  "column": "claude",
+  "model": "Fable 5.2",
+  "date": "2026-11-18",
+  "seconds": 50,
+  "timedOut": false,
+  "page": "index.html",
+  "checks": [
+    {
+      "name": "page_opens",
+      "pass": true
+    },
+    {
+      "name": "shows_10_days",
+      "pass": true
+    },
+    {
+      "name": "ticks",
+      "pass": true
+    },
+    {
+      "name": "share_button",
+      "pass": true
+    },
+    {
+      "name": "share_does_something",
+      "pass": true
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "pass": true,
+  "failure": "success",
+  "notes": [],
+  "screenshot": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/countdown-claude-2026-11-18T23-27-25/built.png",
+  "run": "/Users/bartdecrem/Library/Caches/ola-eval/runs-apps/countdown-claude-2026-11-18T23-27-25"
+}
