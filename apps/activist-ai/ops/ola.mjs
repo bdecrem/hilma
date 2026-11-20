@@ -14,7 +14,7 @@
 //                                     The suites run are those the change since the deployed
 //                                     commit can affect, side by side (ops/select.mjs, OLA-283);
 //                                     --all runs every one; the log and deploys.log name the skipped
-//   node ops/ola.mjs check [<commit>] [--base <commit>] [--all]
+//   node ops/ola.mjs check [<commit>] [--base <commit>] [--all] [--no-apps]
 //                                     the deploy's steps and suites for one commit (default
 //                                     origin/main) without serving it (OLA-84), the suites picked
 //                                     against --base (default: the deployed commit): unpacked into
@@ -316,7 +316,7 @@ if (cmd === 'container-up') {
 } else if (cmd === 'deploy') {
   await deploy(refArg(), { unsigned: process.argv.includes('--unsigned'), all: process.argv.includes('--all') })
 } else if (cmd === 'check') {
-  const r = await deploy(refArg(), { check: true, all: process.argv.includes('--all'), base: optArg('--base') })
+  const r = await deploy(refArg(), { check: true, all: process.argv.includes('--all'), base: optArg('--base'), noApps: process.argv.includes('--no-apps') })
   if (!r?.ok) process.exitCode = r?.yielded ? 3 : 1
 } else if (cmd === 'ci') {
   const { ciOnce } = await import('./ci.mjs')
@@ -568,7 +568,7 @@ function counts(tail) {
 // same unpack, dependencies, web build, image and suites, plus the Mac and iPhone apps' shared code
 // (OlaKit's swift test, no VM), and nothing is served. It returns { ok, commit, suites, why } (ok
 // null and yielded when it gave the turn to a deploy) and records it in checks.json / checks.log.
-async function deploy(ref, { unsigned = false, check = false, all = false, base = null } = {}) {
+async function deploy(ref, { unsigned = false, check = false, all = false, base = null, noApps = false } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
   const SUITES = [
@@ -681,7 +681,8 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   // deployed one, or --base) can affect; every suite when it cannot tell, or with --all.
   const baseRef = base ?? before?.commit ?? null
   const baseCommit = baseRef ? git('rev-parse', '--verify', '--quiet', `${baseRef}^{commit}`).stdout.trim() || null : null
-  const names = [...(check ? ['apps'] : []), ...SUITES.map(([n]) => n)]
+  // --no-apps: a check from an ssh session, where the apps' keychain test cannot reach the login keychain.
+  const names = [...(check && !noApps ? ['apps'] : []), ...SUITES.map(([n]) => n)]
   const changed = all ? null : changedFiles(git, baseCommit, commit)
   const pick = all
     ? { run: names, skip: [], all: '--all was asked for', why: {} }

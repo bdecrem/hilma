@@ -1281,6 +1281,37 @@ backup and ci tests). Only if all pass: `current` is switched, `deployed.json` w
 rewritten and restarted (`kickstart -k`; the container job is not restarted), and the front desk
 and the gateway must answer within 30 s or the previous release is switched back and restarted.
 
+**Only the suites a change can affect, side by side (OLA-283, 2026-11-20, `ops/select.mjs`).** On
+Nov 20 an update that changed a README, the asks' own code and one admin command took 23 min 18 s,
+22.7 min of it the suites one after another (front desk 589 s, web 331, workspace 310, TLS 66,
+gateway 59, the rest 8), and while it ran nobody else could use the test turn. Now an update
+compares the commit with the deployed one (a check: `--base <commit>`, else the deployed one) and
+runs a suite only when the change touches one of its files: its entry's closure (relative imports,
+and every string in the code that names a file of the tree, such as a script it spawns, a fixture
+it reads or the server it starts, followed file to file; a named folder counts all its files) plus
+the folders it owns (`OWNS`: the front desk suite signs people in through the built page and its VMs
+run the image, so `web/src/`, `workspace/` and `skills/` are its too). The seconds-long suites
+(turn, backup, ci, signers, restart, asks, select) always run. A changed file that no suite uses
+skips them only when it is on the written `UNCHECKED` list (writing, the evals and the asks'
+runner, the site, the brand, the ops programs no suite runs); any other file no suite claims, a
+change to the update tool (`ops/ola.mjs` and its imports) or the top packages, no deployed commit,
+or `--all` runs every suite. The README itself counts only where checks read it (its standing
+instruction). The update's log names every skipped suite with the reason, and the line in
+`deploys.log` / `checks.log` says which were skipped and how long the suites and the whole update
+took (without the wait for the turn); each suite's output in the log is stamped with its seconds.
+The suites then run in lanes side by side: workspace then front desk in one lane (together they
+would take all four of the machine's VMs and leave none for the test server's people), and the web,
+gateway and TLS suites and the small ones each beside them (no VM; port 0 or their own ports; their
+own temp folders). The front desk suite serves a copy of `web/dist` taken first (`OLA_FD_DIST`),
+because the web suite builds `web/dist` again while it runs. On a failure no new suite starts, the
+running ones finish, and the update is refused; a check gives the turn to a waiting deploy the same
+way. Measured on the mini (checks of made-up commits on ebdd4110, `ops/ola.mjs check <c> --base <c>`):
+a document only, 12 s of suites; the website only (web and front desk), 599 s in all, the front desk
+594 s with the web suite's 306 s beside it. `node --test ops/select-test.mjs` (also a suite) holds the
+rule, including the cross-part cases: a shared file the front desk check imports from `web/server/`,
+the pass code the TLS front imports, the gateway every VM suite starts. The update that runs is the
+previous release's tool, so this takes effect from the second update after it lands.
+
 **A deploy drops no request (OLA-94).** Only the jobs whose code changed are restarted
 (`ops/restart.mjs`): the TLS front, the tunnel and the gateway keep running from the release they
 started in when their files (their import closure, `ngrok.yml` for the tunnel) are the same in the
