@@ -30,6 +30,11 @@ BUILD=$(grep -E '^[[:space:]]*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/
 VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/')
 xcodegen generate -q
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/tokensurfers-ship.XXXXXX")
+# On exit, keep only the logs: the archives and exports are about 2 GB a run and nothing removed
+# them (21 runs of Ola's script filled this Mac's disk on 2026-11-19). Log folders older than two
+# days go at the start of the next run.
+trap 'find "$OUT" ! -type d ! -name "*.log" ! -name "*.notary.json" ! -name "*.err" -delete 2>/dev/null; find "$OUT" -depth -type d -empty -delete 2>/dev/null' EXIT
+find "$(dirname "$OUT")" -maxdepth 1 -name "$(basename "${OUT%.*}").*" -mtime +2 -exec rm -rf {} + 2>/dev/null || true
 
 cat > "$OUT/export.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

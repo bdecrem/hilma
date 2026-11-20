@@ -34,6 +34,11 @@ VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"(
 [ -z "$(git status --porcelain project.yml)" ] || { echo "error: commit and push the build number first" >&2; exit 1; }
 git fetch -q origin && [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "error: push main first (the mini pulls it)" >&2; exit 1; }
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/takt-ship.XXXXXX")
+# On exit, keep only the logs: the archives and exports are about 2 GB a run and nothing removed
+# them (21 runs of Ola's script filled this Mac's disk on 2026-11-19). Log folders older than two
+# days go at the start of the next run.
+trap 'find "$OUT" ! -type d ! -name "*.log" ! -name "*.notary.json" ! -name "*.err" -delete 2>/dev/null; find "$OUT" -depth -type d -empty -delete 2>/dev/null' EXIT
+find "$(dirname "$OUT")" -maxdepth 1 -name "$(basename "${OUT%.*}").*" -mtime +2 -exec rm -rf {} + 2>/dev/null || true
 
 if [ "$MINI" = local ]; then
   # Archived SIGNED here (the profile and its cert are on this Mac): an unsigned archive carries

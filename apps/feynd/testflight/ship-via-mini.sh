@@ -26,6 +26,11 @@ VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"(
 [ -z "$(git status --porcelain project.yml)" ] || { echo "error: project.yml has uncommitted changes; commit and push the build number first" >&2; exit 1; }
 git fetch -q origin && [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "error: push main first (the mini pulls it)" >&2; exit 1; }
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/dodo-ship.XXXXXX")
+# On exit, keep only the logs: the archives and exports are about 2 GB a run and nothing removed
+# them (21 runs of Ola's script filled this Mac's disk on 2026-11-19). Log folders older than two
+# days go at the start of the next run.
+trap 'find "$OUT" ! -type d ! -name "*.log" ! -name "*.notary.json" ! -name "*.err" -delete 2>/dev/null; find "$OUT" -depth -type d -empty -delete 2>/dev/null' EXIT
+find "$(dirname "$OUT")" -maxdepth 1 -name "$(basename "${OUT%.*}").*" -mtime +2 -exec rm -rf {} + 2>/dev/null || true
 
 echo "== archiving $VERSION ($BUILD) on the mini"
 ssh -o ConnectTimeout=10 "$MINI" 'set -e; export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/Documents/code/hilma && git pull -q --ff-only && cd apps/feynd && { [ -f Feynd/Secrets.swift ] || cp Feynd/Secrets.swift.example Feynd/Secrets.swift; } && { command -v xcodegen >/dev/null && xcodegen generate -q || echo "no xcodegen on the mini: using the committed .xcodeproj"; } && rm -rf /tmp/dodo.xcarchive && xcodebuild archive -project Feynd.xcodeproj -scheme Feynd -destination "generic/platform=iOS" -archivePath /tmp/dodo.xcarchive -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > /tmp/dodo-archive.log 2>&1 || { grep -E "error:" /tmp/dodo-archive.log | head; exit 1; }; /usr/libexec/PlistBuddy -c "Print CFBundleVersion" /tmp/dodo.xcarchive/Products/Applications/Feynd.app/Info.plist; cd /tmp && rm -f dodo.xcarchive.tgz && tar czf dodo.xcarchive.tgz dodo.xcarchive' \
