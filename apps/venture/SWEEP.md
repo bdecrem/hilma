@@ -29,6 +29,23 @@ people kept on the Ola machine (and which were handed to Claude after Ola's own 
 machine's alarms. Then read that day's entries in `private/CORRECTIONS.md`, `LOG.md` and
 `JOURNAL.md`.
 
+## 1b. First, the escapes and the checks (since 2026-11-20)
+
+Before anything else, the three things that say whether "it works" could be trusted today:
+
+- `node scripts/venture/correct.mjs escapes`: how often Bart met something broken or untrue after
+  being told it was done or working. For each one today: which check passed it, or why there was
+  no check, and what that check now does differently. A checker's pass that failed for him is the
+  most important finding of the day.
+- `node scripts/venture/issues.mjs unchecked`: tickets ready with no checker, tickets in progress
+  with no checks, and the day's closings without checks. Read every "internal" reason and every
+  skipped place as a stranger would; reopen what does not hold.
+- The request test set on the test server (OLA-231): every request that stopped working, and every
+  failure of Ola today that is not yet a case in it.
+
+A correction is recorded with `node scripts/venture/correct.mjs add …` and nothing else. A weakness
+that came back gets a stronger kind of fix; the tool refuses another written rule.
+
 ## 2. Study each thing that went wrong: five questions
 
 Bart, the same evening: "our goal is to have a system that gets smarter and better each day by
