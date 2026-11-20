@@ -1,0 +1,766 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica expulsion_a claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "expulsion_a",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  47,
+  49,
+  51,
+  53
+ ],
+ "started_at": "2026-11-20T20:17:43.389Z",
+ "meters_before": {
+  "at": "2026-11-20T20:17:38.752Z",
+  "window": {
+   "pct": 25,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 25,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 25% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 60228,
+  "user": 115
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:24:53.110Z",
+ "minutes": 7.16,
+ "meters_after": {
+  "at": "2026-11-20T20:24:53.110Z",
+  "window": {
+   "pct": 27,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 27,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 27% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 127694,
+   "output": 29077,
+   "cache_read": 2440665,
+   "cache_write": 147093,
+   "cost_usd": 2.14,
+   "total": 2744529
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 127646,
+    "output": 10735,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2430,
+    "cost_usd": 0.1081
+   },
+   "claude-opus-5-5": {
+    "input": 48,
+    "output": 18342,
+    "cache_read": 2440665,
+    "cache_write": 147093,
+    "thinking": 4849,
+    "cost_usd": 2.0319
+   }
+  }
+ },
+ "turns": 31,
+ "calls": 59,
+ "duration_ms": 428966,
+ "duration_api_ms": 284017,
+ "pages_read": 20,
+ "pages": [
+  {
+   "at": "2026-11-20T20:17:49.265Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 70 | ARTÍCULO 129 | ARTÍCULO 115 | ARTÍCULO 116 | ARTÍCULO 186 | ARTÍCULO 187 | asilo para toda persona | derecho a la vida se encuentre en riesgo",
+   "ok": true,
+   "chars": 16778
+  },
+  {
+   "at": "2026-11-20T20:17:56.631Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 31.- | Ninguna persona extranjera solicitante de refugio | vinculación de las personas extranjeras con la comisión de hechos delictivos | ARTÍCULO 65 | Ley 10645 | Ley N° 10493",
+   "ok": true,
+   "chars": 11117
+  },
+  {
+   "at": "2026-11-20T20:18:00.358Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "solicitante de asilo | hechos delictivos dolosos | Cancelar, mediante resolución | Ficha Artículo 31",
+   "ok": true,
+   "chars": 4169
+  },
+  {
+   "at": "2026-11-20T20:18:14.446Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&nValor3=0&strTipM=FN",
+   "find": "Afectaciones | Versiones | 10493 | 2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 2089
+  },
+  {
+   "at": "2026-11-20T20:18:30.344Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2",
+   "find": "Versión de la Norma | vigencia desde | 10493 | 10645",
+   "ok": true,
+   "chars": 1962
+  },
+  {
+   "at": "2026-11-20T20:19:10.639Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=7",
+   "find": "2023 | 2024 | 2025 | Ley",
+   "ok": true,
+   "chars": 1681
+  },
+  {
+   "at": "2026-11-20T20:19:16.627Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=5",
+   "find": "2023 | 2024 | 2025 | Reforma",
+   "ok": true,
+   "chars": 1865
+  },
+  {
+   "at": "2026-11-20T20:19:24.206Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 14 | Artículo 17 | Artículo 134 | 43810 | 44501 | Artículo 100",
+   "ok": true,
+   "chars": 14698
+  },
+  {
+   "at": "2026-11-20T20:19:42.563Z",
+   "url": "https://revistas.ucr.ac.cr/index.php/rjuridicas/article/view/6060",
+   "find": "artículo 14 | devolución | 43810 | 44501",
+   "ok": true,
+   "chars": 2766
+  },
+  {
+   "at": "2026-11-20T20:19:44.147Z",
+   "url": "https://www.pgr.go.cr/wp-content/uploads/2023/11/RG-151123.pdf",
+   "find": "43810 | artículo 14 | devolución | rige",
+   "ok": true,
+   "chars": 719
+  },
+  {
+   "at": "2026-11-20T20:20:34.495Z",
+   "url": "https://www.refworld.org/es/node/132300",
+   "find": "Artículo 14 | Rige | devolución | Artículo 1",
+   "ok": true,
+   "chars": 571
+  },
+  {
+   "at": "2026-11-20T20:21:08.305Z",
+   "url": "https://revistas.ucr.ac.cr/index.php/juridicas/article/download/63830/63144/299620",
+   "find": "artículo 14 | devolución | 43810",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:21:28.051Z",
+   "url": "https://rimap.unhcr.org/node/244",
+   "find": "43810 | 14 | devolución | non-refoulement | 44501",
+   "ok": true,
+   "chars": 1362
+  },
+  {
+   "at": "2026-11-20T20:21:40.346Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=98356&strTipM=TC",
+   "find": "Artículo 14 | devolución | Rige | Artículo 1",
+   "ok": true,
+   "chars": 9508
+  },
+  {
+   "at": "2026-11-20T20:22:23.562Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+   "find": "Artículo 121 | Artículo 134 | Artículo 59",
+   "ok": true,
+   "chars": 9515
+  },
+  {
+   "at": "2026-11-20T20:22:39.922Z",
+   "url": "https://refugeesinternational.org/?p=3138",
+   "find": "non-refoulement | one month | safe | work permit | 43810",
+   "ok": true,
+   "chars": 4887
+  },
+  {
+   "at": "2026-11-20T20:22:52.753Z",
+   "url": "https://www.nacion.com/blogs/por-tanto/vivio-30-anos-en-costa-rica-y-tuvo-tres-hijos/4VRSX6BO6FCVDLECFF5ZIKE2FQ/story/",
+   "find": "condena | residencia | Tribunal | 2016 | arraigo",
+   "ok": true,
+   "chars": 5529
+  },
+  {
+   "at": "2026-11-20T20:22:53.794Z",
+   "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses",
+   "find": "non-refoulement | returned | IOM | Constitutional | asylum in Costa Rica | fear",
+   "ok": true,
+   "chars": 5964
+  },
+  {
+   "at": "2026-11-20T20:23:14.750Z",
+   "url": "https://semanariouniversidad.com/?p=271837",
+   "find": "un mes | país seguro | devolución | rechaz | inadmisib",
+   "ok": true,
+   "chars": 5534
+  },
+  {
+   "at": "2026-11-20T20:23:44.041Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 31 | perseguidos por razones políticas",
+   "ok": true,
+   "chars": 2663
+  }
+ ],
+ "searches": [
+  "Decreto 43810-MGP reforma artículo 14 Reglamento de Personas Refugiadas \"protección contra una devolución\" texto",
+  "pgrweb.go.cr scij \"43810\" Reforma al Reglamento de Personas Refugiadas",
+  "\"43810\" \"artículo 14\" refugio solicitante \"garantías\" Costa Rica 2022 reglamento cambio devolución",
+  "\"43810-MGP\" texto decreto \"Artículo 1°\" \"Refórmese el artículo 14\"",
+  "Sala Constitucional plazo de un mes solicitud refugio artículo 14 decreto 43810 inconstitucional",
+  "Human Rights Watch Costa Rica deportees United States CATEM 2025 asylum non-refoulement report",
+  "Migración expulsa extranjero residente cumplir condena delito cancelación residencia 2023 OR 2024 OR 2025 Costa Rica",
+  "Costa Rica 2023 solicitudes de refugio inadmisibles plazo un mes primer país seguro aplicación Migración rechazadas",
+  "Decreto 44501-MGP publicado La Gaceta junio 2024 reglamento personas refugiadas rige"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":47,\"answer_2023\":\"only major convictions (e.g., criminal offenses) can lead to loss of residence status\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"only major convictions (e.g., criminal offenses) can lead to loss of residence status\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 13(17)\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 70\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 129(4), (9)\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Arts. 186-187\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"The law and DGME practice did not change in the window. Cancellation and expulsion follow convictions for intentional crimes (delitos dolosos) and are decided case by case. A La Nación report of Oct. 2025 on a Sala Primera judgment shows DGME cancelled the permanent residence of a Nicaraguan who had lived in Costa Rica for about 30 years, over a 2010 two-month suspended sentence for assault with a weapon. Cancellation came in 2016 and deportation in 2019, and the Sala Primera upheld it. So even minor intentional offences can cost residence status, although no cases turned on administrative offences. No documented shift in practice between 2023 and 2026, so the starting rating of Usually is kept for both dates.\",\"practice_sources\":[{\"title\":\"Sentencia confirmó deportación de hombre que vivió",
+ "output": {
+  "answers": [
+   {
+    "question_id": 47,
+    "answer_2023": "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+    "implementation_2023": "Usually",
+    "answer_2026": "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 13(17)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 70",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 129(4), (9)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 186-187",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The law and DGME practice did not change in the window. Cancellation and expulsion follow convictions for intentional crimes (delitos dolosos) and are decided case by case. A La Nación report of Oct. 2025 on a Sala Primera judgment shows DGME cancelled the permanent residence of a Nicaraguan who had lived in Costa Rica for about 30 years, over a 2010 two-month suspended sentence for assault with a weapon. Cancellation came in 2016 and deportation in 2019, and the Sala Primera upheld it. So even minor intentional offences can cost residence status, although no cases turned on administrative offences. No documented shift in practice between 2023 and 2026, so the starting rating of Usually is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Sentencia confirmó deportación de hombre que vivió 30 años en Costa Rica y tuvo tres hijos ticos (La Nación, Por tanto)",
+      "url": "https://www.nacion.com/blogs/por-tanto/vivio-30-anos-en-costa-rica-y-tuvo-tres-hijos/4VRSX6BO6FCVDLECFF5ZIKE2FQ/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The SINALEVI ficha shows the current Ley 8764 text is version 19 of 19, dated 24/02/2025. Arts. 13(17), 70, 129, 186 and 187 carry no 'Así reformado' notes, while the 2024-2025 amendments (Ley 10493 on arts. 33, 241, 253; Ley 10645 on art. 6(8)) are noted on their own articles. So the cited text in force on 1 Jan 2023 was the same. The list of acts that amended the law ('Normativa que la afectó') would not render, and no earlier version was opened directly.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SCIJ/SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764, texto completo versión 145230 (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764, ficha de la norma (versión 19 de 19, 24/02/2025)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2"
+     },
+     {
+      "title": "La Nación: Sentencia confirmó deportación de hombre que vivió 30 años en Costa Rica",
+      "url": "https://www.nacion.com/blogs/por-tanto/vivio-30-anos-en-costa-rica-y-tuvo-tres-hijos/4VRSX6BO6FCVDLECFF5ZIKE2FQ/story/"
+     }
+    ],
+    "starting_answer_concern": "The 50-point option fits because the trigger is a criminal conviction (delito doloso). But the La Nación case shows that a minor intentional offence (a two-month suspended sentence) was enough to cancel 20 years of permanent residence and deport the person despite Costa Rican children. That makes 'Usually' protective look generous; 'Sometimes' may describe practice better.",
+    "confidence": "medium",
+    "notes": "Arts. 13(17) and 129(9) also allow cancellation on a 'vinculación' to intentional crimes or a security threat, without a conviction. The El Observador (2021) and CR Hoy (2026) items from the starting answer were not reopened in this session."
+   },
+   {
+    "question_id": 49,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 6(6)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31 (chapeau) and 31(9)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 65",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Art. 17",
+      "enacted": "2011-11-01",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: no documented returns to torture. The main concerns were the Decree 43810 restrictions: a one-month filing deadline and first-safe-country inadmissibility. UNHCR's technical opinion and the Sala Constitucional (habeas corpus of 14 Feb. 2023, as reported by Semanario Universidad) criticised them, but they did not produce documented refoulement. 2025-2026: about 200 third-country nationals expelled from the US were held at CATEM. HRW (May 2025) reports that 97 returned home in circumstances that call into question whether their choices were truly voluntary. They were first told their only options were return or onward travel, and only on 26 March were they told they could seek asylum. These are serious gaps, but there is no systematic pattern, so Usually is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "US: Asylum Seekers Expelled to Costa Rica Detail Abuses (Human Rights Watch)",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala IV y un informe de ACNUR desde Ginebra, un revés para nuevas reglas de Chaves que restringen refugio (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/?p=271837",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Statement from IRCA CASABIERTA and Refugees International regarding Executive Decrees 43809-MGP/43810-MGP",
+      "url": "https://refugeesinternational.org/?p=3138",
+      "year": 2022,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 8764 arts. 6(6), 31 and 65 and Refugee Reg. art. 17 carry no amendment notes in the current consolidated texts (Ley 8764 version 19 of 19, 24/02/2025). Decree 43810 (in force 1 Dec 2022), read in full, did not touch art. 17. The amending-acts list for Ley 8764 would not render. CAT concluding observations were not opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764, ficha de la norma",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Decreto Ejecutivo 43810-MGP (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=98356&strTipM=TC"
+     },
+     {
+      "title": "HRW: US Asylum Seekers Expelled to Costa Rica Detail Abuses",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses"
+     },
+     {
+      "title": "Semanario Universidad on Sala IV and UNHCR opinion on Decree 43810",
+      "url": "https://semanariouniversidad.com/?p=271837"
+     },
+     {
+      "title": "Refugees International / IRCA CASABIERTA statement on Decrees 43809/43810",
+      "url": "https://refugeesinternational.org/?p=3138"
+     }
+    ],
+    "starting_answer_concern": "The Yes rests on art. 6(6), which is a policy guarantee, plus the treaty-interpretation clause and the directly applicable CAT art. 3. No statute bars removal of every migrant to a risk of torture or ill-treatment. A strict reading could give No, but that holds equally for 2023 and 2026.",
+    "confidence": "medium",
+    "notes": "For 2023 the asylum-seeker part of the protection was narrowed at regulatory level by Decree 43810: art. 14 imposed a one-month deadline, and the old art. 121 allowed first-safe-country inadmissibility. Decree 44501 (2024) reversed this. Neither provision is cited in this indicator, and the statutory and treaty basis did not change. Practice evidence covers asylum seekers and third-country deportees, not labour migrants."
+   },
+   {
+    "question_id": 51,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 31",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 115",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 31(8)-(9), 65, 116",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Art. 14",
+      "enacted": "2011-11-01",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Art. 121",
+      "enacted": "2011-11-01",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Arts. 17, 134",
+      "enacted": "2011-11-01",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-06",
+      "instrument": "Decreto Ejecutivo N.º 44501-MGP del 28 de mayo de 2024 (Reforma de los artículos 14, 54, 59, 121, 122 y 140 del Reglamento de Personas Refugiadas)",
+      "article": "Reglamento 36831-G, art. 14",
+      "kind": "amended",
+      "what_changed": "Before (Decree 43810, in force 1 Dec 2022): only people who filed within one month of entry counted as applicants, late claims were inadmissible, and applicants were protected from return only 'until the claim is determined'. After: there is no deadline, and every applicant enjoys protection against return and the same guarantees as a recognised refugee until the claim is resolved. This widens regulatory non-refoulement coverage for asylum seekers.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "En razón del carácter declarativo del refugio, la persona solicitante gozará de protección contra una devolución y de las mismas garantías que una persona refugiada reconocida, hasta tanto no se haya resuelto su solicitud. (Así reformado por el artículo 1° del decreto ejecutivo N° 44501 del 28 de mayo del 2024)"
+     },
+     {
+      "date": "2024-06",
+      "instrument": "Decreto Ejecutivo N.º 44501-MGP del 28 de mayo de 2024",
+      "article": "Reglamento 36831-G, art. 121",
+      "kind": "amended",
+      "what_changed": "Decree 43810's art. 121 made claims inadmissible from people who had transited 'safe' countries without seeking asylum there. Decree 44501 replaced it with an expedited procedure for manifestly unfounded claims, with interviews and appeals, and removed the first-safe-country bar to access to the procedure.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "Artículo 121. -Las solicitudes manifiestamente infundadas o claramente abusivas, en los términos del artículo 740 del presente reglamento serán conocidas por el Subproceso de Refugio, el cual realizará un procedimiento expedito ... (Así reformado por el artículo 4° del decreto ejecutivo N° 44501 del 28 de mayo del 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: Costa Rica held more than 200,000 pending claims and generally did not return asylum seekers. Decree 43810's one-month deadline and safe-country inadmissibility rules were criticised by UNHCR in a technical opinion. The Sala Constitucional ruled against the related exit ban (habeas corpus of 14 Feb. 2023, reported by Semanario Universidad). No documented refoulement was found. 2025-2026: the 2024 restoration (Decree 44501) applies. The US-deportee episode (HRW, May 2025) showed asylum access delayed until 26 March and 97 returns home of doubtful voluntariness. Usually is kept for both dates, with known gaps.",
+    "practice_sources": [
+     {
+      "title": "Sala IV y un informe de ACNUR desde Ginebra, un revés para nuevas reglas de Chaves que restringen refugio (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/?p=271837",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "US: Asylum Seekers Expelled to Costa Rica Detail Abuses (Human Rights Watch)",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Statement from IRCA CASABIERTA and Refugees International regarding Executive Decrees 43809-MGP/43810-MGP",
+      "url": "https://refugeesinternational.org/?p=3138",
+      "year": 2022,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The art. 14 text in force on 1 Jan 2023 was rebuilt from Decree 43810, read in full on SINALEVI ('Artículo 9. Rige a partir de su publicación', published 1 Dec 2022). The current text shows the 44501 reform notes. The exact gazette date of 44501 was not confirmed; it was published around June 2024. Const. art. 31 and Ley 8764 arts. 31, 65, 115 and 116 carry no amendment notes. Sala Constitucional rulings 2023-003439 and 2023-021440 (exit rule, art. 59) were known only from press reports and not read.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764, texto completo (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Decreto Ejecutivo 43810-MGP (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=98356&strTipM=TC"
+     },
+     {
+      "title": "UNHCR RIMAP: Decree 43810-MGP",
+      "url": "https://rimap.unhcr.org/node/244"
+     },
+     {
+      "title": "Semanario Universidad on Sala IV and UNHCR opinion",
+      "url": "https://semanariouniversidad.com/?p=271837"
+     },
+     {
+      "title": "HRW: US Asylum Seekers Expelled to Costa Rica Detail Abuses",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses"
+     },
+     {
+      "title": "Refugees International / IRCA CASABIERTA statement",
+      "url": "https://refugeesinternational.org/?p=3138"
+     },
+     {
+      "title": "Revista de Ciencias Jurídicas (UCR): Del Decreto 43810-MGP al Decreto 44501-MGP (abstract page)",
+      "url": "https://revistas.ucr.ac.cr/index.php/rjuridicas/article/view/6060"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The Yes holds on both dates: Const. art. 31 and Ley 8764 art. 115, which explicitly names race, religion, nationality, gender, membership of a particular group and political opinion and covers refugees and asylum seekers, were unchanged. The difference is regulatory. On 1 Jan 2023 late filers (after one month) and people who had transited 'safe' countries could be declared inadmissible and so fall outside art. 14's protection as applicants. By 1 Jan 2026 Decree 44501 had removed both limits. Hence 'not the same'. Decree 44133 (June 2023), reported to have repealed the art. 59 exit rule, was not read."
+   },
+   {
+    "question_id": 53,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(9)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 6(6)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 94(12)",
+      "enacted": "2009-08-19",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 2 ('Razón humanitaria')",
+      "enacted": "2012",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In both periods Costa Rica generally did not remove asylum seekers whose lives were at risk, and humanitarian and special categories let many with rejected or pending claims stay. 2023: the Decree 43810 admissibility restrictions drew UNHCR and Sala Constitucional criticism (Semanario Universidad, 2023), but no removals to a risk to life were documented. 2025: HRW documented the detention of about 200 US deportees, mixed messages limiting their options to return, and 97 returns home of doubtful voluntariness. These are serious episode-specific gaps, but no systematic pattern. Usually is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "US: Asylum Seekers Expelled to Costa Rica Detail Abuses (Human Rights Watch)",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala IV y un informe de ACNUR desde Ginebra, un revés para nuevas reglas de Chaves que restringen refugio (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/?p=271837",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 8764 arts. 6(6) and 31(9) were read in the current consolidated text (version 19 of 19, 24/02/2025) and carry no amendment notes. Art. 94(12) and Reglamento de Extranjería art. 2 were not reopened in this session, so their history in the window could not be checked. Nothing found suggests they changed.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764, ficha de la norma",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2"
+     },
+     {
+      "title": "HRW: US Asylum Seekers Expelled to Costa Rica Detail Abuses",
+      "url": "https://www.hrw.org/news/2025/05/22/us-asylum-seekers-expelled-costa-rica-detail-abuses"
+     },
+     {
+      "title": "Semanario Universidad on Sala IV and UNHCR opinion",
+      "url": "https://semanariouniversidad.com/?p=271837"
+     }
+    ],
+    "starting_answer_concern": "The explicit statutory bar (art. 31(9)) covers only asylum seekers and refugees. Coverage of other migrants rests on art. 6(6), a policy guarantee, and on the directly applicable ACHR art. 22(8). A reviewer applying the Chile example strictly might weigh this differently, but the same holds for both dates.",
+    "confidence": "medium",
+    "notes": "The Decree 43810 restrictions in force on 1 Jan 2023 (one-month deadline and safe-country inadmissibility, Reg. arts. 14 and 121) narrowed who counted as a 'solicitante' protected by art. 31(9). Decree 44501 (2024) reversed them. The regulation is not cited for this indicator, so no change is recorded here, but see q51."
+   }
+  ]
+ }
+}
