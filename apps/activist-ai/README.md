@@ -2817,3 +2817,51 @@ the suites; the sampler does not yet go through the batch lane (it runs only whe
 nothing executing, one comparison at a time on the machine, which is what the lane would buy until the
 priority lane exists); real-task comparisons have no checks (judge only); a copy of a PDF-heavy task
 gets text stand-ins only (the generator may write .txt, .csv, .md, .json and .xlsx).
+
+## Learning from every switch to Claude (2026-11-19, OLA-157)
+
+Bart, Nov 18: "When I switch to Use Claude for an app after I used a lower model, that choice means
+the work was poor quality ... learn from that so our system learns and gets better over time."
+Approved Nov 19 ("Yes, approved."); the proposal is Venture's private note of Nov 18.
+
+**A switch** is a request handed to a fallback (the hosted open model or Claude) right after a
+cheaper engine had the last turn in that conversation; the ladder is Ola's own model, the hosted
+model, Claude. The web app works it out before it starts the run (`switchOf` in
+`web/src/lib/conversation.ts`, the same rule as the apps' kept turns) and sends `switchedFrom` and
+the Ola turn's message id with `/api/claude/run` or `/api/hosted/run`; a stretch seen before Ola ran
+(the precheck) is not a switch. The Mac and iPhone apps report it through their kept turns
+(`switched_from`, OLA-159), so only for people who store their conversations.
+
+**What is recorded: labels and counts only** (`frontdesk/switches.mjs`, platform migration 15,
+table `switches`): when, product and runtime, from which engine to which, why (`asked`, `stuck`,
+`always`), and the kind of work as one fixed word (apps, design, documents, data, research, other),
+worked out in memory from the request (`kindOf`, keywords) and never stored with it. No request,
+answer, file name or person. Proof that nothing else is kept: `test/switches.test.mjs` plants names
+in a request and finds them in no file of the database.
+
+**A test task, where allowed, and only there:**
+- In a project whose owner chose "A few each day, on their own" for made-up copies (Compare with
+  Claude, above): the switch waits with the request's opencode ids (ids, not content) and the
+  sampler takes it before any random pick; the made-up copy is made in the project's VM,
+  leak-checked and scored against Claude, and a loss becomes a candidate eval task in
+  `evals/candidates/` on this machine. The ids are dropped when the copy is made or fails, after a
+  week, or when the owner stops automatic copies.
+- For a person who stores their conversations (Bart, OLA-159): the kept turns are the draft, the
+  request word for word with what Ola's model did and what the fallback did, read on this machine
+  only: `node frontdesk/admin.mjs switches tasks [--kind app] [--json]` (in the shape of
+  `evals/apps/problems.json`, `must` left for whoever writes its check; with its check it runs as a
+  private problem set outside the repo, `OLA_APP_PROBLEMS_DIR`, `evals/apps/README.md`). When the person deletes
+  their kept turns the drafts go with them; the switch keeps its labels.
+- Anywhere else: labels only.
+
+Nothing of a project's content leaves the machine or enters the repo. What leaves is the summary,
+`node frontdesk/admin.mjs switches [--days 7] [--json]`: requests (Ola runs `run_started`, Claude runs
+`claude_used`, and kept local turns), switches, switches per 100 requests, by engine, reason,
+product, kind (the largest group named) and day, and how many became test tasks.
+`scripts/venture/learning.mjs` reads it over Tailscale for the board's Learning page ("Switches to
+Claude"), and the daily sweep prints it. **Every Friday** the sweep takes the week's largest group
+and fixes it (a skill, an instruction, a tool, or the model), measured before and after on that
+group's test tasks (`apps/venture/SWEEP.md`, "On Fridays, the week").
+
+Not counted: a Mac or iPhone that does not store its conversations (neither its switches nor its
+requests), and the apps' Cloud requests handed to Claude are counted only through kept turns.

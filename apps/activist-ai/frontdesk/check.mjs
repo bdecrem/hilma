@@ -2303,6 +2303,13 @@ await check('a role change that leaves only admins as owners moves the project t
   const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/compare.test.mjs')], { encoding: 'utf8', timeout: 300_000 })
   ok('Compare with Claude without a VM: order swap, evidence, outcomes, budgets stop the sampler, a member, the real-task switch, a candidate run by the eval runner (test/compare.test.mjs)', u.status === 0, `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} passed${u.status ? `: ${u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}` : ''}`)
 }
+{
+  // Switches to Claude (OLA-157, switches.mjs, test/switches.test.mjs): labels and counts only, the
+  // request in no table or file, a made-up copy only where the owner has them made on their own, the
+  // sampler takes a switched request first, kept drafts go when the person deletes them, the summary.
+  const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/switches.test.mjs')], { encoding: 'utf8', timeout: 120_000 })
+  ok('Switches to Claude: labels and counts only, a made-up copy only where allowed, taken first by the sampler, kept drafts deleted with the turns, the summary (test/switches.test.mjs)', u.status === 0, `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} passed${u.status ? `: ${u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}` : ''}`)
+}
 if (!LIVE) {
   const PLANTED =['Quennell', 'Vashkin', 'Brandvold', 'Ostrander', 'harbor_roster']
   const cpost = (who, p, body) => api(p, { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })

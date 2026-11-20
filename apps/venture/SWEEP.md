@@ -131,9 +131,11 @@ Nov 18 the ledger held 9 corrections for the day and the re-read found 27.
 
 ### What to look at for Ola (agents, skills, orchestration)
 
-- Each request handed to Claude after Ola's own model tried: a result that was not good enough.
-  It becomes a test task (`apps/activist-ai/evals/`), and the largest group of them gets a fix (a
-  skill, an instruction, a tool, the choice of model), measured before and after.
+- Each request handed to Claude after Ola's own model tried: a result that was not good enough
+  (OLA-157). `gather` prints the week's switches as labels and counts (per 100 requests, by kind,
+  the largest group) and how many became test tasks: made-up copies scored against Claude, whose
+  losses are candidates (`admin.mjs compare candidates` on the Ola machine), and drafts from kept
+  conversations (`admin.mjs switches tasks`). The largest group gets the Friday fix (below).
 - Each failed test and each thing Bart said about Ola's output.
 - How requests are routed and approved: the wrong engine, an approval asked too often or not at
   all, a step that took too long, an alarm on the machine.
@@ -150,6 +152,16 @@ The Friday sweep also reads the ledger as a whole: which weaknesses were seen th
 guards held all week, which came back, whether the number at the top of the Learning page moved
 (weaknesses guarded and holding, of all known), and whether last week's "to build" got built.
 One paragraph in the entry's `pattern`.
+
+**The switches fix** (OLA-157, approved by Bart Nov 19). The Friday sweep names the week's largest
+group of switches to Claude (`admin.mjs switches --days 7` on the Ola machine; the board's Learning
+page shows the same). For that group: turn its drafts and candidates into test tasks with a check a
+program runs (`apps/activist-ai/evals/apps/README.md`, "Add a problem from a real failure"; Bart's
+own requests and anything else from a real project stay on the Ola machine, never in this public
+repo), score Ola's own model on them, make the one fix (a skill, an instruction, a tool, or a
+different open model), score again, and put both numbers in the entry's `ola` change with its
+ticket. A group with no drafts or candidates yet is fixed from its labels and the eval families'
+existing tasks of that kind, and the entry says so.
 
 ## 4. Write the entry
 

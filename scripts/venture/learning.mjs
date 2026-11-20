@@ -17,6 +17,7 @@
 // tasks as a share of Claude's score on the same tasks (apps/activist-ai/evals/results/learning.json),
 // with the rounds so far; beside it, the app problems (evals/apps/results.json when it exists).
 // Run it at every checkpoint (sync.mjs push calls it).
+import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { loadWeaknesses, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
@@ -82,6 +83,27 @@ const ola = {
   goal: '100: Ola’s own model scores as well as Claude on the work people bring.',
 }
 
+// Switches to Claude (OLA-157): requests handed to Claude or the hosted model right after Ola's own
+// model had the conversation's last turn, from the Ola machine (frontdesk/switches.mjs, `admin.mjs
+// switches --json`): labels and counts only, never a request. Over Tailscale (100.95.51.98), as the
+// sweep's gather; when the machine does not answer, the last reading stays, with its own date.
+function machineSwitches() {
+  const r = spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', 'export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs switches --json --days 7'], { encoding: 'utf8', timeout: 30000 })
+  if (r.status !== 0) return { error: (r.stderr || 'the Ola machine did not answer').trim().split('\n').pop().slice(0, 200) }
+  try {
+    const s = JSON.parse(r.stdout.trim().split('\n').pop())
+    return typeof s.switches === 'number' && Array.isArray(s.kinds) ? s : { error: 'the Ola machine answered something else' }
+  } catch {
+    return { error: 'the Ola machine answered something else' }
+  }
+}
+const sw = machineSwitches()
+if (sw.error) console.log(`switches: not read (${sw.error})`)
+else {
+  ola.switches = sw
+  console.log(`Switches: ${sw.switches} in ${sw.requests} requests over ${sw.days} days${sw.per100 === null ? '' : ` (${sw.per100} per 100)`}${sw.largest ? `; the largest group: ${sw.largest.words} (${sw.largest.n})` : ''}`)
+}
+
 // The weaknesses ledger (scripts/venture/_weak.mjs): every correction and sweep finding filed under
 // a named weakness, with whether its guard is holding.
 const weaknesses = weaknessStatus(loadWeaknesses(root), new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }))
@@ -101,7 +123,11 @@ if (!dry) {
       .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
   )
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-  const { data: st } = await db.from('venture_state').select('key, value').in('key', ['steers', 'steer_replay'])
+  const { data: st } = await db.from('venture_state').select('key, value').in('key', ['steers', 'steer_replay', 'learning'])
+  if (!value.ola.switches) {
+    const prev = st?.find((x) => x.key === 'learning')?.value?.ola?.switches
+    if (prev) value.ola.switches = prev // the last reading, with its own `at`
+  }
   const steers = st?.find((x) => x.key === 'steers')?.value ?? null
   const replay = st?.find((x) => x.key === 'steer_replay')?.value ?? null
   if (steers && typeof steers === 'object') {

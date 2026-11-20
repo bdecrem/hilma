@@ -37,6 +37,7 @@ import { makeWeb } from './web.mjs'
 import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
+import { makeSwitches } from './switches.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSites, sitesConfig } from './sites.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
@@ -232,7 +233,9 @@ export function makeFrontDesk(cfg = config()) {
   }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
-  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log })
+  // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
+  const switches = makeSwitches({ db, log })
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches })
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so
@@ -308,7 +311,7 @@ export function makeFrontDesk(cfg = config()) {
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })
-  const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log })
+  const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log, switches })
   const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
@@ -497,6 +500,7 @@ export function makeFrontDesk(cfg = config()) {
       if (!canRun) return json(res, 403, readOnly)
       const r = await hosted.start(ws, sess.personId, body)
       refused(ws, 'hosted run', r)
+      if (r.status === 200) switches.fromRun(ws, body, 'hosted')
       return json(res, r.status, r.body)
     }
     if (p.startsWith('/api/claude/')) {
@@ -521,6 +525,7 @@ export function makeFrontDesk(cfg = config()) {
         hold()
         const r = await claude.start(ws, sess.personId, body, res, req)
         if (r) refused(ws, 'Claude run', r)
+        else switches.fromRun(ws, body, 'claude') // it ran (streamed): a switch when Ola or the hosted model had the last turn
         return r ? json(res, r.status, r.body) : undefined
       }
       const r = what === 'answer' ? claude.answer(ws, body) : claude.stop(ws, body.run)

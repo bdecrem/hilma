@@ -182,7 +182,7 @@ export const claude = {
   info: () => call<import('./types.ts').ClaudeInfo>('/api/claude'),
   settings: (body: { enabled?: boolean; consent?: boolean; auto?: string }) => post<import('./types.ts').ClaudeInfo>('/api/claude/settings', body),
   /** Starts a run and reads it until it ends; each line goes to onEvent. */
-  run: (body: { request: string; context: string; conversation: string; autonomy: 'go' | 'ask'; why: 'asked' | 'stuck' | 'always'; once?: boolean }, onEvent: (e: any) => void, signal?: AbortSignal) =>
+  run: (body: { request: string; context: string; conversation: string; autonomy: 'go' | 'ask'; why: 'asked' | 'stuck' | 'always'; once?: boolean; switchedFrom?: 'ola' | 'hosted'; fromMessage?: string }, onEvent: (e: any) => void, signal?: AbortSignal) =>
     stream('/api/claude/run', { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' }, signal }, onEvent),
   /** A run already going (after a lost connection): its lines so far, then the rest. */
   follow: (run: string, onEvent: (e: any) => void, signal?: AbortSignal) => stream(`/api/claude/follow?run=${encodeURIComponent(run)}`, { signal }, onEvent),
@@ -200,7 +200,7 @@ export const fallback = {
 export const hosted = {
   settings: (body: { enabled?: boolean; consent?: boolean }) => post<import('./types.ts').HostedInfo>('/api/hosted/settings', body),
   /** One request with the hosted open model, in this conversation; its run is followed on opencode's own stream. */
-  run: (body: { request: string; conversation: string; once?: boolean }) => post<{ ok: true; run: string; provider: string }>('/api/hosted/run', body),
+  run: (body: { request: string; conversation: string; once?: boolean; why?: 'asked' | 'stuck'; switchedFrom?: 'ola'; fromMessage?: string }) => post<{ ok: true; run: string; provider: string }>('/api/hosted/run', body),
 }
 
 /** "Compare with Claude" (frontdesk/compare.mjs): owner only. */

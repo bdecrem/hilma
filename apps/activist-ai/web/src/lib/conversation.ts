@@ -329,6 +329,23 @@ export interface ClaudeEvent {
   [k: string]: any
 }
 
+/**
+ * A switch (OLA-157, frontdesk/switches.mjs): a request handed to a fallback right after a cheaper
+ * engine had the conversation's last turn (the ladder: Ola's own model, the hosted open model,
+ * Claude), the same rule as the Mac and iPhone apps' kept turns. Call it before the new turn is
+ * added. `fromMessage` is that turn's opencode message id, when the page has it (a made-up copy can
+ * be made of it where the owner allows). The front desk records labels and counts only.
+ */
+export function switchOf(turns: Turn[], to: 'hosted' | 'claude'): { switchedFrom: 'ola' | 'hosted'; fromMessage?: string } | null {
+  const RANK = { ola: 0, hosted: 1, claude: 2 } as const
+  const last = turns[turns.length - 1]
+  if (!last) return null
+  const from = last.engine ?? 'ola'
+  if (from === 'claude' || RANK[to] <= RANK[from]) return null
+  const id = /^[A-Za-z0-9_-]{1,80}$/.test(last.id) && !/^(local|claude)-/.test(last.id) ? last.id : undefined
+  return { switchedFrom: from, ...(id ? { fromMessage: id } : {}) }
+}
+
 export function startClaudeTurn(state: ConversationState, request: string, at = Date.now(), handoff: string | null = null): Turn {
   const turn = startTurn(state, request, at)
   turn.id = `claude-${at}`

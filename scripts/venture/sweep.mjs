@@ -132,6 +132,16 @@ async function facts() {
     const rows = JSON.parse(r.stdout.trim().split('\n').pop()).filter((k) => new Date(k.at).toISOString() >= from && new Date(k.at).toISOString() < to)
     const sw = rows.filter((k) => k.switched_from)
     count(rows.length, `kept requests to Ola, ${sw.length} handed on after a first try`)
+    // Switches to Claude (OLA-157): labels and counts for everyone, the largest group of the week.
+    const sws = ssh('switches --json --days 7')
+    if (sws.status === 0) {
+      const w = JSON.parse(sws.stdout.trim().split('\n').pop())
+      add('Ola: switches to Claude or the hosted model after a cheaper engine, the last 7 days (labels and counts only)', [
+        `${w.switches} in ${w.requests} requests${w.per100 === null ? '' : `, ${w.per100} per 100`}; to Claude ${w.to.claude}, to the hosted model ${w.to.hosted}`,
+        `by kind: ${w.kinds.map((k) => `${k.words} ${k.n}`).join(', ') || 'none'}${w.largest ? `; the largest group: ${w.largest.words}` : ''}`,
+        `test tasks: ${w.tasks.copies} made-up copies (${w.tasks.candidates} became candidates, \`admin.mjs compare candidates\`), ${w.tasks.waiting} waiting, ${w.tasks.kept} drafts from kept conversations (\`admin.mjs switches tasks\`), ${w.tasks.labels_only} labels only`,
+      ])
+    } else add('Ola: switches to Claude', [`not read: ${(sws.stderr || 'no answer').trim().split('\n').pop()}`])
     add('Ola: kept requests that day (only people who turned on "Store your conversations")', rows.map((k) => `${new Date(k.at).toISOString().slice(11, 16)}Z ${k.handle} ${k.product}/${k.runtime} ${k.engine}${k.switched_from ? ` (AFTER ${k.switched_from})` : ''} ${k.status}: ${String(k.request).replace(/\s+/g, ' ').slice(0, 300)}`))
   })
 

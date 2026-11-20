@@ -62,6 +62,18 @@ macOS user).
 4. Run the columns, then look at every screenshot: a verdict the picture contradicts means the check
    is wrong; fix it, `recheck`, and say so in the commit.
 
+## Problems from switches to Claude: a private set (OLA-157)
+
+A request handed to Claude after Ola's own model tried is a failure to learn from. For a person who
+stores their conversations, the Ola machine keeps it as a draft: `node frontdesk/admin.mjs switches
+tasks --json` there gives the request word for word with both attempts, in this list's shape. A
+request from a real project never goes into `problems.json` here (this repo is public): it goes into
+a private set on the machine, a folder outside the repo with the same layout (`problems.json`,
+`checks/`, `fixtures/`, `results/`), run with `OLA_APP_PROBLEMS_DIR=<folder> node run.mjs …` (every
+command works on it; the runner refuses a folder inside the repo). A private check imports the
+harness by its absolute path (`…/apps/activist-ai/evals/apps/lib/harness.mjs`). The Friday sweep
+(`apps/venture/SWEEP.md`) fills it from the week's largest group of switches.
+
 ## Checks corrected after looking at the first screenshots (2026-11-18)
 
 - crossword: Claude's app builds the grid in its own server; the check now runs a model's Node

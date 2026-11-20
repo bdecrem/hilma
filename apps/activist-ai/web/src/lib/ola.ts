@@ -4,7 +4,7 @@
 // drawer never shows a stale "working" after the network comes back.
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
-import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, questionOf, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
+import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
@@ -378,15 +378,19 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     if (plan.kind === 'none') return false
     if (plan.kind === 'handover') {
       const to = plan.target === 'claude' ? 'Claude' : 'the hosted open model'
-      void runOn(plan.target, request, { why: 'stuck', handoff: handoffWords(reason, to), once: false })
+      void runOn(plan.target, request, { why: 'stuck', handoff: handoffWords(reason, to), once: false, after: turnId !== null })
       return true
     }
     setState('suggestion', { id: `s${Date.now()}`, request, turnId, reason, offers: plan.offers, target: plan.offers[0], canAct: plan.canAct })
     return true
   }
-  /** Hands one request to a fallback: on (its switch), or just this once (the owner, the switch left off). */
-  function runOn(target: Fallback, request: string, o: { why: 'asked' | 'stuck'; handoff: string | null; once: boolean }) {
-    return target === 'claude' ? sendClaude(request, o.why, o.handoff, o.once) : sendHosted(request, o.handoff, o.once)
+  /**
+   * Hands one request to a fallback: on (its switch), or just this once (the owner, the switch left off).
+   * `after`: false only for a stretch seen before Ola ran (precheck): then Ola did not try, so it is
+   * not a switch (OLA-157); otherwise the conversation's last turn decides (switchOf).
+   */
+  function runOn(target: Fallback, request: string, o: { why: 'asked' | 'stuck'; handoff: string | null; once: boolean; after?: boolean }) {
+    return target === 'claude' ? sendClaude(request, o.why, o.handoff, o.once, o.after ?? true) : sendHosted(request, o.handoff, o.once, o.after ?? true, o.why)
   }
   /** The card's answers. "Always" comes here after the person confirmed the consent text (when the switch was off). */
   async function answerSuggestion(answer: 'once' | 'always' | 'not_now') {
@@ -408,7 +412,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       }
     }
     setState('suggestion', null)
-    void runOn(s.target, s.request, { why: s.turnId ? 'stuck' : 'asked', handoff: null, once: answer === 'once' && !isOn(s.target) })
+    void runOn(s.target, s.request, { why: s.turnId ? 'stuck' : 'asked', handoff: null, once: answer === 'once' && !isOn(s.target), after: s.turnId !== null })
   }
   /** The card offers both: show the other one ("or Claude"). */
   function switchSuggestion() {
@@ -417,8 +421,9 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
 
   /** One request with the hosted open model, in this conversation (the front desk switches the model for that run). */
-  async function sendHosted(request: string, handoff: string | null = null, once = false) {
+  async function sendHosted(request: string, handoff: string | null = null, once = false, after = true, why: 'asked' | 'stuck' = 'asked') {
     setState('problem', null)
+    const sw = after ? switchOf(state.turns, 'hosted') : null
     const at = Date.now()
     setState(
       produce((s) => {
@@ -436,7 +441,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       )
     try {
       const conversation = await ensureSession(request)
-      await hosted.run({ request, conversation, once })
+      await hosted.run({ request, conversation, once, why, ...(sw?.switchedFrom === 'ola' ? { switchedFrom: 'ola' as const, ...(sw.fromMessage ? { fromMessage: sw.fromMessage } : {}) } : {}) })
     } catch (e) {
       update((t) => Object.assign(t, { status: 'failed', ended: Date.now(), error: (e as any)?.problem ?? { text: 'The hosted open model could not start just now. Nothing was done.', detail: String((e as any)?.message ?? e) } }))
     }
@@ -482,8 +487,9 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
 
   /** Hands a request to Claude Code in the project. why: the person asked, Ola got stuck, or every request goes to Claude. */
-  async function sendClaude(request: string, why: 'asked' | 'stuck' | 'always', handoff: string | null = null, once = false) {
+  async function sendClaude(request: string, why: 'asked' | 'stuck' | 'always', handoff: string | null = null, once = false, after = true) {
     setState('problem', null)
+    const sw = after ? switchOf(state.turns, 'claude') : null
     const context = contextOf(state.turns)
     const at = Date.now()
     setState(produce((s) => void startClaudeTurn(s, request, at, handoff)))
@@ -501,7 +507,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return update((_, t) => Object.assign(t, { status: 'failed', ended: Date.now(), error: { text: 'Your request did not reach Ola’s computer. Nothing was done; send it again when the connection is back.', detail: String((e as any)?.message ?? e) } }))
     }
     try {
-      await claude.run({ request, context, conversation, autonomy: state.autonomy, why, ...(once ? { once: true } : {}) }, (e) => update((s, t) => void applyClaudeEvent(s, t, e)))
+      await claude.run({ request, context, conversation, autonomy: state.autonomy, why, ...(once ? { once: true } : {}), ...(sw ?? {}) }, (e) => update((s, t) => void applyClaudeEvent(s, t, e)))
       update((s, t) => {
         if (t.status !== 'working' && t.status !== 'sending') return
         // The reply ended without its last line: the run may still be going on Ola's computer.

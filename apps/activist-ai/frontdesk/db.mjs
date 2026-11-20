@@ -611,6 +611,31 @@ const MIGRATIONS = [
   ALTER TABLE audit_v14 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // 15: Switches to Claude (OLA-157, switches.mjs): a request handed to a fallback after a cheaper
+  // engine had the conversation's last turn. Labels and counts only: no request, answer, file name or
+  // person. `copy_session`/`copy_message` (opencode ids, never content) only while a made-up copy
+  // waits for the sampler, cleared when it is made; `kept_turn_id` only for a person who stores their
+  // conversations, set to NULL when they delete them.
+  `
+  CREATE TABLE switches (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    product TEXT NOT NULL CHECK (product IN ('mac', 'iphone', 'cli', 'web')),
+    runtime TEXT NOT NULL CHECK (runtime IN ('local', 'cloud')),
+    from_engine TEXT NOT NULL CHECK (from_engine IN ('ola', 'hosted')),
+    to_engine TEXT NOT NULL CHECK (to_engine IN ('hosted', 'claude') AND to_engine <> from_engine),
+    reason TEXT NOT NULL CHECK (reason IN ('asked', 'stuck', 'always', 'unknown')),
+    kind TEXT NOT NULL CHECK (kind IN ('app', 'design', 'document', 'data', 'research', 'other')),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    kept_turn_id INTEGER UNIQUE REFERENCES kept_turns(id) ON DELETE SET NULL,
+    copy_state TEXT NOT NULL CHECK (copy_state IN ('labels_only', 'waiting', 'made', 'failed', 'kept')),
+    copy_session TEXT CHECK (copy_session IS NULL OR (copy_state = 'waiting' AND length(copy_session) <= 80)),
+    copy_message TEXT CHECK (copy_message IS NULL OR (copy_state = 'waiting' AND length(copy_message) <= 80)),
+    comparison_id TEXT
+  ) STRICT;
+  CREATE INDEX switches_at ON switches(at);
+  CREATE INDEX switches_waiting ON switches(workspace_id, copy_state);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */

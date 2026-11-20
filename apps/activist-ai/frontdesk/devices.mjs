@@ -201,7 +201,7 @@ export const deviceView = (d) => ({
 
 // ---------------------------------------------------------------- the server's half
 
-export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {} }) {
+export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null }) {
   const key = cfg.key
   const enabled = !!key
   const codes = new Map() // pass id -> { challenge, personId, name, kind, exp }
@@ -397,6 +397,8 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
        ON CONFLICT(person_id, session, turn) DO UPDATE SET received_at = excluded.received_at, status = excluded.status, seconds = excluded.seconds, answer = excluded.answer, steps = excluded.steps, model = excluded.model, switched_from = excluded.switched_from, session_title = excluded.session_title`,
     ).run(dev.personId, String(dev.id), t.at, Date.now(), t.product, t.runtime, text(b.app, 40) || null, t.session, text(b.session_title, 200) || null, t.turn, t.engine, text(b.model, 120) || null, t.status,
       Number.isFinite(b.seconds) ? Math.max(0, Math.round(b.seconds)) : null, t.request, t.answer, JSON.stringify(steps), one(b.switched_from, KEPT.engine))
+    // A switch to a fallback (OLA-157): its labels, and the kept turns are its draft test task.
+    if (switches && one(b.switched_from, KEPT.engine)) switches.fromKept(db.prepare('SELECT id FROM kept_turns WHERE person_id = ? AND session = ? AND turn = ?').get(dev.personId, t.session, t.turn).id)
     return json(res, 200, { ok: true })
   }
 

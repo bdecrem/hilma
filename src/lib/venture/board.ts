@@ -111,9 +111,26 @@ export type Claim = { who: string; since?: string; at: string }
 export type Learning = {
   at: string
   kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number; errors?: { day: string; n: number; repeats: number; total: number; since: string } | null }
-  ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number }
+  ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number; switches?: Switches }
   weaknesses?: Weakness[]
   doc: string
+}
+/** Switches to Claude (OLA-157; apps/activist-ai/frontdesk/switches.mjs, read by scripts/venture/
+ *  learning.mjs): requests handed to Claude or the hosted model right after Ola's own model had the
+ *  conversation's last turn, over the last `days` days. Labels and counts only, never a request. */
+export type Switches = {
+  at: string
+  days: number
+  requests: number
+  switches: number
+  per100: number | null
+  to: { claude: number; hosted: number }
+  reasons: { asked: number; stuck: number; always: number; unknown: number }
+  products: { mac: number; iphone: number; cli: number; web: number }
+  kinds: { kind: string; words: string; n: number }[]
+  largest: { kind: string; words: string; n: number } | null
+  tasks: { copies: number; candidates: number; waiting: number; kept: number; labels_only: number }
+  by_day: { day: string; requests: number; switches: number }[]
 }
 /** One named weakness of Kit or of Ola (scripts/venture/_weak.mjs; Bart, Nov 18: "a system that gets
  *  smarter and better each day by studying what it did wrong, how to prevent that same

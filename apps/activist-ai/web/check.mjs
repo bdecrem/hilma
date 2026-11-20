@@ -896,11 +896,15 @@ async function claudeChecks(engine, label) {
       await pg.press('#ask-input', 'Enter')
       await waitDone(pg)
       assert((await lastWho()).trim() === 'Ola', 'the first reply is not Ola’s')
+      const sent = pg.waitForRequest((r) => r.url().endsWith('/api/claude/run') && r.method() === 'POST')
       await lastTurn(pg).getByRole('button', { name: 'Ask Claude instead' }).click()
       await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2)
       await waitDone(pg)
       const req = await lastTurn(pg).locator('.request').innerText()
       assert(req === 'Say hello' && /outside this machine/.test(await lastWho()), `second turn: ${req} / ${await lastWho()}`)
+      // The switch (OLA-157): the page says Ola had the last turn, so the front desk counts it.
+      const body = (await sent).postDataJSON()
+      assert(body.switchedFrom === 'ola' && /^[A-Za-z0-9_-]+$/.test(body.fromMessage ?? '') && !/^(local|claude)-/.test(body.fromMessage), `the run said: ${JSON.stringify({ switchedFrom: body.switchedFrom, fromMessage: body.fromMessage })}`)
     })
     await check(`${label}: Stop ends a Claude run, and the turn says so`, async () => {
       await pg.locator('fieldset.engine label', { hasText: 'Claude' }).click()
@@ -1567,8 +1571,8 @@ async function compareChecks(engine, label) {
 // README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
 // and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium
 // and WebKit. A watcher in the page records any text with a raw marker the moment it appears.
-const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts'], { cwd: HERE, encoding: 'utf8' })
-ok('the command and reaction parsers (test/commands.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts'], { cwd: HERE, encoding: 'utf8' })
+ok('the command and reaction parsers, the conversation reducer and the switch rule (test/commands.test.ts, test/conversation.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
 async function commandChecks(engine, label) {
   const b = await engine.launch()
   const d = await startDev(['--fake-model'])

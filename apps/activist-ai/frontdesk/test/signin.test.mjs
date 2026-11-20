@@ -384,6 +384,10 @@ test('kept conversations: only with the device’s own pass; a turn is stored, s
   assert.deepEqual([rows[0].handle, rows[0].answer, rows[0].switched_from], ['pat', 'Here it is, fixed.', null])
   assert.deepEqual([rows[1].engine, rows[1].switched_from], ['claude', 'ola'])
   assert.equal(JSON.parse(rows[0].steps)[0].words, 'Wrote index.html')
+  // The switch is counted once, labels only, with its kept turns as the draft (OLA-157, switches.mjs).
+  assert.equal((await asApp('/api/device/kept', { ...turn, turn: 'msg_2', engine: 'claude', switched_from: 'ola', answer: 'A working crossword, again.' }, patKey)).status, 200)
+  const sw = db.prepare('SELECT product, runtime, from_engine, to_engine, kind, copy_state, kept_turn_id FROM switches').all()
+  assert.deepEqual(sw.map((x) => [x.product, x.runtime, x.from_engine, x.to_engine, x.kind, x.copy_state, x.kept_turn_id !== null]), [['mac', 'local', 'ola', 'claude', 'app', 'kept', true]])
   const seen = await call('/api/device/kept', { method: 'GET', bearer: patKey })
   assert.deepEqual([seen.status, seen.json.count, seen.json.since], [200, 2, '2026-11-18T22:00:00.000Z'])
   // The admin reads them, and only the switched ones on request.
@@ -393,6 +397,7 @@ test('kept conversations: only with the device’s own pass; a turn is stored, s
   const gone = await call('/api/device/kept', { method: 'DELETE', bearer: patKey })
   assert.deepEqual([gone.status, gone.json.deleted], [200, 2])
   assert.equal(db.prepare('SELECT count(*) AS n FROM kept_turns').get().n, 0)
+  assert.deepEqual(db.prepare('SELECT kept_turn_id, kind FROM switches').all().map((x) => [x.kept_turn_id, x.kind]), [[null, 'app']], 'deleted with the turns: only the labels stay')
 })
 
 

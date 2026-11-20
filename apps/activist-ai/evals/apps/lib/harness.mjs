@@ -94,7 +94,9 @@ async function startServer(folder) {
 }
 
 export async function checkFolder(problem, folder, { shot } = {}) {
-  const mod = await import(pathToFileURL(path.join(HERE, '../checks', `${problem.id}.mjs`)).href + `?t=${Date.now()}`)
+  // A private problem set (OLA_APP_PROBLEMS_DIR, run.mjs) keeps its checks beside its list.
+  const checks = process.env.OLA_APP_PROBLEMS_DIR ? path.join(path.resolve(process.env.OLA_APP_PROBLEMS_DIR), 'checks') : path.join(HERE, '../checks')
+  const mod = await import(pathToFileURL(path.join(checks, `${problem.id}.mjs`)).href + `?t=${Date.now()}`)
   const names = mod.NAMES
   const result = { page: null, checks: [], notes: [] }
   const fill = (got) => { result.checks = names.map((n) => ({ name: n, pass: !!got[n] })) }

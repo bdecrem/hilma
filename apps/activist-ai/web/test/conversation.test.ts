@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
+import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, switchOf, turnsFromMessages } from '../src/lib/conversation.ts'
 import { describeCommand, describeTool, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY } from '../src/lib/steps.ts'
 
 function replay(file: string) {
@@ -205,4 +205,16 @@ test('a request the computer lost in a restart stays on the page, said plainly (
   // Only requests newer than the last one the computer has are carried over.
   const old = { ...s.turns[0], request: 'Older question', at: t0 - 60_000, status: 'done' as const }
   assert.equal(mergeResync([old], server, t0 + 30_000).length, 1)
+})
+
+test('a switch (OLA-157): a fallback right after a cheaper engine had the last turn, with that turn’s message id when the page has one', () => {
+  const t = (id: string, engine?: 'claude' | 'hosted') => ({ id, request: 'r', at: 0, status: 'done', steps: [], answer: '', notes: [], error: null, notice: null, ended: 1, ...(engine ? { engine } : {}) }) as any
+  assert.equal(switchOf([], 'claude'), null, 'nothing before it')
+  assert.deepEqual(switchOf([t('msg_a1')], 'claude'), { switchedFrom: 'ola', fromMessage: 'msg_a1' })
+  assert.deepEqual(switchOf([t('msg_a1')], 'hosted'), { switchedFrom: 'ola', fromMessage: 'msg_a1' })
+  assert.deepEqual(switchOf([t('msg_a1'), t('local-1763600000', 'hosted')], 'claude'), { switchedFrom: 'hosted' }, 'a turn the page has no id for: no id')
+  assert.deepEqual(switchOf([t('local-1763600000')], 'claude'), { switchedFrom: 'ola' })
+  assert.equal(switchOf([t('claude-1', 'claude')], 'claude'), null, 'Claude again')
+  assert.equal(switchOf([t('claude-1', 'claude')], 'hosted'), null, 'down the ladder')
+  assert.equal(switchOf([t('x', 'hosted')], 'hosted'), null, 'the same engine')
 })

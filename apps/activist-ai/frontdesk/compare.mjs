@@ -370,7 +370,7 @@ export function leftovers(db, xc, home = ws.HOME) {
   return { scratch, stuck, grants, files }
 }
 
-export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container, log, home = ws.HOME }) {
+export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container, log, home = ws.HOME, switches = null }) {
   mkdirSync(xc.dir, { recursive: true, mode: 0o700 })
   // At start: nothing of an earlier front desk's comparison is under way any more (its execs ended
   // with it), so its rows are marked failed, its scratch grants taken back, its made-up files on the
@@ -1006,6 +1006,20 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       if (!workspaces.isReady(w.slug)) continue
       const now = await workspaces.executing(w.slug)
       if (!now || now.size) continue
+      // A request someone handed to Claude or the hosted model after Ola tried (OLA-157,
+      // switches.mjs) is the next pick: Ola already lost it in the person's eyes.
+      const sw = switches?.nextCopy(w.id)
+      if (sw) {
+        const owner = db.prepare("SELECT m.person_id AS id FROM memberships m JOIN workspaces w ON w.team_id = m.team_id WHERE w.id = ? AND m.role = 'owner' LIMIT 1").get(w.id)
+        const had = db.prepare('SELECT id FROM comparisons WHERE workspace_id = ? AND session = ? AND message = ?').get(w.id, sw.conversation, sw.message)
+        let r = null
+        try {
+          r = had ? { status: 200, body: { id: had.id } } : await start(w, owner?.id ?? null, { conversation: sw.conversation, message: sw.message, mode: 'twin' }, 'sampled')
+        } finally {
+          switches.copied(sw.id, r?.status === 200 ? r.body.id : null) // tried once; its ids are dropped either way
+        }
+        return r
+      }
       const s = await workspaces.oc(w.slug, 'GET', '/api/session?limit=20')
       const sessions = (Array.isArray(s.json?.data) ? s.json.data : Array.isArray(s.json) ? s.json : []).filter((x) => SID.test(x?.id ?? '') && x.title !== 'Compare')
       const done = new Set(db.prepare('SELECT session || ":" || message AS k FROM comparisons WHERE workspace_id = ?').all(w.id).map((r) => r.k))

@@ -15,8 +15,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { checkFolder } from './lib/harness.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const PROBLEMS = JSON.parse(fs.readFileSync(path.join(HERE, 'problems.json'), 'utf8'))
-const RESULTS = path.join(HERE, 'results')
+// A private problem set (OLA-157): OLA_APP_PROBLEMS_DIR=<dir> reads problems.json, checks/, fixtures/
+// and writes results/ there instead, for problems made from a real project's requests (the drafts
+// of `frontdesk/admin.mjs switches tasks`), which stay on the machine and never enter this repo.
+const SET = process.env.OLA_APP_PROBLEMS_DIR ? path.resolve(process.env.OLA_APP_PROBLEMS_DIR) : HERE
+if (SET !== HERE && SET.startsWith(path.resolve(HERE, '../../../..') + path.sep)) die('OLA_APP_PROBLEMS_DIR is inside the repo; a private problem set lives outside it')
+const PROBLEMS = JSON.parse(fs.readFileSync(path.join(SET, 'problems.json'), 'utf8'))
+const RESULTS = path.join(SET, 'results')
 const RUNS = path.join(os.homedir(), 'Library/Caches/ola-eval/runs-apps')
 const OLA = path.join(os.homedir(), 'Library/Caches/ola-eval/Ola.app/Contents/MacOS/Ola')
 const TOKEN = path.join(os.homedir(), 'Library/Caches/ola-eval/model-token')
@@ -149,7 +154,7 @@ async function selftest(only) {
     const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'apps-empty-'))
     const cases = [['empty', empty, false]]
     for (const [k, want] of [['wrong', false], ['good', true]]) {
-      const d = path.join(HERE, 'fixtures', p.id, k)
+      const d = path.join(SET, 'fixtures', p.id, k)
       if (fs.existsSync(d)) cases.push([k, d, want])
       else { console.log(`${p.id}: no fixture ${k}`); bad++ }
     }

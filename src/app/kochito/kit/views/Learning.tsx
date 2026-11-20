@@ -1,4 +1,4 @@
-import { openCounts, type BoardData, type Issue, type Learning, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Weakness } from '@/lib/venture/board'
+import { openCounts, type BoardData, type Issue, type Learning, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
@@ -111,6 +111,50 @@ function WeakFig({ l, sweeps }: { l: Learning | null; sweeps: ReturnType<typeof 
       small={sweeps.missed.length ? `not swept: ${sweeps.missed.slice(0, 3).map(dayShort).join(', ')}` : `${back ? `${back} came back after a guard, ` : ''}${w.length - held - back} rest on a rule, ${sweepLine}`}
       amber={sweeps.missed.length > 0}
     />
+  )
+}
+
+// Switches to Claude (OLA-157; Bart, Nov 18: "When I switch to Use Claude for an app after I used a
+// lower model, that choice means the work was poor quality ... learn from that"). From the Ola
+// machine, labels and counts only: per 100 requests, by kind with the largest group named, by day,
+// and how many became test tasks. The largest group is what the Friday sweep fixes.
+function SwitchesSec({ s, now, today }: { s: Switches | undefined; now: string; today: string }) {
+  if (!s) return <p className="bd-empty">Not measured yet: the Ola machine has not reported its switches.</p>
+  const old = Date.parse(now) - Date.parse(s.at) > DAY
+  const t = s.tasks
+  return (
+    <>
+      <div className="bd-ind">
+        <div className="now">
+          <b>{s.per100 ?? '–'}</b> <span className="sub">switches per 100 requests</span>
+          <p>
+            {s.switches} {s.switches === 1 ? 'switch' : 'switches'} in {s.requests} {s.requests === 1 ? 'request' : 'requests'}, the last {s.days} days: {s.to.claude} to Claude, {s.to.hosted} to the hosted open model.
+            {s.largest ? (
+              <>
+                {' '}
+                The largest group: {s.largest.words} ({s.largest.n} of {s.switches}).
+              </>
+            ) : null}
+          </p>
+          <p className={`m${old ? ' bd-amber' : ' faint'}`}>{old ? `as of ${at(s.at, now)}` : `read ${at(s.at, now)}`}</p>
+        </div>
+        <Bars items={s.by_day.map((x) => ({ key: x.day, v: x.switches, label: x.day.slice(8).replace(/^0/, ''), title: `${dayShort(x.day)}: ${x.switches} ${x.switches === 1 ? 'switch' : 'switches'} in ${x.requests} requests`, last: x.day === today }))} />
+      </div>
+      {s.kinds.length > 0 && (
+        <ol className="bd-kv">
+          {s.kinds.map((k) => (
+            <li key={k.kind}>
+              <b>{k.n}</b>
+              <span>{k.words}</span>
+              <span className="t">{Math.round((100 * k.n) / s.switches)}%</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="bd-p">
+        Test tasks made from them: {t.copies} made-up {t.copies === 1 ? 'copy' : 'copies'} scored against Claude ({t.candidates} became new test tasks), {t.waiting} waiting, {t.kept} {t.kept === 1 ? 'draft' : 'drafts'} from stored conversations; {t.labels_only} counted as labels only.
+      </p>
+    </>
   )
 }
 
@@ -354,6 +398,14 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
       )}
 
       <LearningFigures l={l} now={now} sweeps={st} />
+
+      <section className="bd-sec" aria-labelledby="switch-h">
+        <h2 id="switch-h">Switches to Claude</h2>
+        <p className="bd-p" style={{ margin: '0 0 8px' }}>
+          A switch is a request handed to Claude or the hosted open model right after Ola&rsquo;s own model had the last turn in that conversation: the first result was not good enough. The Ola machine records each one as labels and counts only (the kind of work, why, from which engine to which), never the request. Where the owner allows it, a switch also becomes a test task: a made-up copy of the request scored against Claude, or, for people who store their conversations, the request with both attempts. Every Friday the largest group is fixed, measured before and after. Lower is better.
+        </p>
+        <SwitchesSec s={l?.ola.switches} now={now} today={d.today} />
+      </section>
 
       <section className="bd-sec" aria-labelledby="ideas-h">
         <h2 id="ideas-h">

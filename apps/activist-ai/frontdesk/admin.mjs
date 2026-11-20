@@ -35,6 +35,11 @@
 //   node admin.mjs compare promote <id>                copies it into the eval set (evals/tasks/t-<id>), after its selftest passes
 //   node admin.mjs compare status                      comparisons under way, scratch VMs, and what the last start cleaned up
 //   node admin.mjs compare weekly                      the weekly number, as JSON (also $OLA_HOME/compare/weekly.json)
+//   node admin.mjs switches [--days 7] [--json]        requests handed to Claude or the hosted model after a cheaper
+//                  engine (OLA-157): labels and counts only (per 100 requests, by kind, the largest group);
+//                  the board's Learning page reads the --json
+//   node admin.mjs switches tasks [--kind app] [--days 7] [--json]   the draft test tasks from kept conversations
+//                  (people who store them): the request word for word, both attempts; on this machine only
 //   node admin.mjs app-allowance <handle> <tokens|default>   their weekly allowance on Ola from the Mac app and
 //                  the command line (all their computers together); default: the gateway's own number.
 //                  (allow-devices and disallow-devices are no longer needed: every active account may.)
@@ -71,6 +76,7 @@ import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
 import { writeBatchGrants } from './jobs.mjs'
 import { leftovers, weekly } from './compare.mjs'
+import { drafts, KINDS as WORK_KINDS, summary as switchSummary } from './switches.mjs'
 import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 import { makeSites } from './sites.mjs'
@@ -547,6 +553,30 @@ switch (cmd) {
     else
       for (const r of rows.reverse())
         console.log(`${new Date(r.at).toISOString()}  ${r.action.padEnd(20)} ${r.ok ? '' : 'FAILED '}by ${r.actor_kind === 'person' || r.actor_kind === 'run' ? (r.actor ?? '-') + (r.actor_kind === 'run' ? ' (a run)' : '') : r.actor_kind}${r.workspace ? ` in ${r.workspace}` : ''}${r.subject ? ` re ${r.subject}` : ''}${r.role ? ` as ${r.role}` : ''}${r.size != null ? ` ${r.size} B` : ''}${r.sha256 ? ` sha256 ${r.sha256.slice(0, 12)}` : ''}${r.name_ref ? ` file#${r.name_ref.slice(0, 10).toLowerCase()}` : ''}`)
+    break
+  }
+  case 'switches': {
+    const days = Number(flags.days ?? 7)
+    if (!Number.isFinite(days) || days <= 0 || days > 3650) fail('--days: 1 to 3650')
+    if (args[0] === 'tasks') {
+      if (flags.kind && !(flags.kind in WORK_KINDS)) fail(`--kind: one of ${Object.keys(WORK_KINDS).join(', ')}`)
+      const list = drafts(db, { kind: flags.kind ?? null, days })
+      if (flags.json) { console.log(JSON.stringify(list, null, 1)); break }
+      for (const d of list) {
+        console.log(`${d.id}  ${WORK_KINDS[d.kind]}  ${d.from}`)
+        console.log(`    asked: ${d.request.replace(/\s+/g, ' ').slice(0, 300)}`)
+        for (const [engine, a] of Object.entries(d.attempts)) console.log(`    ${engine}: ${a ? `${a.status}, ${a.steps.length} steps: ${a.answer.replace(/\s+/g, ' ').slice(0, 200)}` : 'not kept'}`)
+      }
+      console.log(`${list.length} draft test task(s) in the last ${days} day(s)`)
+      break
+    }
+    if (args[0]) fail('switches [--days 7] [--json] | switches tasks [--kind app] [--json]')
+    const s = switchSummary(db, { days })
+    if (flags.json) { console.log(JSON.stringify(s)); break }
+    console.log(`${s.switches} switch(es) in ${s.requests} request(s) in the last ${days} day(s)${s.per100 === null ? '' : `: ${s.per100} per 100`}`)
+    console.log(`  to Claude ${s.to.claude}, to the hosted model ${s.to.hosted}; asked ${s.reasons.asked}, stuck ${s.reasons.stuck}, always ${s.reasons.always}`)
+    console.log(`  by kind: ${s.kinds.map((k) => `${k.words} ${k.n}`).join(', ') || 'none'}${s.largest ? `; the largest group: ${s.largest.words}` : ''}`)
+    console.log(`  test tasks: ${s.tasks.copies} made-up copies (${s.tasks.candidates} became candidates), ${s.tasks.waiting} waiting, ${s.tasks.kept} drafts from kept conversations, ${s.tasks.labels_only} labels only`)
     break
   }
   case 'kept': {
