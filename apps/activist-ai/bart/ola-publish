@@ -159,6 +159,10 @@ def main(argv):
         if status != 200:
             return refused(j)
         if cmd == "preview":
+            if j.get("configured") is False:
+                # Nothing to ask the person yet: the server cannot publish (no deploy token on it).
+                print(j.get("notOn") or "Publishing to sites.ola.cx is not switched on yet on Ola's server. Nothing was published.")
+                return 1
             items = j["items"]
             print(f"These {len(items)} file(s) would be public at {j['url']}")
             for it in items:

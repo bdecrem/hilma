@@ -131,7 +131,9 @@ After Steps 2 and 3, with the folder ready (`site/`):
    prints the files that would be public, the address, what was left out and why, notes, the
    rule line and a fingerprint. If it refuses (a key, a `.env`, a database, a name that belongs to
    someone else), say its sentence to the person, fix what it names (or choose another name), and
-   run it again.
+   run it again. If it says publishing to sites.ola.cx is not switched on yet, tell the person
+   exactly that (nothing was published, the page is still on their Mac) and offer GitHub and
+   Vercel instead; do not ask for a yes.
 4. **Ask, every time**, even with "Lots of permissions" on: show the files, the address and the
    rule line, and ask "Shall I publish these N files at https://sites.ola.cx/<name>/?" Wait for
    the yes. A yes for one list is not a yes for another.

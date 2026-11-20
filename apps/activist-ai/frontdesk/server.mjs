@@ -1139,6 +1139,7 @@ export function makeFrontDesk(cfg = config()) {
   //   POST /api/device/sites/publish     the same, with {fingerprint, confirm: true}: published
   //   POST /api/device/sites/unpublish   {name}: taken down (the name stays the person's)
   // The files come in the body as base64; hidden files and working folders only by name.
+  const NOT_ON = 'Publishing to sites.ola.cx is not switched on yet on Ola’s server, so nothing was published. The page is still on this Mac; Ola can put it online with GitHub and Vercel instead, or publish it here once Ola’s team switches it on.'
   async function deviceSites(req, res, p) {
     const dev = devices.deviceFor(req)
     if (!dev) return json(res, 401, { error: 'signed_out' })
@@ -1175,8 +1176,10 @@ export function makeFrontDesk(cfg = config()) {
       if (what === 'preview') {
         const r = await sites.preview(ctx, { folder })
         if (r.body?.error === 'secret') audit(db, { actor: dev.personId, action: 'site_refused', nameRef: ref(name), ok: false })
-        return json(res, r.status, r.status === 200 ? { ...r.body, name } : r.body)
+        return json(res, r.status, r.status === 200 ? { ...r.body, name, configured: sites.configured(), ...(sites.configured() ? {} : { notOn: NOT_ON }) } : r.body)
       }
+      // No deploy token on the server yet (~/.ola/sites.env, OLA-209): said plainly, no name taken.
+      if (!sites.configured()) return json(res, 503, { error: 'not_set_up', message: NOT_ON })
       // The name is taken now, with no await since problem() said yes; a first publish that fails
       // gives it back.
       const fresh = siteNames.claim(name, dev.personId)

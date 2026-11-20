@@ -264,9 +264,11 @@ test('not set up (no deploy token on the machine): preview works, publish says s
     const body = { name: 'unset-site', folder: 'site', files: send({ 'index.html': '<p>x</p>' }) }
     const pre = await asMac('omar', 'preview', body)
     assert.equal(pre.status, 200)
+    assert.equal(pre.json.configured, false)
+    assert.match(pre.json.notOn, /not switched on yet/)
     const pub = await asMac('omar', 'publish', { ...body, fingerprint: pre.json.fingerprint, confirm: true })
     assert.equal(pub.status, 503)
-    assert.match(pub.json.message, /not set up/)
+    assert.match(pub.json.message, /sites\.ola\.cx is not switched on yet.*nothing was published/)
     assert.equal(db.prepare("SELECT count(*) AS n FROM site_names WHERE name = 'unset-site'").get().n, 0)
   } finally {
     writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${TOKEN}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
@@ -344,6 +346,20 @@ test('ola-publish through a door: preview, the yes, publish, status, publish aga
     assert.equal(leak.status, 1)
     assert.match(leak.out, /Ola will not publish this: .*app\.js/)
     assert.doesNotMatch(leak.out, /sk-ant/)
+    // No deploy token on the server yet (OLA-209): the agent is told plainly, and asks nobody for a yes.
+    writeFileSync(path.join(site, 'app.js'), 'const k = 1')
+    writeFileSync(path.join(run, 'sites.env'), '', { mode: 0o600 })
+    try {
+      const off = await olaPublish(['preview', site, '--name', 'food-bank'])
+      assert.equal(off.status, 1, off.out)
+      assert.match(off.out, /sites\.ola\.cx is not switched on yet.*nothing was published/)
+      assert.doesNotMatch(off.out, /Shall I publish|fingerprint:/)
+      const offPub = await olaPublish(['publish', site, '--name', 'food-bank', '--fingerprint', 'f'.repeat(64)])
+      assert.equal(offPub.status, 1)
+      assert.match(offPub.out, /not switched on yet/)
+    } finally {
+      writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${TOKEN}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
+    }
     const un = await olaPublish(['unpublish', '--name', 'food-bank'])
     assert.equal(un.status, 0, un.out)
     assert.match(un.out, /now answers 404\. The name stays yours/)
