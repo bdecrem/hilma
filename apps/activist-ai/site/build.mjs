@@ -13,6 +13,8 @@ import { word, mark, ulURI, BTN, scene, T, cr } from './src/drawing.mjs'
 // turbine in front of the computer, a stone-and-bamboo fountain where the plant stood), with the tour:
 // point at a thing and the caption says what it does for the datacenter.
 import HERO from './src/alt/datacenter-tour.mjs'
+// How Ola works (the architecture), at ola.cx/architecture (OLA-219)
+import { ARCH_CSS, DIAGRAM_CSS, archBody, diagram } from './src/architecture.mjs'
 
 // The two places the address lives. SITE_URL is the public address (canonical, og:url, og:image);
 // BASE is the path the files are served from. Every asset URL is absolute under BASE, because the
@@ -106,6 +108,8 @@ p{margin:0 0 12px;max-width:34em;text-wrap:pretty}
 .act small{font-size:15px;color:var(--text2)}
 .act small a{color:var(--text);text-underline-offset:3px;text-decoration-color:var(--comma);text-decoration-thickness:1.5px}
 .act small a:hover{color:var(--link);text-decoration-color:var(--link)}
+.letter p a{color:var(--text);text-underline-offset:3px;text-decoration-color:var(--comma);text-decoration-thickness:1.5px}
+.letter p a:hover{color:var(--link);text-decoration-color:var(--link)}
 .art{grid-column:2;grid-row:2;margin:0;align-self:end;display:flex;flex-direction:column;align-items:flex-end;min-width:0}
 .art svg{display:block;width:100%;max-width:720px;max-height:calc(100dvh - 100px);height:auto}
 figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;align-self:flex-start;padding-left:3%}
@@ -207,7 +211,7 @@ function landing(alt = HERO) {
     <h1><span class="h">An AI agent for activists and academics</span></h1>
     <p>Hi. This is something I’m building for a few friends, community groups and researchers.</p>
     <p>Most of you don’t love Big Tech, and you think hard about where your data goes. So I’ve set up a system on one computer in my office, just for this. It can build code, websites and data analysis. You decide what data you give it, and it runs on open models, so none of it goes to an AI company.</p>
-    <p>It isn’t bulletproof. It’s one machine and one person, me. What I can promise is that you’ll always know where your stuff is and what’s happening to it, and you can see all of it and delete it anytime.</p>
+    <p>It isn’t bulletproof. It’s one machine and one person, me. What I can promise is that you’ll always know where your stuff is and what’s happening to it, and you can see all of it and delete it anytime. <a href="/architecture">Here’s how it works.</a></p>
     <p>I want to find out whether AI can be small, honest, and actually useful to people doing work that matters. Starting in December, with about 10 of you.</p>
     ${signature()}
     <div class="act">${btn('Ask to join', MAILTO)}<small>or write to <a href="${MAILTO}">bart@ola.cx</a></small></div>
@@ -257,6 +261,42 @@ html,body{width:1200px;height:630px;overflow:hidden;padding:0}
 <svg class="room" viewBox="0 26 600 586" aria-hidden="true">${scene(T, HERO)}</svg><span class="url">ola.cx</span></div></body></html>`
 }
 
+// ---------- How Ola works: the architecture page, served at ola.cx/architecture by a host rewrite ----------
+const ARCH_TITLE = 'How Ola works'
+const ARCH_DESCRIPTION = 'How Ola is built: one sealed computer per project with no internet, one gate out to the model, where your files live, who can see them, and what is live today and what is planned.'
+function architecture() {
+  return `${head({ title: `${ARCH_TITLE} · Ola`, description: ARCH_DESCRIPTION, base: BASE, canonical: `${SITE_URL}/architecture`, fonts: ['literata', 'bricolage'], css: DIAGRAM_CSS + ARCH_CSS, extra: `<meta property="og:type" content="article">
+<meta property="og:site_name" content="Ola">
+<meta property="og:url" content="${SITE_URL}/architecture">
+<meta property="og:title" content="${ARCH_TITLE}">
+<meta property="og:description" content="${ARCH_DESCRIPTION}">
+<meta property="og:image" content="${SITE_URL}${BASE}architecture-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="How Ola works: a drawing of a request's path, from your device to the Ola machine, into your project's sealed computer, and out through one gate to the model.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${ARCH_TITLE}">
+<meta name="twitter:description" content="${ARCH_DESCRIPTION}">
+<meta name="twitter:image" content="${SITE_URL}${BASE}architecture-og.png">
+` })}
+${archBody({ wordmark: word('display', { cls: 'hello', label: 'Ola' }) })}`
+}
+// its share card, 1200 × 630: the title on the left, the top of the diagram on the right
+function archCard(fontsDir) {
+  const css = DIAGRAM_CSS + `
+html,body{width:1200px;height:630px;overflow:hidden;padding:0}
+.og{position:relative;width:1200px;height:630px;display:grid;grid-template-columns:600px 1fr;align-items:center;padding:0 0 0 76px}
+.og .hello{display:block;width:250px;height:auto;margin:0 0 30px -7px;overflow:visible}
+.og .tl{display:block;font-family:var(--grot);font-weight:720;font-size:64px;line-height:1.02;letter-spacing:-.03em;font-variation-settings:'opsz' 72}
+.og .sub{display:block;font-family:var(--book);font-size:27px;line-height:1.35;color:var(--text2);margin-top:18px;max-width:20em}
+.og .url{position:absolute;left:76px;bottom:44px;font-family:var(--book);font-style:italic;font-size:22px;color:var(--text2)}
+.og .clip{align-self:start;justify-self:center;height:630px;overflow:hidden;padding-top:44px}
+.og .clip svg{width:430px;height:auto}`
+  return head({ title: 'How Ola works, share card', description: '', base: fontsDir, fonts: [], css }) + `
+<body><div class="og"><div>${word('display', { cls: 'hello', label: 'Ola' })}<span class="tl">How Ola works</span><span class="sub">One sealed computer per project, no internet, and one gate out to the model.</span></div>
+<div class="clip">${diagram({ id: 'og' })}</div><span class="url">ola.cx/architecture</span></div></body></html>`
+}
+
 // ---------- icons ----------
 const favicon = xmlns(mark(32, T))
 const iconPage = (px, full) => `<!doctype html><html><body style="margin:0;background:transparent">${full ? mark(px, T).replace(/rx="[\d.]+"/, 'rx="0"') : mark(px, T)}</body></html>`
@@ -279,6 +319,7 @@ const manifest = {
 fs.mkdirSync(OUT, { recursive: true })
 fs.writeFileSync(path.join(OUT, 'index.html'), landing())
 fs.writeFileSync(path.join(OUT, '404.html'), notFound())
+fs.writeFileSync(path.join(OUT, 'architecture.html'), architecture())
 // alternates of the drawing: each src/alt/<slug>.mjs default-exports { name, label, omit, layers, caption? }
 const ALT = path.join(HERE, 'src', 'alt')
 if (fs.existsSync(ALT)) {
@@ -326,7 +367,7 @@ fs.writeFileSync(path.join(OUT, 'site.webmanifest'), JSON.stringify(manifest, nu
 
 const pairs = [['text on ground', T.text, T.ground], ['text2 on ground', T.text2, T.ground], ['button', T.btnText, T.btn], ['button hover', T.btnHoverText, T.btnHover], ['button focus', T.btnText, T.link], ['link hover', T.link, T.ground]]
 console.log('contrast', pairs.map(([n, a, b]) => `${n} ${cr(a, b).toFixed(2)}`).join(' · '))
-for (const f of ['index.html', '404.html']) console.log(f, (fs.statSync(path.join(OUT, f)).size / 1024).toFixed(1), 'KB')
+for (const f of ['index.html', '404.html', 'architecture.html']) console.log(f, (fs.statSync(path.join(OUT, f)).size / 1024).toFixed(1), 'KB')
 
 if (process.argv.includes('--images')) {
   const { chromium } = await import('playwright')
@@ -350,6 +391,14 @@ if (process.argv.includes('--images')) {
     await page.waitForTimeout(300)
     await page.screenshot({ path: path.join(OUT, 'og.png') })
     await page.close()
+    const archOg = path.join(tmp, 'architecture-og.html')
+    fs.writeFileSync(archOg, archCard(pathToFileURL(OUT).href + '/'))
+    const page2 = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 })
+    await page2.goto(pathToFileURL(archOg).href, { waitUntil: 'load' })
+    await page2.evaluate(() => document.fonts.ready)
+    await page2.waitForTimeout(300)
+    await page2.screenshot({ path: path.join(OUT, 'architecture-og.png') })
+    await page2.close()
   } finally {
     await browser.close()
     fs.rmSync(tmp, { recursive: true, force: true })

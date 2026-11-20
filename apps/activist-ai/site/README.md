@@ -31,10 +31,11 @@ drawing and both alternates side by side (not indexed).
 | `src/drawing.mjs`, `src/geom.mjs` | The brush pen: the wordmark "Ola,", the mark (the room: a brushed O with a vermilion dot), the painted button and the study. |
 | `signature.svg` | **The signature slot.** For now it holds a drawn placeholder "Bart". Replace it with a trace of Bart's real signature: `viewBox="0 0 160 70"`, ink baseline at y≈60, one color (any fill becomes `currentColor`). Then run `node build.mjs`. It is shown 116 px wide on a desk and 92 px on a phone. |
 | `src/fonts.py` | Cuts the fonts to Latin and to the axis ranges the page uses (Bricolage Grotesque wght 650–720 and opsz 12–72; Literata roman and italic at 400, opsz 12–24). Sources are the variable TTFs from github.com/google/fonts, cached in `scripts/fonts/.cache/`. Run it with `scripts/fonts/.venv/bin/python apps/activist-ai/site/src/fonts.py`. Both families are OFL, and the license files ship next to the fonts. |
+| `src/architecture.mjs` | **How Ola works** (OLA-219, 2026-11-19): the architecture page at `ola.cx/architecture`, linked from the letter's third paragraph. The words, the request-path diagram (inline SVG) and its styles; `build.mjs` writes `architecture.html` and, with `--images`, its share card `architecture-og.png`. Every claim must stay true of the running system (checked against `../OVERVIEW.md`); what is not live is labeled Planned. It is public: no addresses, ports, paths, internal service names, account names or people's names. |
 | `check.mjs` | The proof (see below). |
 
 How it is served: ola.cx is the hilma Next.js app on Vercel. A host rewrite sends `/` to
-`/ola-site/index.html`, which is why every asset URL is absolute under `/ola-site/`. A relative URL
+`/ola-site/index.html` (and `/architecture` to `/ola-site/architecture.html`), which is why every asset URL is absolute under `/ola-site/`. A relative URL
 would break when the page is served at `/`. `404.html` is written for the rewrite to use for
 unknown paths on ola.cx.
 

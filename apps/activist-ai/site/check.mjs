@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Proves the page keeps its promise: nothing leaves for another origin.
 //   node apps/activist-ai/site/check.mjs              serves the repo's public/ the way ola.cx will
-//                                                     (/ rewritten to /ola-site/index.html) and checks it
+//                                                     (/ rewritten to /ola-site/index.html, /architecture
+//                                                     to /ola-site/architecture.html) and checks both pages
 //   node apps/activist-ai/site/check.mjs https://…    checks a deployed copy, e.g. https://ola.cx/
 // At five screen sizes it loads the page in a fresh browser, scrolls to the end, hovers and
 // tabs to the button, and records every request. It fails on any request to an origin other
@@ -26,6 +27,7 @@ function serve() {
   const server = http.createServer((req, res) => {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname)
     if (p === '/') p = SITE + 'index.html'
+    if (p === '/architecture') p = SITE + 'architecture.html'
     let file = path.join(ROOT, path.normalize(p))
     let status = 200
     if (!p.startsWith(SITE) || !file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { file = path.join(ROOT, SITE, '404.html'); status = 404 }
@@ -48,8 +50,11 @@ const fail = (m) => { failures.push(m); console.log('  FAIL', m) }
 const browser = await chromium.launch()
 const foreign = new Set()
 let firstVisit = null
+// the pages ola.cx serves from this site: the letter at /, How Ola works at /architecture (OLA-219)
+const PAGES = ['', 'architecture']
 
-for (const [w, h] of SIZES) {
+for (const pagePath of PAGES) for (const [w, h] of SIZES) {
+  const URL_ = new URL(pagePath, BASE).href, at = `${pagePath || '/'} ${w}×${h}`
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
   const page = await ctx.newPage()
   const reqs = []
@@ -59,12 +64,12 @@ for (const [w, h] of SIZES) {
     reqs.push(r)
     if (new URL(u).origin !== ORIGIN) foreign.add(u)
   })
-  const res = await page.goto(BASE, { waitUntil: 'networkidle' })
-  if (res.status() !== 200) fail(`${w}×${h}: page answered ${res.status()}`)
+  const res = await page.goto(URL_, { waitUntil: 'networkidle' })
+  if (res.status() !== 200) fail(`${at}: page answered ${res.status()}`)
   await page.evaluate(() => document.fonts.ready)
   await page.mouse.wheel(0, 4000)
   await page.waitForTimeout(150)
-  await page.hover('a.paint')
+  if (await page.$('a.paint')) await page.hover('a.paint')
   for (let i = 0; i < 4; i++) await page.keyboard.press('Tab')
   await page.waitForLoadState('networkidle')
 
@@ -77,19 +82,19 @@ for (const [w, h] of SIZES) {
     h1: document.querySelectorAll('h1').length,
     focus: document.activeElement?.className ?? '',
   }))
-  if (st.overflow > 0) fail(`${w}×${h}: scrolls sideways by ${st.overflow}px`)
-  if (st.scripts) fail(`${w}×${h}: ${st.scripts} script element(s)`)
-  if (st.cookie || (await ctx.cookies()).length) fail(`${w}×${h}: a cookie was set`)
-  if (st.storage) fail(`${w}×${h}: storage was written`)
-  if (st.h1 !== 1) fail(`${w}×${h}: ${st.h1} h1 elements`)
+  if (st.overflow > 0) fail(`${at}: scrolls sideways by ${st.overflow}px`)
+  if (st.scripts) fail(`${at}: ${st.scripts} script element(s)`)
+  if (st.cookie || (await ctx.cookies()).length) fail(`${at}: a cookie was set`)
+  if (st.storage) fail(`${at}: storage was written`)
+  if (st.h1 !== 1) fail(`${at}: ${st.h1} h1 elements`)
   const notLoaded = st.fonts.filter((f) => !f.endsWith('loaded'))
-  if (notLoaded.length) fail(`${w}×${h}: fonts not loaded: ${notLoaded.join(', ')}`)
+  if (notLoaded.length) fail(`${at}: fonts not loaded: ${notLoaded.join(', ')}`)
 
   if (!firstVisit) {
     const sizes = await Promise.all(reqs.map(async (r) => { const s = await r.sizes().catch(() => null); return { url: r.url().replace(ORIGIN, ''), bytes: s ? s.responseBodySize + s.responseHeadersSize : 0 } }))
     firstVisit = sizes
   }
-  console.log(`${w}×${h}: ${reqs.length} requests, ${reqs.filter((r) => new URL(r.url()).origin !== ORIGIN).length} to other origins, no sideways scroll: ${st.overflow <= 0}, fonts: ${st.fonts.length} loaded`)
+  console.log(`${at}: ${reqs.length} requests, ${reqs.filter((r) => new URL(r.url()).origin !== ORIGIN).length} to other origins, no sideways scroll: ${st.overflow <= 0}, fonts: ${st.fonts.length} loaded`)
   await ctx.close()
 }
 
@@ -98,14 +103,23 @@ for (const [w, h] of SIZES) {
   const ctx = await browser.newContext()
   const page = await ctx.newPage()
   page.on('request', (r) => { const u = r.url(); if (!u.startsWith('data:') && new URL(u).origin !== ORIGIN) foreign.add(u) })
+  let checked = 0
+  for (const pagePath of PAGES) {
+    await page.goto(new URL(pagePath, BASE).href)
+    const links = await page.evaluate(() => [...document.querySelectorAll('link[rel~=icon],link[rel=apple-touch-icon],link[rel=manifest]')].map((l) => l.href))
+    const og = await page.evaluate(() => document.querySelector('meta[property="og:image"]')?.content)
+    if (!og) fail(`${pagePath || '/'}: no share card (og:image)`)
+    const manifestHref = await page.evaluate(() => document.querySelector('link[rel=manifest]').href)
+    const manifest = await (await page.request.get(manifestHref)).json()
+    // same-site links on the page (the letter's link to /architecture, the way back to /)
+    const local = await page.evaluate((o) => [...document.querySelectorAll('a[href]')].map((a) => a.href).filter((h) => h.startsWith(o)), ORIGIN)
+    const targets = [...links, ...manifest.icons.map((i) => new URL(i.src, BASE).href), ...(og ? [new URL(new URL(og).pathname, BASE).href] : []), ...local]
+    for (const t of targets) { const r = await page.request.get(t); if (r.status() !== 200) fail(`${pagePath || '/'}: ${t.replace(ORIGIN, '')} answered ${r.status()}`) }
+    checked += targets.length
+  }
   await page.goto(BASE)
-  const links = await page.evaluate(() => [...document.querySelectorAll('link[rel~=icon],link[rel=apple-touch-icon],link[rel=manifest]')].map((l) => l.href))
-  const og = await page.evaluate(() => document.querySelector('meta[property="og:image"]')?.content)
-  const manifestHref = await page.evaluate(() => document.querySelector('link[rel=manifest]').href)
-  const manifest = await (await page.request.get(manifestHref)).json()
-  const targets = [...links, ...manifest.icons.map((i) => new URL(i.src, BASE).href), new URL(new URL(og).pathname, BASE).href]
-  for (const t of targets) { const r = await page.request.get(t); if (r.status() !== 200) fail(`${t.replace(ORIGIN, '')} answered ${r.status()}`) }
-  console.log(`icons, manifest and share card: ${targets.length} links checked`)
+  if (!(await page.$('a[href="/architecture"]'))) fail('the letter has no link to /architecture')
+  console.log(`icons, manifest, share cards and same-site links: ${checked} checked`)
 
   const nf = await page.goto(new URL('/no/such/page', BASE).href, { waitUntil: 'networkidle' })
   if (nf.status() !== 404) fail(`a missing page answered ${nf.status()}, not 404`)

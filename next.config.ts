@@ -110,6 +110,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.ola.cx' }],
           destination: '/ola-site/index.html',
         },
+        // How Ola works (the architecture), linked from the letter (OLA-219)
+        {
+          source: '/architecture',
+          has: [{ type: 'host', value: 'ola.cx' }],
+          destination: '/ola-site/architecture.html',
+        },
+        {
+          source: '/architecture',
+          has: [{ type: 'host', value: 'www.ola.cx' }],
+          destination: '/ola-site/architecture.html',
+        },
         // ola.cx universal-link manifest — Dolly (apps/dolly) opens
         // https://ola.cx/dolly/today, the daily text's link, on its map.
         {
