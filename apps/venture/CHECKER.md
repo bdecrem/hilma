@@ -41,6 +41,14 @@ your failure, not the builder's.
 7. Report in five lines at most: passed, failed, not checked, and anything that looked wrong that
    no check covered (open a ticket for it).
 
+## A ticket that is an analysis, a plan or a proposal
+
+It reaches Bart as something to read, so it has checks too. The checker opens it the way he will
+(from the link he gets, at phone width) and checks what it is built from: it names the outside
+sources read for it, each link opens and says what the text says it says, and it does not rest only
+on this project's own notes. Bart, Nov 20, about the review of the learning system: "did the agent
+do any web searches to understand what best practices are?" It had not.
+
 ## For the lead
 
 - Start a checker as soon as a ticket is ready: `issues.mjs unchecked` lists them. Checkers come

@@ -41,7 +41,12 @@ Before anything else, the three things that say whether "it works" could be trus
   with no checks, and the day's closings without checks. Read every "internal" reason and every
   skipped place as a stranger would; reopen what does not hold.
 - The request test set on the test server (OLA-231): every request that stopped working, and every
-  failure of Ola today that is not yet a case in it.
+  failure of Ola today that is not yet a case in it. A case is written from the stored conversation
+  of what Bart typed (on the mini: `frontdesk/admin.mjs kept bart`), with his exact words, the place
+  and the time; from his description only when there is no log (Bart, Nov 20: "don't rely on the
+  report, rely on the logs ... when possible").
+- A day counts as learned from only when each of its failures ended in a fix that code enforces or
+  that someone else checks. A day whose fixes are all written rules is reported as not learned from.
 
 A correction is recorded with `node scripts/venture/correct.mjs add …` and nothing else. A weakness
 that came back gets a stronger kind of fix; the tool refuses another written rule.
