@@ -84,3 +84,14 @@ export async function articleTranslations(id: string): Promise<ArticleEnglish[]>
   if (!r.ok) return []
   return r.json()
 }
+
+/** Read a table through PostgREST (`table?select=…&filter=…`), server-side with the service key. */
+export async function select<T>(pathAndQuery: string, revalidate: number | false = 60): Promise<T[]> {
+  const { url, key } = env()
+  const r = await fetch(`${url}/rest/v1/${pathAndQuery}`, {
+    headers: headers(key),
+    ...(revalidate === false ? { cache: 'no-store' as const } : { next: { revalidate, tags: ['mrd'] } }),
+  })
+  if (!r.ok) throw new Error(`mrd select ${r.status}: ${(await r.text()).slice(0, 300)}`)
+  return r.json() as Promise<T[]>
+}

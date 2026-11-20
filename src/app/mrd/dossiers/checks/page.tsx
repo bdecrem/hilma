@@ -88,7 +88,7 @@ export default async function Page() {
     <main className="wrap">
       <header className="top">
         <div className="eyebrow">
-          <span><a href="/mrd/dossiers">MRD · six new dossiers</a> · checks · <a href="/mrd/dossiers/changes">what changed this week</a> · <a href="/mrd">the library</a></span>
+          <span><a href="/mrd/dossiers">MRD · six new dossiers</a> · checks · <a href="/mrd/dossiers/changes">what changed this week</a> · <a href="/mrd/dossiers/costa-rica">Costa Rica</a> · <a href="/mrd">the library</a></span>
         </div>
         <h1>No answer stays up unless its sources were read <em>and a second reader agrees.</em></h1>
         <p className="lede">

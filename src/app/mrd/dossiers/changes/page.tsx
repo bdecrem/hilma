@@ -62,7 +62,7 @@ export default function Page() {
     <main className="wrap chg">
       <header className="top">
         <div className="eyebrow">
-          <span><a href="/mrd/dossiers">MRD · six new dossiers</a> · <a href="/mrd/dossiers/checks">checks</a> · what changed this week · <a href="/mrd">the library</a></span>
+          <span><a href="/mrd/dossiers">MRD · six new dossiers</a> · <a href="/mrd/dossiers/checks">checks</a> · what changed this week · <a href="/mrd/dossiers/costa-rica">Costa Rica</a> · <a href="/mrd">the library</a></span>
         </div>
         <h1>What changed <em>this week</em></h1>
         <p className="lede">
