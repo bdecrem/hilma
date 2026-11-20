@@ -202,7 +202,7 @@ async function gitSetup({ delayMs = 0 } = {}) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r))
   const origin = `http://127.0.0.1:${server.address().port}`
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_GIT_REMOTE=${bare}\nOLA_SITES_GIT_EMAIL=owner@example.com\n`, { mode: 0o600 })
-  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: origin, OLA_FD_SITES_API: 'http://127.0.0.1:9', OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_GIT_VERIFY_MS: '3000', OLA_FD_SITES_POLL_MS: '50' })
+  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: origin, OLA_FD_SITES_API: 'http://127.0.0.1:9', OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_GIT_VERIFY_MS: '3000', OLA_FD_SITES_GIT_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
   const branch = (args) => execFileSync('git', ['-C', bare, ...args], { encoding: 'utf8' })
   return { d, bare, origin, branch, server, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()) }
 }

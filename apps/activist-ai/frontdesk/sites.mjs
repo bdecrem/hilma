@@ -48,6 +48,10 @@ export function sitesConfig(env = process.env) {
     verifyMs: Number(env.OLA_FD_SITES_VERIFY_MS) || 90_000,
     // A push is built by the host before it is served: a minute or two, longer when it is busy.
     gitVerifyMs: Number(env.OLA_FD_SITES_GIT_VERIFY_MS) || 300_000,
+    // After a push the host's edges switch over a few seconds apart (seen 2026-11-20: the front desk
+    // saw the new page, curl a second later the old answer): a match counts once it holds again
+    // this long after.
+    gitSettleMs: Number(env.OLA_FD_SITES_GIT_SETTLE_MS) || 8000,
     pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
   }
 }
@@ -554,19 +558,24 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
   const deploy = (c, all) => (c.git ? gitDeployAll(c.git, all) : deployAll(c, all))
 
   // The public address answers with what was published (or, after an unpublish, with 404).
-  async function verify(url, expect, ms = cfg.verifyMs) {
+  async function verify(url, expect, ms = cfg.verifyMs, settleMs = 0) {
     const until = Date.now() + ms
     let last = ''
+    let since = null
     while (Date.now() < until) {
       try {
         const r = await fetch(url, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15_000) })
         const b = Buffer.from(await r.arrayBuffer())
         last = String(r.status)
-        if (expect === null ? r.status === 404 : r.ok && sha1(b) === expect) return true
+        if (expect === null ? r.status === 404 : r.ok && sha1(b) === expect) {
+          since ??= Date.now()
+          if (Date.now() - since >= settleMs) return true
+        } else since = null
       } catch (e) {
         last = e.code ?? e.name
+        since = null
       }
-      await new Promise((r) => setTimeout(r, cfg.pollMs))
+      await new Promise((r) => setTimeout(r, since === null ? cfg.pollMs : Math.max(cfg.pollMs, Math.min(2000, settleMs))))
     }
     log(`sites: ${url} did not show the change yet (${last})`)
     return false
@@ -733,7 +742,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         return { status: e.code === 'BUSY' ? 429 : 502, body: { error: 'publish_failed', message: e.code === 'BUSY' ? 'Another page is being published just now. Try again in a minute.' : 'The page could not be published just now: the host did not take it. Nothing changed. Try again in a few minutes.' } }
       }
       const index = plan.items.find((i) => i.as === plan.page)
-      const live = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs)
+      const live = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
       const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet. It usually appears within a few minutes; check the address again then.` }
       return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, ...notYet, fingerprint: plan.fingerprint }, plan }
     },
@@ -757,7 +766,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
         return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
       }
-      const gone = await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs)
+      const gone = await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
       const notYet = gone ? {} : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
       return { status: 200, body: { unpublished: true, url: m.url, gone, ...notYet, files: m.files.length } }
     },
