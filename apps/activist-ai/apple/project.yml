@@ -45,6 +45,12 @@ targets:
         includes: [ola-page-mac, ola-publish]
         buildPhase: resources
         group: WebTools
+      # Ola's opencode plugins (ola-planted, OLA-88/OLA-228): the folder itself, as a folder
+      # reference, so the app carries the committed files and nothing can drift from the image's
+      # /opt/ola/plugins; installed for the local agent at each start (LocalServer.installPlugins).
+      - path: ../workspace/plugins
+        type: folder
+        buildPhase: resources
       # Ola's own skills (designer, app-designer, chart, ...), staged fresh from ../skills at the
       # commit, with VERSION.json, by tools/skills.mjs (tools/build.sh and testflight/ship-via-mini.sh
       # do it, and refuse a build that carries anything else); installed for the local agent at each

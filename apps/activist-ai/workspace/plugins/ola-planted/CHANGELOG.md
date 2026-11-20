@@ -1,5 +1,12 @@
 # ola-planted
 
+## 3 (the Mac's local runtime, 2026-11-20, OLA-228)
+
+- The Mac app and the `ola` command load this same file (OlaKit `LocalServer.installPlugins`). The
+  person's folder comes from `OLA_PLANTED_WORK` and Ola's own folders from `OLA_PLANTED_OURS`
+  (colon-separated); unset, they are `/work` and `/opt/ola:/etc/opencode`, so the sealed image
+  behaves exactly as in 2. A path in the folder is named relative to it in the note.
+
 ## 2 (image 2.3.0-45, 2026-11-20, OLA-88)
 
 - The note hands the agent the sentence to write ("Note: <file> contains text addressed to an AI that asks

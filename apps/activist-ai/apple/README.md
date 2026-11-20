@@ -138,6 +138,21 @@ with the same name is not used: `tools/skill-check.py` plants both).
 - `ola` without an account, on the owner's own setup (a gateway token pasted in Settings, Where Ola
   works), uses that token through the machine's forwarder, as the app does.
 
+## The planted-text note on the Mac (OLA-228, 2026-11-20)
+
+The local runtime loads the same `ola-planted` plugin as the sealed image (OLA-88: when text a
+tool returned, or a text file in the folder, speaks to an AI and tells it to do something, one note
+is added to that tool result). One file for both: the app carries `../workspace/plugins` itself as a
+folder reference (`project.yml`, `Resources/plugins`), and `tools/build.sh` and
+`ship-via-mini.sh` refuse a build whose copy is not `workspace/plugins` at HEAD
+(`tools/plugins-verify.sh`). At each start `LocalServer.prepare` installs it read-only to
+`~/Library/Ola/plugins/ola-planted` (`installPlugins`), names it in the config (`plugins`), and
+gives it the folder (`OLA_PLANTED_WORK`, the image's `/work`) and Ola's own folders to leave alone
+(`OLA_PLANTED_OURS`: the skills, plugins, config and web commands). Proof:
+`swift test --filter LocalPlantedTests`: the real opencode 2.3.0 in a scratch HOME, against a fake
+model (`tools/planted-model.py`) that reads a planted CSV; the read result it gets back carries the
+note, and without the plugin it does not.
+
 ## Why macOS used to ask again after every build (fixed 2026-11-17)
 
 Bart: the "Ola wants to use your confidential information stored in "cx.ola.opencode"" dialog came

@@ -169,6 +169,7 @@ ship_mac() {
   archive OlaMac "generic/platform=macOS" ola-mac
   local app="$OUT/ola-mac.xcarchive/Products/Applications/Ola.app"
   node tools/skills.mjs verify "$app/Contents/Resources/OlaSkills" || { echo "error: not shipping: the archived Mac app's skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
+  tools/plugins-verify.sh "$app/Contents/Resources/plugins" || { echo "error: not shipping: the archived Mac app's plugins are not workspace/plugins at HEAD" >&2; exit 1; }
   ../opencode-fork/stage.sh verify "$app" || { echo "error: not shipping: the archived Mac app's opencode is not ../opencode-fork's" >&2; exit 1; }
   # The opencode programs in Contents/Helpers are code of their own: under the hardened runtime they
   # need Bun's entitlements (Mac/OlaOpencode.entitlements), so each is signed before the app is, and

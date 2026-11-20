@@ -53,6 +53,7 @@ case "${1:-}" in
     REQ="$(codesign -d -r- "$APP" 2>&1 | sed -n 's/^.*designated => //p')"
     echo "designated requirement: $REQ"
     node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not this build: its skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
+    tools/plugins-verify.sh "$APP/Contents/Resources/plugins" || { echo "FAIL: not this build: its plugins are not workspace/plugins at HEAD" >&2; exit 1; }
     # Ola's opencode: this tag, this rebrand, and this Mac's one starts.
     ../opencode-fork/stage.sh verify "$APP" || { echo "FAIL: not this build: its opencode is not ../opencode-fork's" >&2; exit 1; }
     "$APP/Contents/Helpers/ola-opencode-$(uname -m)" --version >/dev/null || { echo "FAIL: the opencode inside the app does not start" >&2; exit 1; }
@@ -85,6 +86,7 @@ case "${1:-}" in
       exit 3
     fi
     node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not installing: the built app's skills are not apps/activist-ai/skills at HEAD (build again)" >&2; exit 1; }
+    tools/plugins-verify.sh "$APP/Contents/Resources/plugins" >/dev/null || { echo "FAIL: not installing: the built app's plugins are not workspace/plugins at HEAD (build again)" >&2; exit 1; }
     ../opencode-fork/stage.sh verify "$APP" >/dev/null || { echo "FAIL: not installing: the built app's opencode is not ../opencode-fork's (build again)" >&2; exit 1; }
     rm -rf /Applications/Ola.app
     cp -R "$APP" /Applications/Ola.app

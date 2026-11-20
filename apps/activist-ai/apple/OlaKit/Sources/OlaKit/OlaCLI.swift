@@ -111,6 +111,7 @@ public enum OlaCLI {
       LocalServer.support = URL(fileURLWithPath: dir)
       // The installed skills too (~/Library/Ola/skills is the real app's).
       LocalServer.skillsHome = URL(fileURLWithPath: dir).appendingPathComponent("skills-home")
+      LocalServer.pluginsHome = URL(fileURLWithPath: dir).appendingPathComponent("plugins-home")
     }
     // The owner's own setup in a check: the gateway token from a file instead of the Keychain.
     if let f = env["OLA_MODEL_TOKEN_FILE"], let t = try? String(contentsOfFile: f, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {

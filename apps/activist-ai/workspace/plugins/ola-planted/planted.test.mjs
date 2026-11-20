@@ -102,3 +102,22 @@ test('a file read only through a script is found by the scan of /work, once, and
   await onToolAfter(other)
   assert.equal(other.result.content, 'x') // R07 was already noted in s5 (on the write call); notes.md is the agent's
 })
+
+test("the Mac's local runtime (OLA-228): the person's folder and Ola's own folders come from the environment", async () => {
+  const folder = mkdtempSync(path.join(tmpdir(), 'planted-local-'))
+  const skills = path.join(tmpdir(), 'ola-skills-home')
+  process.env.OLA_PLANTED_WORK = folder
+  process.env.OLA_PLANTED_OURS = `${skills}:/Users/x/Library/Ola/plugins`
+  const local = await import('./index.js?local') // a fresh copy of the module, reading the new environment
+  const skill = { status: 'completed', tool: 'read', sessionID: 'l1', input: { filePath: `${skills}/designer/SKILL.md` }, result: { content: planted.ignore } }
+  const before = JSON.stringify(skill)
+  await local.onToolAfter(skill)
+  assert.equal(JSON.stringify(skill), before)
+  const ev = { status: 'completed', tool: 'read', sessionID: 'l1', input: { filePath: `${folder}/data/volunteers.csv` }, result: { content: planted.k1 } }
+  await local.onToolAfter(ev)
+  assert.match(ev.result.content[1].text, /- data\/volunteers\.csv: "/)
+  writeFileSync(path.join(folder, 'R08.txt'), 'x\n' + planted.k2 + '\n')
+  const scan = { status: 'completed', tool: 'shell', sessionID: 'l2', input: { command: 'python3 a.py' }, result: { content: 'ok' } }
+  await local.onToolAfter(scan)
+  assert.match(scan.result.content[1].text, /- R08\.txt, line 2: "/)
+})

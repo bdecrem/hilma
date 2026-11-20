@@ -125,6 +125,55 @@ public final class LocalServer: @unchecked Sendable {
     return names
   }
 
+  /// Ola's opencode plugins (OLA-228): workspace/plugins as committed, the files the sealed image
+  /// carries at /opt/ola/plugins. Today ola-planted (OLA-88): a note on a tool result whose text speaks
+  /// to an AI. The Mac app carries the folder in its Resources straight from ../workspace/plugins
+  /// (project.yml), so the cloud and this Mac load one file; a check run from the repo points this at
+  /// workspace/plugins.
+  public static let pluginNames = ["ola-planted"]
+  /// What of each plugin is installed, as the Containerfile copies it.
+  static let pluginFiles = ["index.js", "package.json"]
+  nonisolated(unsafe) public static var pluginsSource: URL? = Bundle.main.resourceURL.flatMap { r in
+    let p = r.appendingPathComponent("plugins")
+    return FileManager.default.fileExists(atPath: p.appendingPathComponent("ola-planted/index.js").path) ? p : nil
+  }
+  /// Where they are installed for opencode: written fresh at each start, read-only, beside the skills.
+  nonisolated(unsafe) public static var pluginsHome = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Ola/plugins")
+
+  /// Copies each plugin's files into `dir/<name>` (made fresh, read-only). Returns the installed
+  /// plugins' folders, the paths the config names (empty when the source is missing).
+  @discardableResult
+  public static func installPlugins(into dir: URL) -> [URL] {
+    let fm = FileManager.default
+    guard let src = pluginsSource else { return [] }
+    if let all = fm.enumerator(atPath: dir.path) {
+      for case let rel as String in all { try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.appendingPathComponent(rel).path) }
+      try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+    }
+    try? fm.removeItem(at: dir)
+    guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: true)) != nil else { return [] }
+    var out: [URL] = []
+    for name in pluginNames {
+      let to = dir.appendingPathComponent(name)
+      guard (try? fm.createDirectory(at: to, withIntermediateDirectories: true)) != nil else { return [] }
+      for f in pluginFiles {
+        guard (try? fm.copyItem(at: src.appendingPathComponent("\(name)/\(f)"), to: to.appendingPathComponent(f))) != nil else { return [] }
+        try? fm.setAttributes([.posixPermissions: 0o444], ofItemAtPath: to.appendingPathComponent(f).path)
+      }
+      try? fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: to.path)
+      out.append(to)
+    }
+    try? fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+    return out
+  }
+
+  /// The path with every symlink resolved (realpath), or the path itself when it does not exist.
+  static func realPath(_ u: URL) -> String {
+    guard let r = realpath(u.path, nil) else { return u.path }
+    defer { free(r) }
+    return String(cString: r)
+  }
+
   public let folder: URL
   public private(set) var port: Int
   /// Where opencode keeps its config, sessions and caches (default: Application Support/Ola/local).
@@ -199,7 +248,7 @@ public final class LocalServer: @unchecked Sendable {
   /// one-shot runs cannot ask): commands, edits and so Ola's web commands allowed (OLA-139). The app
   /// keeps it true and answers those approvals itself (OlaStore.goesAhead), so its setting applies
   /// to the next step without a restart.
-  static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "", askFirst: Bool = true) -> String {
+  static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "", plugins: [String] = [], askFirst: Bool = true) -> String {
     let first = askFirst ? "ask" : "allow"
     let allow = { (action: String) in skills.map { #"    { "action": "\#(action)", "resource": "\#($0)", "effect": "allow" },"# }.joined(separator: "\n") }
     let deny = ["*GAMI*", "*hilma-*", "*ola-staging*", "*launchctl*", "*sudo *", "*.ola/*"]
@@ -236,6 +285,8 @@ public final class LocalServer: @unchecked Sendable {
       // Ola's own skills and nothing else (installSkills): the folder is named here, and every
       // skill is denied by name except Ola's. OPENCODE_DISABLE_CLAUDE_CODE keeps Claude's out.
       "skills": [\(skills.isEmpty ? "" : "\"\(skillsPath)\"")],
+      // Ola's own plugins (installPlugins), as in the sealed image's system config: ola-planted.
+      "plugins": [\(plugins.map { "\"\($0)\"" }.joined(separator: ", "))],
       "policies": [
         { "action": "skill.use", "resource": "*", "effect": "deny" },
     \(allow("skill.use"))
@@ -324,7 +375,10 @@ public final class LocalServer: @unchecked Sendable {
     }
     try notes.write(to: instructions, atomically: true, encoding: .utf8)
     let offered = installed.isEmpty ? [] : skillStates.filter(\.ready).map(\.skill.name)
-    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, askFirst: askFirst).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
+    // Ola's plugins, the same files as the sealed image's (OLA-228).
+    let plugins = Self.installPlugins(into: Self.pluginsHome)
+    trace?(plugins.isEmpty ? "Ola's plugins NOT found (no planted-text note)" : "Ola's plugins in \(Self.pluginsHome.path): " + plugins.map(\.lastPathComponent).joined(separator: ", "))
+    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, plugins: plugins.map(\.path), askFirst: askFirst).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
     var env: [String: String] = [:]
     let mine = ProcessInfo.processInfo.environment
@@ -334,6 +388,10 @@ public final class LocalServer: @unchecked Sendable {
     // downloads land in the project's sources/.
     env["OLA_GATEWAY_HOSTPORT"] = route.hostPort
     env["OLA_WORK"] = folder.path
+    // ola-planted: the person's folder (the image's /work), and Ola's own files, which it leaves alone.
+    // Real paths, as opencode names the files it reads (a folder under /var is /private/var to it).
+    env["OLA_PLANTED_WORK"] = Self.realPath(folder)
+    env["OLA_PLANTED_OURS"] = [skillsDir, Self.pluginsHome, config, webTools].flatMap { [$0.path, Self.realPath($0)] }.joined(separator: ":")
     env["OLA_LIB"] = webTools.path
     // ola-page asks this app to render a page in its own web view (PageRender in the Mac app).
     env["OLA_RENDER_DIR"] = Self.support.appendingPathComponent("render").path

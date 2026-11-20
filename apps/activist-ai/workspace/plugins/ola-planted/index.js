@@ -16,6 +16,11 @@
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process; the sealed design is unchanged. It skips Ola's own files (/opt/ola: skills, config),
 // which are instructions by design.
+//
+// The Mac's local runtime loads this same file (OLA-228): the Mac app and the `ola` command carry
+// workspace/plugins in their Resources, install it read-only beside the skills and name it in their config
+// (OlaKit LocalServer.installPlugins). There the person's folder is OLA_PLANTED_WORK, and Ola's own files are
+// the folders in OLA_PLANTED_OURS (colon-separated); unset, they are /work and /opt/ola:/etc/opencode.
 
 const NOTE_HEAD = '[Ola file check]'
 const MAX_SCAN = 4_000_000 // characters of one tool result
@@ -91,7 +96,7 @@ function visibleParts(result) {
 function sourceOf(tool, input) {
   const i = input && typeof input === 'object' ? input : {}
   const p = i.filePath ?? i.file_path ?? i.path ?? i.file
-  if (typeof p === 'string') return { label: p.replace(/^\/work\//, ''), path: p }
+  if (typeof p === 'string') return { label: p.startsWith(WORK + '/') ? p.slice(WORK.length + 1) : p.replace(/^\/work\//, ''), path: p }
   if (typeof i.command === 'string') return { label: `the output of \`${clip(i.command.replace(/\s+/g, ' '), 80)}\``, path: i.command }
   if (typeof i.pattern === 'string') return { label: `the search for "${clip(i.pattern, 40)}"`, path: '' }
   return { label: `what the ${tool} tool returned`, path: '' }
@@ -112,7 +117,10 @@ const READING_TOOLS = /^(?:read|grep|shell|bash|glob|view|cat)$/i
 const WRITING_TOOLS = /^(?:write|edit|patch|apply_patch)$/i
 const notes = new Map() // sessionID -> Set of keys already flagged
 const written = new Set() // paths the agent wrote with its file tools: its own output, not the person's
-const WORK = process.env.OLA_PLANTED_WORK || '/work'
+const WORK = (process.env.OLA_PLANTED_WORK || '/work').replace(/\/+$/, '')
+// Ola's own skills and config: /opt/ola and /etc/opencode in the image, the Mac's install folders locally.
+const OURS = (process.env.OLA_PLANTED_OURS || '/opt/ola:/etc/opencode').split(':').map((d) => d.replace(/\/+$/, '')).filter(Boolean)
+const isOurs = (s) => OURS.some((d) => s === d || s.includes(d + '/'))
 const SKIP_DIR = /^(?:\.|node_modules$|__pycache__$)/
 const TEXT_EXT = /\.(?:csv|tsv|txt|md|markdown|json|jsonl|ndjson|html?|xml|ya?ml|rtf|eml|log|ini|tex|srt|vtt)$/i
 const MAX_FILE = 30 * 1024 * 1024
@@ -169,7 +177,7 @@ export async function onToolAfter(event) {
   const text = parts.filter((p) => p?.type === 'text').map((p) => p.text).join('\n')
   if (text.includes(NOTE_HEAD)) return
   let found = []
-  const ours = /(^|\s|['"])\/(?:opt\/ola|etc\/opencode)\//.test(src.path) // Ola's own skills and config
+  const ours = isOurs(src.path) // Ola's own skills and config
   if (READING_TOOLS.test(tool) && !ours) found = findPlanted(text).map((f) => ({ ...f, where: src.label }))
   found.push(...(await scanWork()))
   const fresh = []
