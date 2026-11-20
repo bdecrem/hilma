@@ -2,19 +2,27 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { drawMe, type Face } from '@/app/claude/drawing'
+import { isBackchannel } from '@/lib/venture/voice-turns'
 
 // The open conversation, forked from Call.tsx. Same WebRTC line to OpenAI
 // Realtime, but the Realtime model never decides what to say: it hears Bart
 // (voice activity + transcription) and reads text aloud. Each thing Bart says
 // goes to /api/venture/talk/reply, Claude's reply streams back as text, and
-// the page hands it to the voice a sentence or two at a time. Talking over
-// Claude stops it.
+// the page hands it to the voice a sentence or two at a time.
+//
+// Interrupting is deliberate (OLA-204): talking over Claude for BARGE_MS stops
+// it; a "yeah" or a noise under its voice does not, and a few more words while
+// it is still writing do not start the reply over (the voice writer carries
+// the reply it was writing over to the longer turn, src/lib/venture/voice-carry.ts).
+// While he is talking, no new piece goes to the voice.
 
 type Phase = 'idle' | 'connecting' | 'live' | 'paused' | 'done'
 type Line = { role: 'claude' | 'bart'; text: string }
 type RtEvent = { type: string; transcript?: string; response?: { id?: string; status?: string }; error?: { message?: string } }
 
 const STORE = 'venture.talk.session'
+// Talking over Claude this long stops it.
+const BARGE_MS = 700
 
 // The longest prefix of `s` that ends on a sentence boundary.
 function sentences(s: string): number {
@@ -64,6 +72,11 @@ export default function Talk() {
   const pendingBart = useRef(false) // Bart said something no stored reply answers yet
   const unanswered = useRef(false)
   const fidelity = useRef<{ sent: string; heard: string }[]>([])
+  const listening = useRef(false) // he is talking: hold the next piece until his words are in
+  const barge = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const release = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const held = useRef<string[]>([]) // what he said under Claude's voice ("yeah"), stored after the reply
+  const replyRef = useRef<(text: string | null) => Promise<void>>(async () => {})
 
   useEffect(() => {
     key.current = new URLSearchParams(window.location.search).get('k') ?? ''
@@ -72,7 +85,7 @@ export default function Talk() {
     } catch {}
   }, [])
 
-  const post = useCallback((role: 'claude' | 'event', text: string) => {
+  const post = useCallback((role: 'claude' | 'bart' | 'event', text: string) => {
     const sid = session.current
     if (!sid || !text.trim()) return
     queue.current = queue.current.then(async () => {
@@ -96,24 +109,36 @@ export default function Talk() {
   }, [])
 
   // The reply has been heard to its end (or was cut): it becomes one stored turn.
-  const closeReply = useCallback(() => {
-    if (closer.current) clearTimeout(closer.current)
-    closer.current = null
-    const text = said.current.join(' ').trim()
-    said.current = []
-    audioAt.current = null
-    setThinking(false)
-    setDraft('')
-    if (!text) return
-    pendingBart.current = false
-    setLines((l) => [...l, { role: 'claude', text }])
-    post('claude', text)
-  }, [post])
+  // What he said under it is stored after it; when it ended on a question, his
+  // "yes" is the answer and gets a reply.
+  const closeReply = useCallback(
+    (cut = false) => {
+      if (closer.current) clearTimeout(closer.current)
+      closer.current = null
+      const text = said.current.join(' ').trim()
+      said.current = []
+      audioAt.current = null
+      setThinking(false)
+      setDraft('')
+      if (text) {
+        pendingBart.current = false
+        setLines((l) => [...l, { role: 'claude', text }])
+        post('claude', text)
+      }
+      const under = held.current.join(' ').trim()
+      held.current = []
+      if (!under) return
+      if (!cut && /\?["')\]]?$/.test(text)) return void replyRef.current(under)
+      setLines((l) => [...l, { role: 'bart', text: under }])
+      post('bart', under)
+    },
+    [post],
+  )
 
   // Hand the voice the next piece: whole sentences while Claude is still
   // writing, everything that is left once the stream has ended.
   const pump = useCallback(() => {
-    if (chunk.current !== null) return
+    if (chunk.current !== null || listening.current) return
     const cut = streamDone.current ? buf.current.length : sentences(buf.current)
     const text = buf.current.slice(0, cut).trim()
     buf.current = buf.current.slice(cut)
@@ -166,7 +191,7 @@ export default function Talk() {
     playing.current = false
     said.current = heard >= words.length ? (all ? [all] : []) : heard >= 2 ? [`${words.slice(0, heard).join(' ')} …`] : []
     const cut = said.current.length > 0
-    closeReply()
+    closeReply(true)
     if (cut) post('event', 'interrupted')
     else unanswered.current = pendingBart.current
   }, [closeReply, post, send])
@@ -228,9 +253,16 @@ export default function Talk() {
     },
     [interrupt, pump],
   )
+  replyRef.current = reply
 
   const hangUp = useCallback(() => {
     gen.current++
+    for (const t of [barge, release]) {
+      if (t.current) clearTimeout(t.current)
+      t.current = null
+    }
+    listening.current = false
+    held.current = []
     abort.current?.abort()
     buf.current = ''
     streamDone.current = true
@@ -270,17 +302,45 @@ export default function Talk() {
           if (ev.type.endsWith('stopped') && streamDone.current && chunk.current === null && !buf.current.trim()) closeReply()
           break
         case 'input_audio_buffer.speech_started':
-          interrupt()
+          // Not a stop yet: his words decide, or talking over Claude for BARGE_MS.
+          listening.current = true
+          if (release.current) clearTimeout(release.current)
+          release.current = null
+          if (playing.current && !barge.current)
+            barge.current = setTimeout(() => {
+              barge.current = null
+              interrupt()
+            }, BARGE_MS)
           setTalking('bart')
           break
         case 'input_audio_buffer.speech_stopped':
+          if (barge.current) clearTimeout(barge.current)
+          barge.current = null
+          // In case his words never arrive, the voice goes on after a while.
+          if (release.current) clearTimeout(release.current)
+          release.current = setTimeout(() => {
+            release.current = null
+            listening.current = false
+            pump()
+          }, 4000)
           setTalking((t) => (t === 'bart' ? null : t))
           break
         case 'conversation.item.input_audio_transcription.completed':
         case 'conversation.item.input_audio_transcription.failed': {
           const text = (ev.transcript ?? '').trim()
-          if (text) void reply(text)
+          listening.current = false
+          for (const t of [barge, release]) {
+            if (t.current) clearTimeout(t.current)
+            t.current = null
+          }
+          const speaking = chunk.current !== null || said.current.length > 0 || playing.current
+          if (text && speaking && isBackchannel(text)) {
+            // A "yeah" under Claude's voice: kept, and Claude goes on.
+            held.current.push(text)
+            pump()
+          } else if (text) void reply(text)
           else if (unanswered.current) void reply(null)
+          else pump()
           break
         }
         case 'response.created':

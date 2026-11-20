@@ -17,15 +17,18 @@
 // server used (talkSystem).
 //
 // Each reply is one headless Claude Code call with no tools, no settings and an empty folder, the
-// API key removed from its environment. When the caller hangs up on a reply (he started talking),
-// the call is stopped. The job ends by itself when the checkout moves to a new commit; launchd
-// starts it again on the new code.
+// API key removed from its environment. When the caller hangs up on a reply (he said more), the
+// reply goes on for a few seconds: if the next request is his same turn with only a few words
+// added, it takes that reply over instead of starting again (src/lib/venture/voice-carry.ts,
+// OLA-204); otherwise it is stopped. The job ends by itself when the checkout moves to a new
+// commit; launchd starts it again on the new code.
 import { execFileSync, spawn } from 'node:child_process'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { timingSafeEqual } from 'node:crypto'
+import { carryKey, carryRegistry } from '../../src/lib/venture/voice-carry'
 
 const root = path.join(__dirname, '../..')
 for (const l of readFileSync(path.join(root, '.env.local'), 'utf8').split('\n')) {
@@ -36,6 +39,9 @@ const SECRET = process.env.VENTURE_VOICE_SECRET ?? ''
 const PORT = Number(process.env.VENTURE_VOICE_PORT || 3931)
 const MODEL = 'claude-opus-5-5'
 const say = (s: string) => console.log(`${new Date().toISOString().slice(0, 19)}Z ${s}`)
+// How long a reply whose caller left waits to be taken over (the phone's next request comes about
+// a second after the last; the talk page's sooner).
+const carry = carryRegistry({ graceMs: 8000 })
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
 
 type Msg = { role: 'user' | 'assistant'; content: string }
@@ -147,31 +153,43 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'POST' || (req.url !== '/reply' && req.url !== '/warm')) return void res.writeHead(404).end()
   const b = await body(req)
   const lead = typeof b.lead === 'string' ? b.lead : ''
-  const ac = new AbortController()
-  res.on('close', () => {
-    if (!res.writableEnded) ac.abort() // he started talking, or the caller went away
-  })
   if (req.url === '/warm') {
+    const ac = new AbortController()
+    res.on('close', () => {
+      if (!res.writableEnded) ac.abort() // the caller went away
+    })
     const r = await claude(await system(lead), 'BART: (The call just connected.)\n\nReply with the single word: ready', () => {}, ac.signal)
     say(`warm: ${r.said ? `notes cached in ${r.ms} ms` : `failed (${r.why})`}`)
     return void res.writeHead(r.said ? 200 : 502, { 'Content-Type': 'text/plain' }).end(r.said ? 'ok' : r.why)
   }
   const messages = (Array.isArray(b.messages) ? b.messages : []).filter((m): m is Msg => !!m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
   if (!messages.length) return void res.writeHead(400).end('no messages')
+  const last = messages[messages.length - 1]
+  const opened = carry.open(carryKey(lead, messages), last.role === 'user' ? last.content : '', async (onText, signal) => {
+    const r = await claude(await system(lead), transcript(messages), onText, signal)
+    say(`reply: ${signal.aborted ? 'stopped: nobody took it over' : r.said ? `first words after ${r.firstMs} ms, done in ${r.ms} ms` : `failed (${r.why || 'nothing said'})`}`)
+    return r
+  })
+  if (opened.carried) say(`reply: carried over, already ${opened.ms} ms along (he added a few words)`)
   let started = false
-  const r = await claude(
-    await system(lead),
-    transcript(messages),
-    (t) => {
-      if (!started) res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store, no-transform', 'X-Accel-Buffering': 'no' })
-      started = true
-      res.write(t)
-    },
-    ac.signal,
-  )
-  if (started) res.end()
-  else res.writeHead(ac.signal.aborted ? 499 : 502, { 'Content-Type': 'text/plain' }).end(r.why || 'no reply')
-  say(`reply: ${ac.signal.aborted ? 'stopped by the caller' : r.said ? `first words after ${r.firstMs} ms, done in ${r.ms} ms` : `failed (${r.why || 'nothing said'})`}`)
+  await new Promise<void>((resolve) => {
+    res.on('close', () => {
+      if (!res.writableEnded) opened.leave() // he said more, or the caller went away
+      resolve()
+    })
+    opened.attach({
+      onText(t) {
+        if (!started) res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store, no-transform', 'X-Accel-Buffering': 'no', 'X-Kit-Carried': opened.carried ? '1' : '0' })
+        started = true
+        res.write(t)
+      },
+      onEnd(w) {
+        if (started) res.end()
+        else res.writeHead(502, { 'Content-Type': 'text/plain' }).end(w.why || 'no reply')
+        resolve()
+      },
+    })
+  })
 }
 
 if (SECRET.length < 32) {

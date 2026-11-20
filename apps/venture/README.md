@@ -80,8 +80,11 @@ the ears and the mouth: voice activity detection, transcription, and reading
 text aloud (`create_response: false`, so it never answers by itself). Every
 reply is written by Claude (`claude-opus-5-5`, effort low, the system prompt
 cached), with every row of `venture_docs` loaded as its notes; the row `now`
-(source `private/NOW.md`, "where things stand") goes first, so update and
-republish it before a conversation.
+(source `private/NOW.md`, "where things stand") is always loaded, so update and
+republish it before a conversation. In the text the documents run from the least
+recently changed to the newest (OLA-204): the prompt cache holds only up to the
+first changed character, and a reply that has to read all 370,000 tokens again
+begins after about ten seconds instead of three to four.
 
 1. Bart stops talking; the transcript of his turn arrives on the data channel.
 2. The page posts it to `/api/venture/talk/reply`, which stores it and streams
@@ -94,6 +97,11 @@ republish it before a conversation.
    cleared, and the stored turn keeps only as much as he can have heard
    (playback time at about 2.7 words a second), followed by an `interrupted`
    event that Claude sees on its next reply.
+   Interrupting is deliberate (OLA-204): it takes 0.7 s of talking over
+   Claude, or words that are not a "yeah" (a "yeah", "mm-hmm" or "got it"
+   under its voice is stored after the reply and Claude goes on; when the
+   reply ended on a question, it is the answer). While he talks no new
+   sentence goes to the voice.
 
 Turns land in `venture_interview_turns` with `call = 'talk'`; "End the call"
 writes the `ended` marker, so `transcript.mjs --wait talk` returns at once.
@@ -456,7 +464,20 @@ Kit tab signs in with the page's accounts (`/api/kochito/app-token`) and calls
 - **A note** is the memo page's path: the phone records AAC (up to five
   minutes, 4 MB), the server transcribes it (`transcribe` in `memo.ts`) and
   stores it as a voice note in `venture_messages`; the audio is not kept.
-- Tests with stand-ins for everything: `npx tsx --test scripts/venture/phone-test.ts`.
+- **A few more words do not start a reply over** (OLA-204). At the check-in of 2026-11-19 the
+  engine sent his turn again each time he added a word, every send dropped the reply in flight and
+  Claude started from nothing, four to six seconds each, three times in a row ("Are you still
+  there?"). Now the voice writer on the mini keeps a reply whose caller left for 8 s, and a request
+  for the same call whose last line is the earlier one plus at most eight words that do not turn
+  it (no "no", "but", "wait", no new question) takes it over (`src/lib/venture/voice-carry.ts`,
+  `voice-turns.ts`; the talk page gets the same). The transcript says `reply carried over`. A
+  stutter heard twice is one turn, each request answers the row it wrote (one "Can I hang up?" was
+  answered twice), and his earlier words that the engine sends again at the front of a turn are cut
+  off. Measured on that call: Claude's first words came 2.7 to 5 s after the question on the mini
+  (about 1 s more through Vercel and the bridge), and 8.6 to 10.4 s when a document had changed,
+  because the changing ones went first in the notes and the whole prompt was read again (now they
+  go last, `notes.ts`).
+- Tests with stand-ins for everything: `npx tsx --test scripts/venture/phone-test.ts scripts/venture/voice-turns-test.ts`.
 
 ### Every voice call becomes notes (2026-11-17)
 

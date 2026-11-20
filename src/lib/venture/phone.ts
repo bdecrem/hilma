@@ -3,6 +3,9 @@ import { isSession, newSession, type Turn } from './interview'
 import { talkMessages } from './talk'
 import type { Memo } from './memo'
 import { correctMinutes, type Minutes, type MinutesDeps } from './minutes'
+import { isRevision, norm, withoutRepeat } from './voice-turns'
+
+export { isRevision }
 
 // Kit in the Ola iPhone app (2026-11-17). Bart: "proper full duplex voice meetings with you or
 // leave you voice notes", inside the app, for admins only, "like the voice mode in the dodo app".
@@ -64,7 +67,8 @@ export type PhoneDeps = {
   system(): Promise<string>
   warm(system: string): Promise<void>
   later(fn: () => Promise<void>): void
-  reply(system: string, messages: Anthropic.MessageParam[], signal?: AbortSignal): AsyncIterable<string>
+  /// `info.carried`: the writer took over the reply it was writing to his same turn with fewer words.
+  reply(system: string, messages: Anthropic.MessageParam[], signal?: AbortSignal, info?: { carried?: boolean }): AsyncIterable<string>
   transcribe(audio: Blob, filename: string): Promise<string>
   saveMemo(text: string): Promise<Memo>
   memos(limit: number): Promise<Memo[]>
@@ -165,20 +169,15 @@ export const spoken = (s: string) => s.replace(/[*#`_~]+/g, '')
 // its row, and a reply whose question has since been revised or followed stops and is not kept.
 // The engine also heard Kit's own greeting through the speaker: "Hello. Hi Bart." was his line.
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
-
-/// The same spoken turn, heard again: one is the other with more words (or the same words fixed up).
-export function isRevision(before: string, after: string): boolean {
-  const a = norm(before), b = norm(after)
-  if (!a || !b) return false
-  if (b.startsWith(a) || a.startsWith(b)) return true
-  const aw = a.split(' '), bw = b.split(' ')
-  const n = Math.min(aw.length, bw.length)
-  if (n < 4) return false
-  let same = 0
-  for (let i = 0; i < n; i++) if (aw[i] === bw[i]) same++
-  return same / n >= 0.8
-}
+// The check-in of 2026-11-19 (OLA-204): each new turn still dropped the reply in flight and Claude
+// started from nothing, four to six seconds each, three times in a row while he added "Okay." and
+// "Yeah, this looks good."; now the voice writer carries that reply over to the longer turn when
+// he only added a few words (voice-carry.ts). The same call stored "Can I hang up?" twice and
+// answered it twice: the two turns came 150 ms apart, a stutter apart ("I, I, I'm" and "I, I, I,
+// I'm"), which did not count as a revision, and each request took the newest row as its question.
+// Now a stutter is a revision, and a request answers the row it wrote. ElevenLabs also sends his
+// earlier words again at the front of a turn when Kit's answer to them was not heard; they are
+// cut off (withoutRepeat), so each row holds what he said once.
 
 /// His line without the sentences that are Kit's own last line coming back through the speaker.
 export function withoutEcho(said: string, kitLine: string | undefined): string {
@@ -212,23 +211,30 @@ export async function kitTurn(body: BridgeTurn, signal: AbortSignal, d: PhoneDep
     return text(line)
   }
   const lastSpoken = [...rows].reverse().find((t) => t.role !== 'event')
-  const said = withoutEcho(heard, lastSpoken?.role === 'claude' ? lastSpoken.text : undefined)
+  // His earlier lines, oldest first; when his last row is the turn being heard again, not that one.
+  const his = rows.filter((t) => t.role === 'bart' && t !== lastSpoken).map((t) => t.text)
+  const said = withoutRepeat(withoutEcho(heard, lastSpoken?.role === 'claude' ? lastSpoken.text : undefined), his)
   // ElevenLabs asks for a turn when he has been quiet a while (or heard only Kit's own voice);
   // no need to wake Claude for that.
   if (!said) return text(HERE)
 
   // One row per spoken turn: a retry is the same row, a revision rewrites it.
+  let mine: number | null = null
   if (lastSpoken?.role === 'bart' && lastSpoken.text !== said && isRevision(lastSpoken.text, said)) {
     await d.reviseTurn(lastSpoken.id, said)
-  } else if (!(lastSpoken?.role === 'bart' && lastSpoken.text === said)) {
+    mine = lastSpoken.id
+  } else if (lastSpoken?.role === 'bart' && lastSpoken.text === said) {
+    mine = lastSpoken.id
+  } else {
     await d.addTurn(session, 'bart', said)
   }
   const turns = await d.turns(session)
-  const asked = [...turns].reverse().find((t) => t.role === 'bart')!
-  const messages = talkMessages(turns)
+  // The row this request wrote, not the newest one: a turn that came a moment later is its own.
+  const asked = mine !== null ? { id: mine, text: said } : [...turns].reverse().find((t) => t.role === 'bart' && t.text === said)!
+  const messages = talkMessages(turns.filter((t) => t.id <= asked.id))
 
   const enc = new TextEncoder()
-  const gen = phoneReply(session, { id: asked.id, text: asked.text }, messages, signal, d)
+  const gen = phoneReply(session, { id: asked.id, text: said }, messages, signal, d)
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -260,6 +266,7 @@ async function* phoneReply(session: string, asked: { id: number; text: string },
     return !last || last.id !== asked.id || last.text !== asked.text
   }
   let replaced = false
+  const info: { carried?: boolean } = {}
   const watch = setInterval(() => {
     superseded()
       .then((yes) => {
@@ -275,7 +282,7 @@ async function* phoneReply(session: string, asked: { id: number; text: string },
   const giveUp = setTimeout(() => clearInterval(watch), 120_000)
   ;(giveUp as { unref?: () => void }).unref?.()
   try {
-    for await (const chunk of d.reply(await d.system(), messages, both)) {
+    for await (const chunk of d.reply(await d.system(), messages, both, info)) {
       if (replaced) break
       const s = spoken(chunk)
       if (!s) continue
@@ -299,6 +306,7 @@ async function* phoneReply(session: string, asked: { id: number; text: string },
     if (replaced) {
       await d.addTurn(session, 'event', 'reply dropped: he said more').catch(() => {})
     } else {
+      if (info.carried) await d.addTurn(session, 'event', 'reply carried over: he added a few words').catch(() => {})
       if (out.trim()) await d.addTurn(session, 'claude', out.trim()).catch((e) => console.error('[venture/phone] store failed:', e))
       if (state === 'running') await d.addTurn(session, 'event', 'interrupted').catch(() => {})
     }

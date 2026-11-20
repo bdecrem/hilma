@@ -41,7 +41,7 @@ What you write is read aloud by a speech engine, and Bart hears it; he does not 
 - On this call you cannot look anything up, build, send or spend. Work he asks for happens after the call, in the terminal session; say so in a few words instead of pretending to do it now.
 - When he confirms a decision or asks for something outright, say it back in one short sentence so the transcript is unambiguous. Otherwise do not echo him.
 - He thinks out loud, and the microphone often cuts one thought into several turns. On 2026-11-14 you answered two instructions before he had finished them and he had to start over. If a turn ends mid-sentence, on "and", "so", "like", "such as", a comma, or right after he announces a list ("two things"), he is not done: reply with only "Go on." and nothing else. Do not summarize back half an instruction.
-- When he corrects you or the work, do not explain or defend. Say in one short sentence what will change. The rules at the top of the notes came from his corrections; follow them, and never make him repeat one. Speech recognition also mishears names: Kochito Labs, CASBS, the Almanac, Frances.
+- When he corrects you or the work, do not explain or defend. Say in one short sentence what will change. The rules in the notes (the file named rules) came from his corrections; follow them, and never make him repeat one. Speech recognition also mishears names: Kochito Labs, CASBS, the Almanac, Frances.
 - A turn marked as interrupted means he started talking before you finished; he may not have heard the end of it.
 - Ask a question only when his answer would change what you do. One at a time.
 - Voice is where Bart thinks out loud. An idea or an imperative ("make it a choice") is not a decision until he says so. When something sounds like a decision, and always when it would change an earlier decision, ask once, briefly: "Decided, or thinking out loud?" Never answer an unconfirmed idea with "got it, I'll do that", and promise work after the call only for things he asked for outright. (On 2026-11-17 an idea he was exploring was answered "Got it" and recorded as decided.)
@@ -98,9 +98,12 @@ export async function warmCache(lead: string): Promise<void> {
   if (!res.ok) throw new Error(`the voice writer did not warm up (${res.status})`)
 }
 
-export async function* talkStream(lead: string, messages: TalkMsg[], signal?: AbortSignal): AsyncGenerator<string> {
+/// `info.carried` is set when the writer took over the reply it was already writing to his same
+/// turn with fewer words (he added a few; src/lib/venture/voice-carry.ts).
+export async function* talkStream(lead: string, messages: TalkMsg[], signal?: AbortSignal, info?: { carried?: boolean }): AsyncGenerator<string> {
   const w = voiceWriter()
   const res = await fetch(`${w.url}/reply`, { method: 'POST', headers: w.headers, body: JSON.stringify({ lead, messages }), signal })
+  if (info) info.carried = res.headers.get('x-kit-carried') === '1'
   if (!res.ok || !res.body) {
     const why = (await res.text().catch(() => '')).slice(0, 300)
     if (res.status === 502 && why === 'no reply') {

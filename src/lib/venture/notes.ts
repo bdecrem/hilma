@@ -10,7 +10,7 @@ export type Doc = { slug: string; title: string; body: string; updated_at?: stri
 // day: about 2.7 characters a token, so 1,000,000 characters is about 370,000 tokens.
 export const NOTES_BUDGET = 1_000_000 // characters, all documents together
 export const NOTES_DOC_MAX = 150_000 // a longer file is a raw dump, not a note: listed, never loaded
-// "now" (where things stand) goes first, then the standing rules distilled from Bart's
+// "now" (where things stand) is loaded first, then the standing rules distilled from Bart's
 // corrections, the corrections themselves and the lessons: he asked (2026-11-14) that those
 // "are always part of your context". These load whatever their size.
 // "terminal-chat" is what Bart and the terminal Kit said, kept current after every message
@@ -38,8 +38,15 @@ export function pickNotes(all: Doc[]): { loaded: Doc[]; listed: Doc[] } {
   return { loaded, listed }
 }
 
+// The order in the text is not the order of importance: the least recently changed document
+// first, the newest last (OLA-204). The notes are about 370,000 tokens and the model reads them
+// from its prompt cache only up to the first character that changed. "now" and "terminal-chat"
+// used to go first and change many times a day, so a reply after any change read all of it
+// again: on the check-in of 2026-11-19 those replies began after 8.6 and 10.4 seconds, the
+// others after 3 to 4.5.
 export function notesText({ loaded, listed }: { loaded: Doc[]; listed: Doc[] }): string {
-  const full = loaded.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
+  const order = [...loaded].sort((a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? '') || a.slug.localeCompare(b.slug))
+  const full = order.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
   if (listed.length === 0) return full
   const titles = listed.map((d) => `- ${d.slug}: ${d.title} (${Math.round(d.body.length / 1000)}k characters)`).join('\n')
   return `${full}\n===== files that exist but are not loaded here (too long) =====\nOnly the terminal session can read these. If Bart asks for something that is in one of them, say that the file is not loaded here and that you will check after.\n${titles}\n`
