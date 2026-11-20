@@ -109,7 +109,7 @@ const menu = await side.locator('.bd-nav a').allTextContents()
 check(menu.length === 5 && ['Home', 'Issue Tracker', 'Plan', 'Notes', 'Learning'].every((w, n) => menu[n].startsWith(w)), `the menu lists the five pages: ${menu.map((x) => x.replace(/\d+$/, '').trim()).join(', ')}`)
 check((await side.locator('.bd-nav a[aria-current=page]').count()) === 1, 'the current page is marked in the menu')
 // Home: needs you, now, health, the week, learning; no issue list but Needs you
-for (const id of ['agenda-h', 'needs-h', 'now-h', 'health-h', 'week-h', 'learn-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
+for (const id of ['agenda-h', 'needs-h', 'issues-h', 'health-h', 'week-h', 'learn-h']) check((await p.locator(`h2#${id}`).count()) === 1, `Home has its section ${id.replace('-h', '')}`)
 check((await p.locator('.bd-table').count()) === 0, 'Home lists no issues outside Needs you')
 // Bart, Nov 19: the check-in agenda is on Home "with a link to each item", and in Needs you
 // "everything needs to have clickable stuff in it"; no item is on both lists
@@ -122,7 +122,7 @@ check((await p.locator('.bd-table').count()) === 0, 'Home lists no issues outsid
   const twice = needsRows.flatMap((r) => r.ids).filter((id) => agenda.some((a) => a.ids.includes(id)))
   check(twice.length === 0, `nothing is on both the agenda and Needs you${twice.length ? `: ${twice.join(', ')}` : ''}`)
 }
-check((await p.locator('.bd-now a').count()) === 5, 'Now shows five counts that link into the tracker')
+check((await p.locator('.bd-issues > li').count()) === 3 && /Open issues: \d+ \(yesterday: \d+\)/.test(await p.locator('.bd-issues').innerText()) && (await p.locator('.bd-issues a.num').count()) === 2, 'Issues lists the open count with yesterday, what blocks on Bart, and who is working (OLA-212)')
 const health = p.locator('dl.bd-health')
 check((await health.locator('dd.read').count()) === 1, `Health is one reading with one time (${(await health.locator('dd.read').textContent())?.trim()})`)
 check((await health.locator('dd.read.stale').count()) === 0, 'the reading is younger than 30 minutes')
