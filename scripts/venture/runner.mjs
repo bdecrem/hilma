@@ -436,8 +436,13 @@ async function deployFacts() {
   }
   const now = Date.now()
   const checkerAt = []
-  for (const x of acc) for (const c of x.value?.checks ?? []) if (c.checked_at && now - Date.parse(c.checked_at) < CHECKER_QUIET) checkerAt.push({ id: x.key.slice(7), at: c.checked_at, what: `check #${c.n} ${c.result} on ${x.key.slice(7)} by ${c.by}` })
-  for (const [id, c] of Object.entries(await claims())) if (claimRole(c) === 'checker' && now - Date.parse(c.at) < CHECKER_QUIET) checkerAt.push({ id, at: c.at, what: `${c.who}'s claim on ${id} renewed` })
+  // Only checks done on the live server hold an update back: a check whose place is one of the places Ola is
+  // used (cloud-web:chat, local-mac:screen, …). On Nov 20 a checker of this project's own tools (OLA-251,
+  // places like "terminal") recorded results every few minutes and no update could start for an hour.
+  const onLive = (c) => /^(cloud|local)-(web|mac|phone):/.test(String(c.at ?? ''))
+  const liveTickets = new Set(acc.filter((x) => (x.value?.checks ?? []).some(onLive)).map((x) => x.key.slice(7)))
+  for (const x of acc) for (const c of x.value?.checks ?? []) if (onLive(c) && c.checked_at && now - Date.parse(c.checked_at) < CHECKER_QUIET) checkerAt.push({ id: x.key.slice(7), at: c.checked_at, what: `check #${c.n} ${c.result} on ${x.key.slice(7)} by ${c.by}` })
+  for (const [id, c] of Object.entries(await claims())) if (liveTickets.has(id) && claimRole(c) === 'checker' && now - Date.parse(c.at) < CHECKER_QUIET) checkerAt.push({ id, at: c.at, what: `${c.who}'s claim on ${id} renewed` })
   return { live, lastAttempt, lastLine, pending, checkerAt }
 }
 
