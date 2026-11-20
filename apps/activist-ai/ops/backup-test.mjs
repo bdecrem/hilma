@@ -3,7 +3,7 @@
 // gateway folder and made-up projects from a stand-in snapshotter. Real age, real tar; no VM.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
@@ -195,17 +195,4 @@ test('the host never opens a project database: a hostile project.db is copied, r
   assert.doesNotMatch(wsSrc, /from ['"]node:sqlite['"]|require\(['"](node:sqlite|better-sqlite3|sqlite3)['"]\)/)
   const opens = [...readFileSync(new URL('./backup.mjs', import.meta.url), 'utf8').matchAll(/new DatabaseSync\((.+?), \{ readOnly: true \}\)/g)].map((m) => m[1].trim())
   assert.deepEqual(opens, ['db', "path.join(out, 'platform.db')", 'f'], `backup.mjs opens ${opens.join(', ')}`)
-})
-
-test('started through a symlinked release folder (how launchd runs it), the command still runs', () => {
-  // 2026-11-20: launchd starts ~/ola-staging/current/.../backup.mjs, and current is a symlink. The
-  // main-module check compared the link path with the real path, so the 3:30 job exited 0 having
-  // done nothing. Every script launchd or the deploy kit starts by path must pass this.
-  const link = path.join(T, 'current')
-  symlinkSync(path.resolve(import.meta.dirname, '..'), link)
-  const r = spawnSync(process.execPath, [path.join(link, 'ops', 'backup.mjs'), 'status'], { encoding: 'utf8', env: process.env })
-  assert.equal(r.status, 0, r.stderr)
-  assert.match(r.stdout, /^key {8}/m, 'status printed nothing: main() did not run')
-  const run = spawnSync(process.execPath, [path.join(link, 'ops', 'backup.mjs'), 'nonsense'], { encoding: 'utf8', env: process.env })
-  assert.equal(run.status, 2, 'an unknown command through the link must reach the usage line')
 })

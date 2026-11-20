@@ -16,14 +16,19 @@ image=$1 tasks=$2 seeds=$3; shift 3
 here=${0:A:h}; ai=${here:h}
 export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 export OLA_EVALS_ROOT=$HOME/.ola-fu2-evals OLA_GATEWAY_PORT=4397
-while [[ -e ~/ola-deploy.hold ]] || ! mkdir ~/ola-suite.lock 2>/dev/null; do sleep 20; done
-echo "pid $$ fu2 $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
+# Under `node ops/turn.mjs run -- evals/run-instructions.sh ...` the turn is already held (OLA_TURN_HELD,
+# a queue ticket, so a waiting check cannot keep taking it first); alone it takes the lock itself.
+own_lock=0
+if [[ -z ${OLA_TURN_HELD:-} ]]; then
+  while [[ -e ~/ola-deploy.hold ]] || ! mkdir ~/ola-suite.lock 2>/dev/null; do sleep 20; done
+  echo "pid $$ fu2 $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$; own_lock=1
+fi
 ws=$ai/workspace/ws.mjs
 cp $ws $ws.orig
 cleanup() {
   [[ -f $ws.orig ]] && mv $ws.orig $ws
   [[ -s $OLA_EVALS_ROOT/state/nemo-gateway.pid ]] && kill $(cat $OLA_EVALS_ROOT/state/nemo-gateway.pid) 2>/dev/null || true
-  rm -rf ~/ola-suite.lock
+  (( own_lock )) && rm -rf ~/ola-suite.lock || true
 }
 trap cleanup EXIT INT TERM
 free=$(df -g /System/Volumes/Data | awk 'NR==2 {print $4}')
@@ -32,9 +37,10 @@ sed -i '' "s|^export const IMAGE = '.*'|export const IMAGE = '$image'|" $ws
 node $ws image --missing
 $here/start-gateway-ws.sh nemo 4397 nvidia/NVIDIA-Nemotron-3.5-Super-VL 15000000
 sleep 3
-# The configuration names the AGENTS.md it ran with (a rewrite is a new configuration, not a rerun).
+# The configuration names the AGENTS.md and the image it ran with (a rewrite or a new image, e.g. one
+# with another plugin, is a new configuration, not a rerun).
 agents=$(shasum -a 256 $ai/workspace/AGENTS.md | cut -c1-12)
-cfg=$here/configs/.nemotron-agents-$agents.json
-python3 -c "import json,sys; c=json.load(open('$here/configs/nemotron-3.5-super-vl-ws.json')); c['agents_md']='$agents'; json.dump(c, open('$cfg','w'), indent=2)"
+cfg=$here/configs/.nemotron-agents-$agents-${image##*:}.json
+python3 -c "import json,sys; c=json.load(open('$here/configs/nemotron-3.5-super-vl-ws.json')); c['agents_md']='$agents'; c['image']='$image'; json.dump(c, open('$cfg','w'), indent=2)"
 node $here/run.mjs --config $cfg --tasks $tasks --seeds $seeds --concurrency 2 \
   --db results/fu2-nemo.db --time 900 --tokens 500000 --max-load 9 --load-patience 20 "$@"

@@ -8,8 +8,12 @@
 // in this file, which outranks any project's list, so a planted skill with the same ID loses.
 // The built-in skills (opencode's own docs, bug reports, the desktop browser) are denied too.
 // Keep the allow list equal to the folders in apps/activist-ai/skills (skills/check.py proves it).
+//
+// Plugins: only Ola's, from the image (OPENCODE_DISABLE_PROJECT_CONFIG keeps a project's out).
+// ola-planted notes text in a file that speaks to an AI (plugins/ola-planted/index.js, OLA-88).
 {
   "skills": ["/opt/ola/skills"],
+  "plugins": ["/opt/ola/plugins/ola-planted"],
   "policies": [
     { "action": "skill.use", "resource": "*", "effect": "deny" },
     { "action": "skill.use", "resource": "chart", "effect": "allow" },

@@ -38,7 +38,7 @@
 // included, under /work/.ola), so `files` shows all of it and `destroy` removes all of it.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { chmodSync, closeSync, cpSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, realpathSync } from 'node:fs'
+import { chmodSync, closeSync, cpSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-43'
+export const IMAGE = 'ola-workspace:2.3.0-45'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -1470,7 +1470,7 @@ export function stateLine(r) {
   }
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.argv.slice(2)).catch((e) => {
     console.error(e instanceof Refusal ? `ws: ${e.message}` : `ws: ${e?.name || 'error'}: ${e?.message}`)
     process.exit(EXIT[e?.code] ?? 1)

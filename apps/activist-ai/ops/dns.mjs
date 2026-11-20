@@ -17,7 +17,7 @@
 // if anything else differs, the record set read before the write is written back and the command
 // fails. It refuses to write a zone that reads back with fewer than 3 records (a parse gone wrong
 // must not become an empty zone).
-import { chmodSync, readFileSync, writeFileSync, realpathSync } from 'node:fs'
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 
@@ -126,7 +126,7 @@ const show = (z) => {
   for (const r of z.hosts) console.log(`  ${r.name.padEnd(28)} ${r.type.padEnd(6)} ${r.type === 'MX' ? `${r.mxPref} ` : ''}${r.address}  ttl ${r.ttl}`)
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(new URL(import.meta.url).pathname)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname) {
   const [cmd, ...a] = process.argv.slice(2)
   const ttl = a.includes('--ttl') ? a[a.indexOf('--ttl') + 1] : '1800'
   const pos = a.filter((x, i) => x !== '--ttl' && a[i - 1] !== '--ttl')

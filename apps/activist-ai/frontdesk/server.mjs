@@ -1410,7 +1410,7 @@ export function makeFrontDesk(cfg = config()) {
   return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, close: () => (madeBy.close(), devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
-if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const fd = makeFrontDesk()
   fd.listener.listen(fd.cfg.port, fd.cfg.host, () => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'start', origin: fd.cfg.origin, port: fd.listener.address().port, proxyProtocol: fd.cfg.proxyProtocol, idleStopMin: fd.cfg.idleStopMs / 60_000, runCeilingMin: fd.cfg.runCeilingMs / 60_000 })))
   const stop = () => (fd.close(), process.exit(0))
