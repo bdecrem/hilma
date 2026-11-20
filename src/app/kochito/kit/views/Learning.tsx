@@ -220,7 +220,10 @@ function ReplaySec({ r, a, weak, now }: { r: Replay | null; a: ReplayAttempt | n
   const failed = a && !a.running && a.ok === false && Date.parse(a.at) > Date.parse(r.at)
   const since = new Map(weak.flatMap((w) => (w.replay?.failing ?? []).map((f) => [f.id, f.since] as const)))
   const name = (id: string | null) => weak.find((w) => w.id === id)?.name ?? id ?? 'no weakness'
-  const hist = (r.history ?? []).slice(-14)
+  // one bar per night over the last 14 days (the last run of each day), as the steers bars
+  const byDay = new Map((r.history ?? []).map((h) => [pday(h.at), h] as const))
+  const last = pday(r.at)
+  const window = Array.from({ length: 14 }, (_, n) => shiftDay(last, n - 13))
   const pc = (n: number, d: number) => (d ? Math.round((100 * n) / d) : 0)
   return (
     <>
@@ -237,7 +240,12 @@ function ReplaySec({ r, a, weak, now }: { r: Replay | null; a: ReplayAttempt | n
             {failed ? `the last attempt (${at(a!.at, now)}) failed${a!.why ? `: ${a!.why}` : ''}; last good run ${at(r.at, now)}` : stale ? `did not run last night; last run ${at(r.at, now)}` : `last run ${at(r.at, now)}${r.kind ? `, ${r.kind}` : ''}`}
           </p>
         </div>
-        {hist.length > 1 && <Bars items={hist.map((h, n) => ({ key: `${h.at}-${n}`, v: pc(h.prevented, h.cases), label: h.at.slice(8, 10).replace(/^0/, ''), title: `${at(h.at, now)}: ${h.prevented} of ${h.cases} prevented (${h.prevented_without} without the rules)`, last: n === hist.length - 1 }))} />}
+        <Bars
+          items={window.map((day) => {
+            const h = byDay.get(day)
+            return { key: day, v: h ? pc(h.prevented, h.cases) : null, label: day.slice(8).replace(/^0/, ''), title: h ? `${dayShort(day)}: ${h.prevented} of ${h.cases} prevented, ${pc(h.prevented, h.cases)}% (${h.prevented_without} without the rules)` : `${dayShort(day)}: not run`, last: day === last }
+          })}
+        />
       </div>
       {(r.weak ?? []).length > 0 ? (
         <>
