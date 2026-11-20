@@ -3,7 +3,7 @@
 # server's Together account (start-gateway-design.sh <port> first; configs/design-ola168-ws.json):
 #   1. the block party page, seeds 1 to 5 (five in a row): the design model must serve each
 #   2. two more page requests (the good-morning page, a results page), for what a design request costs
-#   3. a request that is not design, seeds 1 to 5: the design model must serve none
+#   3. a request that is not design (a1-survey, a CSV survey), seeds 1 to 5: the design model must serve none
 # Each step takes the machine-wide suite lock, as the other eval runs do. Results: results/design-ola168.db
 # and the gateway's own record (state/dz-gateway.db: tables usage and served; state/dz-gateway.log).
 set -u
@@ -25,7 +25,7 @@ for s in ${=DZ_STEPS:-1 2 3}; do
   case $s in
     1) step u9-block-party 1,2,3,4,5 ;;
     2) step u12-good-morning,u2-results-page 1 ;;
-    3) step b1-count 1,2,3,4,5 ;;
+    3) step a1-survey 1,2,3,4,5 ;;
   esac
 done
 echo "== done $(date)" >> $log
