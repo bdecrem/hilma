@@ -36,14 +36,18 @@ ticket is the runner's. Read the LOG lines starting "runner:" to see what it did
 while you were away.
 
 **One builder at a time on Ola's server code, counting the runner** (OLA-251, Nov 20:
-three builders at once overwrote each other's work). The old limit ("never more than
-three") is gone; the tracker enforces this one. A claim gets a lane from its ticket:
-server (web, model, security, design, and ops tickets about Ola's server), apps (the
-Mac and iPhone apps), tools (this project's scripts and notes). `issues.mjs start`
-refuses a builder while another builder or the runner holds a server ticket, and says
-who; the runner then takes the next ticket whose lane is free. Builders on apps and
-tools, checkers and investigators (`--who checker`, `--who investigator`) run beside
-it. `--beside "<why it cannot collide>"` overrides, recorded on the ticket.
+three builders at once overwrote each other's work). The tracker enforces it. The lane is
+the ticket's (server: web, model, security, design, and ops tickets about Ola's server;
+apps; tools), changed only on the ticket (`issues.mjs edit <id> --lane <lane> --why "…"`).
+A claim has a role: builder, checker, investigator, hold, runner (`--role`, or a `--who`
+that is that word; `lead` is a hold; any other name is a builder). Builders and the runner
+take the lane; a checker, an investigator and a hold do not, unless their ticket gets
+commits changing the server's code while they hold it. A refused builder waits with
+`--wait` (one command; `issues.mjs claims` shows it waiting; the runner yields to a higher
+priority) instead of a polling loop; `--beside "<folders>"` starts beside the holder when
+its recent commits touch none of them. The one who built a ticket cannot pass its checks:
+the tracker reads which agent runs the command (`scripts/venture/_who.mjs`), not the name.
+The test server is updated only through `runner.mjs deploy` (OLA-272).
 
 ## 1. Load the state
 

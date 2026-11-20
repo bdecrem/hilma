@@ -55,10 +55,14 @@ do any web searches to understand what best practices are?" It had not.
 
 - Start a checker as soon as a ticket is ready: `issues.mjs unchecked` lists them. Checkers come
   before new work.
-- Builders: one at a time on Ola's server code, counting the runner on the mini (OLA-251; this
-  replaces "never more than three"). `issues.mjs start <id> --who builder` refuses a second server
-  builder and names who holds the lane; apps and tools builders, and checkers
-  (`--who checker`) and investigators (`--who investigator`), are never refused by it.
+- Builders: one at a time on Ola's server code, counting the runner on the mini (OLA-251).
+  `issues.mjs start <id> --who builder` refuses a second server builder and names who holds the
+  lane; add `--wait` in the builder's brief and it starts when the lane frees. Checkers claim with
+  `--who checker`, investigators `--who investigator`, the lead holds with `--who lead` (a hold):
+  none of them takes the lane, unless the ticket gets commits changing the server's code.
+- A pass is refused from the agent that built the ticket, claimed it as builder, marked it ready
+  or committed for it, whatever `--by` says; a checker passes as `--by checker` from its own agent.
+  A pass by `--case` must name the request test exactly as its result file does, passing there.
 - What Bart is told about a ticket is what `issues.mjs say <id>` prints: what works, what does not,
   what nobody checked, in that order. Never "it works" from a builder's report.
 - A ticket where nothing a person does or sees changes is marked
