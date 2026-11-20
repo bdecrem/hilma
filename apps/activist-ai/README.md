@@ -1413,6 +1413,65 @@ The platform database, tokens and `stage-a` were not moved or changed. Deploys c
 three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
 and notes any Ola process running from elsewhere (a check or a dev run).
 
+## The asks: every failed request, sent again after every update (OLA-231)
+
+On Nov 20 Bart asked Ola in a cloud project "make a page that says Bart and publish it on ola", and
+Ola said it could not publish from the cloud and told him to press a button. Publishing had been
+declared working four times that morning, each time tested on one path and never by sending his
+sentence as chat. So every request a person makes of Ola that does not do what was asked becomes a
+case in `evals/asks/cases.json`, kept forever: the sentence word for word, the places it is asked
+in, what must be true afterwards, and the date and ticket of the failure.
+
+**When Bart reports that Ola did not do what he asked**, the lead adds it the same hour, in his
+words, in every place he could ask it (the neighbors: the other runtime too), from the repo root:
+
+```bash
+node apps/activist-ai/evals/asks/add-case.mjs "<his sentence, word for word>" --runtime cloud,local \
+     --must "site:Bart" --ticket OLA-nnn --what "what Ola did instead"
+git add apps/activist-ai/evals/asks/cases.json && git commit -m "ola asks: <the case> [OLA-nnn]" && git push
+```
+
+`--must` (any number): `site:<words>` (Ola's answer gives a `https://sites.ola.cx/<name>/` address
+that answers 200 with a page saying the words), `says:<regex>` (the answer matches), `file:<path>[:<words>]`
+(the file is in the project afterwards). Every case is also held to a never list (`lib.mjs`
+`NEVER`): Ola says it cannot do it from here, sends the person to a button or another screen when it
+did not do it itself, or says the feature is not switched on. `--must-not "<regex>"` adds to it;
+`--places cloud-web:chat,local-mac:chat` names the places exactly (the tracker's names). To try a
+new case at once on the test server: `node evals/asks/run.mjs --case <id>` in a checkout there.
+
+**It runs by itself after every deploy that serves** (`ops/ola.mjs` starts
+`evals/asks/run.mjs --after-deploy` in the background once it gives the machine's turn back; log
+`~/ola-asks/run-<commit>.log`; `OLA_ASKS_AFTER_DEPLOY=0` leaves it out). It takes its own turn, waits a
+minute for the deploy kit's restart, then sends each case as chat the way a person does:
+
+- `cloud-web:chat`: a made-up person (`askcases`, an ordinary account; never Bart's) gets a fresh
+  password nobody sees, signs in on https://app.ola.cx like anyone, and talks to Ola in its project
+  through the website's own routes; the project's folder is emptied first. Yes cards are answered
+  yes, Ola's questions the way someone who wants it done would, and when Ola ends on a question the
+  person says "Yes, go ahead." (twice at most).
+- `local-mac:chat`: `olakit-selftest` in `OLA_SERVE_LOCAL` mode starts the Mac app's own local
+  runtime headless (OlaKit `LocalServer` and the model door, signed in with the same account: the
+  app's config, skills, web commands and `ola-publish`), in an empty folder; no window, no Keychain,
+  nothing under `~/Library` but the pinned opencode the app also uses.
+- Every other place a case names (cloud-mac, cloud-phone, local-phone) is listed as **not run**,
+  never as passed.
+
+A case's setup can record a file as Claude's (`claudeWrote`): written and recorded the way the app
+and the server record a Claude run, without running Claude. At the end every page of the made-up
+person is taken down (also between tries), it is signed out everywhere, and the project's computer
+is stopped. The person is kept for the next run: the admin tool cannot delete a person.
+
+**A ratchet.** The model is in the loop, so a case is tried until it passes twice or fails twice (2
+of 3), and the result says how many tries it took. Each case and place records whether it has ever
+passed on the live server: one that passed before and fails now is **STOPPED WORKING** and is
+printed first; one that never passed is **not working yet**. A case is cited in a ticket check as
+`<id>@<place>`: `issues.mjs check OLA-n pass <k> --case publish-bart@cloud-web:chat --on <release>`.
+
+Results: `~/ola-staging/asks-latest.json` on the mini (each case and place: status, tries, why,
+when it last and first passed, on which release; what the dashboard and the hourly check read), its
+summary in the board status `ops/watch.mjs` pushes every 10 minutes (`asks`), and every run with
+Ola's words in `~/ola-asks/log.jsonl`. Offline checks of the runner itself: `node evals/asks/test.mjs`.
+
 ## When something breaks (the alarm, 2026-11-17)
 
 On 2026-11-16 the mini's disk filled to 100% and, twice the same evening, every sealed VM on it

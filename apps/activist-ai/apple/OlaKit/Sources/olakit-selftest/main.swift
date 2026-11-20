@@ -60,6 +60,9 @@ if env["OLA_WEB_CHECK"] == "1" {
   exit(bad == 0 ? 0 : 1)
 }
 
+// The local runtime, headless, for the asks runner (evals/asks): ServeLocal.swift.
+if env["OLA_SERVE_LOCAL"] == "1" { exit(await ServeLocal.go(env: env)) }
+
 if env["OLA_MADEBY_CHECK"] == "1" {
   var bad = 0
   await MadeByCheck.go(env: env) { ok, what, note in

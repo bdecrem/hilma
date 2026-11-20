@@ -1,0 +1,84 @@
+{
+  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, file:<path>[:<words>]); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; from is the failure it came from. Add one with evals/asks/add-case.mjs.",
+  "cases": [
+    {
+      "id": "publish-bart",
+      "say": "make a page that says Bart and publish it on ola",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "site:Bart"
+      ],
+      "mustNot": [],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-230",
+        "what": "Bart asked this in a cloud project; Ola answered that it cannot publish from the cloud and told him to press Publish. Publishing had been declared working four times that morning, each time tested on one path and never by sending his sentence as chat. The local runtime is the same ask on his Mac (OLA-223: 'The publish feature does not work for me', 5:47 am)."
+      }
+    },
+    {
+      "id": "who-made-index",
+      "say": "the most recent versoin of \"index.html\" that i have here on this mac, in my Local version on Ola, it say Good Morning from Palo Alto.  pls confirm whether that was built by claude code or our hosted open models",
+      "places": [
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "setup": [
+        {
+          "claudeWrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Good Morning</title>\n<h1>Good Morning from Palo Alto</h1>\n"
+          }
+        }
+      ],
+      "must": [
+        "says:\\b(?:built|made|written|wrote|created|rewr\\w*|changed)\\b[^.\\n]{0,40}\\bby claude|\\bclaude(?: code)?\\b[^.\\n]{0,40}\\b(?:built|made|wrote|created|rewr\\w*|changed)\\b"
+      ],
+      "mustNot": [
+        "\\bI (?:built|made|wrote|created) (?:it|index\\.html|the page|this)\\b",
+        "no separate claude",
+        "\\bnot (?:built |made |written |created )?by claude"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-224",
+        "what": "Claude Code had rewritten index.html on his Mac; asked which engine built it, Ola said 'I built it… there was no separate claude agent'. The setup records Claude's turn the way the app records a Claude run (begin, the file written, end) without running Claude."
+      }
+    },
+    {
+      "id": "who-made-index-cloud",
+      "say": "the most recent version of \"index.html\" in this project says Good Morning from Palo Alto. pls confirm whether that was built by claude code or our hosted open models",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "setup": [
+        {
+          "claudeWrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Good Morning</title>\n<h1>Good Morning from Palo Alto</h1>\n"
+          }
+        }
+      ],
+      "must": [
+        "says:\\b(?:built|made|written|wrote|created|rewr\\w*|changed)\\b[^.\\n]{0,40}\\bby claude|\\bclaude(?: code)?\\b[^.\\n]{0,40}\\b(?:built|made|wrote|created|rewr\\w*|changed)\\b"
+      ],
+      "mustNot": [
+        "\\bI (?:built|made|wrote|created) (?:it|index\\.html|the page|this)\\b",
+        "no separate claude",
+        "\\bnot (?:built |made |written |created )?by claude"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-224",
+        "what": "The same ask as who-made-index in the other runtime (its neighbor): his sentence with 'here on this mac, in my Local version' made 'in this project'. The setup records Claude's turn the way the server records a Claude run, without running Claude."
+      }
+    }
+  ]
+}

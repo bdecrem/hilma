@@ -809,6 +809,17 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     say(`clean failed (the deploy stands): ${e.message}`)
   }
   turn.release()
+  // The asks (OLA-231): people's real requests that once failed, sent again as chat to what is now
+  // live, in both runtimes. In the background, after the turn is given back (it takes its own); its
+  // result goes to ~/ola-asks and ~/ola-staging/asks.json. OLA_ASKS_AFTER_DEPLOY=0 leaves it out.
+  const asks = path.join(code, 'evals/asks/run.mjs')
+  if (process.env.OLA_ASKS_AFTER_DEPLOY !== '0' && existsSync(asks)) {
+    const dir = path.join(homedir(), 'ola-asks')
+    mkdirSync(dir, { recursive: true })
+    const fd = openSync(path.join(dir, `run-${short}.log`), 'a')
+    spawn(NODE, [asks, '--after-deploy'], { cwd: code, detached: true, stdio: ['ignore', fd, fd], env: { ...process.env, OLA_TURN_HELD: '' } }).unref()
+    say(`asks: started in the background, log ~/ola-asks/run-${short}.log`)
+  }
   out.end()
 }
 /** A deploy is waiting for (or holds) the machine's turn: ops/turn.mjs's hold file, with a live pid. */

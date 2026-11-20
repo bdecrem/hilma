@@ -541,6 +541,15 @@ export function boardStatus(S, state, r, conds, now) {
     const c = JSON.parse(readFileSync(path.join(S.STAGING, 'checks.json'), 'utf8')).runs?.find((r) => r.ok === true || r.ok === false)
     if (c) ci = { commit: String(c.commit ?? ''), at: c.at ?? null, ok: c.ok, by: c.by ?? null, suites: c.suites ?? {}, why: c.ok ? null : String(c.why ?? 'failed').slice(0, 160) }
   } catch {}
+  // The asks (OLA-231, evals/asks): people's real requests sent again after each update, each case
+  // and place passing, STOPPED WORKING (it passed before) or not working yet. Counts, and the
+  // failing ones by case id, place and ticket (no words of Ola's, no project or file names).
+  let asks = null
+  try {
+    const a = JSON.parse(readFileSync(path.join(S.STAGING, 'asks-latest.json'), 'utf8'))
+    const pick = (st) => Object.values(a.cases ?? {}).filter((c) => c.status === st).slice(0, 20).map((c) => ({ case: `${String(c.id).slice(0, 40)}@${String(c.place).slice(0, 20)}`, ticket: c.ticket ? String(c.ticket).slice(0, 12) : null, tries: c.tries ? String(c.tries).slice(0, 20) : null }))
+    asks = { release: String(a.release ?? ''), at: a.lastRun?.at ?? a.updated ?? null, summary: a.summary ?? null, stoppedWorking: pick('STOPPED WORKING'), notWorkingYet: pick('not working yet') }
+  } catch {}
   // The alarm sentences come from this run's own readings: a condition that is in alarm now and
   // has been for long enough to text (state.active), or a disk alarm, which is shown but never
   // texted. Never from state.active alone: an entry there keeps the sentence of the run that set
@@ -557,6 +566,7 @@ export function boardStatus(S, state, r, conds, now) {
     host: 'mini',
     deployed,
     ci,
+    asks,
     alarm: { state: alarms.length ? 'alarm' : warns.length ? 'warn' : 'ok', says: alarms.map((a) => a.say), warns, runAt: new Date(now).toISOString() },
     disk: r.disk && !r.disk.error ? { freeGB: r.disk.freeGB } : null,
     memory: r.memory ? `${r.memory.pressure}, swap ${r.memory.swapPct}%` : null,
