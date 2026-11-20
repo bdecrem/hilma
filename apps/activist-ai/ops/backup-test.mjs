@@ -163,3 +163,36 @@ test('the recovery sheet holds the key, is mode 600, and will not overwrite a fi
   assert.equal((spawnSync('/usr/bin/stat', ['-f', '%Lp', f], { encoding: 'utf8' }).stdout || '').trim(), '600')
   assert.throws(() => B.recoverySheet(f), /exists/)
 })
+
+// OLA-91 (review 4, "the backup copy checks a database outside its box"): a project's database is
+// written by the agent, so this machine must never parse it. Its copy is made and checked inside
+// the project's own VM (ola-db api snapshot-check, ws.mjs snapshot); here it is only bytes with a
+// checksum. A file that looks like SQLite and is not (a parser on this machine would throw on it)
+// goes through the nightly copy, the read-back and the restore test untouched.
+test('the host never opens a project database: a hostile project.db is copied, read back and handed to the restore as bytes', async () => {
+  const hostile = Buffer.concat([Buffer.from('SQLite format 3\0', 'latin1'), Buffer.alloc(84, 0xff), Buffer.from(`not a database ${SECRET_WORD}`)])
+  const probe = path.join(T, 'probe.db')
+  writeFileSync(probe, hostile)
+  assert.throws(() => new DatabaseSync(probe, { readOnly: true }).prepare('PRAGMA integrity_check').get(), undefined, 'the probe: SQLite refuses this file')
+  const snap = async (dir) => {
+    const out = path.join(dir, 'gamma')
+    mkdirSync(out, { recursive: true })
+    writeFileSync(path.join(out, 'project.db'), hostile)
+    writeFileSync(path.join(out, 'files.tar'), 'files of gamma')
+    writeFileSync(path.join(out, 'manifest.json'), JSON.stringify({ id: 'gamma', database: { tables: { documents: 1 } } }))
+    return { done: ['gamma'], failed: [] }
+  }
+  const r = await B.backup({ now: new Date('2026-11-24T11:30:00Z'), snapshotAll: snap, takeTurn: noTurn, say: quiet })
+  const out = path.join(T, 'restored-hostile')
+  await B.unpack(path.join(D1, 'ola-backups', r.archive), out)
+  assert.ok(readFileSync(path.join(out, 'projects/gamma/project.db')).equals(hostile), 'the same bytes came back')
+  const handed = []
+  await B.restoreTest({ now: new Date('2026-11-24T13:00:00Z'), takeTurn: noTurn, say: quiet, loadAndCompare: async (dir, id) => (handed.push(readFileSync(path.join(dir, 'project.db')).equals(hostile)), { id }) })
+  assert.deepEqual(handed, [true], 'the restore got the bytes, for its new VM to load')
+  // And by construction: the host side of a snapshot (ws.mjs) loads no SQLite at all, and the only
+  // databases backup.mjs opens are the platform's own (copyPlatform, checkPlatform).
+  const wsSrc = readFileSync(new URL('../workspace/ws.mjs', import.meta.url), 'utf8')
+  assert.doesNotMatch(wsSrc, /from ['"]node:sqlite['"]|require\(['"](node:sqlite|better-sqlite3|sqlite3)['"]\)/)
+  const opens = [...readFileSync(new URL('./backup.mjs', import.meta.url), 'utf8').matchAll(/new DatabaseSync\((.+?), \{ readOnly: true \}\)/g)].map((m) => m[1].trim())
+  assert.deepEqual(opens, ['db', "path.join(out, 'platform.db')", 'f'], `backup.mjs opens ${opens.join(', ')}`)
+})

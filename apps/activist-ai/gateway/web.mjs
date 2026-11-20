@@ -91,9 +91,22 @@ export function ownNetworks() {
 
 // Review 4's open item (review 5): the fetch route still reached the rest of the campus the machine
 // sits in, and anything that trusts a campus address. GATEWAY_FETCH_REFUSE_NETS lists more networks
-// to refuse, as CIDRs separated by commas; by default Stanford's 171.64.0.0/14, where this machine
-// is (set it to an empty value where the machine is somewhere else).
-export const DEFAULT_REFUSE_NETS = '171.64.0.0/14'
+// to refuse, as CIDRs separated by commas; by default every network registered to Stanford
+// University, where this machine is (set it to an empty value where the machine is somewhere else).
+// Until OLA-91 the default was 171.64.0.0/14 alone, so a download still reached Stanford's other
+// networks: 128.12.0.0/16, the internet services and Redwood City blocks, and all of its IPv6
+// (2607:f6d0::/32, the campus's own, where a dual-stack campus host is reached by its AAAA record).
+// The list is ARIN's for the two Stanford University records, STANFO and STANFO-Z (whois -h
+// whois.arin.net "o + > STANFO", checked 2026-11-19); the Durumeric lab's blocks are inside them.
+export const STANFORD_NETS = [
+  '171.64.0.0/14', // NETBLK-SUNET, the campus (CASBS's 171.66.240.0/24 is in it)
+  '128.12.0.0/16', // SU-NET
+  '68.65.160.0/20', // SUNET-INET-SVCS (also Stanford Health Care's contractor and telecom servers)
+  '204.63.224.0/21', // SUNET-RWC, Redwood City
+  '2607:f6d0::/32', // SUNET-V6, the campus's IPv6
+  '2620:6c:40c0::/48', // SUNET-RWC6
+]
+export const DEFAULT_REFUSE_NETS = STANFORD_NETS.join(',')
 export function refuseNets(spec, bad = (m) => { throw new Error(m) }) {
   const list = new net.BlockList()
   for (const [i, part] of String(spec ?? '').split(',').map((x) => x.trim()).filter(Boolean).entries()) {

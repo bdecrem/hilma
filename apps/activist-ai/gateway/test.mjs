@@ -1240,17 +1240,32 @@ test('web fetch: one document, no cookies or credentials sent, redirects followe
 
 // Review 4's open item, closed in review 5: the rest of the campus (171.64.0.0/14 by default, a
 // setting), and a neighbor's address written as NAT64 or 6to4, which slipped past the own-network check.
-test('web fetch refuses the networks set in GATEWAY_FETCH_REFUSE_NETS (the campus by default) and an IPv4 address hidden in IPv6', async () => {
+test('web fetch refuses the networks set in GATEWAY_FETCH_REFUSE_NETS (every Stanford University network by default, IPv4 and IPv6, OLA-91) and an IPv4 address hidden in IPv6', async () => {
   const { refuseNets, inNets, DEFAULT_REFUSE_NETS } = await import('./web.mjs')
   const campus = refuseNets(DEFAULT_REFUSE_NETS)
   for (const ip of ['171.64.1.1', '171.67.255.254', '::ffff:171.66.240.10', '64:ff9b::ab42:f00a', '2002:ab42:f00a::1']) assert.ok(inNets(ip, campus), `${ip} should be refused`)
   for (const ip of ['171.63.255.255', '171.68.0.1', '8.8.8.8', '2606:4700:4700::1111']) assert.ok(!inNets(ip, campus), `${ip} should pass`)
   assert.ok(!inNets('171.64.1.1', refuseNets('')), 'an empty setting refuses nothing more')
   assert.throws(() => refuseNets('171.64.0.0'), /a network like/)
-  const { g, k, file } = await webGateway({ GATEWAY_FETCH_TEST_HOSTS: 'campus.test=171.64.10.10,nat64.test=64:ff9b::ab42:f00a' })
+  // OLA-91: every network registered to Stanford University, not only the campus /14: its other
+  // IPv4 blocks and its IPv6, each at both ends, and the IPv4 ones hidden in IPv6 too.
+  const stanford = {
+    '128.12.0.0/16': ['128.12.0.1', '128.12.255.254', '::ffff:128.12.4.4', '2002:800c:0404::1'],
+    '68.65.160.0/20': ['68.65.160.1', '68.65.175.254', '64:ff9b::4441:a001'],
+    '204.63.224.0/21': ['204.63.224.1', '204.63.231.254'],
+    '2607:f6d0::/32': ['2607:f6d0::1', '2607:f6d0:ffff:ffff:ffff:ffff:ffff:fffe', '2607:F6D0:EC50::10'],
+    '2620:6c:40c0::/48': ['2620:6c:40c0::1', '2620:6c:40c0:ffff::1'],
+  }
+  for (const [net, ips] of Object.entries(stanford)) {
+    assert.ok(DEFAULT_REFUSE_NETS.split(',').includes(net), `${net} is in the default`)
+    for (const ip of ips) assert.ok(inNets(ip, campus), `${ip} (${net}) should be refused`)
+  }
+  for (const ip of ['128.11.255.255', '128.13.0.1', '68.65.159.255', '68.65.176.1', '204.63.223.255', '204.63.232.1', '2607:f6cf:ffff::1', '2607:f6d1::1', '2620:6c:40c1::1']) assert.ok(!inNets(ip, campus), `${ip} (next to Stanford) should pass`)
+  const { g, k, file } = await webGateway({ GATEWAY_FETCH_TEST_HOSTS: 'campus.test=171.64.10.10,nat64.test=64:ff9b::ab42:f00a,sunet.test=128.12.8.8,sunet6.test=2607:f6d0:0:1::8a,rwc.test=204.63.226.1,svcs.test=68.65.161.2,rwc6.test=2620:6c:40c0:2::5e' })
   try {
     writeGrants(file, { 'ws-one': { always: true } })
-    for (const u of ['https://campus.test/doc.pdf', 'https://nat64.test/doc.pdf', 'https://171.65.2.3/doc.pdf', 'https://[64:ff9b::ab40:0101]/doc.pdf']) {
+    for (const u of ['https://campus.test/doc.pdf', 'https://nat64.test/doc.pdf', 'https://171.65.2.3/doc.pdf', 'https://[64:ff9b::ab40:0101]/doc.pdf',
+      'https://sunet.test/doc.pdf', 'https://sunet6.test/doc.pdf', 'https://rwc.test/doc.pdf', 'https://svcs.test/doc.pdf', 'https://rwc6.test/doc.pdf', 'https://128.12.1.1/doc.pdf', 'https://[2607:f6d0::443]/doc.pdf']) {
       const r = await webCall(g, k.one, 'fetch', { url: u })
       assert.equal(r.status, 403, `${u}: ${r.status} ${r.text?.slice(0, 120)}`)
     }
