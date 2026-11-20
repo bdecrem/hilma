@@ -178,6 +178,10 @@ final class WhereOlaWorks {
     defer { if mine == generation { starting = false } }
     stopLocal()
     let server = LocalServer(folder: folder)
+    // The engine ends with the app however the app ends (OLA-288): a crash, a force quit or a kill
+    // left it running until the next launch found its pid file, holding memory and its port with
+    // nothing behind its model door. Quit already stopped it (applicationWillTerminate).
+    server.tiedToThisProcess = true
     // Only Ola's models (ModelGuard, OLA-249): the engine has stopped itself; the app says why.
     server.onForeignModels = { [weak self] _ in Task { @MainActor in self?.foreignModels(server) } }
     do {
