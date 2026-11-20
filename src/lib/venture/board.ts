@@ -182,6 +182,12 @@ export type Sweep = {
   /** The tracker's open count when the entry was posted, and at the end of the day before (OLA-212;
    *  sweep.mjs post computes both from the records). Older entries have none: the page counts them. */
   openIssues?: { n: number; yesterday: number }
+  /** Since Nov 20 (OLA-251): what the review removed, merged or corrected in the notes that day,
+   *  checked against what really happened. The review cleans the notes instead of adding rules. */
+  cleaned?: { did: 'removed' | 'merged' | 'corrected'; what: string; where: string }[]
+  /** Since Nov 20 (OLA-245): the day's shares of the models by output, and each stretch where the lead
+   *  session, on its more expensive model, did reading and writing that an Opus agent could have done. */
+  models?: { shares: { model: string; share: number }[]; rule: string; stretches: { at: string; calls: number; what: string }[]; note?: string }
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 

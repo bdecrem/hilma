@@ -179,6 +179,19 @@ function checkEntry(e) {
     })
   }
   if (!Array.isArray(e.open) || e.open.some((o) => !str(o.text))) bad.push('open: [{ text, issue? }]')
+  // OLA-251 (Nov 20): the review cleans the notes instead of adding rules. `cleaned` lists what was
+  // removed, merged or corrected in the notes that day, checked against what really happened.
+  const CLEAN = ['removed', 'merged', 'corrected']
+  if (!Array.isArray(e.cleaned) || e.cleaned.some((c) => !CLEAN.includes(c.did) || !str(c.what) || !str(c.where))) bad.push(`cleaned: [{ did: ${CLEAN.map((x) => `"${x}"`).join(' | ')}, what: "what changed in the notes, and what in the day's record showed it was wrong, stale or a duplicate", where: "the file" }]`)
+  else if (!e.quiet && !e.cleaned.length) bad.push("cleaned is empty: the review removes, merges or corrects something in the notes every day (SWEEP.md, \"Clean the notes\"), or the day is quiet")
+  // A written rule for a weakness that already has a fix is the fix that failed (correct.mjs): refused.
+  const weakById = new Map(loadWeaknesses(rootUrl).map((w) => [w.id, w]))
+  for (const side of ['kit', 'ola']) for (const [n, c] of (Array.isArray(e[side]) ? e[side] : []).entries()) {
+    const written = !c.enforced && (Number(c.level) === 1 || /\brules? \d+|RULES\.md|LESSONS\.md|a (new )?rule\b/i.test(`${c.where ?? ''} ${c.changed ?? ''}`))
+    const w = weakById.get(c.weakness)
+    const before = (w?.guards ?? []).filter((g) => g.day < e.day)
+    if (written && before.length) bad.push(`${side}[${n}] adds a written rule for "${w.name}", which already has a fix (strongest: kind ${Math.max(...before.map((g) => g.level ?? (g.enforced ? 3 : 1)))}): a rule of the same kind is what failed. Make the change stronger (correct.mjs: refused by code, checked by another, taken away) or, when none can be built yet, owe it with correct.mjs add --owed OLA-n`)
+  }
   if (!e.quiet && known.size && (!e.build || !str(e.build.text))) bad.push('build: { text, issue? }: the one thing to build next that would remove a whole weakness, not one instance (or say why nothing is worth building)')
   if (!e.quiet && Array.isArray(e.read) && e.read.length === 0) bad.push('read is empty: say what the sweep looked at, or mark the day quiet')
   // Bart, 2026-11-18, 11:13 pm: "daily loop for kit and Ola each to think of one idea or improvement to
@@ -201,7 +214,7 @@ function checkEntry(e) {
   // Bart, 2026-11-18: "I don't love the writing style on the learning section ... write it like a
   // factual straight description of our evolving learning system". An entry is a description of the
   // system, not Kit's account of itself: no first person outside a direct quote of his words.
-  const texts = [e.summary, e.pattern, e.build?.text, e.ideas?.kit?.text, e.ideas?.kit?.why, e.ideas?.ola?.text, e.ideas?.ola?.why, e.learning?.changed, e.learning?.why, e.learning?.where, e.learningReview?.text, ...(e.open ?? []).map((o) => o.text), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
+  const texts = [e.summary, e.pattern, e.build?.text, e.ideas?.kit?.text, e.ideas?.kit?.why, e.ideas?.ola?.text, e.ideas?.ola?.why, e.learning?.changed, e.learning?.why, e.learning?.where, e.learningReview?.text, ...(e.open ?? []).map((o) => o.text), ...(Array.isArray(e.cleaned) ? e.cleaned.map((c) => c.what) : []), ...['kit', 'ola'].flatMap((k) => (Array.isArray(e[k]) ? e[k] : []).flatMap((c) => [c.saw, c.changed, c.where]))].filter((t) => typeof t === 'string')
   const first = [...new Set(texts.flatMap((t) => t.replace(/"[^"]*"/g, '').replace(/“[^”]*”/g, '').match(/\b(I|I'm|I've|I'd|my|me|myself|we|our|us)\b/g) ?? []))]
   if (first.length) bad.push(`written in the first person (${first.join(', ')}): describe what the system does and what happened, with Kit, Ola, Bart or the mechanism as the subject (apps/venture/SWEEP.md, "Rules for the entry")`)
   return bad
@@ -230,7 +243,7 @@ if (cmd === '--wait') {
   console.log('Now follow apps/venture/SWEEP.md.')
 } else if (cmd === 'template') {
   const f = await facts()
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', where: '' }], kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
@@ -269,7 +282,7 @@ if (cmd === '--wait') {
   if (args.includes('--dry')) (console.log(`--dry: the entry for ${e.day} passes every check; nothing was stored`), process.exit(0))
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}) }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })) }
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.

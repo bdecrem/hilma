@@ -405,6 +405,35 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
           {s.learning.issue && <a href={`${href(base, '/issues')}/${s.learning.issue}`} className="m">{s.learning.issue}</a>}
         </p>
       )}
+      {s.cleaned && s.cleaned.length > 0 && (
+        <div className="bd-sweep-build">
+          <b>Cleaned in the notes.</b>
+          <ul>
+            {s.cleaned.map((c, i) => (
+              <li key={i}>
+                {c.did}: {inline(c.what)} <span className="m faint">{c.where}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {s.models && (
+        <div className="bd-sweep-build">
+          <b>Models.</b> {s.models.shares.map((m) => `${m.model} ${Math.round(m.share)}%`).join(', ')} of the day&rsquo;s output. <span className="faint">{s.models.rule}</span>
+          {s.models.stretches.length > 0 ? (
+            <ul>
+              {s.models.stretches.map((x, i) => (
+                <li key={i}>
+                  <span className="m">{x.at}</span> {x.calls} tool calls: {inline(x.what)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span> No such stretch.</span>
+          )}
+          {s.models.note && <span className="faint"> {s.models.note}</span>}
+        </div>
+      )}
       {s.learningReview && (
         <p className="bd-sweep-build">
           <b>Review of the week of daily improvements.</b> {inline(s.learningReview.text)} {s.learningReview.issue && <a href={`${href(base, '/issues')}/${s.learningReview.issue}`} className="m">{s.learningReview.issue}</a>}

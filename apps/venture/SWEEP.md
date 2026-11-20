@@ -51,6 +51,46 @@ Before anything else, the three things that say whether "it works" could be trus
 A correction is recorded with `node scripts/venture/correct.mjs add …` and nothing else. A weakness
 that came back gets a stronger kind of fix; the tool refuses another written rule.
 
+## 1c. Clean the notes, instead of adding rules (since 2026-11-20)
+
+Bart approved on Nov 20 (OLA-251) that the evening review cleans the notes rather than adding to
+them. The outside research of that morning (LEARNING-RESEARCH-2026-11-20.md) found that notes an
+agent writes for itself, unreviewed, do nothing or do harm, and that a pass checking the notes
+against what really happened is what helped. So every evening, against the day's record:
+
+- **Remove** what is no longer true or no longer needed: a superseded state, a finished plan, a
+  stale "next", a layer of NOW.md that a later layer replaced.
+- **Merge** what says the same thing twice: two rules for one weakness, a lesson repeated in a
+  rule, the same fact in three notes.
+- **Correct** what the day showed to be wrong: a time, a number, a name, a description of how a
+  tool works that the code no longer matches.
+
+Each one goes in the entry's `cleaned`: `{ "did": "removed" | "merged" | "corrected", "what": "…",
+"where": "NOW.md" }`, where `what` says what changed and what in the record showed it. The Learning
+page shows the list under the day; it is the short list Bart reads of what the review removed.
+`sweep.mjs post` refuses an entry with no `cleaned` (a quiet day excepted), and refuses one whose
+`kit` or `ola` change adds a written rule (a rule, a lesson, `enforced: false` naming RULES.md) for a
+weakness that already had a fix before that day: a written rule of the same kind is what failed.
+Make the fix stronger (`correct.mjs`: refused by code, checked by another, taken away), or record it
+as owed (`correct.mjs add --owed OLA-n`). A fix owed for more than two days also blocks the post.
+
+Measure before and after: `npx tsx scripts/venture/notes-check.ts --quiet` prints the characters
+the voice and text replies carry against the 1,000,000 budget; `wc -l apps/venture/private/NOW.md`.
+
+### The first job, tonight (Nov 20)
+
+1. **NOW.md** is 232 lines and about 91,000 characters, eight dated layers stacked since Nov 14
+   ("NIGHT OF Nov 19 to 20", "READ FIRST: STATE AT 8:30 pm, Wednesday Nov 18", "M4 SESSION,
+   Wednesday Nov 18", "HANDOFF, Tuesday Nov 17", "State", "Fact check … Nov 14", …). Keep the top
+   block (from "# NOW" to "# Where things stand"), brought up to date against today's record, and
+   "Waiting on Bart", "How we talk" and "Background tasks" if they are still true. Move every other
+   layer, unchanged, to `apps/venture/private/NOW-ARCHIVE.md` (its slug ends in "archive", so the
+   voice and text replies list it and never load it: `src/lib/venture/notes.ts`). The state file
+   must read in one screen or two.
+2. **The notes are about 8,700 characters over budget** (Nov 20, 1 pm: 1,008,670 of 1,000,000).
+   Step 1 alone brings them under; check with notes-check.ts after `sync.mjs push`.
+3. Each move, merge and correction is a line in the entry's `cleaned`.
+
 ## 2. Study each thing that went wrong: five questions
 
 Bart, the same evening: "our goal is to have a system that gets smarter and better each day by
@@ -228,6 +268,7 @@ The shape (`Sweep` in `src/lib/venture/board.ts`):
                   "where": "rule 48; the prompt hook", "enforced": true, "issue": "OLA-171" }],
       "ola":   [ … the same … ],
       "open":  [{ "text": "found, not fixed today", "issue": "OLA-175" }],
+      "cleaned": [{ "did": "removed", "what": "what changed in the notes and what showed it", "where": "NOW.md" }],
       "build": { "text": "the one thing to build next that removes a whole weakness", "issue": "OLA-175" },
       "ideas": { "kit": { "text": "one sentence: what would be built", "why": "the evidence, and the measure", "issue": "OLA-180" },
                  "ola": { … the same … } } }

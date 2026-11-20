@@ -30,6 +30,12 @@ export function pickNotes(all: Doc[]): { loaded: Doc[]; listed: Doc[] } {
   let used = 0
   for (const d of docs) {
     const core = FIRST.includes(d.slug)
+    // An archive note (a file named *-ARCHIVE*.md, slug "…-archive…") is listed, never loaded: the
+    // evening review moves stale layers of NOW.md there (OLA-251, SWEEP.md "Clean the notes").
+    if (/(^|-)archive(-|$)/.test(d.slug)) {
+      listed.push(d)
+      continue
+    }
     if (core || (d.body.length <= NOTES_DOC_MAX && used + d.body.length <= NOTES_BUDGET)) {
       loaded.push(d)
       used += d.body.length
