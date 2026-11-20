@@ -1171,6 +1171,9 @@ longer wanted.
 
 ## The Studio's install list (OLA-100, 2026-11-19)
 
+The install itself, script first, with the human steps and the local model plan:
+`ops/studio/README.md` and `ops/studio/setup.sh` (`setup.sh check` reports what it would change).
+
 What the Mac Studio needs before the first person's real files reach it, in order, and a check
 that says which items are in place: `node ops/studio.mjs check` (`--json`), run as the account
 that runs Ola. It reads and never changes anything, needs no sudo, and reads only the names of the
