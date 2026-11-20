@@ -207,6 +207,14 @@ if (cmd === 'add') {
   const id = normId(pos[0])
   const proof = one('proof')
   if (!proof || proof === true) die('done needs --proof "what proved it" (e.g. "402 checks", "his phone, by hand")')
+  // Bart, Nov 20 ("Third time. Massive learning fail"): OLA-223 was closed on a test against a fake
+  // service while the feature could not run on his devices. A ticket closes only on the real thing.
+  if (!/\b(walked|bart|no user path):/i.test(proof)) die(
+    'done needs proof on the real thing, in the proof text:\n' +
+    '  "walked: <what you did on the live server / installed app, as he would, and what you saw>"\n' +
+    '  or "Bart: <his words>" when he said it is done, or "no user path: <why nothing reaches a person>".\n' +
+    'Tests passing, or a message saying a feature is "not switched on yet", is not done: leave it open\n' +
+    '(issues.mjs wait <id>) and say what is still missing.')
   const r = await get(id)
   const now = new Date().toISOString()
   await patch(id, { status: 'done', proof, finished_at: now, started_at: r.started_at ?? now, day: one('day') ?? pacificDay() })
