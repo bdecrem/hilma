@@ -72,6 +72,7 @@ import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
+import { deployable } from './signers.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -550,6 +551,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     ['frontdesk', ['frontdesk/check.mjs', '--no-live']],
     ['backup', ['--test', 'ops/backup-test.mjs']], // encrypted backups (OLA-86), seconds, no VM
     ['ci', ['--test', 'ops/ci-test.mjs']], // the automatic checks' decisions (OLA-84), seconds, no VM
+    ['signers', ['--test', 'ops/signers-test.mjs']], // who may deploy (OLA-85), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
@@ -569,7 +571,8 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
   writeFileSync(lockFile, String(process.pid))
   process.on('exit', () => rmSync(lockFile, { force: true }))
 
-  const f = git('fetch', '--quiet', 'origin')
+  // --tags: an approval is a signed tag ola-deploy/<commit12> (ops/signers.mjs, OLA-85).
+  const f = git('fetch', '--quiet', '--tags', '--force', 'origin')
   if (f.status !== 0) fail(`git fetch: ${f.stderr.trim()}`)
   const r = git('rev-parse', '--verify', '--quiet', `${ref}^{commit}`)
   if (r.status !== 0) fail(`${ref} is not a commit in ${STAGING}`)
@@ -577,17 +580,19 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
   const short = commit.slice(0, 12)
   // What a deploy trusts (second review, 2026-11-16): origin/main of a public repo that unattended
   // agents push to (the Discord bot and the venture runner, from this same machine), under one
-  // author name. A commit is deployed only when it is signed by a key listed in
-  // ~/.ola/allowed-signers (git's ssh allowed-signers format; the key lives off this machine), or
-  // with --unsigned, which deploys.log records.
+  // author name. A commit is deployed only when it, or a tag ola-deploy/<commit12> on it, is signed
+  // by a key listed in ~/.ola/allowed-signers (git's ssh allowed-signers format; the key lives off
+  // this machine; ops/signers.mjs, OLA-85), or with --unsigned, which deploys.log records.
   const signers = path.join(OLA, 'allowed-signers')
   let signed = false
+  let signedHow = ''
   if (check) {
     // A check serves nothing, so no signature is asked for; it runs the same code a deploy would.
   } else if (existsSync(signers)) {
-    const v = git('-c', `gpg.ssh.allowedSignersFile=${signers}`, 'verify-commit', commit)
-    signed = v.status === 0
-    if (!signed && !unsigned) fail(`${short} is not signed by a key in ${signers}; nothing was changed`)
+    const v = deployable(git, commit, signers)
+    signed = v.ok
+    if (signed) console.log(`signature: ${(signedHow = v.how)}`)
+    else if (!unsigned) fail(`${short} may not deploy: ${v.why}. On Bart's Mac: node apps/activist-ai/ops/signers.mjs approve ${short}; nothing was changed`)
   } else if (!unsigned) fail(`${signers} is missing, so no commit can be checked: add the deploying key there (see the README, "Deploying staging"), or deploy with --unsigned (recorded in deploys.log)`)
   const before = existsSync(DEPLOYED) ? JSON.parse(readFileSync(DEPLOYED, 'utf8')) : null
   // A check runs even for the deployed commit: ops/ci.mjs asks for one only when the deploy's
@@ -779,7 +784,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     }
     if (!healthy) return refuse('after the restart the front desk or the gateway did not answer')
   } else say('no env files in ~/.ola: nothing to restart (node ops/ola.mjs install once they exist)')
-  history(`deployed ${short} (${ref})${signed ? '' : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  history(`deployed ${short} (${ref})${signed ? ` (${signedHow})` : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   say(`deployed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   // The disk (OLA-135): old images, releases beyond the current and the previous, an oversized
   // builder, builders' leftovers. Still holding the turn, so no suite starts a VM meanwhile. A

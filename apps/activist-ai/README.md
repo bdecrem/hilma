@@ -1255,6 +1255,23 @@ format: `bart@ola namespaces="git" ssh-ed25519 AAAA…`, the key on a device tha
 and refuses an unsigned or unknown one. `--unsigned` deploys anyway and `deploys.log` says UNSIGNED.
 On the Studio, no other agent or service may run under the account that runs Ola.
 
+**Approving someone else's commit** (OLA-85, `ops/signers.mjs`). Most commits are made by agents
+(the runner, builders), not on Bart's Mac, so a commit also deploys when a signed tag
+`ola-deploy/<commit12>` points at it, signed by a key in the list. The deploy fetches tags and
+checks the commit's own signature first, then the tag (`git verify-tag`); a tag signed by another
+key, an unsigned tag, or a tag whose name and commit differ do not count (`ops/signers-test.mjs`,
+one of the deploy's suites). On Bart's Mac, in a clone of hilma:
+
+```bash
+node apps/activist-ai/ops/signers.mjs setup             # once: ~/.ssh/ola_signing, this clone signs with it; prints the line
+node apps/activist-ai/ops/signers.mjs approve [ref]     # sign ola-deploy/<commit12> for ref (default origin/main) and push it
+```
+
+The printed line goes into `~/.ola/allowed-signers` on the staging machine (the public half only;
+the private key never leaves that Mac). `node ops/signers.mjs verify [ref]` on the staging machine
+says whether a commit may deploy and why. Once the list exists, a deploy without a signature is
+refused with the `approve` command to run; `--unsigned` still overrides and is logged.
+
 A deploy, one at a time (a lock file): `git fetch`; unpack the commit fresh into its release; per
 package folder (`.`, `frontdesk`, `web`), an APFS clone of the served release's `node_modules` when
 the lockfile is unchanged, `npm ci` when it changed; build `web/dist`; run the suites from the

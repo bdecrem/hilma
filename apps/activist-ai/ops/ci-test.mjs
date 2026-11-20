@@ -74,3 +74,9 @@ test('a check behind a passed deploy of its own commit takes the deploy suites p
   assert.equal(coveredByDeploy(LOG, 'c'.repeat(12), {}), null)
   assert.match(ghStatus({ ok: true, by: 'check+deploy', suites: { apps: '1 of 1', web: '2 of 2' } }).description, /^3 of 3 checks passed \(apps here/)
 })
+
+test('a signed deploy line (OLA-85) is read the same way', () => {
+  const d = parseDeploys(`2026-11-21T09:00:00.000Z deployed ${A.slice(0, 12)} (origin/main) (signed tag ola-deploy/${A.slice(0, 12)}); turn 10 of 10, gateway 47 of 47`)
+  assert.equal(d[A.slice(0, 12)].ok, true)
+  assert.deepEqual(parseSuites(d[A.slice(0, 12)].suitesText), { turn: '10 of 10', gateway: '47 of 47' })
+})
