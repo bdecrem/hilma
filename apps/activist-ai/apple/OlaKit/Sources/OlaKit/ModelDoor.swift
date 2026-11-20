@@ -108,6 +108,12 @@ public final class ModelDoor: @unchecked Sendable {
         case .response(let h):
           if h.statusCode == 401 {
             upstream.cancel(id)
+            // About the sign-in this request was sent with. If the person signed in again while it
+            // was on its way (OLA-252), that answer is about the old sign-in: this request is
+            // refused, the new sign-in stays, and the door keeps working with it.
+            guard self.token() == token else {
+              return await res.send(401, Self.error("That request was sent before you signed in again. Try it again."))
+            }
             markSignedOut()
             return await res.send(401, Self.error("Signed out of Ola on this Mac. Sign in again in the Ola app."))
           }

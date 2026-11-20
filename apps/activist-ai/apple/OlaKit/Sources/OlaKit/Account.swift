@@ -379,6 +379,13 @@ public enum AccountKeeper {
     return true
   }
 
+  /// Whether `token` is the sign-in kept now (OLA-252): a 401 for a request sent with an older
+  /// sign-in's token says nothing about the current one, and must not end it.
+  public static func isCurrent(_ token: String?) -> Bool {
+    guard let token, !token.isEmpty, let now = session?.token else { return false }
+    return now == token
+  }
+
   public static func forget() {
     SecretStore.remove(.account)
     defaults.removeObject(forKey: handleKey)

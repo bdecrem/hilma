@@ -131,6 +131,9 @@ final class AccountController {
 
   private func finish(_ session: AccountSession) {
     guard AccountKeeper.keep(session) else { phase = .problem("This Mac\u{2019}s Keychain didn\u{2019}t take the sign-in. Try again."); return }
+    // A door made for an earlier sign-in is not this one's: its answers are about that sign-in.
+    door?.stop()
+    door = nil
     name = session.person.name
     signedIn = true
     passkeyNote = nil
@@ -189,9 +192,17 @@ final class AccountController {
     onSignedOut?()
   }
 
-  /// The server ended this Mac's sign-in: forget it and say so.
-  func signedOutByServer() {
+  /// The server ended this Mac's sign-in: forget it and say so. `token` is the sign-in the refused
+  /// request was sent with (OLA-252: a fresh sign-in was forgotten a second later, or the app crashed,
+  /// when an answer about an older sign-in came back after it). Only the sign-in kept now is ended;
+  /// nil (the caller cannot tell) ends it only when this Mac no longer holds one at all.
+  func signedOutByServer(token: String?) {
     guard signedIn else { return }
+    if let token {
+      guard AccountKeeper.isCurrent(token) else { return }
+    } else if AccountKeeper.session != nil {
+      return
+    }
     forgetHere()
     phase = .expired
     onSignedOut?()
@@ -210,7 +221,7 @@ final class AccountController {
   func refreshUsage() {
     Task {
       guard let s = AccountKeeper.session else { return }
-      do { usage = try await api.usage(s) } catch AccountError.signedOut { signedOutByServer() } catch {}
+      do { usage = try await api.usage(s) } catch AccountError.signedOut { signedOutByServer(token: s.token) } catch {}
     }
   }
 
@@ -219,14 +230,22 @@ final class AccountController {
   /// The door for this launch, started on first use. The account token is read from the Keychain
   /// only when the first request goes through it.
   func route() async throws -> ModelRoute {
-    if door == nil {
-      let d = ModelDoor(api: api) { AccountKeeper.session?.token }
-      d.onSignedOut = { Task { @MainActor [weak self] in self?.signedOutByServer() } }
+    let d: ModelDoor
+    if let door { d = door } else {
+      d = ModelDoor(api: api) { AccountKeeper.session?.token }
+      // The door refuses for good only on a 401 about the sign-in it holds now (ModelDoor); one
+      // from a door this controller has since replaced says nothing about the current sign-in.
+      d.onSignedOut = { [weak d] in Task { @MainActor [weak self] in
+        guard let self, let d, self.door === d else { return }
+        self.signedOutByServer(token: AccountKeeper.session?.token)
+      } }
       d.allowHosted = { [g = hostedGate] in g.isOpen }
       door = d
     }
-    try await door!.start()
-    return .door(door!)
+    try await d.start()
+    // Signed out (or in again) while the door was starting (OLA-252: this was `door!`, and crashed).
+    guard door === d, signedIn else { throw AccountError.signedOut }
+    return .door(d)
   }
 
   func stop() { door?.stop() }
