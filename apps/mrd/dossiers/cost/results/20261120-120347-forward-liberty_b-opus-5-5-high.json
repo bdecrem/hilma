@@ -1,0 +1,733 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica liberty_b claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "liberty_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  21,
+  23,
+  25
+ ],
+ "started_at": "2026-11-20T20:03:47.709Z",
+ "meters_before": {
+  "at": "2026-11-20T20:03:43.176Z",
+  "window": {
+   "pct": 20,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 20,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 20% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 50087,
+  "user": 110
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:08:50.383Z",
+ "minutes": 5.04,
+ "meters_after": {
+  "at": "2026-11-20T20:08:50.383Z",
+  "window": {
+   "pct": 21,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 21,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 21% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 73801,
+   "output": 21401,
+   "cache_read": 1229214,
+   "cache_write": 125420,
+   "cost_usd": 1.6352,
+   "total": 1449836
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 73773,
+    "output": 5102,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1581,
+    "cost_usd": 0.0599
+   },
+   "claude-opus-5-5": {
+    "input": 28,
+    "output": 16299,
+    "cache_read": 1229214,
+    "cache_write": 125420,
+    "thinking": 3858,
+    "cost_usd": 1.5753
+   }
+  }
+ },
+ "turns": 24,
+ "calls": 38,
+ "duration_ms": 301644,
+ "duration_api_ms": 190972,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-20T20:03:53.228Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31 | supuestos y condiciones excepcionales | ARTÍCULO 194 | ARTÍCULO 211 | ARTÍCULO 229 | Así reformado | Ley N° 10493",
+   "ok": true,
+   "chars": 16775
+  },
+  {
+   "at": "2026-11-20T20:03:58.306Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "menos gravosa | treinta días naturales | ARTÍCULO 211 | ARTÍCULO 229 | Ficha Artículo 211 | Ficha Artículo 229",
+   "ok": true,
+   "chars": 11394
+  },
+  {
+   "at": "2026-11-20T20:04:11.199Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN",
+   "find": "Afectaciones | 10493 | 2023 | 2024 | 2025 | Versiones",
+   "ok": true,
+   "chars": 2012
+  },
+  {
+   "at": "2026-11-20T20:04:12.521Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=38533&strTipM=TC",
+   "find": "Artículo 15 | Artículo 16 | Artículo 26 | Así reformado",
+   "ok": true,
+   "chars": 8523
+  },
+  {
+   "at": "2026-11-20T20:04:24.042Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 40 | ARTÍCULO 48 | ARTÍCULO 19",
+   "ok": true,
+   "chars": 6503
+  },
+  {
+   "at": "2026-11-20T20:04:28.068Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=7",
+   "find": "2023 | 2024 | 2025 | Ley",
+   "ok": true,
+   "chars": 1681
+  },
+  {
+   "at": "2026-11-20T20:05:04.620Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=6",
+   "find": "2023 | 2024 | 2025 | Ley",
+   "ok": true,
+   "chars": 1681
+  },
+  {
+   "at": "2026-11-20T20:05:05.474Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=5",
+   "find": "2023 | 2024 | 2025 | Ley",
+   "ok": true,
+   "chars": 1681
+  },
+  {
+   "at": "2026-11-20T20:05:10.233Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC",
+   "find": "381 bis | Tortura | 10213 | 123 bis",
+   "ok": true,
+   "chars": 6215
+  },
+  {
+   "at": "2026-11-20T20:05:47.642Z",
+   "url": "https://www.dhr.go.cr/mnpt/informes_mnpt/ifmnpt_2022.pdf",
+   "find": "Centro de Aprehensión | migratori | hábeas corpus | celda | plazo",
+   "ok": true,
+   "chars": 540
+  },
+  {
+   "at": "2026-11-20T20:06:18.504Z",
+   "url": "https://www.theadvocatesforhumanrights.org/res/USDOS+Human+Rights+Report+Costa+Rica+2022.pdf",
+   "find": "torture | migrant | detention | habeas | refugee",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:06:26.516Z",
+   "url": "https://www.ecoi.net/de/dokument/2089463.html",
+   "find": "Torture | migrant | Arrest Procedures | detention facility | refugee | UNHCR",
+   "ok": true,
+   "chars": 8435
+  },
+  {
+   "at": "2026-11-20T20:06:27.791Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "Torture | migrant | Arrest Procedures | detention facility | refugee | UNHCR",
+   "ok": true,
+   "chars": 8372
+  },
+  {
+   "at": "2026-11-20T20:06:31.855Z",
+   "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+   "find": "habeas corpus | Constitutional Chamber | detained | lawyer | CATEM | ill-treatment | passports",
+   "ok": true,
+   "chars": 9669
+  },
+  {
+   "at": "2026-11-20T20:06:33.141Z",
+   "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+   "find": "privación de libertad | proporcionalidad | hábeas corpus | resolución | Defensoría",
+   "ok": true,
+   "chars": 6733
+  },
+  {
+   "at": "2026-11-20T20:06:37.671Z",
+   "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf",
+   "find": "POR TANTO | proporcionalidad | última ratio | hábeas corpus correctivo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:07:11.697Z",
+   "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2023/11/examen-du-costa-rica-devant-le-cat-la-surpopulation-carcerale",
+   "find": "migra | réfugi | demandeurs d'asile | rétention",
+   "ok": true,
+   "chars": 5503
+  }
+ ],
+ "searches": [
+  "Mecanismo Nacional de Prevención de la Tortura informe anual 2022 CATEM aprehensión migrantes",
+  "Sala Constitucional hábeas corpus persona extranjera aprehensión migración 2022 con lugar CATEM",
+  "dhr.go.cr mnpt informe anual 2022 personas migrantes aprehensión Dirección General de Migración",
+  "Costa Rica 2022 Country Reports on Human Rights Practices migrants detention torture",
+  "Ley 10213 tortura Código Penal 381 bis publicada La Gaceta 2022 vigencia"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":21,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 48 (habeas corpus / amparo); art. 19 (foreigners' rights)\",\"enacted\":\"1949 (art. 48 as reformed by Ley 7128 of 18 Aug 1989)\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de la Jurisdicción Constitucional, N.º 7135\",\"article\":\"Arts. 15, 16, 26\",\"enacted\":\"1989\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 31(1), 31(5)(a)-(c)\",\"enacted\":\"2009-08-19 (in force 2010-03-01)\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Arts. 194, 211, 229\",\"enacted\":\"2009-08-19 (in force 2010-03-01)\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-02-20\",\"instrument\":\"Práctica administrativa de la Dirección General de Migración y Extranjería (CATEM Sur, deportados desde EE.UU.)\",\"article\":\"Ley 8764 art. 31(5); Const. art. 48 (practice, not a change in law)\",\"kind\":\"practice\",\"what_changed\":\"From 20 Feb 2025 about 200 third-country nationals deported from the US were held at CATEM Sur for up to two months with documents retained and no legal basis for detention; release came only after civil-society/Defensoría habeas corpus petitions (Sala Constitucional, 24 June 2025). Practice evidence on the effectiveness of the remedy; the law did not change.\",\"url\":\"https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa\",\"passage\":\"People were detained for up to two months in the migrant center, locat",
+ "output": {
+  "answers": [
+   {
+    "question_id": 21,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 48 (habeas corpus / amparo); art. 19 (foreigners' rights)",
+      "enacted": "1949 (art. 48 as reformed by Ley 7128 of 18 Aug 1989)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de la Jurisdicción Constitucional, N.º 7135",
+      "article": "Arts. 15, 16, 26",
+      "enacted": "1989",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31(1), 31(5)(a)-(c)",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Arts. 194, 211, 229",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-02-20",
+      "instrument": "Práctica administrativa de la Dirección General de Migración y Extranjería (CATEM Sur, deportados desde EE.UU.)",
+      "article": "Ley 8764 art. 31(5); Const. art. 48 (practice, not a change in law)",
+      "kind": "practice",
+      "what_changed": "From 20 Feb 2025 about 200 third-country nationals deported from the US were held at CATEM Sur for up to two months with documents retained and no legal basis for detention; release came only after civil-society/Defensoría habeas corpus petitions (Sala Constitucional, 24 June 2025). Practice evidence on the effectiveness of the remedy; the law did not change.",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+      "passage": "People were detained for up to two months in the migrant center, located in Puntarenas province, near the border with Panama and some 300 kilometers from San José. There was no legal basis for their detention, as Costa Rica agreed to allow them to enter, provided them temporary status in Costa Rica prior to their arrival, and never accused any of a crime."
+     }
+    ],
+    "implementation_then_now": "2023: the US State Department's 2022 report (covering 2022) says the constitution provides 'the right for any person to challenge the lawfulness of his or her arrest or detention in court' and that 'the government generally observed these requirements'. It adds that UNHCR monitored the migration detention facility monthly. That source is general rather than migrant-specific, and no documented pattern of migrants being denied review was found for 2022. 2026: the 2025 CATEM episode shows both sides. Detainees had poor access to counsel and documents were retained (HRW 2025). Yet habeas corpus worked once civil society and the Defensoría filed it: the Sala partly upheld it on 24 June 2025 and ordered release (Semanario Universidad, quoting the judgment). The starting 'Usually' already takes this episode into account. Nothing shows the remedy's availability moved a full level, so the rating is 'Usually' at both dates.",
+    "practice_sources": [
+     {
+      "title": "USDOS 2022 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "USDOS 2023 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Human Rights Watch, 'The Strategy Is to Break Us': The US Expulsion of Third-Country Nationals to Costa Rica",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Semanario Universidad – Resolución de Sala IV revela importante papel que jugó la denuncia de sociedad civil y Defensoría ante la privación de libertad de personas migrantes",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the current consolidated SINALEVI texts with their per-article amendment notes. Ley 8764 arts. 31, 194, 211 and 229 carry no 'Así reformado' notes, so they are unchanged since 2009. Ley 10493 (2024) touched only art. 33 (fees). Ley 7135 arts. 15, 16 and 26 and Const. art. 48 (last reformed 1989) are also unannotated in the window. SINALEVI's 'Normativa que la afectó' tab would not load, and the Ley 8764 ficha shows version 19 of 19 dated 24/02/2025 without saying which article changed. The Voto 2025-019485 PDF could not be opened (no PDF extraction), so it is used only as practice evidence through the press account.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI consolidated text)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764 – Ficha de la norma (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI tabs (normativa que la afectó; did not load)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=7"
+     },
+     {
+      "title": "Ley de la Jurisdicción Constitucional N.º 7135 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=38533&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "USDOS 2022 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html"
+     },
+     {
+      "title": "USDOS 2023 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "HRW 2025 report on US expulsions to Costa Rica",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa"
+     },
+     {
+      "title": "Semanario Universidad on Voto 2025-019485",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     },
+     {
+      "title": "Voto 2025-019485 PDF (failed: no PDF extraction)",
+      "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf"
+     },
+     {
+      "title": "MNPT Informe anual 2022 (404)",
+      "url": "https://www.dhr.go.cr/mnpt/informes_mnpt/ifmnpt_2022.pdf"
+     }
+    ],
+    "starting_answer_concern": "Coding 'conditions' rests on the 'integridad personal' limb of habeas corpus (Ley 7135 art. 15) and on the Sala's 'hábeas corpus correctivo' practice. No migration statute gives a conditions remedy, so a strict reviewer might read this as two of three. 'Length' is reviewable because art. 31(5) sets 24-hour and 30-day limits.",
+    "confidence": "medium",
+    "notes": "No change in law. Ley 8764 arts. 31, 194, 211 and 229, Ley 7135 arts. 15, 16 and 26, and Const. arts. 19 and 48 read identically on both dates. Voto 2025-019485 is a fact-specific habeas corpus ruling and was treated as practice evidence, not as a source of the protection."
+   },
+   {
+    "question_id": 23,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31(5)(a)",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 211",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 229",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-02-20",
+      "instrument": "Práctica administrativa de la Dirección General de Migración y Extranjería (CATEM Sur, deportados desde EE.UU.)",
+      "article": "Ley 8764 art. 31(5)(a) (practice, not a change in law)",
+      "kind": "practice",
+      "what_changed": "About 200 US deportees, including 81 children, were confined at CATEM as a group from arrival for up to two months. There was no individual apprehension decision and no legal basis. The Sala Constitucional later called this an illegitimate deprivation of liberty. This is a documented breach of the individualised, least-burdensome-measure requirement that has no counterpart in the pre-2023 evidence. The law did not change.",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+      "passage": "People were detained for up to two months in the migrant center, located in Puntarenas province, near the border with Panama and some 300 kilometers from San José. There was no legal basis for their detention, as Costa Rica agreed to allow them to enter, provided them temporary status in Costa Rica prior to their arrival, and never accused any of a crime. (The Costa Rican government denies that they were in detention.)"
+     }
+    ],
+    "implementation_then_now": "2023: no documented pattern of automatic or group migration detention was found for 2022. The USDOS 2022 report says the government generally observed the bar on arbitrary detention and that UNHCR monitored the migration detention facility monthly. That evidence is general, not specific to individualised migration-detention decisions, which is why confidence is low. 2026: the starting answer's 'Sometimes; Usually' rests on the Feb–June 2025 CATEM episode. HRW (2025) and the Sala Constitucional's 24 June 2025 judgment, as quoted by Semanario Universidad, document group confinement of about 200 deportees 'sin haber cometido delito o inclusive tener una presunción de una falta migratoria'. That is a new, dated breach, so the 2026 rating sits half a level below 2023.",
+    "practice_sources": [
+     {
+      "title": "USDOS 2022 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "USDOS 2023 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Human Rights Watch, 'The Strategy Is to Break Us'",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Semanario Universidad on Sala IV Voto 2025-019485",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "In the current SINALEVI consolidated text, arts. 31(5), 211 and 229 of Ley 8764 carry no amendment notes, so they read the same on both dates. The 2024 reform (Ley 10493) touched only arts. 33, 241 and 253. The version history tab would not load. The 2025 judgment PDF could not be extracted, and evidence on routine individualised decisions before 2023 is thin and general.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI consolidated text)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764 – Ficha de la norma",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN"
+     },
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "USDOS 2022 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html"
+     },
+     {
+      "title": "USDOS 2023 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "HRW 2025 report on US expulsions to Costa Rica",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa"
+     },
+     {
+      "title": "Semanario Universidad on Voto 2025-019485",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     },
+     {
+      "title": "Voto 2025-019485 PDF (failed: no PDF extraction)",
+      "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf"
+     }
+    ],
+    "starting_answer_concern": "The statute requires a least-burdensome-measure test ('siempre y cuando no exista otra medida menos gravosa') and a 'resolución justificada' for extensions, not an express 'individual examination' clause. 'Yes' is a reasonable inference but still an inference. Also, the CATEM deportees were not under any art. 211 apprehension measure, so the episode shows detention outside the statutory framework rather than misuse of it.",
+    "confidence": "low",
+    "notes": "No change in law. The difference between the two dates is implementation only, driven by the dated 2025 CATEM episode. If a reviewer sees the episode as an exceptional case rather than a shift in routine practice, both dates could be rated identically."
+   },
+   {
+    "question_id": 25,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 40 (with arts. 19, 48)",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 381 bis (added by Ley 10213 of 5 May 2022; art. 123 bis repealed by same law)",
+      "enacted": "2022-05 (Ley 10213; reported published La Gaceta 100, 31 May 2022, in force on publication)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31(5)(c), 31(7); art. 7(6)",
+      "enacted": "2009-08-19 (in force 2010-03-01)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the USDOS 2022 report says 'The law prohibits such practices, and there were no reports that government officials employed them', and notes UNHCR's monthly monitoring of the migration detention facility. 2026: the USDOS 2023 report again found 'no credible reports' of torture. The CAT's November 2023 review praised Costa Rica's safeguards, noted that the national preventive mechanism visits migrant shelters, and focused on prisons. In 2025, HRW and the Sala Constitucional record (via Semanario Universidad) show degrading aspects at CATEM: retained documents, police escort and restricted contact, though the allegations of cruel treatment concerned the US. No pattern of torture by Costa Rican authorities is documented at either date, and 'Usually' holds for both.",
+    "practice_sources": [
+     {
+      "title": "USDOS 2022 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "USDOS 2023 Country Report on Human Rights Practices: Costa Rica (via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "UN Geneva meeting summary: Examen du Costa Rica devant le CAT (Nov. 2023)",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2023/11/examen-du-costa-rica-devant-le-cat-la-surpopulation-carcerale",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Human Rights Watch, 'The Strategy Is to Break Us'",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Semanario Universidad on Sala IV Voto 2025-019485",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the current consolidated texts with per-article amendment notes. Const. art. 40 carries no note. Penal Code art. 381 bis is annotated 'Así adicionado por el artículo 1° de la ley N° 10213 del 5 de mayo de 2022', and art. 123 bis is annotated as repealed by the same law. The 31 May 2022 publication date comes from search results only, but either way torture was criminalised on 1 Jan 2023. Ley 8764 arts. 31 and 7 carry no notes in the window. The MNPT 2022/2025 reports and the CAT concluding observations (PDFs) could not be extracted.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Código Penal Ley 4573 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "USDOS 2022 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089463.html"
+     },
+     {
+      "title": "USDOS 2023 Country Report: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "UN Geneva CAT review summary, Nov. 2023",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2023/11/examen-du-costa-rica-devant-le-cat-la-surpopulation-carcerale"
+     },
+     {
+      "title": "HRW 2025 report on US expulsions to Costa Rica",
+      "url": "https://www.hrw.org/report/2025/05/22/the-strategy-is-to-break-us/the-us-expulsion-of-third-country-nationals-to-costa"
+     },
+     {
+      "title": "Semanario Universidad on Voto 2025-019485",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     },
+     {
+      "title": "MNPT Informe anual 2022 (404)",
+      "url": "https://www.dhr.go.cr/mnpt/informes_mnpt/ifmnpt_2022.pdf"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Ley 10213 (art. 381 bis, naming 'condición migratoria' among the grounds) predates the window, so it is not a 2023–2026 event. Const. art. 40 covers cruel or degrading treatment but does not name torture. The torture prohibition comes from Penal Code 381 bis and from CAT/ACHR art. 5, which apply directly under Const. art. 7."
+   }
+  ]
+ }
+}
