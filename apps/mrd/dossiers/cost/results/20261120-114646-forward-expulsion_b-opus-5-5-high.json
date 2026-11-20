@@ -1,0 +1,740 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica expulsion_b claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "expulsion_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  55,
+  57,
+  59,
+  61
+ ],
+ "started_at": "2026-11-20T19:46:46.704Z",
+ "meters_before": {
+  "at": "2026-11-20T19:46:42.277Z",
+  "window": {
+   "pct": 12,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 12,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 12% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 130 requests · 2 sessions\n  39%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  32%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 32%, statusline 1%\n\nLast 7d · 141 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  37%  Start fresh when you switch tasks · run /clear\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 59085,
+  "user": 115
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T19:50:30.664Z",
+ "minutes": 3.73,
+ "meters_after": {
+  "at": "2026-11-20T19:50:30.664Z",
+  "window": {
+   "pct": 13,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 13,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 13% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 130 requests · 2 sessions\n  39%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  32%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 32%, statusline 1%\n\nLast 7d · 141 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  37%  Start fresh when you switch tasks · run /clear\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 14875,
+   "output": 14180,
+   "cache_read": 1268656,
+   "cache_write": 125128,
+   "cost_usd": 1.5289,
+   "total": 1422839
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 14847,
+    "output": 1079,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 526,
+    "cost_usd": 0.012
+   },
+   "claude-opus-5-5": {
+    "input": 28,
+    "output": 13101,
+    "cache_read": 1268656,
+    "cache_write": 125128,
+    "thinking": 1883,
+    "cost_usd": 1.5169
+   }
+  }
+ },
+ "turns": 19,
+ "calls": 33,
+ "duration_ms": 223336,
+ "duration_api_ms": 129576,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-20T19:46:51.331Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31 | ARTÍCULO 183 | ARTÍCULO 209 | ARTÍCULO 216 | ARTÍCULO 222 | Así reformado | ARTÍCULO 186",
+   "ok": true,
+   "chars": 17690
+  },
+  {
+   "at": "2026-11-20T19:46:57.807Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 209.- | ARTÍCULO 210.- | ARTÍCULO 215.- | ARTÍCULO 216.- | ARTÍCULO 222.- | ARTÍCULO 186.- | ARTÍCULO 122.- | ARTÍCULO 184.-",
+   "ok": true,
+   "chars": 15292
+  },
+  {
+   "at": "2026-11-20T19:47:03.547Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN",
+   "find": "Afectaciones | 10493 | Versiones | reforma",
+   "ok": true,
+   "chars": 2203
+  },
+  {
+   "at": "2026-11-20T19:47:21.377Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=6",
+   "find": "2022 | 2023 | 2024 | 2025 | Ley",
+   "ok": true,
+   "chars": 1689
+  },
+  {
+   "at": "2026-11-20T19:47:57.820Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=4",
+   "find": "2022 | 2023 | 2024 | 2025 | afect",
+   "ok": true,
+   "chars": 1435
+  },
+  {
+   "at": "2026-11-20T19:48:07.307Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=5",
+   "find": "2022 | 2023 | 2024 | 2025 | afect",
+   "ok": true,
+   "chars": 1433
+  },
+  {
+   "at": "2026-11-20T19:48:43.691Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "de 2025 | del 2025 | de 2023 | del 2023 | del 2024",
+   "ok": true,
+   "chars": 10600
+  },
+  {
+   "at": "2026-11-20T19:48:44.925Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 39 | Artículo 40 | Artículo 123 | Artículo 127 | Artículo 134 | Así reformado",
+   "ok": true,
+   "chars": 16508
+  },
+  {
+   "at": "2026-11-20T19:48:48.140Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 127 | Artículo 134 | Artículo 124",
+   "ok": true,
+   "chars": 7872
+  },
+  {
+   "at": "2026-11-20T19:48:53.044Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 115.- | ARTÍCULO 64.- | ARTÍCULO 214.- | ARTÍCULO 217.- | ARTÍCULO 207.-",
+   "ok": true,
+   "chars": 9693
+  },
+  {
+   "at": "2026-11-20T19:48:58.086Z",
+   "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+   "find": "refugio desde el momento | tome nota | resolución individualizada | Por tanto | POR TANTO",
+   "ok": true,
+   "chars": 8559
+  },
+  {
+   "at": "2026-11-20T19:49:08.044Z",
+   "url": "https://www.theadvocatesforhumanrights.org/res/USDOS+Human+Rights+Report+Costa+Rica+2022.pdf",
+   "find": "refoulement | Access to Asylum | deport | expul",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:49:13.827Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "refoulement | Access to Asylum | deport | expel",
+   "ok": true,
+   "chars": 2145
+  },
+  {
+   "at": "2026-11-20T19:49:18.219Z",
+   "url": "https://www.ecoi.net/de/dokument/2071253.html",
+   "find": "refoulement | Access to Asylum | deport | Refoulement",
+   "ok": true,
+   "chars": 5823
+  },
+  {
+   "at": "2026-11-20T19:49:19.420Z",
+   "url": "https://www.dhr.go.cr/informacion_relevante/comunicados/2026/marzo/014_Costa_Rica_tardo_corregir_atencion_integral_personas_migrantes_deportadas.pdf",
+   "find": "refugio | protección internacional | resolución",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:49:24.898Z",
+   "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo",
+   "find": "asilo | resolución | abogado",
+   "ok": true,
+   "chars": 3500
+  }
+ ],
+ "searches": [
+  "Costa Rica 2022 human rights report refoulement rechazo frontera Nicaragua solicitantes de refugio deportación"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":55,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(8)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Arts. 64, 65 (rechazo)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G\",\"article\":\"Arts. 123(a), 124, 127, 134\",\"enacted\":\"2011\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-06-24\",\"instrument\":\"Sala Constitucional, Voto N.º 2025-019485 (exp. 25-006713-0007-CO)\",\"article\":\"Considerando on information about refugio for US deportees admitted on humanitarian grounds\",\"kind\":\"ruling\",\"what_changed\":\"Found that about 200 US deportees admitted on humanitarian grounds were not shown to have been told from entry that they could seek refuge, and held that this injured their rights. It is a fact-specific finding with a 'take note' for future humanitarian admissions. It sets no general duty to advise before expulsion or rejection, so it is practice evidence and does not change the protection answer.\",\"url\":\"https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500\",\"passage\":\"No se demuestra; sin embargo, que tal información se transmitiera a las personas tuteladas desde el momento de su ingreso. [...] El lapso en el cual esta obligación se incumplió implicó la lesión de los derechos de las personas que eventualmente tuvieran acceso a la figura [...] Tome nota la autoridad recurrida de lo dispuesto en esta sentencia a los efectos de eventuales autorizaciones de ingreso de personas por razones de humanidad.\"}],\"implementation_then_now\":\"Not rated on eithe",
+ "output": {
+  "answers": [
+   {
+    "question_id": 55,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(8)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 64, 65 (rechazo)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Arts. 123(a), 124, 127, 134",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-06-24",
+      "instrument": "Sala Constitucional, Voto N.º 2025-019485 (exp. 25-006713-0007-CO)",
+      "article": "Considerando on information about refugio for US deportees admitted on humanitarian grounds",
+      "kind": "ruling",
+      "what_changed": "Found that about 200 US deportees admitted on humanitarian grounds were not shown to have been told from entry that they could seek refuge, and held that this injured their rights. It is a fact-specific finding with a 'take note' for future humanitarian admissions. It sets no general duty to advise before expulsion or rejection, so it is practice evidence and does not change the protection answer.",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "passage": "No se demuestra; sin embargo, que tal información se transmitiera a las personas tuteladas desde el momento de su ingreso. [...] El lapso en el cual esta obligación se incumplió implicó la lesión de los derechos de las personas que eventualmente tuvieran acceso a la figura [...] Tome nota la autoridad recurrida de lo dispuesto en esta sentencia a los efectos de eventuales autorizaciones de ingreso de personas por razones de humanidad."
+     }
+    ],
+    "implementation_then_now": "Not rated on either date, because the law has no duty to advise of asylum before rejection or deportation. For the record: in 2025, HRW reported that deportees said they had repeatedly stated an intention to seek asylum, and the Sala Constitucional found they had not been informed from the moment of entry. Nothing comparable was found for 2022, but the rating stays Does Not Apply.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Debe permitir que migrantes deportados soliciten asilo (Human Rights Watch)",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485 (full text)",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "SINALEVI's consolidated texts (Ley 8764 version 19 of 19, dated 24/02/2025, and the Refugee Regulation) show no amendment notes on the cited articles. The 2022–2025 amendments it does record (Leyes 10493 and 10645; Decrees 43810 and 44501) touch other articles. The 'Normativa que la afectó' tab would not render, so the per-article notes were relied on instead.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764, ficha de la norma",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas, texto completo",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC"
+     },
+     {
+      "title": "Sala Constitucional Voto 2025-019485",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Relied on the statutes and the full text of the ruling, not press reports of it. Later rulings citing Voto 2025-019485 were not read; dated after 1 January 2026, they would not affect the 2026 date anyway unless issued in late 2025."
+   },
+   {
+    "question_id": 57,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(9)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 115",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 64, 184",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Arts. 39, 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 31",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-05-28",
+      "instrument": "Decreto Ejecutivo N.º 44501-MGP",
+      "article": "Reglamento de Personas Refugiadas art. 14",
+      "kind": "amended",
+      "what_changed": "Art. 14 was rewritten so that asylum seekers enjoy protection against return and the same guarantees as recognised refugees. This is direct non-refoulement only, with no onward/chain refoulement rule, so it does not touch the indicator.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+      "passage": "la persona solicitante gozará de protección contra una devolución y de las mismas garantías que una persona refugiada reconocida, hasta tanto no se haya resuelto su solicitud. (Así reformado por el artículo 1° del decreto ejecutivo N° 44501 del 28 de mayo del 2024)"
+     }
+    ],
+    "implementation_then_now": "Not rated on either date, because the law has no chain-refoulement ban. In 2025, NGOs criticised Costa Rica's role in onward removals of third-country nationals deported from the US. That episode falls after the 2023 date and does not change the protection answer.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Debe permitir que migrantes deportados soliciten asilo (HRW)",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited articles of Ley 8764 and the Refugee Regulation carry no amendment notes in the current consolidated text. Arts. 39 and 40 of the Regulation are unchanged, and the only window amendment seen nearby (44501, art. 14) adds nothing on onward refoulement. The Constitution was not re-read this session.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas, texto completo",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Art. 31(9) of Ley 8764 ('a otro país, sea o no de origen, donde su derecho a la vida esté en riesgo') was the same on both dates."
+   },
+   {
+    "question_id": 59,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 183, 186, 209, 210, 214, 215",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 122",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-06-05",
+      "instrument": "Ley N.º 10493",
+      "article": "Ley 8764 art. 33 (fees)",
+      "kind": "amended",
+      "what_changed": "Amended the migration-fee paragraph of art. 33. It does not touch the expulsion or deportation provisions, so it has no bearing on the indicator.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "(Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     },
+     {
+      "date": "2025-02-24",
+      "instrument": "Ley N.º 10645 (Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros)",
+      "article": "Ley 8764 arts. 6, 94, 105",
+      "kind": "amended",
+      "what_changed": "Added provisions on students, teachers and researchers; this is the latest version (19 of 19) of Ley 8764. It does not touch the expulsion provisions.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "(Así adicionado el inciso anterior por el artículo 1° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero de 2025)"
+     },
+     {
+      "date": "2025-06-24",
+      "instrument": "Sala Constitucional, Voto N.º 2025-019485",
+      "article": "Habeas corpus on US deportees at CATEM-Sur",
+      "kind": "practice",
+      "what_changed": "The Sala partly upheld a habeas corpus for about 200 third-country deportees held at CATEM under a collective humanitarian resolution (D.JUR-0057-02-2025-JM) and ordered individual decisions. This is a documented breach in practice; it does not change the law.",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "passage": "La resolución D. JUR-0057-02-2025-JM, indicó que la permanencia podrá ser autorizada por una única vez y tendrá validez por un plazo de treinta días naturales, a efecto de que las personas beneficiadas puedan hacer abandono del país."
+     }
+    ],
+    "implementation_then_now": "2023: the US State Department reports covering 2021 and 2023 describe a functioning asylum and migration system. They record no pattern of arbitrary or collective expulsions; the main problems they note are backlogs. That supports Usually, though the evidence is thin and indirect. 2026: in the US-deportee episode of 2025, people were held under a collective resolution without individual decisions, and the Sala Constitucional corrected this through habeas corpus. This is a serious but isolated breach that the courts remedied. No systematic shift was found, so the rating stays Usually.",
+    "practice_sources": [
+     {
+      "title": "2021 Country Report on Human Rights Practices: Costa Rica (US DOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2071253.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (US DOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited articles carry no amendment notes in SINALEVI's current consolidated Ley 8764 (version 19, 24/02/2025) or in the Refugee Regulation. The versions of Ley 8764 amended in the window touched only arts. 6, 33, 94 and 105, and other non-cited provisions. Practice evidence for around 2022 is thin and indirect; the US DOS 2022 PDF and the Defensoría PDF could not be parsed.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764, ficha",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&strTipM=FN"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC"
+     },
+     {
+      "title": "Voto 2025-019485",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "US DOS 2021 report",
+      "url": "https://www.ecoi.net/de/dokument/2071253.html"
+     },
+     {
+      "title": "US DOS 2023 report",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The Defensoría communiqué of March 2026 (E2 of the starting answer) could not be opened (PDF parse failure). In any case it postdates 1 January 2026."
+   },
+   {
+    "question_id": 61,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 31(1), 207, 209, 210",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 215, 216, 217",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 65, 222",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 122",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-06-24",
+      "instrument": "Sala Constitucional, Voto N.º 2025-019485",
+      "article": "Habeas corpus on US deportees at CATEM-Sur",
+      "kind": "practice",
+      "what_changed": "Review of the deportees' situation came only through habeas corpus. They had been held under a collective resolution rather than individual proceedings with a hearing. This is practice evidence of a gap; it does not change the law.",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "passage": "Se consideró que la autorización de permanencia es en el CATEM Sur, y al tener ese proceso un fin de tránsito por nuestro país se estimó fundamental tener ubicadas a estas personas para acelerar el proceso de continuación de viaje."
+     }
+    ],
+    "implementation_then_now": "In both periods, expulsion of lawful residents carries a hearing and an appeal with suspensive effect. Deportation of irregular migrants is summary (art. 207) and cannot be appealed administratively (art. 222), so review depends on habeas corpus. For 2022, the US DOS reports show a functioning system and no documented pattern of denied hearings; this evidence is indirect. For 2025, the CATEM episode shows deportees processed collectively without individual hearings until the Sala intervened. This is consistent with the existing mixed rating rather than a shift, so the rating stays Sometimes; Usually on both dates.",
+    "practice_sources": [
+     {
+      "title": "2021 Country Report on Human Rights Practices: Costa Rica (US DOS)",
+      "url": "https://www.ecoi.net/de/dokument/2071253.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (US DOS)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Arts. 65, 207, 209, 210, 215, 216, 217 and 222 of Ley 8764 and art. 40 of the Regulation were read in the current consolidated text; none carries an amendment note, so they are unchanged since 2009/2011. Practice evidence for around 2022 is indirect, and specific data on deportation hearings were not found.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764, texto completo",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC"
+     },
+     {
+      "title": "Voto 2025-019485",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "US DOS 2021 report",
+      "url": "https://www.ecoi.net/de/dokument/2071253.html"
+     },
+     {
+      "title": "US DOS 2023 report",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     }
+    ],
+    "starting_answer_concern": "The Yes rests on the oral hearing before the DGME in deportation (art. 209). Review by a separate body exists only for expulsion and refugee cases (art. 222 bars appeals against rejection and deportation). A stricter reviewer could treat irregular migrants as uncovered.",
+    "confidence": "medium",
+    "notes": "The FIDH report cited in the starting answer predates the window and was not opened."
+   }
+  ]
+ }
+}
