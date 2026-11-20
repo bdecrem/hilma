@@ -605,6 +605,19 @@ print(json.dumps(out))
       const r = insideJSON(A, page, { timeout: 240_000 })
       t('ola-page: renders a page at 390 and 1280 px inside the VM, and reports the request to another address it could not make', r['390']?.code === 0 && r['390'].size?.[0] === 390 && r['1280']?.size?.[0] === 1280 && r['390'].outside?.length === 1 && r['390'].broken?.length === 1, JSON.stringify(r).slice(0, 240))
     }
+    // ola-page --do (OLA-174): the agent tries its own page before saying it works: fill, click, the words after
+    {
+      const page = String.raw`
+import json, subprocess
+open("/tmp/d.html", "w").write('<!doctype html><title>t</title><input placeholder="Task"><input type="date"><select><option>Low</option><option>High</option></select><button onclick="var l=document.createElement(\'li\');var f=document.querySelectorAll(\'input\');l.textContent=f[0].value+\' due \'+f[1].value+\' \'+document.querySelector(\'select\').value;document.body.appendChild(l)">Add</button>')
+r = subprocess.run(["ola-page", "/tmp/d.html", "--out", "/tmp/d.png", "--json", "/tmp/d.json", "--do", "fill task=Buy milk", "--do", "fill 2=2026-12-01", "--do", "fill 3=High", "--do", "click Add", "--do", "click Nope", "--text"], capture_output=True, text=True, timeout=120)
+j = json.load(open("/tmp/d.json")) if r.returncode == 0 else {}
+print(json.dumps({"code": r.returncode, "did": j.get("did"), "text": j.get("text"), "printed": "Buy milk due 2026-12-01 High" in r.stdout}))
+`
+      const r = insideJSON(A, page, { timeout: 240_000 })
+      const did = r.did || []
+      t('ola-page --do: fills fields by words and by number, picks a choice, clicks a button by its words, says FAILED for a button that is not there, and prints the words after', r.code === 0 && did.length === 5 && did.slice(0, 4).every((d) => d.endsWith('ok') || d.includes('-> ok')) && did[4].includes('FAILED') && /Buy milk due 2026-12-01 High/.test(r.text || '') && r.printed === true, JSON.stringify(r).slice(0, 300))
+    }
     // ola-page against a page that never ends and one that eats memory (review 5 follow-up): each look
     // ends within its deadline, the browser is held to its share of memory, nothing of it is left
     // running, and opencode lives on. Small limits here so the check is quick.

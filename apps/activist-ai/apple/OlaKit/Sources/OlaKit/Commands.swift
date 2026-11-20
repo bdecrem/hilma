@@ -146,6 +146,11 @@ public enum AgentNotes {
   public static let skills = """
   Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `sound` for any sound or music in a page or app (chimes, button sounds, a melody, a background loop, fixing harsh sounds); `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report; `publish` when the person wants something on the public web (publish it, put it online, a link anyone can open, their own domain). For a page or app screen, do this before you write or change any .html file, every time; for sound or music, load `sound` before you write any sound code (only `sound` when the request is only about a page's sounds).
   """
+  /// For opencode only (OLA-174): check the built thing against each item asked, with `ola-page --do`.
+  /// In step with workspace/AGENTS.md ("Check what was asked") and bart/ola-bart.sh.
+  public static let tryIt = """
+  Before you say something you built works (an app, a game, a tool, a form, any page that does something): write down every thing the request asked for, one short line each, with what it plainly means ("each book has a rating" means the rating shows beside each book; a stopwatch moves while it runs; a recipe scaler gives the right amounts; a card game starts with the cards hidden; a puzzle shows its board). Then try each one on the page the way a person would, with `ola-page <page> --out .shots/try.png --do "fill 1=<value>" --do "click <button words>" --text`, and read the words it prints and look at the picture. For anything that changes over time, look twice (`--wait 500`, then `--wait 3000`) and check that the words changed. For numbers, try one whose answer you know (2 cups doubled is 4 cups; 0 Celsius is 32 Fahrenheit). Fix every item that is missing or wrong and try it again. In your answer, name each item and what you saw when you tried it; never say something works that you did not try.
+  """
   /// For the agent on opencode: when the person asks for Claude (README, "Fallback to Claude").
   /// In step with workspace/AGENTS.md and bart/ola-bart.sh.
   public static let claude = """
@@ -158,5 +163,5 @@ public enum AgentNotes {
   """
   public static var all: String { Reaction.instruction + "\n\n" + drawing + "\n\n" + madeBy }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
-  public static var opencode: String { web + "\n\n" + skills + "\n\n" + claude + "\n\n" + all }
+  public static var opencode: String { web + "\n\n" + skills + "\n\n" + tryIt + "\n\n" + claude + "\n\n" + all }
 }

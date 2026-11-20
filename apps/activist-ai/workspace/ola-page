@@ -2,6 +2,14 @@
 """ola-page: look at a page the way a visitor's browser shows it, inside the sealed computer.
 
     ola-page index.html [--width 390] [--height 900] --out shot.png [--json checks.json] [--viewport] [--dark] [--scale 2]
+    ola-page index.html --out .shots/try.png --do "fill 1=Buy milk" --do "fill 2=2026-12-01" --do "click Add" --text
+
+--do tries the page the way a person would, after it loads and before it is measured and pictured:
+`fill <n or words>=<value>` types into the n-th visible field (or the one whose label, placeholder or
+name has those words), `click <words>` presses the button or link with those words (`click css:<selector>`
+for anything else, such as a tile), `press Enter` presses Enter in the last field filled. Steps run in
+order, at once (what a click starts with a timer is seen with a longer --wait on the next look); each
+prints whether it worked. --text prints the words on the page after the steps, so a result can be read.
 
 Serves the page's own folder on 127.0.0.1 (so the page's fetch() of its data files works, as it does
 under Open), loads it in a headless Chromium (chromium-headless-shell from Debian, driven over a
@@ -237,6 +245,98 @@ MEASURE = r"""
 """
 
 
+# Runs in the page before MEASURE when --do is given (OLA-174): the steps a person would take, at once.
+# Synchronous on purpose: the Mac app's web view evaluates a script without awaiting it.
+DO = r"""
+((steps) => {
+  const vis = (e) => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' }
+  const fields = () => [...document.querySelectorAll('input:not([type=hidden]):not([type=button]):not([type=submit]):not([type=reset]):not([type=checkbox]):not([type=radio]), textarea, select')].filter(vis)
+  const said = (e) => [(e.innerText || ''), e.value, e.getAttribute('aria-label'), e.title, e.getAttribute('alt')].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+  const label = (e) => [e.placeholder, e.name, e.id, e.getAttribute('aria-label'), e.labels && e.labels[0] && e.labels[0].innerText].filter(Boolean).join(' ').toLowerCase()
+  const set = (el, v) => {
+    if (el.tagName === 'SELECT') {
+      const o = [...el.options].find((o) => o.value === v || o.text.trim().toLowerCase() === v.toLowerCase())
+      if (!o) return 'no choice "' + v + '" in the list (it has: ' + [...el.options].map((o) => o.text.trim()).slice(0, 8).join(', ') + ')'
+      el.value = o.value
+    } else {
+      const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+      el.focus(); Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v)
+    }
+    el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }))
+    return ''
+  }
+  const out = []; let last = null
+  for (const raw of steps) {
+    const sp = raw.trim(), i = sp.indexOf(' '), op = (i < 0 ? sp : sp.slice(0, i)).toLowerCase(), arg = i < 0 ? '' : sp.slice(i + 1).trim()
+    let r = ''
+    try {
+      if (op === 'fill') {
+        const eq = arg.indexOf('='); if (eq < 0) throw new Error('write it as fill <n or words>=<value>')
+        const who = arg.slice(0, eq).trim(), v = arg.slice(eq + 1), f = fields()
+        const el = /^\d+$/.test(who) ? f[Number(who) - 1] : f.find((x) => label(x).includes(who.toLowerCase()))
+        if (!el) throw new Error('no field ' + who + ' (the page has ' + f.length + ' field' + (f.length === 1 ? '' : 's') + (f.length ? ': ' + f.map((x, n) => (n + 1) + ' ' + (label(x) || x.type || x.tagName.toLowerCase())).slice(0, 8).join('; ') : '') + ')')
+        r = set(el, v); if (r) throw new Error(r); last = el; r = 'ok'
+      } else if (op === 'click') {
+        let el
+        if (arg.startsWith('css:')) el = [...document.querySelectorAll(arg.slice(4))].filter(vis)[0]
+        else {
+          const want = arg.toLowerCase(), tries = [...document.querySelectorAll('button, input[type=button], input[type=submit], [role=button], a, [onclick], label, summary')].filter(vis)
+          el = tries.find((e) => said(e).toLowerCase() === want) || tries.find((e) => said(e).toLowerCase().includes(want))
+            || [...document.querySelectorAll('body *')].filter((e) => vis(e) && !e.children.length && said(e).toLowerCase().includes(want))[0]
+        }
+        if (!el) throw new Error('nothing to click with "' + arg + '"')
+        el.click(); r = 'ok (' + (said(el).slice(0, 30) || el.tagName.toLowerCase()) + ')'
+      } else if (op === 'press') {
+        const el = last || document.activeElement; if (!el) throw new Error('no field to press in')
+        for (const t of ['keydown', 'keypress', 'keyup']) el.dispatchEvent(new KeyboardEvent(t, { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }))
+        if (el.form && el.form.requestSubmit) el.form.requestSubmit()
+        r = 'ok'
+      } else throw new Error('unknown step (fill, click or press)')
+    } catch (e) { r = 'FAILED: ' + (e && e.message || e) }
+    out.push(sp + ' -> ' + r)
+  }
+  return out
+})"""
+
+
+# The words a person sees, after the steps: visible text in reading order, each field as [its value],
+# a list as [its choice], a box as [x] or [ ] (a select's innerText would list every option).
+WORDS = r"""
+(() => {
+  const out = [], block = /^(DIV|P|LI|H[1-6]|TR|SECTION|ARTICLE|HEADER|FOOTER|MAIN|UL|OL|TABLE|FORM|BR|NAV|ASIDE|DT|DD|FIELDSET)$/
+  const walk = (n) => {
+    if (n.nodeType === 3) { if (n.textContent.trim()) out.push(n.textContent.replace(/\s+/g, ' ')); return }
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION)$/.test(n.tagName)) return
+    const s = getComputedStyle(n), tag = n.tagName
+    if (s.display === 'none' || s.visibility === 'hidden') return
+    if (tag === 'SELECT') { out.push(' [' + (n.selectedOptions[0] ? n.selectedOptions[0].text.trim() : '') + '] '); return }
+    if (tag === 'INPUT') {
+      if (n.type === 'hidden') return
+      out.push(/^(checkbox|radio)$/.test(n.type) ? (n.checked ? ' [x] ' : ' [ ] ') : /^(button|submit|reset)$/.test(n.type) ? ' ' + n.value + ' ' : ' [' + n.value + '] ')
+      return
+    }
+    if (tag === 'TEXTAREA') { out.push(' [' + n.value.slice(0, 200) + '] '); return }
+    if (tag === 'CANVAS') { out.push(' [a drawing on a canvas: look at the picture] '); return }
+    const b = block.test(tag) || /^(block|flex|grid|table-row|list-item)$/.test(s.display)
+    if (b) out.push('\n')
+    for (const c of n.childNodes) walk(c)
+    if (b) out.push('\n')
+  }
+  if (document.body) walk(document.body)
+  return out.join('').split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n').slice(0, 3000)
+})()"""
+
+
+def measure_script(a):
+    """The script run in the page: MEASURE, after the --do steps when there are any, with the text."""
+    steps = getattr(a, "do", None) or []
+    if not steps and not getattr(a, "text", False):
+        return MEASURE
+    return ("(() => { const did = " + DO + "(" + json.dumps(steps) + "); const r = JSON.parse(" + MEASURE.strip() + ");"
+            " r.did = did; r.text = " + WORDS.strip() + ";"
+            " return JSON.stringify(r) })()")
+
+
 class Quiet(http.server.SimpleHTTPRequestHandler):
     root = "/"
 
@@ -372,6 +472,8 @@ def arguments():
     ap.add_argument("--wait", type=int, default=600, help="milliseconds to let the page settle after it loads")
     ap.add_argument("--scale", type=float, default=1.0)
     ap.add_argument("--dark", action="store_true", help="as a browser set to dark mode shows it (prefers-color-scheme: dark)")
+    ap.add_argument("--do", action="append", metavar="STEP", help='a step to take before the look, in order: "fill 1=Buy milk", "fill due=2026-12-01", "click Add", "click css:.tile", "press Enter"')
+    ap.add_argument("--text", action="store_true", help="print the words on the page (after the --do steps)")
     return ap
 
 
@@ -420,7 +522,7 @@ def main():
             cdp.pump(0.25)
         loaded = any(e.get("method") == "Page.loadEventFired" for e in cdp.events)
         cdp.pump(a.wait / 1000)
-        res = cdp.send("Runtime.evaluate", {"expression": MEASURE, "returnByValue": True}, session=sid)
+        res = cdp.send("Runtime.evaluate", {"expression": measure_script(a), "returnByValue": True}, session=sid)
         report.update(json.loads(res["result"]["value"]))
         h = a.height if a.viewport else min(max(report.get("page_height") or a.height, a.height), MAX_HEIGHT)
         shot = cdp.send("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": not a.viewport,
@@ -476,6 +578,12 @@ def finish(a, report):
         for x in report[key][:5]:
             extra = f" ratio {x['ratio']} (needs {x['needs']}), {x['color']} on {x['background']}" if key == "low_contrast" else (f" {x['size']} px" if key == "small_text" else "")
             print(f"    {say}: {x['where']} \"{x['text'][:40]}\"{extra}")
+    for d in report.get("did") or []:
+        print("  step: " + d)
+    if getattr(a, "text", False):
+        print("  the words on the page:")
+        for l in (report.get("text") or "(none)").split("\n")[:80]:
+            print("    " + l[:160])
     if not report["loaded"]:
         print("  the page never finished loading (it may wait on something that cannot load here)")
     return 0

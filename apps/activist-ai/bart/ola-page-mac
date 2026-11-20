@@ -35,7 +35,7 @@ def main():
     out = Path(a.out).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     req = {"id": rid, "page": str(page), "root": str(page.parent), "width": a.width, "height": a.height, "viewport": a.viewport,
-           "scale": a.scale, "dark": a.dark, "wait": a.wait, "measure": olapage.MEASURE, "max_height": olapage.MAX_HEIGHT}
+           "scale": a.scale, "dark": a.dark, "wait": a.wait, "measure": olapage.measure_script(a), "max_height": olapage.MAX_HEIGHT}
     inbox, outbox = Path(box) / "in", Path(box) / "out"
     inbox.mkdir(exist_ok=True)
     tmp = inbox / f".{rid}.tmp"

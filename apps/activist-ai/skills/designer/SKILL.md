@@ -3,7 +3,7 @@ name: designer
 description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "7"
+  ola/version: "8"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
@@ -109,5 +109,9 @@ you decided in `design/notes.md` in a few lines.
 - A page loads only its own files: no web fonts, CDNs or outside images. Fonts come from `fonts.py`.
 - It works at 390 px with no sideways scroll, and text contrast is at least 4.5 to 1.
 - Never guess what a page looks like: render it and look (`look.py`, `sheet.py`, `ola-page`).
+- A page that does something (a list, a form, a calculator, a timer, a game) is tried before you hand it
+  off: list every thing the request asked for, then try each one with `ola-page <page> --out .shots/try.png
+  --do "fill 1=..." --do "click ..." --text` and read what it prints (look twice, `--wait 500` and
+  `--wait 3000`, for anything that moves). Fix what is missing or wrong; the hand-off names each item and what you saw.
 - Polish by looking and removing, never by adding decoration. In Bold too: every color, shape and
   gradient belongs to the system or the subject; nothing is there only to fill space.
