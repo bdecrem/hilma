@@ -60,6 +60,8 @@ function callerOnce({ argv, file, now, tool }) {
       const r = JSON.parse(l)
       if (now - r.at * 1000 > WINDOW || r.at * 1000 > now + 5e3) continue
       const c = norm(r.cmd)
+      // a commit's record (the hook notes commits naming a ticket) is no run of the tool, whatever its message says
+      if (/\bgit\b[^\n;&|]*\bcommit\b/.test(r.cmd)) continue
       if (c.includes(norm(tool)) && want.every((t) => c.includes(t)) && (used.get(keyOf(r)) ?? 0) < uses(r)) rows.push(r)
     } catch {}
   }

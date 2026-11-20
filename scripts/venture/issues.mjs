@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 9
+export const TRACKER_VERSION = 10
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -313,11 +313,12 @@ async function claim(id, who, row = null, { gated = false } = {}) {
   const since = keep ? old.value.since : new Date().toISOString()
   check(await db.from('venture_state').upsert({ key, value: { who, role, host: hostname(), since, lane, ...(me.id ? { caller: me.id } : {}), ...(beside ? { beside } : keep && old.value.beside ? { beside: old.value.beside } : {}) }, at: new Date().toISOString() }), 'claim')
   // OLA-251, sixth pass: two builders that pass the gate at the same moment both wrote a claim. Each reads
-  // the lane again after writing; the later start (the higher ticket id on a tie) takes its claim back.
+  // the lane again after writing, and backs off when another builder holds it: the gate saw nobody, so that
+  // one came at the same moment. When both see each other both back off and try again; two are never kept.
   if (!keep && !beside && LANE_ROLES.has(role) && lane === 'server') {
     const h = await laneState(id, lane)
     const theirs = h ? (await liveClaims())[h.id] : null
-    if (h && theirs && !theirs.beside && (Date.parse(theirs.since ?? theirs.at) < Date.parse(since) || (Date.parse(theirs.since ?? theirs.at) === Date.parse(since) && h.id < id))) {
+    if (h && theirs && !theirs.beside) {
       check(await db.from('venture_state').delete().eq('key', key), 'claim')
       die(laneSentence(h, lane))
     }
