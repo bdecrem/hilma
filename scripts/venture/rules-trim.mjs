@@ -19,6 +19,13 @@
 // automates it, and the WHOLE rule is covered. A rule that code covers only in part stays, and the
 // note says which part. Everything is checked again at each run, so an entry whose code was removed
 // stops proposing its rule.
+// Since Nov 20, 1:40 pm (OLA-251 check #5): "enforced by code" means the code refuses the action for
+// EVERY caller. Each claim lists the holes a session could walk through (`holes`: a test on the code
+// as it is now and the words that say what gets through); a rule with any hole open stays, and the
+// note says which. Rule 7 was called enforced because mail.mjs refuses an address missing from
+// approved-recipients.txt, but any session can append to that file and nothing shows Bart the text.
+//   node scripts/venture/rules-trim.mjs judge     the judgment again on the proposal (digests and the
+//                                                 replay results are kept as they were run), then `note`
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -35,13 +42,24 @@ const read = (f) => readFileSync(root + f, 'utf8')
 // whole rule; otherwise `left` says what of the rule is still the agent's to remember.
 const CLAIMS = [
   { rule: 7, file: 'scripts/venture/mail.mjs', proof: /NOT SENT: .*approved-recipients\.txt/, weakness: 'your-call', full: true,
-    how: 'mail.mjs refuses to send to an address that has not written to us, has not signed up and is not in approved-recipients.txt, which only Bart approves.' },
+    how: 'mail.mjs refuses to send to an address that has not written to us, has not signed up and is not in approved-recipients.txt.',
+    holes: [
+      { test: () => !/approved-recipients\.txt[^\n]*(signed|sha|hmac|signature)/i.test(read('scripts/venture/mail.mjs')), why: 'approved-recipients.txt is a plain file that any session can append to; Bart\'s yes to an address is a sentence, not something mail.mjs checks' },
+      { test: () => !/(preview|show(n)? to bart|bart.*(saw|approved).*text)/i.test(read('scripts/venture/mail.mjs')), why: 'nothing shows Bart the text of an email before it is sent: the rule covers what is said, the code only who it goes to' },
+    ] },
   { rule: 32, file: '.claude/hooks/issue-guard.py', hook: true, proof: /must name its tracker issue/, full: true,
-    how: 'The PreToolUse hook refuses a git commit that touches Ola without an issue id (OLA-n) in the command.' },
+    how: 'The PreToolUse hook refuses a git commit that touches Ola without an issue id (OLA-n) in the command.',
+    holes: [
+      { test: () => !/venture_issues|ticket_exists|issues\.mjs show/.test(read('.claude/hooks/issue-guard.py').replace(/def note_caller[\s\S]*?\n\n\n/, '')), why: 'the hook checks only that some OLA-n appears in the commit command, not that the ticket exists or is the one the work is for' },
+      { test: () => true, why: '"a tracker issue before it starts" is not code: only the commit is checked, after the work' },
+    ] },
   { rule: 45, file: 'scripts/venture/chat-export.py', hook: true, proof: /terminal-chat/, weakness: 'unread-channel', full: true,
     how: 'The Stop and UserPromptSubmit hook copies the terminal conversation to venture_docs "terminal-chat" after every turn, which the voice and texting Kit load.' },
   { rule: 54, file: 'scripts/venture/issues.mjs', proof: /cannot be closed yet/, weakness: 'not-your-path', full: true,
-    how: '`issues.mjs done` refuses until every check has passed, each passed by someone who did not build it, with a file that shows it; for the product every place (cloud and local; web, Mac, phone; chat and screen) is covered by a check or skipped with a reason.' },
+    how: '`issues.mjs done` refuses until every check has passed, each passed by someone who did not build it, with a file that shows it; for the product every place (cloud and local; web, Mac, phone; chat and screen) is covered by a check or skipped with a reason.',
+    holes: [
+      { test: () => true, why: '"before I say it works" is about what a session tells Bart, and no code stands between a reply or a text and Bart: `issues.mjs say` prints what may be told, but nothing makes a session read it first' },
+    ] },
   { rule: 36, file: 'scripts/venture/issues.mjs', proof: /async function laneGate/, full: false,
     how: '`issues.mjs start` refuses a second builder on Ola\'s server code (OLA-251).', left: '"broken before new" (nothing new while something he reported broken is open) is not code.' },
   { rule: 27, file: '.claude/hooks/secret-guard.py', hook: true, proof: /secret/i, weakness: 'secrets', full: false,
@@ -83,7 +101,7 @@ function digestText() {
   return r.stdout
 }
 
-function propose() {
+function judgeAll() {
   const all = rules()
   const settings = registered()
   const weak = loadWeaknesses(root)
@@ -97,11 +115,30 @@ function propose() {
     const name = c.file.split('/').pop()
     if (c.hook && !settings.includes(name)) problems.push(`${name} is not registered in .claude/settings.json, so it does not run`)
     const guards = (weak.find((w) => w.id === c.weakness)?.guards ?? []).filter((g) => (g.level ?? (g.enforced ? 3 : 1)) >= 3).map((g) => g.what.slice(0, 160))
-    return { rule: c.rule, lead: r?.lead ?? '', file: c.file, how: c.how, full: c.full, left: c.left ?? null, guards, problems, leaves: c.full && !problems.length }
+    const open = (c.holes ?? []).filter((h) => { try { return h.test() } catch { return true } }).map((h) => h.why)
+    const full = c.full && !open.length
+    return { rule: c.rule, lead: r?.lead ?? '', file: c.file, how: c.how, full, left: open.length ? `Not every caller is refused: ${open.join('; ')}.` : c.left ?? null, holes: open, guards, problems, leaves: full && !problems.length }
   })
   // The rules no entry speaks for: those hooks and guards that name a rule number are listed as leads.
   const leads = []
   for (const h of hooks) for (const m of read('.claude/hooks/' + h).matchAll(/\brules? (\d+)\b/gi)) if (!CLAIMS.some((c) => c.rule === Number(m[1]))) leads.push(`${h} mentions rule ${m[1]}`)
+  return { all, result, leads }
+}
+
+function judge() {
+  // the judgment again, on the proposal that was replayed: digests and replay results stay as they were run
+  if (!existsSync(OUT + 'proposal.json')) die('run `rules-trim.mjs propose` first')
+  const p = JSON.parse(readFileSync(OUT + 'proposal.json', 'utf8'))
+  const { all, result, leads } = judgeAll()
+  const leaving = result.filter((x) => x.leaves).map((x) => x.rule)
+  const next = { ...p, judged: new Date().toISOString(), rules: all.length, replayed_leaving: p.replayed_leaving ?? p.leaving, leaving, claims: result, leads: [...new Set(leads)] }
+  writeFileSync(OUT + 'proposal.json', JSON.stringify(next, null, 2) + '\n')
+  for (const x of result) console.log(`${x.leaves ? 'LEAVES' : 'stays '} rule ${String(x.rule).padStart(2)}  ${x.file}${x.problems.length ? `  (${x.problems.join('; ')})` : x.full ? '' : `  (in part: ${x.left})`}`)
+  console.log(`${leaving.length} of ${all.length} rules enforced for every caller (the replayed shorter list left out ${next.replayed_leaving.length}: ${next.replayed_leaving.join(', ')}). Nothing that sessions load changes.`)
+}
+
+function propose() {
+  const { all, result, leads } = judgeAll()
   const full = digestText()
   const leaving = new Set(result.filter((x) => x.leaves).map((x) => x.rule))
   const lines = full.split('\n')
@@ -143,13 +180,19 @@ function note() {
   const worse = res.full && res.short ? res.short.prevented < res.full.prevented : null
   const leaving = p.claims.filter((c) => c.leaves)
   const staying = p.claims.filter((c) => !c.leaves)
+  const replayed = p.replayed_leaving ?? p.leaving
+  const rejudged = p.judged && replayed.join() !== leaving.map((c) => c.rule).join()
   const text = `# Rules that code already enforces: a shorter always-loaded list, tested first
 
 Written ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' })} by \`node scripts/venture/rules-trim.mjs\` (OLA-251). Nothing that sessions load has changed. The lead decides after reading this; the shorter list is used only if it did no worse.
 
 Bart approved on Nov 20: "a rule leaves the always-loaded list only when code already enforces it, and the shorter list is first run against the replay cases beside the full one; no target number."
 
-## What would leave the list (${leaving.length} of ${p.rules} rules)
+${rejudged ? `## Judged again, ${new Date(p.judged).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}: enforced only when every caller is refused
+
+A checker found that the first version of this note called rule 7 enforced by code when it is enforced only in part (OLA-251, check #5). A rule now counts as enforced by code only when the code refuses the action for every caller; each rule below lists the ways a session could still get through. Under that judgment ${leaving.length ? `only rule${leaving.length > 1 ? 's' : ''} ${leaving.map((c) => c.rule).join(', ')} would leave` : 'no rule would leave'}; the replay below tested a shorter list without rules ${replayed.join(', ')}, which did worse, so no rule leaves the loaded list and no new shorter list was run.
+
+` : ''}## What would leave the list (${leaving.length} of ${p.rules} rules)
 
 The always-loaded list is the digest every session gets at its start (one line per rule, \`.claude/hooks/venture-rules.py\`). A rule that leaves it stays in RULES.md with its full text; only its line in the digest goes, and the digest names it as enforced by code.
 
@@ -168,20 +211,21 @@ Each run sent every replay case (a past mistake, as the situation just before it
 - Cases prevented with the full digest and not with the shorter: ${lost.join(', ') || 'none'}.
 - Cases prevented with the shorter digest and not with the full: ${gained.join(', ') || 'none'}.
 
-${worse === null ? 'The runs are not complete, so there is no verdict.' : worse ? '**The shorter digest did worse.** By the rule Bart approved, it is not used.' : '**The shorter digest did no worse.** It may be used; the change is to make venture-rules.py print the shorter digest.'}
+${rejudged ? `These runs tested the first proposal's shorter list (without rules ${replayed.join(', ')}). ` : ''}${worse === null ? 'The runs are not complete, so there is no verdict.' : worse ? '**The shorter digest did worse.** By the rule Bart approved, it is not used.' : rejudged ? '**The shorter digest did no worse, but it left out rules that code enforces only in part**, so it is not used.' : '**The shorter digest did no worse.** It may be used; the change is to make venture-rules.py print the shorter digest.'}
 
 ## How this was decided
 
-A rule leaves only when an entry in \`scripts/venture/rules-trim.mjs\` names the file that refuses or does what the rule says, the file exists, a hook among them is registered in \`.claude/settings.json\`, the file still contains the line that refuses it, and the whole rule is covered. Every run checks that again.${p.leads.length ? ` Hooks that mention a rule no entry covers: ${p.leads.join('; ')}.` : ''}
+A rule leaves only when an entry in \`scripts/venture/rules-trim.mjs\` names the file that refuses or does what the rule says, the file exists, a hook among them is registered in \`.claude/settings.json\`, the file still contains the line that refuses it, the whole rule is covered, and no caller can get around it (no hole in the entry's list is open). Every run checks that again.${p.leads.length ? ` Hooks that mention a rule no entry covers: ${p.leads.join('; ')}.` : ''}
 `
   writeFileSync(NOTE, text)
   console.log(`wrote ${NOTE}`)
 }
 
 if (cmd === 'propose') propose()
+else if (cmd === 'judge') judge()
 else if (cmd === 'replay') replay()
 else if (cmd === 'note') note()
 else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 14).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 30).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }
