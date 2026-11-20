@@ -19,7 +19,7 @@
 // takes a deliberate lie, not a slip. A caller is "unknown" when its call is not found (no hook, as in a
 // plain shell, or two agents ran the very same command in the same two minutes); a pass from an unknown
 // caller is refused, except Bart's (--by bart), whose word closes a ticket anyway.
-import { existsSync, readFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
 
@@ -30,8 +30,26 @@ const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 /** { id, session, agent, agent_type, host, known, why } for the process that runs this.
  *  id: "agent <agent id>" inside an agent, "session <session id>" for a top-level session, null when unknown. */
+// OLA-251, sixth pass: each record of the hook identifies one call. A call typed so the hook does not see
+// the tool's name (iss*s.mjs) matched the holder's own recent record and passed as the holder; a record
+// already used (<file>.used) is skipped. Within one process the answer is kept, so the tracker and its
+// override lines see the same caller.
+const seen = new Map()
 export function caller({ argv = process.argv.slice(2), file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now = Date.now(), tool = 'issues.mjs' } = {}) {
+  const memo = `${file}\n${tool}\n${argv.join('\u0000')}`
+  if (seen.has(memo)) return seen.get(memo)
+  const out = callerOnce({ argv, file, now, tool })
+  seen.set(memo, out)
+  return out
+}
+function callerOnce({ argv, file, now, tool }) {
   const host = shortHost()
+  const usedFile = file + '.used'
+  // a command that runs the tool n times (comment … && ready …) identifies n calls
+  const used = new Map()
+  for (const k of existsSync(usedFile) ? readFileSync(usedFile, 'utf8').split('\n').slice(-2000) : []) used.set(k, (used.get(k) ?? 0) + 1)
+  const uses = (r) => Math.max(1, norm(r.cmd).split(norm(tool)).length - 1)
+  const keyOf = (r) => `${r.session ?? ''}|${r.agent ?? ''}|${r.at}|${norm(r.cmd).slice(0, 200)}`
   if (!existsSync(file)) return { id: null, host, known: false, why: `no record of the call (${file} does not exist: not run from a Claude Code session with the hook)` }
   // paths are left out of the match: the shell expands ~ and $VARS in them, the command keeps them as typed
   const want = argv.filter((t) => !t.includes('/')).map(norm).filter((t) => t.length > 0)
@@ -42,13 +60,14 @@ export function caller({ argv = process.argv.slice(2), file = process.env.VENTUR
       const r = JSON.parse(l)
       if (now - r.at * 1000 > WINDOW || r.at * 1000 > now + 5e3) continue
       const c = norm(r.cmd)
-      if (c.includes(norm(tool)) && want.every((t) => c.includes(t))) rows.push(r)
+      if (c.includes(norm(tool)) && want.every((t) => c.includes(t)) && (used.get(keyOf(r)) ?? 0) < uses(r)) rows.push(r)
     } catch {}
   }
   const ids = [...new Set(rows.map((r) => (r.agent ? `agent ${r.agent}` : `session ${r.session}`)))]
   if (!ids.length) return { id: null, host, known: false, why: 'no record of this call by the hook: not run from a Claude Code session (a plain shell, launchd, a script)' }
   if (ids.length > 1) return { id: null, host, known: false, why: `the same command was run by ${ids.length} sessions or agents in the last two minutes, so the caller is not known` }
   const r = rows.at(-1)
+  try { appendFileSync(usedFile, keyOf(r) + '\n') } catch {}
   return { id: ids[0], session: r.session, agent: r.agent ?? null, agent_type: r.agent_type ?? null, host, known: true, why: `${r.agent ? `agent ${r.agent.slice(0, 8)} (${r.agent_type ?? 'agent'})` : `session ${String(r.session).slice(0, 8)}`} on ${host}` }
 }
 
