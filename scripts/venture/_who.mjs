@@ -30,7 +30,7 @@ const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 /** { id, session, agent, agent_type, host, known, why } for the process that runs this.
  *  id: "agent <agent id>" inside an agent, "session <session id>" for a top-level session, null when unknown. */
-export function caller({ argv = process.argv.slice(2), file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now = Date.now() } = {}) {
+export function caller({ argv = process.argv.slice(2), file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now = Date.now(), tool = 'issues.mjs' } = {}) {
   const host = shortHost()
   if (!existsSync(file)) return { id: null, host, known: false, why: `no record of the call (${file} does not exist: not run from a Claude Code session with the hook)` }
   // paths are left out of the match: the shell expands ~ and $VARS in them, the command keeps them as typed
@@ -42,7 +42,7 @@ export function caller({ argv = process.argv.slice(2), file = process.env.VENTUR
       const r = JSON.parse(l)
       if (now - r.at * 1000 > WINDOW || r.at * 1000 > now + 5e3) continue
       const c = norm(r.cmd)
-      if (c.includes('issuesmjs') && want.every((t) => c.includes(t))) rows.push(r)
+      if (c.includes(norm(tool)) && want.every((t) => c.includes(t))) rows.push(r)
     } catch {}
   }
   const ids = [...new Set(rows.map((r) => (r.agent ? `agent ${r.agent}` : `session ${r.session}`)))]

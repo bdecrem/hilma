@@ -120,7 +120,7 @@ export type Claim = { who: string; since?: string; at: string }
  *  test tasks as a share of Claude's. Missing or older than a day: the board says so. */
 export type Learning = {
   at: string
-  kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number; errors?: { day: string; n: number; repeats: number; total: number; since: string }; escapes?: { total: number; by_day: { day: string; n: number }[]; latest: { day: string; n: number } | null; label: string }; only_written?: { id: string; name: string; seen: number; stuck: string | null }[] | null; owed?: { n: number; overdue: number; oldest_days: number | null; list: { ref: string; weakness: string; name: string; issue: string; need: number; since: string }[]; label: string } }
+  kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number; errors?: { day: string; n: number; repeats: number; total: number; since: string }; escapes?: { total: number; by_day: { day: string; n: number }[]; latest: { day: string; n: number } | null; label: string }; only_written?: { id: string; name: string; seen: number; stuck: string | null }[] | null; owed?: { n: number; overdue: number; oldest_days: number | null; list: { ref: string; weakness: string; name: string; issue: string; need: number; since: string }[]; label: string }; overrides?: { day: string; n: number; label: string } }
   ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number; switches?: Switches }
   weaknesses?: Weakness[]
   doc: string
@@ -188,6 +188,9 @@ export type Sweep = {
   /** Since Nov 20 (OLA-245): the day's shares of the models by output, and each stretch where the lead
    *  session, on its more expensive model, did reading and writing that an Opus agent could have done. */
   models?: { shares: { model: string; share: number }[]; rule: string; stretches: { at: string; calls: number; what: string }[]; note?: string }
+  /** Since Nov 20 (OLA-251, third pass): the day's ways around a guard, from the tracker's record
+   *  (issues.mjs overrides); sweep.mjs post stores them itself, the author cannot leave them out. */
+  overrides?: { count: number; list: { at: string; ticket: string | null; what: string; caller: string; tool?: string }[] }
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 

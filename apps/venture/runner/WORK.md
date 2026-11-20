@@ -14,7 +14,8 @@ close it with proof. Nobody will answer a question in this run.
 2. `node scripts/venture/issues.mjs show <id>`: the ticket and its whole thread. Bart's comments
    are instructions. Earlier runner runs may have left commits and comments: continue from them,
    do not redo them.
-3. The runner holds the ticket's claim and renews it while you work. Do not run `runner.mjs`, and
+3. The runner holds the ticket's claim and renews it while you work. Do not run `runner.mjs`, except
+   `runner.mjs deploy`, the only way to update the test server (below), and
    do not start watchers (`--wait` commands never return here).
 
 ## Work

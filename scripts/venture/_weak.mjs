@@ -11,7 +11,9 @@
 //   guarded  an enforced guard, and not seen on any later day ("holding N days")
 //   back     seen again on a day after its newest enforced guard: the guard was too weak
 import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { realCaller } from './_overrides.mjs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const WEAK_FILE = 'apps/venture/private/data/weaknesses.json'
@@ -32,6 +34,10 @@ export function refuseOnCopy(what) {
   const p = process.env.VENTURE_PRIVATE
   if (!p) return
   console.error(`Refused: VENTURE_PRIVATE is set (${p}), so the notes read here are a copy, and ${what} would put the copy's numbers on the live page or in the live database. Unset it (unset VENTURE_PRIVATE) to work on the real notes, or use --dry.`)
+  // a line in the tracker's overrides (OLA-251, third pass), with the caller as the hook saw it
+  const tool = basename(process.argv[1] ?? 'venture')
+  const who = realCaller(process.argv.slice(2), tool)
+  spawnSync(process.execPath, [fileURLToPath(new URL('./issues.mjs', import.meta.url)), 'record-override', '--what', `VENTURE_PRIVATE was set on a real write (${tool} ${process.argv.slice(2).join(' ')}: ${what}); refused`, '--tool', tool, '--caller', who], { stdio: ['ignore', 'ignore', 'inherit'], timeout: 30000, env: { ...process.env, VENTURE_PRIVATE: '' } })
   process.exit(1)
 }
 

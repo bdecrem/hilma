@@ -28,6 +28,8 @@ import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { openCounts } from './_plate.mjs'
+import { overridesOf } from './_overrides.mjs'
+import { fakeClient } from './_fakedb.mjs'
 import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -37,7 +39,9 @@ const env = Object.fromEntries(
     .filter((l) => /^[A-Z0-9_]+=/.test(l))
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
-const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+// VENTURE_TRACKER_FAKE=<file.json>: a copy of the tracker (_fakedb.mjs), for tests; nothing then reaches the live page or Bart
+const FAKE = !!process.env.VENTURE_TRACKER_FAKE
+const db = FAKE ? fakeClient(process.env.VENTURE_TRACKER_FAKE) : createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 const args = process.argv.slice(2)
 const cmd = args[0]
 const opt = (f) => (args.includes(f) ? args[args.indexOf(f) + 1] : null)
@@ -349,12 +353,18 @@ if (cmd === '--wait') {
     const again = old.days.find((d) => d.day !== e.day && [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(e.ideas?.[side]?.issue))
     if (again && e.ideas?.[side]?.issue) bad.push(`ideas.${side}: ${e.ideas[side].issue} was already the idea of ${again.day}; think of a new one`)
   }
+  // OLA-251, third pass: the day's ways around a guard (issues.mjs overrides) are counted here from the
+  // tracker's record and stored with the entry; what the author wrote there is ignored
+  const ways = await overridesOf(db, e.day)
+  const overrides = { count: ways.length, list: ways.map((v) => ({ at: v.at, ticket: v.ticket, what: v.what, caller: v.caller, tool: v.tool })) }
+  if (e.overrides !== undefined && JSON.stringify(e.overrides) !== JSON.stringify(overrides)) console.log(`note: the entry's overrides part differs from the tracker's record (${e.overrides?.count ?? 'no count'} written, ${overrides.count} recorded); the record is stored`)
+  console.log(`ways around a guard on ${e.day}: ${overrides.count} (stored with the entry; issues.mjs overrides --day ${e.day})`)
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
   if (args.includes('--dry')) (console.log(`--dry: the entry for ${e.day} passes every check; nothing was stored`), process.exit(0))
-  refuseOnCopy('posting the entry')
+  if (!FAKE) refuseOnCopy('posting the entry')
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), overrides, models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.
@@ -370,6 +380,7 @@ if (cmd === '--wait') {
   console.log(`stored ${entry.day}: ${entry.kit.length} for Kit, ${entry.ola.length} for Ola, ${entry.open.length} open`)
   console.log(`so far: ${all.length} changes from ${days.filter((d) => !d.quiet).length} day(s) swept, ${all.filter((c) => c.enforced).length} enforced by the system`)
   // the ledger and the two percentages ride along, so the page is whole at once
+  if (FAKE) (console.log(`a copy of the tracker (${process.env.VENTURE_TRACKER_FAKE}): stored there only; the Learning page was not refreshed and Bart was not texted`), process.exit(0))
   const learn = spawnSync('node', [root + 'scripts/venture/learning.mjs'], { encoding: 'utf8' })
   console.log(learn.status === 0 ? learn.stdout.trim().split('\n').filter((l) => /^Weaknesses/.test(l)).join('\n') : `learning numbers NOT refreshed: ${(learn.stderr || learn.stdout).trim().split('\n').pop()}`)
   // "Notify me each day when that happened": one text per day, on the day's first post. A repost

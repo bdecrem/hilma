@@ -73,7 +73,7 @@ export function LearningFigures({ l, now, sweeps }: { l: Learning | null; now: s
             what="the agent system that works with Bart"
             big={String(k.errors.n)}
             line={`${k.errors.n === 1 ? 'error' : 'errors'} ${k.errors.day === pday(now) ? 'today' : `on ${dayShort(k.errors.day)}`}. Each correction from Bart counts as one error by the agent.`}
-            small={[`${k.errors.repeats} of them under a weakness seen before`, `${k.errors.total} since ${dayShort(k.errors.since).replace(/^[A-Za-z]+, /, '')}`, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(', ') + (k.escapes?.latest ? `. Times Bart met something broken after being told it worked: ${k.escapes.latest.day === pday(now) ? k.escapes.latest.n : 0} today, ${k.escapes.total} in all` : '') + (k.owed ? `. Fixes owed (correction recorded, stronger fix not built yet): ${k.owed.n}${k.owed.overdue ? `, ${k.owed.overdue} older than two days` : ''}` : '')}
+            small={[`${k.errors.repeats} of them under a weakness seen before`, `${k.errors.total} since ${dayShort(k.errors.since).replace(/^[A-Za-z]+, /, '')}`, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(', ') + (k.escapes?.latest ? `. Times Bart met something broken after being told it worked: ${k.escapes.latest.day === pday(now) ? k.escapes.latest.n : 0} today, ${k.escapes.total} in all` : '') + (k.owed ? `. Fixes owed (correction recorded, stronger fix not built yet): ${k.owed.n}${k.owed.overdue ? `, ${k.owed.overdue} older than two days` : ''}` : '') + (k.overrides ? `. Ways around a guard used today: ${k.overrides.day === pday(now) ? k.overrides.n : 0}` : '')}
           />
         ) : (
           <Fig name="Kit" what="the agent system that works with Bart" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />
@@ -415,6 +415,20 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      {s.overrides && (
+        <div className="bd-sweep-build">
+          <b>Ways around a guard: {s.overrides.count}.</b> <span className="faint">From the tracker&rsquo;s record, not written by the review.</span>
+          {s.overrides.list.length > 0 && (
+            <ul>
+              {s.overrides.list.map((o, i) => (
+                <li key={i}>
+                  <span className="m faint">{new Date(o.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}{o.ticket ? ` ${o.ticket}` : ''}</span> {o.what} <span className="m faint">{o.caller}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
       {s.models && (

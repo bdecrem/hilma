@@ -20,11 +20,14 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { overridesOf } from './_overrides.mjs'
+import { fakeClient } from './_fakedb.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dry = process.argv.includes('--dry')
 if (!dry) refuseOnCopy('storing venture_state "learning"')
+if (!dry && process.env.VENTURE_TRACKER_FAKE) (console.error('Refused: VENTURE_TRACKER_FAKE is set (a copy of the tracker); the live Learning page is not written from a copy. Use --dry.'), process.exit(1))
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const pct = (a, b) => (b ? Math.round((100 * a) / b) : null)
 
@@ -127,6 +130,15 @@ console.log(`Fixes owed: ${owed.length}${owed.length ? ` (oldest ${owed[0].days}
 console.log(`Escapes: ${kit.escapes.total} in all${kit.escapes.latest ? `; ${kit.escapes.latest.n} on ${kit.escapes.latest.day}` : ''}. Weaknesses that came back and still have only a written rule: ${kit.only_written.map((w) => w.id).join(', ') || 'none'}`)
 for (const h of unnumberedCorrections(text)) console.log(`corrections: "${h.slice(0, 80)}" has no number, so it is not counted or filed: make it "## N. …" in CORRECTIONS.md`)
 if (weaknesses.length && filed !== entries.length) console.log(`weaknesses: ${entries.length - filed} correction(s) are not filed under a weakness yet (apps/venture/private/data/weaknesses.json)`)
+// Ways around a guard used today (OLA-251, third pass): the tracker's record (issues.mjs overrides), read only
+{
+  const env0 = Object.fromEntries(read('.env.local').split('\n').filter((l) => /^[A-Z0-9_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]))
+  const tdb = process.env.VENTURE_TRACKER_FAKE ? fakeClient(process.env.VENTURE_TRACKER_FAKE) : createClient(env0.SUPABASE_URL, env0.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+  const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  const ways = await overridesOf(tdb, day).catch((e) => (console.log(`overrides not read: ${e.message}`), null))
+  if (ways) kit.overrides = { day, n: ways.length, label: 'ways around a guard used today' }
+  if (ways) console.log(`Ways around a guard used today: ${ways.length} (issues.mjs overrides)`)
+}
 const value = { at: new Date().toISOString(), kit, ola, weaknesses, doc: 'how-we-learn' }
 console.log(`Kit: ${kit.percent}% of ${kit.corrections} corrections were new (${kit.repeats} repeats); latest day ${kit.latest_day?.day}: ${kit.latest_day?.corrections} corrections, ${kit.latest_day?.repeats} repeats`)
 if (apps) console.log(`Apps: Ola's own model ${apps.own.passed} of ${apps.own.run}; Claude Code ${apps.claude.passed} of ${apps.claude.run}`)

@@ -23,9 +23,9 @@ const pacificDay = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', {
 
 /** The caller as the hook saw it: the real hook file, whatever VENTURE_CALLERS_FILE says (that file is
  *  read only on a copy of the tracker, VENTURE_TRACKER_FAKE, where tests name their own callers). */
-export function realCaller(argv = process.argv.slice(2)) {
+export function realCaller(argv = process.argv.slice(2), tool = 'issues.mjs') {
   try {
-    const c = caller({ argv, file: process.env.VENTURE_TRACKER_FAKE && process.env.VENTURE_CALLERS_FILE ? process.env.VENTURE_CALLERS_FILE : CALLERS })
+    const c = caller({ argv, file: process.env.VENTURE_TRACKER_FAKE && process.env.VENTURE_CALLERS_FILE ? process.env.VENTURE_CALLERS_FILE : CALLERS, tool })
     return c.id ?? 'unknown'
   } catch {
     return 'unknown'
@@ -56,3 +56,35 @@ export async function overridesOf(db, day = pacificDay()) {
 }
 
 export const overrideLine = (v) => `${new Date(v.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }).padEnd(8)} ${(v.ticket ?? '-').padEnd(8)} ${String(v.caller).slice(0, 44).padEnd(44)} ${v.what}`
+
+// ---- Updates of the test server that did not go through the gate (OLA-279). `ola.mjs deploy` itself has
+// no gate (it is in the server's code); `runner.mjs deploy` is the gate and records every update it
+// allows in venture_state "runner_deploys". The test server's own list (~/ola-staging/deploys.log, one
+// line per update attempt, ending when it is deployed or refused) is compared with that record; every
+// line after the gate existed with no allowed start in the 90 minutes before it is an override, written
+// once (its key is the line's time). runner.mjs status and issues.mjs unchecked (the hourly check) do it.
+export const GATE_SINCE = '2026-11-20T21:20:32Z' // a9d7cbee, the gate (OLA-272)
+const DEPLOY_SPAN = 90 * 60e3
+export function ungatedDeploys(logText = '', starts = [], since = GATE_SINCE) {
+  const lines = String(logText).split('\n').map((l) => ({ l: l.trim(), at: /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\s/.exec(l.trim())?.[1] })).filter((x) => x.at && x.at > since)
+  const free = [...starts].map((s) => s.at).sort()
+  const out = []
+  for (const x of lines.sort((a, b) => a.at.localeCompare(b.at))) {
+    const i = free.findIndex((s) => s <= x.at && Date.parse(x.at) - Date.parse(s) < DEPLOY_SPAN)
+    if (i >= 0) free.splice(i, 1)
+    else out.push(x)
+  }
+  return out
+}
+export async function checkDeploys(db, logText, { tool = 'runner.mjs' } = {}) {
+  const st = (await db.from('venture_state').select('value').eq('key', 'runner_deploys').maybeSingle()).data?.value ?? { starts: [] }
+  const bad = ungatedDeploys(logText, st.starts ?? [])
+  const fresh = []
+  for (const x of bad) {
+    const key = `deploy:${x.at}`
+    if (await hasOverride(db, key)) continue
+    fresh.push(x)
+    await writeOverride(db, { key, at: x.at, tool, who: 'not known (run on the test server, outside a hook)', what: `the test server was updated outside runner.mjs deploy (no update allowed by the gate in the 90 minutes before): ${x.l.slice(0, 200)}` })
+  }
+  return { bad, fresh }
+}

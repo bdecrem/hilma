@@ -43,6 +43,36 @@ def note_caller(data: dict, cmd: str) -> None:
         pass
 
 
+def tracker_version(path: str) -> int:
+    try:
+        m = re.search(r"TRACKER_VERSION = (\d+)", open(path).read())
+        return int(m.group(1)) if m else 0
+    except Exception:
+        return -1
+
+
+def old_tracker(data: dict, cmd: str) -> str:
+    """OLA-273: an agent in a git worktree under .claude/worktrees/ runs its worktree's copy of the tracker,
+    which has the rules of the day it was made. Refuse that copy when it is older than this checkout's
+    (the TRACKER_VERSION line in scripts/venture/issues.mjs). Older copies have no version check of their own."""
+    if "issues.mjs" not in cmd:
+        return ""
+    main_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    mine = tracker_version(os.path.join(main_root, "scripts/venture/issues.mjs"))
+    places = [data.get("cwd") or ""] + re.findall(r"(\S*/\.claude/worktrees/[^/\s]+)", cmd)
+    for p in places:
+        m = re.search(r"^(.*?/\.claude/worktrees/[^/]+)", p)
+        if not m:
+            continue
+        if re.search(r"(^|\s)(node\s+)?" + re.escape(main_root) + r"/scripts/venture/issues\.mjs", cmd) and p == (data.get("cwd") or ""):
+            continue  # the main checkout's tracker, run from the worktree: the newest rules
+        theirs = tracker_version(os.path.join(m.group(1), "scripts/venture/issues.mjs"))
+        if theirs < mine:
+            return (f"Blocked: {m.group(1)} has an older copy of the tracker (rules version {max(theirs, 0)}, the main checkout has {mine}). "
+                    f"Rebase this worktree on origin/main (git pull --rebase) and run it again, or run the main checkout's: node {main_root}/scripts/venture/issues.mjs …\n")
+    return ""
+
+
 def main() -> None:
     try:
         data = json.load(sys.stdin)
@@ -51,8 +81,13 @@ def main() -> None:
     if data.get("tool_name") != "Bash":
         sys.exit(0)
     cmd = (data.get("tool_input") or {}).get("command") or ""
-    if "issues.mjs" in cmd or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
+    # the other venture tools and the server's deploy too (OLA-251, third pass: their overrides name the caller)
+    if "issues.mjs" in cmd or "scripts/venture/" in cmd or "ola.mjs" in cmd or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
         note_caller(data, cmd)  # a commit naming a ticket is recorded too: its maker does not pass its checks
+    old = old_tracker(data, cmd)
+    if old:
+        sys.stderr.write(old)
+        sys.exit(2)
     if not re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) or "--amend" in cmd:
         sys.exit(0)
     if re.search(r"OLA-\d+|\[no-issue\]", cmd):

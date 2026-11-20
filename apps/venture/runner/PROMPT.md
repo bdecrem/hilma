@@ -12,7 +12,8 @@ differences because you are unattended:
   `INDEPENDENCE.md`, then `NOW.md`, `CHARTER.md`, `LESSONS.md`, `BETS.md` and the
   end of `LOG.md`. The private folder was pulled just before you started.
 - **Do not start watchers** (`--wait` commands never return here) and do not
-  run `runner.mjs`.
+  run `runner.mjs`, except `runner.mjs deploy`, the only way to update the test
+  server; never `ola.mjs deploy` yourself.
 - **Read what woke you** (the list is at the end of this prompt):
   `node scripts/venture/imsg.mjs inbox`, `node scripts/venture/mail.mjs inbox`,
   `node scripts/venture/leads.mjs`, `node scripts/venture/transcript.mjs --list`

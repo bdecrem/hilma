@@ -76,7 +76,7 @@ import { sweepDue } from './_state.mjs'
 import { tmpdir } from 'node:os'
 import { CLAIM_PREFIX, CLAIM_TTL, LANES, WAIT_PREFIX, caseKey, caseState, claimRole, isServerFile, laneHolder, laneOf, laneSentence, liveWaiters, releasesIn } from './_plate.mjs'
 import { CALLERS, LANE_ROLES, ROLES, caller, committers, roleOf } from './_who.mjs'
-import { overrideLine, overridesOf, writeOverride } from './_overrides.mjs'
+import { checkDeploys, overrideLine, overridesOf, writeOverride } from './_overrides.mjs'
 import { relative, resolve } from 'node:path'
 import { fakeClient } from './_fakedb.mjs'
 
@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 3
+export const TRACKER_VERSION = 4
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -725,6 +725,16 @@ if (cmd === 'overrides') {
     const cases = withPasses.some((r) => by.get(r.id).checks.some((c) => c.result === 'pass' && (c.case || /\bcase \S/.test(c.evidence ?? '')))) ? asksCases() : null
     await flushWays()
     const stale = withPasses.flatMap((r) => by.get(r.id).checks.filter((c) => c.result === 'pass').map((c) => ({ r, c, n: nowOf(r, by.get(r.id), c, live, cases) })).filter((x) => !x.n.ok))
+    // OLA-279: the test server's own list of updates against the updates runner.mjs deploy allowed
+    {
+      const dl = fromMini('deploys-log', 'tail -20 ~/ola-staging/deploys.log', (o) => o)
+      await flushWays()
+      if (dl.value === null) console.log(`Updates of the test server: its list could not be read (${dl.error})`)
+      else {
+        const d = await checkDeploys(db, dl.value, { tool: 'issues.mjs unchecked' })
+        console.log(`Updates of the test server outside runner.mjs deploy (${d.bad.length})${d.bad.length ? `: ${d.bad.map((x) => x.at).join(', ')} (each a line in issues.mjs overrides)` : ''}`)
+      }
+    }
     console.log(`Passed, but not on what is live now (${stale.length})${live ? (live.value ? `: the test server is on ${live.value}` : `: the live release could not be read (${live.error})`) : ''}`)
     for (const x of stale) console.log(`  ${x.r.id.padEnd(8)} #${x.c.n} ${x.n.word}: ${x.n.why}`)
   }

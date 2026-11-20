@@ -50,6 +50,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
+import { checkDeploys } from './_overrides.mjs'
 import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
@@ -450,6 +451,13 @@ if (cmd === 'status') {
     const f = await deployFacts()
     const g = deployGate(f)
     console.log(`test server: ${f.live ?? 'release not read'}; last update attempt ${f.lastAttempt ? at(f.lastAttempt) : 'none on record'}; ${g.ok ? 'an update may start now' : `next allowed ${at(g.nextAllowed)} (${g.why})`}`)
+    // OLA-279: the test server's own list of updates against the updates this gate allowed
+    const log = mini('tail -20 ~/ola-staging/deploys.log')
+    if (log === null) console.log("test server's list of updates: not read")
+    else {
+      const d = await checkDeploys(db, log)
+      console.log(d.bad.length ? `UPDATES OUTSIDE runner.mjs deploy: ${d.bad.length} (${d.fresh.length} new, each a line in issues.mjs overrides): ${d.bad.map((x) => x.at).join(', ')}` : "test server's list of updates: every update since the gate went through runner.mjs deploy")
+    }
   }
   if (has('--long')) {
     const { session, why } = await look()
@@ -469,7 +477,13 @@ if (cmd === 'status') {
   say(`update of the test server${DRY ? ' would start' : ''}: ${g.why}`)
   if (DRY) process.exit(0)
   await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() })
-  const r = spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit' })
+  // every update the gate allows, kept, so the test server's list can be checked against it (OLA-279)
+  {
+    const prev = (await getState(db, 'runner_deploys'))?.value ?? { starts: [] }
+    await setState(db, 'runner_deploys', { starts: [...(prev.starts ?? []), { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() }].slice(-200) })
+  }
+  // OLA_DEPLOY_VIA: for the gate inside ola.mjs deploy, once the server's code checks it (OLA-279)
+  const r = spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit', env: { ...process.env, OLA_DEPLOY_VIA: 'runner.mjs deploy' } })
   await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
   process.exit(r.status ?? 1)
 } else if (cmd === 'probe') {

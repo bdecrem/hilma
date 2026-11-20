@@ -429,8 +429,8 @@ onward the plate as of that morning).
 **Freshness.** The mini's alarm (`apps/activist-ai/ops/watch.mjs`) also pushes
 a compact status every 10 minutes to `/api/venture/status` (venture_state
 `ola_status`); the board marks it stale after 30 minutes. It goes live on the
-mini with the next deploy of the practice copy (`node ops/ola.mjs deploy`, from
-`~/ola-staging`). The narrative is Kit's: the header says when Kit last wrote,
+mini with the next update of the practice copy (`node scripts/venture/runner.mjs
+deploy`, the only way to update it; never `ola.mjs deploy` by hand). The narrative is Kit's: the header says when Kit last wrote,
 and when that is more than three hours ago between 7 am and 11 pm Pacific, the
 runner wakes with "the board is stale" and refreshes the journal from the
 tracker, the commits and the status (`runner.mjs`, `runner/PROMPT.md`). The
