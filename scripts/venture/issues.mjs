@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 6
+export const TRACKER_VERSION = 7
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -293,6 +293,14 @@ async function claim(id, who, row = null, { gated = false } = {}) {
   laneFlag(r, a)
   const role = roleFor(who)
   const old = check(await db.from('venture_state').select('value, at').eq('key', key).maybeSingle(), 'claim')
+  // OLA-251, sixth pass: the runner is runner.mjs alone (it writes its claim itself, with no caller); no
+  // session claims as the runner or changes the runner's live claim, under any name or role
+  const runnerLive = old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && claimRole(old.value) === 'runner'
+  // runner.mjs claims first, then runs issues.mjs start --who runner: that renews its own claim on its machine
+  if ((role === 'runner' || /^runner$/i.test(String(who).trim())) && !(runnerLive && old.value?.host === hostname())) die(`Refused: only the runner (runner.mjs on the mini) claims as the runner. Claim under your own name and role.`)
+  if (runnerLive && role !== 'runner') die(`Refused: ${id} is the runner's (renewed ${Math.round((Date.now() - Date.parse(old.at)) / 60e3)} min ago); its claim ends when its run ends.`)
+  // a caller the tracker cannot identify only renews a claim exactly as it was: same name, machine and role
+  if (!me.id && old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && LANE_ROLES.has(claimRole(old.value)) && claimRole(old.value) !== role) die(`Refused: ${id} is held by ${old.value?.who} (${claimRole(old.value)}), and this call cannot be identified (${me.why ?? 'no hook record'}), so it may only renew the claim as it is, not change its role.`)
   // OLA-251, fifth pass: a live builder's or the runner's claim is not taken over by another caller, under any name or role
   // (a session with no caller record renews only a claim made the same way, under its name, on its machine)
   if (old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && LANE_ROLES.has(claimRole(old.value)) && !(me.id ? old.value?.caller === me.id : !old.value?.caller && old.value?.who === who && old.value?.host === hostname())) {

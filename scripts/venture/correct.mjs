@@ -45,7 +45,7 @@
 // stronger fix existed, so corrections waited unrecorded (Nov 18: 9 written, 27 real). Now `add` always
 // writes the entry and the weakness's `seen` at once; the escalation rule applies to the fix, which is
 // either given with the correction or owed and settled later with `fix`.
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
@@ -270,11 +270,16 @@ if (cmd === 'add') {
   writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)
-  // OLA-251, fifth pass: a fix settled by another ticket is not the owed ticket's own work; whether that
-  // ticket really carries the fix is a judgment no script makes, so a person reads it in the overrides
-  if (!settledBy) {
-    const what = `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, not by ${o.issue}'s own commit: read whether it carries the fix`
-    if (process.env.VENTURE_PRIVATE && !process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the notes: not written to the real overrides; the line would be: ${what})`)
+  // OLA-251, fifth pass: whether the file or ticket really carries the fix (not a comment committed under
+  // the ticket's tag, not an unrelated closed ticket) is a judgment no script makes, so every settle is a
+  // line in the overrides that a person reads the same day
+  {
+    const what = settledBy
+      ? `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, changed by ${settledBy}: read whether that change carries the fix`
+      : `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, not by ${o.issue}'s own commit: read whether it carries the fix`
+    const real = (() => { try { return realpathSync(root + 'apps/venture/private') } catch { return null } })()
+    const onCopy = !!process.env.VENTURE_PRIVATE && (() => { try { return realpathSync(process.env.VENTURE_PRIVATE) !== real } catch { return true } })()
+    if (onCopy && !process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the notes: not written to the real overrides; the line would be: ${what})`)
     else {
       const { writeOverride } = await import('./_overrides.mjs')
       await writeOverride(await trackerDb(), { ticket: o.issue, what, tool: 'correct.mjs' })
