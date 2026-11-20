@@ -6,10 +6,12 @@
 //
 //   CLAUDE_OAUTH_TOKEN_FILE=~/.ola/claude-oauth-token node frontdesk/compare-live.mjs
 //
-// Its own everything: gateway on 4686 (Ola's model live on Together: GLM-5.3-Flash; Claude through
-// the subscription), state in ~/.ola-cq-live, the front desk's code in this process (no port, no
-// sign-in), one 1 GiB project `cqlive-a`, destroyed at the end. At most four Claude requests in all
-// (OLA_FD_COMPARE_CLAUDE_REQUESTS=4: Claude Code's and the judge's together, by the gateway's count).
+// Its own everything: gateway on 4686 (Ola's model live on Together: the machine's `general`,
+// Nemotron 3.5 Super, or OLA_LIVE_GENERAL_MODEL; Claude through the subscription), state in
+// ~/.ola-cq-live, the front desk's code in this process (no port, no sign-in), one 1 GiB project
+// `cqlive-a`, destroyed at the end. At most twelve Claude requests in all (OLA_LIVE_CLAUDE_REQUESTS,
+// default 12: Claude Code's and the judge's together, by the gateway's count; the first run, with 4,
+// left none for the judge, OLA-89).
 // The token is read by the gateway only (from its file); nothing here prints it, and the run fails if
 // it appears in the gateway's output, the record or the VM. Prints where the record is, for the page.
 import { spawn, spawnSync } from 'node:child_process'
@@ -31,6 +33,9 @@ const together = () => {
   return line.slice('TOGETHER_API_KEY='.length).trim().replace(/^["']|["']$/g, '')
 }
 const ID = 'cqlive-a'
+// No Chinese model without Bart's yes (rule 42): the default is the machine's own `general`.
+const GENERAL = process.env.OLA_LIVE_GENERAL_MODEL || 'nvidia/NVIDIA-Nemotron-3.5-Super-VL'
+const LABEL = GENERAL.split('/').pop()
 const HOME = path.join(homedir(), '.ola-cq-live')
 mkdirSync(HOME, { recursive: true, mode: 0o700 })
 const usageToken = `usage-${randomBytes(16).toString('hex')}`
@@ -45,10 +50,10 @@ Object.assign(process.env, {
   OLA_FD_GATEWAY_USAGE_TOKEN: usageToken,
   OLA_FD_COMPARE_PREFIX: 'cqlc',
   OLA_FD_CANDIDATES_DIR: path.join(HOME, 'candidates'),
-  OLA_FD_COMPARE_CLAUDE_REQUESTS: '4',
+  OLA_FD_COMPARE_CLAUDE_REQUESTS: process.env.OLA_LIVE_CLAUDE_REQUESTS || '12',
   OLA_FD_COMPARE_ENGINE_MIN: '8',
   OLA_FD_COMPARE_TICK_MS: '86400000',
-  OLA_FD_MODEL_LABEL: 'GLM-5.3-Flash',
+  OLA_FD_MODEL_LABEL: LABEL,
 })
 delete process.env.CLAUDE_OAUTH_TOKEN_FILE
 const say = (s) => console.log(`${new Date().toISOString().slice(11, 19)}  ${s}`)
@@ -64,7 +69,7 @@ admin('create-workspace', ID, '--name', 'Made-up volunteer roster', '--team', 'c
 let made = true
 let gwLog = ''
 const gw = spawn(process.execPath, [path.join(AI, 'gateway/server.mjs')], {
-  env: { HOME: homedir(), PATH: process.env.PATH, UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash', GATEWAY_PORT: '4686', GATEWAY_TOKENS_FILE: path.join(HOME, 'gateway-tokens'), GATEWAY_DOOR_DIR: path.join(HOME, 'gw'), GATEWAY_DB: path.join(HOME, 'usage.db'), GATEWAY_CLAUDE_FILE: path.join(HOME, 'gateway-claude'), CLAUDE_OAUTH_TOKEN_FILE: tokenFile, GATEWAY_USAGE_TOKEN: usageToken },
+  env: { HOME: homedir(), PATH: process.env.PATH, UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: `general=${GENERAL}`, GATEWAY_PORT: '4686', GATEWAY_TOKENS_FILE: path.join(HOME, 'gateway-tokens'), GATEWAY_DOOR_DIR: path.join(HOME, 'gw'), GATEWAY_DB: path.join(HOME, 'usage.db'), GATEWAY_CLAUDE_FILE: path.join(HOME, 'gateway-claude'), CLAUDE_OAUTH_TOKEN_FILE: tokenFile, GATEWAY_USAGE_TOKEN: usageToken },
   stdio: ['ignore', 'pipe', 'pipe'],
 })
 gw.stdout.on('data', (d) => (gwLog += d))
@@ -124,6 +129,11 @@ try {
   say(`state ${it.state}; outcome ${it.outcome}; Ola ${row.ola_passed}/${row.ola_total}, Claude ${row.claude_passed}/${row.claude_total}; judge ${row.judged}; ${row.judge_tokens} judge tokens; Claude ${row.claude_tokens} tokens`)
   say(`the made-up request: ${it.twin?.request}`)
   say(`the difference: ${it.result?.judge?.difference}`)
+  const rec = record ? JSON.parse(record) : null
+  for (const [i, r] of (rec?.judge?.runs ?? []).entries()) say(`judge run ${i + 1}: winner ${r.winner}; ${(r.points ?? []).length} points kept; ${r.difference ?? ''}`)
+  say(`judge verdict ${rec?.judge?.verdict ?? '?'}`)
+  say(`Ola's answer: ${(rec?.engines?.ola?.final ?? '').slice(0, 240)}`)
+  say(`Claude's answer: ${(rec?.engines?.claude?.final ?? '').slice(0, 240)}`)
   say(`Claude requests at the gateway: ${claudeLines().length} (mode ${claudeLines().every((l) => l.includes('"mode":"oauth"')) ? 'oauth' : '?'}); Ola's model requests: ${gwLog.split('\n').filter((l) => l.includes('"route":"chat"')).length}`)
   say(`the token anywhere it must not be: ${leaked ? 'YES' : 'no'}`)
   writeFileSync(path.join(HOME, 'last.json'), JSON.stringify({ id, fd: path.join(HOME, 'fd'), compare: path.join(HOME, 'compare') }) + '\n')

@@ -140,7 +140,10 @@ def build_index(request, context, read_paths, names=(), texts=()):
 # ------------------------------------------------------------------ the model
 
 
-def ask_model(messages, max_tokens=8000):
+# 32,000, not 8,000 (OLA-89, 2026-11-20): Nemotron 3.5 Super, the `general` model, reasons before it
+# answers; on this prompt it spent all 8,000 tokens reasoning and returned no text, twice of twice, so
+# every copy failed. With 32,000 it answered using about 10,000.
+def ask_model(messages, max_tokens=32000):
     body = json.dumps({"model": "general", "messages": messages, "max_tokens": max_tokens, "temperature": 0}).encode()
     if "OLA_BATCH_GATEWAY" not in os.environ and os.path.exists(DOOR):
         # The door's own socket (mounted from the host, read-only root): not the loopback bridge,
