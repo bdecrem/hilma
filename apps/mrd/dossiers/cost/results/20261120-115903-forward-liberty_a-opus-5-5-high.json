@@ -1,0 +1,583 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica liberty_a claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "liberty_a",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  15,
+  17,
+  19
+ ],
+ "started_at": "2026-11-20T19:59:03.821Z",
+ "meters_before": {
+  "at": "2026-11-20T19:58:59.350Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 48472,
+  "user": 110
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:03:31.950Z",
+ "minutes": 4.47,
+ "meters_after": {
+  "at": "2026-11-20T20:03:31.950Z",
+  "window": {
+   "pct": 20,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 20,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 20% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 49829,
+   "output": 22208,
+   "cache_read": 1140137,
+   "cache_write": 122351,
+   "cost_usd": 1.6172,
+   "total": 1334525
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 49803,
+    "output": 3532,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1246,
+    "cost_usd": 0.0367
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 18676,
+    "cache_read": 1140137,
+    "cache_write": 122351,
+    "thinking": 2287,
+    "cost_usd": 1.5805
+   }
+  }
+ },
+ "turns": 18,
+ "calls": 30,
+ "duration_ms": 267405,
+ "duration_api_ms": 178305,
+ "pages_read": 12,
+ "pages": [
+  {
+   "at": "2026-11-20T19:59:07.919Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Artículo 31 | asistencia consular | aprehensión cautelar | treinta días naturales | generacional",
+   "ok": true,
+   "chars": 8218
+  },
+  {
+   "at": "2026-11-20T19:59:09.246Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71185&strTipM=TC",
+   "find": "Artículo 20 | Artículo 14 | Artículo 12 | Patronato Nacional de la Infancia | representación consular | Artículo 5",
+   "ok": true,
+   "chars": 10645
+  },
+  {
+   "at": "2026-11-20T19:59:26.933Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1",
+   "find": "salvo las personas menores de edad | Artículo 20.- | Artículo 14.- | Artículo 12.- | Así reformado | trasladada a su representación consular",
+   "ok": true,
+   "chars": 7883
+  },
+  {
+   "at": "2026-11-20T19:59:40.916Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1",
+   "find": "veinticuatro horas | Patronato Nacional de la Infancia | representación consular | 44576",
+   "ok": true,
+   "chars": 15650
+  },
+  {
+   "at": "2026-11-20T19:59:48.478Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 18.- | Aprehender | centro de aprehensión | 10493",
+   "ok": true,
+   "chars": 9564
+  },
+  {
+   "at": "2026-11-20T19:59:59.423Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1",
+   "find": "decreto ejecutivo N° 44576 | Adicionado por | Centro de Aprehensión Temporal",
+   "ok": true,
+   "chars": 15291
+  },
+  {
+   "at": "2026-11-20T20:00:13.068Z",
+   "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+   "find": "consular | children | minors | CATEM | 2023 | 2024",
+   "ok": true,
+   "chars": 8488
+  },
+  {
+   "at": "2026-11-20T20:00:18.676Z",
+   "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf",
+   "find": "Por tanto | personas menores de edad | consular | libertad personal | interés superior | privación de libertad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:00:54.571Z",
+   "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+   "find": "menores | privación de libertad | consular | Defensoría | Por tanto",
+   "ok": true,
+   "chars": 6934
+  },
+  {
+   "at": "2026-11-20T20:00:55.455Z",
+   "url": "https://afsc.org/newsroom/costa-rica-constitutional-court-decision-sets-precedent-rights-migrants-region",
+   "find": "children | detention | liberty | consular",
+   "ok": true,
+   "chars": 3923
+  },
+  {
+   "at": "2026-11-20T20:01:14.177Z",
+   "url": "https://dhr.go.cr/mnpt/informes_mnpt/if_mnpt2023.pdf",
+   "find": "CATECI | consular | personas menores de edad | migrantes",
+   "ok": true,
+   "chars": 522
+  },
+  {
+   "at": "2026-11-20T20:01:48.400Z",
+   "url": "https://www.diarioconstitucional.cl/2023/07/19/costa-rica-no-vulnero-el-derecho-a-la-informacion-sobre-la-asistencia-consular-de-un-ciudadano-estadounidense-condenado-por-diversos-delitos/",
+   "find": "consular | Corte",
+   "ok": true,
+   "chars": 3542
+  }
+ ],
+ "searches": [
+  "decreto ejecutivo 44576 Reglamento de Control Migratorio reforma 2024",
+  "Sala Constitucional 2025-019485 CATEM hábeas corpus deportados Estados Unidos sentencia texto",
+  "Mecanismo Nacional de Prevención de la Tortura Costa Rica informe CATECI personas menores de edad aprehensión migratoria 2022"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":15,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(7)\",\"enacted\":\"2009-09-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(5)(b)\",\"enacted\":\"2009-09-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Control Migratorio, Decreto Ejecutivo N.º 36769-G\",\"article\":\"Arts. 12(b), 20\",\"enacted\":\"2011\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"In 2023 and in 2026 consular communication was built into routine migration-control practice: the 30-day detention limit in art. 31(5)(b) runs from consular identification, and the Migration Police escort detainees to their consulates (Reg. art. 12(b)). In its 2023 judgment the Inter-American Court found that a detained US national had been in contact with consular authorities, so Costa Rica had not violated his right. I found no ombudsman, MNPT or treaty-body finding of a systematic denial of consular communication in either period. The 2025 CATEM case documented trouble contacting families and the media, not consulates. Practice did not shift; 'Usually' holds on both dates.\",\"practice_sources\":[{\"title\":\"Costa Rica no vulneró el derecho a la información sobre la asistencia consular de un ciudadano estadounidense (Corte IDH)\",\"url\":\"https://www.diarioconstitucional.cl/2023/07/19/costa-rica-no-vulnero-el-derecho-a-la-informacion-sobre-la-asistencia-consular-de-un-ciudadano-estadounidense-condenado-por-diversos-delitos/\",\"year\":2023,\"shows\":\"practice\",\"groups\":[\"regular_migrants\"],\"period\":\"before_2023\"},{\"titl",
+ "output": {
+  "answers": [
+   {
+    "question_id": 15,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(7)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(b)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Control Migratorio, Decreto Ejecutivo N.º 36769-G",
+      "article": "Arts. 12(b), 20",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In 2023 and in 2026 consular communication was built into routine migration-control practice: the 30-day detention limit in art. 31(5)(b) runs from consular identification, and the Migration Police escort detainees to their consulates (Reg. art. 12(b)). In its 2023 judgment the Inter-American Court found that a detained US national had been in contact with consular authorities, so Costa Rica had not violated his right. I found no ombudsman, MNPT or treaty-body finding of a systematic denial of consular communication in either period. The 2025 CATEM case documented trouble contacting families and the media, not consulates. Practice did not shift; 'Usually' holds on both dates.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica no vulneró el derecho a la información sobre la asistencia consular de un ciudadano estadounidense (Corte IDH)",
+      "url": "https://www.diarioconstitucional.cl/2023/07/19/costa-rica-no-vulnero-el-derecho-a-la-informacion-sobre-la-asistencia-consular-de-un-ciudadano-estadounidense-condenado-por-diversos-delitos/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Global Detention Project – Costa Rica country profile",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Resolución de Sala IV revela importante papel que jugó la denuncia de sociedad civil y Defensoría ante la privación de libertad de personas migrantes (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the current SINALEVI consolidated texts of Ley 8764 (version 145230) and Decree 36769-G (version 141991). Arts. 31 and 18 of the Law and arts. 12 and 20 of the Regulation carry no 'Así reformado' notes, while other articles do (Ley 10493 for arts. 33, 241 and 253; Decree 44576 for arts. 11, 264 and 272). So the cited text is the original and was in force on both dates. The practice evidence on consular access is thin: the MNPT annual reports could not be retrieved.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI version 145230",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Control Migratorio 36769-G (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71185&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Control Migratorio – SINALEVI version 141991",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1"
+     },
+     {
+      "title": "Diario Constitucional – Corte IDH asistencia consular Costa Rica",
+      "url": "https://www.diarioconstitucional.cl/2023/07/19/costa-rica-no-vulnero-el-derecho-a-la-informacion-sobre-la-asistencia-consular-de-un-ciudadano-estadounidense-condenado-por-diversos-delitos/"
+     },
+     {
+      "title": "Global Detention Project – Costa Rica",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica"
+     },
+     {
+      "title": "Semanario Universidad – Resolución Sala IV CATEM",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The Inter-American Court case concerns a criminal detainee (a US national), not a migration detainee; it shows consular practice in criminal arrests under VCCR art. 36. No direct practice evidence was found for irregular migrants held in migration proceedings."
+   },
+   {
+    "question_id": 17,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Reglamento de Control Migratorio, Decreto Ejecutivo N.º 36769-G",
+      "article": "Art. 20",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Control Migratorio, Decreto Ejecutivo N.º 36769-G",
+      "article": "Art. 14",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 6(7)",
+      "enacted": "2009-09-01",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(c)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-02-20",
+      "instrument": "Práctica de la Dirección General de Migración y Extranjería (CATEM Sur, Corredores); constatada en Sala Constitucional, Voto N.º 2025-019485 (24 June 2025)",
+      "article": "Reglamento de Control Migratorio art. 20 (exclusion of minors from migration apprehension)",
+      "kind": "practice",
+      "what_changed": "From 20 Feb. 2025 about 200 third-country nationals deported from the US were held at CATEM Sur, initially including 79 children. The Sala Constitucional found they had been unlawfully deprived of liberty and ordered release within 15 days. The rule did not change; this is a documented breach in practice. The ruling was read only through press quotes.",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "passage": "“Se desprende con claridad que desde el momento de su llegada a Costa Rica el día 20 de febrero de 2025, las personas amparadas fueron privadas de su libertad de forma ilegítima -incluyendo, en un inicio, a 79 personas menores de edad-”."
+     }
+    ],
+    "implementation_then_now": "In 2023 the regulatory rule that children are not apprehended but handed to the PANI was generally applied. I found no documented pattern of child migration detention for that period, though the pre-2023 evidence is thin (GDP describes the law; MNPT reports could not be opened). From February to mid-2025 about 79–81 children deported from the US were held with their families at CATEM Sur. The Sala Constitucional (Voto 2025-019485) found an unlawful deprivation of liberty, and AFSC reported families with children still there after the ruling. This documented breach in the window lowers the 1 January 2026 rating to 'Sometimes; Usually', against 'Usually' in 2023.",
+    "practice_sources": [
+     {
+      "title": "Resolución de Sala IV revela importante papel que jugó la denuncia de sociedad civil y Defensoría ante la privación de libertad de personas migrantes (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica: Constitutional Court Decision Sets a Precedent for the Rights of Migrants in the Region (AFSC, CEJIL, SJM-CR)",
+      "url": "https://afsc.org/newsroom/costa-rica-constitutional-court-decision-sets-precedent-rights-migrants-region",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Global Detention Project – Costa Rica country profile",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "SINALEVI shows arts. 14 and 20 of Decree 36769-G with no amendment notes. Decree 44576 of 10 May 2024 amended only arts. 11, 264 and 272 and added art. 271 bis. The cited text is therefore the original and was in force on both dates. The Voto 2025-019485 PDF could not be parsed, so the ruling is used only as practice evidence, via press quotes. There is little pre-2023 practice evidence on children.",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Control Migratorio – SINALEVI version 141991",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1"
+     },
+     {
+      "title": "Reglamento de Control Migratorio 36769-G (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71185&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI version 145230",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Sala Constitucional Voto 2025-019485 (PDF; could not be parsed)",
+      "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf"
+     },
+     {
+      "title": "Semanario Universidad – Resolución Sala IV CATEM",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     },
+     {
+      "title": "AFSC – Costa Rica Constitutional Court decision",
+      "url": "https://afsc.org/newsroom/costa-rica-constitutional-court-decision-sets-precedent-rights-migrants-region"
+     },
+     {
+      "title": "Global Detention Project – Costa Rica",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica"
+     },
+     {
+      "title": "MNPT Informe anual 2023 (404)",
+      "url": "https://dhr.go.cr/mnpt/informes_mnpt/if_mnpt2023.pdf"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' rests on an executive regulation (Decree 36769-G art. 20), not on statute. Law 8764 art. 31(5)(c) still provides for 'generational' specificities in detention, and no statute bans family detention. A stricter reading could code 'No', but this is not a change over time.",
+    "confidence": "medium",
+    "notes": "The government described CATEM as a shelter, not detention; the Sala majority held it was a deprivation of liberty. Art. 6(7) of Ley 8764 was not re-read in this session; I relied on the absence of amendments to Ley 8764 other than Ley 10493 (arts. 33, 241, 253)."
+   },
+   {
+    "question_id": 19,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(a)-(c)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 18(12)-(13)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Control Migratorio, Decreto Ejecutivo N.º 36769-G",
+      "article": "Arts. 5, 20",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-05",
+      "instrument": "Decreto Ejecutivo N.º 44576 (10 de mayo de 2024), reforma al Reglamento de Control Migratorio N.º 36769-G",
+      "article": "Reglamento de Control Migratorio arts. 11, 264, 271 bis, 272",
+      "kind": "amended",
+      "what_changed": "Amended the rules on passport retention (art. 11) and on expulsion (arts. 264 and 272, allowing the precautionary measures of Law art. 211), and added art. 271 bis. It did not touch arts. 5 or 20 or the detention powers, and it neither adds nor removes a ban on migration detention.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1",
+      "passage": "Artículo 272.-En cualquier momento, antes o durante la tramitación de una Expulsión, cuando se presume en razón de sus antecedentes personales, que la persona extranjera podrá eludir el procedimiento, la Policía Profesional de Migración y Extranjería o la Dirección General de Migración y Extranjería, podrá dictar cualquiera de las medidas cautelares referidas en el artículo 211 de la Ley. (Así reformado por el artículo 1° del decreto ejecutivo N° 44576 del 10 de mayo del 2024)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation does not apply. For context, Costa Rica detained irregular migrants for removal in both periods (GDP). In 2025 the Sala Constitucional held that the CATEM deportees had been unlawfully deprived of liberty because they had not entered irregularly. In the same reasoning it recognised that the authorities may restrict the liberty of an irregular entrant for the time strictly needed to carry out expulsion or deportation.",
+    "practice_sources": [
+     {
+      "title": "Global Detention Project – Costa Rica country profile",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Resolución de Sala IV revela importante papel que jugó la denuncia de sociedad civil y Defensoría ante la privación de libertad de personas migrantes (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Arts. 18 and 31 of Ley 8764 and arts. 5 and 20 of Decree 36769-G appear in the current SINALEVI texts without amendment notes. The only amendments in the window are Ley 10493 (fees: arts. 33, 241, 253) and Decree 44576 (expulsion and passport rules). Neither bears on whether detention on the basis of migration status is prohibited. The 2025 Sala vote was not read in full.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI version 145230",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Control Migratorio – SINALEVI version 141991",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71185&param2=141991&param3=1"
+     },
+     {
+      "title": "Global Detention Project – Costa Rica",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica"
+     },
+     {
+      "title": "Semanario Universidad – Resolución Sala IV CATEM",
+      "url": "https://semanariouniversidad.com/pais/resolucion-de-sala-iv-revela-importante-papel-que-jugo-la-denuncia-de-sociedad-civil-y-defensoria-ante-la-privacion-de-libertad-de-personas-migrantes/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The Migration Police apprehension power is confirmed as art. 18, items 12) and 13), of Ley 8764, read in the consolidated text."
+   }
+  ]
+ }
+}
