@@ -76,7 +76,12 @@ export async function signIn(password) {
   if (r.status !== 200) throw new Error(`sign-in: ${r.status} ${r.text.slice(0, 160)}`)
   const jar = r.headers.getSetCookie().map((c) => c.split(';')[0]).filter(Boolean)
   if (!jar.length) throw new Error('sign-in gave no cookie')
-  return jar.join('; ')
+  const cookie = jar.join('; ')
+  // The page's own first call: who am I, and the token every change carries (x-ola-csrf).
+  const me = await fetch(ORIGIN + '/api/me', { headers: { cookie } })
+  const csrf = me.status === 200 ? (await me.json()).csrf : null
+  if (!csrf) throw new Error(`after sign-in, /api/me answered ${me.status} without the page's token`)
+  return { cookie, csrf }
 }
 async function post(p, body, cookie) {
   const res = await fetch(ORIGIN + p, { method: 'POST', headers: { 'content-type': 'application/json', origin: ORIGIN, ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) })
@@ -147,13 +152,13 @@ async function steady(go, method) {
     }
   }
 }
-export function cloudTransport(cookie) {
+export function cloudTransport({ cookie, csrf }) {
   return {
     runtime: 'cloud',
     async call(method, p, body) {
       const res = await steady(() => fetch(`${ORIGIN}/oc${p}`, {
         method,
-        headers: { cookie, origin: ORIGIN, 'x-ola-workspace': PROJECT, accept: 'application/json', ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+        headers: { cookie, origin: ORIGIN, 'x-ola-workspace': PROJECT, 'x-ola-csrf': csrf, accept: 'application/json', ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
         body: body !== undefined ? JSON.stringify(body) : undefined,
       }), method)
       const text = await res.text()
@@ -181,6 +186,8 @@ export function cloudTransport(cookie) {
 /** The Mac app's local runtime, headless (olakit-selftest OLA_SERVE_LOCAL): started, then talked to. */
 export async function startLocal(password, { build = true } = {}) {
   const dir = path.join(STATE, 'local')
+  // The skills and plugins are installed read-only (as the app does): writable again to remove them.
+  if (existsSync(dir)) spawnSync('/bin/chmod', ['-R', 'u+w', dir])
   rmSync(dir, { recursive: true, force: true })
   mkdirSync(path.join(dir, 'folder'), { recursive: true })
   const pw = path.join(dir, 'pw')
@@ -258,6 +265,12 @@ export async function startLocal(password, { build = true } = {}) {
 
 // ---------------------------------------------------------------- one conversation
 const list = (j) => (Array.isArray(j) ? j : Array.isArray(j?.data) ? j.data : [])
+// opencode answers at most 200 messages a page; a refusal here must not read as "nothing yet".
+async function messagesOf(T, sid) {
+  const r = await T.call('GET', `/api/session/${sid}/message?limit=200`)
+  if (r.status >= 300) throw new Error(`reading the conversation: ${r.status} ${r.text.slice(0, 160)}`)
+  return turnsOf(list(r.json))
+}
 
 /** The turns of a conversation from its messages, the way the apps fold them (Conversation.swift). */
 export function turnsOf(messages) {
@@ -290,7 +303,7 @@ const YES = /^(yes|publish|go ahead|ok|okay|sure|do it|allow|continue|confirm)/i
  * turn: Ola's words, the steps, the status, and what was answered on the way.
  */
 export async function ask(T, sid, text, limitMs) {
-  const before = turnsOf(list((await T.call('GET', `/api/session/${sid}/message?limit=500`)).json)).length
+  const before = (await messagesOf(T, sid)).length
   const sent = await T.call('POST', `/api/session/${sid}/prompt`, { text })
   if (sent.status >= 300) throw new Error(`the request was not taken: ${sent.status} ${sent.text.slice(0, 200)}`)
   const answered = []
@@ -315,12 +328,12 @@ export async function ask(T, sid, text, limitMs) {
       const r = await T.call('POST', `/api/session/${sid}/form/${f.id}/reply`, { answer })
       answered.push(`question: ${said.join('; ')}${r.status >= 300 ? ` (reply ${r.status})` : ''}`)
     }
-    const turns = turnsOf(list((await T.call('GET', `/api/session/${sid}/message?limit=500`)).json))
+    const turns = (await messagesOf(T, sid))
     const t = turns[turns.length - 1]
     if (turns.length > before && t && t.status !== 'working') return { ...t, answered }
   }
   await T.call('POST', `/api/session/${sid}/interrupt`, {}).catch(() => {})
-  const turns = turnsOf(list((await T.call('GET', `/api/session/${sid}/message?limit=500`)).json))
+  const turns = (await messagesOf(T, sid))
   return { ...(turns[turns.length - 1] ?? { texts: [], tools: [] }), status: 'timeout', answered }
 }
 

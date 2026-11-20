@@ -41,7 +41,7 @@ import { AI, PLACES_REACHED, STATE, ask, checkMust, checkNever, cloudTransport, 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
 const ONLY = arg('--case', null)?.split(',')
-const RUNTIMES = arg('--runtime', 'cloud,local').split(',')
+const RUNTIMES = arg('--runtime', 'local,cloud').split(',')
 const STAGING = path.join(homedir(), 'ola-staging')
 const LATEST = process.env.OLA_ASKS_LATEST || path.join(STAGING, 'asks-latest.json')
 mkdirSync(STATE, { recursive: true })
@@ -49,20 +49,21 @@ mkdirSync(STATE, { recursive: true })
 const cases = readCases(arg('--cases', undefined)).filter((c) => !ONLY || ONLY.includes(c.id))
 if (!cases.length) throw new Error(`no case ${ONLY?.join(', ')} in the cases`)
 
-// One turn on the machine at a time (a case wakes the project's VM), deploys first.
-await (await import(path.join(AI, 'ops/turn.mjs'))).takeTurn(args.includes('--after-deploy') ? 'asks after a deploy' : 'asks')
 const t0 = Date.now()
+// One turn on the machine at a time for anything that runs a project's VM, deploys first: the
+// cloud cases take it (below); the local ones run no VM and go first, without it.
+const turnLabel = args.includes('--after-deploy') ? 'asks after a deploy' : 'asks'
 // After a deploy, the deploy kit installs and restarts the jobs once more: a minute for that first.
 if (args.includes('--after-deploy')) await new Promise((r) => setTimeout(r, 60_000))
-// Read after the turn: a deploy queued meanwhile went first, and what is live now is what is tested.
-const deployed = (() => {
+// What is live is read again for each case: a deploy can go first while the cloud cases wait for the turn.
+const liveRelease = () => {
   try {
-    return JSON.parse(readFileSync(path.join(STAGING, 'deployed.json'), 'utf8')).commit ?? null
+    return String(JSON.parse(readFileSync(path.join(STAGING, 'deployed.json'), 'utf8')).commit ?? 'unknown').slice(0, 12)
   } catch {
-    return null
+    return 'unknown'
   }
-})()
-const release = String(deployed ?? 'unknown').slice(0, 12)
+}
+const release = liveRelease()
 say(`asks: ${cases.length} case(s), runtimes ${RUNTIMES.join(', ')}, against the server running ${release}`)
 
 const results = [] // one per case@place that ran, and one per place not run
@@ -70,7 +71,7 @@ let local = null
 let password = null
 try {
   password = await prepareAccount()
-  const cookie = await signIn(password)
+  const signedIn = await signIn(password)
   for (const runtime of RUNTIMES) {
     const place = Object.keys(PLACES_REACHED).find((p) => PLACES_REACHED[p] === runtime)
     if (!place) throw new Error(`unknown runtime ${runtime} (cloud or local)`)
@@ -78,7 +79,10 @@ try {
     if (!mine.length) continue
     let T
     try {
-      if (runtime === 'cloud') T = cloudTransport(cookie)
+      if (runtime === 'cloud') {
+        await (await import(path.join(AI, 'ops/turn.mjs'))).takeTurn(turnLabel)
+        T = cloudTransport(signedIn)
+      }
       else {
         ensureLocalOpencode()
         local = await startLocal(password, { build: !args.includes('--no-build') })
@@ -137,6 +141,7 @@ function row(c, place, r) {
     place,
     say: c.say,
     ok: !!r.ok,
+    release: liveRelease(),
     tries: `${tries.filter((t) => t.ok).length} of ${tries.length} passed`,
     why: r.why,
     ticket: c.from?.ticket ?? null,
@@ -226,10 +231,10 @@ for (const r of results) {
     tries: r.tries,
     why: r.why,
     at: now,
-    release,
+    release: r.release,
     everPassed: ever,
-    firstPassed: was.firstPassed ?? (r.ok ? { at: now, release } : null),
-    lastPassed: r.ok ? { at: now, release } : was.lastPassed ?? null,
+    firstPassed: was.firstPassed ?? (r.ok ? { at: now, release: r.release } : null),
+    lastPassed: r.ok ? { at: now, release: r.release } : was.lastPassed ?? null,
   }
 }
 // Cases no longer in the set leave the table.
@@ -253,7 +258,7 @@ const ran = results.filter((r) => r.ok !== null)
 console.log('')
 for (const r of [...results].sort((a, b) => order[a.status] - order[b.status])) {
   const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status
-  console.log(`${head.padEnd(34)} case ${`${r.id}@${r.place}`.padEnd(38)} ${r.tries ? `${r.tries}, ${r.secs} s` : ''}  ${r.ticket ?? ''}`)
+  console.log(`${head.padEnd(34)} case ${`${r.id}@${r.place}`.padEnd(38)} ${r.tries ? `${r.tries}, ${r.secs} s, on ${r.release}` : ''}  ${r.ticket ?? ''}`)
   console.log(`${''.padEnd(34)}   "${r.say.slice(0, 110)}"${r.ok === false || r.status === 'not run' ? `\n${''.padEnd(34)}   ${String(r.why).slice(0, 400)}` : ''}`)
 }
 console.log(`\n${ran.filter((r) => r.ok).length} of ${ran.length} passed on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${results.length - ran.length} place(s) not run. Results: ${LATEST}`)
