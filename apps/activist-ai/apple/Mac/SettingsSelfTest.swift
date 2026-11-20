@@ -31,7 +31,7 @@ enum SettingsSelfTest {
     Credentials.disabled = true
     PairingWindow.offscreen = true
     let d = LocalSettings.defaults
-    d.set("mac", forKey: LocalSettings.modeKey)
+    d.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
     d.set((folderPath as NSString).expandingTildeInPath, forKey: LocalSettings.folderKey)
     d.set(4339, forKey: "ola.phone.port")
     d.set(false, forKey: "ola.phone.enabled")
@@ -97,10 +97,10 @@ enum SettingsSelfTest {
       _ = await (a, b)
       d.set(false, forKey: "ola.phone.enabled"); await link.apply()
       d.set(true, forKey: "ola.phone.enabled"); await link.apply()
-      d.set("machine", forKey: LocalSettings.modeKey); await whereOla.apply()
-      d.set("mac", forKey: LocalSettings.modeKey); await whereOla.apply()
-      d.set("machine", forKey: LocalSettings.modeKey); await whereOla.apply()
-      d.set("mac", forKey: LocalSettings.modeKey); await whereOla.apply()
+      d.set(Runtime.cloud.rawValue, forKey: LocalSettings.shownKey); await whereOla.apply()
+      d.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey); await whereOla.apply()
+      d.set(Runtime.cloud.rawValue, forKey: LocalSettings.shownKey); await whereOla.apply()
+      d.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey); await whereOla.apply()
       await whereOla.apply()                  // Save
       settle(1)
       let kids = children()
@@ -116,7 +116,7 @@ enum SettingsSelfTest {
 
       // 2b. Fallback to Claude: off by default; on, the store offers Claude; no request is made.
       whereOla.configureClaude()
-      check(!store.claudeOn && store.claudeLauncher != nil, "Fallback to Claude is off by default, and Claude Code is ready here", whereOla.claudeUnavailable ?? "ready")
+      check(!store.claudeOn && store.claudeLauncher != nil, "Fallback to Claude is off by default, and Claude Code is ready here", whereOla.claudeUnavailable(.local) ?? "ready")
       d.set(true, forKey: WhereOlaWorks.claudeKey); whereOla.configureClaude()
       check(store.claudeOn, "turning it on offers Claude beside the composer")
 
@@ -127,7 +127,8 @@ enum SettingsSelfTest {
       settle(1)
       check(whereOla.shown == .cloud && children().count == agents && agents == 1, "the cloud on screen keeps the local agent running", "\(children().count) agent(s)")
       check(whereOla.store(.local).runtime == .local && whereOla.store(.local) !== store, "the local runtime's sessions stay listed, in the other store")
-      check(!store.claudeOn && whereOla.claudeUnavailable?.hasPrefix("Not yet in cloud sessions") == true, "in a cloud session the switch is disabled, and says why", whereOla.claudeUnavailable ?? "")
+      check(!store.claudeOn && whereOla.claudeUnavailable(.cloud)?.hasPrefix("Not yet in cloud sessions") == true, "in a cloud session Claude is not offered, and Settings says why", whereOla.claudeUnavailable(.cloud) ?? "")
+      check(whereOla.store(.local).claudeOn, "and the local runtime keeps its own switch on (OLA-220)")
 
       // 4. New Session, Local: that runtime is on screen again, with the same agent (a swap, no
       // restart), a new session, and Local as the next default.

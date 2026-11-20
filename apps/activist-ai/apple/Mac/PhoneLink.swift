@@ -99,7 +99,9 @@ final class PhoneLink {
   /// The phone follows the Mac's local runtime (and the machine on a Mac without one).
   func follow() {
     let c = upstream
-    relay.setClaudeLine(store.claudeOn ? "On" : (store.claudeUnavailable == nil ? "Off" : (store.claudeUnavailable!.hasPrefix("Not yet") ? "Not available on the Ola machine yet" : "Off")))
+    // The Claude line of the runtime the relay serves (its own store), not of the one on screen.
+    let s = whereOla?.store(Runtime.of(c) ?? .cloud) ?? store
+    relay.setClaudeLine(s.claudeOn ? "On" : (s.claudeUnavailable == nil ? "Off" : (s.claudeUnavailable!.hasPrefix("Not yet") ? "Not available on the Ola machine yet" : "Off")))
     guard c != last else { return }
     last = c
     served.set(Runtime.of(c) ?? .cloud)

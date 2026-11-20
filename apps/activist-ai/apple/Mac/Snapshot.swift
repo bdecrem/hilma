@@ -16,6 +16,10 @@ enum Snapshot {
   static func run(to dir: URL) {
     let app = NSApplication.shared
     app.setActivationPolicy(.prohibited)
+    // Never the Keychain, never the app's own sign-in (2026-11-19: a WhereOlaWorks drawn here read
+    // the real account's session and macOS asked for the Keychain on Bart's screen).
+    SecretStore.disabled = true
+    AccountKeeper.defaults = UserDefaults(suiteName: "cx.ola.mac.snapshot")!
     try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     let chosen = Treatment.plain
     let shots: [(String, String, Treatment, NSAppearance.Name, CGSize)] = [
@@ -65,6 +69,8 @@ enum Snapshot {
     // Settings, in each of its states, at the window's own width. Its own defaults suite, so the
     // app's real setting is never read or written.
     let defaults = UserDefaults(suiteName: "cx.ola.mac.snapshot")!
+    // Everything below reads and writes this suite only, never the app's own settings.
+    LocalSettings.defaults = defaults
     let settings: [(String, String, String?, NSAppearance.Name, SettingsLook)] = [
       ("dir-A-settings", "mac", nil, .aqua, .native),
       ("dir-B-settings", "mac", nil, .aqua, .paper),
@@ -74,7 +80,7 @@ enum Snapshot {
       ("mac-settings-mac-dark", "mac", nil, .darkAqua, .native),
     ]
     for (name, mode, problem, appearance, look) in settings where only == nil || name.contains(only!) {
-      defaults.set(mode, forKey: LocalSettings.modeKey)
+      defaults.set(mode == "mac" ? Runtime.local.rawValue : Runtime.cloud.rawValue, forKey: LocalSettings.shownKey)
       defaults.set(mode == "mac", forKey: "ola.phone.enabled")
       defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
       let store = OlaStore(fixture: Fixture.main)
@@ -85,7 +91,7 @@ enum Snapshot {
     }
     // Permissions (General pane), each choice: apple-shots/permissions.
     for (name, mode) in [("mac-settings-permissions-lots", PermissionMode.lots), ("mac-settings-permissions-ask", .ask)] where only == nil || name.contains(only!) {
-      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
       defaults.set(mode.rawValue, forKey: PermissionSettings.key)
       let store = OlaStore(fixture: Fixture.main)
       var view = SettingsView(store: store, whereOla: WhereOlaWorks(store: store), tokenKnown: true)
@@ -99,7 +105,7 @@ enum Snapshot {
         let name = "mac-settings-cloud-\(state)-\(mode)"
         guard only == nil || name.contains(only!) else { continue }
         // The cloud on screen, so the cloud store is the fixture's.
-        defaults.set("machine", forKey: LocalSettings.modeKey)
+        defaults.set(Runtime.cloud.rawValue, forKey: LocalSettings.shownKey)
         defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
         let store = OlaStore(fixture: Fixture.named(fixture))
         let account = AccountController(preview: .idle, name: "Bart Decrem")
@@ -114,7 +120,7 @@ enum Snapshot {
     let other = OlaSkills.Version(hash: "0123456789abcdef", commit: "fedcba9876543210")
     let variants: [(String, NSAppearance.Name, OlaSkills.Version?)] = [("same-light", .aqua, OlaSkills.version()), ("same-dark", .darkAqua, OlaSkills.version()), ("different-light", .aqua, other), ("unknown-light", .aqua, nil)]
     for (mode, appearance, machine) in variants where only == nil || "skills-settings-\(mode)".contains(only!) || only == "skills" {
-      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
       defaults.set(false, forKey: "ola.phone.enabled")
       defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
       let store = OlaStore(fixture: Fixture.main)
@@ -156,7 +162,7 @@ enum Snapshot {
         ("signin-9c-settings-passkey-not-fresh", AccountController(preview: .idle, name: "Bart Decrem", passkeyNote: (AccountError.notFresh.errorDescription!, true)), CLIInstaller(installed: true), "mac"),
       ]
       for (name, account, cli, where_) in accounts where only == nil || name.contains(only!) {
-        defaults.set(where_, forKey: LocalSettings.modeKey)
+        defaults.set(where_ == "mac" ? Runtime.local.rawValue : Runtime.cloud.rawValue, forKey: LocalSettings.shownKey)
         defaults.set(false, forKey: "ola.phone.enabled")
         defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
         let store = OlaStore(fixture: Fixture.main)
@@ -170,8 +176,6 @@ enum Snapshot {
     // Settings as a Mac settings window (apple-shots/settings): every pane, in the two layouts
     // compared (A, a toolbar of panes, chosen; B, a sidebar), light and dark; the Models pane with
     // both fallbacks on. And the conversation with both fallbacks and the stretch card.
-    let savedDefaults = LocalSettings.defaults
-    LocalSettings.defaults = defaults
     for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
       for (name, fixture) in [("mac-fallbacks", "fallbacks"), ("mac-fallbacks-ask-claude", "ask-claude")] where only == nil || name.contains(only!) {
         let store = OlaStore(fixture: Fixture.named(fixture))
@@ -199,7 +203,7 @@ enum Snapshot {
           .environment(\.workingClock, 2.4).environment(\.workingLarge, large)
         write(view, size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
       }
-      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
       defaults.set(true, forKey: "ola.phone.enabled")
       defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
       let store = OlaStore(fixture: Fixture.main)
@@ -222,7 +226,24 @@ enum Snapshot {
         }
       }
     }
-    LocalSettings.defaults = savedDefaults
+    // The Models pane with a Local session and with a Cloud session on screen (OLA-220): the same
+    // pane either way, each runtime's own fallbacks, read from settings as the app reads them.
+    for r in Runtime.allCases {
+      let name = "mac-models-\(r.rawValue)-session-light"
+      guard only == nil || name.contains(only!) || only == "models" else { continue }
+      defaults.set(r.rawValue, forKey: LocalSettings.shownKey)
+      defaults.set(false, forKey: "ola.phone.enabled")
+      defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+      FallbackSettings.save(FallbackSettings(claude: true), for: NSHomeDirectory() + "/Documents/court-watch")
+      let store = OlaStore(fixture: Fixture.main)
+      store.previewAs(r)
+      let controller = WhereOlaWorks(store: store)
+      controller.hostedStatus = HostedStatus(unavailable: nil, provider: "Made-up Cloud", usedUSD: 0.03, capUSD: 20)
+      controller.configureClaude()
+      let settings = SettingsView(store: store, whereOla: controller, tokenKnown: true)
+      write(SettingsSnapshot(layout: .toolbar, pane: .models, panes: [.general, .account, .models, .skills, .phone, .advanced], settings: settings).defaultAppStorage(defaults), size: CGSize(width: SettingsView.width, height: 300), appearance: .aqua, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
+    }
+    defaults.removeObject(forKey: FallbackSettings.key)
     // The three palettes (design pass two), each on the conversation with an approval and on
     // Settings, dark and light: apple-shots/polish-2.
     let chosenPalette = Palette.current
@@ -232,7 +253,7 @@ enum Snapshot {
         NSApplication.shared.appearance = NSAppearance(named: appearance)
         let store = OlaStore(fixture: Fixture.approval)
         write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("palette-\(palette.id)-conversation-\(mode).png"), titled: false)
-        defaults.set("mac", forKey: LocalSettings.modeKey)
+        defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
         defaults.set(true, forKey: "ola.phone.enabled")
         let s2 = OlaStore(fixture: Fixture.main)
         let view = SettingsView(store: s2, whereOla: WhereOlaWorks(store: s2), phoneLink: PhoneLink(store: s2), tokenKnown: true).defaultAppStorage(defaults)

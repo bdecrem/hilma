@@ -795,6 +795,14 @@ Settings), toggles the phone setting, switches modes twice and saves, and checks
 agent is alive, the app uses it, it answers, the app is connected and Settings says "Running" with
 no address; then switches back and checks the agent stopped. 12 of 12 on 2026-11-16.
 
+**The Models check** (OLA-220, keep it): `tools/models-selftest.sh <Ola.app>` runs `--models-selftest`
+the same hidden way against `tools/stub-ola.py`, on settings made like Bart's on build 0.1 (18) (the
+old `ola.where = machine`, Local as the last New Session choice, a folder). The Models pane's
+fallbacks follow the runtime, not what is on screen: Local has its two switches, the cloud says it
+has none yet. The check proves the first launch moves the runtime on screen to `ola.runtime.shown`
+and removes `ola.where`, both Local switches are enabled, ask for consent, turn on, reach the store,
+survive a cloud session on screen and a relaunch. 19 of 19 on 2026-11-19.
+
 **The check from the real app** (keep it; it is the proof for this mode):
 `tools/local-selftest.sh <Ola.app> <folder> [token-file]` launches a second, background instance of
 the app through LaunchServices (`open -n -g`, no window), so macOS treats it as when Bart opens it,

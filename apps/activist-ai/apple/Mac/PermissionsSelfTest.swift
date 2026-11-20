@@ -41,7 +41,7 @@ enum PermissionsSelfTest {
     if let u = after("--model-url") { LocalSettings.modelURLOverride = u }
     Credentials.disabled = true
     let d = LocalSettings.defaults
-    d.set("mac", forKey: LocalSettings.modeKey)
+    d.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
     d.set(folder.path, forKey: LocalSettings.folderKey)
     d.set(false, forKey: "ola.phone.enabled")
 

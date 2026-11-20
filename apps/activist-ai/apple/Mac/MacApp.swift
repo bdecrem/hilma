@@ -13,6 +13,7 @@ enum Main {
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
     if SettingsSelfTest.requested { SettingsSelfTest.run() }
+    if ModelsSelfTest.requested { MainActor.assumeIsolated { ModelsSelfTest.run() } }
     if PermissionsSelfTest.requested { MainActor.assumeIsolated { PermissionsSelfTest.run() } }
     if RenderSelfTest.requested { MainActor.assumeIsolated { RenderSelfTest.run() } }
     if MotionRender.cpuRequested { MotionRender.measureCPU() }
@@ -21,13 +22,15 @@ enum Main {
       Snapshot.run(to: dir)
       return
     }
+    // The runtime on screen from the old setting, once (OLA-220), before the stores are made.
+    LocalSettings.migrate()
     OlaMacApp.main()
   }
 
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
   static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--render-selftest", "--import-secret", "--secret-status", "--forget-secret",
-                                          "--permissions-selftest", "--shots", "--token-file", "--model-url", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
+                                          "--permissions-selftest", "--models-selftest", "--shots", "--token-file", "--model-url", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
 
   static func refuseUnknownOptions() {
     let args = Array(CommandLine.arguments.dropFirst())
@@ -42,7 +45,7 @@ struct OlaMacApp: App {
   /// The runtime on screen; `peer` holds the other one's sessions (WhereOlaWorks, OLA-143). The
   /// cloud is the signed-in person's project on app.ola.cx (OLA-150): its key is read from the
   /// Keychain only when the cloud is on screen (once per launch).
-  @State private var store = OlaStore(config: LocalSettings.onThisMac || !AccountKeeper.signedIn ? nil : OlaCloud.saved())
+  @State private var store = OlaStore(config: LocalSettings.shown == .local || !AccountKeeper.signedIn ? nil : OlaCloud.saved())
   @State private var peer = OlaStore(config: nil)
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
@@ -117,7 +120,7 @@ struct MacGate: View {
   var store: OlaStore
   var account: AccountController
   var whereOla: WhereOlaWorks?
-  @AppStorage(LocalSettings.modeKey) private var mode = "machine"
+  @AppStorage(LocalSettings.shownKey) private var shown = Runtime.cloud.rawValue
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   @AppStorage(LocalSettings.tokenSavedKey) private var pastedToken = false
 
@@ -126,9 +129,9 @@ struct MacGate: View {
       if needsSignIn {
         // One sign-in reaches both runtimes (OLA-150): no machine address or second password.
         SignInScreen(account: account)
-      } else if mode == "mac", folder.isEmpty {
+      } else if shown == Runtime.local.rawValue, folder.isEmpty {
         FolderScreen { whereOla?.chooseFolder() }
-      } else if mode == "mac", let w = whereOla, w.installing || w.installProblem != nil {
+      } else if shown == Runtime.local.rawValue, let w = whereOla, w.installing || w.installProblem != nil {
         InstallScreen(fraction: w.installFraction, problem: w.installProblem) { Task { await w.apply() } }
       } else {
         MacRoot(store: store, whereOla: whereOla)
@@ -149,7 +152,7 @@ struct MacGate: View {
     // Started from this screen: it stays until the sign-in finishes or is cancelled.
     if account.fromGate, account.phase != .idle { return true }
     // The pasted token works "On this Mac" only; the cloud needs the sign-in (OLA-150).
-    return !(pastedToken && mode == "mac")
+    return !(pastedToken && shown == Runtime.local.rawValue)
   }
 }
 

@@ -441,8 +441,34 @@ public final class LocalServer: @unchecked Sendable {
 
 /// The gateway token for "On this Mac", in the Keychain, and the folder, in defaults.
 public enum LocalSettings {
-  public static let modeKey = "ola.where"
+  /// The runtime on screen in the Mac app: which of its two stores holds which runtime, and what
+  /// opens at launch. Written only when a session of the other runtime is brought on screen
+  /// (`WhereOlaWorks.show`). It is not a setting: what a session may do follows that session's own
+  /// runtime (Settings shows each runtime's own switches, OLA-142, OLA-220).
+  public static let shownKey = "ola.runtime.shown"
+  /// Before OLA-220: the old "Where Ola works" setting ("mac" or "machine"). Settings stopped
+  /// writing it with OLA-143, the fallbacks kept reading it, and a Mac working in Local sessions
+  /// was treated as in the cloud. Read once, by `migrate`, then removed.
+  public static let legacyModeKey = "ola.where"
   public static let folderKey = "ola.localFolder"
+
+  /// The runtime on screen (the cloud until anything says otherwise).
+  public static var shown: Runtime {
+    get { defaults.string(forKey: shownKey).flatMap(Runtime.init(rawValue:)) ?? .cloud }
+    set { defaults.set(newValue.rawValue, forKey: shownKey) }
+  }
+
+  /// At launch, before anything reads `shown`: the first time, the runtime on screen is the one last
+  /// chosen in New Session, else what the old setting said, else Local when a folder is set up; the
+  /// old key is removed either way.
+  public static func migrate() {
+    let old = defaults.string(forKey: legacyModeKey)
+    if defaults.string(forKey: shownKey) == nil {
+      let fromOld: Runtime? = old == "mac" ? .local : old == "machine" ? .cloud : nil
+      if let r = RuntimeChoice.last(defaults) ?? fromOld ?? (folder != nil ? .local : nil) { shown = r }
+    }
+    if old != nil { defaults.removeObject(forKey: legacyModeKey) }
+  }
 
   /// The app's settings. A self-test uses its own suite, so it never changes Bart's.
   nonisolated(unsafe) public static var defaults = UserDefaults.standard
@@ -450,7 +476,6 @@ public enum LocalSettings {
   nonisolated(unsafe) public static var tokenOverride: String?
   /// A self-test's stand-in model (with `tokenOverride`), never set by the app.
   nonisolated(unsafe) public static var modelURLOverride: String?
-  public static var onThisMac: Bool { defaults.string(forKey: modeKey) == "mac" }
   public static var folder: URL? { defaults.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
 
   /// The pasted gateway token (before account sign-in), read once per launch and only when needed.

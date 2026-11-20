@@ -50,7 +50,8 @@ struct SettingsView: View {
   /// Screenshots: Advanced as it would look (on, with a count), without asking the server.
   var keptPreview: KeptSettings.Preview? = nil
   @AppStorage("ola.settingsPane") private var chosen = SettingsPane.general.rawValue
-  @AppStorage(LocalSettings.modeKey) private var mode = "machine"
+  /// Redraws when the runtime on screen changes (the Cloud group reads its store).
+  @AppStorage(LocalSettings.shownKey) private var shown = Runtime.cloud.rawValue
   static let width: CGFloat = 560
 
   var panes: [SettingsPane] {
@@ -221,77 +222,107 @@ struct PermissionsSettings: View {
   }
 }
 
+/// One runtime's fallback switches, as the Models pane drives them (and its self-test,
+/// Mac/ModelsSelfTest.swift): enabled or not and why, the consent asked before one is turned on,
+/// saved for that runtime only.
+@MainActor
+@Observable
+final class FallbackSwitches {
+  let controller: WhereOlaWorks
+  let runtime: Runtime
+  let preview: FallbackSettings?
+  var f: FallbackSettings
+  /// The switch whose consent is being asked (the alert is up while this is set).
+  var asking: Fallback?
+
+  init(controller: WhereOlaWorks, runtime: Runtime, preview: FallbackSettings? = nil) {
+    self.controller = controller
+    self.runtime = runtime
+    self.preview = preview
+    f = preview ?? FallbackSettings.load(controller.fallbackFolder(runtime))
+  }
+
+  func why(_ w: Fallback) -> String? { w == .claude ? controller.claudeUnavailable(runtime) : controller.hostedUnavailable(runtime) }
+  /// A switch that is on can always be turned off; one that is off only where it can run.
+  func enabled(_ w: Fallback) -> Bool { why(w) == nil || f.isOn(w) }
+
+  /// Turning one on asks first, with the consent text; turning it off does not.
+  func set(_ w: Fallback, _ on: Bool) {
+    if on { asking = w; return }
+    if w == .claude { f.claude = false } else { f.hosted = false }
+    save()
+  }
+
+  func accept() {
+    guard let w = asking else { return }
+    if w == .claude { f.claude = true } else { f.hosted = true }
+    asking = nil
+    save()
+  }
+
+  func reload() { f = preview ?? FallbackSettings.load(controller.fallbackFolder(runtime)) }
+
+  func save() {
+    guard preview == nil else { return }
+    controller.saveFallbacks(f, for: runtime)
+  }
+}
+
 /// Models: Ola's own model always; Claude and the hosted open model only when the person says so.
+/// Each runtime has its own (OLA-220; laid out as Permissions is, OLA-142): Local's two switches,
+/// and what is true in the cloud. Which runtime is on screen does not change what this pane shows.
 struct ModelsSettings: View {
   var controller: WhereOlaWorks
-  var preview: FallbackSettings?
-  @State private var f: FallbackSettings
-  @State private var asking: Fallback?
+  @State private var local: FallbackSwitches
 
   init(controller: WhereOlaWorks, preview: FallbackSettings?) {
     self.controller = controller
-    self.preview = preview
-    _f = State(initialValue: preview ?? FallbackSettings.load(controller.fallbackFolder))
+    _local = State(initialValue: FallbackSwitches(controller: controller, runtime: .local, preview: preview))
   }
 
   var body: some View {
-    let claudeWhy = controller.claudeUnavailable
-    let hostedWhy = controller.hostedUnavailable
     let provider = controller.hostedStatus.provider
     Section {
       Toggle(isOn: binding(.claude)) {
         Text("Fallback to Claude")
-        Text(claudeWhy ?? "Claude Code on this Mac, with your own Claude login.")
+        Text(local.why(.claude) ?? "Claude Code on this Mac, with your own Claude login.")
       }
-      .disabled(claudeWhy != nil && !f.claude)
+      .disabled(!local.enabled(.claude))
       Toggle(isOn: binding(.hosted)) {
         Text("Fallback to the hosted open model")
-        Text(hostedWhy ?? (["A bigger open model at \(provider ?? "an outside company")", controller.hostedStatus.monthLine].compactMap { $0 }.joined(separator: ". ") + "."))
+        Text(local.why(.hosted) ?? (["A bigger open model at \(provider ?? "an outside company")", controller.hostedStatus.monthLine].compactMap { $0 }.joined(separator: ". ") + "."))
       }
-      .disabled(hostedWhy != nil && !f.hosted)
-    } header: {
-      Text("Fallbacks")
-    } footer: {
-      Text("Off unless you turn them on. Type /claude or /hosted before a request to hand over just that one.")
-        .font(.callout).foregroundStyle(.secondary)
-    }
-    Section("When a request looks like a stretch") {
-      Picker("Ola", selection: Binding(get: { f.stretch }, set: { f.stretch = $0; save() })) {
+      .disabled(!local.enabled(.hosted))
+      Picker("When a request looks like a stretch", selection: Binding(get: { local.f.stretch }, set: { local.f.stretch = $0; local.save() })) {
         ForEach(StretchMode.allCases, id: \.self) { Text($0.label).tag($0) }
       }
-      if f.claude && f.hosted && f.stretch == .handover {
-        Picker("Hand it to", selection: Binding(get: { f.stretchTo }, set: { f.stretchTo = $0; save() })) {
+      if local.f.claude && local.f.hosted && local.f.stretch == .handover {
+        Picker("Hand it to", selection: Binding(get: { local.f.stretchTo }, set: { local.f.stretchTo = $0; local.save() })) {
           Text("The hosted open model").tag(Fallback.hosted)
           Text("Claude").tag(Fallback.claude)
         }
       }
+    } header: {
+      Text("Local: on this Mac")
+    } footer: {
+      Text("Off unless you turn them on. Type /claude or /hosted before a request to hand over just that one.")
+        .font(.callout).foregroundStyle(.secondary)
     }
-    .onAppear { f = preview ?? FallbackSettings.load(controller.fallbackFolder) }
-    .alert(asking == .claude ? "Turn on Fallback to Claude?" : "Turn on Fallback to the hosted open model?", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
-      Button("Turn On") {
-        if asking == .claude { f.claude = true } else { f.hosted = true }
-        asking = nil
-        save()
-      }
-      Button("Cancel", role: .cancel) { asking = nil }
+    Section("Cloud: on the Ola machine") {
+      LabeledContent("Fallbacks") { Text("Not yet").foregroundStyle(.secondary) }
+      SettingNote("Cloud sessions from this Mac use Ola\u{2019}s own model only, for now.")
+    }
+    .onAppear { local.reload() }
+    .alert(local.asking == .claude ? "Turn on Fallback to Claude?" : "Turn on Fallback to the hosted open model?", isPresented: Binding(get: { local.asking != nil }, set: { if !$0 { local.asking = nil } })) {
+      Button("Turn On") { local.accept() }
+      Button("Cancel", role: .cancel) { local.asking = nil }
     } message: {
-      Text(asking == .claude ? FallbackWords.claudeConsent : FallbackWords.hostedConsent(provider))
+      Text(local.asking == .claude ? FallbackWords.claudeConsent : FallbackWords.hostedConsent(provider))
     }
   }
 
-  /// Turning one on asks first, with the consent text; turning it off does not.
-  func binding(_ which: Fallback) -> Binding<Bool> {
-    Binding(get: { f.isOn(which) }, set: { on in
-      if on { asking = which } else {
-        if which == .claude { f.claude = false } else { f.hosted = false }
-        save()
-      }
-    })
-  }
-
-  func save() {
-    guard preview == nil else { return }
-    controller.saveFallbacks(f)
+  func binding(_ w: Fallback) -> Binding<Bool> {
+    Binding(get: { local.f.isOn(w) }, set: { local.set(w, $0) })
   }
 }
 

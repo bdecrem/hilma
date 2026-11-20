@@ -9,7 +9,8 @@ import SwiftUI
 ///   (a folder, and a way to the model), so its sessions are listed and the phone can reach it.
 /// Which one a session is in is chosen in New Session (`startSession`); the session list shows both
 /// (`store` is the runtime on screen, `peer` the other one), and opening a session of the other
-/// runtime brings that runtime on screen (`show`). `LocalSettings.onThisMac` says which is on screen.
+/// runtime brings that runtime on screen (`show`). `LocalSettings.shown` says which is on screen; what a
+/// session may do (the fallbacks) follows that session's own runtime, never what is on screen.
 @MainActor
 @Observable
 final class WhereOlaWorks {
@@ -36,7 +37,7 @@ final class WhereOlaWorks {
   }
 
   /// The runtime on screen.
-  var shown: Runtime { LocalSettings.onThisMac ? .local : .cloud }
+  var shown: Runtime { LocalSettings.shown }
 
   /// The store that holds a runtime's sessions now.
   func store(_ r: Runtime) -> OlaStore { r == shown ? store : peer }
@@ -107,7 +108,7 @@ final class WhereOlaWorks {
   /// of its sessions, or a new one.
   func show(_ r: Runtime, select id: String? = nil) {
     if r != shown {
-      LocalSettings.defaults.set(r == .local ? "mac" : "machine", forKey: LocalSettings.modeKey)
+      LocalSettings.shown = r
       let front = store.config, back = peer.config
       store.attach(back, orSaved: false)
       peer.attach(front, orSaved: false)
@@ -428,7 +429,6 @@ struct SettingsGroup<Content: View>: View {
 
 struct WhereSettings: View {
   var controller: WhereOlaWorks
-  @AppStorage(LocalSettings.modeKey) private var mode = "machine"
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   /// Screenshots pass this, so drawing Settings never reads the Keychain.
   var tokenKnown: Bool? = nil
@@ -509,55 +509,75 @@ struct WhereSettings: View {
 extension WhereOlaWorks {
   static let claudeKey = "ola.claude.enabled"
 
-  /// Why the switch cannot be used here, or nil.
-  var claudeUnavailable: String? {
-    if !LocalSettings.onThisMac { return "Not yet in cloud sessions. Start a Local session (New Session) to use Claude." }
-    return ClaudeRunner.unavailable()
+  /// Why Fallback to Claude cannot be used in a runtime, or nil. Each runtime has its own switches
+  /// (OLA-220, Bart, 2026-11-18: settings "should always try to follow the runtime, not the
+  /// product"); which runtime is on screen does not matter.
+  func claudeUnavailable(_ r: Runtime) -> String? {
+    switch r {
+    case .cloud: return Self.notInCloud
+    case .local: return LocalSettings.folder == nil ? Self.localNotSetUp : ClaudeRunner.unavailable()
+    }
   }
 
-  /// The folder the fallback settings belong to: the one On this Mac works in, or the machine's.
-  var fallbackFolder: String {
-    LocalSettings.onThisMac ? (LocalSettings.folder?.standardizedFileURL.path ?? FallbackSettings.machineFolder) : FallbackSettings.machineFolder
+  /// Why the hosted open model cannot be used in a runtime, or nil.
+  func hostedUnavailable(_ r: Runtime) -> String? {
+    switch r {
+    case .cloud: return Self.notInCloud
+    case .local: return LocalSettings.folder == nil ? Self.localNotSetUp : hostedStatus.unavailable
+    }
   }
 
-  /// Why the hosted open model cannot be used here, or nil.
-  var hostedUnavailable: String? {
-    if !LocalSettings.onThisMac { return "Not yet in cloud sessions. Start a Local session (New Session) to use it." }
-    return hostedStatus.unavailable
+  static let notInCloud = "Not yet in cloud sessions from this Mac. Cloud sessions use Ola\u{2019}s own model."
+  static let localNotSetUp = "Choose the folder Local works in first (Settings, General)."
+  /// The key the local runtime's fallbacks are kept under while it has no folder.
+  static let noFolder = "local"
+
+  /// The folder a runtime's fallback settings belong to: the one Local works in, or the machine's.
+  func fallbackFolder(_ r: Runtime) -> String {
+    switch r {
+    case .cloud: return FallbackSettings.machineFolder
+    case .local: return LocalSettings.folder?.standardizedFileURL.path ?? Self.noFolder
+    }
   }
 
-  /// Asks the gateway, as this Mac's caller, whether the hosted open model is there for it.
+  /// Asks the gateway, as this Mac's caller, whether the hosted open model is there for it (the
+  /// local runtime's route, whichever runtime is on screen).
   func refreshHosted() async {
-    guard LocalSettings.onThisMac, let route else { return }
+    guard let route else { return }
     hostedStatus = await HostedStatus.check(baseURL: route.baseURL, token: route.token)
     configureClaude()
   }
 
-  /// Saves one folder's fallbacks and tells the store.
-  func saveFallbacks(_ s: FallbackSettings) {
-    FallbackSettings.save(s, for: fallbackFolder)
+  /// Saves one runtime's fallbacks and tells both stores.
+  func saveFallbacks(_ s: FallbackSettings, for r: Runtime) {
+    FallbackSettings.save(s, for: fallbackFolder(r))
     configureClaude()
   }
 
-  /// Tells the store about both fallbacks for this folder: whether each can run, whether it is on,
+  /// Tells each store about the fallbacks of its own runtime: whether each can run, whether it is on,
   /// and how (Claude Code here, in the session's folder; the hosted open model through the door).
   func configureClaude() {
-    store.claudeTurnsBase = LocalServer.support
-    let reason = claudeUnavailable
-    let f = FallbackSettings.load(fallbackFolder)
-    store.fallbacks = f
-    store.claudeUnavailable = reason
-    store.claudeOn = reason == nil && f.claude
-    store.hosted = HostedStatus(unavailable: hostedUnavailable, provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD)
-    store.hostedOn = f.hosted && store.hosted.unavailable == nil
-    if (!store.claudeOn && store.nextEngine == .claude && !store.nextOnly) || (!store.hostedOn && store.nextEngine == .hosted && !store.nextOnly) { store.nextEngine = .ola }
-    store.onFallbacksChanged = { [weak self] s in self?.saveFallbacks(s) }
+    configure(store, as: shown)
+    configure(peer, as: shown == .local ? .cloud : .local)
+  }
+
+  private func configure(_ s: OlaStore, as r: Runtime) {
+    s.claudeTurnsBase = LocalServer.support
+    let reason = claudeUnavailable(r)
+    let f = FallbackSettings.load(fallbackFolder(r))
+    s.fallbacks = f
+    s.claudeUnavailable = reason
+    s.claudeOn = reason == nil && f.claude
+    s.hosted = HostedStatus(unavailable: hostedUnavailable(r), provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD)
+    s.hostedOn = f.hosted && s.hosted.unavailable == nil
+    if (!s.claudeOn && s.nextEngine == .claude && !s.nextOnly) || (!s.hostedOn && s.nextEngine == .hosted && !s.nextOnly) { s.nextEngine = .ola }
+    s.onFallbacksChanged = { [weak self] f in self?.saveFallbacks(f, for: r) }
     let gate = account?.hostedGate
-    store.hostedArm = { on in gate?.set(on) }
-    if LocalSettings.onThisMac, let folder = LocalSettings.folder { store.localFiles = { Stretch.localFiles(folder) } } else { store.localFiles = nil }
-    guard reason == nil, let bin = ClaudeRunner.find() else { store.claudeLauncher = nil; return }
+    s.hostedArm = { on in gate?.set(on) }
+    if r == .local, let folder = LocalSettings.folder { s.localFiles = { Stretch.localFiles(folder) } } else { s.localFiles = nil }
+    guard reason == nil, let bin = ClaudeRunner.find() else { s.claudeLauncher = nil; return }
     let fallback = LocalSettings.folder
-    store.claudeLauncher = { session, request, context in
+    s.claudeLauncher = { session, request, context in
       let folder = session.directory.map { URL(fileURLWithPath: $0) } ?? fallback ?? FileManager.default.homeDirectoryForCurrentUser
       return ClaudeRunner(binary: bin, folder: folder, request: request, context: context)
     }
