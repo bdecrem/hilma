@@ -52,9 +52,11 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
     const lane = laneOf(i, lanes[i.id])
     const holder = lane === 'server' ? laneHolder({ id: i.id, lane: 'server', issues, lanes, building, claims: Object.fromEntries(Object.entries(claims).filter(([, x]) => x.who !== 'runner')), now }) : null
     if (holder) { passed.push({ id: i.id, why: `the server lane is held by ${holder.who} on ${holder.id}` }); continue }
-    // the runner yields (OLA-251): a builder waiting for this lane on a ticket of a higher priority goes first
-    const before = Object.entries(liveWaiters(waiters, now)).find(([wid, w]) => wid !== i.id && w.lane === lane && (PRI[w.priority] ?? 9) < (PRI[i.priority] ?? 9))
-    if (before && lane === 'server') { passed.push({ id: i.id, why: `${before[1].who} is waiting for the server lane with ${before[0]} (${before[1].priority}), above this ${i.priority}` }); continue }
+    // the runner yields (OLA-251): a builder already waiting for this lane on a ticket of the same or a higher
+    // priority goes first. Same priority counts: on Nov 20 the runner took the lane again with another P0 while
+    // two P0 builders had been waiting for it, one for half an hour.
+    const before = Object.entries(liveWaiters(waiters, now)).find(([wid, w]) => wid !== i.id && w.lane === lane && (PRI[w.priority] ?? 9) <= (PRI[i.priority] ?? 9))
+    if (before && lane === 'server') { passed.push({ id: i.id, why: `${before[1].who} is waiting for the server lane with ${before[0]} (${before[1].priority}), which goes before this ${i.priority}` }); continue }
     if (i.status === 'in_progress' && i.who !== 'runner' && age(i.updated_at) < CLAIM_TTL) { passed.push({ id: i.id, why: `in progress, touched ${Math.round(age(i.updated_at) / MIN)} min ago` }); continue }
     if (sessionOpen && i.status === 'in_progress' && i.who !== 'runner' && age(i.started_at) < SESSION_DOING_HOLD) { passed.push({ id: i.id, why: `started ${Math.round(age(i.started_at) / MIN)} min ago by ${i.who} while a session is open` }); continue }
     if (isRecurring(i, recurring)) { passed.push({ id: i.id, why: 'a recurring job (it runs on its own schedule)' }); continue }

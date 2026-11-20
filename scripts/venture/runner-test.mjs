@@ -157,6 +157,7 @@ ok('OLA-251: lanes from the ticket; one builder in the server lane; roles, holds
   const y = pickTicket(two, { waiters: w, now: NOW })
   assert.equal(y.pick.id, 'OLA-6')
   assert.match(y.passed[0].why, /waiting for the server lane with OLA-9 \(P0\)/)
+  assert.equal(pickTicket(two, { waiters: { 'OLA-9': { ...w['OLA-9'], priority: 'P1' } }, now: NOW }).pick.id, 'OLA-6', 'a waiter of the same priority, already waiting, goes first')
   assert.equal(pickTicket(two, { waiters: { 'OLA-9': { ...w['OLA-9'], priority: 'P2' } }, now: NOW }).pick.id, 'OLA-5', 'a waiter of a lower priority does not stop it')
   assert.equal(pickTicket(two, { waiters: { 'OLA-9': { ...w['OLA-9'], at: ago(10) } }, now: NOW }).pick.id, 'OLA-5', 'a waiter that stopped renewing is gone')
 })
