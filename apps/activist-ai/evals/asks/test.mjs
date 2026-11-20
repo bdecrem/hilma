@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { HERE, PLACES, checkMust, checkNever, readCases, siteAddresses, turnsOf } from './lib.mjs'
+import { HERE, PLACES, checkMust, checkNever, readCases, siteAddresses, turnsOf, verdictOf, ratchet } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -136,3 +136,40 @@ test('OLA-232: the list of abilities, the instructions written from it, and its 
 })
 
 void fileURLToPath
+
+test('OLA-251: works is two passes in a row; 2 of 3 is works sometimes; the tries are as before', () => {
+  const P = { ok: true }
+  const F = { ok: false }
+  assert.deepEqual(verdictOf([P, P]), { ok: true, status: 'passing', verdict: 'works' })
+  for (const t of [[P, F, P], [F, P, P]]) assert.deepEqual(verdictOf(t), { ok: true, status: 'works sometimes', verdict: 'works sometimes (2 of 3)' })
+  for (const t of [[F, F], [P, F, F], [F, P, F]]) assert.equal(verdictOf(t).ok, false)
+  // the runner's loop is unchanged: it stops at two passes or two fails, so never more than three tries
+  const loop = (seq) => {
+    const tries = []
+    while (tries.filter((t) => t.ok).length < 2 && tries.filter((t) => !t.ok).length < 2) tries.push(seq[tries.length])
+    return tries
+  }
+  for (const seq of [[P, P, P], [P, F, P], [F, P, P], [F, F, P], [P, F, F]]) assert.ok(loop(seq).length <= 3)
+  assert.equal(loop([P, P, F]).length, 2)
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.ok(src.includes("while (tries.filter((t) => t.ok).length < 2 && tries.filter((t) => !t.ok).length < 2)"), 'the number of tries is exactly as before')
+  // the abilities list counts it apart, never as passing
+  const L = lines({ latest: { cases: { 'web-search@cloud-web:chat': { status: 'works sometimes', at: 'x' } } } })
+  assert.equal(L.find((l) => l.ability === 'web-search' && l.place === 'cloud-web:chat').status, 'sometimes')
+})
+
+test('OLA-251: the result file says works for pass, pass and works sometimes (2 of 3) for the other', () => {
+  const res = (id, tries) => {
+    const v = verdictOf(tries)
+    return { id, place: 'cloud-web:chat', say: 'x', ok: v.ok, sometimes: v.status === 'works sometimes', verdict: v.verdict, tries: `${tries.filter((t) => t.ok).length} of ${tries.length} passed`, release: 'r1' }
+  }
+  const results = [res('a', [{ ok: true }, { ok: true }]), res('b', [{ ok: true }, { ok: false }, { ok: true }])]
+  const t = ratchet({ cases: {} }, results, { now: 'n', release: 'r1', known: new Set(['a@cloud-web:chat', 'b@cloud-web:chat']), lastRun: {} })
+  assert.equal(t.cases['a@cloud-web:chat'].status, 'passing')
+  assert.equal(t.cases['a@cloud-web:chat'].verdict, 'works')
+  assert.equal(t.cases['b@cloud-web:chat'].status, 'works sometimes')
+  assert.equal(t.cases['b@cloud-web:chat'].verdict, 'works sometimes (2 of 3)')
+  assert.equal(t.summary.passing, 1)
+  assert.equal(t.summary.worksSometimes, 1)
+})
+

@@ -189,3 +189,12 @@ export function leadLine(issues, { runner = null, claims = {}, limit = null, now
   if (limit?.until && Date.parse(limit.until) > now) parts.push(`${limit.kind === 'error' ? 'paused after an error' : 'limit reached'}, starts again ${when(Date.parse(limit.until), now)}`)
   return { text: parts.join(' · '), idle, working, lastActive }
 }
+
+/** What a check passed with `--case <id>@<place>` says now, from the board's asks summary (ops/watch.mjs):
+ *  'sometimes' (two passes with a fail between, OLA-251), 'fails' (failing on its last run) or null. */
+export function caseVerdict(evidence, asks) {
+  const k = /^case (\S+)/.exec(evidence ?? '')?.[1]
+  if (!k || !asks) return null
+  const has = (list) => (list ?? []).some((x) => x.case === k)
+  return has(asks.worksSometimes) ? 'sometimes' : has(asks.stoppedWorking) || has(asks.notWorkingYet) ? 'fails' : null
+}

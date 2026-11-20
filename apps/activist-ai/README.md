@@ -1482,8 +1482,13 @@ file the request made, not there before); a setup step `wrote` puts a fixture fr
 the machine's turn to a waiting deploy between cases, and only one asks run goes at a time
 (`~/ola-asks/run.pid`).
 
-**A ratchet.** The model is in the loop, so a case is tried until it passes twice or fails twice (2
-of 3), and the result says how many tries it took. Each case and place records whether it has ever
+**A ratchet.** The model is in the loop, so a case is tried until it passes twice or fails twice (at
+most three tries), and the result says how many tries it took. **"Works" is two passes in a row**
+(since Nov 20, OLA-251): pass, pass is `passing`; two passes with a fail between them (pass, fail,
+pass or fail, pass, pass) is **works sometimes (2 of 3)**, a status of its own in the result file
+(`status: "works sometimes"`, `verdict`, `summary.worksSometimes`), on the board (`asks.worksSometimes`)
+and in `issues.mjs say`, which never prints WORKS for a check passed by such a case. The number of
+tries did not change. Each case and place records whether it has ever
 passed on the live server: one that passed before and fails now is **STOPPED WORKING** and is
 printed first; one that never passed is **not working yet**. A case is cited in a ticket check as
 `<id>@<place>`: `issues.mjs check OLA-n pass <k> --case publish-bart@cloud-web:chat --on <release>`.

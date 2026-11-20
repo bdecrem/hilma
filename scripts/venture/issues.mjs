@@ -57,7 +57,7 @@ import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue } from './_state.mjs'
-import { CLAIM_PREFIX, CLAIM_TTL } from './_plate.mjs'
+import { CLAIM_PREFIX, CLAIM_TTL, caseVerdict } from './_plate.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -383,13 +383,21 @@ if (cmd === 'add') {
   const v = verdict(r, a)
   console.log(`${r.id}  ${r.title}`)
   if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
-  for (const c of v.works) console.log(`  WORKS        ${c.at}: ${c.do} (checked ${when(c.checked_at)} on ${c.on})`)
+  // A check passed by a case of the request tests (--case id@place) says what that case says now
+  // (OLA-251): "works" is two passes in a row; 2 of 3 is "works sometimes", never printed as WORKS.
+  const asks = (check(await db.from('venture_state').select('value').eq('key', 'ola_status').maybeSingle(), 'status'))?.value?.asks ?? null
+  const caseNow = (c) => caseVerdict(c.evidence, asks)
+  const sometimes = v.works.filter((c) => caseNow(c) === 'sometimes')
+  const failsNow = v.works.filter((c) => caseNow(c) === 'fails')
+  for (const c of v.works.filter((x) => !sometimes.includes(x) && !failsNow.includes(x))) console.log(`  WORKS        ${c.at}: ${c.do} (checked ${when(c.checked_at)} on ${c.on})`)
+  for (const c of sometimes) console.log(`  WORKS SOMETIMES (2 of 3) ${c.at}: ${c.do} (its request test, ${c.evidence.slice(5)}, passed twice with a fail between on its last run; "works" is two passes in a row)`)
+  for (const c of failsNow) console.log(`  DOES NOT WORK NOW ${c.at}: ${c.do} (passed ${when(c.checked_at)}, but its request test, ${c.evidence.slice(5)}, fails on its last run)`)
   for (const c of v.fails) console.log(`  DOES NOT WORK ${c.at}: ${c.do} -> ${c.saw}`)
   for (const c of v.open) console.log(`  NOT CHECKED  ${c.at}: ${c.do}`)
   for (const cell of v.uncovered) console.log(`  NOT CHECKED  ${cell}: no check written`)
   for (const k of a.skips) console.log(`  not offered  ${k.pattern}: ${k.why}`)
   if (!a.internal && !a.checks.length) console.log('  NOT CHECKED  anywhere: this ticket has no checks')
-  console.log(v.ok && !a.internal ? '  -> may be told: it works in the places above.' : a.internal ? '' : '  -> may NOT be told "it works". Say what works, what does not, and what nobody checked, in that order.')
+  console.log(v.ok && !a.internal && !sometimes.length && !failsNow.length ? '  -> may be told: it works in the places above.' : a.internal ? '' : '  -> may NOT be told "it works". Say what works, what does not, and what nobody checked, in that order.')
 } else if (cmd === 'unchecked') {
   const acc = check(await db.from('venture_state').select('key, value').like('key', `${ACCEPT}%`), 'checks')
   const by = new Map(acc.map((x) => [x.key.slice(ACCEPT.length), { ...emptyAccept(), ...x.value }]))

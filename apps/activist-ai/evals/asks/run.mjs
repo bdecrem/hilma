@@ -9,7 +9,9 @@
 // A ratchet: every case and place records whether it has EVER passed on the live server. A case that
 // passed before and fails now is STOPPED WORKING, reported first; one that never passed is "not
 // working yet". The model is in the loop, so a case is tried until it passes twice or fails twice
-// (2 of 3); the result says how many tries it took. Places as the tracker names them
+// (at most 3 tries); the result says how many tries it took. Since Nov 20 (OLA-251) "works" means two
+// passes in a row: pass, pass is "passing"; two passes with a fail among three tries is "works
+// sometimes (2 of 3)", its own status, never reported as works. Places as the tracker names them
 // (scripts/venture/issues.mjs): this runner reaches cloud-web:chat (a project on app.ola.cx through
 // the website's own API) and local-mac:chat (the Mac app's On this Mac, headless, the same opencode
 // setup); every other place a case names is listed as "not run", never as passed.
@@ -36,7 +38,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STATE, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STATE, ratchet, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -145,9 +147,9 @@ try {
         }
       }
       await yieldToDeploy()
-      const passed = tries.filter((t) => t.ok).length >= 2
-      const last = tries.findLast((t) => t.ok === passed) ?? tries.at(-1)
-      results.push(row(c, place, { ...last, ok: passed, tries }))
+      const v = verdictOf(tries)
+      const last = tries.findLast((t) => t.ok === v.ok) ?? tries.at(-1)
+      results.push(row(c, place, { ...last, ok: v.ok, tries, verdict: v }))
     }
     if (runtime === 'local' && local) say(`local runtime ${await local.stop()}`), (local = null)
   }
@@ -173,6 +175,8 @@ function row(c, place, r) {
     ok: !!r.ok,
     release: liveRelease(),
     tries: `${tries.filter((t) => t.ok).length} of ${tries.length} passed`,
+    sometimes: r.verdict?.status === 'works sometimes',
+    verdict: r.verdict?.verdict ?? (r.ok ? 'works' : 'fails'),
     why: r.why,
     ticket: c.from?.ticket ?? null,
     secs: tries.reduce((s, t) => s + (t.secs ?? 0), 0),
@@ -241,58 +245,19 @@ let table = { cases: {} }
 try {
   table = JSON.parse(readFileSync(LATEST, 'utf8'))
 } catch {}
-table.cases ??= {}
-for (const r of results) {
-  const key = `${r.id}@${r.place}`
-  const was = table.cases[key] ?? {}
-  if (r.ok === null) {
-    // Not run: keeps what it had, if it ever ran; otherwise listed as not run.
-    table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status && was.status !== 'not run' ? was.status : 'not run', why: was.why ?? r.why, everPassed: !!was.everPassed }
-    r.status = 'not run'
-    continue
-  }
-  const ever = !!was.everPassed || r.ok
-  r.status = r.ok ? 'passing' : was.everPassed ? 'STOPPED WORKING' : 'not working yet'
-  r.everPassed = ever
-  table.cases[key] = {
-    id: r.id,
-    place: r.place,
-    say: r.say,
-    ticket: r.ticket,
-    status: r.status,
-    tries: r.tries,
-    why: r.why,
-    at: now,
-    release: r.release,
-    everPassed: ever,
-    firstPassed: was.firstPassed ?? (r.ok ? { at: now, release: r.release } : null),
-    lastPassed: r.ok ? { at: now, release: r.release } : was.lastPassed ?? null,
-  }
-}
-// Cases no longer in the set leave the table.
-const known = new Set(readCases(arg('--cases', undefined)).flatMap((c) => placesOf(c).map((p) => `${c.id}@${p}`)))
-for (const k of Object.keys(table.cases)) if (!known.has(k)) delete table.cases[k]
-const all = Object.values(table.cases)
-const count = (s) => all.filter((x) => x.status === s).length
-table = {
-  updated: now,
-  release,
-  lastRun: { at: now, release, secs, afterDeploy: args.includes('--after-deploy'), cases: ONLY ?? 'all', runtimes: RUNTIMES },
-  summary: { passing: count('passing'), stoppedWorking: count('STOPPED WORKING'), notWorkingYet: count('not working yet'), notRun: count('not run') },
-  cases: table.cases,
-}
+table = ratchet(table, results, { now, release, known: new Set(readCases(arg('--cases', undefined)).flatMap((c) => placesOf(c).map((p) => `${c.id}@${p}`))), lastRun: { at: now, release, secs, afterDeploy: args.includes('--after-deploy'), cases: ONLY ?? 'all', runtimes: RUNTIMES } })
 mkdirSync(path.dirname(LATEST), { recursive: true })
 writeFileSync(LATEST, JSON.stringify(table, null, 2) + '\n')
 appendFileSync(path.join(STATE, 'log.jsonl'), JSON.stringify({ at: now, release, secs, results }) + '\n')
 
-const order = { 'STOPPED WORKING': 0, 'not working yet': 1, passing: 2, 'not run': 3 }
+const order = { 'STOPPED WORKING': 0, 'not working yet': 1, 'works sometimes': 2, passing: 3, 'not run': 4 }
 const ran = results.filter((r) => r.ok !== null)
 console.log('')
 for (const r of [...results].sort((a, b) => order[a.status] - order[b.status])) {
-  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status
+  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status === 'works sometimes' ? r.verdict : r.status === 'passing' ? 'works (passing)' : r.status
   console.log(`${head.padEnd(34)} case ${`${r.id}@${r.place}`.padEnd(38)} ${r.tries ? `${r.tries}, ${r.secs} s, on ${r.release}` : ''}  ${r.ticket ?? ''}`)
   console.log(`${''.padEnd(34)}   "${r.say.slice(0, 110)}"${r.ok === false || r.status === 'not run' ? `\n${''.padEnd(34)}   ${String(r.why).slice(0, 400)}` : ''}`)
 }
-console.log(`\n${ran.filter((r) => r.ok).length} of ${ran.length} passed on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${results.length - ran.length} place(s) not run. Results: ${LATEST}`)
+console.log(`\n${ran.filter((r) => r.ok && !r.sometimes).length} of ${ran.length} work (two passes in a row)${ran.some((r) => r.sometimes) ? `, ${ran.filter((r) => r.sometimes).length} work sometimes (2 of 3)` : ''} on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${results.length - ran.length} place(s) not run. Results: ${LATEST}`)
 console.log(`Cite a case in a ticket check: issues.mjs check OLA-n pass <k> --case <id>@<place> --on ${release}`)
 process.exit(ran.every((r) => r.ok) ? 0 : 1)

@@ -543,13 +543,13 @@ export function boardStatus(S, state, r, conds, now) {
     if (c) ci = { commit: String(c.commit ?? ''), at: c.at ?? null, ok: c.ok, by: c.by ?? null, suites: c.suites ?? {}, why: c.ok ? null : String(c.why ?? 'failed').slice(0, 160) }
   } catch {}
   // The asks (OLA-231, evals/asks): people's real requests sent again after each update, each case
-  // and place passing, STOPPED WORKING (it passed before) or not working yet. Counts, and the
+  // and place passing (two passes in a row), works sometimes (2 of 3, OLA-251), STOPPED WORKING (it passed before) or not working yet. Counts, and the
   // failing ones by case id, place and ticket (no words of Ola's, no project or file names).
   let asks = null
   try {
     const a = JSON.parse(readFileSync(path.join(S.STAGING, 'asks-latest.json'), 'utf8'))
     const pick = (st) => Object.values(a.cases ?? {}).filter((c) => c.status === st).slice(0, 20).map((c) => ({ case: `${String(c.id).slice(0, 40)}@${String(c.place).slice(0, 20)}`, ticket: c.ticket ? String(c.ticket).slice(0, 12) : null, tries: c.tries ? String(c.tries).slice(0, 20) : null }))
-    asks = { release: String(a.release ?? ''), at: a.lastRun?.at ?? a.updated ?? null, summary: a.summary ?? null, stoppedWorking: pick('STOPPED WORKING'), notWorkingYet: pick('not working yet') }
+    asks = { release: String(a.release ?? ''), at: a.lastRun?.at ?? a.updated ?? null, summary: a.summary ?? null, stoppedWorking: pick('STOPPED WORKING'), notWorkingYet: pick('not working yet'), worksSometimes: pick('works sometimes') }
   } catch {}
   // Everything Ola can be asked to do, by place (OLA-232, evals/asks/abilities.json): how many lines,
   // and how many pass, fail or nobody has run. Counted from the list and the asks' results, even

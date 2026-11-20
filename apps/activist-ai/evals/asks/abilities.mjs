@@ -92,7 +92,7 @@ export function lines({ abilities = readAbilities(), cases = readCases(), latest
         const c = cases.find((x) => x.ability === a.id && (x.places ?? []).includes(place))
         const r = c ? latest.cases?.[`${c.id}@${place}`] : null
         const ran = r && r.status && r.status !== 'not run'
-        out.push({ ability: a.id, what: a.what, place, offered: !offer.notOffered, case: c?.id ?? null, status: ran ? (r.status === 'passing' ? 'passing' : 'failing') : 'not run', at: ran ? r.at : null })
+        out.push({ ability: a.id, what: a.what, place, offered: !offer.notOffered, case: c?.id ?? null, status: ran ? (r.status === 'passing' ? 'passing' : r.status === 'works sometimes' ? 'sometimes' : 'failing') : 'not run', at: ran ? r.at : null })
       }
     }
     for (const place of a.screens ?? []) out.push({ ability: a.id, what: a.what, place, offered: true, case: null, status: 'not run', at: null })
@@ -104,7 +104,7 @@ export function lines({ abilities = readAbilities(), cases = readCases(), latest
 export function summary(opts) {
   const L = lines(opts)
   const n = (f) => L.filter(f).length
-  return { lines: L.length, passing: n((l) => l.status === 'passing'), failing: n((l) => l.status === 'failing'), notRun: n((l) => l.status === 'not run'), notOffered: n((l) => !l.offered), noCase: n((l) => !l.case) }
+  return { lines: L.length, passing: n((l) => l.status === 'passing'), sometimes: n((l) => l.status === 'sometimes'), failing: n((l) => l.status === 'failing'), notRun: n((l) => l.status === 'not run'), notOffered: n((l) => !l.offered), noCase: n((l) => !l.case) }
 }
 
 /** What check finds wrong: instructions out of step with the list, an ability with no case in a runtime. */
@@ -142,6 +142,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   } else {
     for (const l of lines()) console.log(`${l.status.padEnd(8)} ${l.offered ? '' : '(not offered) '}${l.what} @ ${l.place}${l.case ? `  case ${l.case}` : '  no case'}`)
     const s = summary()
-    console.log(`\n${s.lines} lines: ${s.passing} passing, ${s.failing} failing, ${s.notRun} nobody has run (${s.noCase} with no case yet); ${s.notOffered} not offered, each with its sentence.`)
+    console.log(`\n${s.lines} lines: ${s.passing} passing, ${s.sometimes} working sometimes (2 of 3), ${s.failing} failing, ${s.notRun} nobody has run (${s.noCase} with no case yet); ${s.notOffered} not offered, each with its sentence.`)
   }
 }

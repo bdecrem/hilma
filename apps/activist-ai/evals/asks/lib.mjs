@@ -453,6 +453,63 @@ export function checkNever(c, answer, { done = false } = {}) {
   return hits
 }
 
+/** The ratchet and the record (run.mjs): the new asks-latest table from the old one and this run's
+ *  results. Each case@place keeps its newest result; one that passed before and fails now is STOPPED
+ *  WORKING; a result of two passes with a fail between is "works sometimes", apart from "passing". */
+export function ratchet(table, results, { now, release, known, lastRun }) {
+  table = { cases: {}, ...(table ?? {}) }
+  table.cases ??= {}
+  for (const r of results) {
+    const key = `${r.id}@${r.place}`
+    const was = table.cases[key] ?? {}
+    if (r.ok === null) {
+      // Not run: keeps what it had, if it ever ran; otherwise listed as not run.
+      table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status && was.status !== 'not run' ? was.status : 'not run', why: was.why ?? r.why, everPassed: !!was.everPassed }
+      r.status = 'not run'
+      continue
+    }
+    const ever = !!was.everPassed || r.ok
+    r.status = r.ok ? (r.sometimes ? 'works sometimes' : 'passing') : was.everPassed ? 'STOPPED WORKING' : 'not working yet'
+    r.everPassed = ever
+    table.cases[key] = {
+      id: r.id,
+      place: r.place,
+      say: r.say,
+      ticket: r.ticket,
+      status: r.status,
+      tries: r.tries,
+      verdict: r.verdict,
+      why: r.why,
+      at: now,
+      release: r.release,
+      everPassed: ever,
+      firstPassed: was.firstPassed ?? (r.ok ? { at: now, release: r.release } : null),
+      lastPassed: r.ok ? { at: now, release: r.release } : was.lastPassed ?? null,
+    }
+  }
+  // Cases no longer in the set leave the table.
+  for (const k of Object.keys(table.cases)) if (!known.has(k)) delete table.cases[k]
+  const all = Object.values(table.cases)
+  const count = (s) => all.filter((x) => x.status === s).length
+  return {
+    updated: now,
+    release,
+    lastRun,
+    summary: { passing: count('passing'), worksSometimes: count('works sometimes'), stoppedWorking: count('STOPPED WORKING'), notWorkingYet: count('not working yet'), notRun: count('not run') },
+    cases: table.cases,
+  }
+}
+
+/** The verdict of a case at a place from its tries (OLA-251). The runner tries until two passes or two
+ *  fails, as before; only the words changed: "works" is two passes in a row. Two passes with a fail
+ *  among three tries is "works sometimes (2 of 3)", never reported as works. */
+export function verdictOf(tries) {
+  const passes = tries.filter((t) => t.ok).length
+  if (passes >= 2 && tries.length === 2) return { ok: true, status: 'passing', verdict: 'works' }
+  if (passes >= 2) return { ok: true, status: 'works sometimes', verdict: `works sometimes (${passes} of ${tries.length})` }
+  return { ok: false, status: null, verdict: 'fails' }
+}
+
 export function readCases(file = path.join(HERE, 'cases.json')) {
   return JSON.parse(readFileSync(file, 'utf8')).cases
 }
