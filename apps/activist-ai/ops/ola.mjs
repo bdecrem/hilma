@@ -643,6 +643,8 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   const say = (m) => (console.log(m), out.write(`${m}\n`))
   const history = (line) => writeFileSync(path.join(STAGING, check ? 'checks.log' : 'deploys.log'), `${new Date().toISOString()} ${line}\n`, { flag: 'a' })
   const suites = {}
+  const T0 = Date.now()
+  let turnWait = 0 // how long this update stood waiting for the turn (another holder's time)
   const refuse = (m) => {
     if (check) {
       say(`CHECK FAILED: ${m}`)
@@ -748,7 +750,9 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   if (check) {
     const early = await covered(() => turnAbort.abort())
     if (early) return early
+    const tq = Date.now()
     turn = await turnP
+    turnWait = Date.now() - tq
     if (!turn) return refuse('the turn for the suites was given up')
     process.on('exit', turn.release)
     say('turn: the check holds it')
@@ -777,7 +781,9 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   // The suites, from the release itself, holding the machine's turn (the suites inherit it).
   const tw = Date.now()
   if (!check) {
+    const tq = Date.now()
     turn = await turnP
+    turnWait = Date.now() - tq
     if (!turn) return refuse('the turn for the suites was given up')
     process.on('exit', turn.release)
     say(`turn: the deploy holds it${turn.waitedMs > 2000 ? ` (waited ${Math.round((Date.now() - tw) / 1000)} s after building)` : ''}`)
@@ -803,8 +809,14 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     if (file && !existsSync(path.join(code, file))) return say(`suite ${name}: not in this commit (${file}), skipped`)
     const t0 = Date.now()
     say(`suite ${name}: node ${args.join(' ')}`)
+    // Each line stamped with the seconds since the suite started, so the log shows where it waits.
     let text = ''
-    const s = await runLogged(NODE, args, { cwd: code, out: { write: (d) => (text += d) }, env: { OLA_TURN_HELD: String(process.pid), ...(name === 'web' ? {} : { OLA_FD_DIST: fdDist }) } })
+    let atStart = true
+    const stamp = (d) => {
+      const at = `[${String(Math.round((Date.now() - t0) / 1000)).padStart(4)} s] `
+      for (const piece of String(d).split(/(?<=\n)/)) (text += (atStart ? at : '') + piece), (atStart = piece.endsWith('\n'))
+    }
+    const s = await runLogged(NODE, args, { cwd: code, out: { write: stamp }, env: { OLA_TURN_HELD: String(process.pid), ...(name === 'web' ? {} : { OLA_FD_DIST: fdDist }) } })
     suites[name] = counts(s.tail)
     out.write(`---- suite ${name} output ----\n${text}${text.endsWith('\n') ? '' : '\n'}---- end of ${name} ----\n`)
     say(`suite ${name}: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
@@ -833,8 +845,10 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     return { ok: null, yielded: true, commit, suites }
   }
   // For deploys.log and checks.log: which ran, which were skipped, how long the suites took.
-  const picked = `${pick.all ? `all suites (${pick.all})` : `skipped ${skipped.length ? skipped.join(', ') : 'none'} (nothing they use changed${since})`}; suites ${took} s side by side`
-  say(`suites: ${Object.keys(suites).length} ran in ${took} s; ${skipped.length ? `skipped ${skipped.join(', ')}` : 'none skipped'}`)
+  // The whole update so far, without the wait for the turn (another holder's time, not this one's).
+  const own = Math.round((Date.now() - T0 - turnWait) / 1000)
+  const picked = `${pick.all ? `all suites (${pick.all})` : `skipped ${skipped.length ? skipped.join(', ') : 'none'} (nothing they use changed${since})`}; suites ${took} s side by side, ${own} s in all without the wait for the turn`
+  say(`suites: ${Object.keys(suites).length} ran in ${took} s; ${skipped.length ? `skipped ${skipped.join(', ')}` : 'none skipped'}; ${own} s since the update started, not counting ${Math.round(turnWait / 1000)} s waiting for the turn`)
   if (check) {
     history(`passed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}; ${picked}`)
     say(`check passed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
