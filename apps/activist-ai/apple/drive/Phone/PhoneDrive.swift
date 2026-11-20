@@ -210,7 +210,7 @@ final class PhoneDrive: XCTestCase {
 
   /// A refusal or error line the app shows in words, if any.
   func visibleProblem() -> String? {
-    let p = NSPredicate(format: "label CONTAINS[c] 'didn’t match' OR label CONTAINS[c] 'isn’t answering' OR label CONTAINS[c] 'not reachable' OR label CONTAINS[c] 'went wrong' OR label CONTAINS[c] 'signed out'")
+    let p = NSPredicate(format: "label CONTAINS[c] 'didn’t match' OR label CONTAINS[c] 'isn’t answering' OR label CONTAINS[c] 'not reachable' OR label CONTAINS[c] 'went wrong' OR label CONTAINS[c] 'signed out' OR label CONTAINS[c] 'couldn’t' OR label CONTAINS[c] 'Try again.'")
     let e = app.staticTexts.matching(p).firstMatch
     return e.exists ? e.label : nil
   }

@@ -24,14 +24,15 @@ XCODEGEN="$(command -v xcodegen || echo "$STATE/xcodegen/bin/xcodegen")"
 COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:12])' "$HOME/ola-staging/deployed.json")" || fail "no deployed.json: which release is live is not known"
 SRC="$STATE/phone/$COMMIT"
 APP="$SRC/dd/Build/Products/Debug-iphonesimulator/Ola.app"
-if [ ! -d "$APP" ]; then
+# Signed to run locally (ad hoc): an unsigned simulator app gets no Keychain, and the sign-in lives there.
+if [ ! -d "$APP" ] || ! codesign -v "$APP" 2>/dev/null; then
   echo "  building the iPhone app at the live release $COMMIT (once per release, a few minutes)"
   mkdir -p "$SRC"
   rsync -a --delete --exclude node_modules --exclude '.git' "$LIVE/" "$SRC/ai/" || fail "could not copy the release"
   mkdir -p "$SRC/ai/apple/build/OlaSkills" "$SRC/ai/apple/build/OlaOpencode"
   (cd "$SRC/ai/apple" && "$XCODEGEN" generate >/dev/null) || fail "xcodegen failed on the release's project.yml"
   xcodebuild -project "$SRC/ai/apple/Ola.xcodeproj" -scheme OlaPhone -configuration Debug -destination 'generic/platform=iOS Simulator' \
-    -derivedDataPath "$SRC/dd" CODE_SIGNING_ALLOWED=NO build > "$SRC/build.log" 2>&1 || fail "the iPhone app did not build at $COMMIT (log: $SRC/build.log): $(grep -m3 'error:' "$SRC/build.log" | tr '\n' ' ')"
+    -derivedDataPath "$SRC/dd" CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build > "$SRC/build.log" 2>&1 || fail "the iPhone app did not build at $COMMIT (log: $SRC/build.log): $(grep -m3 'error:' "$SRC/build.log" | tr '\n' ' ')"
 fi
 VERSION="$(defaults read "$APP/Info" CFBundleShortVersionString 2>/dev/null)"
 BUILD="$(defaults read "$APP/Info" CFBundleVersion 2>/dev/null)"
