@@ -16,8 +16,8 @@ models=("$@")
 tasks=u12-good-morning,u9-block-party,u10-youth-strike,u2-results-page,u5-signup-flow
 log=${OD_LOG:-results/open-design-run.log}
 for m in $models; do
-  while [ -e ~/ola-deploy.hold ]; do sleep 20; done
-  until mkdir ~/ola-suite.lock 2>/dev/null; do sleep 10; done
+  # every 2 s: the other users of the lock retry fast, and at 10 s this lost the race for an hour
+  until [ ! -e ~/ola-deploy.hold ] && mkdir ~/ola-suite.lock 2>/dev/null; do sleep 2; done
   echo "pid $$ open-model design OLA-168 $m $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
   echo "== $m $(date)" >> $log
   node run.mjs --config configs/$m-ws-od.json --tasks $tasks --seeds 1 --skills on --db results/open-design.db \
