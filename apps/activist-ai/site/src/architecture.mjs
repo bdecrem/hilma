@@ -201,7 +201,7 @@ export function archBody({ wordmark }) {
     </ul>
 
     <h2><span class="n">8</span>Publishing</h2>
-    <p>${live()}Nothing is public until the project owner selects Publish. The agent has no way to publish.</p>
+    <p>${live('Built, not switched on yet')}Nothing is public until the project owner selects Publish. The agent has no way to publish.</p>
     <ul>
       <li>The Publish dialog lists every file to be published and the address, sites.ola.cx/&lt;project&gt;.</li>
       <li>Every file is scanned first. Publishing is refused for files that contain keys or passwords, for database files, and for secret files such as <code>.env</code>.</li>
