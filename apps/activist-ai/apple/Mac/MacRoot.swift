@@ -278,10 +278,12 @@ struct SessionRow: View {
         if needsYou { Text("Needs your yes").font(.system(size: Metrics.meta, weight: .medium)).foregroundStyle(Ola.vermilionText) }
       }
       Spacer(minLength: Space.xs)
-      ZStack {
-        if needsYou { Circle().fill(Ola.vermilion).frame(width: 7, height: 7) }
-        else if running { LampDot() }
-        else if unseen { Circle().fill(Ola.vermilion).frame(width: 6, height: 6) }
+      Hopping(running: running) { hopping in
+        ZStack {
+          if needsYou { Circle().fill(Ola.vermilion).frame(width: 7, height: 7) }
+          else if hopping { ListHop() }
+          else if unseen { Circle().fill(Ola.vermilion).frame(width: 6, height: 6) }
+        }
       }
       .frame(width: needsYou || running || unseen ? 10 : 0, height: 8)
       .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 3.5 }

@@ -317,10 +317,12 @@ struct PhoneSessionRow: View {
   var needsYou: Bool
   var body: some View {
     HStack(alignment: .center, spacing: 12) {
-      ZStack {
-        if needsYou { Circle().fill(Ola.vermilion).frame(width: 9, height: 9) }
-        else if running { LampDot() }
-        else if unseen { Circle().fill(Ola.vermilion).frame(width: 8, height: 8) }
+      Hopping(running: running) { hopping in
+        ZStack {
+          if needsYou { Circle().fill(Ola.vermilion).frame(width: 9, height: 9) }
+          else if hopping { ListHop(label: nil) }
+          else if unseen { Circle().fill(Ola.vermilion).frame(width: 8, height: 8) }
+        }
       }
       .frame(width: 12)
       VStack(alignment: .leading, spacing: 3) {

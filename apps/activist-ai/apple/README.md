@@ -459,21 +459,15 @@ are drawn by the window server's glass), so the sidebar and files in the drawn f
 views but not proof of how the system frames them. The iPhone app takes
 `-OlaFixture <main|approval|empty|unreachable>` and `-OlaOpen` for simulator screenshots.
 
-## Working animations (2026-11-17)
+## Working indicator: the Hop (2026-11-20, OLA-225)
 
-While Ola works, the run line shows one of four small characters drawn in code in place of the lamp
-dot (`Shared/WorkingArt.swift`, placed by `Shared/Working.swift`): **swing** (the icon's tag on its
-string), **hop** (the coral comma hopping on its tail), **machine** (the sidebar's datacenter box), and
-**eyes** (the 👀, drawn). On the Mac it is always the comma (hop, OLA-154); on the phone one per run,
-by the run's id; `defaults write cx.ola.mac OlaWorking hop` (or `cx.ola.mac`) forces one, `defaults
-delete` undoes it. A rare special beat every 20 to 40 s; a new step gets a small acknowledging beat;
-waiting for a yes, it stops and looks down at the approval; done and failed get a short goodbye. After
-20 s with nothing new, a 120-point version comes out under the run and tucks back when something
-arrives. Reduce Motion gets a still pose that breathes slowly (`defaults write cx.ola.mac
-OlaWorkingMotion full` animates anyway). 30 fps on the run line, 60 for the large one. Paused when scrolled away, in the background, and once a wait
-has settled. Numbers for the web: `MOTION.md`. Videos: `tools/motion.sh <dir>` (frames rendered off
-screen by `Ola -OlaMotion`, encoded with ffmpeg); CPU: `Ola -OlaMotionCPU <figure|plain|lamp> <s>
-[-OlaLarge] [-OlaCalm]`.
+While Ola works, a coral ball hops across three faint dots ("Hop, skip", the design in
+`misc/ola-working-hop.zip`): 48 by 24 pt beside "Working for … · N steps" on the run line, 32 by 16
+beside a running session in the Mac's sidebar and the phone's session list. One view for both apps,
+`Shared/OlaHop.swift`; when the work ends it finishes the hop in the air, Reduce Motion gets a still
+frame (the middle dot lit). It replaced the four drawn characters of 2026-11-17, the large figure under
+a quiet run, the lamp dot and the `OlaWorking` defaults; the phone's Settings no longer has a
+"Working animation" picker. The numbers, the colors per dark style and the checks are in `MOTION.md`.
 
 ## Plain HTTP over Tailscale (App Transport Security)
 

@@ -1,76 +1,53 @@
-# Ola's working animations: the numbers (for the web app)
+# Ola's working indicator: the Hop, in numbers
 
-Source: `Shared/WorkingArt.swift` (poses), `Shared/Working.swift` (placement). Video of each:
-`~/Desktop/ola-brand/motion/`. Every pose is a pure function of **run time t** (seconds since the
-request) and a scene, so the web can match frame for frame.
+Since 2026-11-20 (OLA-225) Ola shows one working indicator on the Mac and the iPhone, "Hop, skip":
+a coral ball hops across three faint dots, left, middle, right, middle, left; it squashes a little
+as it lands and the dot it lands on flashes coral. It replaced the four drawn characters (swing,
+the comma, the machine, the eyes), the large figure under a quiet run, the lamp dot beside running
+sessions, and the `OlaWorking` / `OlaWorkingMotion` defaults. Kit's voice on the phone still uses
+the eyes, now in `iOS/Kit/KitEyes.swift`.
 
-**Drawing space** 100 by 100, scaled to the box: **26 pt** on the run line in place of the lamp dot
-(28 on the phone), spilling into the left margin; **120 pt** under the run after **20 s** with nothing
-new (scale-from-0.2 at top-leading + fade, spring response 0.45 s, damping 0.72; back the same way when
-a step, the answer or an approval appears). One figure on screen at a time. **Frame rate**: 30 fps on
-the run line (battery first), 60 for the large one. On the run line each is zoomed to fill its box
-and must stay inside it: swing 1.12 from (45,10) then 2 left, machine 1.2 from (50,86), eyes 1.45 from (50,52), hop
-1.55 from its foot with hops at half height. Lines are thicker small (about 1 pt minimum).
+Source of truth: the design in `misc/ola-working-hop.zip` (README, `ola-hop.css`, `ola-hop.html`,
+`ola-working-hop.svg`). The app's version is `Shared/OlaHop.swift` (`HopMotion` is the math,
+`OlaHop` the view, `Hopping` the stop at the end of a hop). A web version can use the zip's CSS as is.
 
-**Choice** one per run: `FNV-1a-64(turn id) % 4` over [swing, hop, machine, eyes]; forced by the
-`OlaWorking` default. **Special** first at `15 + 15r` s, then every `20 + 20r` s (r from splitmix64 of
-the seed), snapped up to the next loop boundary. **Moods**: working, waiting (a step needs his yes),
-done, failed (failed or stopped). A new step is a **beat**. Waiting holds still after 3.2 s; done and
-failed fade out and end within 2.7 s. Colors: tag palette for the tag, comma and eyes (paper `#F5EFE4`,
-ink `#1B2550`, navy `#2B3A6E`, coral `#E8704A`, mustard `#E9B44C`); theme roles for the machine
-(field, ink3, leaf, lamp, rule), shadows ink at 12 to 13 %. **Reduce Motion**: the rest pose, opacity
-0.75 + 0.25·cos(2πt/3.2) at 8 fps while working; still poses otherwise.
+**Box** 240 by 120, drawn at 2:1: **48 by 24 pt** beside "Working for 1 min 12 s · 3 steps" (the
+run line), **32 by 16 pt** beside a running session in the Mac's sidebar and the phone's list.
 
-Springs below are damped step responses `spring(f Hz, z)`; `kick` is the same struck once. "Eased" =
-cosine pose-to-pose between keys.
+**Colors** ball coral `#E8704A` everywhere. Dots: navy `#2B3A6E` at 25 % on light; cream `#F5EFE4`
+at 40 % on dark (Standard); in the Graphite and Ink dark styles the style's own text color at 40 %
+(Graphite `#f0f0f2`, Ink `#f7f0e3`).
 
-## Swing (the tag)
-Nail (45,12), string 22, tag from the icon at scale 0.066 hanging from its eyelet. Loop period **1.7 s**,
-string angle θ = A·sin(2πτ/1.7), A = 14° × (0.86..1.14 per swing, eased). Tag angle ψ = θ(t − 0.15) × 1.2
-(lags, then overshoots). String bows against the swing: 0.022 × dθ/dt, clamp ±3.5. **Beat**: A × (1 +
-0.7 (0.4 small) × (1 − e^−6b)e^−1.1b), and a tug up 3.2 × kick(3.4 Hz, 0.32). **Special 1 "stall"** (5.1 s): A grows
-14→50° (14→26° small) (cubic in) to the peak at 2.125 s, hangs 0.42 s trembling (±0.9° at 11 Hz), the tag flops +20° (4° small)
-kick(1.3 Hz), then drops as (14 + 36e^−1.7y)·cos, cross-fading to the loop over the last 0.8 s.
-**Special 2 "twirl"** (3.4 s): width × cos(4π·ease(0.25..1.75 s)) (blank back when negative), lifts 2.2.
-**Waiting**: θ × e^−2.4x, then turns to 62 % width and bows +8°, +7° θ, spring(1.3, 0.55) from 0.7 s.
-**Done**: θ × e^−3.4x, a nod 2.6 × kick(2.2) at 0.35 s, the sparkle pops 0.45–0.62 s (cubic out to
-1.1), turns 45°, gone by 1.45 s; fade 1.45–1.85 s. **Failed**: the string slips 7 × spring(1.7, 0.3),
-the tag hangs −15° crooked by 0.95 s; fade 0.95–1.45 s.
+**Geometry** dots radius 6 at (90, 94), (120, 94), (150, 94); ball radius 8 resting 16 above them
+(y 78).
 
-## Hop (the comma)
-The icon's comma (head radius 8.6), standing on its tail tip at (45, 91). Loop **0.74 s**: contact for
-the first 24 % (u, so the squash lands on two frames at 30 fps), then a parabola of height 25 × (0.92..1.08). Keys (u: value), eased:
-tail length 0:1, .12:.72, .24:1.14, .44:1, .78:1, .96:1.07; tail curl (rad) 0:.12, .12:.24, .24:−.16,
-.47:−.04, .75:.14, .96:.16; head height 0:1, .12:.84, .24:1.07, .42:1, .9:1.03 (width = 1/h^0.8); lean
-0:0, .12:−.05, .34:.06, .62:−.03, .9:.02. Curl and length act more toward the tail tip. **Beat**: the
-next hop × 1.38. **Special 1 "missed bounce"** (3.7 s): lands, wobbles to standing (spring 2.6, 0.32),
-holds, leans −0.26 at 1.0 s (look left), +0.26 at 1.45 s, center at 1.9 s; winds up 2.15–2.5 s (length
-0.6), hop of 40 with a full backflip, landing on the loop's next contact. **Special 2 "somersault"**
-(1.48 s): deeper squash, hop 46, one turn. **Waiting** (from the next landing): stands, leans +0.28 and
-curls +0.12, spring(1.6, 0.55) from 0.35 s. **Done**: stands, the tail is pulled in 0.32–0.72 s (cubic
-in, length to 0.27): "Ola," becomes "Ola.", the full stop hops 11 (0.32 s) and 2.4, squashing; fade
-1.45–1.85 s. **Failed**: slumps over 0.15–0.9 s (length 0.58, curl 0.5, lean −0.32); fade 0.95–1.45 s.
+**Timing** 4 hops of 0.4 s, a 1.6 s loop: 90→120, 120→150, 150→120, 120→90. Across at constant
+speed. Up 26 in the first half of each hop with `cubic-bezier(0.33, 0.66, 0.66, 1)` (slowing into
+the top), down in the second half with `cubic-bezier(0.33, 0, 0.66, 0.33)` (speeding into the landing).
 
-## Machine (our datacenter)
-Box 64 × 42 on feet at (50, 86), two lights (green leaf, yellow lamp), four vents. Tempo **0.54 s a
-beat**, 2.16 s a bar. Yellow fires on a seeded 8-step pattern per bar ("x.x.x.xx", "x..x..x.",
-"xx.x.x..", "x.xx.x.x", "x...x.x."), decaying e^−7t to 22 %. Each beat squashes 3.5 % (kick 5 Hz).
-Every second bar: wind up from beat 2.2 (squash 9 %), hop 7 on beat 4, land on the downbeat (kick
-3.5 Hz) with a puff from the vents (0.9 s). **Beat**: a 3.4 hop for 0.24 s, both lights flash.
-**Special "dance"** (3 bars): bar 1 rocks ±6° per beat, lights alternate on eighths; bar 2 hops on
-beats 2 and 4, the second 12 high with a full spin; bar 3 frozen, lights on, and they glance −3 then +3
-(spring 3 Hz) as if checking whether anyone saw. **Waiting**: lights on and shifted (+4, +2.4) as eyes
-looking down, box leans 3°, spring(1.8, 0.6). **Done**: yellow off, green glows, a contented squash and
-a sigh of a puff; fade 1.3–1.75 s. **Failed**: yellow flickers twice, lights out, box sinks to 90 % and
-tilts −4°, a puff of smoke; fade 1.0–1.5 s.
+**Squash** (1.3, 0.7) at each landing, anchored at the ball's bottom, linear back to (1, 1) over the
+first 12 % of the hop and into it again over the last 12 %.
 
-## Eyes (the 👀, drawn)
-Two eyes at (36.5, 52) and (63.5, 52), 12 × 16, paper with ink outline and pupils (r 5.6). Reading: a
-line every **2.3 s** with 3–5 fixations from −5.5 to +5.5 (saccades 0.07 s), a 0.24 s return sweep
-dipping 1.4. Blinks: one in most 4 s slots (82 %), sometimes doubled; shut 0.07 s, held 0.04, open
-0.12. **Beat**: a glance down 6.5 (0.09 s), held to 0.5 s, back by 0.68 s. **Specials** (4.6 s each):
-a double take (glance right, back, snap right with eyes 22 % wider, pupils smaller, then a suspicious
-squint to 45 %); an eye roll under half lids, then a slow blink; cross-eyed (±6.5) for 0.8 s, a double
-blink and a shake. **Waiting**: look down-right (+3.5, +6.5) in 0.16 s, one slow blink at 1.5 s, hold.
-**Done**: happy ^ ^ 0.12–0.32 s with a hop of 3.5; fade 1.25–1.7 s. **Failed**: upper lids droop to
-half, pupils down, eyes sink 3.5; fade 1.0–1.5 s.
+**Landing flash** each dot's coral opacity, linear between keys over the loop (p = t / 1.6):
+left 0:1, .08:0, .92:0, 1:1; middle 0:0, .19:0, .25:1, .33:0, .67:0, .75:1, .83:0; right 0:0,
+.44:0, .5:1, .58:0. So it rises over 0.1 s before the landing and fades over 0.13 s after.
+
+**Reduce Motion** no animation: the middle dot lit, the ball at rest at (90, 78), as the CSS shows it.
+
+**When the work ends** the loop runs on until the hop in the air lands (at most 0.4 s), then the mark
+gives way (the chevron on the run line, nothing or the unseen dot in the list). With Reduce Motion it
+goes at once.
+
+**Cost** one `TimelineView(.animation)` at up to 60 fps drawing seven shapes in a `Canvas`; paused
+off screen, scrolled away and in the background.
+
+**Accessibility** one element labeled "Working" that never changes, so VoiceOver says it once; hidden
+where the words beside it already say Ola is working (the run line, the phone's "Working" row).
+
+**Checks** `Ola -OlaSnapshot <dir> -OlaOnly hop` writes `hop/swift-{dark,light}-<t>.png` every
+0.05 s over a loop, the still frames, Graphite and Ink, both sizes at 4x, the stop (`stop-*.png`,
+the work ends 0.55 s in, the hop lands at 0.8 s), and the run line and sidebar in the app.
+`node scripts/activist-ai/hop-frames.mjs <ola-hop.html> <dir>` freezes the CSS version at the same
+moments with Playwright. On 2026-11-20 the two agreed to a mean difference under 0.11 of 255 per
+channel in every frame (`~/Desktop/Ola/hop/compare.txt`). Video: `tools/motion.sh <dir>`; CPU:
+`Ola -OlaMotionCPU <seconds> [-OlaLarge]`.

@@ -195,12 +195,11 @@ enum Snapshot {
         store.nextEngine = next
         write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
       }
-      // The working figure on the Mac: always the comma (OLA-154), on the run line and large.
-      for (name, large) in [("mac-working-comma-line", false), ("mac-working-comma-large", true)] where only == nil || name.contains(only!) {
+      // The Hop on the run line and beside the running session (OLA-225), mid-hop and landing.
+      for (name, t) in [("mac-working-hop-line", 0.5), ("mac-working-hop-landing", 0.4)] where only == nil || name.contains(only!) {
         let store = OlaStore(fixture: Fixture.named("approval"))
         if var c = store.conversation { c.approval = nil; store.previewSet("s1", c, running: true) }
-        let view = SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen)
-          .environment(\.workingClock, 2.4).environment(\.workingLarge, large)
+        let view = SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen).environment(\.hopClock, t)
         write(view, size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
       }
       defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
@@ -310,11 +309,94 @@ enum Snapshot {
     defaults.removeObject(forKey: AppearanceChoice.key)
     defaults.removeObject(forKey: DarkStyle.key)
     ThemeBox.shared.use(keptStyle)
+    if only == nil || only!.hasPrefix("hop") { hopFrames(into: dir.appendingPathComponent("hop")) }
     // The pairing sheet, with a made-up code.
     let sample = PairingCode(host: "imac-m1.tail1234.ts.net", port: 4330, secret: "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ-23", name: "Bart\u{2019}s iMac")
     write(PairingSheet(code: sample) {}, size: CGSize(width: 400, height: 560), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)
     print("wrote \(dir.path)")
     exit(0)
+  }
+
+  /// The Hop alone at fixed times, 360 by 180 (the size of the big one in ola-hop.html), on the
+  /// demo's dark row (#252528) and on white, in each dark style, and still (Reduce Motion), so each
+  /// frame can sit beside the CSS version at the same moment (OLA-225). `-OlaOnly hop` for these.
+  static func hopFrames(into dir: URL) {
+    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let kept = ThemeBox.shared.style
+    defer { ThemeBox.shared.use(kept) }
+    func png<V: View>(_ v: V, _ name: String, scale: CGFloat = 1) {
+      let r = ImageRenderer(content: v)
+      r.scale = scale
+      guard let img = r.cgImage else { return }
+      try? NSBitmapImageRep(cgImage: img).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent(name + ".png"))
+    }
+    func hop(_ t: Double?, still: Bool = false, dark: Bool, back: Color, width: CGFloat = 360) -> some View {
+      OlaHop(width: width).environment(\.hopClock, t).environment(\.hopStill, still).environment(\.colorScheme, dark ? .dark : .light)
+        .frame(width: width, height: width / 2).background(back)
+    }
+    func hex(_ v: UInt32) -> Color { Color(red: Double((v >> 16) & 0xff) / 255, green: Double((v >> 8) & 0xff) / 255, blue: Double(v & 0xff) / 255) }
+    let row = hex(0x252528)
+    let times = stride(from: 0.0, to: 1.6, by: 0.05).map { ($0 * 100).rounded() / 100 }
+    ThemeBox.shared.use(.standard)
+    for t in times {
+      png(hop(t, dark: true, back: row), String(format: "swift-dark-%.2f", t))
+      png(hop(t, dark: false, back: .white), String(format: "swift-light-%.2f", t))
+    }
+    png(hop(nil, still: true, dark: true, back: row), "swift-dark-still")
+    png(hop(nil, still: true, dark: false, back: .white), "swift-light-still")
+    for style in [DarkStyle.graphite, .ink] {
+      ThemeBox.shared.use(style)
+      png(hop(0.4, dark: true, back: hex(style.tones!.page)), "swift-\(style.rawValue)-0.40")
+    }
+    ThemeBox.shared.use(.standard)
+    // The two sizes the apps use, at 4x so the pixels can be seen.
+    png(hop(0.5, dark: false, back: .white, width: Metrics.hopLine), "swift-size-line-48", scale: 4)
+    png(hop(0.5, dark: false, back: .white, width: Metrics.hopList), "swift-size-list-32", scale: 4)
+    hopStop(into: dir)
+    print("hop frames: \(dir.path)")
+  }
+
+  /// The stop at the end of a hop, live: a Hop runs in a window off every display, the work ends
+  /// 0.55 s in (mid-air, in the second hop), and a frame is taken every 50 ms. The hop must land at
+  /// 0.8 s and then give way (here to the word "Done"), never cut off in the air.
+  static func hopStop(into dir: URL) {
+    @MainActor final class Box: ObservableObject { @Published var running = true }
+    struct Probe: View {
+      @ObservedObject var box: Box
+      var body: some View {
+        Hopping(running: box.running) { hopping in
+          ZStack {
+            if hopping { OlaHop(width: 360) } else { Text("Done").font(.system(size: 28, weight: .semibold)).foregroundStyle(.white) }
+          }
+        }
+        .frame(width: 360, height: 180).background(Color(red: 0x25 / 255, green: 0x25 / 255, blue: 0x28 / 255))
+        .environment(\.colorScheme, .dark).environment(\.scenePhase, .active)
+      }
+    }
+    OlaHop.probeMotion = true
+    defer { OlaHop.probeMotion = false }
+    let box = Box()
+    let host = NSHostingView(rootView: Probe(box: box))
+    let far = CGPoint(x: -30_000, y: -30_000)
+    let window = SnapshotWindow(contentRect: NSRect(origin: far, size: CGSize(width: 360, height: 180)), styleMask: [.borderless], backing: .buffered, defer: false)
+    window.contentView = host
+    window.isReleasedWhenClosed = false
+    NSApplication.shared.setActivationPolicy(.accessory)
+    window.orderFrontRegardless()
+    window.setFrameOrigin(far)
+    defer { window.orderOut(nil); window.close() }
+    let start = Date()
+    var stopped = false, n = 0
+    while Date().timeIntervalSince(start) < 1.3 {
+      RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+      let e = Date().timeIntervalSince(start)
+      if !stopped && e >= 0.55 { box.running = false; stopped = true }
+      host.layoutSubtreeIfNeeded()
+      guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { continue }
+      host.cacheDisplay(in: host.bounds, to: rep)
+      n += 1
+      try? rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent(String(format: "stop-%02d-%.2fs%@.png", n, e, stopped ? "-after-stop" : "")))
+    }
   }
 
   static func write<V: View>(_ view: V, size: CGSize, appearance: NSAppearance.Name, to url: URL, titled: Bool = true, fit: Bool = false) {

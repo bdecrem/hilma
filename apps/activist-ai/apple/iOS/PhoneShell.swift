@@ -311,12 +311,14 @@ struct SessionRow: View {
           Text(shortTime(session.updated)).font(.subheadline).foregroundStyle(Ola.ink3).monospacedDigit()
         }
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-          if needsYou {
-            Label("Needs your OK", systemImage: "exclamationmark.circle.fill").labelStyle(.titleAndIcon).foregroundStyle(Ola.vermilionText)
-          } else if running {
-            HStack(spacing: 6) { Circle().fill(Ola.lamp).frame(width: 7, height: 7); Text("Working") }.foregroundStyle(Ola.ink2)
-          } else {
-            Text(preview?.isEmpty == false ? preview! : " ").foregroundStyle(Ola.ink2).lineLimit(2)
+          Hopping(running: running) { hopping in
+            if needsYou {
+              Label("Needs your OK", systemImage: "exclamationmark.circle.fill").labelStyle(.titleAndIcon).foregroundStyle(Ola.vermilionText)
+            } else if hopping {
+              HStack(spacing: 6) { ListHop(label: nil); Text("Working") }.foregroundStyle(Ola.ink2)
+            } else {
+              Text(preview?.isEmpty == false ? preview! : " ").foregroundStyle(Ola.ink2).lineLimit(2)
+            }
           }
           Spacer(minLength: 0)
           if unseen && !needsYou && !running { Circle().fill(Ola.action).frame(width: 9, height: 9).accessibilityLabel("New") }
@@ -374,7 +376,6 @@ struct SettingsScreen: View {
   @AppStorage("ola.appearance") private var appearance = "light"
   @AppStorage(DarkStyle.key) private var darkStyle = DarkStyle.standard.rawValue
   @Environment(\.colorScheme) private var scheme
-  @AppStorage("OlaWorking") private var working = ""
   @State private var pairAgain = false
   @State private var forgetting = false
   @State private var signingIn = false
@@ -464,22 +465,6 @@ struct SettingsScreen: View {
           Text("Not available in this build yet.").foregroundStyle(Ola.ink2)
         }
       } header: { Text("Notifications") } footer: { Text("They come only while Ola is open on your Mac.") } }
-      Section("Working animation") {
-        HStack(spacing: 14) {
-          WorkingFigure(turn: Turn(id: "preview-\(working)", request: "", at: .now, status: .working), size: 56)
-            .frame(width: 56, height: 56)
-            .id(working)
-            .accessibilityHidden(true)
-          Picker("Animation", selection: $working) {
-            Text("Surprise me").tag("")
-            Text("Swing").tag("swing")
-            Text("Hop").tag("hop")
-            Text("Machine").tag("machine")
-            Text("Eyes").tag("eyes")
-          }
-          .pickerStyle(.menu)
-        }
-      }
       Section {
         Picker("Appearance", selection: $appearance) {
           Text("Light").tag("light")

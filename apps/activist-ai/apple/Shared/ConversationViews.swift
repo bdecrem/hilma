@@ -162,17 +162,6 @@ struct RunView: View {
   }
 }
 
-/// The lamp beside a working session in the session list.
-struct LampDot: View {
-  @State private var breathe = false
-  @Environment(\.accessibilityReduceMotion) private var reduce
-  var body: some View {
-    Circle().fill(Ola.lamp).frame(width: 7, height: 7)
-      .background(Circle().fill(Ola.lamp.opacity(0.35)).frame(width: 14, height: 14).scaleEffect(breathe ? 1 : 0.6).opacity(breathe ? 0.2 : 0.8))
-      .onAppear { if !reduce { withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) { breathe = true } } }
-  }
-}
-
 struct StepRow: View {
   var step: Step
   /// Who did it: a step that wrote or changed a file says so ("Claude changed index.html").
@@ -494,9 +483,6 @@ struct ConversationPane: View {
   @Binding var draft: String
   var columnWidth: CGFloat = Metrics.column
   var sidePadding: CGFloat = Space.xxl
-  /// The larger working figure is out (a long quiet run).
-  @State private var largeShown = false
-  @Environment(\.workingLarge) private var forcedLarge
 
   var body: some View {
     let convo = store.conversation
@@ -506,13 +492,9 @@ struct ConversationPane: View {
           VStack(alignment: .leading, spacing: Space.xxl) {
             if let convo, !convo.turns.isEmpty {
               ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in
-                VStack(alignment: .leading, spacing: 0) {
-                  TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil,
-                           askHosted: store.hostedOn ? { Task { await store.askHosted(t.request) } } : nil, hostedProvider: store.hosted.provider, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
-                  if i == convo.turns.count - 1, t.isRunning { WorkingStage(turn: t, waiting: convo.approval != nil, shown: $largeShown) }
-                }
+                TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil,
+                         askHosted: store.hostedOn ? { Task { await store.askHosted(t.request) } } : nil, hostedProvider: store.hosted.provider, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
               }
-              .environment(\.workingLargeShown, (forcedLarge ?? largeShown) && convo.approval == nil)
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder, runtime: store.runtime)
             } else {
@@ -529,7 +511,6 @@ struct ConversationPane: View {
         .onChange(of: convo?.turns.last?.answer.count) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
         .onChange(of: convo?.turns.last?.steps.count) { _, _ in withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo("end", anchor: .bottom) } }
         .onChange(of: store.selectedID) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
-        .onChange(of: forcedLarge ?? largeShown) { _, now in if now { withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo("end", anchor: .bottom) } } }
       }
       .overlay(alignment: .bottom) {
         if let a = convo?.approval {

@@ -1,7 +1,7 @@
 import OlaKit
 import SwiftUI
 
-/// Kit's voice: the eyes from "Ola is working" (Shared/WorkingArt.swift), posed by the meeting.
+/// Kit's voice: the eyes (KitEyes.swift), posed by the meeting.
 /// Kit speaking: they look at you and bob with the loudness of its voice. You speaking: a steady,
 /// attentive look that dips a little as you talk. Thinking: a glance up and aside. Connecting:
 /// the reading sweep. Muted: heavy lids (Kit cannot hear you). Over: ^ ^; cut short: a still look.
@@ -53,19 +53,19 @@ struct KitVoiceFigure: View {
     return Canvas { ctx, _ in
       var c = ctx
       c.scaleBy(x: size / 100, y: size / 100)
-      Eyes.draw(&c, small: false, pose: p)
+      Eyes.draw(&c, pose: p)
     }
   }
 
-  static let scene = WorkingScene(character: .eyes, seed: 0x4B17)
+  static let seed: UInt64 = 0x4B17
 
   static func pose(_ mode: Mode, t: Double, kit: Double, you: Double) -> Eyes.Pose {
     var p = Eyes.Pose()
     p.px = 0; p.py = 0
-    p.open = Eyes.blink(scene, t)
+    p.open = Eyes.blink(seed: seed, t)
     switch mode {
     case .connecting:
-      (p.px, p.py) = Eyes.reading(scene, t)
+      (p.px, p.py) = Eyes.reading(seed: seed, t)
     case .listening:
       // On you; a small dip as you speak, like a nod along.
       p.px = 0.6 * sin(t * 0.7)
