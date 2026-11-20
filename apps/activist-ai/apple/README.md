@@ -76,6 +76,94 @@ on any Mac with 8 GB or less (OLA-215). Run them as `ssh admin@100.95.51.98 'cd 
 
 Every builder shares one Xcode build folder, `~/Library/Developer/Xcode/DerivedData/ola-shared` (the default in `build.sh`, the shot scripts and `ship-via-mini.sh`; leave `OLA_DERIVED` unset): on the iMac `.claude/hooks/disk-guard.py` refuses a `-derivedDataPath` in a scratchpad or worktree, refuses builds and big copies under 5 GB free, and everything but cleanup under 1 GB (OLA-226).
 
+## Using the apps as a checker (OLA-237, 2026-11-20)
+
+`tools/drive.sh` uses the Mac app or the iPhone app the way a person does, on the Mac mini, with no
+window on anyone's screen: it signs in as a made-up person, opens a project, types a sentence, answers
+the yes card, waits for the answer and reads it from the screen. A picture of every step and
+`transcript.json` (each sentence, each card and what was answered, the answer as read from the screen,
+the answer as the app holds it, timings, the build and the bundle it drove) land in `--out`.
+
+```bash
+ssh admin@171.66.240.175
+export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+cd <a copy of this branch's apps/activist-ai/apple on the mini>      # e.g. rsync apple/ to ~/ola-drive/src/apple
+tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next sentence>"] \
+    [--card yes|any|no] [--wait <seconds>] [--app <Ola.app>] --out <dir>
+```
+
+- **Exit 0 only when every sentence got a finished answer on the screen** (and a card came, with
+  `--card yes`). Anything else is exit 1 with one line, `DRIVE FAIL  <why>`, and the picture of where
+  it stopped (`NN-stopped-here.png`): the app not opening, a sign-in refused, the app signing itself
+  out, the sentence not taken, an error on the screen, a turn that failed or stopped, no card when one
+  was required, a card when `--card no`, the answer not on the screen, a wait longer than `--wait`.
+- `--card yes`: a card must come and is answered "Yes, this once"; `any` (default): any card is
+  answered yes; `no`: a card fails the run. `--wait`: seconds per answer (default 600).
+- **The made-up person** is `appdriver` with its one project `appdriver` on the live test server
+  (`tools/drive-account.mjs`, made with the live release's `frontdesk/admin.mjs` the first time).
+  Each run gives it a fresh password nobody sees, in a file with mode 600 that the app reads (never
+  on a command line, never printed), empties the project's folder, and at the end takes its pages
+  down, signs it out everywhere and stops the project's computer. Not `askcases`: an asks run resets
+  that one's password and signs it out at its end.
+- **The machine's turn**: a cloud run uses the project's computer, so it waits for and holds the test
+  turn (`ops/turn.mjs` of the live release; deploys go first). One drive at a time (`~/ola-drive/lock`).
+
+**The five checks of OLA-237, as commands** (from the copy of `apple/` on the mini; pictures under
+`~/ola-drive/checks/`):
+
+```bash
+# 1. cloud-mac: the sentence in a cloud project, the yes card answered, twice (two conversations)
+tools/drive.sh mac --where cloud --card yes --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/1a
+tools/drive.sh mac --where cloud --card yes --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/1b
+# 2. cloud-phone: the same in the iPhone app in the simulator
+tools/drive.sh phone --where cloud --card yes --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/2
+# 3. local-mac: Ola working on the Mac, in a scratch folder; the page must be in it (transcript.json "filesInFolder", and folder/)
+tools/drive.sh mac --where local --say "make a page that says Hello" --out ~/ola-drive/checks/3
+# 4. local-phone: not built yet (see below)
+# 5. a failure must fail: an answer that takes a minute, with 5 seconds to wait
+tools/drive.sh mac --where cloud --wait 5 --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/5; echo "exit $?"
+```
+
+**The Mac app** (`mac`): by default the published download (`https://ola.cx/ola-site/mac/latest.json`),
+installed once per build in `~/ola-drive/apps/Ola-<version>-<build>/` (never `/Applications`); `--app`
+drives another build. It runs as a second copy through LaunchServices in the background (`open -n -g`),
+with its own settings domain (`cx.ola.mac.drive`, emptied at each start and deleted after), its own home
+for Application Support (`CFFIXED_USER_HOME`) and its secrets in memory only, so it never reads or
+changes the settings or Keychain of an Ola someone uses on the mini.
+
+- **Why the app drives itself.** macOS lets a program click and type in another app only with
+  Automation Mode (XCUITest) or the Accessibility permission, and on the mini both need an
+  administrator's password at the screen. Measured 2026-11-20: a macOS UI test there stops with
+  "Timed out while enabling automation mode", and a process started over ssh is not trusted for
+  Accessibility. So the Mac app has a launch option, `-OlaDrive <script.json>` (`Mac/MacDrive.swift`),
+  that uses its own real window: key events into the window for typing (one per character, Return
+  as a Return key), a mouse click at a text field's center that the window's hit-testing delivers
+  (a covered field fails the run), buttons by their keyboard shortcuts as the app hands a key on
+  (Return for Sign In, Start and the card's "Yes, this once"; Command-N for New Session; a disabled
+  button takes nothing and the run stops), and the answer read from the window's picture with text
+  recognition (Vision), compared word by word with the end of the answer.
+- **What the Mac drive does not exercise**: the window server's input path (real hardware, focus
+  between apps, another app's window on top), and mouse clicks on buttons: SwiftUI gives a program
+  in the same process no place for a button (its accessibility tree stays empty until an assistive
+  app asks, which needs the permission above), so buttons are pressed by their shortcuts. The window
+  is opaque and far off every display (a transparent one counts as hidden, and SwiftUI then stops
+  drawing the conversation), never under the mini's mouse.
+- **Builds 0.1 (25) and older have no drive mode.** `drive.sh mac` asks a build first
+  (`Ola --drive-probe`) and refuses one without it, so a check on "the Mac app as shipped" needs a
+  download shipped after this change; until then `--app` points at a build of this branch.
+
+**The iPhone app** (`phone`, `tools/drive-phone.sh`): built from the live release's commit
+(`~/ola-staging/deployed.json`, from `~/ola-staging/current`) once per release into
+`~/ola-drive/phone/<commit>/`, installed fresh with an empty Keychain into a simulator of its own
+("Ola drive", booted headless, shut down after), and driven by XCUITest (`drive/`, a project of its own
+that knows the app only by its bundle id): real taps and the simulator's keyboard. A button that is
+not on the screen, covered or disabled cannot be tapped, and the run fails there. Pictures are at the
+phone's size. The mini has no Homebrew xcodegen; the driver uses a private copy in
+`~/ola-drive/xcodegen/` (copy `/opt/homebrew/Cellar/xcodegen/<version>/` there from any Mac that has it).
+
+**Not built yet:** check 4 (the phone through the Mac app, Ola working on the Mac) needs the Mac copy
+running with its phone link on and the simulator paired to it; `drive.sh phone --where local` says so.
+
 ## Shipping: TestFlight for the phone, a signed download for the Mac (2026-11-17)
 
 `testflight/README.md`: `bump-build.sh`, then `testflight/asc-setup.mjs` once and

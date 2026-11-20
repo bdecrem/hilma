@@ -30,6 +30,8 @@ your failure, not the builder's.
    stand-ins: not a fake service, not a local copy, not the test suite, not a neighbouring path
    that "uses the same code". If you cannot reach a place (a phone app with no device), the check
    stays not checked: say so, do not pass it.
+   The Mac app and the iPhone app: `apps/activist-ai/apple/tools/drive.sh` on the Mac mini types a
+   sentence in either app and answers its cards (apple/README.md, "Using the apps as a checker").
 4. Type what he would type, in his words, not the words the builder's instructions expect. Try it
    the awkward way once: a second time in a row, in a new project, with the sentence phrased
    differently.

@@ -5,10 +5,16 @@ import UserNotifications
 @main
 enum Main {
   static func main() {
+    // A copy a checker drives (OLA-237) keeps every setting in a domain of its own, before anything
+    // reads one.
+    if MacDrive.requested { MacDrive.isolateDefaults() }
     // Modes that never start the interface come first, before anything from AppKit or SwiftUI:
     // the `ola` command (--cli, --install-cli), then the Keychain tools.
     OlaCLI.runIfRequested()
     refuseUnknownOptions()
+    // tools/drive.sh asks a build whether it has -OlaDrive (OLA-237) before driving it; older builds
+    // answer "unknown option" and open nothing.
+    if CommandLine.arguments.contains("--drive-probe") { print("Ola drive mode: yes"); exit(0) }
     SecretImport.runIfRequested()
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
@@ -24,13 +30,15 @@ enum Main {
     }
     // The runtime on screen from the old setting, once (OLA-220), before the stores are made.
     LocalSettings.migrate()
+    // A checker driving this copy (OLA-237): secrets in memory, the runtime chosen, before the stores.
+    MacDrive.prepare()
     OlaMacApp.main()
   }
 
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
   static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--render-selftest", "--import-secret", "--secret-status", "--forget-secret",
-                                          "--permissions-selftest", "--models-selftest", "--shots", "--token-file", "--model-url", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
+                                          "--permissions-selftest", "--models-selftest", "--shots", "--token-file", "--model-url", "--folder", "--fresh", "--key-id", "--cli", "--install-cli", "--drive-probe"]
 
   static func refuseUnknownOptions() {
     let args = Array(CommandLine.arguments.dropFirst())
@@ -180,10 +188,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationWillFinishLaunching(_ notification: Notification) {
     // Before the first window draws: Light unless the person chose otherwise (OLA-207).
     MainActor.assumeIsolated { AppearanceChoice.apply() }
+    // Driven by a checker (OLA-237): no Dock icon, never the frontmost app.
+    if MacDrive.requested { NSApp.setActivationPolicy(.accessory) }
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     MainActor.assumeIsolated { keepAppMenuPlain() }
+    if MacDrive.requested {
+      MainActor.assumeIsolated { MacDrive.start(delegate: self) }
+      return
+    }
     // `-OlaMenuProbe <file>` (a hidden second instance, for a check): writes each item of the Ola
     // menu with whether it carries an icon, then quits. Bart, 2026-11-18, three times: no icon
     // beside Settings in the Ola menu.
@@ -227,7 +241,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 enum Notifier {
   static func wire(_ store: OlaStore) {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    // A driven copy (OLA-237) never asks: the question would wait on a screen nobody watches.
+    if !MacDrive.requested { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
     store.onRunEnded = { s, t in
       let body: String
       switch t.status {
