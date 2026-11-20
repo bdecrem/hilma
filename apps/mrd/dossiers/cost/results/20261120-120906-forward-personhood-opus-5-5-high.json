@@ -1,0 +1,824 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica personhood claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "personhood",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  27,
+  29,
+  31,
+  33
+ ],
+ "started_at": "2026-11-20T20:09:06.308Z",
+ "meters_before": {
+  "at": "2026-11-20T20:09:01.730Z",
+  "window": {
+   "pct": 21,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 21,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 21% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 64837,
+  "user": 115
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:14:01.601Z",
+ "minutes": 4.92,
+ "meters_after": {
+  "at": "2026-11-20T20:14:01.601Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 108390,
+   "output": 25984,
+   "cache_read": 1830002,
+   "cache_write": 142499,
+   "cost_usd": 1.9677,
+   "total": 2106875
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 108354,
+    "output": 7124,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2200,
+    "cost_usd": 0.0844
+   },
+   "claude-opus-5-5": {
+    "input": 36,
+    "output": 18860,
+    "cache_read": 1830002,
+    "cache_write": 142499,
+    "thinking": 4660,
+    "cost_usd": 1.8833
+   }
+  }
+ },
+ "turns": 31,
+ "calls": 49,
+ "duration_ms": 294252,
+ "duration_api_ms": 237687,
+ "pages_read": 22,
+ "pages": [
+  {
+   "at": "2026-11-20T20:09:15.524Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 54 | Artículo 55 | 43810 | 44501",
+   "ok": true,
+   "chars": 12606
+  },
+  {
+   "at": "2026-11-20T20:09:16.616Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Artículo 18 | Artículo 33 | Artículo 138 | Artículo 211 | 10493",
+   "ok": true,
+   "chars": 14633
+  },
+  {
+   "at": "2026-11-20T20:09:28.579Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 211 | Secuestro temporal de documentos",
+   "ok": true,
+   "chars": 4504
+  },
+  {
+   "at": "2026-11-20T20:09:32.497Z",
+   "url": "https://revistas.ucr.ac.cr/index.php/juridicas/article/download/63830/63144/299620",
+   "find": "artículo 54 | permiso laboral | trabajar | 43810",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:09:55.771Z",
+   "url": "https://rimap.unhcr.org/node/244",
+   "find": "54 | work | laboral | carné",
+   "ok": true,
+   "chars": 1339
+  },
+  {
+   "at": "2026-11-20T20:09:57.059Z",
+   "url": "https://crhoy.com/nacionales/no-se-otorgaran-permisos-laborales-inmediatos-a-solicitantes-de-refugio/",
+   "find": "permiso | decreto | carné | documento",
+   "ok": true,
+   "chars": 3123
+  },
+  {
+   "at": "2026-11-20T20:10:03.490Z",
+   "url": "https://www.refworld.org/es/leg/decre/pejec/2022/es/132300",
+   "find": "Artículo 54 | permiso laboral | rige | Rige",
+   "ok": true,
+   "chars": 627
+  },
+  {
+   "at": "2026-11-20T20:10:47.187Z",
+   "url": "https://www.elempleo.com/cr/noticias/mundo-empresarial/procedimiento-para-el-otorgamiento-de-permisos-laborales-las-personas-solicitantes-de-refugio-6721",
+   "find": "decreto | artículo | tres meses | carné | documento",
+   "ok": true,
+   "chars": 5143
+  },
+  {
+   "at": "2026-11-20T20:10:48.262Z",
+   "url": "https://centroamerica360.com/region/costa-rica-restituye-derechos-laborales-y-otros-a-solicitantes-de-refugio",
+   "find": "decreto | permiso | carné | dos años",
+   "ok": true,
+   "chars": 3807
+  },
+  {
+   "at": "2026-11-20T20:10:57.971Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC",
+   "find": "ARTÍCULO 223 | ARTÍCULO 228 | ARTÍCULO 366 | ARTÍCULO 368 | ARTÍCULO 369",
+   "ok": true,
+   "chars": 10605
+  },
+  {
+   "at": "2026-11-20T20:10:59.210Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "ARTÍCULO 70 | ARTÍCULO 83 | ARTÍCULO 84",
+   "ok": true,
+   "chars": 8569
+  },
+  {
+   "at": "2026-11-20T20:11:15.940Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC",
+   "find": "Falsificación de documentos privados | Supresión, ocultación y destrucción de documentos",
+   "ok": true,
+   "chars": 4210
+  },
+  {
+   "at": "2026-11-20T20:11:17.120Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC",
+   "find": "ARTÍCULO 6 | destrucción de documentos",
+   "ok": true,
+   "chars": 4474
+  },
+  {
+   "at": "2026-11-20T20:11:24.031Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC",
+   "find": "Artículo 3 | Artículo 23",
+   "ok": true,
+   "chars": 5488
+  },
+  {
+   "at": "2026-11-20T20:11:24.880Z",
+   "url": "https://www.tse.go.cr/pdf/normativa/leyorganicaTSE.pdf",
+   "find": "Artículo 48 | Artículo 49 | Artículo 50",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:11:27.768Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC",
+   "find": "Artículo 174 | Artículo 175",
+   "ok": true,
+   "chars": 5470
+  },
+  {
+   "at": "2026-11-20T20:11:49.597Z",
+   "url": "https://bufetedecostarica.com/ley-organica-del-tribunal-supremo-de-elecciones-tse-y-del-registro-civil-de-costa-rica-3504/",
+   "find": "Artículo 48 | Artículo 49 | Artículo 50 | reformado",
+   "ok": true,
+   "chars": 6561
+  },
+  {
+   "at": "2026-11-20T20:11:50.313Z",
+   "url": "https://help.unhcr.org/costarica/apatridia",
+   "find": "nacimiento | inscripción | Registro Civil",
+   "ok": true,
+   "chars": 4345
+  },
+  {
+   "at": "2026-11-20T20:12:17.987Z",
+   "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+   "find": "document | passport | confiscat | labor inspectors",
+   "ok": true,
+   "chars": 4078
+  },
+  {
+   "at": "2026-11-20T20:12:18.843Z",
+   "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "asylum | document | backlog | appointment | birth registration",
+   "ok": true,
+   "chars": 7490
+  },
+  {
+   "at": "2026-11-20T20:12:22.498Z",
+   "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "Stateless Persons | Birth Registration | forced labor",
+   "ok": true,
+   "chars": 5510
+  },
+  {
+   "at": "2026-11-20T20:12:26.571Z",
+   "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "identification document | work permit | Stateless | birth registration | passport",
+   "ok": true,
+   "chars": 7554
+  }
+ ],
+ "searches": [
+  "decreto 43810-MGP reforma reglamento personas refugiadas artículo 54 documento provisional permiso laboral vigencia La Gaceta",
+  "\"43810\" refugio solicitantes permiso laboral \"tres meses\" OR \"artículo 54\" Costa Rica 2022 reforma",
+  "\"Reforma al Reglamento de Personas Refugiadas\" 43810 texto \"documento provisional\" \"permiso\"",
+  "pgrweb.go.cr scij \"Ley Orgánica del Tribunal Supremo de Elecciones y del Registro Civil\" 3504 nrm_texto_completo",
+  "inscripción nacimiento hijos de madres migrantes indocumentadas Costa Rica Registro Civil 2023 OR 2024 OR 2025 riesgo apatridia informe",
+  "Migración atraso entrega DIMEX citas 2023 OR 2022 solicitantes refugio carné documento espera",
+  "Costa Rica trabajadores migrantes retención pasaporte patrono 2022 OR 2023 trata laboral documentos retenidos"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":27,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 18 (penultimate paragraph)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 211(4)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 33(2)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código de Trabajo, Ley N.º 2\",\"article\":\"Art. 70(d)\",\"enacted\":\"1943\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código de Trabajo, Ley N.º 2\",\"article\":\"Arts. 83-84\",\"enacted\":\"1943\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código Penal, Ley N.º 4573\",\"article\":\"Art. 369\",\"enacted\":\"1970\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código Penal, Ley N.º 4573\",\"article\":\"Art. 223\",\"enacted\":\"1970\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley N.º 9095 contra la Trata de Personas\",\"article\":\"Art. 6\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2024-06\",\"instrument\":\"Ley N.º 10493 (Reforma del penúltimo párrafo del artículo 33 ... de la Ley 8764)\",\"article\":\"Ley 8764, art. 33 (fee-exemption paragraph after inc. 5)\",\"kind\":\"amended\",\"what_changed\":\"Rewrote the paragraph of art. 33 that exempts minors, refugees, stateless persons and others from the Fondo Social de Migración fees and halves them for seasonal farm workers. Inciso 2 (duty to carry and show identity and migration doc",
+ "output": {
+  "answers": [
+   {
+    "question_id": 27,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 18 (penultimate paragraph)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 211(4)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33(2)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 70(d)",
+      "enacted": "1943",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Arts. 83-84",
+      "enacted": "1943",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 369",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 223",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley N.º 9095 contra la Trata de Personas",
+      "article": "Art. 6",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-06",
+      "instrument": "Ley N.º 10493 (Reforma del penúltimo párrafo del artículo 33 ... de la Ley 8764)",
+      "article": "Ley 8764, art. 33 (fee-exemption paragraph after inc. 5)",
+      "kind": "amended",
+      "what_changed": "Rewrote the paragraph of art. 33 that exempts minors, refugees, stateless persons and others from the Fondo Social de Migración fees and halves them for seasonal farm workers. Inciso 2 (duty to carry and show identity and migration documents) was not touched, so the indicator is unaffected.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "En el caso de trabajadores del sector agrícola, que atienden labores de cosecha temporales por periodos de nueve meses o inferiores, el costo de estos pagos será de hasta un cincuenta por ciento (50%) menos. (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: the US TIP Report 2023 (covering 2022) shows anti-trafficking units identifying and assisting victims, but labour inspectors lacked training and referred few if any cases. No pattern of employers confiscating documents is documented; enforcement against employer retention comes through trafficking cases. 2026: the starting coder's evidence (migration-police and prosecutor raids in 2024 against employers who held Venezuelan workers' passports; the blanket 'decomiso temporal' of US deportees' passports at CATEM in Feb–Apr 2025, with the passports later returned) shows the same pattern. Retention by private actors is acted on when it surfaces as trafficking; detection outside trafficking is weak; there was one State episode in 2025. The level stays at Usually; no documented shift.",
+    "practice_sources": [
+     {
+      "title": "US Department of State, 2023 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "US Department of State, 2022 Country Reports on Human Rights Practices: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Every cited provision was read in the current SINALEVI consolidated text, whose per-article amendment notes show no change in force between 1 Jan 2023 and 1 Jan 2026. Labour Code art. 70 was last amended by Ley 10211 of May 2022; Penal Code art. 223 by Ley 6726 of 1982; Ley 9095 art. 6 by Ley 9545 of 2018. The only window amendment, Ley 10493, touches a fee paragraph of art. 33. The 2023 text is therefore the current text minus later notes; no archived version was opened.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Código de Trabajo (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Código Penal (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 contra la Trata de Personas (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "US TIP Report 2023: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/"
+     },
+     {
+      "title": "US Country Reports on Human Rights Practices 2022: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": "The Yes is implied: no provision names identity documents or migrant workers, and Labour Code art. 70(d) speaks of the worker's 'herramientas u objetos'. A strict reviewer could code No. This concern does not depend on any change.",
+    "confidence": "medium",
+    "notes": "Sala Constitucional Voto 2025-019485 and the 2024/2026 press items are the starting coder's practice evidence. I did not re-open them this session, so they are not recorded as events. They are practice evidence, not a general rule. Ley 10886 of 18 March 2026 amended Ley 9095 (e.g. art. 35 bis) after the window, and not art. 6."
+   },
+   {
+    "question_id": 29,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley Orgánica del Tribunal Supremo de Elecciones y del Registro Civil N.º 3504",
+      "article": "Art. 48",
+      "enacted": "1965",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley Orgánica del Tribunal Supremo de Elecciones y del Registro Civil N.º 3504",
+      "article": "Arts. 49-50",
+      "enacted": "1965",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley N.º 7739",
+      "article": "Arts. 3 and 23",
+      "enacted": "1998",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the US Human Rights Report 2022 records statelessness problems for indigenous Ngäbe-Buglé children and children of seasonal workers in the Panama and Nicaragua border areas, arising from difficulties completing birth registration. It also records active TSE–UNHCR mobile registration and late-registration projects. 2026: the US Human Rights Report 2023 repeats the same gaps: migrant children at risk of statelessness when parents do not register them, and border-area seasonal-worker children. It also describes continued joint TSE/UNHCR/IOM registration programmes. The starting coder's TSE procedure sheets show free hospital registration on a foreign passport, with a proof-of-entry requirement for late home-birth registration. Registration is the norm, with known gaps for border and irregular families; no shift between the dates.",
+    "practice_sources": [
+     {
+      "title": "US Department of State, 2022 Country Reports on Human Rights Practices: Costa Rica (Stateless Persons)",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "US Department of State, 2023 Country Reports on Human Rights Practices: Costa Rica (Birth Registration; Stateless Persons)",
+      "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "ACNUR Costa Rica – Apatridia (help page)",
+      "url": "https://help.unhcr.org/costarica/apatridia",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 7739 arts. 3 and 23 were read in the SINALEVI consolidated text and carry no amendment notes. The official TSE PDF of Ley 3504 could not be parsed (PDF tool failure), so arts. 48–50 were read in a private consolidated copy (Bufete de Costa Rica, updated 2025). That copy shows art. 50 last reformed by Ley 7538 of 1995 and no later notes. Search metadata for the TSE PDF shows its last reform was published 29 Sept 2022, before the window.",
+    "sources_opened": [
+     {
+      "title": "Código de la Niñez y la Adolescencia (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC"
+     },
+     {
+      "title": "Ley Orgánica del TSE y del Registro Civil 3504 (Bufete de Costa Rica copy)",
+      "url": "https://bufetedecostarica.com/ley-organica-del-tribunal-supremo-de-elecciones-tse-y-del-registro-civil-de-costa-rica-3504/"
+     },
+     {
+      "title": "US Country Reports on Human Rights Practices 2022: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US Country Reports on Human Rights Practices 2023: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "ACNUR Costa Rica – Apatridia",
+      "url": "https://help.unhcr.org/costarica/apatridia"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The attempt to open the official TSE PDF (leyorganicaTSE.pdf) failed for technical reasons. Ley 3504 history therefore rests on a secondary consolidated copy, which is why confidence is medium. No practice source dated 2025 was found specifically on migrant birth registration."
+   },
+   {
+    "question_id": 31,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 138",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33(2)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo N.º 37112-G",
+      "article": "Arts. 174-175",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 54",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 55",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-06-14",
+      "instrument": "Decreto Ejecutivo N.º 44501-MGP, Reforma al Reglamento de Personas Refugiadas (28 May 2024; La Gaceta 14 June 2024)",
+      "article": "Reglamento de Personas Refugiadas, art. 54 (also art. 14)",
+      "kind": "amended",
+      "what_changed": "Under the 43810-MGP regime in force on 1 Jan 2023, the asylum seeker's provisional document regularised stay but did not itself authorise work. A separate, employer-tied permit could be sought after 3 months (procedure published Feb 2023). The new art. 54 makes the provisional document valid up to two years and itself grant the right to paid work, employed or self-employed. The document now records work status for asylum seekers.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+      "passage": "Dicho documento será válido hasta por el plazo de dos años ... Ese documento a su vez le otorgará a la persona solicitante, la posibilidad de realizar labores remunerada por cuenta propia o en relación de dependencia, sujeta a la legislación laboral y social vigente. (Así reformado por el artículo 2° del decreto ejecutivo N° 44501 del 28 de mayo del 2024)"
+     },
+     {
+      "date": "2024-06",
+      "instrument": "Ley N.º 10493",
+      "article": "Ley 8764, art. 33 (fee-exemption paragraph)",
+      "kind": "amended",
+      "what_changed": "Changed the paragraph on fee exemptions and reductions; inciso 2 (duty to carry identity and migration documents) untouched. No effect on the indicator.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "(Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: the US Human Rights Report 2022 says asylum seekers got provisional documents after an interview, with about a two-month wait, and that government authorities generally accepted them while many private actors did not. The 2023 report says that under the 2022 decree new applicants had to wait three months and file extra documentation for work authorisation. 2026: the starting coder's evidence shows the DGME routinely issuing DIMEX and asylum documents but with a backlog of about 20,000 DIMEX cards in late 2025 and early 2026 (Semanario Universidad, Teletica). Since July 2024 the asylum card carries the work permit. Both dates rate Usually (issued as routine, with delays); the legal content changed, not the implementation level.",
+    "practice_sources": [
+     {
+      "title": "US Department of State, 2022 Country Reports on Human Rights Practices: Costa Rica (Protection of Refugees)",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "US Department of State, 2023 Country Reports on Human Rights Practices: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "CRHoy, No se otorgarán permisos laborales inmediatos a solicitantes de refugio (30 Nov 2022)",
+      "url": "https://crhoy.com/nacionales/no-se-otorgaran-permisos-laborales-inmediatos-a-solicitantes-de-refugio/",
+      "year": 2022,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "El Empleo / BDS Asesores, Procedimiento para el otorgamiento de permisos laborales a las personas solicitantes de refugio (1 Mar 2023)",
+      "url": "https://www.elempleo.com/cr/noticias/mundo-empresarial/procedimiento-para-el-otorgamiento-de-permisos-laborales-las-personas-solicitantes-de-refugio-6721",
+      "year": 2023,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Centroamérica 360, Costa Rica restituye derechos laborales y otros a solicitantes de refugio (15 Jun 2024)",
+      "url": "https://centroamerica360.com/region/costa-rica-restituye-derechos-laborales-y-otros-a-solicitantes-de-refugio",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 8764 arts. 33 and 138, Reglamento de Extranjería arts. 174–175 and Refugee Regulation arts. 54–55 were read in current SINALEVI consolidated texts with their amendment notes. The art. 54 wording as amended by Decreto 43810-MGP (published 1 Dec 2022, in force on 1 Jan 2023) could not be read: Refworld blocked access and no archived SINALEVI version was found. The 2023 position is reconstructed from the 44501 amendment note and press and HRR descriptions of 43810.",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     },
+     {
+      "title": "UNHCR RIMAP: Decreto 43810-MGP",
+      "url": "https://rimap.unhcr.org/node/244"
+     },
+     {
+      "title": "Refworld: Decreto 43810-MGP (blocked by Cloudflare)",
+      "url": "https://www.refworld.org/es/leg/decre/pejec/2022/es/132300"
+     },
+     {
+      "title": "CRHoy 30 Nov 2022",
+      "url": "https://crhoy.com/nacionales/no-se-otorgaran-permisos-laborales-inmediatos-a-solicitantes-de-refugio/"
+     },
+     {
+      "title": "El Empleo 1 Mar 2023",
+      "url": "https://www.elempleo.com/cr/noticias/mundo-empresarial/procedimiento-para-el-otorgamiento-de-permisos-laborales-las-personas-solicitantes-de-refugio-6721"
+     },
+     {
+      "title": "Centroamérica 360, 15 Jun 2024",
+      "url": "https://centroamerica360.com/region/costa-rica-restituye-derechos-laborales-y-otros-a-solicitantes-de-refugio"
+     },
+     {
+      "title": "US Country Reports on Human Rights Practices 2022: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US Country Reports on Human Rights Practices 2023: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "UCR Revista de Ciencias Jurídicas article on 43810→44501 (PDF could not be parsed)",
+      "url": "https://revistas.ucr.ac.cr/index.php/juridicas/article/download/63830/63144/299620"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Both dates are Yes: DIMEX residence documents (art. 138 Ley 8764, arts. 174–175 Reglamento) and the asylum seeker's identifying and regularising document (art. 55, unchanged) were mandated throughout. The difference is that from 14 June 2024 the asylum document itself records work authorisation, which under 43810 was a separate employer-tied permit. Hence 'not the same' rather than 'no change'. The art. 54 text of 1 Jan 2023 was not read directly."
+   },
+   {
+    "question_id": 33,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 369",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 366",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 368",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal, Ley N.º 4573",
+      "article": "Art. 228",
+      "enacted": "1970",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 138",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley N.º 9095 contra la Trata de Personas",
+      "article": "Art. 6",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No report found for either period of officials, employers or others destroying migrants' residence, work or identity documents. The 2023 TIP report (covering 2022) and the starting coder's 2025 TIP report mention no document destruction. In the 2025 CATEM episode (starting coder's evidence, not re-opened here), seized passports were logged, kept in a safe and returned. No prosecution data for arts. 369 or 228 exist for either period, so both ratings rest mainly on the absence of documented breaches; no shift.",
+    "practice_sources": [
+     {
+      "title": "US Department of State, 2023 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Penal Code arts. 228, 366, 368, 369, Ley 8764 art. 138 and Ley 9095 art. 6 were read in current SINALEVI texts. Their latest amendment notes predate the window: art. 228 by Ley 8720 (2009); arts. 366–369 renumbered by Ley 9048 (2012); art. 6 by Ley 9545 (2018). The 1 Jan 2023 text is therefore identical to today's.",
+    "sources_opened": [
+     {
+      "title": "Código Penal (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI consolidated)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "US TIP Report 2023: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": "The implementation rating rests on a negative finding with no prosecution data. Plain 'Usually', the MRD default, would be as defensible. This concern does not depend on any change.",
+    "confidence": "low",
+    "notes": "The legal answer rests on general Penal Code offences. Treating DGME documents as public documents (art. 366 penalty) is an inference from Ley 8764 art. 138. Practice evidence is indirect, about retention rather than destruction."
+   }
+  ]
+ }
+}
