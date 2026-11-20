@@ -8,7 +8,9 @@
 // front desk. A request that passes has its Authorization header removed and goes to the front
 // desk on 127.0.0.1 over HTTP/1.1, on a connection that starts with a PROXY v1 line naming the
 // client. Bodies and replies stream both ways with backpressure (server-sent events, uploads);
-// nothing is buffered. Every other HTTP check (Host, Origin, the body limits, HSTS and the other
+// nothing is buffered. While the front desk restarts (a deploy), a request waits up to 20 s for it
+// to take connections again instead of failing, and a GET or HEAD with no body that the stopping
+// front desk cut before answering is sent again (OLA-94). Every other HTTP check (Host, Origin, the body limits, HSTS and the other
 // headers) is the front desk's.
 //
 //   node ops/run.mjs ~/.ola/tls.env ops/tls.mjs       (the launchd job cx.ola.tls)
@@ -85,6 +87,8 @@ export const CIPHERS = [
   'ECDHE-RSA-CHACHA20-POLY1305',
 ].join(':')
 const KNOWN = ['LISTEN', 'UPSTREAM', 'CERT_DIR', 'SERVERNAME', 'PROXY_IN', 'PROXY_OUT', 'GATE', 'GATE_PASSCODE', 'CONNECTIONS_PER_ADDRESS', 'MAX_CONNECTIONS'].map((k) => `OLA_TLS_${k}`)
+// How long a request waits for the front desk to take connections again (it restarts in a deploy).
+export const UPSTREAM_WAIT_MS = 20_000
 export const GATE = { firstDelayMs: 250, maxDelayMs: 8_000, blockAfter: 10, addressBlockAfter: 100, windowMs: 15 * 60_000, blockMs: 15 * 60_000, maxTracked: 20_000 }
 
 function hostPort(v, name) {
@@ -199,7 +203,7 @@ export function makeTlsFront(cfg = config()) {
   const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'tls', ...o }))
   let current = loadCert(cfg.certDir, cfg.servername)
   let seen = stamp(cfg.certDir)
-  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, probes: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
+  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, probes: 0, blocked: 0, upgrade: 0, upstreamDown: 0, upstreamWaits: 0, upstreamRetries: 0 }
 
   // ------------------------------------------------------------ the gate
   // `a:<address key>` (the backstop) and `n:<address key> <name or device>` -> { n, last, blockedUntil }
@@ -270,40 +274,65 @@ export function makeTlsFront(cfg = config()) {
     // (third review, 2026-11-16; frontdesk/review/rev3-tls.mjs). Node's parser has already refused
     // any Transfer-Encoding that does not end in chunked, and one sent with a Content-Length.
     if (req.headers['transfer-encoding'] !== undefined) headers['transfer-encoding'] = 'chunked'
-    const up = http.request({
-      method: req.method,
-      path: req.url,
-      headers,
-      // No agent (agent: false would make one, which ignores createConnection): one upstream
-      // connection per request, opened with the PROXY line.
-      createConnection: (_o, cb) => {
-        const s = net.connect({ host: cfg.upstream.host, port: cfg.upstream.port })
-        s.once('connect', () => {
-          if (cfg.proxyOut) {
-            const v6 = net.isIP(client.address) === 6
-            s.write(`PROXY ${v6 ? 'TCP6' : 'TCP4'} ${client.address} ${v6 ? '::1' : '127.0.0.1'} ${client.port} ${cfg.upstream.port}\r\n`)
+    // While the front desk restarts (a deploy, OLA-94) its port refuses connections for a second or
+    // two: the request waits here instead of failing (nothing has been sent, so this is always
+    // safe). A GET or HEAD with no body whose connection is cut before any answer is sent again: the
+    // old front desk was stopping and no request of that kind changes anything.
+    const deadline = Date.now() + UPSTREAM_WAIT_MS
+    const bodyless = (req.method === 'GET' || req.method === 'HEAD') && req.headers['content-length'] === undefined && req.headers['transfer-encoding'] === undefined
+    let gone = false
+    let up = null
+    res.on('close', () => ((gone = true), up?.destroy()))
+    const send = () => {
+      let answered = false
+      up = http.request({
+        method: req.method,
+        path: req.url,
+        headers,
+        // No agent (agent: false would make one, which ignores createConnection): one upstream
+        // connection per request, opened with the PROXY line.
+        createConnection: (_o, cb) => {
+          let wait = 50
+          const dial = () => {
+            const s = net.connect({ host: cfg.upstream.host, port: cfg.upstream.port })
+            s.once('connect', () => {
+              if (gone) return s.destroy()
+              if (cfg.proxyOut) {
+                const v6 = net.isIP(client.address) === 6
+                s.write(`PROXY ${v6 ? 'TCP6' : 'TCP4'} ${client.address} ${v6 ? '::1' : '127.0.0.1'} ${client.port} ${cfg.upstream.port}\r\n`)
+              }
+              cb(null, s)
+            })
+            s.once('error', (e) => {
+              if (!gone && e.code === 'ECONNREFUSED' && Date.now() + wait < deadline) return (counts.upstreamWaits++, setTimeout(dial, wait), (wait = Math.min(wait * 2, 250)))
+              cb(e)
+            })
           }
-          cb(null, s)
-        })
-        s.once('error', (e) => cb(e))
-        return undefined
-      },
-    })
-    up.on('response', (r) => {
-      const out = []
-      for (let i = 0; i < r.rawHeaders.length; i += 2) if (!HOP.has(r.rawHeaders[i].toLowerCase())) out.push(r.rawHeaders[i], r.rawHeaders[i + 1])
-      res.writeHead(r.statusCode, r.statusMessage, out)
-      res.flushHeaders() // an event stream's headers go out at once
-      r.pipe(res)
-      r.on('error', () => res.destroy())
-    })
-    up.on('error', () => {
-      counts.upstreamDown++
-      if (!res.headersSent) refuse(res, 502, '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Ola is not answering just now.</p>\n')
-      else res.destroy()
-    })
-    res.on('close', () => up.destroy())
-    req.pipe(up)
+          dial()
+          return undefined
+        },
+      })
+      up.on('response', (r) => {
+        answered = true
+        const out = []
+        for (let i = 0; i < r.rawHeaders.length; i += 2) if (!HOP.has(r.rawHeaders[i].toLowerCase())) out.push(r.rawHeaders[i], r.rawHeaders[i + 1])
+        res.writeHead(r.statusCode, r.statusMessage, out)
+        res.flushHeaders() // an event stream's headers go out at once
+        r.pipe(res)
+        r.on('error', () => res.destroy())
+      })
+      up.on('error', (e) => {
+        if (gone) return
+        if (bodyless && !answered && !res.headersSent && e.code === 'ECONNRESET' && Date.now() < deadline) return (counts.upstreamRetries++, setTimeout(send, 50))
+        counts.upstreamDown++
+        if (!res.headersSent) refuse(res, 502, '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Ola is not answering just now.</p>\n')
+        else res.destroy()
+      })
+      if (bodyless) up.end()
+      else req.pipe(up)
+    }
+    if (bodyless) req.resume() // nothing to read, but the request must end for the connection's next one
+    send()
   }
 
   // A pass may be used only under /api/device/: the raw request line and the path as the front desk

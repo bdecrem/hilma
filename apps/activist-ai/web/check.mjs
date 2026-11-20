@@ -233,6 +233,21 @@ await check('a lost network is said out loud, and the page recovers', async () =
   await page.waitForSelector('.banner-lost', { state: 'detached', timeout: 20_000 })
 })
 
+await check('a stream cut that is back at once (a deploy restarting the front desk, OLA-94) shows no banner, and the page opens it again', async () => {
+  const cut = await page.evaluate(() => fetch('/__dev/cut-streams', { method: 'POST' }).then((r) => r.json()))
+  assert(cut.cut >= 1, `no open stream to cut: ${JSON.stringify(cut)}`)
+  const t0 = Date.now()
+  let banner = false
+  let opened = cut.opened
+  while (Date.now() - t0 < 6_000) {
+    banner ||= (await page.locator('.banner-lost').count()) > 0
+    opened = (await page.evaluate(() => fetch('/__dev/cut-streams?peek=1', { method: 'POST' }).then((r) => r.json()))).opened
+    await page.waitForTimeout(200)
+  }
+  assert(!banner, 'the lost banner showed for a cut that was back at once')
+  assert(opened > cut.opened, `the stream was not opened again (${cut.opened} -> ${opened})`)
+})
+
 await check('a stopped workspace is said out loud, and the page recovers', async () => {
   await page.evaluate(() => fetch('/__dev/opencode?to=stop', { method: 'POST' }))
   await page.waitForSelector('.banner-lost', { timeout: 15_000 })

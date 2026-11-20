@@ -1307,8 +1307,11 @@ async function onRequest(req, res) {
     log(rec)
   }
 }
+// Requests being answered on any of the gateway's servers, for a stop that lets them finish.
+let answering = 0
 function makeServer(maxConnections) {
   const s = http.createServer(onRequest)
+  s.on('request', (_req, res) => (answering++, res.on('close', () => answering--)))
   s.headersTimeout = Math.min(10_000, C.readMs)
   s.requestTimeout = C.readMs // receiving the request; the response has its own timeouts
   s.maxConnections = maxConnections
@@ -1425,13 +1428,24 @@ process.on('SIGHUP', () => reloadTokens('signal'))
     }, 3000).unref()
 }
 
+// launchd's stop (a deploy restarts the gateway only when its code changed, OLA-94): no new
+// connection is taken (a door waits for the next gateway's socket, workspace/door.mjs), and the
+// requests in flight get up to 5 s to finish.
+let stopping = false
 const stop = () => {
+  if (stopping) return
+  stopping = true
   server.close()
   for (const [name, d] of doors) d.close(), rmSync(join(C.doorDir, `${name}.sock`), { force: true })
-  try {
-    db.close()
-  } catch {}
-  process.exit(0)
+  const until = Date.now() + 5_000
+  const done = () => {
+    if (answering > 0 && Date.now() < until) return setTimeout(done, 25)
+    try {
+      db.close()
+    } catch {}
+    process.exit(0)
+  }
+  done()
 }
 process.on('SIGTERM', stop)
 process.on('SIGINT', stop)

@@ -29,9 +29,9 @@ const ssl = (...a) => {
 function leaf(dir, name) {
   mkdirSync(path.join(T, dir))
   ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', `${dir}/key.pem`)
-  ssl('req', '-new', '-key', `${dir}/key.pem`, '-subj', `/CN=${name}`, '-out', `${dir}/csr.pem`)
+  ssl('req', '-new', '-sha256', '-key', `${dir}/key.pem`, '-subj', `/CN=${name}`, '-out', `${dir}/csr.pem`)
   writeFileSync(path.join(T, dir, 'ext.cnf'), `subjectAltName=DNS:${name}\nextendedKeyUsage=serverAuth\n`)
-  ssl('x509', '-req', '-in', `${dir}/csr.pem`, '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-days', '2', '-extfile', `${dir}/ext.cnf`, '-out', `${dir}/leaf.pem`)
+  ssl('x509', '-req', '-sha256', '-in', `${dir}/csr.pem`, '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-days', '2', '-extfile', `${dir}/ext.cnf`, '-out', `${dir}/leaf.pem`)
   writeFileSync(path.join(T, dir, 'cert.pem'), readFileSync(path.join(T, dir, 'leaf.pem'), 'utf8') + readFileSync(path.join(T, 'ca.pem'), 'utf8'))
   return new X509Certificate(readFileSync(path.join(T, dir, 'leaf.pem'))).serialNumber
 }
@@ -141,7 +141,7 @@ function get(port, p, { auth = `ola:${PASS}`, headers = {}, ...opts } = {}, body
 
 before(async () => {
   ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', 'ca.key')
-  ssl('req', '-x509', '-new', '-key', 'ca.key', '-subj', '/CN=Ola test CA', '-days', '2', '-out', 'ca.pem')
+  ssl('req', '-x509', '-new', '-sha256', '-key', 'ca.key', '-subj', '/CN=Ola test CA', '-days', '2', '-out', 'ca.pem')
   CA = readFileSync(path.join(T, 'ca.pem'))
   SERIAL_A = leaf('a', NAME)
   SERIAL_B = leaf('b', NAME)
@@ -605,4 +605,73 @@ test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and
   assert.equal((await get(f.port, '/who', { from: b })).status, 200)
   // A bad key setting is refused at start.
   for (const env of [{ OLA_GATE_PASS_KEY: 'abc' }, { OLA_GATE_PASS_KEY: 'zz'.repeat(32) }]) await assert.rejects(startFront(env), /exited 78/, JSON.stringify(env))
+})
+
+// ------------------------------------------------------------------ a deploy restarts the front desk (OLA-94)
+/** A front desk on `port` (0: any): reads the PROXY line, then hands the connection to `handler`. */
+function deskOn(port, handler) {
+  const h = http.createServer(handler)
+  return new Promise((resolve) => {
+    const s = net.createServer({ pauseOnConnect: true }, (sock) => {
+      let head = Buffer.alloc(0)
+      const onData = (d) => {
+        head = Buffer.concat([head, d])
+        const nl = head.indexOf('\r\n')
+        if (nl < 0) return
+        sock.off('data', onData)
+        sock.pause()
+        const rest = head.subarray(nl + 2)
+        if (rest.length) sock.unshift(rest)
+        if (sock._handle) sock._handle._consumed = true
+        h.emit('connection', sock)
+        sock.resume()
+      }
+      sock.on('data', onData)
+      sock.on('error', () => {})
+      sock.resume()
+    })
+    s.listen(port, '127.0.0.1', () => resolve(s))
+  })
+}
+
+test('while the front desk restarts, requests wait for it instead of failing: a GET, and a POST with a body (OLA-94)', async () => {
+  // A port with nothing on it yet: the front desk is "restarting".
+  const probe = await deskOn(0, () => {})
+  const port = probe.address().port
+  await new Promise((r) => probe.close(r))
+  const f = await startFront({ OLA_TLS_UPSTREAM: `127.0.0.1:${port}` })
+  const t0 = Date.now()
+  const pending = [get(f.port, '/who'), get(f.port, '/upload', {}, Buffer.alloc(100_000, 1))]
+  await new Promise((r) => setTimeout(r, 1500))
+  const desk = await deskOn(port, (req, res) => {
+    let n = 0
+    req.on('data', (d) => (n += d.length))
+    req.on('end', () => res.end(JSON.stringify({ url: req.url, bytes: n })))
+  })
+  const [a, b] = await Promise.all(pending)
+  desk.close()
+  assert.equal(a.status, 200)
+  assert.deepEqual(JSON.parse(a.body), { url: '/who', bytes: 0 })
+  assert.equal(b.status, 200)
+  assert.deepEqual(JSON.parse(b.body), { url: '/upload', bytes: 100_000 })
+  assert.ok(Date.now() - t0 >= 1400, 'answered before the front desk was back')
+})
+
+test('a GET the stopping front desk cuts before answering is sent again; a POST is not (OLA-94)', async () => {
+  const seen = []
+  const desk = await deskOn(0, (req, res) => {
+    seen.push(`${req.method} ${req.url}`)
+    // The first request of each kind is cut, as a front desk that stops mid-request would.
+    if (seen.filter((s) => s === `${req.method} ${req.url}`).length === 1) return req.socket.destroy()
+    req.resume()
+    req.on('end', () => res.end('second try'))
+  })
+  const f = await startFront({ OLA_TLS_UPSTREAM: `127.0.0.1:${desk.address().port}` })
+  const g = await get(f.port, '/page')
+  assert.equal(g.status, 200)
+  assert.equal(g.body, 'second try')
+  const p = await get(f.port, '/change', {}, Buffer.from('x'))
+  assert.equal(p.status, 502, 'a POST must not be sent twice')
+  desk.close()
+  assert.deepEqual(seen, ['GET /page', 'GET /page', 'POST /change'])
 })

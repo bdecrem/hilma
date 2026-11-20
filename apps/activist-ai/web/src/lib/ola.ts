@@ -57,6 +57,9 @@ export interface Typed {
 }
 
 const QUIET_MS = 60_000
+// A deploy restarts the front desk, which ends the event stream; the page opens it again at once and
+// it is back within a second or two. Only a stream gone this long is "Lost the connection" (OLA-94).
+export const LOST_AFTER_MS = 5_000
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
@@ -117,12 +120,19 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       }),
     )
   }
+  let lostTimer: ReturnType<typeof setTimeout> | null = null
   const markLost = () => {
+    if (lostTimer) clearTimeout(lostTimer)
+    lostTimer = null
     if (state.connection !== 'lost') setState({ connection: 'lost', lostSince: Date.now() })
+  }
+  /** The stream is gone: lost only if it is not back within LOST_AFTER_MS. */
+  const markGone = () => {
+    if (!lostTimer && state.connection !== 'lost') lostTimer = setTimeout(markLost, LOST_AFTER_MS)
   }
 
   async function listen() {
-    let backoff = 1000
+    let backoff = 250
     let everOpen = false
     while (!disposed) {
       streamAbort = new AbortController()
@@ -140,9 +150,11 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
         for await (const ev of client.event.subscribe({ signal: ctl.signal, onActivity })) {
           if ((ev as any).type === 'server.connected') {
             const wasLost = state.connection === 'lost' || everOpen
+            if (lostTimer) clearTimeout(lostTimer)
+            lostTimer = null
             setState({ connection: 'open', lostSince: null })
             everOpen = true
-            backoff = 1000
+            backoff = 250
             if (wasLost) void resync()
             void refreshEarlier()
             continue
@@ -152,7 +164,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
         throw new Error('the event stream ended')
       } catch {
         if (disposed) return
-        markLost()
+        markGone()
         // The stream is also cut when the person is taken off the project: if this project is no
         // longer theirs, the page says so now instead of retrying until a reload (first-user pass, B11).
         void desk
@@ -667,6 +679,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     open,
     dispose() {
       disposed = true
+      if (lostTimer) clearTimeout(lostTimer)
       streamAbort?.abort()
       window.removeEventListener('offline', onOffline)
       window.removeEventListener('online', onOnline)

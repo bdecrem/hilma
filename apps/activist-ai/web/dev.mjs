@@ -320,6 +320,9 @@ fs.writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${fakeToke
 const devSites = makeSites({ cfg: sitesConfig({ OLA_FD_SITES_ORIGIN: fakeVercel.origin, OLA_FD_SITES_API: fakeVercel.api, OLA_FD_SITES_FILE: path.join(run, 'sites.env'), OLA_FD_SITES_POLL_MS: '50', OLA_FD_SITES_VERIFY_MS: '5000' }), dataDir: path.join(run, 'fd'), log })
 const uploadedHere = new Set()
 let pagePort = PORT
+// The event streams the page holds open (for /__dev/cut-streams), and how many it has opened.
+const eventStreams = new Set()
+let eventOpens = 0
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
   const p = url.pathname
@@ -332,6 +335,7 @@ const server = http.createServer(async (req, res) => {
     if (origin && origin !== `http://${req.headers.host}`) return json(res, 403, { error: 'wrong_origin' })
   }
   try {
+    if (p === '/oc/api/event') (eventStreams.add(res), (eventOpens += 1), res.on('close', () => eventStreams.delete(res)))
     if (p.startsWith('/oc/')) return await proxy(req, res, p.slice(3), url.search)
     // Fallback to Claude, stood in for (server/claude-standin.mjs; the real one is the front desk's).
     if ((p === '/api/claude' || p.startsWith('/api/claude/')) && (await claudeStandin(req, res, p, url))) return
@@ -537,6 +541,14 @@ const server = http.createServer(async (req, res) => {
         return json(res, r.status, { ...r.body, path: u.name, size: u.size })
       }
       return json(res, 404, { error: 'not_found' })
+    }
+    // Dev-only: end every open event stream, as a deploy's front desk restart does (OLA-94); the
+    // answer says how many streams the page has opened so far (?peek=1: only that, nothing cut).
+    if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/cut-streams' && req.method === 'POST') {
+      const peek = url.searchParams.get('peek') === '1'
+      const cut = peek ? 0 : eventStreams.size
+      if (!peek) for (const r of eventStreams) r.destroy()
+      return json(res, 200, { cut, opened: eventOpens })
     }
     // Dev-only switches for the checks: stop and start the workspace's opencode.
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/opencode' && req.method === 'POST') {

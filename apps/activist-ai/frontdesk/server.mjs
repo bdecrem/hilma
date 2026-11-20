@@ -1345,7 +1345,12 @@ export function makeFrontDesk(cfg = config()) {
   // Headers whole within 5 s and at most 8 KiB; an idle kept-alive connection closes after 5 s;
   // a body not wanted is not read (json() above). requestTimeout stays long for an upload that
   // passed sign-in, which has its own minimum rate.
+  // The requests being answered, for a stop that lets them finish (drain, below).
+  const active = new Set()
   const server = http.createServer({ requestTimeout: 15 * 60_000, headersTimeout: 5_000, keepAliveTimeout: 5_000, maxHeaderSize: 8 * 1024, connectionsCheckingInterval: 1_000 }, (req, res) => {
+    res.olaStream = /\/event(\?|$)/.test(req.url ?? '')
+    active.add(res)
+    res.on('close', () => active.delete(res))
     handle(req, res).catch((e) => {
       log(`error (${e?.code ?? e?.name ?? 'error'})`)
       if (res.headersSent) res.destroy()
@@ -1407,13 +1412,38 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, close: () => (madeBy.close(), devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  /**
+   * The first half of a stop (a deploy restarts the front desk, OLA-94): no new connection is taken
+   * (the TLS front holds new requests until the next front desk listens), the event streams end now
+   * (the page opens its stream again at once, on the next front desk), and requests in flight get up
+   * to `ms` to finish. Resolves with how many were still open.
+   */
+  const drain = (ms) =>
+    new Promise((resolve) => {
+      listener.close()
+      server.closeIdleConnections()
+      for (const res of active) if (res.olaStream) res.destroy()
+      const until = Date.now() + ms
+      const tick = () => (active.size === 0 || Date.now() >= until ? resolve(active.size) : setTimeout(tick, 25))
+      tick()
+    })
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, drain, close: () => (madeBy.close(), devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   const fd = makeFrontDesk()
   fd.listener.listen(fd.cfg.port, fd.cfg.host, () => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'start', origin: fd.cfg.origin, port: fd.listener.address().port, proxyProtocol: fd.cfg.proxyProtocol, idleStopMin: fd.cfg.idleStopMs / 60_000, runCeilingMin: fd.cfg.runCeilingMs / 60_000 })))
-  const stop = () => (fd.close(), process.exit(0))
+  // launchd's stop (a deploy's kickstart -k) is SIGTERM, and it waits for the exit before starting
+  // the next front desk: requests in flight finish first, for at most 5 s.
+  let stopping = false
+  const stop = async () => {
+    if (stopping) return
+    stopping = true
+    const left = await fd.drain(5_000)
+    console.log(JSON.stringify({ t: new Date().toISOString(), event: 'stop', unfinished: left }))
+    fd.close()
+    process.exit(0)
+  }
   process.on('SIGTERM', stop)
   process.on('SIGINT', stop)
 }

@@ -1276,10 +1276,23 @@ A deploy, one at a time (a lock file): `git fetch`; unpack the commit fresh into
 package folder (`.`, `frontdesk`, `web`), an APFS clone of the served release's `node_modules` when
 the lockfile is unchanged, `npm ci` when it changed; build `web/dist`; run the suites from the
 release, `--no-live` (no model call, no key): `ops/turn-test.mjs`, `gateway/test.mjs`, `workspace/check.mjs`,
-`web/check.mjs`, `frontdesk/check.mjs`. Only if all pass: `current` is switched, `deployed.json`
-written, the jobs rewritten and restarted (`kickstart -k`; the container job is not restarted), and
-the front desk and the gateway must answer within 30 s or the previous release is switched back and
-restarted. **On a failed suite nothing that runs is touched**: the message names the suite and its
+`web/check.mjs`, `frontdesk/check.mjs`, `ops/tls-test.mjs`, `ops/restart-test.mjs` (and the
+backup and ci tests). Only if all pass: `current` is switched, `deployed.json` written, the jobs
+rewritten and restarted (`kickstart -k`; the container job is not restarted), and the front desk
+and the gateway must answer within 30 s or the previous release is switched back and restarted.
+
+**A deploy drops no request (OLA-94).** Only the jobs whose code changed are restarted
+(`ops/restart.mjs`): the TLS front, the tunnel and the gateway keep running from the release they
+started in when their files (their import closure, `ngrok.yml` for the tunnel) are the same in the
+new one, and the install prints `unchanged, left running`. The front desk restarts every time, and
+that is invisible: on SIGTERM it stops taking connections, ends the event streams and gives
+requests in flight up to 5 s; meanwhile the TLS front holds each new request (up to 20 s) until the
+next front desk listens, and sends a GET that the stopping one cut again. The web app opens a cut
+stream again at once and says "Lost the connection" only after 5 s without it. A gateway restart
+drains the same way, and a door waits up to 20 s for the gateway's socket. Measure it across a deploy
+with `node ops/probe.mjs` (a new connection every 200 ms; it prints the failures and the longest
+gap) and `node ops/probe.mjs <event url> --stream --token-file <device token>` (one stream held
+open, each cut and how long it was gone). **On a failed suite nothing that runs is touched**: the message names the suite and its
 count, says the running version was left alone, and keeps the release for a look; the whole output
 is in `~/Library/Logs/ola/deploy-<commit12>.log`. Running workspaces keep their door and desk from
 the release they were started with until they next start. A deploy takes about as long as the

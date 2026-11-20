@@ -7,7 +7,9 @@
 //                                     changes: fetch, unpack that commit as a new release, npm ci
 //                                     where the lockfile changed, build web/dist, run the --no-live
 //                                     suites, and only if all pass point `current` at it and
-//                                     restart the jobs; on a failed suite the running version is
+//                                     restart the jobs whose code changed (the front desk always;
+//                                     it drains, and the TLS front holds requests meanwhile, so a
+//                                     deploy drops none: OLA-94); on a failed suite the running version is
 //                                     left alone and the release is kept for a look
 //   node ops/ola.mjs check [<commit>] the deploy's steps and suites for one commit (default
 //                                     origin/main) without serving it (OLA-84): unpacked into
@@ -73,6 +75,7 @@ import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
 import { deployable } from './signers.mjs'
+import { unchanged } from './restart.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -228,9 +231,10 @@ function tlsHealth(env) {
 }
 
 /**
- * Writes the three jobs' plists (pointed at SERVED) and loads them. A job whose plist is unchanged
- * and loaded is restarted with kickstart -k when `restart` (the container job never is: it only
- * starts Apple's container system); any other is unloaded and loaded again.
+ * Writes the jobs' plists (pointed at SERVED) and loads them. A job whose plist is unchanged and
+ * loaded is restarted with kickstart -k when `restart` (the container job never is: it only starts
+ * Apple's container system), unless its code is the same in the release it runs from (the gateway,
+ * the TLS front, the tunnel: ops/restart.mjs, OLA-94); any other is unloaded and loaded again.
  */
 function install({ restart }) {
   for (const [name, file] of Object.entries(ENV)) {
@@ -254,6 +258,14 @@ function install({ restart }) {
     }
     if (same) {
       if (j.keepAlive) {
+        // A job whose code did not change keeps running, and keeps open what passes through it
+        // (OLA-94, ops/restart.mjs): it works in the release it started from.
+        const s = job(j.label)
+        const from = s.state === 'running' && s.pid ? cwdOf(s.pid) : null
+        if (from && unchanged(j.label, from, realpathSafe(SERVED))) {
+          console.log(`${j.label} unchanged, left running (pid ${s.pid}, from ${path.relative(STAGING, from).split('/').slice(0, 2).join('/')})`)
+          continue
+        }
         const k = sh('/bin/launchctl', ['kickstart', '-k', `${DOMAIN}/${j.label}`])
         if (k.status !== 0) fail(`could not restart ${j.label}: ${k.stderr.trim()}`)
         console.log(`restarted ${j.label}`)
@@ -552,6 +564,8 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     ['backup', ['--test', 'ops/backup-test.mjs']], // encrypted backups (OLA-86), seconds, no VM
     ['ci', ['--test', 'ops/ci-test.mjs']], // the automatic checks' decisions (OLA-84), seconds, no VM
     ['signers', ['--test', 'ops/signers-test.mjs']], // who may deploy (OLA-85), seconds, no VM
+    ['tls', ['--test', 'ops/tls-test.mjs']], // the TLS front (app.ola.cx's door), about a minute, no VM
+    ['restart', ['--test', 'ops/restart-test.mjs']], // a deploy drops no request (OLA-94), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
@@ -819,6 +833,11 @@ function recordCheck(r) {
   all = [run, ...all.filter((x) => x.commit !== r.commit)].slice(0, 50)
   writeFileSync(file, JSON.stringify({ runs: all }, null, 2) + '\n')
   return run
+}
+/** A process's working folder (launchd starts each job in SERVED, so: the release it runs). */
+function cwdOf(pid) {
+  const l = (sh('/usr/sbin/lsof', ['-a', '-p', String(pid), '-d', 'cwd', '-Fn']).stdout || '').split('\n').find((x) => x.startsWith('n'))
+  return l ? l.slice(1) : null
 }
 function realpathSafe(p) {
   try {

@@ -32,25 +32,41 @@ let open = 0
 const server = net.createServer({ allowHalfOpen: false, pauseOnConnect: true }, (inside) => {
   if (open >= MAX_OPEN) return inside.destroy()
   open++
-  const gw = dial()
+  let gw = null
   let closed = false
   const close = () => {
     if (closed) return
     closed = true
     open--
     inside.destroy()
-    gw.destroy()
+    gw?.destroy()
   }
-  for (const s of [inside, gw]) {
-    s.setTimeout(IDLE_MS, close)
-    s.on('error', close)
-    s.on('close', close)
+  inside.setTimeout(IDLE_MS, close)
+  inside.on('error', close)
+  inside.on('close', close)
+  // While the gateway restarts (a deploy that changed it, OLA-94) its socket is gone or refuses for
+  // a moment: the connection waits for it, up to 20 s, instead of failing. Nothing has been read
+  // from the VM yet (the connection is paused), so this is always safe.
+  const until = Date.now() + 20_000
+  const attempt = (wait) => {
+    if (closed) return
+    const s = dial()
+    s.once('error', (e) => {
+      if (!closed && (e.code === 'ENOENT' || e.code === 'ECONNREFUSED') && Date.now() + wait < until) return setTimeout(() => attempt(Math.min(wait * 2, 250)), wait)
+      close()
+    })
+    s.once('connect', () => {
+      if (closed) return s.destroy()
+      gw = s
+      s.setTimeout(IDLE_MS, close)
+      s.on('error', close)
+      s.on('close', close)
+      inside.pipe(s)
+      s.pipe(inside)
+      inside.resume()
+    })
   }
-  gw.on('connect', () => {
-    inside.pipe(gw)
-    gw.pipe(inside)
-    inside.resume()
-  })
+  attempt(50)
 })
 server.on('error', (e) => {
   console.error(`door: ${e.code || e.name}`)
