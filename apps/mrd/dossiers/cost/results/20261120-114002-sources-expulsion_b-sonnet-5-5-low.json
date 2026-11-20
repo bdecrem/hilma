@@ -1,0 +1,494 @@
+{
+ "status": "ok",
+ "job_id": "sources costa_rica expulsion_b claude-sonnet-5-5 low",
+ "step": "sources",
+ "slug": "costa_rica",
+ "chunk": "expulsion_b",
+ "model": "claude-sonnet-5-5",
+ "effort": "low",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  55,
+  57,
+  59,
+  61
+ ],
+ "started_at": "2026-11-20T19:40:02.182Z",
+ "meters_before": {
+  "at": "2026-11-20T19:39:57.559Z",
+  "window": {
+   "pct": 9,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 35,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 9,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 35,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 9% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 35% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 128 requests · 2 sessions\n  37%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  33%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 33%, statusline 1%\n\nLast 7d · 139 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  35%  Start fresh when you switch tasks · run /clear\n  31%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 31%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 23020,
+  "user": 65
+ },
+ "default_model": "claude-sonnet-5-5",
+ "default_effort": "low",
+ "finished_at": "2026-11-20T19:42:08.156Z",
+ "minutes": 2.1,
+ "meters_after": {
+  "at": "2026-11-20T19:42:08.156Z",
+  "window": {
+   "pct": 10,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 35,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 10,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 35,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 10% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 35% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 130 requests · 2 sessions\n  39%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  32%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 32%, statusline 1%\n\nLast 7d · 141 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  37%  Start fresh when you switch tasks · run /clear\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 1197,
+   "output": 5272,
+   "cache_read": 90926,
+   "cache_write": 84457,
+   "cost_usd": 0.3995,
+   "total": 181852
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 1191,
+    "output": 27,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 0,
+    "cost_usd": 0.0001
+   },
+   "claude-sonnet-5-5": {
+    "input": 6,
+    "output": 5245,
+    "cache_read": 90926,
+    "cache_write": 84457,
+    "thinking": 128,
+    "cost_usd": 0.3994
+   }
+  }
+ },
+ "turns": 13,
+ "calls": 14,
+ "duration_ms": 122470,
+ "duration_api_ms": 30384,
+ "pages_read": 11,
+ "pages": [
+  {
+   "at": "2026-11-20T19:40:08.280Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "derecho a solicitar y recibir asilo | no podrá ser expulsado, deportado o rechazado | Artículo 186 | Artículo 209 | Artículo 216 | Artículo 222 | Artículo 122",
+   "ok": true,
+   "chars": 12300
+  },
+  {
+   "at": "2026-11-20T19:40:20.332Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 39 | Artículo 40 | Artículo 127 | Artículo 134 | Artículo 123",
+   "ok": true,
+   "chars": 12644
+  },
+  {
+   "at": "2026-11-20T19:41:07.943Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "Artículo 31",
+   "ok": true,
+   "chars": 2612
+  },
+  {
+   "at": "2026-11-20T19:41:23.752Z",
+   "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+   "find": "Considerando X | tome nota | refugio | resolución individualizada",
+   "ok": true,
+   "chars": 8503
+  },
+  {
+   "at": "2026-11-20T19:41:36.061Z",
+   "url": "https://www.hrw.org/es/news/2025/03/18/costa-rica-debe-permitir-que-migrantes-deportados-soliciten-asilo",
+   "find": "asilo | orden",
+   "ok": true,
+   "chars": 4479
+  },
+  {
+   "at": "2026-11-20T19:41:37.051Z",
+   "url": "https://www.dhr.go.cr/informacion_relevante/comunicados/2026/marzo/014_Costa_Rica_tardo_corregir_atencion_integral_personas_migrantes_deportadas.pdf",
+   "find": "34 | D.JUR-616 | protección internacional",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:41:38.929Z",
+   "url": "https://cejil.org/en/press-releases/costa-rica-new-report-exposes-human-rights-violations-against-migrants-expelled-from-the-u-s-and-warns-this-cannot-happen-again/",
+   "find": "asylum | information",
+   "ok": true,
+   "chars": 4580
+  },
+  {
+   "at": "2026-11-20T19:41:40.145Z",
+   "url": "https://www.refugeesinternational.org/advocacy-letters/human-rights-organizations-call-for-an-end-to-chain-deportations-from-the-united-states-to-costa-rica/",
+   "find": "chain | Costa Rica",
+   "ok": true,
+   "chars": 3589
+  },
+  {
+   "at": "2026-11-20T19:41:40.872Z",
+   "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica",
+   "find": "resolución | individual",
+   "ok": true,
+   "chars": 2722
+  },
+  {
+   "at": "2026-11-20T19:41:41.209Z",
+   "url": "https://www.fidh.org/IMG/pdf/CostaRica517e.pdf",
+   "find": "abogado | representación | defensa",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:41:49.864Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "solicitar y recibir asilo | otro país, sea o no | ARTÍCULO 184 | ARTÍCULO 210 | ARTÍCULO 215",
+   "ok": true,
+   "chars": 6613
+  }
+ ],
+ "searches": [],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"checks\":[{\"question_id\":55,\"answer_covers\":[\"all_migrants\"],\"legal\":[{\"n\":1,\"opened\":true,\"page_is\":\"the_text_itself\",\"quote_found\":\"yes\",\"passage\":\"8) Toda persona extranjera tiene derecho a buscar y recibir asilo en el territorio nacional, en razón de los convenios internacionales suscritos y ratificados por el país.\",\"note\":\"Full text of Ley 8764 via SINALEVI redirect.\"},{\"n\":2,\"opened\":true,\"page_is\":\"the_text_itself\",\"quote_found\":\"yes\",\"passage\":\"Artículo 127.—... La persona interesada puede ser referida por alguna otra autoridad, incluso inferirse cuando existan problemas de comunicación, barreras idiomáticas, culturales, personas en detención administrativa o judicial y casos de personas que desconozcan su posible condición de persona refugiada.\",\"note\":\"Art. 123(a) also confirmed; art. 134 begins but was cut off.\"},{\"n\":3,\"opened\":true,\"page_is\":\"the_text_itself\",\"quote_found\":\"yes\",\"passage\":\"No se demuestra; sin embargo, que tal información se transmitiera a las personas tuteladas desde el momento de su ingreso. ... El lapso en el cual esta obligación se incumplió implicó la lesión de los derechos ... Tome nota la autoridad recurrida de lo dispuesto en esta sentencia a los efectos de eventuales autorizaciones de ingreso de personas por razones de humanidad.\",\"note\":\"Nexus PJ full text.\"}],\"evidence\":[{\"n\":1,\"opened\":true,\"shows\":\"practice\",\"groups\":[\"refugees_asylum_seekers\"],\"supports_claim\":\"partly\",\"note\":\"HRW (18 Mar 2025) interviews with deportees on asylum intent. The visible part does not state that the departure orders omitted the right to seek asylum; the page was only partly read (an order authorising entry for 30 days was mentioned).\"},{\"n\":2,\"opened\":true,\"shows\":\"practice\",\"groups\":[\"refugees_asylum_seekers\"],\"supports_claim\":\"yes\",\"note\":\"The Sala found no proof that information on seeking refuge was given from entry.\"},{\"n\":3,\"opened\":false,\"shows\":\"unreadable\",\"groups\":[],\"supports_claim\":\"not_checked\",\"note\":\"PDF could not be read (pdft",
+ "output": {
+  "checks": [
+   {
+    "question_id": 55,
+    "answer_covers": [
+     "all_migrants"
+    ],
+    "legal": [
+     {
+      "n": 1,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "8) Toda persona extranjera tiene derecho a buscar y recibir asilo en el territorio nacional, en razón de los convenios internacionales suscritos y ratificados por el país.",
+      "note": "Full text of Ley 8764 via SINALEVI redirect."
+     },
+     {
+      "n": 2,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "Artículo 127.—... La persona interesada puede ser referida por alguna otra autoridad, incluso inferirse cuando existan problemas de comunicación, barreras idiomáticas, culturales, personas en detención administrativa o judicial y casos de personas que desconozcan su posible condición de persona refugiada.",
+      "note": "Art. 123(a) also confirmed; art. 134 begins but was cut off."
+     },
+     {
+      "n": 3,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "No se demuestra; sin embargo, que tal información se transmitiera a las personas tuteladas desde el momento de su ingreso. ... El lapso en el cual esta obligación se incumplió implicó la lesión de los derechos ... Tome nota la autoridad recurrida de lo dispuesto en esta sentencia a los efectos de eventuales autorizaciones de ingreso de personas por razones de humanidad.",
+      "note": "Nexus PJ full text."
+     }
+    ],
+    "evidence": [
+     {
+      "n": 1,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "partly",
+      "note": "HRW (18 Mar 2025) interviews with deportees on asylum intent. The visible part does not state that the departure orders omitted the right to seek asylum; the page was only partly read (an order authorising entry for 30 days was mentioned)."
+     },
+     {
+      "n": 2,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "yes",
+      "note": "The Sala found no proof that information on seeking refuge was given from entry."
+     },
+     {
+      "n": 3,
+      "opened": false,
+      "shows": "unreadable",
+      "groups": [],
+      "supports_claim": "not_checked",
+      "note": "PDF could not be read (pdftotext missing)."
+     },
+     {
+      "n": 4,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "yes",
+      "note": "CEJIL/AFSC/SJM report: detainees lacked information in their own languages and received no individual assessment of protection needs."
+     }
+    ],
+    "evidence_fits": "not_applicable",
+    "evidence_gap": null
+   },
+   {
+    "question_id": 57,
+    "answer_covers": [
+     "all_migrants"
+    ],
+    "legal": [
+     {
+      "n": 1,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "9) Ningún extranjero solicitante de refugio o que se le haya otorgado dicha condición, podrá ser expulsado, deportado o rechazado a otro país, sea o no de origen, donde su derecho a la vida esté en riesgo.",
+      "note": "Art. 184 confirmed: 'a su país de origen o a un tercer país que lo admita'. Art. 115 not checked."
+     },
+     {
+      "n": 2,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "Artículo 39.—Ninguna persona refugiada o solicitante de esta condición pendiente de resolución firme e inapelable, podrá ser expulsado o devuelto al territorio de un país donde su vida, seguridad o libertad peligre ...",
+      "note": "Art. 40 also present."
+     },
+     {
+      "n": 3,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "ARTÍCULO 31.- ... Si por imperativo legal se decretare su expulsión, nunca podrá enviársele al país donde fuere perseguido.",
+      "note": "Translation is a paraphrase; the article matches."
+     }
+    ],
+    "evidence": [
+     {
+      "n": 1,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "yes",
+      "note": "March 2026 letter by 40+ organisations on chain deportations from the US to Costa Rica and the risk of refoulement."
+     }
+    ],
+    "evidence_fits": "not_applicable",
+    "evidence_gap": null
+   },
+   {
+    "question_id": 59,
+    "answer_covers": [
+     "all_migrants"
+    ],
+    "legal": [
+     {
+      "n": 1,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "ARTÍCULO 186.- La expulsión es la orden emanada del Ministerio de Gobernación y Policía, en resolución razonada, por medio de la cual la persona extranjera que goce de permanencia legal ... deberá abandonar el territorio nacional ... cuando se considere que sus actividades comprometen la paz, la seguridad pública, la tranquilidad o el orden público.",
+      "note": "Art. 209 confirmed; arts. 183 and 210 not separately viewed."
+     },
+     {
+      "n": 2,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "ARTÍCULO 122.- La expulsión de un refugiado que se halle legalmente en el territorio nacional, únicamente se efectuará por razones de seguridad nacional o de orden público, en virtud de una decisión tomada conforme a los procedimientos legales vigentes.",
+      "note": "Art. 31(1) not viewed (31(7)-(10) seen)."
+     },
+     {
+      "n": 3,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "se deberá realizar una audiencia oral confidencial a la persona refugiada, en la cual podrá presentar las pruebas exculpatorias, evaluado el caso se emitirá por parte de la Dirección General, la resolución correspondiente, que de proceder será recurrible ante el órgano competente.",
+      "note": null
+     }
+    ],
+    "evidence": [
+     {
+      "n": 1,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "yes",
+      "note": "News report on Sala ruling 2025-19485: deprivation of liberty without an individualised resolution; ordered individual reasoned acts."
+     },
+     {
+      "n": 2,
+      "opened": false,
+      "shows": "unreadable",
+      "groups": [],
+      "supports_claim": "not_checked",
+      "note": "PDF could not be read (pdftotext missing)."
+     }
+    ],
+    "evidence_fits": "partly",
+    "evidence_gap": "Practice sources cover only the 2025 US third-country deportees; no practice evidence for ordinary DGME deportation or expulsion of residents."
+   },
+   {
+    "question_id": 61,
+    "answer_covers": [
+     "all_migrants"
+    ],
+    "legal": [
+     {
+      "n": 1,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "ARTÍCULO 216.- La persona extranjera cuya expulsión se haya ordenado, podrá interponer ... recurso de revocatoria ante la Dirección General o de apelación ante el Tribunal Administrativo Migratorio. ... La impugnación de la orden de expulsión suspenderá la ejecución de esta.",
+      "note": "Art. 209 confirmed ('audiencia oral para que la persona extranjera pueda ejercer su derecho de defensa'). Art. 215 not separately viewed."
+     },
+     {
+      "n": 2,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "ARTÍCULO 222.- No cabrá recurso alguno contra el rechazo y las deportaciones ordenadas por autoridad competente, ni contra la denegatoria de visa dictada por parte de la Comisión de Visas Restringidas y Refugio.",
+      "note": "Art. 65 not checked."
+     },
+     {
+      "n": 3,
+      "opened": true,
+      "page_is": "the_text_itself",
+      "quote_found": "yes",
+      "passage": "en atención al debido proceso se deberá realizar una audiencia oral confidencial a la persona refugiada, en la cual podrá presentar las pruebas exculpatorias ... que de proceder será recurrible ante el órgano competente.",
+      "note": null
+     }
+    ],
+    "evidence": [
+     {
+      "n": 1,
+      "opened": true,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "supports_claim": "partly",
+      "note": "Reports a habeas corpus ruling for the US deportees: no individual resolution, no information, no legal advice. Does not mention the Defensoría's findings."
+     },
+     {
+      "n": 2,
+      "opened": false,
+      "shows": "unreadable",
+      "groups": [],
+      "supports_claim": "not_checked",
+      "note": "PDF could not be read (pdftotext missing)."
+     },
+     {
+      "n": 3,
+      "opened": false,
+      "shows": "unreadable",
+      "groups": [],
+      "supports_claim": "not_checked",
+      "note": "FIDH PDF could not be read (pdftotext missing)."
+     }
+    ],
+    "evidence_fits": "partly",
+    "evidence_gap": "Practice evidence covers only the 2025 US deportees; none on ordinary expulsion of residents or deportation of irregular migrants, and the FIDH report was unreadable."
+   }
+  ]
+ }
+}

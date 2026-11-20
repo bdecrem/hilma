@@ -1,0 +1,7 @@
+# 2026-11-20, window 1 (to 16:00). Chunk: expulsion_b (q55 q57 q59 q61, all verified; q55 is the No recoded from the full ruling).
+# Test 0, calibration: the two checks as run on 2026-11-17
+sources costa_rica --chunk expulsion_b --model claude-sonnet-5-5 --effort low --to-the-limit
+verify costa_rica --chunk expulsion_b --model claude-opus-5-5 --effort high --to-the-limit
+# Test A, forward 2023 -> 2026
+forward costa_rica --chunk expulsion_b --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk expulsion_b --model claude-sonnet-5-5 --effort medium --to-the-limit
