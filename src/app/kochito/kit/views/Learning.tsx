@@ -73,7 +73,7 @@ export function LearningFigures({ l, now, sweeps }: { l: Learning | null; now: s
             what="the agent system that works with Bart"
             big={String(k.errors.n)}
             line={`${k.errors.n === 1 ? 'error' : 'errors'} ${k.errors.day === pday(now) ? 'today' : `on ${dayShort(k.errors.day)}`}. Each correction from Bart counts as one error by the agent.`}
-            small={[`${k.errors.repeats} of them under a weakness seen before`, `${k.errors.total} since ${dayShort(k.errors.since).replace(/^[A-Za-z]+, /, '')}`, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(', ') + (k.escapes?.latest ? `. Times Bart met something broken after being told it worked: ${k.escapes.latest.day === pday(now) ? k.escapes.latest.n : 0} today, ${k.escapes.total} in all` : '')}
+            small={[`${k.errors.repeats} of them under a weakness seen before`, `${k.errors.total} since ${dayShort(k.errors.since).replace(/^[A-Za-z]+, /, '')}`, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(', ') + (k.escapes?.latest ? `. Times Bart met something broken after being told it worked: ${k.escapes.latest.day === pday(now) ? k.escapes.latest.n : 0} today, ${k.escapes.total} in all` : '') + (k.owed ? `. Fixes owed (correction recorded, stronger fix not built yet): ${k.owed.n}${k.owed.overdue ? `, ${k.owed.overdue} older than two days` : ''}` : '')}
           />
         ) : (
           <Fig name="Kit" what="the agent system that works with Bart" big={`${Math.round(k.percent)}%`} pct={k.percent} label={`${Math.round(k.percent)} of 100`} line={k.label} small={[today, k.steers ? `${k.steers.rate} steers per 100 messages` : ''].filter(Boolean).join(' · ')} />

@@ -11,13 +11,35 @@
 //   guarded  an enforced guard, and not seen on any later day ("holding N days")
 //   back     seen again on a day after its newest enforced guard: the guard was too weak
 import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const WEAK_FILE = 'apps/venture/private/data/weaknesses.json'
 const dayDiff = (a, b) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 86400e3)
 
+// The notes folder. VENTURE_PRIVATE points every learning tool (correct.mjs, learning.mjs, sweep.mjs,
+// the prompt hook, rules-trim.mjs) at a copy of apps/venture/private, so a made-up correction or entry
+// is tested there and never lands in the real ledger (2026-11-20, OLA-251).
+export function privPath(root, rel = '') {
+  if (process.env.VENTURE_PRIVATE) return join(process.env.VENTURE_PRIVATE, rel)
+  const base = typeof root === 'string' && !root.startsWith('file:') ? pathToFileURL(root.endsWith('/') ? root : root + '/') : root
+  return fileURLToPath(new URL('apps/venture/private/' + rel, base))
+}
+
 export function loadWeaknesses(root) {
-  const f = new URL(WEAK_FILE, root)
+  const f = privPath(root, 'data/weaknesses.json')
   return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : []
+}
+
+// Fixes owed (2026-11-20, OLA-251). A correction is recorded the moment it is made; when the stronger
+// fix its weakness needs is not built yet, the correction carries `owed` on its weakness:
+//   owed: [{ ref: "correction 101", since: ISO, issue: "OLA-n", need: 3 }]
+// `correct.mjs fix` settles it. `sweep.mjs post` refuses while one is older than OWED_DAYS.
+export const OWED_DAYS = 2
+export function owedFixes(list, now = Date.now()) {
+  return list
+    .flatMap((w) => (w.owed ?? []).map((o) => ({ ...o, weakness: w.id, name: w.name, days: Math.floor((now - Date.parse(o.since)) / 86400e3) })))
+    .sort((a, b) => a.since.localeCompare(b.since))
 }
 
 // CORRECTIONS.md headings that look like a correction but carry no number (2026-11-19 sweep). Every

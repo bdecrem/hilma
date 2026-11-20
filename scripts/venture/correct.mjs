@@ -21,16 +21,29 @@
 //        [--why-last "<why the last fix did not hold>"]   required when the weakness had a fix before
 //        [--escape]        he met something broken or untrue after being told it was done or working
 //        [--cannot "<why no stronger fix exists>"]        records the weakness as open, on the Learning page
+//        [--owed OLA-n]    the stronger fix is not built yet: the correction is recorded NOW and the fix is
+//                          listed as owed, carried by that ticket (it must exist; --fix/--level may be left out)
 //        [--when "9:28 am"] [--side ola] [--new "Name of a new weakness|what it is"]
+//   node scripts/venture/correct.mjs fix <correction> --fix "<what changed>" --level 3 --where "<file>" [--why-last "…"]
+//                                              settles an owed fix; refused when not stronger than the last or not built
+//   node scripts/venture/correct.mjs owed      every owed fix, oldest first (sweep.mjs post refuses while one is
+//                                              older than two days; the prompt hook and the Learning page show them)
 //   node scripts/venture/correct.mjs list      every weakness: times seen, came back, strongest fix
 //   node scripts/venture/correct.mjs escapes   per day: how often he met something broken after "it works"
-// Writes apps/venture/private/CORRECTIONS.md (a numbered entry) and data/weaknesses.json together.
+// Writes apps/venture/private/CORRECTIONS.md (a numbered entry) and data/weaknesses.json together
+// (VENTURE_PRIVATE=<folder> works on a copy of apps/venture/private instead, for tests).
+//
+// Since Nov 20, 1 pm (OLA-251): a correction is never held back. Until then `add` refused until the
+// stronger fix existed, so corrections waited unrecorded (Nov 18: 9 written, 27 real). Now `add` always
+// writes the entry and the weakness's `seen` at once; the escalation rule applies to the fix, which is
+// either given with the correction or owed and settled later with `fix`.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const COR = root + 'apps/venture/private/CORRECTIONS.md'
-const WEAK = root + 'apps/venture/private/data/weaknesses.json'
+const COR = privPath(root, 'CORRECTIONS.md')
+const WEAK = privPath(root, 'data/weaknesses.json')
 const argv = process.argv.slice(2)
 const cmd = argv[0]
 const opt = {}
@@ -42,12 +55,12 @@ export const levelOf = (g) => g.level ?? (g.enforced ? 3 : 1)
 const pacific = (o) => new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', ...o })
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
 
-/** What the next fix of a weakness must be: { prev, cameBack, need }. */
-export function required(w) {
+/** What the next fix of a weakness must be: { prev, cameBack, need }. recorded: the correction is in `seen` already. */
+export function required(w, { recorded = false } = {}) {
   const guards = w.guards ?? []
   const prev = guards.length ? Math.max(...guards.map(levelOf)) : 0
   const first = guards.map((g) => g.day).sort()[0]
-  const cameBack = first ? w.seen.filter((s) => s.day > first).length + 1 : 0 // + this one
+  const cameBack = first ? w.seen.filter((s) => s.day > first).length + (recorded ? 0 : 1) : 0 // + this one
   let need = prev + 1
   if (cameBack >= 3) need = Math.max(need, 3) // three repeats: remembering has been tried enough
   if (prev >= 4) need = 4 // already checked by another: the hole in that check is what gets fixed
@@ -55,6 +68,34 @@ export function required(w) {
 }
 
 const weak = () => JSON.parse(readFileSync(WEAK, 'utf8'))
+
+/** Why a fix of `level` is refused for weakness w (null when it is accepted). */
+function fixProblem(w, level, { prev, cameBack, need }, { whyLast = str('why-last') } = {}) {
+  if (prev && !whyLast) return `"${w.name}" had a fix before (strongest so far: ${prev}, ${KINDS[prev]}) and it came back.\nSay why that fix did not hold: --why-last "…". The new fix has to answer that, not repeat it.`
+  if (level < need) return (
+    `Refused: "${w.name}" has now come back ${cameBack} time(s) after a fix, and its strongest fix so far is ${prev} (${KINDS[prev] ?? 'none'}).\n` +
+    `The next fix must be at least ${need} (${KINDS[need]}); you gave ${level} (${KINDS[level]}).\n` +
+    `Another rule of the same kind is what failed. Build the stronger fix first, then record it with --where.\n` +
+    `If no stronger fix exists, say so: --cannot "<why>". The weakness then shows as open on the Learning page.`)
+  if (level >= 3) {
+    const where = str('where')
+    if (!where) return `a fix of kind ${level} (${KINDS[level]}) names what carries it: --where "<file, command or ticket>"`
+    const path = where.split(/[\s:]/)[0]
+    if (/[/.]/.test(path) && !/^OLA-\d+$/.test(path) && !existsSync(root + path) && !existsSync(path)) return `--where: ${path} does not exist. The fix is recorded after it is built, not before.`
+  }
+  return null
+}
+
+/** The ticket must exist in the tracker (read only). */
+async function ticketMustExist(id) {
+  const { createClient } = await import('@supabase/supabase-js')
+  const env = existsSync(root + '.env.local') ? Object.fromEntries(readFileSync(root + '.env.local', 'utf8').split('\n').filter((l) => /^[A-Z0-9_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')])) : process.env
+  const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+  const { data, error } = await db.from('venture_issues').select('id, status').eq('id', id).maybeSingle()
+  if (error) die(`--owed: the tracker could not be read (${error.message})`)
+  if (!data) die(`--owed: there is no ticket ${id}. Open it first: node scripts/venture/issues.mjs add "…" --area ops --pri P1`)
+  if (['done', 'dropped'].includes(data.status)) die(`--owed: ${id} is ${data.status}; a fix that is still owed needs an open ticket`)
+}
 
 if (cmd === 'add') {
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
@@ -72,21 +113,19 @@ if (cmd === 'add') {
   const { prev, cameBack, need } = required(w)
   const repeat = w.seen.length > 0
   const cannot = str('cannot')
+  const owedIssue = str('owed')
   const level = Number(opt.level)
-  if (!cannot) {
-    if (!fix || !(level >= 1 && level <= 5)) die(`add needs --fix "<what changed>" and --level 1..5:\n${Object.entries(KINDS).map(([n, k]) => `  ${n}  ${k}`).join('\n')}`)
-    if (prev && !str('why-last')) die(`"${w.name}" had a fix before (strongest so far: ${prev}, ${KINDS[prev]}) and it came back.\nSay why that fix did not hold: --why-last "…". The new fix has to answer that, not repeat it.`)
-    if (level < need) die(
-      `Refused: "${w.name}" has now come back ${cameBack} time(s) after a fix, and its strongest fix so far is ${prev} (${KINDS[prev] ?? 'none'}).\n` +
-      `The next fix must be at least ${need} (${KINDS[need]}); you gave ${level} (${KINDS[level]}).\n` +
-      `Another rule of the same kind is what failed. Build the stronger fix first, then record it with --where.\n` +
-      `If no stronger fix exists, say so: --cannot "<why>". The weakness then shows as open on the Learning page.`)
-    if (level >= 3) {
-      const where = str('where')
-      if (!where) die(`a fix of kind ${level} (${KINDS[level]}) names what carries it: --where "<file, command or ticket>"`)
-      const path = where.split(/[\s:]/)[0]
-      if (/[/.]/.test(path) && !/^OLA-\d+$/.test(path) && !existsSync(root + path) && !existsSync(path)) die(`--where: ${path} does not exist. The fix is recorded after it is built, not before.`)
-    }
+  // the fix given with the correction, if any, is judged exactly as before; a fix that is not there yet is owed
+  let owed = null
+  if (owedIssue) {
+    if (!/^OLA-\d+$/.test(owedIssue)) die('--owed names the ticket that builds the fix, like OLA-251')
+    await ticketMustExist(owedIssue)
+    if (fix && level >= need && !fixProblem(w, level, { prev, cameBack, need })) die(`--owed: the fix you gave (kind ${level}) is strong enough and built; record it without --owed`)
+    owed = { issue: owedIssue, need }
+  } else if (!cannot) {
+    if (!fix || !(level >= 1 && level <= 5)) die(`add needs --fix "<what changed>" and --level 1..5:\n${Object.entries(KINDS).map(([n, k]) => `  ${n}  ${k}`).join('\n')}\nor, when that fix is not built yet: --owed OLA-n (the ticket that builds it). The correction is then recorded now.`)
+    const problem = fixProblem(w, level, { prev, cameBack, need })
+    if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
   const text = readFileSync(COR, 'utf8')
   const n = Math.max(0, ...[...text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1]))) + 1
@@ -100,19 +139,55 @@ if (cmd === 'add') {
     `Cause: ${cause}`,
     `Weakness: ${w.id}${opt.escape ? ' (ESCAPE: he met it after being told it was done or working)' : ''}`,
     ...(str('why-last') ? [`Why the last fix did not hold: ${str('why-last')}`] : []),
-    cannot ? `No stronger fix found: ${cannot}` : `Fix (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}): ${fix}`,
+    cannot ? `No stronger fix found: ${cannot}` : owed ? `Fix OWED (kind ${need} or stronger, ${KINDS[need]}; ${owed.issue}): not built yet. Settle with: correct.mjs fix ${n} --fix … --level ${need} --where …` : `Fix (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}): ${fix}`,
     '',
   ].join('\n')
   writeFileSync(COR, text.replace(/\n*$/, '\n\n') + entry)
   w.seen.push({ day: today(), ref: `correction ${n}`, ...(opt.escape ? { escape: true } : {}) })
   if (cannot) w.stuck = { day: today(), why: cannot, at_level: prev }
+  else if (owed) (w.owed ??= []).push({ ref: `correction ${n}`, since: new Date().toISOString(), issue: owed.issue, need, ...(str('why-last') ? { why_last: str('why-last') } : {}) })
   else {
     w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}) })
     delete w.stuck
   }
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
-  console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : `; fix kind ${level} (${KINDS[level]})`}`)
+  console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
   console.log('next: node scripts/venture/sync.mjs push')
+} else if (cmd === 'fix') {
+  // Settles an owed fix. The escalation rule is the same as for a fix given with the correction.
+  const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
+  if (!num) die('usage: correct.mjs fix <correction number> --fix "<what changed>" --level 1..5 --where "<file, command or ticket>" [--why-last "…"]')
+  const list = weak()
+  const w = list.find((x) => (x.owed ?? []).some((o) => o.ref === `correction ${num}`))
+  if (!w) die(`correction ${num} has no owed fix (correct.mjs owed lists them)`)
+  const o = w.owed.find((x) => x.ref === `correction ${num}`)
+  const fix = str('fix')
+  const level = Number(opt.level)
+  if (!fix || !(level >= 1 && level <= 5)) die(`fix needs --fix "<what changed>" and --level 1..5 (at least ${o.need}, ${KINDS[o.need]})`)
+  const req = required(w, { recorded: true })
+  const need = Math.max(o.need, req.need)
+  const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last })
+  if (problem) die(problem)
+  w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), settles: o.ref })
+  w.owed = w.owed.filter((x) => x !== o)
+  if (!w.owed.length) delete w.owed
+  delete w.stuck
+  // the entry in CORRECTIONS.md gets the fix under its OWED line
+  const text = readFileSync(COR, 'utf8')
+  const at = text.search(new RegExp(`^## ${num}\\. `, 'm'))
+  if (at < 0) die(`correction ${num} is not in CORRECTIONS.md`)
+  const next = text.slice(at + 1).search(/^## /m)
+  const endAt = next < 0 ? text.length : at + 1 + next
+  const block = text.slice(at, endAt).replace(/\n*$/, '')
+  const line = `Fix settled ${pacific({ month: 'long', day: 'numeric' })} (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}): ${fix}`
+  writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
+  writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
+  console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)
+  console.log('next: node scripts/venture/sync.mjs push')
+} else if (cmd === 'owed') {
+  const rows = owedFixes(weak())
+  for (const o of rows) console.log(`${o.ref.padEnd(15)} owed ${String(o.days).padStart(2)} day(s)${o.days >= OWED_DAYS ? ' OVERDUE' : '        '}  ${o.issue.padEnd(8)} kind ${o.need}+ (${KINDS[o.need]})  ${o.name}`)
+  console.log(`${rows.length} fix(es) owed${rows.some((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3) ? `; sweep.mjs post refuses while one is older than ${OWED_DAYS} days` : ''}`)
 } else if (cmd === 'list') {
   for (const w of weak().sort((a, b) => b.seen.length - a.seen.length)) {
     const { prev, cameBack } = required(w)
@@ -124,6 +199,6 @@ if (cmd === 'add') {
   for (const d of Object.keys(by).sort()) console.log(`${d}  ${by[d]}`)
   console.log(`total ${Object.values(by).reduce((a, b) => a + b, 0)}: times Bart met something broken or untrue after being told it was done or working`)
 } else if (import.meta.url === `file://${process.argv[1]}`) {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 28).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1).filter((l, i, a) => a.slice(0, i + 1).every((x) => x.startsWith('//'))).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }

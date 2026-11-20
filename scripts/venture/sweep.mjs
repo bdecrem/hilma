@@ -11,7 +11,7 @@
 //                                                       idle, run beside the other watchers
 //   node scripts/venture/sweep.mjs gather [--day D]     everything that happened that day, printed to read
 //   node scripts/venture/sweep.mjs template [--day D]   an empty entry (JSON) for that day
-//   node scripts/venture/sweep.mjs post <entry.json>    check the entry and store it; the Learning page
+//   node scripts/venture/sweep.mjs post <entry.json> [--dry]   check the entry (--dry: only check) and store it; the Learning page
 //                                                       of app.kochitolabs.com shows it at once. The first
 //                                                       post of a day also texts Bart the day's two ideas
 //                                                       (one for Kit, one for Ola); --no-text skips that
@@ -26,7 +26,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
-import { loadWeaknesses, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
+import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { openCounts } from './_plate.mjs'
 import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
@@ -44,7 +44,7 @@ const opt = (f) => (args.includes(f) ? args[args.indexOf(f) + 1] : null)
 const day = opt('--day') ?? pacificDay()
 if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) (console.error(`not a day: ${day}`), process.exit(1))
 const die = (m) => (console.error(m), process.exit(1))
-const priv = (f) => root + 'apps/venture/private/' + f
+const priv = (f) => privPath(root, f) // VENTURE_PRIVATE=<copy> for tests
 // the Pacific day as two instants (PST or PDT, whichever the day's noon is in)
 const offset = new Date(`${day}T12:00:00Z`).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' }).match(/GMT([+-]\d+)/)?.[1] ?? '-8'
 const from = new Date(Date.parse(`${day}T00:00:00Z`) - Number(offset) * 3600e3).toISOString()
@@ -255,6 +255,9 @@ if (cmd === '--wait') {
     const graded = (await getState(db, 'steers'))?.value?.days?.[e.day]
     if (graded && graded.steers > written) bad.push(`the grader found ${graded.steers} corrections in Bart's messages on ${e.day} and CORRECTIONS.md has ${written} for that day: write down and file the others (node scripts/venture/steers.mjs --dry --day ${e.day} lists them)`)
     if (!graded) console.log(`note: ${e.day} is not graded yet (steers.mjs), so the count of corrections rests on the sweep's own re-read of the messages`)
+    // OLA-251: a correction is recorded at once, its stronger fix may be owed; owed for more than two days blocks the day's entry
+    const late = owedFixes(loadWeaknesses(rootUrl)).filter((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3)
+    if (late.length) bad.push(`fixes owed for more than ${OWED_DAYS} days: ${late.map((o) => `${o.ref} (${o.name}, ${o.issue}, ${o.days} days)`).join('; ')}. Build each and settle it: correct.mjs fix <n> --fix … --level … --where … (correct.mjs owed lists them)`)
   }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
   // an idea is new: its ticket was not the idea of another day
@@ -263,6 +266,7 @@ if (cmd === '--wait') {
     if (again && e.ideas?.[side]?.issue) bad.push(`ideas.${side}: ${e.ideas[side].issue} was already the idea of ${again.day}; think of a new one`)
   }
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
+  if (args.includes('--dry')) (console.log(`--dry: the entry for ${e.day} passes every check; nothing was stored`), process.exit(0))
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
   const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}) }

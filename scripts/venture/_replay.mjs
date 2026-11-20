@@ -9,18 +9,20 @@
 // structural fault with no moment of choice, or covered by another case): `sweep.mjs post`
 // refuses an entry while a correction has neither.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { privPath } from './_weak.mjs'
 
 export const CASE_DIR = 'apps/venture/private/data/replay-cases/'
 export const UNTESTABLE = 'apps/venture/private/data/replay-untestable.json'
 export const FIRST_COVERED = 22
 
 export function loadCases(root) {
-  const dir = new URL(CASE_DIR, root)
+  const dir = privPath(root, 'data/replay-cases/')
   if (!existsSync(dir)) return []
   return readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
     .sort()
-    .map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')))
+    .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')))
 }
 
 /** The correction numbers a case comes from ("Correction 83", "Corrections 5, 9 / Rule 1"). */
@@ -33,7 +35,7 @@ export const caseCorrections = (c) => {
 export function uncoveredCorrections(root, correctionsText) {
   const nums = correctionsText.split(/^## (?=\d+\. )/m).slice(1).map((p) => Number(/^\d+/.exec(p)[0]))
   const have = new Set(loadCases(root).flatMap(caseCorrections))
-  const f = new URL(UNTESTABLE, root)
+  const f = privPath(root, 'data/replay-untestable.json')
   const why = existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : {}
   return nums.filter((n) => n >= FIRST_COVERED && !have.has(n) && !why[String(n)])
 }

@@ -47,7 +47,7 @@ def most_seen():
     that matter most in front of every prompt, where a compaction cannot drop them."""
     try:
         from datetime import date, timedelta
-        ws = json.load(open(os.path.join(root, "apps/venture/private/data/weaknesses.json")))
+        ws = json.load(open(os.path.join(os.environ.get("VENTURE_PRIVATE") or os.path.join(root, "apps/venture/private"), "data/weaknesses.json")))
         since = (date.today() - timedelta(days=3)).isoformat()
         rows = sorted(((sum(1 for x in w.get("seen", []) if x.get("day", "") >= since), w) for w in ws if w.get("now")),
                       key=lambda r: -r[0])
@@ -61,7 +61,30 @@ def most_seen():
         return ""
 
 
-remind = most_seen()
+def owed_fixes():
+    """Fixes owed (OLA-251, Nov 20): corrections recorded the moment Bart made them, whose stronger fix
+    is not built yet (`correct.mjs owed`). Listed before every prompt until `correct.mjs fix` settles
+    them; `sweep.mjs post` refuses while one is older than two days."""
+    try:
+        from datetime import datetime, timezone
+        ws = json.load(open(os.path.join(os.environ.get("VENTURE_PRIVATE") or os.path.join(root, "apps/venture/private"), "data/weaknesses.json")))
+        rows = sorted(((o, w) for w in ws for o in w.get("owed") or []), key=lambda r: r[0].get("since", ""))
+        if not rows:
+            return ""
+        now = datetime.now(timezone.utc)
+        def age(o):
+            try:
+                return (now - datetime.fromisoformat(o["since"].replace("Z", "+00:00"))).days
+            except Exception:
+                return 0
+        return ("Fixes owed (a correction recorded, its stronger fix not built yet; build it, then "
+                "`node scripts/venture/correct.mjs fix <n> --fix ... --level <n> --where ...`):\n"
+                + "\n".join(f"- {o['ref']}, {w['name']}: kind {o.get('need')} or stronger, {o.get('issue')}, owed {age(o)} day(s)" for o, w in rows))
+    except Exception:
+        return ""
+
+
+remind = "\n\n".join(x for x in (most_seen(), owed_fixes()) if x)
 if not isinstance(data, dict):
     if remind:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": remind}}))

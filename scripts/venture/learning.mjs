@@ -20,7 +20,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { loadWeaknesses, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
+import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dry = process.argv.includes('--dry')
@@ -28,7 +28,7 @@ const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const pct = (a, b) => (b ? Math.round((100 * a) / b) : null)
 
 // ---- part 1: Kit
-const text = read('apps/venture/private/CORRECTIONS.md')
+const text = readFileSync(privPath(root, 'CORRECTIONS.md'), 'utf8')
 const parts = text.split(/^## (?=\d+\. )/m).slice(1)
 const MONTHS = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 }
 const entries = parts.map((p) => {
@@ -119,6 +119,10 @@ kit.escapes = { total: escDays.reduce((a, d) => a + esc[d], 0), by_day: escDays.
 // Weaknesses whose strongest fix is still only written down after they came back, and those with no
 // stronger fix found (correct.mjs --cannot): the open problems, by name.
 kit.only_written = loadWeaknesses(root).filter((w) => w.seen.length > 1 && w.guards.length && !w.guards.some((g) => (g.level ?? (g.enforced ? 3 : 1)) >= 3)).map((w) => ({ id: w.id, name: w.name, seen: w.seen.length, stuck: w.stuck?.why ?? null }))
+// Fixes owed (OLA-251): corrections recorded at once whose stronger fix is not built yet (correct.mjs owed).
+const owed = owedFixes(loadWeaknesses(root))
+kit.owed = { n: owed.length, overdue: owed.filter((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3).length, oldest_days: owed[0]?.days ?? null, list: owed.map((o) => ({ ref: o.ref, weakness: o.weakness, name: o.name, issue: o.issue, need: o.need, since: o.since })), label: 'corrections whose stronger fix is owed, not built yet' }
+console.log(`Fixes owed: ${owed.length}${owed.length ? ` (oldest ${owed[0].days} day(s); ${kit.owed.overdue} older than ${OWED_DAYS} days): ${owed.map((o) => `${o.ref} ${o.issue}`).join(', ')}` : ''}`)
 console.log(`Escapes: ${kit.escapes.total} in all${kit.escapes.latest ? `; ${kit.escapes.latest.n} on ${kit.escapes.latest.day}` : ''}. Weaknesses that came back and still have only a written rule: ${kit.only_written.map((w) => w.id).join(', ') || 'none'}`)
 for (const h of unnumberedCorrections(text)) console.log(`corrections: "${h.slice(0, 80)}" has no number, so it is not counted or filed: make it "## N. …" in CORRECTIONS.md`)
 if (weaknesses.length && filed !== entries.length) console.log(`weaknesses: ${entries.length - filed} correction(s) are not filed under a weakness yet (apps/venture/private/data/weaknesses.json)`)
