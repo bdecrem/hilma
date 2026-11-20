@@ -98,7 +98,8 @@ export const TRACKER_VERSION = 4
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
-if (!FAKE) for (const k of ['VENTURE_CALLERS_FILE', 'VENTURE_LIVE_RELEASE', 'VENTURE_ASKS_FILE']) if (process.env[k]) { envWays.push(`${k} was set on the real tracker (ignored there; honored only with VENTURE_TRACKER_FAKE)`); delete process.env[k] }
+// (VENTURE_FAKE_AS_REAL=1 makes a copy of the tracker treat them as the real one does, to test this)
+if (!FAKE || process.env.VENTURE_FAKE_AS_REAL) for (const k of ['VENTURE_CALLERS_FILE', 'VENTURE_LIVE_RELEASE', 'VENTURE_ASKS_FILE']) if (process.env[k]) { envWays.push(`${k} was set on the real tracker (ignored there; honored only with VENTURE_TRACKER_FAKE)`); delete process.env[k] }
 
 export const AREAS = { web: 'Web app', apps: 'Mac and phone apps', model: 'Model and skills', security: 'Security', ops: 'Operations', voice: 'Voice', design: 'Design', board: 'The board' }
 const STATUSES = ['open', 'in_progress', 'waiting', 'done', 'dropped']
