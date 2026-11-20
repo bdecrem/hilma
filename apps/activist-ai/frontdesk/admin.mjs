@@ -66,6 +66,8 @@
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
+//   node admin.mjs asked <handle> [--days 2] [--wake] [--json]   what the person typed to Ola, word for
+//                  word (kept turns and their cloud projects' conversations), for the asks' add-case --from-log
 //                  and size, one place (like a dashboard's table list). Asks each running project's own
 //                  computer (ola-db, read-only); a resting one is listed as resting, or woken with --wake
 //                  (one at a time, stopped again after)
@@ -660,6 +662,68 @@ switch (cmd) {
     console.log(`${rows.length} kept turn(s) in the last ${days} day(s)`)
     break
   }
+  case 'asked': {
+    // node admin.mjs asked <handle> [--days 2] [--wake] [--json]: what the person typed to Ola, word
+    // for word, newest first, for a case of the asks (OLA-231: a case is written from the stored
+    // conversation, not from a description). Two stores: the turns they chose to keep (Mac, iPhone,
+    // ola; both runtimes) and the conversations in their cloud projects (the website, and the apps
+    // when keeping is off), read only, from a project whose computer is running (--wake starts a
+    // stopped one and stops it again). Each row says where it came from and, when it is known, the place.
+    const p = person(args[0] ?? fail('asked <handle>'))
+    const since = Date.now() - Number(flags.days ?? 2) * 86400_000
+    const SCREEN = { mac: 'mac', cli: 'mac', iphone: 'phone', web: 'web' }
+    const rows = db.prepare('SELECT at, product, runtime, session, request FROM kept_turns WHERE person_id = ? AND at >= ? ORDER BY at DESC LIMIT 500').all(p.id, since)
+      .map((r) => ({ at: r.at, request: r.request, source: 'kept', product: r.product, runtime: r.runtime, place: `${r.runtime}-${SCREEN[r.product]}:chat`, session: r.session }))
+    const notes = []
+    const ws = await import('../workspace/ws.mjs')
+    const http = await import('node:http')
+    const get = (slug, urlPath) => new Promise((resolve) => {
+      const auth = `Basic ${Buffer.from(`opencode:${ws.secrets(slug).OPENCODE_PASSWORD}`).toString('base64')}`
+      const req = http.request({ socketPath: ws.paths(slug).opencode, path: urlPath, headers: { authorization: auth, accept: 'application/json' }, timeout: 20_000 }, (res) => {
+        let t = ''
+        res.setEncoding('utf8')
+        res.on('data', (d) => (t += d))
+        res.on('end', () => { try { resolve(res.statusCode < 300 ? JSON.parse(t) : null) } catch { resolve(null) } })
+      })
+      req.on('error', () => resolve(null))
+      req.on('timeout', () => req.destroy())
+      req.end()
+    })
+    const items = (j) => (Array.isArray(j) ? j : Array.isArray(j?.data) ? j.data : [])
+    const ms = (t) => (t > 1e12 ? t : t * 1000)
+    const projects = db.prepare("SELECT DISTINCT w.slug, w.status FROM workspaces w JOIN memberships m ON m.team_id = w.team_id WHERE m.person_id = ? ORDER BY w.slug").all(p.id)
+    for (const w of projects) {
+      if (w.status === 'closed') { notes.push(`${w.slug}: closed, not read`); continue }
+      const state = ws.inspect(w.slug)?.status?.state ?? ws.inspect(w.slug)?.status ?? 'no container'
+      let woke = false
+      if (state !== 'running') {
+        if (!flags.wake) { notes.push(`${w.slug}: its computer is stopped, its conversations were not read (--wake reads them)`); continue }
+        try {
+          await ws.waitForRoom([w.slug], 1, { say: () => {} })
+          await ws.start(w.slug)
+          woke = true
+        } catch (e) { notes.push(`${w.slug}: could not be woken (${e.message})`); continue }
+      }
+      const sessions = items(await get(w.slug, '/api/session?limit=50'))
+      if (!sessions.length) notes.push(`${w.slug}: no conversations, or they did not answer`)
+      for (const s of sessions) {
+        for (const m of items(await get(w.slug, `/api/session/${encodeURIComponent(s.id)}/message?limit=200`))) {
+          const at = ms(m.time?.created ?? 0)
+          if (m.type !== 'user' || at < since || !String(m.text ?? '').trim()) continue
+          // The same turn kept by an app (it knows the screen) is listed once, as kept.
+          if (rows.some((r) => r.source === 'kept' && r.runtime === 'cloud' && r.request.trim() === String(m.text).trim() && Math.abs(r.at - at) < 10 * 60_000)) continue
+          rows.push({ at, request: String(m.text), source: `project ${w.slug}`, runtime: 'cloud', place: null, session: s.id, title: s.title ?? null })
+        }
+      }
+      if (woke) ws.stop(w.slug)
+    }
+    rows.sort((a, b) => b.at - a.at)
+    if (flags.json) { console.log(JSON.stringify({ handle: p.handle, since, rows, notes })); break }
+    for (const r of rows) console.log(`${new Date(r.at).toISOString().slice(0, 16).replace('T', ' ')}Z  ${r.place ?? `${r.runtime} (website, or an app with keeping off)`}  ${r.source}\n    ${r.request.replace(/\s+/g, ' ').slice(0, flags.full ? 4000 : 200)}`)
+    for (const n of notes) console.log(`note: ${n}`)
+    console.log(`${rows.length} request(s) from ${p.handle} in the last ${flags.days ?? 2} day(s)`)
+    break
+  }
   case 'list': {
     for (const p of db.prepare('SELECT id, handle, display_name, status, is_admin, password_set_at, require_passkey FROM people ORDER BY handle').all()) {
       const keys = db.prepare('SELECT id, created_at, last_used_on, via FROM passkeys WHERE person_id = ? ORDER BY id').all(p.id)
@@ -718,7 +782,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | app-hosted | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | link | links | unlink | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | app-hosted | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | link | links | unlink | audit | asked | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

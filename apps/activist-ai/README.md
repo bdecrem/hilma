@@ -1431,6 +1431,23 @@ node apps/activist-ai/evals/asks/add-case.mjs "<his sentence, word for word>" --
 git add apps/activist-ai/evals/asks/cases.json && git commit -m "ola asks: <the case> [OLA-nnn]" && git push
 ```
 
+**His words come from the log, not from the report** (Bart, Nov 20: "don't rely on the report,
+rely on the logs"). `--from-log "<words>"` takes the sentence he typed, word for word, from what is
+stored on the Ola machine (`frontdesk/admin.mjs asked <handle>`: the turns kept by the Mac, iPhone
+and `ola` when keeping is on, and the conversations in his cloud projects; `--wake` also reads a
+project whose computer is stopped); `--from-log 9:28` takes the request nearest that time today
+(Pacific). Several matches are listed for `--pick <n>`. The case records `from.words: "log"`, the
+time, the place (a cloud project's conversation does not know the screen, and says so) and the
+handle (`--handle`, default bart; `--days`, default 2). A sentence given directly is looked up too:
+found, it is recorded the same way; not found, or the machine unreachable, the tool says so and
+records it as `from.words: "description"`. Off the Ola machine it asks it over ssh
+(`OLA_ASKS_HOST`).
+
+```bash
+node apps/activist-ai/evals/asks/add-case.mjs --from-log "publish wikipedia" --runtime cloud,local \
+     --must "site:Bart" --ticket OLA-nnn --what "what Ola did instead"
+```
+
 `--must` (any number): `site:<words>` (Ola's answer gives a `https://sites.ola.cx/<name>/` address
 that answers 200 with a page saying the words), `says:<regex>` (the answer matches), `file:<path>[:<words>]`
 (the file is in the project afterwards). Every case is also held to a never list (`lib.mjs`

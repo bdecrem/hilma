@@ -82,6 +82,8 @@ test('add-case adds a case the runner reads, in one command', () => {
   copyFileSync(path.join(HERE, 'add-case.mjs'), path.join(dir, 'add-case.mjs'))
   copyFileSync(path.join(HERE, 'lib.mjs'), path.join(dir, 'lib.mjs'))
   writeFileSync(path.join(dir, 'cases.json'), JSON.stringify({ cases: [] }))
+  writeFileSync(path.join(dir, 'log.json'), JSON.stringify({ rows: [], notes: [] }))
+  process.env.OLA_ASKS_LOG_JSON = path.join(dir, 'log.json') // never the real machine from a test
   const r = spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), 'make a chart of the survey and publish it', '--runtime', 'cloud,local', '--must', 'site:survey', '--must', 'file:chart.png', '--ticket', 'OLA-999', '--what', 'a made-up failure'], { encoding: 'utf8' })
   assert.equal(r.status, 0, r.stderr)
   const [c] = JSON.parse(readFileSync(path.join(dir, 'cases.json'), 'utf8')).cases
@@ -94,6 +96,60 @@ test('add-case adds a case the runner reads, in one command', () => {
   assert.notEqual(again.status, 0)
   const bad = spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), 'x y z', '--must', 'live:it', '--ticket', 'OLA-1'], { encoding: 'utf8' })
   assert.notEqual(bad.status, 0)
+  assert.equal(c.from.words, 'description', 'a sentence nobody typed is recorded as a description')
+})
+
+test('add-case takes the sentence from the stored conversation, word for word, with its time and place (Bart, Nov 20)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'asks-log-'))
+  for (const f of ['add-case.mjs', 'lib.mjs']) copyFileSync(path.join(HERE, f), path.join(dir, f))
+  const file = path.join(dir, 'cases.json')
+  writeFileSync(file, JSON.stringify({ cases: [] }))
+  const at1 = Date.parse('2026-11-20T13:47:32Z') // 5:47 am Pacific
+  const at2 = Date.parse('2026-11-20T16:17:49Z') // 8:17 am Pacific
+  writeFileSync(path.join(dir, 'log.json'), JSON.stringify({
+    rows: [
+      { at: at2, request: 'build me a gorgeous simple web page that is a bio of bart decrem - me, i have a wikipedia page, and then publish it on the web', source: 'kept', runtime: 'cloud', place: 'cloud-mac:chat' },
+      { at: at1, request: 'Publish this page to sites.ola.cx', source: 'kept', runtime: 'local', place: 'local-mac:chat' },
+      { at: at1 - 60_000, request: 'make a page that says Bart and publish it on ola', source: 'project hello', runtime: 'cloud', place: null },
+    ],
+    notes: [],
+  }))
+  const env = { ...process.env, OLA_ASKS_LOG_JSON: path.join(dir, 'log.json') }
+  const run = (...a) => spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), ...a, '--must', 'says:x', '--ticket', 'OLA-999'], { encoding: 'utf8', env })
+  const cases = () => JSON.parse(readFileSync(file, 'utf8')).cases
+  // by words: his exact sentence, not the words searched for
+  let r = run('--from-log', 'gorgeous wikipedia', '--places', 'cloud-web:chat')
+  assert.equal(r.status, 0, r.stderr)
+  assert.equal(cases()[0].say, 'build me a gorgeous simple web page that is a bio of bart decrem - me, i have a wikipedia page, and then publish it on the web')
+  assert.deepEqual([cases()[0].from.words, cases()[0].from.at, cases()[0].from.where, cases()[0].from.handle], ['log', '2026-11-20T16:17:49.000Z', 'cloud-mac:chat', 'bart'])
+  // by time, Pacific
+  r = run('--from-log', '5:47 am', '--places', 'local-mac:chat')
+  assert.equal(r.status, 0, r.stderr)
+  assert.equal(cases()[1].say, 'Publish this page to sites.ola.cx')
+  // several match: it lists them and writes nothing until --pick
+  r = run('--from-log', 'publish', '--places', 'local-phone:chat')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /3 requests match/)
+  assert.equal(cases().length, 2)
+  r = run('--from-log', 'publish', '--pick', '3', '--places', 'local-phone:chat')
+  assert.equal(r.status, 0, r.stderr)
+  assert.equal(cases()[2].say, 'make a page that says Bart and publish it on ola')
+  assert.equal(cases()[2].from.where, 'cloud (project hello)', 'a cloud project does not know the screen; it says so')
+  // nothing in the log: it says so and writes nothing
+  r = run('--from-log', 'zebra unicorn', '--places', 'local-phone:chat')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /nothing bart typed/)
+  // a sentence he did type is found in the log even without --from-log
+  r = run('Publish this page to sites.ola.cx', '--places', 'cloud-phone:chat')
+  assert.equal(r.status, 0, r.stderr)
+  assert.equal(cases()[3].from.words, 'log')
+  // the log cannot be read: a sentence is still taken, marked as a description, and it says why
+  writeFileSync(path.join(dir, 'log.json'), JSON.stringify({ error: 'ssh: connect timed out' }))
+  r = run('make a table of members', '--places', 'cloud-web:chat')
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /could not be read/)
+  assert.equal(cases()[4].from.words, 'description')
+  assert.notEqual(run('--from-log', 'members', '--places', 'cloud-web:chat').status, 0)
 })
 
 test('OLA-232: the network excuse is a failure for any request; a not-offered case may say it cannot', () => {

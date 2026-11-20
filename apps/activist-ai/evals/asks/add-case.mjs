@@ -18,7 +18,20 @@
 //   file:<path>[:<words>]   the file is in the project afterwards (and says <words>)
 // Every case is also held to the never list in lib.mjs (it cannot do it from here; press a button
 // or go to another screen yourself; not switched on); --must-not adds patterns to it.
-import { readFileSync, writeFileSync } from 'node:fs'
+//
+// The sentence is the person's exact words from the stored conversation, not a description (Bart,
+// Nov 20: "don't rely on the report, rely on the logs"). Every sentence is looked up in what the
+// person typed (admin.mjs asked on the Ola machine: kept turns and their cloud projects'
+// conversations, the last --days 2, --handle bart); found, the case records the time and the place
+// from the log; not found, the tool says so and records the sentence as a description.
+//   --from-log "<words>"      take the sentence from the log: the request with all these words
+//   --from-log 9:28           ... or the one nearest that time today (9:28 am, 2026-11-20T09:28; Pacific, within 30 min)
+//   --pick <n>                when several match, the n-th of the list it printed
+//   --wake                    also read cloud projects whose computer is stopped
+// Off the Ola machine it asks it over ssh (OLA_ASKS_HOST, default admin@100.95.51.98).
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { homedir } from 'node:os'
 import { PLACES, RUNTIME_PLACES } from './lib.mjs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -27,10 +40,67 @@ const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'cases.json
 const argv = process.argv.slice(2)
 const many = (name) => argv.flatMap((a, i) => (a === name && argv[i + 1] !== undefined ? [argv[i + 1]] : []))
 const one = (name, dflt) => many(name).at(-1) ?? dflt
-const flags = new Set(['--places', '--runtime', '--must', '--must-not', '--ticket', '--id', '--what', '--date', '--minutes'])
-const say = argv.find((a, i) => !a.startsWith('--') && !flags.has(argv[i - 1]))
+const flags = new Set(['--places', '--runtime', '--must', '--must-not', '--ticket', '--id', '--what', '--date', '--minutes', '--from-log', '--pick', '--handle', '--days'])
+const given = argv.find((a, i) => !a.startsWith('--') && !flags.has(argv[i - 1]))
 const fail = (m) => (console.error(m), process.exit(2))
-if (!say) fail('usage: add-case.mjs "<the person\'s sentence>" --runtime cloud,local --must "<outcome>" --ticket OLA-nnn')
+if (!given && !one('--from-log')) fail('usage: add-case.mjs "<the person\'s sentence>" | --from-log "<words or time>"  --runtime cloud,local --must "<outcome>" --ticket OLA-nnn')
+
+// ---------------------------------------------------------------- the stored conversation
+const handle = one('--handle', 'bart')
+const days = one('--days', '2')
+function readLog() {
+  if (process.env.OLA_ASKS_LOG_JSON) return JSON.parse(readFileSync(process.env.OLA_ASKS_LOG_JSON, 'utf8'))
+  const cmd = ['frontdesk/admin.mjs', 'asked', handle, '--days', days, '--json', ...(argv.includes('--wake') ? ['--wake'] : [])]
+  const here = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
+  const r = existsSync(path.join(here, 'frontdesk/admin.mjs'))
+    ? spawnSync(process.execPath, cmd, { cwd: here, encoding: 'utf8', timeout: 240_000 })
+    : spawnSync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', process.env.OLA_ASKS_HOST || 'admin@100.95.51.98', `cd ~/ola-staging/current/apps/activist-ai && node ${cmd.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(' ')}`], { encoding: 'utf8', timeout: 240_000 })
+  if (r.status !== 0) return { error: (r.stderr || r.error?.message || `exit ${r.status}`).trim().split('\n').pop() }
+  try { return JSON.parse(r.stdout.trim().split('\n').pop()) } catch { return { error: 'the Ola machine did not answer with the list' } }
+}
+const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase()
+const pacific = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+function atOf(q) {
+  const m = /^(?:(\d{4}-\d{2}-\d{2})[T ])?(\d{1,2}):(\d{2})\s*(am|pm)?$/i.exec(q.trim())
+  if (!m) return null
+  const h = m[4] ? (Number(m[2]) % 12) + (m[4].toLowerCase() === 'pm' ? 12 : 0) : Number(m[2])
+  if (h > 23 || Number(m[3]) > 59) return null
+  const day = m[1] ?? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  // Pacific: try both offsets and keep the one that reads back as that hour there
+  for (const off of ['-08:00', '-07:00']) {
+    const t = Date.parse(`${day}T${String(h).padStart(2, '0')}:${m[3]}:00${off}`)
+    if (Number(new Date(t).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' })) === h) return t
+  }
+  return null
+}
+let say = given
+let source = null
+const log = readLog()
+const rows = log.rows ?? []
+if (one('--from-log')) {
+  if (log.error) fail(`the stored conversation could not be read (${log.error}). Give his sentence as he typed it instead; the case records it as a description.`)
+  const q = one('--from-log')
+  const at = atOf(q)
+  let found = at !== null
+    ? rows.map((r) => ({ r, d: Math.abs(Math.floor(r.at / 60_000) * 60_000 - at) })).filter((x) => x.d <= 30 * 60_000).sort((a, b) => a.d - b.d).map((x) => x.r) // by the minute, as a clock shows it
+    : rows.filter((r) => norm(q).split(' ').every((w) => norm(r.request).includes(w)))
+  if (!found.length) fail(`nothing ${handle} typed in the last ${days} day(s) ${at !== null ? `near ${pacific(at)}` : `has the words "${q}"`} (${rows.length} requests read${log.notes?.length ? `; ${log.notes.join('; ')}` : ''}). With no log, give his sentence as he typed it; the case records it as a description.`)
+  if (at !== null) found = found.slice(0, 1) // a time names one request: the nearest
+  if (found.length > 1 && !one('--pick')) {
+    console.error(`${found.length} requests match; add --pick <n>:`)
+    found.slice(0, 20).forEach((r, i) => console.error(`  ${i + 1}. ${pacific(r.at)}  ${r.place ?? r.runtime}  ${r.request.replace(/\s+/g, ' ').slice(0, 150)}`))
+    process.exit(2)
+  }
+  const r = found[Number(one('--pick', '1')) - 1] ?? fail('--pick: no such number in the list')
+  say = r.request.trim()
+  source = r
+} else {
+  const r = log.error ? null : rows.find((x) => norm(x.request) === norm(given))
+  if (r) source = r
+  else console.log(log.error
+    ? `note: the stored conversation could not be read (${log.error}); the sentence is recorded as a description`
+    : `note: ${handle} did not type this in the last ${days} day(s) (${rows.length} requests read${log.notes?.length ? `; ${log.notes.join('; ')}` : ''}); recorded as a description. If he did type it, use --from-log.`)
+}
 const places = one('--places') ? one('--places').split(',').map((x) => x.trim()) : one('--runtime', 'cloud,local').split(',').flatMap((r) => RUNTIME_PLACES[r.trim()] ?? fail('--runtime is cloud, local or cloud,local'))
 for (const p of places) if (!PLACES.includes(p)) fail(`--places: ${p} is not a place (${PLACES.join(', ')})`)
 const must = many('--must')
@@ -57,9 +127,16 @@ const c = {
   must,
   mustNot: many('--must-not'),
   ...(one('--minutes') ? { limitMin: Number(one('--minutes')) } : {}),
-  from: { date: one('--date', new Date().toISOString().slice(0, 10)), ticket, what: one('--what', '') },
+  from: {
+    date: one('--date', source ? new Date(source.at).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) : new Date().toISOString().slice(0, 10)),
+    ticket,
+    what: one('--what', ''),
+    words: source ? 'log' : 'description',
+    ...(source ? { handle, at: new Date(source.at).toISOString(), where: source.place ?? `${source.runtime} (${source.source})`, log: source.source } : {}),
+  },
 }
 doc.cases.push(c)
 writeFileSync(file, JSON.stringify(doc, null, 2) + '\n')
 console.log(`added ${id} (${places.join(', ')}): ${must.join('; ')}`)
+console.log(source ? `his words, from the log: "${say}" (${pacific(source.at)}, ${c.from.where})` : `his words, as described: "${say}"`)
 console.log(`next: commit evals/asks/cases.json with [${ticket}]; to try it now on the test server: node evals/asks/run.mjs --case ${id}`)
