@@ -918,3 +918,17 @@ redraws at once. `python3 tools/contrast.py` measures every pair a person reads 
 7:1). Shots: `Ola -OlaSnapshot <dir> -OlaOnly dark` on the Mac; `tools/sim-dark-shots.sh` on the
 Mac mini for the phone (it boots a simulator: never on Bart's iMac). Sheets beside Claude, ChatGPT,
 Linear and Ivory in dark: ~/Desktop/Ola/dark-themes/.
+
+**The phone matches the Mac** (OLA-222, 2026-11-19): the same San Francisco type and relative scale
+(on iOS's own default sizes, following Dynamic Type), the same native palette, Light by default with
+the same Appearance and Dark style choices, the same steps, code blocks, approval cards, file rows
+and input box (Shared/). Sheets: ~/Desktop/Ola/phone-matches-mac/. What is left different is the
+platform's own convention, nothing else:
+- Navigation: a tab bar, a pushed conversation and a sessions list on the phone; a sidebar, a toolbar and an inspector on the Mac.
+- Touch: controls at least 44 points high with more padding, and the approval's three answers stacked full width when the screen is narrow.
+- Sizes: iOS Dynamic Type (body 17) on the phone; the Mac's fixed system sizes (13 and 14) there.
+
+The phone's Cloud and Local headers hide and show their sessions with a tap or a double tap (the
+chevron included), at least 44 points high, kept in the same keys as the Mac's
+(`ola.sessions.hidden.cloud` / `.local`); VoiceOver says "collapsed" or "expanded".
+`tools/sim-sections-check.sh` proves it on the mini's simulator (hide, relaunch, still hidden, show).

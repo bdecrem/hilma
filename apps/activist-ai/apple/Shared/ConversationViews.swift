@@ -398,7 +398,7 @@ struct Composer: View {
   let corner: CGFloat = 10
   #else
   let button: CGFloat = 32
-  let corner: CGFloat = 8
+  let corner: CGFloat = 10
   #endif
 
   var body: some View {
@@ -603,17 +603,10 @@ struct EmptyConversation: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: Space.xs) {
-      #if os(macOS)
       Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .semibold)).foregroundStyle(Ola.ink)
       Text(Self.line(folder: folder, runtime: runtime))
         .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3).fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: 480, alignment: .leading)
-      #else
-      Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
-      Text(Self.line(folder: folder, runtime: runtime))
-        .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(Metrics.readingLeading).fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: 480, alignment: .leading).padding(.top, Space.xs)
-      #endif
     }
     .padding(.top, Space.xxl)
   }

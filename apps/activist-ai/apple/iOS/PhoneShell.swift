@@ -83,7 +83,8 @@ struct PhoneShell: View {
   @Bindable private var admin = AdminState.shared
   @State private var tab = "sessions"
   @State private var settingsPath: [String] = []
-  @AppStorage("ola.appearance") private var appearance = "system"
+  /// Light by default, as on the Mac (OLA-207, OLA-222).
+  @AppStorage("ola.appearance") private var appearance = "light"
 
   var body: some View {
     Group {
@@ -149,6 +150,15 @@ struct SessionsHome: View {
   @AppStorage("ola.sessions.hidden.local") private var localHidden = false
   func hidden(_ r: Runtime) -> Bool { r == .cloud ? cloudHidden : localHidden }
   func toggle(_ r: Runtime) { if r == .cloud { cloudHidden.toggle() } else { localHidden.toggle() } }
+  /// Checks only: `-OlaToggleRuntime local` toggles that header once at launch, through the same
+  /// `toggle` a tap calls (the simulator has no tap), so a relaunch shows the kept state.
+  static var toggledAtLaunch = false
+  func toggleFromLaunchArguments() {
+    let a = ProcessInfo.processInfo.arguments
+    guard !Self.toggledAtLaunch, let i = a.firstIndex(of: "-OlaToggleRuntime"), i + 1 < a.count, let r = Runtime(rawValue: a[i + 1]) else { return }
+    Self.toggledAtLaunch = true
+    toggle(r)
+  }
   @Bindable private var place = PhoneWhereState.shared
 
   /// The runtimes that are set up, cloud first, each with the store holding its sessions now.
@@ -213,18 +223,26 @@ struct SessionsHome: View {
             Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).rotationEffect(.degrees(hidden(r) ? -90 : 0))
           }
           .font(.footnote).foregroundStyle(Ola.ink2).textCase(nil)
+          // The whole header is the target, at least 44 points high (OLA-222): a double tap, as
+          // Bart does on the Mac, or a single tap (the chevron included) hides or shows the
+          // sessions. The double tap is attached first so it is recognized as one toggle, not two.
+          .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
           .contentShape(Rectangle())
           .onTapGesture(count: 2) { withAnimation { toggle(r) } }
           .onTapGesture { withAnimation { toggle(r) } }
-          .accessibilityElement(children: .combine)
+          .accessibilityElement(children: .ignore)
           .accessibilityAddTraits(.isButton)
-          .accessibilityLabel("\(r.name) sessions, \(hidden(r) ? "hidden" : "shown")")
+          .accessibilityLabel("\(r.name) sessions, \(r.place(phone: true))")
+          .accessibilityValue(hidden(r) ? "collapsed" : "expanded")
+          .accessibilityHint(hidden(r) ? "Shows its sessions." : "Hides its sessions.")
+          .accessibilityAction { toggle(r) }
         }
       }
     }
     .listStyle(.plain)
     .scrollContentBackground(.hidden)
     .background(Ola.paper)
+    .onAppear { toggleFromLaunchArguments() }
     .overlay {
       if allEmpty {
         switch store.connection {
@@ -353,7 +371,7 @@ struct SettingsScreen: View {
   @Bindable var store: OlaStore
   @Bindable private var push = PhonePushState.shared
   @Bindable private var admin = AdminState.shared
-  @AppStorage("ola.appearance") private var appearance = "system"
+  @AppStorage("ola.appearance") private var appearance = "light"
   @AppStorage(DarkStyle.key) private var darkStyle = DarkStyle.standard.rawValue
   @Environment(\.colorScheme) private var scheme
   @AppStorage("OlaWorking") private var working = ""
@@ -464,11 +482,10 @@ struct SettingsScreen: View {
       }
       Section {
         Picker("Appearance", selection: $appearance) {
-          Text("System").tag("system")
           Text("Light").tag("light")
           Text("Dark").tag("dark")
+          Text("Match iPhone").tag("system")
         }
-        .pickerStyle(.segmented)
         // Two variations on dark (OLA-221), while the app is dark (chosen, or the phone's).
         if appearance == "dark" || scheme == .dark {
           Picker("Dark style", selection: Binding(get: { darkStyle }, set: { v in

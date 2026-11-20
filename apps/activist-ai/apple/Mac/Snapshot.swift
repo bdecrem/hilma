@@ -291,6 +291,10 @@ enum Snapshot {
         let peer = OlaStore(fixture: Fixture.named(fixture == "main" ? "results" : "main"))
         peer.previewAs(.cloud)
         write(SnapshotFrame(store: store, treatment: .plain, peer: peer).environment(\.treatment, .plain), size: CGSize(width: 1440, height: 900), appearance: .darkAqua, to: dir.appendingPathComponent("\(shot).png"), titled: false)
+        // Light (the default) once, the same screens, to set beside the phone's (OLA-222).
+        if style == .standard {
+          write(SnapshotFrame(store: store, treatment: .plain, peer: peer).environment(\.treatment, .plain), size: CGSize(width: 1440, height: 900), appearance: .aqua, to: dir.appendingPathComponent("light-mac-\(name).png"), titled: false)
+        }
       }
       let shot = "dark-\(style.rawValue)-mac-settings"
       guard only == nil || shot.contains(only!) || only == "dark" else { continue }

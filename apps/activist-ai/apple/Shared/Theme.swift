@@ -130,13 +130,10 @@ struct Palette {
     return p
   }()
 
-  #if os(macOS)
+  /// The same on the Mac and the phone (OLA-222, Bart: "have the styles on the iphone app match
+  /// the macos app"): the native palette, its dark styles from DarkStyle.swift.
   static let all = [native, ink, blueInk, dusk]
   static let chosen = native
-  #else
-  static let all = [ink, blueInk, dusk]
-  static let chosen = blueInk
-  #endif
   /// The one in use: the hidden default `OlaPalette`, else the chosen one, in the dark style chosen
   /// in Settings (OLA-221). Observed, so changing it redraws every view that reads `Ola`.
   static var current: Palette {
@@ -184,36 +181,34 @@ enum Ola {
 
 /// Bricolage Grotesque for the interface, Literata for what Ola writes, IBM Plex Mono in details.
 ///
-/// On the Mac, one family: the system's (OLA-207). Notes, Mail and ChatGPT set the interface and
-/// what you read in San Francisco; Bricolage beside Literata beside a system sidebar and menus read
-/// as three voices at once, and both run large for their point size (Bricolage's x-height; Literata
-/// at 15 looked like 17). The phone keeps the brand's faces.
+/// One family: the system's (OLA-207 on the Mac, OLA-222 on the phone). Notes, Mail and ChatGPT set
+/// the interface and what you read in San Francisco; Bricolage beside Literata beside a system
+/// sidebar and menus read as three voices at once, and both run large for their point size
+/// (Bricolage's x-height; Literata at 15 looked like 17). On the phone every size follows the
+/// person's Dynamic Type setting (`scaled`), from the iOS default sizes in `Metrics`.
 enum OlaFont {
-  static func sans(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
+  /// A size as the person's text size setting makes it (the phone; the Mac's are fixed, as the
+  /// Mac's own apps are).
+  static func scaled(_ size: CGFloat) -> CGFloat {
     #if os(macOS)
-    .system(size: size, weight: weight.system)
+    size
     #else
-    .custom(weight.sans, size: size)
+    UIFontMetrics.default.scaledValue(for: size)
     #endif
+  }
+  static func sans(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
+    .system(size: scaled(size), weight: weight.system)
   }
   static func serif(_ size: CGFloat, _ style: SerifStyle = .regular) -> Font {
-    #if os(macOS)
     switch style {
-    case .regular: .system(size: size)
-    case .semibold: .system(size: size, weight: .semibold)
-    case .heading: .system(size: size, weight: .bold)
-    case .italic: .system(size: size).italic()
+    case .regular: .system(size: scaled(size))
+    case .semibold: .system(size: scaled(size), weight: .semibold)
+    case .heading: .system(size: scaled(size), weight: .bold)
+    case .italic: .system(size: scaled(size)).italic()
     }
-    #else
-    .custom(style.rawValue, size: size)
-    #endif
   }
   static func mono(_ size: CGFloat, medium: Bool = false) -> Font {
-    #if os(macOS)
-    .system(size: size, weight: medium ? .medium : .regular, design: .monospaced)
-    #else
-    .custom(medium ? "IBMPlexMono-Medium" : "IBMPlexMono-Regular", size: size)
-    #endif
+    .system(size: scaled(size), weight: medium ? .medium : .regular, design: .monospaced)
   }
 
   enum Weight {
@@ -271,20 +266,20 @@ enum Metrics {
   /// Code and command details (IBM Plex Mono).
   static let mono: CGFloat = 12
   #else
-  static let title: CGFloat = 24
-  static let heading: CGFloat = 18
-  static let reading: CGFloat = 16.5
-  static let ui: CGFloat = 15.5
+  // The Mac's scale on iOS's own default sizes (OLA-222), never below them: what Ola writes at
+  // Body (17), every control and row at Callout (16), one step under it as on the Mac; times and
+  // captions at Footnote (13); titles at Title 2 (22); the approval's question at Headline (17);
+  // code at Subheadline (15), the Mac's 12 to 14. All of them follow Dynamic Type.
+  static let title: CGFloat = 22
+  static let heading: CGFloat = 17
+  static let reading: CGFloat = 17
+  static let ui: CGFloat = 16
   static let meta: CGFloat = 13
-  static let mono: CGFloat = 12.5
+  static let mono: CGFloat = 15
   #endif
-  /// Extra space between lines of reading text, on top of Literata's own (1.49 em): about 1.58 in all.
-  /// On the Mac, San Francisco's own line is about 1.19 em: about 1.45 in all.
-  #if os(macOS)
-  static var readingLeading: CGFloat { reading * 0.26 }
-  #else
-  static var readingLeading: CGFloat { reading * 0.09 }
-  #endif
+  /// Extra space between lines of reading text: San Francisco's own line is about 1.19 em, about
+  /// 1.45 in all, on both.
+  static var readingLeading: CGFloat { OlaFont.scaled(reading) * 0.26 }
 }
 
 /// The spacing scale (points). Nothing outside it.
