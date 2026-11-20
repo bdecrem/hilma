@@ -1231,8 +1231,12 @@ The files: `~/ola-suite.lock/` is the turn (mkdir; its `owner` starts `pid <n>`)
 is a deploy's pid, `~/.ola-turns/` holds one ticket per waiter. A turn, ticket or hold whose process
 is gone is cleared by the next waiter. The evals' shell scripts take the same lock by `mkdir` and
 write `pid $$` into the owner, exporting `OLA_TURN_HELD=$$` so the suites they start do not queue
-behind their own parent. `OLA_TURN=off` skips the turn (a development machine with nothing else on
-it). The deploy runs `node --test ops/turn-test.mjs` as its first suite (8 tests, seconds).
+behind their own parent. A suite also runs inside the turn when one of its parent processes holds
+it, or, for a lock that names no pid (a builder's `touch ~/ola-suite.lock`), when a parent is a
+script that makes that lock. A lock that names no pid is trusted for 3 hours from when it was made
+(`OLA_TURN_OWNERLESS_MAX_MIN`), then cleared. Builders queue with `turn.mjs run` and never make the
+lock by hand. `OLA_TURN=off` skips the turn (a development machine with nothing else on it). The
+deploy runs `node --test ops/turn-test.mjs` as its first suite (10 tests, seconds).
 
 **State lives outside every release**, so a deploy or a rollback never touches it: the platform
 database and its key in `~/.ola-frontdesk`, workspaces, gateway tokens, door sockets, the staging

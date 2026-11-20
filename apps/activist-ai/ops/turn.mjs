@@ -27,7 +27,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 export function turnPaths(home = process.env.OLA_TURN_HOME) {
@@ -54,6 +54,8 @@ const readJson = (f) => {
   }
 }
 
+export const OWNERLESS_MAX_MS = Number(process.env.OLA_TURN_OWNERLESS_MAX_MIN || 180) * 60000
+
 /** Who holds the turn: { pid, label, since, shell } or null. Clears a turn whose holder is gone. */
 export function holder(P = turnPaths()) {
   if (!existsSync(P.lock)) return null
@@ -70,8 +72,22 @@ export function holder(P = turnPaths()) {
   }
   const m = /^pid (\d+)\b/.exec(text)
   if (!m) {
-    // A shell script's turn (`echo "fu2 $(date)" > owner`), or one being written this instant.
-    return { pid: null, label: text.trim() || '(starting)', since, shell: true }
+    // A turn that does not say whose it is: an older shell script (`echo "fu2 $(date)" > owner`),
+    // a builder's `touch ~/ola-suite.lock` (a plain file), or a turn being written this instant.
+    // Trusted for OWNERLESS_MAX_MS from when it was made, then cleared: nothing can tell whether
+    // its maker still runs, and a forgotten one would hold the machine forever.
+    if (Date.now() - since > OWNERLESS_MAX_MS) {
+      rmSync(P.lock, { recursive: true, force: true })
+      return null
+    }
+    const file = (() => {
+      try {
+        return statSync(P.lock).isFile()
+      } catch {
+        return false
+      }
+    })()
+    return { pid: null, label: text.trim() || (file ? 'a script that made the lock by hand (touch)' : '(starting)'), since, shell: true }
   }
   const pid = Number(m[1])
   if (!alive(pid)) {
@@ -156,7 +172,11 @@ export async function acquire({ label = `pid ${process.pid}`, deploy = false, P 
         }
         return { release, waitedMs: Date.now() - at }
       }
-      const now = h ? `the turn is held by ${h.label}${h.pid ? ` (pid ${h.pid})` : ''} for ${Math.round((Date.now() - h.since) / 60000)} min` : held ? 'a deploy goes first' : 'waiting'
+      const now = h
+        ? `the turn is held by ${h.label}${h.pid ? ` (pid ${h.pid})` : ''} for ${Math.round((Date.now() - h.since) / 60000)} min${h.shell ? ` (it says no pid, so it is trusted up to ${OWNERLESS_MAX_MS / 60000} min; if it is your own script, start the script with node ops/turn.mjs run -- … instead of making ${P.lock} yourself)` : ''}`
+        : held
+          ? 'a deploy goes first'
+          : 'waiting'
       const msg = `${now}; ${mine < 0 ? '?' : mine} ahead of ${label}`
       if (msg !== said) on((said = msg))
       await sleep(poll)
@@ -175,6 +195,31 @@ function readText(f) {
 }
 
 /**
+ * Whether this process runs under the turn's holder: one of its ancestors is the holder's pid, or,
+ * for a turn that names no pid, an ancestor is a script whose text makes that lock (a builder's
+ * `touch ~/ola-suite.lock` at the top of its run script). Without this, the suite would wait for
+ * its own parent's turn.
+ */
+export function insideHolder(h, P = turnPaths(), start = process.ppid) {
+  const lockName = path.basename(P.lock)
+  let pid = start
+  for (let i = 0; i < 12 && pid > 1; i++) {
+    if (h.pid && pid === h.pid) return true
+    const r = spawnSync('/bin/ps', ['-o', 'ppid=,args=', '-p', String(pid)], { encoding: 'utf8' })
+    const m = /^\s*(\d+)\s+(.*)$/.exec((r.stdout || '').trim())
+    if (!m) return false
+    if (h.shell)
+      for (const a of m[2].split(/\s+/).slice(1, 4)) {
+        try {
+          if (statSync(a).isFile() && statSync(a).size < 1e6 && readFileSync(a, 'utf8').includes(lockName)) return true
+        } catch {}
+      }
+    pid = Number(m[1])
+  }
+  return false
+}
+
+/**
  * For a check suite: wait for the turn, hold it until this process exits, and let children
  * inherit it. Does nothing when this process already runs inside a turn (OLA_TURN_HELD names a
  * live holder of it) or when OLA_TURN=off (a development machine with nothing else on it).
@@ -185,6 +230,9 @@ export async function takeTurn(label, { deploy = false } = {}) {
   const inherited = Number(process.env.OLA_TURN_HELD || 0)
   const h = holder(P)
   if (inherited && h && h.pid === inherited) return null
+  // Run by the turn's holder even though the variable did not come down (a child started with a
+  // clean environment, or a builder's script that made the lock itself and then runs a suite).
+  if (h && insideHolder(h, P)) return null
   const t0 = Date.now()
   const got = await acquire({ label, deploy, P, on: (m) => console.log(`turn: ${m}`) })
   if (got.waitedMs > 2000) console.log(`turn: ${label} has the turn after ${Math.round((Date.now() - t0) / 1000)} s`)

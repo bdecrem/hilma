@@ -3,12 +3,12 @@
 //   node --test ops/turn-test.mjs
 import { spawn, spawnSync } from 'node:child_process'
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { acquire, holder, turnPaths, waiting } from './turn.mjs'
+import { OWNERLESS_MAX_MS, acquire, holder, turnPaths, waiting } from './turn.mjs'
 
 const TURN = path.join(path.dirname(fileURLToPath(import.meta.url)), 'turn.mjs')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -113,6 +113,30 @@ test('an aborted wait takes back its ticket and its hold', async () => {
   assert.equal(existsSync(P.hold), false)
   assert.equal(waiting(P).length, 0)
   a.release()
+})
+
+test("a lock made by hand (touch) is waited out, and cleared once it is older than the limit", async () => {
+  order.length = 0
+  const P = fresh()
+  writeFileSync(P.lock, '') // `touch ~/ola-suite.lock`, a builder's own convention
+  assert.match(holder(P).label, /by hand/)
+  const b = enter(P, 'b')
+  await sleep(100)
+  assert.deepEqual(order, [])
+  const old = (Date.now() - OWNERLESS_MAX_MS - 60000) / 1000
+  utimesSync(P.lock, old, old)
+  ;(await b).release()
+  assert.deepEqual(order, ['b'])
+  assert.equal(existsSync(P.lock), false)
+})
+
+test("a suite run by the script that touched the lock runs inside that script's turn", async () => {
+  const home = mkdtempSync(path.join(tmpdir(), 'ola-turn-'))
+  const script = path.join(home, 'run-suites.sh')
+  const inner = `const t = await import(${JSON.stringify(TURN)}); console.log((await t.takeTurn('workspace check')) === null ? 'inside' : 'queued')`
+  writeFileSync(script, `touch ${path.join(home, 'suite.lock')}\n${JSON.stringify(process.execPath)} --input-type=module -e ${JSON.stringify(inner)}\n`)
+  const r = spawnSync('/bin/zsh', [script], { encoding: 'utf8', timeout: 20000, env: { ...process.env, OLA_TURN_HELD: '', OLA_TURN_HOME: home } })
+  assert.match(r.stdout, /inside/)
 })
 
 const cli = (home, args, env = {}) =>
