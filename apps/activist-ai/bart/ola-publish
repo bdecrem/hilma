@@ -190,6 +190,12 @@ def main(argv):
             return refused(j)
         print(f"taken down: {j['url']} " + ("now answers 404." if j.get("gone") else "did not answer 404 yet; check it again in a minute.") + " The name stays yours.")
         return 0
+    if "--files" in argv:
+        # The cloud project's form (workspace/ola-publish, OLA-230), not this Mac's (OLA-250).
+        print("ola-publish: `--files` is the form in an Ola cloud project. On this Mac it is two steps: "
+              "ola-publish preview <folder> --name <name>, show the person the list it prints, then "
+              "ola-publish publish <folder> --name <name> --fingerprint <the fingerprint it printed>. Nothing was published.")
+        return 2
     print(__doc__.split("\n\n")[1], file=sys.stderr)
     return 2
 

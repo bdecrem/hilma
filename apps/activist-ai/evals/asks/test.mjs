@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { HERE, PLACES, checkMust, checkNever, readCases, siteAddresses, turnsOf, verdictOf, ratchet } from './lib.mjs'
+import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -39,7 +39,8 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => /^(site|says|file|ran|newfile):./.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile):./.test(m)), c.id)
+    assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
     for (const m of c.must.filter((m) => m.startsWith('says:'))) new RegExp(m.slice(5), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
     assert.ok(/^\d{4}-\d\d-\d\d$/.test(c.from?.date) && /^OLA-\d+$/.test(c.from?.ticket), `${c.id}: the date and ticket of the failure it came from`)
@@ -189,6 +190,35 @@ test('OLA-232: the list of abilities, the instructions written from it, and its 
   const s = summary({ latest: { cases: {} } })
   assert.equal(s.passing + s.failing + s.notRun, s.lines)
   assert.equal(s.notRun, s.lines)
+})
+
+test('OLA-250: the local runtime carries the Mac app\'s commands, never the cloud\'s', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'asks-tools-'))
+  copyFileSync(path.join(AI, 'bart/ola-publish'), path.join(dir, 'ola-publish'))
+  copyFileSync(path.join(AI, 'workspace/ola-search'), path.join(dir, 'ola-search'))
+  copyFileSync(path.join(AI, 'bart/ola-page-mac'), path.join(dir, 'ola-page'))
+  copyFileSync(path.join(AI, 'workspace/ola-page'), path.join(dir, 'olapage.py'))
+  copyFileSync(path.join(AI, 'workspace/lib/olatext.py'), path.join(dir, 'olatext.py'))
+  assert.deepEqual(commandsNotTheApps(dir), [])
+  // Nov 20: the cloud's ola-publish in the Mac's runtime
+  copyFileSync(path.join(AI, 'workspace/ola-publish'), path.join(dir, 'ola-publish'))
+  assert.deepEqual(commandsNotTheApps(dir), ["ola-publish: not the app's (bart/ola-publish)"])
+  writeFileSync(path.join(dir, 'ola-extra'), '#!/bin/sh\n')
+  assert.ok(commandsNotTheApps(dir).some((l) => l.startsWith('ola-extra: the app carries no such command')))
+})
+
+test('OLA-250: gone passes only when every address given is not found', async () => {
+  const real = globalThis.fetch
+  const up = new Set(['https://sites.ola.cx/bart/'])
+  globalThis.fetch = async (u) => ({ status: up.has(String(u)) ? 200 : 404, text: async () => '' })
+  try {
+    assert.ok(!(await checkMust('gone', {}, 'Taken down.', { earlier: 'Published: https://sites.ola.cx/bart/', wait: 0 })).ok)
+    up.clear()
+    assert.ok((await checkMust('gone', {}, 'Taken down.', { earlier: 'Published: https://sites.ola.cx/bart/', wait: 0 })).ok)
+    assert.ok(!(await checkMust('gone', {}, 'Taken down.', { earlier: 'It is published.', wait: 0 })).ok, 'no address given: nothing seen taken down')
+  } finally {
+    globalThis.fetch = real
+  }
 })
 
 void fileURLToPath

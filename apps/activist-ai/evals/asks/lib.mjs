@@ -12,7 +12,7 @@
 // questions), POST .../permission/<id>/reply {decision} and .../form/<id>/reply {answer}.
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -147,7 +147,10 @@ async function steady(go, method) {
       }
       return r
     } catch (e) {
-      if (Date.now() > end || (method !== 'GET' && e.cause?.code !== 'ECONNREFUSED')) throw e
+      // OLA-250: "fetch failed" alone said nothing; the cause goes with it into the run log.
+      const code = e.cause?.code ?? e.cause?.name ?? ''
+      if (code && !String(e.message).includes(code)) e.message = `${e.message} (${code}${e.cause?.message ? `: ${e.cause.message}` : ''})`
+      if (Date.now() > end || (method !== 'GET' && code !== 'ECONNREFUSED')) throw e
       await sleep(2000)
     }
   }
@@ -226,6 +229,13 @@ export async function startLocal(password, { build = true } = {}) {
     await sleep(300)
   }
   rmSync(pw, { force: true })
+  // Not the app's commands: every local case would test something no Mac has (OLA-250). Stopped here,
+  // with the reason, instead of a model's paraphrase of a usage line later.
+  const wrong = commandsNotTheApps(path.join(dir, 'serve/support/web-tools'))
+  if (wrong.length) {
+    child.stdin.end()
+    throw new Error(`the local runtime's commands are not the Mac app's: ${wrong.join('; ')}`)
+  }
   const { url, password: serverPw, skills } = JSON.parse(readFileSync(info, 'utf8'))
   const auth = 'Basic ' + Buffer.from(`opencode:${serverPw}`).toString('base64')
   const folder = path.join(dir, 'folder')
@@ -280,6 +290,39 @@ export async function startLocal(password, { build = true } = {}) {
       return log.includes('stopped') ? 'stopped and signed out' : `ended (${log.trim().split('\n').pop()})`
     },
   }
+}
+
+/**
+ * OLA-250: the local runtime is the app's only if its commands are the files the app carries. The
+ * app's Resources are filled by apple/project.yml (the WebTools sources: workspace/ and bart/); a run
+ * from the repo installs from those folders (OlaKit LocalServer.installWebTools). On Nov 20 the
+ * repo run took the cloud's ola-publish (workspace/) instead of the Mac's (bart/), and every
+ * "publish it on ola" failed with a command no Mac app carries. Returns one line per command that
+ * differs or is missing; empty when the runtime carries exactly the app's commands.
+ */
+export function commandsNotTheApps(installed, apple = path.join(AI, 'apple')) {
+  const yml = readFileSync(path.join(apple, 'project.yml'), 'utf8').split('\n')
+  const carried = new Map() // name in the app's Resources -> the repo file
+  for (let i = 0; i < yml.length - 1; i++) {
+    const dir = yml[i].trim().match(/^- path: (\.\.\/\S+)$/)?.[1]
+    const inc = yml[i + 1].trim().match(/^includes: \[(.*)\]$/)?.[1]
+    if (!dir || !inc) continue
+    for (const f of inc.split(',').map((x) => x.trim()).filter(Boolean)) {
+      const name = path.basename(f)
+      if (carried.has(name)) carried.set(name, null) // two files under one name: not one the app can carry
+      else carried.set(name, path.join(apple, dir, f))
+    }
+  }
+  // The names the Mac installs a carried file under (LocalServer.webToolFrom).
+  const from = { 'ola-page': 'ola-page-mac', 'olapage.py': 'ola-page' }
+  const out = []
+  for (const name of readdirSync(installed)) {
+    const src = carried.get(from[name] ?? name)
+    if (src === undefined) out.push(`${name}: the app carries no such command`)
+    else if (src === null) out.push(`${name}: project.yml puts two files under that name in the app`)
+    else if (!readFileSync(src).equals(readFileSync(path.join(installed, name)))) out.push(`${name}: not the app's (${path.relative(AI, src)})`)
+  }
+  return out
 }
 
 // ---------------------------------------------------------------- one conversation
@@ -397,9 +440,23 @@ async function fetchText(url) {
  *   says:<regex>         Ola's answer matches (case-insensitive)
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
  */
-export async function checkMust(must, T, answer, { steps = [], before = [] } = {}) {
+export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000 } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
+  if (kind === 'gone') {
+    // gone: the page is down. Every sites.ola.cx address Ola gave in the conversation (the turns said
+    // first and this one) answers 404, within a minute; at least one address was given.
+    const addrs = siteAddresses(`${earlier}\n${answer}`)
+    if (!addrs.length) return { ok: false, why: 'no sites.ola.cx address anywhere in the conversation, so nothing to see taken down' }
+    const stop = Date.now() + wait
+    for (;;) {
+      const seen = []
+      for (const a of addrs) seen.push({ a, status: (await fetchText(a)).status })
+      if (seen.every((s) => s.status === 404)) return { ok: true, why: seen.map((s) => `${s.a} 404`).join('; ') }
+      if (Date.now() >= stop) return { ok: false, why: `still up: ${seen.filter((s) => s.status !== 404).map((s) => `${s.a} ${s.status}`).join('; ')}` }
+      await sleep(5000)
+    }
+  }
   if (kind === 'site') {
     const addrs = siteAddresses(answer)
     if (!addrs.length) return { ok: false, why: 'no sites.ola.cx address in Ola’s answer' }

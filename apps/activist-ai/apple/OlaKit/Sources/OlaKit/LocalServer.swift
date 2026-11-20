@@ -66,8 +66,11 @@ public final class LocalServer: @unchecked Sendable {
     for name in webToolNames {
       // In the repo, olatext.py is in workspace/lib/; in the app, everything is side by side.
       let file = webToolFrom[name] ?? name
-      // In the repo the Mac's ola-page is bart/ola-page-mac, beside workspace/.
-      guard let from = [src.appendingPathComponent(file), src.appendingPathComponent("lib/\(file)"), src.appendingPathComponent("../bart/\(file)")].first(where: { fm.fileExists(atPath: $0.path) }) else { ok = false; continue }
+      // In the repo the Mac's own commands are in bart/, beside workspace/, and they come first: a
+      // name in both is the cloud's in workspace/ and the Mac's in bart/ (ola-publish since OLA-230;
+      // with workspace/ first the asks' local runtime got the cloud's, which can never publish from
+      // a Mac, OLA-250). The app's Resources are flat and carry the one project.yml names.
+      guard let from = [src.appendingPathComponent("../bart/\(file)"), src.appendingPathComponent(file), src.appendingPathComponent("lib/\(file)")].first(where: { fm.fileExists(atPath: $0.path) }) else { ok = false; continue }
       let to = dir.appendingPathComponent(name)
       do {
         try fm.copyItem(at: from, to: to)

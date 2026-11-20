@@ -1455,6 +1455,23 @@ that answers 200 with a page saying the words), `says:<regex>` (the answer match
 did not do it itself, or says the feature is not switched on. `--must-not "<regex>"` adds to it;
 `--places cloud-web:chat,local-mac:chat` names the places exactly (the tracker's names). To try a
 new case at once on the test server: `node evals/asks/run.mjs --case <id>` in a checkout there.
+A request that only makes sense after another ("publish it again", "take it down") names what was
+said first with `--before "<sentence>"` (any number, in order, same conversation, each answered yes,
+not judged but it has to finish); `--must gone` then means every `sites.ola.cx` address Ola gave in
+the conversation answers 404 (OLA-250: `publish-again`, `take-it-down`).
+
+**The local runtime must be the app's** (OLA-250). On Nov 20 a cloud `ola-publish` was added to
+`workspace/` beside the Mac's in `bart/`; a run from the repo installed the cloud's (OlaKit
+`LocalServer.installWebTools` looked in `workspace/` first), so every "publish it on ola" with Ola
+working on the Mac failed in the asks with a command no Mac app carries, and the answer read like a
+model's mistake ("still being processed"). Two checks hold it now: `startLocal` refuses to start a
+runtime whose commands differ from the files `apple/project.yml` puts in the app (`lib.mjs`
+`commandsNotTheApps`, the reason in the run log), and OlaKit `WebToolsTests` does the same in
+`swift test`. A command that exists in both runtimes under one name is `bart/` first on the Mac.
+"the run broke: fetch failed" is the runner, not Ola: it now carries the cause (`ECONNRESET`), and
+after taking a try's pages down (about 20 s, blocking) the runner reads once before the next try,
+so the socket the local server reset meanwhile is not the one the next try's first POST is sent on
+(every try after a pass broke that way on Nov 20).
 
 **It runs by itself after every deploy that serves** (`ops/ola.mjs` starts
 `evals/asks/run.mjs --after-deploy` in the background once it gives the machine's turn back; log

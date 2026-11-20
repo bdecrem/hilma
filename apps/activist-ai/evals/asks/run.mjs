@@ -145,6 +145,10 @@ try {
         } catch (e) {
           say(`  taking the try's pages down: ${e.message}`)
         }
+        // OLA-250: taking the pages down blocks for ~20 s, and the local server resets the socket
+        // left open meanwhile; the next try's first call (a POST, never sent again) broke on it with
+        // ECONNRESET after every pass on Nov 20. A read first (tried again on a reset) gets a fresh one.
+        await T.call('GET', '/api/session').catch(() => {})
       }
       await yieldToDeploy()
       const v = verdictOf(tries)
@@ -198,25 +202,38 @@ async function runCase(T, c) {
   const sid = await newSession(T, `asks ${c.id}`)
   const limit = (c.limitMin ?? 8) * 60_000
   const end = Date.now() + limit
-  let turn = await ask(T, sid, c.say, limit)
-  const texts = [...turn.texts]
-  const steps = [...turn.tools.map((t) => `${t.name}: ${String(t.input).slice(0, 160)}`)]
-  const answered = [...turn.answered]
-  // A person who asked for it to be done answers "yes" when Ola ends on a question (twice at most).
-  for (let i = 0; i < 2 && turn.status === 'done' && endsOnQuestion(turn.texts.at(-1) ?? '') && Date.now() < end; i++) {
-    answered.push(`said in the conversation: ${c.yes ?? 'Yes, go ahead.'}`)
-    turn = await ask(T, sid, c.yes ?? 'Yes, go ahead.', end - Date.now())
-    texts.push(...turn.texts)
+  const steps = []
+  const answered = []
+  // One request, and the person's "yes" when Ola ends on a question (twice at most).
+  async function converse(text) {
+    let turn = await ask(T, sid, text, Math.max(end - Date.now(), 1000))
+    const texts = [...turn.texts]
     steps.push(...turn.tools.map((t) => `${t.name}: ${String(t.input).slice(0, 160)}`))
     answered.push(...turn.answered)
+    for (let i = 0; i < 2 && turn.status === 'done' && endsOnQuestion(turn.texts.at(-1) ?? '') && Date.now() < end; i++) {
+      answered.push(`said in the conversation: ${c.yes ?? 'Yes, go ahead.'}`)
+      turn = await ask(T, sid, c.yes ?? 'Yes, go ahead.', end - Date.now())
+      texts.push(...turn.texts)
+      steps.push(...turn.tools.map((t) => `${t.name}: ${String(t.input).slice(0, 160)}`))
+      answered.push(...turn.answered)
+    }
+    return { turn, text: texts.join('\n\n') }
   }
-  const answer = texts.join('\n\n')
+  // OLA-250: what the person said first in the same conversation ("make a page and publish it",
+  // then "publish it again" or "take it down"). Not judged, but it has to finish.
+  const earlier = []
+  for (const said of c.before ?? []) {
+    const { turn, text } = await converse(said)
+    earlier.push(text)
+    if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}; Ola said: ${oneLine(text)}` }
+  }
+  const { turn, text: answer } = await converse(c.say)
   const base = { answer, steps, answered }
   if (turn.status !== 'done') return { ...base, ok: false, why: `the turn ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(answer)}` }
   const fails = []
   const notes = []
   for (const m of c.must) {
-    const r = await checkMust(m, T, answer, { steps, before })
+    const r = await checkMust(m, T, answer, { steps, before, earlier: earlier.join('\n\n') })
     ;(r.ok ? notes : fails).push(`${m}: ${r.why}`)
   }
   const never = checkNever(c, answer, { done: !fails.length })

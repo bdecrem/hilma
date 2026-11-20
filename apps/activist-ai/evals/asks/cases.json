@@ -539,6 +539,55 @@
         "ticket": "OLA-232",
         "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
       }
+    },
+    {
+      "id": "publish-again",
+      "say": "publish it again",
+      "before": [
+        "make a page that says Bart and publish it on ola",
+        "change the page so it says Bart was here"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "site:Bart was here"
+      ],
+      "mustNot": [],
+      "limitMin": 20,
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-250",
+        "what": "The neighbour of publish-bart: after a change, the person asks for the page to be published again, in the same conversation (OLA-230 made it work in a cloud project; with Ola working on the Mac it had never been asked as chat)."
+      }
+    },
+    {
+      "id": "take-it-down",
+      "say": "take it down",
+      "before": [
+        "make a page that says Bart and publish it on ola"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "gone"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-250",
+        "what": "The neighbour of publish-bart: the person asks for the published page to come down, in the same conversation; the address must then answer not found."
+      }
     }
   ]
 }
