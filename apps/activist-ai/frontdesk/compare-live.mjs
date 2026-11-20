@@ -9,7 +9,7 @@
 // Its own everything: gateway on 4686 (Ola's model live on Together: the machine's `general`,
 // Nemotron 3.5 Super, or OLA_LIVE_GENERAL_MODEL; Claude through the subscription), state in
 // ~/.ola-cq-live, the front desk's code in this process (no port, no sign-in), one 1 GiB project
-// `cqlive-a`, destroyed at the end. At most twelve Claude requests in all (OLA_LIVE_CLAUDE_REQUESTS,
+// `cqlive-<hex>`, destroyed at the end. At most twelve Claude requests in all (OLA_LIVE_CLAUDE_REQUESTS,
 // default 12: Claude Code's and the judge's together, by the gateway's count; the first run, with 4,
 // left none for the judge, OLA-89).
 // The token is read by the gateway only (from its file); nothing here prints it, and the run fails if
@@ -32,7 +32,7 @@ const together = () => {
   const line = readFileSync(path.join(homedir(), 'Documents/code/hilma/.env.local'), 'utf8').split('\n').find((l) => l.startsWith('TOGETHER_API_KEY='))
   return line.slice('TOGETHER_API_KEY='.length).trim().replace(/^["']|["']$/g, '')
 }
-const ID = 'cqlive-a'
+const ID = `cqlive-${randomBytes(3).toString('hex')}` // one per run: a run's stopped project stays in this state's database
 // No Chinese model without Bart's yes (rule 42): the default is the machine's own `general`.
 const GENERAL = process.env.OLA_LIVE_GENERAL_MODEL || 'nvidia/NVIDIA-Nemotron-3.5-Super-VL'
 const LABEL = GENERAL.split('/').pop()
