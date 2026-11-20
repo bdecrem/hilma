@@ -216,7 +216,7 @@ export function laneOf(issue, given = null) {
   if (!issue) return 'tools'
   if (issue.area === 'apps') return 'apps'
   if (['web', 'model', 'security', 'design'].includes(issue.area)) return 'server'
-  if (issue.area === 'ops' && SERVER_WORDS.test(`${issue.title ?? ''} ${issue.what ?? ''}`)) return 'server'
+  if (issue.area === 'ops' && SERVER_WORDS.test(issue.title ?? '')) return 'server' // the title only: descriptions mention Ola everywhere
   return 'tools'
 }
 export const neverRefused = (who) => /checker|investigator/i.test(String(who ?? ''))
