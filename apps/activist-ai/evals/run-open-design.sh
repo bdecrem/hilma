@@ -21,7 +21,7 @@ for m in $models; do
   echo "pid $$ open-model design OLA-168 $m $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
   echo "== $m $(date)" >> $log
   node run.mjs --config configs/$m-ws-od.json --tasks $tasks --seeds 1 --skills on --db results/open-design.db \
-    --concurrency 2 --time 1800 --tokens 1000000 --max-load 9 --load-patience 10 >> $log 2>&1
+    --concurrency 2 --time 1800 --tokens 1000000 --max-load ${OD_MAX_LOAD:-9} --load-patience 10 >> $log 2>&1
   rm -rf ~/ola-suite.lock
   sleep 20
 done
