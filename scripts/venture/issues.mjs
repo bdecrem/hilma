@@ -5,7 +5,10 @@
 //
 //   node scripts/venture/issues.mjs add "title" --area web --pri P1 [--what "why, one or two sentences"]
 //                                   [--who lead] [--week 1] [--start] [--link "label=https://…"] [--doc slug]
-//   node scripts/venture/issues.mjs start <id> [--who name]
+//   node scripts/venture/issues.mjs start <id> [--who name]                      also claims it (below)
+//   node scripts/venture/issues.mjs claim <id> [--who name]                      "I am on this": renew at least every 45 min
+//   node scripts/venture/issues.mjs release <id>                                 let go (done, wait, open and drop release too)
+//   node scripts/venture/issues.mjs claims                                       the live claims
 //   node scripts/venture/issues.mjs done <id> --proof "402 checks" [--commit <hash>]… [--day YYYY-MM-DD]
 //   node scripts/venture/issues.mjs wait <id> [--what "what Bart has to do"]      waiting on Bart
 //   node scripts/venture/issues.mjs open <id>                                    back to open (next up)
@@ -32,13 +35,18 @@
 // The board's thread (schema 012, venture_issue_activity): what Bart does on an issue's page is new
 // for Kit until `inbox --mark`; the hook .claude/hooks/bart-done.py lists it before every prompt
 // (through `issues.mjs hook`). Kit's own changes from here are recorded too, already read.
+// Claims (OLA-211): the runner on the Mac mini works every open ticket that no one holds. A session
+// or a builder that is working on a ticket claims it (venture_state "claim:OLA-n", renewed by running
+// `claim` again); a claim not renewed for 45 minutes has expired and the ticket is the runner's.
 // Prints no secrets: the database key is read from .env.local (or, where there is no such file, from
 // the environment) and used, never shown.
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue } from './_state.mjs'
+import { CLAIM_PREFIX, CLAIM_TTL } from './_plate.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -106,6 +114,16 @@ async function patch(id, fields) {
   console.log(line(row))
   return row
 }
+async function claim(id, who) {
+  const key = CLAIM_PREFIX + id
+  const old = check(await db.from('venture_state').select('value').eq('key', key).maybeSingle(), 'claim')
+  const keep = old && old.value?.who === who && old.value?.since
+  check(await db.from('venture_state').upsert({ key, value: { who, host: hostname(), since: keep ? old.value.since : new Date().toISOString() }, at: new Date().toISOString() }), 'claim')
+  console.log(`${id} claimed by ${who} (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
+}
+async function release(id) {
+  check(await db.from('venture_state').delete().eq('key', CLAIM_PREFIX + id), 'release')
+}
 const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
 const STATUS_WORD = { open: 'next up', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
 /** One thread line in words: "Nov 18, 3:52 PM  bart  moved this to done: proof". */
@@ -169,6 +187,22 @@ if (cmd === 'add') {
   const id = normId(pos[0])
   const r = await get(id)
   await patch(id, { status: 'in_progress', started_at: r.started_at ?? new Date().toISOString(), ...(one('who') ? { who: one('who') } : {}) })
+  await claim(id, one('who') ?? r.who ?? 'lead')
+} else if (cmd === 'claim') {
+  const id = normId(pos[0])
+  const r = await get(id)
+  await claim(id, typeof one('who') === 'string' ? one('who') : r.who ?? 'lead')
+} else if (cmd === 'release') {
+  const id = normId(pos[0])
+  await release(id)
+  console.log(`${id} released`)
+} else if (cmd === 'claims') {
+  const rows = check(await db.from('venture_state').select('key, value, at').like('key', `${CLAIM_PREFIX}%`).order('at'), 'claims')
+  for (const c of rows) {
+    const mins = Math.round((Date.now() - Date.parse(c.at)) / 60e3)
+    console.log(`${c.key.slice(CLAIM_PREFIX.length).padEnd(8)} ${String(c.value.who).padEnd(12)} ${c.value.host ?? ''}  renewed ${mins} min ago${mins * 60e3 >= CLAIM_TTL ? ' (expired)' : ''}`)
+  }
+  console.log(`${rows.length} claim(s)`)
 } else if (cmd === 'done') {
   const id = normId(pos[0])
   const proof = one('proof')
@@ -177,15 +211,19 @@ if (cmd === 'add') {
   const now = new Date().toISOString()
   await patch(id, { status: 'done', proof, finished_at: now, started_at: r.started_at ?? now, day: one('day') ?? pacificDay() })
   await attach(id, many('commit'))
+  await release(id)
 } else if (cmd === 'wait') {
   const id = normId(pos[0])
   await patch(id, { status: 'waiting', ...(one('what') ? { what: one('what') } : {}) })
+  await release(id)
 } else if (cmd === 'open') {
   await patch(normId(pos[0]), { status: 'open' })
+  await release(normId(pos[0]))
 } else if (cmd === 'drop') {
   const id = normId(pos[0])
   const r = await get(id)
   await patch(id, { status: 'dropped', finished_at: new Date().toISOString(), day: pacificDay(), ...(one('why') ? { proof: `dropped: ${one('why')}` } : {}), what: r.what })
+  await release(id)
 } else if (cmd === 'edit') {
   const id = normId(pos[0])
   const f = {}
@@ -293,6 +331,6 @@ if (cmd === 'add') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 28).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 31).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }

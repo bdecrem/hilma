@@ -16,6 +16,11 @@ git pull --ff-only --quiet
 # own, as the Almanac and the Token Surfers agent on this machine have theirs.
 [ -f "$HOME/.venture-runner.env" ] || { echo "missing ~/.venture-runner.env (one line: CLAUDE_CODE_OAUTH_TOKEN=..., chmod 600)"; exit 1; }
 if grep -q '^ANTHROPIC_API_KEY=' .env.local; then echo "remove ANTHROPIC_API_KEY from $DIR/.env.local: the runner uses the machine's Claude login"; exit 1; fi
+# Work runs commit and push to main (OLA-211): Bart's name on the commits, the mini's gh login for the push.
+git config user.name "Bart Decrem"
+git config user.email bdecrem@gmail.com
+git config --replace-all credential.https://github.com.helper "!/opt/homebrew/bin/gh auth git-credential"
+gh auth status >/dev/null 2>&1 || { echo "the mini's gh login is gone: from a Mac that has one, run: gh auth token | ssh admin@<mini> 'gh auth login -h github.com --with-token'"; exit 1; }
 # the scripts need @supabase/supabase-js; borrow the dev tree's packages
 [ -e node_modules ] || ln -s "$HOME/Documents/code/hilma/node_modules" node_modules
 mkdir -p "$HOME/Library/Logs/venture-runner" apps/venture/private

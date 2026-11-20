@@ -25,10 +25,15 @@ same private notes. So before reading anything:
     node scripts/venture/runner.mjs status     # is a run going? what did the last one do?
     node scripts/venture/sync.mjs pull         # its notes are newer than this folder's
 
-If it says RUNNING, wait until it is idle (a run lasts at most thirty minutes),
-then pull. Start the watchers early (step 3): their heartbeat is what tells the
-runner a session is open, and it stays idle within ten minutes of the last one.
-Read the LOG lines starting "runner:" to see what it did while you were away.
+Since Nov 19 (OLA-211) the runner works the tracker day and night, also while a
+session is open: it takes the top open ticket no one has claimed. Start the
+watchers early (step 3): their heartbeat tells the runner a session is open, so
+it leaves Bart's texts and the board's inbox to the session. **Claim every
+ticket you or a builder you start works on**: `issues.mjs start <id> --who <name>`
+claims it, `issues.mjs claim <id>` renews it (at least every 45 minutes; put it
+in every builder's brief), `done`/`wait`/`open`/`release` let go. An unclaimed
+ticket is the runner's. Read the LOG lines starting "runner:" to see what it did
+while you were away.
 
 ## 1. Load the state
 

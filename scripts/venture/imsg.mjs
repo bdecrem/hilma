@@ -53,6 +53,11 @@ async function patient(fn) {
 const [cmd, arg] = process.argv.slice(2)
 if (cmd === 'send') {
   if (!arg?.trim()) throw new Error('usage: imsg.mjs send "text" [--long]')
+  // The runner on the mini works nights (OLA-211), but never texts Bart between 10 pm and 7 am Pacific.
+  if (process.env.VENTURE_RUNNER) {
+    const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: 'America/Los_Angeles' }))
+    if (h >= 22 || h < 7) { console.error('not sent: no texts to Bart between 10 pm and 7 am Pacific from the runner. Put it in the journal; the morning text carries it.'); process.exit(1) }
+  }
   // A text is checked before it leaves (OLA-180, rule 52): his limits for what reaches his phone,
   // from scripts/venture/reply-rules.json. Unlike a terminal reply, a refused text is never seen.
   // --long is for a text he asked to be long ("tell me what the updated system is"); the banned

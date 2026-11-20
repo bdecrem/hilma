@@ -115,35 +115,69 @@ them fight over `.next` and API routes 404 on the first try.
 
 Bart, 2026-11-14: "runner yes". On the Mac mini, launchd `sh.venture.runner`
 runs `node scripts/venture/runner.mjs tick` every five minutes from its own
-checkout, `~/hilma-venture`. A tick starts no model unless there is something
-to do:
+checkout, `~/hilma-venture`.
 
-- an interactive session is open (the `imsg.mjs --wait` and `mail.mjs --wait`
-  watchers write a heartbeat to `venture_state`, schema 008; fresh for ten
-  minutes) → idle;
-- a run is already going → idle;
-- nothing new and no work block due → idle;
-- otherwise (a text or voice note from Bart, mail from a customer, a sign-up, a
-  finished voice conversation, or three hours since the last run between 6 am
-  and 10 pm): `git pull`, `sync.mjs pull`, Claude Code headless with
-  `apps/venture/runner/PROMPT.md` and the reasons, thirty minutes at most, then
-  `sync.mjs push`.
+**Since Nov 19 (OLA-211) it works the tracker, day and night.** Until then it
+stayed idle while any session's heartbeat was fresh, a session was always open,
+and it did nothing from Nov 14 to Nov 19 while 82 tickets waited. Bart: "'venture
+mode' is supposed to be a hardworking technical cofounder not some moron who
+goes to sleep for no reason and FOREVER." A tick now:
 
-The unattended session reads, writes the private notes, researches, answers
-people who wrote to us and texts Bart when he needs to know; it cannot commit,
-push, spend or write to a stranger (the tool list in `runner.mjs`, and the
-prompt). Its Claude login is `CLAUDE_CODE_OAUTH_TOKEN` in `~/.venture-runner.env`
+1. a run is already going on the mini (a lock with its pid) → idle; one run at a time;
+2. the plan's usage limit was reached → idle until a minute after the reset
+   (venture_state `runner_limit`; the reset is read from the CLI's rate-limit
+   event or its "resets 2am" message, else it tries again every 30 minutes);
+3. no session is open and something came in that a session would answer (a text
+   or voice note, Bart's writes on the tracker, mail, a sign-up, a finished call,
+   minutes, the daily sweep, a stale board) → an answer run with
+   `runner/PROMPT.md`, as before (no code, no commits). An open session answers
+   these itself;
+4. then the tracker: the top open ticket (P0, P1, P2; the newest private
+   `PLATE-*.md` orders within a priority; oldest first) that is not waiting on
+   Bart, not claimed, not a recurring job ("Daily task", "Weekly task", the
+   plate's recurring line), gets a **work run** with `runner/WORK.md`: build,
+   check, commit `[OLA-n]`, push to main, deploy Ola server code, `issues.mjs
+   done` with proof. Ninety minutes at most, Opus (`MODEL` at the top of
+   `runner.mjs`), on the Max login. Then the next ticket in the same tick. Before
+   each run the clone is reset to `origin/main` (anything left over is saved to
+   the log folder first). A ticket that two runs could not move (no commit, not
+   finished), or four runs in all, gets a comment and is passed over until it
+   changes; a run that says `RUNNER: blocked by OLA-n` waits for that ticket.
+   What a work run must never do (destructive operations, spending, anything
+   sent outside, who can sign in, a Chinese open-weights model in Ola without
+   his yes) goes to Bart as waiting, with one line saying what he must decide.
+   No texts between 10 pm and 7 am Pacific (`imsg.mjs send` refuses them when
+   `VENTURE_RUNNER` is set).
+
+**Claims: how a session keeps a ticket for itself.** A session or a builder
+working on a ticket runs `issues.mjs start <id> --who <name>` (which claims it)
+and `issues.mjs claim <id>` at least every 45 minutes; `done`, `wait`, `open`,
+`drop` and `release` let go. The runner skips claimed tickets, and also, as a
+safety net for builders that do not claim yet, a ticket in progress that was
+touched in the last 45 minutes or started in the last three hours while a
+session is open. `issues.mjs claims` lists them.
+
+**An idle lead is flagged.** `runner.mjs status` prints one line: the open
+tickets by priority, the last finished ticket and when, and who is working, or
+IDLE when P0/P1 tickets are open and there was no run and no claim in the last
+hour. The board's Home shows the same under Issues ("Working on OLA-n since …",
+or "Idle since …" in red).
+
+The runner's Claude login is `CLAUDE_CODE_OAUTH_TOKEN` in `~/.venture-runner.env`
 on the mini, like the Almanac's; the four venture keys are in the checkout's
-`.env.local`.
+`.env.local`; it pushes with the mini's `gh` login (restored Nov 19).
 
-    node scripts/venture/runner.mjs status            # from any machine
+    node scripts/venture/runner.mjs status [--long]   # from any machine
+    node scripts/venture/runner.mjs tick --dry [--fake-session] [--fake-claim OLA-n] [--fake-limit]
+    node scripts/venture/runner-test.mjs              # the choices, offline
     ssh admin@100.95.51.98 'tail -20 ~/Library/Logs/venture-runner/runner.log'
     ssh admin@100.95.51.98 'bash ~/hilma-venture/apps/venture/runner/install.sh'   # install or update
     ssh admin@100.95.51.98 'launchctl bootout gui/501/sh.venture.runner'            # stop it
 
 Each run's own output is a file in `~/Library/Logs/venture-runner/` on the
-mini. `tick --dry` prints the decision, `tick --force "why"` runs now, `probe`
-starts Claude Code once read-only. A new session takes over with step 0 of the
+mini. `tick --dry` prints the decision and why each ticket above the pick was
+passed over, `tick --force "why"` starts an answer run now, `probe` starts Claude
+Code once read-only. A new session takes over with step 0 of the
 `/venture` skill (status, then `sync.mjs pull`).
 
 ## The project's home page

@@ -47,7 +47,11 @@ differences because you are unattended:
   only when it is done and he needs to know, or when money or a customer is at
   stake. At most one text in a run. Never a question that can wait for the
   day's one ask (see NOW.md, "Waiting on Bart"). Log every touch in
-  INDEPENDENCE.md.
+  INDEPENDENCE.md. Never between 10 pm and 7 am Pacific (`imsg.mjs send`
+  refuses it from here): put it in the journal for the morning.
+- **Code goes to the tracker.** The runner works open tickets itself, one run
+  each, with its own prompt (WORK.md). Work that needs code becomes a ticket
+  (`issues.mjs add`, P0 or P1 when it is urgent), not only a line in NOW.md.
 - **Every run, keep the deletion promise:** `node scripts/venture/files.mjs purge`
   deletes customer files that are 30 days past delivery (the service page
   promises it) and names any file held too long without a delivery. A file a
