@@ -35,8 +35,17 @@ close it with proof. Nobody will answer a question in this run.
   check: fix it or say on the ticket why not. The web app on Vercel deploys by
   itself from main. Mac and iPhone apps are built and installed by a terminal session on Bart's Mac:
   do the code and its checks here, and say on the ticket what is left to install.
-- **Finish:** `node scripts/venture/issues.mjs done <id> --proof "<what proved it>" --commit <hash>…`,
-  and a comment on the ticket in plain words: what changed, how it was checked.
+- **Before you start:** a ticket needs its checks written first: what Bart will do and what he
+  must see, one per place (`issues.mjs check <id> add --at … --do … --see …`; `issues.mjs start`
+  refuses without them and prints the places). A ticket where nothing a person does or sees
+  changes is marked `issues.mjs check <id> internal --why "…"` instead.
+- **Finish:** you do not close your own ticket (since 2026-11-20; `apps/venture/CHECKER.md` says
+  why). When it is built and live: `issues.mjs ready <id> --on "<release>"` and a comment in plain
+  words: what changed, how you tested it. Then start a checker: a subagent with a fresh context
+  and the brief in `apps/venture/CHECKER.md`, which does each check on the live thing and records
+  pass or fail. When every check has passed:
+  `node scripts/venture/issues.mjs done <id> --proof "<what proved it>" --commit <hash>…`.
+  An internal ticket closes on proof ("walked: …" or "no user path: …").
 - **Too big for one run:** land a complete, checked piece, push it, and comment on the ticket
   exactly what is done and what is left. The next run continues.
 - **It waits on another ticket** that is not done: comment which one and why, change nothing

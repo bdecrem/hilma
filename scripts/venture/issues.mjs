@@ -9,7 +9,18 @@
 //   node scripts/venture/issues.mjs claim <id> [--who name]                      "I am on this": renew at least every 45 min
 //   node scripts/venture/issues.mjs release <id>                                 let go (done, wait, open and drop release too)
 //   node scripts/venture/issues.mjs claims                                       the live claims
-//   node scripts/venture/issues.mjs done <id> --proof "402 checks" [--commit <hash>]… [--day YYYY-MM-DD]
+//   node scripts/venture/issues.mjs done <id> --proof "…" [--commit <hash>]… [--day YYYY-MM-DD]   refused until every check has
+//                                                                                passed (below), unless --proof "Bart: <his words>"
+//   Checks: what Bart will do and see, per place, written BEFORE the work; passed only by someone who did not build it.
+//   node scripts/venture/issues.mjs check <id> add --at cloud-web:chat --do "what he types or taps" --see "what he must then see"
+//   node scripts/venture/issues.mjs check <id> skip 'local-*' --why "why this place does not apply"     (a pattern, * allowed)
+//   node scripts/venture/issues.mjs check <id> internal --why "why nothing a person does or sees changes"
+//   node scripts/venture/issues.mjs check <id> pass <n> --by checker --on "<release or build>" --saw "what happened" --shot <file>
+//   node scripts/venture/issues.mjs check <id> fail <n> --by checker --saw "what happened instead"
+//   node scripts/venture/issues.mjs check <id>                                    the checks and where each stands
+//   node scripts/venture/issues.mjs ready <id> --on "<release or build>"          the builder: built and live, needs a checker
+//   node scripts/venture/issues.mjs say <id>                                      what may be told to Bart about it: works / fails / not checked
+//   node scripts/venture/issues.mjs unchecked                                     tickets waiting for a checker; closed today without checks
 //   node scripts/venture/issues.mjs wait <id> [--what "what Bart has to do"]      waiting on Bart
 //   node scripts/venture/issues.mjs open <id>                                    back to open (next up)
 //   node scripts/venture/issues.mjs drop <id> [--why "…"]
@@ -41,7 +52,7 @@
 // Prints no secrets: the database key is read from .env.local (or, where there is no such file, from
 // the environment) and used, never shown.
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
@@ -171,6 +182,60 @@ async function attach(id, hashes) {
 const label = { open: 'next', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
 const line = (r) => `${r.id.padEnd(8)} ${r.priority} ${(label[r.status] ?? r.status).padEnd(15)} ${r.area.padEnd(8)} ${(r.who ?? '').padEnd(10)} ${r.title}${r.status === 'done' && r.proof ? `  [${r.proof}]` : ''}`
 
+// ---- Checks (2026-11-20). Bart, after publishing failed for him four times in one morning, each
+// time after he was told it worked: "THERE IS ZERO LEARNING AFTER ONE WEEK". The week's record: 104
+// corrections, and every fix that was only written down came back (5 to 13 times each). "Use it the
+// way he will before saying it works" was written four times (rules 22, 34, 37, 54) and broken four
+// times on Nov 20, because the builder tested its own work in one place and closed its own ticket.
+// So it is no longer a rule to remember:
+//   - a ticket carries checks: where he is, what he does, what he must see; written before the work;
+//   - for the product (areas web, apps, model, design) every place Ola can be used is either covered
+//     by a check or skipped with a reason: two runtimes, three apps, asked in chat or done on screen;
+//   - a check passes only with what was seen and a file that shows it, recorded by someone other than
+//     the ticket's builder; `done` refuses until every check has passed;
+//   - `say` prints what may be told to Bart: what works, what fails, what nobody checked.
+// Kept in venture_state under "accept:OLA-n" (no schema change).
+const ACCEPT = 'accept:'
+const PLACES = ['cloud-web', 'cloud-mac', 'cloud-phone', 'local-mac', 'local-phone']
+const WAYS = ['chat', 'screen']
+const CELLS = PLACES.flatMap((p) => WAYS.map((w) => `${p}:${w}`))
+const PRODUCT = new Set(['web', 'apps', 'model', 'design'])
+const CELL_HELP = `places: ${CELLS.join(', ')}\n  (cloud = a cloud project, local = Ola working on his Mac; web = app.ola.cx, mac = the Mac app, phone = the iPhone app;\n   chat = he asks Ola in words, screen = he uses a button, a setting or a page)`
+const emptyAccept = () => ({ checks: [], skips: [], internal: null, ready: null })
+async function accept(id) {
+  const r = check(await db.from('venture_state').select('value').eq('key', ACCEPT + id).maybeSingle(), 'checks')
+  return { ...emptyAccept(), ...(r?.value ?? {}) }
+}
+async function saveAccept(id, a) {
+  check(await db.from('venture_state').upsert({ key: ACCEPT + id, value: a, at: new Date().toISOString() }), 'checks')
+}
+const globs = (pat) => new RegExp('^' + String(pat).split('*').map((x) => x.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$')
+const skipped = (a, cell) => a.skips.find((k) => globs(k.pattern).test(cell))
+/** Where a ticket stands: { ok, why: [what is missing], works, fails, open, uncovered, skips }. */
+function verdict(row, a) {
+  const works = a.checks.filter((c) => c.result === 'pass')
+  const fails = a.checks.filter((c) => c.result === 'fail')
+  const open = a.checks.filter((c) => !c.result)
+  const uncovered = PRODUCT.has(row.area) && !a.internal ? CELLS.filter((cell) => !a.checks.some((c) => c.at === cell) && !skipped(a, cell)) : []
+  const why = []
+  if (!a.internal) {
+    if (!a.checks.length) why.push('it has no checks: write what Bart will do and see (issues.mjs check ' + row.id + ' add …), or mark it internal with the reason')
+    if (uncovered.length) why.push(`no check and no reason for: ${uncovered.join(', ')}`)
+    if (fails.length) why.push(`${fails.length} check(s) failed: ${fails.map((c) => '#' + c.n).join(', ')}`)
+    if (open.length) why.push(`${open.length} check(s) not done yet: ${open.map((c) => '#' + c.n).join(', ')} (a checker who did not build it does them)`)
+  }
+  return { ok: !why.length, why, works, fails, open, uncovered }
+}
+const checkLine = (c) => `  #${c.n} ${(c.result ?? 'not checked').toUpperCase().padEnd(11)} ${String(c.at).padEnd(18)} do: ${c.do}\n${' '.repeat(34)}see: ${c.see}${c.result ? `\n${' '.repeat(34)}${c.result === 'pass' ? 'saw' : 'instead'}: ${c.saw} (${c.by}, ${when(c.checked_at)}${c.on ? `, on ${c.on}` : ''}${c.evidence ? `, ${c.evidence}` : ''})` : ''}`
+function printChecks(row, a) {
+  console.log(`${row.id}  ${row.title}`)
+  if (a.internal) console.log(`  internal, no checks: ${a.internal.why} (${a.internal.by}, ${when(a.internal.at)})`)
+  for (const c of a.checks) console.log(checkLine(c))
+  for (const k of a.skips) console.log(`  skipped ${k.pattern}: ${k.why}`)
+  const v = verdict(row, a)
+  console.log(v.ok ? (a.internal ? '  can be closed with proof ("walked: …" or "no user path: …")' : '  every check has passed: it can be closed') : v.why.map((w) => `  MISSING: ${w}`).join('\n'))
+}
+
 if (cmd === 'add') {
   const title = pos[0]
   if (!title) die('usage: issues.mjs add "title" --area web --pri P1 [--what …] [--who lead] [--week 1] [--start]')
@@ -186,6 +251,15 @@ if (cmd === 'add') {
 } else if (cmd === 'start') {
   const id = normId(pos[0])
   const r = await get(id)
+  const a = await accept(id)
+  // What he will do and see is written before the work, not after it (2026-11-20).
+  if (!a.internal && !a.checks.length && r.status !== 'in_progress') die(
+    `${id} has no checks yet. Before work starts, write what Bart will do and what he must see, one per place:\n` +
+    `  issues.mjs check ${id} add --at ${PRODUCT.has(r.area) ? 'cloud-web:chat' : '"where"'} --do "what he types or taps" --see "what he must then see"\n` +
+    (PRODUCT.has(r.area) ? `  ${CELL_HELP}\n  a place that does not apply: issues.mjs check ${id} skip 'local-*' --why "…"\n` : '') +
+    `or, when nothing a person does or sees changes: issues.mjs check ${id} internal --why "…"`)
+  // work restarts: earlier passes are about an older version
+  if (r.status === 'done' && a.checks.some((c) => c.result)) await saveAccept(id, { ...a, ready: null, checks: a.checks.map((c) => ({ ...c, earlier: [...(c.earlier ?? []), { result: c.result, by: c.by, at: c.checked_at, saw: c.saw }], result: null })) })
   await patch(id, { status: 'in_progress', started_at: r.started_at ?? new Date().toISOString(), ...(one('who') ? { who: one('who') } : {}) })
   await claim(id, one('who') ?? r.who ?? 'lead')
 } else if (cmd === 'claim') {
@@ -207,26 +281,132 @@ if (cmd === 'add') {
   const id = normId(pos[0])
   const proof = one('proof')
   if (!proof || proof === true) die('done needs --proof "what proved it" (e.g. "402 checks", "his phone, by hand")')
-  // Bart, Nov 20 ("Third time. Massive learning fail"): OLA-223 was closed on a test against a fake
-  // service while the feature could not run on his devices. A ticket closes only on the real thing.
-  if (!/\b(walked|bart|no user path):/i.test(proof)) die(
-    'done needs proof on the real thing, in the proof text:\n' +
-    '  "walked: <what you did on the live server / installed app, as he would, and what you saw>"\n' +
-    '  or "Bart: <his words>" when he said it is done, or "no user path: <why nothing reaches a person>".\n' +
-    'Tests passing, or a message saying a feature is "not switched on yet", is not done: leave it open\n' +
-    '(issues.mjs wait <id>) and say what is still missing.')
   const r = await get(id)
+  const byBart = /^\s*bart:/i.test(proof)
+  if (!byBart) {
+    // A ticket closes on its checks, each passed by someone who did not build it (see "Checks" above).
+    const a = await accept(id)
+    const v = verdict(r, a)
+    if (!v.ok) die(`${id} cannot be closed yet:\n` + v.why.map((w) => `  - ${w}`).join('\n') + `\nSee: issues.mjs check ${id}. The builder does not pass its own checks: run "issues.mjs ready ${id} --on <release>" and the lead starts a checker.\nOnly "Bart: <his words>" closes a ticket without checks.`)
+    // Bart, Nov 20 ("Third time. Massive learning fail"): OLA-223 was closed on a test against a fake
+    // service while the feature could not run on his devices. An internal ticket still needs the real thing.
+    if (a.internal && !/\b(walked|no user path):/i.test(proof)) die(
+      'an internal ticket needs proof on the real thing, in the proof text:\n' +
+      '  "walked: <what you did on the live server / installed app and what you saw>"\n' +
+      '  or "no user path: <why nothing reaches a person>".')
+  }
   const now = new Date().toISOString()
   await patch(id, { status: 'done', proof, finished_at: now, started_at: r.started_at ?? now, day: one('day') ?? pacificDay() })
   await attach(id, many('commit'))
   await release(id)
+} else if (cmd === 'check') {
+  const id = normId(pos[0])
+  const r = await get(id)
+  const a = await accept(id)
+  const sub = pos[1]
+  const now = new Date().toISOString()
+  const str = (k) => (typeof one(k) === 'string' && one(k).trim() ? one(k).trim() : null)
+  if (!sub) printChecks(r, a)
+  else if (sub === 'add') {
+    const [at, does, see] = [str('at'), str('do'), str('see')]
+    if (!at || !does || !see) die(`usage: issues.mjs check ${id} add --at <place> --do "what he types or taps" --see "what he must then see"\n  ${CELL_HELP}`)
+    if (PRODUCT.has(r.area) && !CELLS.includes(at)) die(`--at must be one of the places Ola is used:\n  ${CELL_HELP}`)
+    if (does.length < 12 || see.length < 12) die('say exactly what he does and what he sees: the sentence he types, the button he taps, the words or the address that must appear')
+    a.checks.push({ n: (a.checks.at(-1)?.n ?? 0) + 1, at, do: does, see, added_by: str('by') ?? 'kit', added_at: now, result: null })
+    a.internal = null
+    await saveAccept(id, a)
+    printChecks(r, a)
+  } else if (sub === 'skip') {
+    const pattern = pos[2]
+    const why = str('why')
+    if (!pattern || !why || why.length < 15) die(`usage: issues.mjs check ${id} skip '<place or pattern with *>' --why "why this place does not apply (a real reason: he will read it)"`)
+    if (!CELLS.some((c) => globs(pattern).test(c))) die(`"${pattern}" matches no place.\n  ${CELL_HELP}`)
+    a.skips.push({ pattern, why, by: str('by') ?? 'kit', at: now })
+    await saveAccept(id, a)
+    printChecks(r, a)
+  } else if (sub === 'internal') {
+    const why = str('why')
+    if (!why || why.length < 15) die(`usage: issues.mjs check ${id} internal --why "why nothing a person does or sees changes"`)
+    if (a.checks.length) die(`${id} already has checks; an internal ticket has none`)
+    a.internal = { why, by: str('by') ?? 'kit', at: now }
+    await saveAccept(id, a)
+    printChecks(r, a)
+  } else if (sub === 'pass' || sub === 'fail') {
+    const c = a.checks.find((x) => x.n === Number(pos[2]))
+    if (!c) die(`no check #${pos[2]} on ${id} (issues.mjs check ${id})`)
+    const [by, saw, on] = [str('by'), str('saw'), str('on')]
+    if (!by || !saw || saw.length < 20) die(`usage: issues.mjs check ${id} ${sub} ${c.n} --by <who checked> --saw "what happened, in a sentence"${sub === 'pass' ? ' --on "<release or build>" --shot <file that shows it>' : ''}`)
+    const claimRow = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
+    const builders = new Set([r.who, claimRow?.value?.who, 'builder', 'runner'].filter(Boolean).map((x) => String(x).toLowerCase()))
+    if (sub === 'pass') {
+      // The one who built it does not grade it.
+      if (builders.has(by.toLowerCase())) die(`a check is passed by someone who did not build ${id} ("${by}" is its builder). Run "issues.mjs ready ${id} --on <release>"; the lead starts a checker with a fresh context.`)
+      if (!on) die('--on "<release or build>" is required: which live version was checked')
+      const file = str('shot') ?? str('log')
+      const kase = str('case')
+      if (!file && !kase) die('a pass needs something that shows it: --shot <screenshot> or --log <file> (or --case <id> for a run of the request test set)')
+      if (file && (!existsSync(file) || statSync(file).size < 200)) die(`${file}: no such file, or it is empty`)
+      c.evidence = file ? `${file} (${statSync(file).size} bytes)` : `case ${kase}`
+      c.on = on
+    }
+    Object.assign(c, { result: sub, by, saw, checked_at: now })
+    await saveAccept(id, a)
+    await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} (${c.at}) ${sub === 'pass' ? 'passed' : 'FAILED'}, by ${by}: ${saw}` }])
+    if (sub === 'fail' && r.status === 'done') await patch(id, { status: 'in_progress' })
+    printChecks(r, a)
+  } else die(`unknown: check ${sub} (add, skip, internal, pass, fail)`)
+} else if (cmd === 'ready') {
+  const id = normId(pos[0])
+  const r = await get(id)
+  const a = await accept(id)
+  if (a.internal) die(`${id} is internal: close it with proof`)
+  if (!a.checks.length) die(`${id} has no checks to do yet (issues.mjs check ${id} add …)`)
+  if (typeof one('on') !== 'string') die(`usage: issues.mjs ready ${id} --on "<release or build that is live>"`)
+  a.ready = { on: one('on'), at: new Date().toISOString(), by: typeof one('by') === 'string' ? one('by') : r.who }
+  await saveAccept(id, a)
+  await record([{ issue_id: id, kind: 'comment', body: `built and live on ${one('on')}: ready for a checker` }])
+  console.log(`${id} is ready for a checker on ${one('on')}. It stays open until every check has passed.`)
+} else if (cmd === 'say') {
+  // What may be told to Bart about a ticket: read from the checks, never from memory or a builder's report.
+  const id = normId(pos[0])
+  const r = await get(id)
+  const a = await accept(id)
+  const v = verdict(r, a)
+  console.log(`${r.id}  ${r.title}`)
+  if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
+  for (const c of v.works) console.log(`  WORKS        ${c.at}: ${c.do} (checked ${when(c.checked_at)} on ${c.on})`)
+  for (const c of v.fails) console.log(`  DOES NOT WORK ${c.at}: ${c.do} -> ${c.saw}`)
+  for (const c of v.open) console.log(`  NOT CHECKED  ${c.at}: ${c.do}`)
+  for (const cell of v.uncovered) console.log(`  NOT CHECKED  ${cell}: no check written`)
+  for (const k of a.skips) console.log(`  not offered  ${k.pattern}: ${k.why}`)
+  if (!a.internal && !a.checks.length) console.log('  NOT CHECKED  anywhere: this ticket has no checks')
+  console.log(v.ok && !a.internal ? '  -> may be told: it works in the places above.' : a.internal ? '' : '  -> may NOT be told "it works". Say what works, what does not, and what nobody checked, in that order.')
+} else if (cmd === 'unchecked') {
+  const acc = check(await db.from('venture_state').select('key, value').like('key', `${ACCEPT}%`), 'checks')
+  const by = new Map(acc.map((x) => [x.key.slice(ACCEPT.length), { ...emptyAccept(), ...x.value }]))
+  const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'done']).order('num'), 'read')
+  const today = pacificDay()
+  const waiting = rows.filter((r) => r.status === 'in_progress' && by.get(r.id)?.ready && !verdict(r, by.get(r.id)).ok)
+  const bare = rows.filter((r) => r.status === 'in_progress' && !by.get(r.id)?.internal && !(by.get(r.id)?.checks.length))
+  const closedBare = rows.filter((r) => r.status === 'done' && r.day === today && !/^\s*bart:/i.test(r.proof ?? '') && !(by.get(r.id)?.checks.length))
+  console.log(`Ready, waiting for a checker (${waiting.length}):`)
+  for (const r of waiting) console.log(`  ${r.id.padEnd(8)} on ${by.get(r.id).ready.on}: ${verdict(r, by.get(r.id)).why.join('; ')}\n           ${r.title}`)
+  console.log(`In progress with no checks written (${bare.length}):`)
+  for (const r of bare) console.log(`  ${r.id.padEnd(8)} ${r.who.padEnd(8)} ${r.title}`)
+  console.log(`Closed today without checks (${closedBare.length}): read each proof as a stranger would`)
+  for (const r of closedBare) console.log(`  ${r.id.padEnd(8)} ${by.get(r.id)?.internal ? 'internal: ' + by.get(r.id).internal.why : 'closed before checks existed'}\n           proof: ${(r.proof ?? '').slice(0, 220)}`)
 } else if (cmd === 'wait') {
   const id = normId(pos[0])
   await patch(id, { status: 'waiting', ...(one('what') ? { what: one('what') } : {}) })
   await release(id)
 } else if (cmd === 'open') {
-  await patch(normId(pos[0]), { status: 'open' })
-  await release(normId(pos[0]))
+  const id = normId(pos[0])
+  const r = await get(id)
+  const a = await accept(id)
+  // reopened: earlier passes are about an older version
+  if (r.status === 'done' && a.checks.some((c) => c.result)) await saveAccept(id, { ...a, ready: null, checks: a.checks.map((c) => ({ ...c, earlier: [...(c.earlier ?? []), { result: c.result, by: c.by, at: c.checked_at, saw: c.saw }], result: null })) })
+  await patch(id, { status: 'open' })
+  await release(id)
 } else if (cmd === 'drop') {
   const id = normId(pos[0])
   const r = await get(id)
@@ -339,6 +519,6 @@ if (cmd === 'add') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 31).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 42).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }

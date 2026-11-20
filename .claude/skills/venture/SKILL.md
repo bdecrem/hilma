@@ -124,18 +124,28 @@ generalize additional learnings from this?... make sure that those memories are
 always part of your context." A request he should not have had to make counts
 too. The same turn, before other work:
 
-1. Fix what he pointed at.
-2. Write it in `private/CORRECTIONS.md`: his words, what I had done, the real
-   cause, the rule, the generalization (where else the same cause bites), and
-   where the rule is enforced. If it repeats an earlier entry, mark it REPEAT
-   and say what the earlier fix lacked.
-3. Add or sharpen a rule in `private/RULES.md` (concrete enough to check), and
-   a checklist line or a guard in code where one can enforce it.
-4. Apply the generalization at once: go through what is in flight and what has
-   shipped, and fix the other instances without being asked.
-5. If the rule holds outside Venture (design, writing, anticipating), also
-   save it to the auto-memory directory as a feedback memory.
-6. `sync.mjs push`, and tell him in one line what changed in the system.
+His order (2026-11-20, after publishing failed for him four times in one morning): "priority 1:
+learn from your mistake. priority 2: make the harness better from each mistake. priority 3: fix
+the literal thing for the customer."
+
+1. **Learn.** Name the kind of mistake (the weakness it falls under:
+   `node scripts/venture/correct.mjs list`) and why the last fix for that kind did not hold.
+2. **Make the system better.** Build a fix of a stronger kind than the last one: written down <
+   shown at the moment < refused by code < checked by another < taken away. Another rule for a
+   weakness that already had a rule is refused. For a failure of Ola itself, the request he made
+   becomes a case in Ola's request test set, with the same request in the other places Ola is
+   used, so it can never fail again unnoticed.
+3. **Fix the one case.**
+4. **Record it, with the tool and nothing else:**
+   `node scripts/venture/correct.mjs add --title … --words "<his words>" --did … --cause …
+   --weakness <id> --fix … --level <1-5> --where <what carries the fix> [--why-last …] [--escape]`.
+   It writes CORRECTIONS.md and the weaknesses ledger together and refuses a fix that is no
+   stronger than the one that failed. `--escape` when he met something broken or untrue after
+   being told it was done or working: that count is the one that says whether "it works" can be
+   trusted.
+5. Go through what is in flight and what has shipped, and fix the other instances of the same
+   cause without being asked.
+6. `sync.mjs push`, and tell him in one line what changed in the system, not what was patched.
 
 Before Bart or a customer sees anything, run the matching checklist at the end
 of RULES.md.

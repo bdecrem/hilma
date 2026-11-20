@@ -108,6 +108,18 @@ else {
 // a named weakness, with whether its guard is holding.
 const weaknesses = weaknessStatus(loadWeaknesses(root), new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }))
 const filed = loadWeaknesses(root).flatMap((w) => w.seen.map((s) => s.ref)).filter((r) => /^correction \d+$/.test(r)).length
+// Escapes (2026-11-20): how often Bart met something broken or untrue after being told it was done or
+// working. This is the number that says whether "it works" can be trusted; the count of rules written
+// and the replay score both said the system was learning while this went on (2, 3, 5, 2 a day, then 3
+// before 10 am on Nov 20). Read from the ledger: a weakness marked escape, or a single entry marked so.
+const esc = {}
+for (const w of loadWeaknesses(root)) for (const s of w.seen) if (s.escape || w.escape) esc[s.day] = (esc[s.day] ?? 0) + 1
+const escDays = Object.keys(esc).sort()
+kit.escapes = { total: escDays.reduce((a, d) => a + esc[d], 0), by_day: escDays.map((d) => ({ day: d, n: esc[d] })), latest: escDays.length ? { day: escDays.at(-1), n: esc[escDays.at(-1)] } : null, label: 'times Bart met something broken or untrue after being told it was done or working' }
+// Weaknesses whose strongest fix is still only written down after they came back, and those with no
+// stronger fix found (correct.mjs --cannot): the open problems, by name.
+kit.only_written = loadWeaknesses(root).filter((w) => w.seen.length > 1 && w.guards.length && !w.guards.some((g) => (g.level ?? (g.enforced ? 3 : 1)) >= 3)).map((w) => ({ id: w.id, name: w.name, seen: w.seen.length, stuck: w.stuck?.why ?? null }))
+console.log(`Escapes: ${kit.escapes.total} in all${kit.escapes.latest ? `; ${kit.escapes.latest.n} on ${kit.escapes.latest.day}` : ''}. Weaknesses that came back and still have only a written rule: ${kit.only_written.map((w) => w.id).join(', ') || 'none'}`)
 for (const h of unnumberedCorrections(text)) console.log(`corrections: "${h.slice(0, 80)}" has no number, so it is not counted or filed: make it "## N. …" in CORRECTIONS.md`)
 if (weaknesses.length && filed !== entries.length) console.log(`weaknesses: ${entries.length - filed} correction(s) are not filed under a weakness yet (apps/venture/private/data/weaknesses.json)`)
 const value = { at: new Date().toISOString(), kit, ola, weaknesses, doc: 'how-we-learn' }
