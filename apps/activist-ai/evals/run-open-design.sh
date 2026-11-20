@@ -7,7 +7,7 @@
 #
 #   evals/run-open-design.sh [models...]   (default: nemotron-3.5-super-vl inkling inkling-2-small muse-spark-open)
 #
-# The Opus arm runs on an iMac with the Claude login: run-open-design-opus.sh. Sheets: open-design-sheets.mjs.
+# The Opus arm runs on an iMac with the Claude login: run-open-design-opus.sh. Sheets: four-way-sheets.mjs --numbers.
 set -u
 export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 cd ${0:A:h}
