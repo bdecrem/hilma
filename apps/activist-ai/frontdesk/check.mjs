@@ -1644,7 +1644,7 @@ await check('Publish through the page: the sheet lists the files and the address
   await sheet.locator('.publish-files li').first().waitFor({ timeout: 30_000 })
   const names = await sheet.locator('.publish-name').allInnerTexts()
   assert(JSON.stringify(names) === JSON.stringify(['index.html', 'look.css', 'pics/dot.svg']), `files ${JSON.stringify(names)}`)
-  await sheet.getByRole('button', { name: 'Publish these 3 files', exact: true }).click()
+  await sheet.getByRole('button', { name: 'Publish these three files', exact: true }).click()
   await sheet.locator('.publish-done').waitFor({ timeout: 30_000 })
   publicUrl = await sheet.locator('.publish-done a').getAttribute('href')
   assert(publicUrl === `${vercel.origin}/${FA}/`, publicUrl)
