@@ -17,7 +17,7 @@ enum Snapshot {
     let app = NSApplication.shared
     app.setActivationPolicy(.prohibited)
     try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    let chosen = Treatment.desk
+    let chosen = Treatment.plain
     let shots: [(String, String, Treatment, NSAppearance.Name, CGSize)] = [
       // The chosen look.
       ("mac-conversation-light", "main", chosen, .aqua, CGSize(width: 1440, height: 900)),

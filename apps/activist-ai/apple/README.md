@@ -346,6 +346,21 @@ history from the server, renames and deletes the session. One PASS or FAIL line 
 
 ## Design
 
+**The Mac looks like a Mac (OLA-207, 2026-11-19).** Bart on 0.1 (16): "a little... odd. something
+kinda of big or square ... the dark-grey on darker-grey mode is obviously a dark mode where i would
+expect a light mode." What changed on the Mac only (the phone keeps the brand below):
+- **Light by default**: Settings, General, Appearance: Light / Dark / Match this Mac
+  (`Mac/Appearance.swift`, `ola.appearance`, applied before the first window draws).
+- **The palette `N`** (`Palette.native`): a white page (#1e1e1e in dark, as Notes and Mail), neutral
+  grays, label-contrast text; the brand blue stays the accent. A, B, C are still selectable.
+- **One family**: the system's San Francisco for everything (`OlaFont` maps to it on macOS); reading
+  14 at about 1.45 line height in a 600-point column, interface 13, titles 17.
+- **No box in a box**: `Treatment.plain` lays the conversation edge to edge; the files are the
+  system's inspector. The sidebar is the system's source list (`List(.sidebar)` with collapsible
+  Cloud and Local sections); toolbar buttons are plain symbols (no glass capsule on macOS 26+).
+- **References, not earlier versions**: `~/Desktop/Ola/mac-redesign/` has one sheet per mode, ours
+  beside Notes, Mail, Claude and ChatGPT.
+
 "Paper under the lamp" (`~/Desktop/ola-brand/app/spec.md`): what you read is paper laid on the room;
 lamp yellow only for what is running; vermilion only for what needs Bart (an approval, a failed step,
 a session that finished unseen). Bricolage Grotesque for the interface, Literata for what Ola writes,

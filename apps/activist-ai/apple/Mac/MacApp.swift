@@ -177,6 +177,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     plainAppMenu()
   }
 
+  func applicationWillFinishLaunching(_ notification: Notification) {
+    // Before the first window draws: Light unless the person chose otherwise (OLA-207).
+    MainActor.assumeIsolated { AppearanceChoice.apply() }
+  }
+
   func applicationDidFinishLaunching(_ notification: Notification) {
     MainActor.assumeIsolated { keepAppMenuPlain() }
     // `-OlaMenuProbe <file>` (a hidden second instance, for a check): writes each item of the Ola

@@ -393,9 +393,12 @@ struct Composer: View {
   var empty: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
   #if os(macOS)
-  let button: CGFloat = 24
+  let button: CGFloat = 22
+  /// A field-like box, not a card: the radius of the Mac's own rounded fields grown to two lines.
+  let corner: CGFloat = 10
   #else
   let button: CGFloat = 32
+  let corner: CGFloat = 8
   #endif
 
   var body: some View {
@@ -422,8 +425,8 @@ struct Composer: View {
       }
     }
     .padding(.leading, Space.m).padding(.trailing, 6).padding(.vertical, 6)
-    .background(RoundedRectangle(cornerRadius: 8).fill(Ola.field))
-    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Ola.ink3.opacity(0.6) : Ola.ruleStrong, lineWidth: 1))
+    .background(RoundedRectangle(cornerRadius: corner).fill(Ola.field))
+    .overlay(RoundedRectangle(cornerRadius: corner).strokeBorder(focused ? Ola.ink3.opacity(0.6) : Ola.ruleStrong, lineWidth: 1))
     .shadow(color: .black.opacity(focused ? 0.06 : 0.03), radius: 3, y: 1)
     #if os(macOS)
     .onAppear { focused = true }
@@ -504,7 +507,7 @@ struct ConversationPane: View {
               }
               .environment(\.workingLargeShown, (forcedLarge ?? largeShown) && convo.approval == nil)
             } else if store.selectedID == nil {
-              EmptyConversation(folder: store.projectFolder)
+              EmptyConversation(folder: store.projectFolder, runtime: store.runtime)
             } else {
               ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 60)
             }
@@ -569,7 +572,7 @@ extension Metrics {
   /// The reading column: at 15 pt Literata about 80 characters a line, the measure of a good chat
   /// pane (and room for a table or a code block).
   #if os(macOS)
-  static let column: CGFloat = 620
+  static let column: CGFloat = 600
   #else
   static let column: CGFloat = 640
   #endif
@@ -577,12 +580,40 @@ extension Metrics {
 
 struct EmptyConversation: View {
   var folder: String
+  var runtime: Runtime?
+
+  /// Where this session works, and who else sees it, per runtime (OLA-207: a Local session said it
+  /// was on the machine and on the phone; it is on this Mac, and the phone sees it only through
+  /// this Mac when paired).
+  static func line(folder: String, runtime: Runtime?) -> String {
+    #if os(macOS)
+    switch runtime {
+    case .local: return "It works in \(folder) on this Mac. This session stays on this Mac."
+    case .cloud: return "It works in \(folder) on the Ola machine. Your phone can follow this session."
+    case nil: return "It works in \(folder)."
+    }
+    #else
+    switch runtime {
+    case .local: return "It works in \(folder) on your Mac."
+    case .cloud: return "It works in \(folder) on the Ola machine."
+    case nil: return "It works in \(folder)."
+    }
+    #endif
+  }
+
   var body: some View {
-    VStack(alignment: .leading, spacing: Space.s) {
-      Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
-      Text("It works in \(folder) on the machine. Sessions you start here are on your phone too.")
-        .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(Metrics.readingLeading).fixedSize(horizontal: false, vertical: true)
+    VStack(alignment: .leading, spacing: Space.xs) {
+      #if os(macOS)
+      Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .semibold)).foregroundStyle(Ola.ink)
+      Text(Self.line(folder: folder, runtime: runtime))
+        .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3).fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: 480, alignment: .leading)
+      #else
+      Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
+      Text(Self.line(folder: folder, runtime: runtime))
+        .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(Metrics.readingLeading).fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: 480, alignment: .leading).padding(.top, Space.xs)
+      #endif
     }
     .padding(.top, Space.xxl)
   }
