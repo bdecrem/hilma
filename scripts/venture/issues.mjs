@@ -76,6 +76,15 @@ const shiftDay = (d, n) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400e3).
 
 const argv = process.argv.slice(2)
 const cmd = argv[0] === '--wait' ? 'wait-board' : argv[0]
+// A Desktop folder is on one machine. Text for the tracker that names one must say which
+// (Nov 20: OLA-168 said "~/Desktop/Ola/open-design/", the sheets were on the M1 iMac, Bart
+// looked on the M4 and found nothing).
+for (const a of argv) {
+  if (/Desktop\//.test(a) && !/\b(M4|M1|mini|Studio|MacBook)\b/i.test(a)) {
+    console.error('A Desktop folder is on one machine: say which in the same text ("on the M1 iMac: ~/Desktop/…"), and copy it to the machine Bart is at.')
+    process.exit(1)
+  }
+}
 const pos = []
 const opt = {}
 for (let i = 1; i < argv.length; i++) {
