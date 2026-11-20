@@ -112,6 +112,9 @@ never holds user data.
   live scripts, the evals) waits for the machine's one turn, `ops/turn.mjs`; a deploy goes before
   every waiting builder and holds the turn through its suites. `node ops/turn.mjs status` shows it.
 - **Status:** `node ops/ola.mjs status` shows every job, the deployed commit and each workspace.
+- **The disk:** every deploy that serves ends with `ops/clean.mjs` (old workspace images, releases
+  beyond the current and the previous, the image builder over 15 GB, builders' leftovers on a
+  written allowlist); `node ops/ola.mjs clean [--dry]` runs it by hand. README, "Deploying staging".
 - **The alarm:** `ops/watch.mjs` every 2 minutes (`cx.ola.watch`) texts Bart when the disk, memory,
   a service, the public address or the certificate fails, and pushes a status to the board every 10
   minutes. README, "When something breaks".

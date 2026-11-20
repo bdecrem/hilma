@@ -1206,10 +1206,39 @@ written, the jobs rewritten and restarted (`kickstart -k`; the container job is 
 the front desk and the gateway must answer within 30 s or the previous release is switched back and
 restarted. **On a failed suite nothing that runs is touched**: the message names the suite and its
 count, says the running version was left alone, and keeps the release for a look; the whole output
-is in `~/Library/Logs/ola/deploy-<commit12>.log`. The five newest releases are kept, plus the served
-one, the one before and any a running workspace's door or desk still uses. Running workspaces keep
-their door and desk from the release they were started with until they next start. A deploy takes
-about as long as the suites (minutes); run it with `nohup` over ssh.
+is in `~/Library/Logs/ola/deploy-<commit12>.log`. Running workspaces keep their door and desk from
+the release they were started with until they next start. A deploy takes about as long as the
+suites (minutes); run it with `nohup` over ssh.
+
+**The disk is cleaned after every deploy that serves** (OLA-135, `ops/clean.mjs`), still holding the
+turn, and on demand with `node ops/ola.mjs clean --dry` (what it would delete) and `clean`. On
+2026-11-17 the mini fell to 3.5 GB free twice; the image builder's cache alone held 49 GB. The rules:
+
+- **Images** (`ola-workspace:*` only; the base images stay): kept are the image the current release
+  names (`workspace/ws.mjs` `IMAGE`), the previous release's, any image a container (running or
+  stopped) is made from, and any tag newer than the current one (a release being prepared).
+- **Releases**: kept are the current and the previous (`deployed.json` `previous`), any a
+  workspace's door or desk runs from (`~/.ola/launchd`) and any a running process names. A refused
+  release stays only until the next clean; its log stays in `~/Library/Logs/ola`.
+- **The builder** (`buildkit`): `container builder stop` + `delete` when its container holds more
+  than 15 GB (`OLA_CLEAN_BUILDER_GB`) and no `container build` or `ws.mjs image` runs; the next image
+  build makes a new one.
+- **Builders' leftovers**, only those on the written allowlist (`ALLOW` in `ops/clean.mjs`) and
+  unchanged for 2 days (`OLA_CLEAN_LEFTOVER_DAYS`): `~/ola-<tag>` copies of Ola, `~/ola-<tag>-scratch`,
+  the checks' `~/.ola-check[-<tag>]` and `~/.ola-fdcheck[-<tag>]`, the live scripts' `~/.ola-cq-live`,
+  `~/.ola-wcc` and `~/.ola-cloudcheck`, builders' `~/ola-*.log|out`, the ship script's
+  `~/ola-ship/ola-{ios,mac}.xcarchive[.tgz]`, and the checks' mkdtemp folders in `$TMPDIR`. One is kept
+  when a running process, a process's working folder, a launchd plist or an existing container
+  (`ws/<id>`) names it, or when it is a git clone with anything uncommitted, untracked or unpushed.
+  `NEVER` protects `~/.ola`, `~/ola-staging`, `~/ola-bart`, `~/.ola-bart`, `~/.ola-frontdesk`,
+  `~/ola-evals`, `~/ola-ship` itself, `~/GAMI`, `~/almanac`, `~/hilma-deploy`, `~/hilma-venture`,
+  `~/Documents` and the turn's files; nothing else in the home folder is looked at.
+
+Images and the builder are left alone while another process holds the test turn or another deploy
+runs, and the releases while another deploy runs (to wait for the turn: `node ops/turn.mjs run
+--label clean -- node ops/ola.mjs clean`). It prints what it keeps and why, what it deletes, and
+what was freed (measured with `df`). Tests: `node --test ops/clean-test.mjs` (7, a few seconds; a
+fake `container` CLI and a temporary home).
 
 **One test turn on the machine, and deploys go first** (OLA-83, 2026-11-19). The machine runs at
 most four VMs, and on 2026-11-18 builders running their checks side by side filled all four, so a
@@ -1314,6 +1343,8 @@ not to run at all), `KEY_FROM`, `ALMANAC_URL`, `PUBLIC_HOST`. Tests: `node --tes
    (under 20 is a warning in the daily note). VMs and builds fail when it fills.
    - `df -h /System/Volumes/Data; cat ~/.ola/watch-state.json | grep -A8 '"sizes"'` (the hourly
      sizes: the container store and each `~/ola-*` clone).
+   - `node ops/ola.mjs clean --dry`, then `node ops/ola.mjs clean` (OLA-135: old images, releases,
+     an oversized builder, builders' leftovers on its allowlist; see "Deploying staging"). By hand:
    - Old builders' clones and check folders: `du -sh ~/ola-* ~/.ola-check* ~/.ola-fdcheck* 2>/dev/null | sort -h | tail`;
      delete the ones no one is using (never `~/ola-staging`, `~/.ola`, `~/.ola-bart`, `~/.ola-frontdesk`).
    - Old images: `container image list`; `container image delete <tag>` for any `ola-workspace` tag

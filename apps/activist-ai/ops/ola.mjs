@@ -18,6 +18,10 @@
 //   node ops/ola.mjs uninstall        unload and remove the jobs (the env files and data stay)
 //   node ops/ola.mjs container-up     what cx.ola.container runs: start Apple's container
 //                                     system if it is not running (after a reboot it is not)
+//   node ops/ola.mjs clean [--dry]    what a deploy runs after it serves (ops/clean.mjs): old
+//                                     workspace images, old releases, an oversized image builder,
+//                                     and builders' leftovers on a written allowlist; prints
+//                                     what it freed (--dry: what it would delete, nothing deleted)
 //
 // The jobs, in ~/Library/LaunchAgents (loaded at login, restarted when they exit, ThrottleInterval
 // 5 s, logs in ~/Library/Logs/ola/):
@@ -54,6 +58,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
+import { clean } from './clean.mjs'
 import { acquire as acquireTurn, holder as turnHolder } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -367,8 +372,10 @@ if (cmd === 'container-up') {
   process.exit(bad ? 1 : 0)
 } else if (cmd === 'prove-restarts') {
   await proveRestarts()
+} else if (cmd === 'clean') {
+  clean({ dry: process.argv.includes('--dry') })
 } else {
-  console.error('usage: node ops/ola.mjs deploy [<commit> | origin/main] | install | status | prove-restarts | uninstall | container-up')
+  console.error('usage: node ops/ola.mjs deploy [<commit> | origin/main] | install | status | prove-restarts | uninstall | container-up | clean [--dry]')
   process.exit(2)
 }
 
@@ -661,7 +668,14 @@ async function deploy(ref, { unsigned = false } = {}) {
   } else say('no env files in ~/.ola: nothing to restart (node ops/ola.mjs install once they exist)')
   history(`deployed ${short} (${ref})${signed ? '' : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   say(`deployed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
-  prune(short, before?.commit.slice(0, 12))
+  // The disk (OLA-135): old images, releases beyond the current and the previous, an oversized
+  // builder, builders' leftovers. Still holding the turn, so no suite starts a VM meanwhile. A
+  // failure here is reported and never undoes the deploy.
+  try {
+    clean({ say })
+  } catch (e) {
+    say(`clean failed (the deploy stands): ${e.message}`)
+  }
   turn.release()
   out.end()
 }
@@ -685,12 +699,4 @@ async function answering() {
     if (h.status === 200 && g.status > 0) return true
   }
   return false
-}
-/** Keeps the served release, the one before it, any a workspace's door or desk still runs, and the newest five. */
-function prune(...keep) {
-  const releases = path.join(STAGING, 'releases')
-  const inUse = new Set(keep.filter(Boolean))
-  if (existsSync(path.join(OLA, 'launchd'))) for (const f of readdirSync(path.join(OLA, 'launchd'))) for (const m of readFileSync(path.join(OLA, 'launchd', f), 'utf8').matchAll(/releases\/([0-9a-f]{12})\//g)) inUse.add(m[1])
-  const all = readdirSync(releases).filter((d) => /^[0-9a-f]{12}$/.test(d)).sort((x, y) => statSync(path.join(releases, y)).mtimeMs - statSync(path.join(releases, x)).mtimeMs)
-  for (const d of all.slice(5)) if (!inUse.has(d)) rmSync(path.join(releases, d), { recursive: true, force: true })
 }
