@@ -1307,7 +1307,12 @@ because the web suite builds `web/dist` again while it runs. On a failure no new
 running ones finish, and the update is refused; a check gives the turn to a waiting deploy the same
 way. Measured on the mini (checks of made-up commits on ebdd4110, `ops/ola.mjs check <c> --base <c>`):
 a document only, 12 s of suites; the website only (web and front desk), 599 s in all, the front desk
-594 s with the web suite's 306 s beside it. `node --test ops/select-test.mjs` (also a suite) holds the
+594 s with the web suite's 306 s beside it; a change to every part, all 12 suites in 984 s (workspace
+319 s then front desk 659 s, web 318, TLS 67 and gateway 60 beside them, none flaky under the load);
+a made-up break in `web/server/files.mjs`, which the front desk imports, ran the front desk and web
+suites, both failed within a second, and the check was refused. What is left of the front desk
+suite's 590 s is mostly what its checks prove (a 24 s run ceiling, a 3 s idle stop, 60 coded
+documents) plus about 85 s of a batch job waiting after a front desk restart (OLA-295). `node --test ops/select-test.mjs` (also a suite) holds the
 rule, including the cross-part cases: a shared file the front desk check imports from `web/server/`,
 the pass code the TLS front imports, the gateway every VM suite starts. The update that runs is the
 previous release's tool, so this takes effect from the second update after it lands.
