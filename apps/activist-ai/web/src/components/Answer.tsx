@@ -1,13 +1,15 @@
 // Ola's words, set in Literata. A small Markdown subset (paragraphs, lists, headings, tables, **bold**,
-// `code`) built as elements: model text never becomes HTML, so it can never inject markup.
+// `code`, links to the web) built as elements: model text never becomes HTML, so it can never inject
+// markup.
 import { For, Match, Switch, type JSX } from 'solid-js'
 import { desk } from '../lib/api.ts'
 import { citation, CITE_SPLIT } from '../lib/cite.ts'
 import { blocks, projectPaths } from '../lib/blocks.ts'
+import { webLink, WEB_BARE_SPLIT, WEB_MD_SPLIT } from '../lib/weblink.ts'
 
-/** Inline **bold**, `code` and citations (lib/cite.ts); everything else is text. */
+/** Inline **bold**, `code`, citations (lib/cite.ts) and web links (lib/weblink.ts); everything else is text. */
 export function Inline(props: { text: string }): JSX.Element {
-  const parts = () => props.text.split(new RegExp(`(\\*\\*[^*]+\\*\\*|\`[^\`]+\`|${CITE_SPLIT.source})`, 'g')).filter(Boolean)
+  const parts = () => props.text.split(new RegExp(`(${CITE_SPLIT.source}|${WEB_MD_SPLIT.source}|\\*\\*[^*]+\\*\\*|\`[^\`]+\`|${WEB_BARE_SPLIT.source})`, 'g')).filter(Boolean)
   return (
     <For each={parts()}>
       {(part) =>
@@ -15,6 +17,11 @@ export function Inline(props: { text: string }): JSX.Element {
           <a class="cite" href={desk.openUrl(citation(part)!.path, citation(part)!.page)} target="_blank" rel="noopener noreferrer">
             {citation(part)!.label}
             <span class="sr-only"> (opens {citation(part)!.path}{citation(part)!.page ? ` at page ${citation(part)!.page}` : ''} in a new tab)</span>
+          </a>
+        ) : webLink(part) ? (
+          <a class="weblink" href={webLink(part)!.href} target="_blank" rel="noopener noreferrer nofollow">
+            {webLink(part)!.label}
+            {webLink(part)!.titled ? <span class="weblink-host"> {webLink(part)!.host}</span> : null}
           </a>
         ) : part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
           // Bold may hold code or a citation (**`totals.xlsx`**): drawn too, never as raw backticks.

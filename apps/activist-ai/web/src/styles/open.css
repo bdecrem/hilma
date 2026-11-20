@@ -189,3 +189,19 @@ a.cite {
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
+/* Links to the web in Ola's words (OLA-246): tappable, the site's name beside a titled one, and a
+   long address wraps instead of widening the drawer. */
+a.weblink {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+.weblink-host {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  text-decoration: none;
+  display: inline-block;
+}
