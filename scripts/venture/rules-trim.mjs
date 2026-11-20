@@ -153,7 +153,7 @@ Bart approved on Nov 20: "a rule leaves the always-loaded list only when code al
 
 The always-loaded list is the digest every session gets at its start (one line per rule, \`.claude/hooks/venture-rules.py\`). A rule that leaves it stays in RULES.md with its full text; only its line in the digest goes, and the digest names it as enforced by code.
 
-${leaving.map((c) => `- **Rule ${c.rule}: ${c.lead}** Enforced by \`${c.file}\`. ${c.how}${c.guards.length ? ` The weakness ledger records the same guard: "${c.guards[0]}".` : ''}`).join('\n')}
+${leaving.map((c) => `- **Rule ${c.rule}: ${c.lead}** Enforced by \`${c.file}\`. ${c.how}${c.guards.length ? ` The weakness ledger records the same guard: "${c.guards[0].replace(/\.$/, "")}".` : ''}`).join('\n')}
 
 ## Enforced in part, so they stay
 
