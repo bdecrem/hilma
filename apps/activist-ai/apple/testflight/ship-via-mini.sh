@@ -78,7 +78,7 @@ archive() { # $1 scheme, $2 destination, $3 name
   if [ "$MINI" = local ]; then
     echo "== archiving $3 here (unsigned)"
     xcodebuild archive -project Ola.xcodeproj -scheme "$1" -destination "$2" -archivePath "$OUT/$3.xcarchive" \
-      -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/ola-apple-tf-$3" \
+      -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/ola-shared" \
       CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > "$OUT/$3-archive.log" 2>&1 \
       || { grep -E 'error:' "$OUT/$3-archive.log" | sort -u | head -20; echo "error: archive failed ($OUT/$3-archive.log)" >&2; exit 1; }
   else

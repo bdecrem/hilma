@@ -3,7 +3,7 @@
 #   tools/phone-app-shots.sh <out-dir>
 set -euo pipefail
 OUT="$1"; mkdir -p "$OUT"
-APP="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-apple}/Build/Products/Debug-iphonesimulator/Ola.app"
+APP="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-shared}/Build/Products/Debug-iphonesimulator/Ola.app"
 UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r in sorted(d, reverse=True) for x in d[r] if x['name']=='iPhone 17 Pro'))")
 xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$UDID" -b >/dev/null

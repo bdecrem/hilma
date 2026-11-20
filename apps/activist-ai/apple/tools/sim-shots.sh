@@ -4,7 +4,7 @@
 # Installs the built app, launches it with each fixture, screenshots, and shuts the simulator down.
 set -euo pipefail
 OUT="$1"; NAME="${2:-iPhone 17 Pro}"
-APP="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-apple}/Build/Products/Debug-iphonesimulator/Ola.app"
+APP="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-shared}/Build/Products/Debug-iphonesimulator/Ola.app"
 UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r in sorted(d, reverse=True) for x in d[r] if x['name']==sys.argv[1]))" "$NAME")
 mkdir -p "$OUT"
 xcrun simctl boot "$UDID" 2>/dev/null || true

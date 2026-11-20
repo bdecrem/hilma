@@ -16,7 +16,7 @@
 # set, else the first "Apple Development" identity on this Mac, else ad hoc (with a warning).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-apple}"
+DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-shared}"
 APP="$DD/Build/Products/Debug/Ola.app"
 # Ola's skills, copied fresh from apps/activist-ai/skills as committed (refuses uncommitted changes);
 # the Mac build is checked against them after it is made (README, "Every release").

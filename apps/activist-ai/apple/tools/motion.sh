@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="$1"
-DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-apple}"
+DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-shared}"
 OLA_DERIVED="$DD" bash tools/build.sh mac
 FRAMES="$(mktemp -d)/motion"
 "$DD/Build/Products/Debug/Ola.app/Contents/MacOS/Ola" -OlaMotion "$FRAMES"

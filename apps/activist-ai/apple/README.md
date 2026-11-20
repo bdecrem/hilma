@@ -74,6 +74,8 @@ Simulator) happen on the Mac mini, never on Bart's 8 GB iMac: `.claude/hooks/sim
 on any Mac with 8 GB or less (OLA-215). Run them as `ssh admin@100.95.51.98 'cd ~/ola-ship/apple && tools/build.sh sim && tools/sim-shots.sh /tmp/ola-shots'`
 (rsync the branch's `apple/` there first, as `ship-via-mini.sh` does) and scp the PNGs back; `build.sh sim` alone is fine here.
 
+Every builder shares one Xcode build folder, `~/Library/Developer/Xcode/DerivedData/ola-shared` (the default in `build.sh`, the shot scripts and `ship-via-mini.sh`; leave `OLA_DERIVED` unset): on the iMac `.claude/hooks/disk-guard.py` refuses a `-derivedDataPath` in a scratchpad or worktree, refuses builds and big copies under 5 GB free, and everything but cleanup under 1 GB (OLA-226).
+
 ## Shipping: TestFlight for the phone, a signed download for the Mac (2026-11-17)
 
 `testflight/README.md`: `bump-build.sh`, then `testflight/asc-setup.mjs` once and
