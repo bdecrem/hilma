@@ -1,0 +1,568 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica labor_c claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "labor_c",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  109,
+  111
+ ],
+ "started_at": "2026-11-20T20:50:10.962Z",
+ "meters_before": {
+  "at": "2026-11-20T20:50:06.232Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 46940,
+  "user": 107
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:53:54.015Z",
+ "minutes": 3.72,
+ "meters_after": {
+  "at": "2026-11-20T20:53:54.015Z",
+  "window": {
+   "pct": 39,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 39,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 39% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 90169,
+   "output": 20822,
+   "cache_read": 1089492,
+   "cache_write": 123396,
+   "cost_usd": 1.5293,
+   "total": 1323879
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 90143,
+    "output": 8274,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3563,
+    "cost_usd": 0.0732
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 12548,
+    "cache_read": 1089492,
+    "cache_write": 123396,
+    "thinking": 3235,
+    "cost_usd": 1.4561
+   }
+  }
+ },
+ "turns": 25,
+ "calls": 39,
+ "duration_ms": 222327,
+ "duration_api_ms": 177745,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-20T20:50:25.020Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=2340&strTipM=TC",
+   "find": "Artículo 2 | Artículo 3 | desocupación involuntaria | obligatorios",
+   "ok": true,
+   "chars": 8539
+  },
+  {
+   "at": "2026-11-20T20:50:44.348Z",
+   "url": "https://bufetedecostarica.com/wp-content/uploads/2026/05/dinamizacion-de-la-atencion-de-la-poblacion-vulnerable_10705-1.pdf",
+   "find": "artículo 2 | extranjeros | Rige | vigencia | Dado",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:50:46.112Z",
+   "url": "https://www.ucr.ac.cr/medios/documentos/2015/LEY-5662.pdf",
+   "find": "Artículo 2 | extranjeros residentes",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:50:53.622Z",
+   "url": "https://bufetedecostarica.com/ley-de-desarrollo-social-y-asignaciones-familiares-en-costa-rica-5662/",
+   "find": "Artículo 2 | extranjeros residentes | reformado | 10705 | 10875",
+   "ok": true,
+   "chars": 6528
+  },
+  {
+   "at": "2026-11-20T20:51:04.119Z",
+   "url": "https://bufetedecostarica.com/ley-para-la-dinamizacion-de-la-atencion-de-la-poblacion-vulnerable-en-costa-rica-10705/",
+   "find": "artículo 2 | extranjeros | residentes legales | Rige | Dado en",
+   "ok": true,
+   "chars": 8604
+  },
+  {
+   "at": "2026-11-20T20:51:05.462Z",
+   "url": "https://bufetedecostarica.com/reforma-de-la-ley-10705-ley-para-la-dinamizacion-de-la-atencion-de-la-poblacion-vulnerable-en-costa-rica-10875/",
+   "find": "artículo 2 | extranjeros | residentes legales | Rige | Dado en",
+   "ok": true,
+   "chars": 8665
+  },
+  {
+   "at": "2026-11-20T20:51:25.180Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=67607&strTipM=TC",
+   "find": "Artículo 2 | extranjeros residentes legales | condición migratoria",
+   "ok": true,
+   "chars": 4502
+  },
+  {
+   "at": "2026-11-20T20:51:37.578Z",
+   "url": "https://costa-rica.justia.com/nacionales/leyes/ley-5662/gdoc",
+   "find": "Artículo 2 | extranjeros residentes legales | condición migratoria",
+   "ok": true,
+   "chars": 4452
+  },
+  {
+   "at": "2026-11-20T20:51:47.336Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "ARTÍCULO 28 | ARTÍCULO 29 | ARTÍCULO 30 | auxilio de cesantía",
+   "ok": true,
+   "chars": 7499
+  },
+  {
+   "at": "2026-11-20T20:51:48.435Z",
+   "url": "https://bufetedecostarica.com/ley-de-proteccion-al-trabajador-de-costa-rica/",
+   "find": "ARTÍCULO 3 | ARTÍCULO 6 | Así reformado | 1,5%",
+   "ok": true,
+   "chars": 7441
+  },
+  {
+   "at": "2026-11-20T20:51:49.645Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 7 | seguridad social de las personas migrantes | Caja Costarricense",
+   "ok": true,
+   "chars": 5528
+  },
+  {
+   "at": "2026-11-20T20:52:10.510Z",
+   "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/",
+   "find": "migrante | nicaragüense | extranjer | 2025 | seguro",
+   "ok": true,
+   "chars": 5555
+  },
+  {
+   "at": "2026-11-20T20:52:11.800Z",
+   "url": "https://www.oecd.org/es/publications/2025/10/expanding-social-protection-and-addressing-informality-in-latin-america_9a502cb3/full-report/reducing-informality-in-costa-rica-challenges-and-opportunities_9898c7ba.html",
+   "find": "migrant | Nicaragua | foreign",
+   "ok": true,
+   "chars": 3711
+  },
+  {
+   "at": "2026-11-20T20:52:28.232Z",
+   "url": "https://semanariouniversidad.com/?p=253405",
+   "find": "migrante | nicaragüense | seguro | CCSS",
+   "ok": true,
+   "chars": 4451
+  },
+  {
+   "at": "2026-11-20T20:52:43.101Z",
+   "url": "https://www.unhcr.org/blogs/shining-a-spotlight-on-nicaraguans-poverty-and-wellbeing-in-costa-rica/",
+   "find": "social security | insurance | CCSS | informal | contribut",
+   "ok": true,
+   "chars": 5501
+  },
+  {
+   "at": "2026-11-20T20:52:51.434Z",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9141649/",
+   "find": "CCSS | insurance | permit | employer",
+   "ok": true,
+   "chars": 5391
+  },
+  {
+   "at": "2026-11-20T20:53:01.398Z",
+   "url": "https://delfino.cr/asamblea/proyecto/23460",
+   "find": "10705 | Gaceta | publicad | Alcance | 2025",
+   "ok": true,
+   "chars": 2152
+  }
+ ],
+ "searches": [
+  "Ley 5662 Desarrollo Social y Asignaciones Familiares artículo 2 \"extranjeros residentes legales\" beneficiarios",
+  "Ley 10705 dinamización atención población vulnerable fecha publicación La Gaceta",
+  "\"Son beneficiarios de este Fondo los costarricenses y extranjeros residentes legales del país\" 5662",
+  "pgrweb scij nrm_texto_completo Ley 5662 Desarrollo Social y Asignaciones Familiares nValor2",
+  "personas trabajadoras migrantes aseguramiento CCSS informalidad 2024 informe Costa Rica nicaragüenses sin seguro",
+  "migrantes nicaragüenses Costa Rica sin seguro social patronos no aseguran 2023 2024 estudio"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":109,\"answer_2023\":\"Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley Constitutiva de la Caja Costarricense de Seguro Social, Ley N.º 17\",\"article\":\"Art. 2\",\"enacted\":\"1943-10-22\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley Constitutiva de la Caja Costarricense de Seguro Social, Ley N.º 17\",\"article\":\"Art. 3\",\"enacted\":\"1943-10-22\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, Ley N.º 8764\",\"article\":\"Art. 7(7)\",\"enacted\":\"2009\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Desarrollo Social y Asignaciones Familiares, Ley N.º 5662\",\"article\":\"Art. 2\",\"enacted\":\"1974-12-23\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Reglamento del Programa del Régimen no Contributivo (CCSS)\",\"article\":\"Art. 2\",\"enacted\":\"2009\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"}],\"events\":[{\"date\":\"2025-05\",\"instrument\":\"Ley N.º 10705, Ley para la dinamización de la atención de la población vulnerable en Costa Rica (26 de mayo de 2025)\",\"article\":\"Ley 5662, art. 2\",\"kind\":\"amended\",\"what_changed\":\"This law rewrote art. 2 of Ley 5662, which sets who may receive FODESAF benefits (the fund behind the CCSS non-contributory pension). The 2009 (Ley 8783) text covered Costa Ricans, legal resident foreigners and minors whatever their migration status. The new text keeps the same resi",
+ "output": {
+  "answers": [
+   {
+    "question_id": 109,
+    "answer_2023": "Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley Constitutiva de la Caja Costarricense de Seguro Social, Ley N.º 17",
+      "article": "Art. 2",
+      "enacted": "1943-10-22",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley Constitutiva de la Caja Costarricense de Seguro Social, Ley N.º 17",
+      "article": "Art. 3",
+      "enacted": "1943-10-22",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 7(7)",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Desarrollo Social y Asignaciones Familiares, Ley N.º 5662",
+      "article": "Art. 2",
+      "enacted": "1974-12-23",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento del Programa del Régimen no Contributivo (CCSS)",
+      "article": "Art. 2",
+      "enacted": "2009",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05",
+      "instrument": "Ley N.º 10705, Ley para la dinamización de la atención de la población vulnerable en Costa Rica (26 de mayo de 2025)",
+      "article": "Ley 5662, art. 2",
+      "kind": "amended",
+      "what_changed": "This law rewrote art. 2 of Ley 5662, which sets who may receive FODESAF benefits (the fund behind the CCSS non-contributory pension). The 2009 (Ley 8783) text covered Costa Ricans, legal resident foreigners and minors whatever their migration status. The new text keeps the same residence-based limit for foreigners, adds 'Solo' ('only') and redefines the poverty and vulnerability criteria. It does not change who among migrants is covered, so the indicator is not affected.",
+      "url": "https://bufetedecostarica.com/ley-para-la-dinamizacion-de-la-atencion-de-la-poblacion-vulnerable-en-costa-rica-10705/",
+      "passage": "Artículo 2- Solo podrán ser beneficiarios de este Fondo los costarricenses, los extranjeros residentes legales, las personas adultas mayores, las personas con discapacidad y mujeres jefas de hogar. También podrán ser beneficiarias las personas menores de edad en el territorio nacional, independientemente de su situación migratoria."
+     }
+    ],
+    "implementation_then_now": "2023: formally employed migrants with permits are enrolled in CCSS contributory schemes. UNHCR/IICE data for 2017–2023 show the share of Nicaraguan workers contributing to social security is comparable to Costa Ricans'. However, informality is higher (45% vs 36%), and only 39% of poor Nicaraguan households received social transfers, against 52% of poor Costa Rican households. Older qualitative studies (IDESPO-UNA 2021, reported 2022; IJERPH 2022) document uninsured migrant guards and administrative barriers. 2026: La Nación (Dec. 2025) reports 360,124 uninsured people (6.78%), with the highest rate (14.1%) in the Huetar Norte border region. The CCSS attributes this to evasion and informality. No documented shift between the two dates, so the rating stays Sometimes; Usually.",
+    "practice_sources": [
+     {
+      "title": "UNHCR blog: Shining a spotlight on Nicaraguans' poverty and wellbeing in Costa Rica (IICE 2024; IMF-IADB-UNHCR 2023)",
+      "url": "https://www.unhcr.org/blogs/shining-a-spotlight-on-nicaraguans-poverty-and-wellbeing-in-costa-rica/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "La Nación, 360.000 personas no tienen seguro de salud en Costa Rica",
+      "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Semanario Universidad, Guardas informales trabajan agotadoras jornadas (IDESPO-UNA study)",
+      "url": "https://semanariouniversidad.com/?p=253405",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Informality, Social Citizenship, and Wellbeing among Migrant Workers in Costa Rica in the Context of COVID-19 (IJERPH)",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9141649/",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read Ley 17 arts. 2–3 and Ley 8764 art. 7 on SINALEVI (current versions). Their amendment notes show no change after 2000, and none in 2023–2026. For Ley 5662 art. 2, I read the 2025 (Ley 10705) and 2026 (Ley 10875) texts on a private consolidated site. The 1 Jan. 2023 text (Ley 8783 of 2009) was rebuilt from the Decreto 35873 regulation, art. 2, read on SINALEVI, and from search snippets, not read directly. PDFs (UCR copy of Ley 5662, Ley 8783 gazette, DHR reports) could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 17 Ley Constitutiva de la CCSS (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=2340&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 Ley General de Migración y Extranjería (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 5662 consolidated (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-desarrollo-social-y-asignaciones-familiares-en-costa-rica-5662/"
+     },
+     {
+      "title": "Ley 10705 (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-para-la-dinamizacion-de-la-atencion-de-la-poblacion-vulnerable-en-costa-rica-10705/"
+     },
+     {
+      "title": "Ley 10875 (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/reforma-de-la-ley-10705-ley-para-la-dinamizacion-de-la-atencion-de-la-poblacion-vulnerable-en-costa-rica-10875/"
+     },
+     {
+      "title": "Decreto 35873-MTSS Reglamento a la Ley 5662 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=67607&strTipM=TC"
+     },
+     {
+      "title": "Ley 5662 original text (Justia)",
+      "url": "https://costa-rica.justia.com/nacionales/leyes/ley-5662/gdoc"
+     },
+     {
+      "title": "Delfino, Expediente 23460 (Ley 10705)",
+      "url": "https://delfino.cr/asamblea/proyecto/23460"
+     },
+     {
+      "title": "UNHCR blog on Nicaraguans in Costa Rica",
+      "url": "https://www.unhcr.org/blogs/shining-a-spotlight-on-nicaraguans-poverty-and-wellbeing-in-costa-rica/"
+     },
+     {
+      "title": "La Nación, 360.000 sin seguro de salud",
+      "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/"
+     },
+     {
+      "title": "OECD 2025, Reducir la informalidad en Costa Rica",
+      "url": "https://www.oecd.org/es/publications/2025/10/expanding-social-protection-and-addressing-informality-in-latin-america_9a502cb3/full-report/reducing-informality-in-costa-rica-challenges-and-opportunities_9898c7ba.html"
+     },
+     {
+      "title": "Semanario Universidad, guardas informales",
+      "url": "https://semanariouniversidad.com/?p=253405"
+     },
+     {
+      "title": "IJERPH 2022, migrant workers Costa Rica",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9141649/"
+     }
+    ],
+    "starting_answer_concern": "The starting citation says art. 2 of Ley 5662 is 'as amended by Ley 10875 of 2026'. That reform post-dates 1 Jan. 2026, but the residence-only limit for foreigners was also in the 2009 text and in the 2025 Ley 10705 text, so the 50 score holds on both dates. As the first coder notes, a reviewer counting only contributory schemes could code 100.",
+    "confidence": "medium",
+    "notes": "The only in-window event is Ley 10705 (approved in second debate 10 Apr. 2025, dated 26 May 2025, in force on publication in late May 2025). It kept 'extranjeros residentes legales' as the foreign beneficiaries of FODESAF. Ley 10875 (16 Mar. 2026) falls after the window and removed the word 'Solo'. Neither changes coverage for non-resident permit holders. No court ruling was relied on."
+   },
+   {
+    "question_id": 111,
+    "answer_2023": "Yes, immediate equal access to all types of unemployment benefits",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, immediate equal access to all types of unemployment benefits",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 28",
+      "enacted": "1943-08-27",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 29",
+      "enacted": "1943-08-27",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 30",
+      "enacted": "1943-08-27",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Protección al Trabajador, Ley N.º 7983",
+      "article": "Art. 3",
+      "enacted": "2000-02-16",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Protección al Trabajador, Ley N.º 7983",
+      "article": "Art. 6",
+      "enacted": "2000-02-16",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley Constitutiva de la Caja Costarricense de Seguro Social, Ley N.º 17",
+      "article": "Art. 2",
+      "enacted": "1943-10-22",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In both periods, severance (CT art. 29) and the Labour Capitalisation Fund (Ley 7983 art. 6) reach migrants registered by their employers. I found no documented refusal on nationality grounds. The gap is informality: UNHCR/IICE data (2023–2024) show 45% of Nicaraguan workers informal against 36% of Costa Ricans, and informal workers accrue no FCL balance and must sue for severance. Earlier studies of migrant security guards (IDESPO-UNA, reported 2022) show the same pattern. No shift between 2023 and 2026, so the rating stays Usually. This is inferred from informality data, not from severance-specific findings.",
+    "practice_sources": [
+     {
+      "title": "UNHCR blog: Shining a spotlight on Nicaraguans' poverty and wellbeing in Costa Rica",
+      "url": "https://www.unhcr.org/blogs/shining-a-spotlight-on-nicaraguans-poverty-and-wellbeing-in-costa-rica/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Semanario Universidad, Guardas informales (IDESPO-UNA study)",
+      "url": "https://semanariouniversidad.com/?p=253405",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Labour Code arts. 28–30 were read on SINALEVI. Their notes show the last change in 2000 (art. 29 by Ley 7983). Ley 7983 arts. 3 and 6 were read on a private consolidated copy that reproduces Sinalevi notes, with last changes in 2020 (Leyes 9906 and 9839). Ley 17 art. 2 is unchanged. Nothing changed inside the window. I found no severance-specific practice evidence for migrants.",
+    "sources_opened": [
+     {
+      "title": "Código de Trabajo (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Ley de Protección al Trabajador 7983 (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-proteccion-al-trabajador-de-costa-rica/"
+     },
+     {
+      "title": "Ley 17 Ley Constitutiva de la CCSS (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=2340&strTipM=TC"
+     },
+     {
+      "title": "UNHCR blog on Nicaraguans in Costa Rica",
+      "url": "https://www.unhcr.org/blogs/shining-a-spotlight-on-nicaraguans-poverty-and-wellbeing-in-costa-rica/"
+     },
+     {
+      "title": "Semanario Universidad, guardas informales",
+      "url": "https://semanariouniversidad.com/?p=253405"
+     }
+    ],
+    "starting_answer_concern": "The answer depends on counting employer severance and the Labour Capitalisation Fund as 'unemployment benefits' (the Colombia approach). Under the Mexico approach, Costa Rica, which has no unemployment insurance, would be 'No access to any unemployment benefits' with Does Not Apply. This is a coding choice, not a change over time.",
+    "confidence": "low",
+    "notes": "No amendments, new instruments or rulings affecting these provisions between 1 Jan. 2023 and 1 Jan. 2026. The implementation rating is inferred from general informality evidence."
+   }
+  ]
+ }
+}
