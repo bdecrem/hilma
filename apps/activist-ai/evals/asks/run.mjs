@@ -199,7 +199,9 @@ async function runCase(T, c) {
     else throw new Error(`unknown setup step ${JSON.stringify(step)}`)
   }
   const before = await T.listFiles()
+  const since = Date.now() - 2000
   let sid = await newSession(T, `asks ${c.id}`)
+  const sessions = [sid]
   const limit = (c.limitMin ?? 8) * 60_000
   const end = Date.now() + limit
   const steps = []
@@ -225,19 +227,19 @@ async function runCase(T, c) {
   // OLA-267 "separate": each sentence in a conversation of its own, the way a person comes back
   // another day to a project that published before (the fault hid in one long conversation).
   for (const [i, said] of (c.before ?? []).entries()) {
-    if (c.separate && i) sid = await newSession(T, `asks ${c.id} ${i + 1}`)
+    if (c.separate && i) sessions.push((sid = await newSession(T, `asks ${c.id} ${i + 1}`)))
     const { turn, text } = await converse(said)
     earlier.push(text)
     if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}; Ola said: ${oneLine(text)}` }
   }
-  if (c.separate && c.before?.length) sid = await newSession(T, `asks ${c.id} last`)
+  if (c.separate && c.before?.length) sessions.push((sid = await newSession(T, `asks ${c.id} last`)))
   const { turn, text: answer } = await converse(c.say)
   const base = { answer, steps, answered }
   if (turn.status !== 'done') return { ...base, ok: false, why: `the turn ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(answer)}` }
   const fails = []
   const notes = []
   for (const m of c.must) {
-    const r = await checkMust(m, T, answer, { steps, before, earlier: earlier.join('\n\n') })
+    const r = await checkMust(m, T, answer, { steps, before, earlier: earlier.join('\n\n'), since, sessions })
     ;(r.ok ? notes : fails).push(`${m}: ${r.why}`)
   }
   const never = checkNever(c, answer, { done: !fails.length })

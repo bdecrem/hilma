@@ -97,3 +97,36 @@ test('a run that ends on the session event, a missed event caught by the sweep, 
   assert.equal(next.openTurns('fd-y').length, 1)
   for (const x of [m, gone, next]) x.close()
 })
+
+test('a turn the design model served is recorded with it, per conversation; unsure means no model named (OLA-168)', async () => {
+  const p = project()
+  const asked = []
+  // The gateway's answer per conversation: ses_d had design requests, ses_g only general ones.
+  const served = async (slug, session, since) => {
+    asked.push({ slug, session, since })
+    if (session === 'ses_down') return null
+    return { names: session === 'ses_d' ? { general: 1, design: 4 } : { general: 3 }, design_model: 'thinkingmachines/Inkling-2-Small' }
+  }
+  const m = makeMadeBy({ exec: p.exec, executing: async () => new Set(), served, sweepMs: 0 })
+  // Two conversations in one project at the same time: only the design one names the design model.
+  const td = await m.begin('fd-y', { engine: 'ola', session: 'ses_d', request: 'make a page for our block party on Saturday' })
+  const tg = await m.begin('fd-y', { engine: 'ola', session: 'ses_g', request: 'how many members by city?' })
+  p.put('index.html', '<h1>Block party</h1>', Date.now() / 1000 - 20)
+  await m.end('fd-y', td)
+  p.put('cities.csv', 'city,n\n', Date.now() / 1000 - 10)
+  await m.end('fd-y', tg)
+  const rec = Object.fromEntries(p.record().map((r) => [r.path, r]))
+  assert.equal(rec['index.html'].model, 'the design model, Inkling-2-Small')
+  assert.equal(rec['index.html'].engine, 'ola')
+  assert.equal(rec['cities.csv'].model, null, 'the other conversation is not the design model’s')
+  assert.deepEqual(asked.map((a) => a.session), ['ses_d', 'ses_g'])
+  // The gateway could not be asked: no model is named.
+  const tx = await m.begin('fd-y', { engine: 'ola', session: 'ses_down', request: 'redo the page' })
+  p.put('about.html', '<h1>About</h1>')
+  await m.end('fd-y', tx)
+  assert.equal(Object.fromEntries(p.record().map((r) => [r.path, r]))['about.html'].model, null)
+  // What Ola reads: the design model by name.
+  const env = { ...process.env, OLA_WORK: p.work }
+  const words = spawnSync('python3', [OLA_DB, 'made-by', 'index.html'], { encoding: 'utf8', env }).stdout
+  assert.match(words, /Ola's own open model \(model the design model, Inkling-2-Small\)/)
+})

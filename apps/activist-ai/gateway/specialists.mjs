@@ -35,6 +35,8 @@ export const NAMES = {
   rerank: { kind: 'rerank', path: '/rerank', lane: 'interactive', body: 4 * MIB, images: 0, pool: 2, perMinute: 240 },
   transcribe: { kind: 'transcribe', path: '/audio/transcriptions', lane: 'batch', body: 24 * MIB, images: 0, pool: 1, perMinute: 10 },
   draw: { kind: 'draw', path: '/images/generations', lane: 'batch', body: 64 * 1024, images: 0, pool: 1, perMinute: 6 },
+  // The design model (design.mjs, OLA-168): pages and app screens, after the designer skill is loaded.
+  design: { kind: 'chat', lane: 'interactive', body: 4 * MIB, images: 0, pool: 0, perMinute: 0 },
 }
 export const MODEL_NAMES = Object.keys(NAMES)
 export const ROUTE_NAME = { '/v1/embeddings': 'embed', '/v1/rerank': 'rerank', '/v1/audio/transcriptions': 'transcribe', '/v1/images/generations': 'draw' }
@@ -52,6 +54,7 @@ export const NOT_SET = {
   embed: 'No model for meaning search is set up on this machine yet.',
   rerank: 'No model for ranking search hits is set up on this machine yet.',
   transcribe: 'No model that turns recordings into text is set up on this machine yet.',
+  design: 'No design model is set up on this machine.',
   draw: 'No model that makes pictures is set up on this machine yet, so Ola cannot draw this. It can make diagrams and charts with code instead.',
 }
 

@@ -21,6 +21,8 @@
 //                           with a page saying <words>
 //   says:<regex>            Ola's answer matches (case-insensitive)
 //   file:<path>[:<words>]   the file is in the project afterwards (and says <words>)
+//   served:<name>           the model connection's own record says <name> served one of the case's
+//                           requests (served:design); served:!<name> says it served none (OLA-168)
 //   gone                    every sites.ola.cx address Ola gave in the conversation answers 404 (with --before)
 // Every case is also held to the never list in lib.mjs (it cannot do it from here; press a button
 // or go to another screen yourself; not switched on); --must-not adds patterns to it.
@@ -117,7 +119,7 @@ if (must.includes('gone') && !many('--before').length) fail('--must gone needs -
 for (const m of must) {
   const kind = m.split(':')[0]
   if (m === 'gone') continue
-  if (!['site', 'says', 'file'].includes(kind) || !m.slice(kind.length + 1)) fail(`--must "${m}": site:<words>, says:<regex>, file:<path>[:<words>] or gone`)
+  if (!['site', 'says', 'file', 'newfile', 'served'].includes(kind) || !m.slice(kind.length + 1)) fail(`--must "${m}": site:<words>, says:<regex>, file:<path>[:<words>], newfile:<regex>[:<words>], served:<name> or gone`)
   if (kind === 'says') new RegExp(m.slice(5), 'i')
 }
 for (const s of many('--must-not')) new RegExp(s, 'i')

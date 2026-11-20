@@ -38,7 +38,7 @@ import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
-import { makeMadeBy } from './madeby.mjs'
+import { gatewayServed, makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
@@ -261,7 +261,7 @@ export function makeFrontDesk(cfg = config()) {
     await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: `Not published, and the person was not asked: ${why}` })
   }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' }) })
-  madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), log })
+  madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), served: (slug, session, since) => gatewayServed(cfg.claude, `ws-${slug}`, session, since), log })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })

@@ -48,7 +48,10 @@ export function hostedConfig(env = process.env) {
   // the machine's forwarder). Empty by default.
   const callers = (env.OLA_FD_HOSTED_CALLERS || '').split(',').map((s) => s.trim()).filter(Boolean)
   for (const c of callers) if (!/^[A-Za-z0-9._-]{1,64}$/.test(c) || /^(ws|p)-/.test(c) || c === 'usage') throw new Error(`OLA_FD_HOSTED_CALLERS: ${c} is not a standing caller's name (not ws-…, p-… or usage)`)
-  return { file: env.OLA_FD_HOSTED_FILE || path.join(home, 'gateway-hosted'), capMicroUsd: Math.round(usd * 1e6), callers }
+  const file = env.OLA_FD_HOSTED_FILE || path.join(home, 'gateway-hosted')
+  // The owners' permission for design work to leave the office (gateway/design.mjs, OLA-168), beside
+  // the hosted grants, where the gateway looks for it by default.
+  return { file, designFile: env.OLA_FD_DESIGN_FILE || path.join(path.dirname(file), 'gateway-design'), capMicroUsd: Math.round(usd * 1e6), callers }
 }
 
 /** The gateway's hosted grants file, from the database: each active project with a hosted run going on (its lease), or a hosted job running (its runner's key). */
@@ -69,7 +72,22 @@ export function writeHostedGrants(db, hc) {
     grants[`p-${p.id}`] = { cap_micro_usd: p.usd ?? hc.capMicroUsd }
   }
   for (const c of hc.callers ?? []) grants[c] = { cap_micro_usd: hc.capMicroUsd }
+  if (hc.designFile) writeDesignPermission(db, hc)
   return writeGrantsFile(hc.file, grants)
+}
+
+/**
+ * Who may send design work to the design model once the everyday model runs on our own machine
+ * (gateway/design.mjs): each active project whose owner switched the hosted model on, and each person
+ * the admin let use the hosted model on their Mac. The hosted switch is the owner's permission for work
+ * to leave the office; the design request still goes only to the design model, never to `hosted`.
+ * Read by the gateway only while GATEWAY_EVERYDAY_LOCAL is on.
+ */
+export function writeDesignPermission(db, hc) {
+  const allowed = {}
+  for (const w of db.prepare("SELECT slug FROM workspaces WHERE status = 'active' AND hosted_enabled = 1 ORDER BY slug").all()) allowed[`ws-${w.slug}`] = {}
+  for (const p of db.prepare("SELECT id FROM people WHERE app_hosted = 1 AND status = 'active' ORDER BY id").all()) allowed[`p-${p.id}`] = {}
+  return writeGrantsFile(hc.designFile, allowed)
 }
 
 const NOT_SET_UP = {

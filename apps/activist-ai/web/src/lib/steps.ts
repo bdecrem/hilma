@@ -389,6 +389,8 @@ export const STRETCH_CHECKS = {
   designVerb: /\b(build|make|create|draw|lay ?out|restyle)\b/i,
   /** …or says "design a…" outright ("the design of this survey" is a question, not a request to make). */
   designAsk: /\b(re)?design (a|an|the|me|us|our|my|some|this|that)\b/i,
+  /** Off since OLA-168: design requests go to the design model, not to a fallback. */
+  designBeforeRun: false,
 }
 
 /** Before a run: does the request alone look like a stretch? 'big_files', 'many_files', 'long_build', 'design', or null. */
@@ -402,7 +404,9 @@ export function precheck(request: string, files: { path: string; size: number }[
   if (c.allOfThem.test(request) && files.filter((f) => c.docLike.test(f.path)).length >= c.manyDocs) return 'many_files'
   const parts = request.split('\n').filter((l) => /^\s*(\d{1,3}[.)]|[-*•])\s+\S/.test(l)).length
   if (request.length >= c.buildMinChars && parts >= c.buildParts && c.buildVerb.test(request)) return 'long_build'
-  if (c.designAsk.test(request) || (c.designThing.test(request) && c.designVerb.test(request))) return 'design'
+  // Design is no longer a stretch (OLA-168, Bart, Nov 20): design work runs on Ola's design model
+  // (gateway/design.mjs) once the designer skill is loaded, so the card is not offered for it before a run.
+  if (c.designBeforeRun && (c.designAsk.test(request) || (c.designThing.test(request) && c.designVerb.test(request)))) return 'design'
   return null
 }
 

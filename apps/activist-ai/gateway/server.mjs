@@ -52,6 +52,7 @@ import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
+import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, isDesignTurn, makeDesign, sessionOf, withNote } from './design.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
 
 // ---------------------------------------------------------------- config
@@ -75,7 +76,7 @@ const SETTINGS = {
   // devices together. 0: the same as GATEWAY_WEEKLY_TOKENS.
   GATEWAY_PEOPLE_WEEKLY_TOKENS: [0, 0, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -160,6 +161,9 @@ function loadConfig(env) {
     })
   }
 
+  // The design model (design.mjs): its default upstream id, and whether the everyday model is local.
+  const design = designConfig(env, bad, { models, upstream })
+
   // GATEWAY_BACKUP_MODELS: "general=upstream id": when the model server keeps refusing a name
   // (5xx after every try), the same request goes once to this model on the same server. Added
   // 2026-11-19 (OLA-206): Together began refusing large prompts to Nemotron 3.5 Super with 503.
@@ -169,6 +173,8 @@ function loadConfig(env) {
     const name = pair.slice(0, at).trim()
     const id = pair.slice(at + 1).trim()
     if (!models.has(name)) { bad(`GATEWAY_BACKUP_MODELS entry ${i + 1}: ${name} is not in GATEWAY_MODELS`); continue }
+    // The design model has no backup: when it fails, Ola's own `general` does the work (design.mjs).
+    if (name === 'design') { bad('GATEWAY_BACKUP_MODELS: design takes no backup model'); continue }
     if (!/^[\x21-\x7e]{1,200}$/.test(id)) { bad(`GATEWAY_BACKUP_MODELS entry ${i + 1} (${name}): the upstream id must be 1 to 200 printable characters`); continue }
     backups.set(name, id)
   }
@@ -247,6 +253,7 @@ function loadConfig(env) {
     sp,
     claude,
     hosted,
+    design,
     web,
     batch,
     port: num.GATEWAY_PORT,
@@ -461,6 +468,7 @@ const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, t
 const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
 const batch = makeBatch({ cfg: C.batch, db })
+const design = makeDesign({ cfg: C.design, db })
 // A person's own caller (from the people file) answers every web question in their own app, as
 // Bart does for the `bart` caller: a standing grant, by where the caller came from, never by a
 // name a workspace could hold (readTokens refuses p-* anywhere else).
@@ -971,7 +979,7 @@ function identify(req) {
 }
 const known = (name) => name === 'usage' || C.tokens.some((t) => t.name === name)
 
-const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count', '/web/search': 'search', '/web/fetch': 'fetch', '/web/lookup': 'lookup', '/v1/embeddings': 'embed', '/v1/rerank': 'rerank', '/v1/audio/transcriptions': 'transcribe', '/v1/images/generations': 'draw' }
+const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/v1/served': 'served', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count', '/web/search': 'search', '/web/fetch': 'fetch', '/web/lookup': 'lookup', '/v1/embeddings': 'embed', '/v1/rerank': 'rerank', '/v1/audio/transcriptions': 'transcribe', '/v1/images/generations': 'draw' }
 const secondsUntil = (ms) => String(Math.max(1, Math.ceil((ms - Date.now()) / 1000)))
 
 async function handle(req, res, rec, signal) {
@@ -995,6 +1003,22 @@ async function handle(req, res, rec, signal) {
     // A caller's own: its month on the hosted open model too, and the provider's name, so Ola on a
     // person's Mac can say whether it may hand a request over and to whom (no prices, no other caller).
     return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who), ...(hosted ? { hosted_month: hosted.monthOf(who), hosted: { provider: hosted.provider } } : {}) })
+  }
+  // Which names served a caller's chat requests since a moment (design.mjs): the usage token for any
+  // caller (the front desk, for the record of who made each file), a caller's own token for itself.
+  if (rec.route === 'served' && req.method === 'GET') {
+    let q
+    try {
+      q = new URL(req.url, 'http://x').searchParams
+    } catch {
+      q = new URLSearchParams()
+    }
+    const caller = who === 'usage' ? q.get('caller') : who
+    const since = Number(q.get('since'))
+    const session = q.get('session')
+    if (!caller || !known(caller) || caller === 'usage' || !Number.isSafeInteger(since) || since < 0 || (session !== null && !/^[A-Za-z0-9_-]{1,80}$/.test(session))) return no(400, 'a served query that does not check out', 'served takes caller (usage token only), since (ms) and an optional session', 'invalid_request_error')
+    rec.status = 200
+    return send(res, 200, { object: 'served', caller, session, since, names: design.served(caller, session, since), design_model: C.models.get('design') ?? null, everyday_local: design.local })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
   // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
@@ -1044,7 +1068,19 @@ async function handle(req, res, rec, signal) {
   }
   rec.model = body.model
   if (!isHosted && C.sp.spec[body.model].kind !== 'chat') return no(400, 'a name that is not a chat model', `${body.model} is not a chat model; it has its own route`, 'invalid_request_error')
-  const s = isHosted ? { ...C.sp.spec.general, name: 'hosted', pool: 0, perMinute: 0 } : C.sp.spec[body.model]
+  // The design model (design.mjs): a request after the designer or app-designer skill was loaded in
+  // this turn, or one that names `design`, is served by it, if this caller's work may go there; if
+  // not (the everyday model is local and the owner kept the hosted model off), `general` does it
+  // and Ola is told to say that a stronger design model is available.
+  let served = body.model
+  let note = null
+  if (!isHosted && C.models.has('design') && (body.model === 'design' || (body.model === 'general' && isDesignTurn(body.messages)))) {
+    if (design.may(who)) (served = 'design'), (rec.design = 'served')
+    else if (C.models.has('general')) (served = 'general'), (note = WITHHELD), (rec.design = 'withheld')
+    else return no(403, 'design work may not leave this machine', 'The design model is off for this project. Its owner can turn on the hosted model in Settings.', 'permission_error')
+  }
+  if (served !== body.model) rec.served = served
+  const s = isHosted ? { ...C.sp.spec.general, name: 'hosted', pool: 0, perMinute: 0 } : C.sp.spec[served]
   const cap = bodyCap(s)
   if (raw.length > cap) return no(413, 'the body was over the size cap', `the request is larger than ${cap} bytes`, 'invalid_request_error')
   // The hosted open model: only for a project whose owner turned it on, within its month's budget.
@@ -1113,13 +1149,30 @@ async function handle(req, res, rec, signal) {
     const wantStream = body.stream === true
     const wantUsage = body.stream_options?.include_usage === true
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
-    const upstreamBody = { model: isHosted ? hosted.model : C.models.get(body.model), stream: false }
+    const upstreamBody = { model: isHosted ? hosted.model : C.models.get(served), stream: false }
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
+    if (served === 'design') {
+      // Never a small output allowance for the design model (it answers empty when its reasoning uses it up).
+      const given = Math.max(Number(body.max_tokens) || 0, Number(body.max_completion_tokens) || 0)
+      delete upstreamBody.max_completion_tokens
+      upstreamBody.max_tokens = Math.max(given, DESIGN_MIN_OUTPUT)
+    }
     // A job's retries are checked against its budget, a conversation's against the weekly quota.
     const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
-    upstreamBody.messages = withInstructions(body.model, body.messages)
-    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(body.model) ?? null))
-    const backup = isHosted ? null : C.backups?.get(body.model)
+    upstreamBody.messages = withNote(withInstructions(served, body.messages), note)
+    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(served) ?? null))
+    if (served === 'design' && out.status !== 200 && out.status !== 499 && out.status !== 429 && C.models.has('general')) {
+      // The design model refused or failed: Ola's own everyday model does it, once, never a backup model.
+      rec.design = 'failed'
+      rec.served = served = 'general'
+      upstreamBody.model = C.models.get('general')
+      upstreamBody.messages = withNote(withInstructions('general', body.messages), DESIGN_DOWN)
+      if ('max_tokens' in body) upstreamBody.max_tokens = body.max_tokens
+      else delete upstreamBody.max_tokens
+      if ('max_completion_tokens' in body) upstreamBody.max_completion_tokens = body.max_completion_tokens
+      out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, targets.get('general') ?? null)
+    }
+    const backup = isHosted || rec.design ? null : C.backups?.get(body.model)
     if (out.status !== 200 && backup && /answered 5\d\d/.test(out.why || '')) {
       upstreamBody.model = backup
       rec.backup = backup
@@ -1142,13 +1195,14 @@ async function handle(req, res, rec, signal) {
     rec.tokens_out = tally.out
     rec.estimated = tally.estimated ? 'bytes' : null
     if (tally.tries && lane) batch.record(who, lane, tally.in, tally.out)
-    else if (tally.tries) addUsage.run(weekKey(weekStart()), who, body.model, tally.in, tally.out)
+    else if (tally.tries) addUsage.run(weekKey(weekStart()), who, rec.design === 'failed' ? 'design' : served, tally.in, tally.out)
     if (isHosted && tally.tries) rec.cost_micro_usd = hosted.record(who, tally.in, tally.out)
+    if (tally.tries && !isHosted) design.record(who, sessionOf(req), rec.design === 'failed' ? 'design-failed' : served)
   }
 }
 
 // The body cap of a name: the everyday names keep GATEWAY_MAX_BODY_BYTES; a specialist has its own.
-const bodyCap = (s) => (['general', 'fast', 'code', 'hosted'].includes(s.name) ? C.maxBody : s.body)
+const bodyCap = (s) => (['general', 'fast', 'code', 'hosted', 'design'].includes(s.name) ? C.maxBody : s.body)
 // The most a chat request may be before its model name is known: the largest cap of a configured name.
 const CHAT_READ_MAX = Math.max(C.maxBody, ...Object.values(C.sp.spec).filter((s) => s.upstreamId && s.kind === 'chat').map(bodyCap))
 

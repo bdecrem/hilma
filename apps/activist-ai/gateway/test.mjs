@@ -49,7 +49,7 @@ async function fakeUpstream() {
     try {
       cmd = JSON.parse(body.messages.at(-1).content)
     } catch {}
-    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization })
+    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization, maxTokens: body.max_tokens, system: body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n') })
     st.inflight++
     st.max = Math.max(st.max, st.inflight)
     res.on('close', () => {
@@ -63,6 +63,10 @@ async function fakeUpstream() {
       // own Authorization header, which carries the upstream key — as some really do.
       res.writeHead(401, { 'Content-Type': 'application/json' })
       return res.end(JSON.stringify({ error: { message: `invalid api key: ${req.headers.authorization} rejected`, type: 'authentication_error' } }))
+    }
+    if (cmd.failFor && cmd.failFor === body.model) {
+      res.writeHead(500, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ error: { message: 'no' } }))
     }
     if (cmd.status) {
       res.writeHead(cmd.status, { 'Content-Type': 'application/json' })
@@ -2016,6 +2020,131 @@ test('web: a person’s own caller (p-<id>) has a standing grant; a workspace st
     await waitFor(() => g.logs().some((l) => l.route === 'search' && l.caller === 'p-7'), 3000, 'the log line')
     assert.ok(g.logs().some((l) => l.route === 'search' && l.caller === 'p-7' && l.status === 200 && l.grant === 'always'), 'the log says the person searched, under the standing grant')
     assert.ok(!g.out.includes('tide gauges'), 'the words are not in the log')
+  } finally {
+    await g.stop()
+  }
+})
+
+// ---------------------------------------------------------------- the design model (OLA-168)
+
+// A conversation as opencode sends it: the person's request, then (in a design turn) the skill
+// loaded. The fake reads its command from the last message, a tool result in a design turn.
+const turn = (cmd, { skill = null, after = false } = {}) => {
+  const m = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
+  if (skill) m.push({ role: 'assistant', content: '', tool_calls: [{ id: 's1', type: 'function', function: { name: 'skill', arguments: JSON.stringify({ name: skill }) } }] })
+  if (after) m.push({ role: 'tool', tool_call_id: 's1', content: 'the skill' }, { role: 'assistant', content: 'Here it is.' }, { role: 'user', content: JSON.stringify(cmd) })
+  else if (skill) m.push({ role: 'tool', tool_call_id: 's1', content: JSON.stringify(cmd) })
+  else m.push({ role: 'user', content: JSON.stringify(cmd) })
+  return { model: 'general', max_tokens: 4000, messages: m }
+}
+const DESIGN_ENV = { GATEWAY_MODELS: `${MODELS},design=up/design-1`, GATEWAY_EVERYDAY_LOCAL: '0', GATEWAY_USAGE_TOKEN: T.usage }
+
+test('design: after the designer skill is loaded in this turn, the design model serves it; other work stays on general', async () => {
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV })
+  try {
+    const sid = { 'X-Session-Id': 'ses_abc123' }
+    const plain = await call(g, T.a, turn({ tag: 'plain' }), { headers: sid })
+    assert.equal(plain.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'no skill: the everyday model')
+    const d = await call(g, T.a, turn({ tag: 'design', usage: [100, 50] }, { skill: 'designer' }), { headers: sid })
+    assert.equal(d.status, 200)
+    assert.equal(d.json.model, 'general', 'the caller still sees the name it asked for')
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1', 'designer loaded: the design model')
+    assert.ok(up.st.seen.at(-1).maxTokens >= 16000, 'never a small output allowance for the design model')
+    await call(g, T.a, turn({ tag: 'app' }, { skill: 'app-designer' }), { headers: sid })
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1', 'app-designer too')
+    await call(g, T.a, turn({ tag: 'chart' }, { skill: 'chart' }), { headers: sid })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'another skill: the everyday model')
+    await call(g, T.a, turn({ tag: 'next' }, { skill: 'designer', after: true }), { headers: sid })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'a new message from the person starts again on general')
+    // The log says which name served, never what was asked.
+    const line = await waitFor(() => g.logs().find((l) => l.design === 'served'), 3000, 'the log line')
+    assert.equal(line.served, 'design')
+    assert.equal(line.model, 'general')
+    assert.ok(!g.out.includes('block party'))
+    // The tokens count against the caller's week, under the name that served them.
+    const u = await call(g, T.a, null, { method: 'GET', path: '/v1/usage' })
+    assert.equal(u.json.by_model.design.tokens_in, 100 + 10)
+    assert.ok(u.json.tokens_used >= 160)
+    // Which names served this conversation: the usage token for any caller, a caller for itself only.
+    const since = Date.now() - 60_000
+    const sv = await call(g, T.usage, null, { method: 'GET', path: `/v1/served?caller=a&session=ses_abc123&since=${since}` })
+    assert.equal(sv.status, 200)
+    assert.deepEqual(sv.json.names, { general: 3, design: 2 })
+    assert.equal(sv.json.design_model, 'up/design-1')
+    const other = await call(g, T.usage, null, { method: 'GET', path: `/v1/served?caller=a&session=ses_other&since=${since}` })
+    assert.deepEqual(other.json.names, {}, 'another conversation of the same caller is not this one')
+    const mine = await call(g, T.b, null, { method: 'GET', path: `/v1/served?caller=a&since=${since}` })
+    assert.deepEqual(mine.json.names, {}, 'a caller reads only its own')
+    assert.equal(mine.json.caller, 'b')
+  } finally {
+    await g.stop()
+  }
+})
+
+test('design: when the design model fails, general does it once with a sentence for Ola, never a backup model', async () => {
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV, GATEWAY_BACKUP_MODELS: 'general=up/backup-1' })
+  try {
+    const r = await call(g, T.a, turn({ tag: 'down', failFor: 'up/design-1' }, { skill: 'designer' }))
+    assert.equal(r.status, 200)
+    assert.deepEqual(up.st.seen.map((x) => x.model), ['up/design-1', 'up/design-1', 'up/design-1', 'up/general-1'])
+    assert.match(up.st.seen.at(-1).system, /could not answer this request just now/)
+    assert.equal(up.st.seen.at(-1).maxTokens, 4000, 'general gets the caller’s own allowance back')
+    await waitFor(() => g.logs().some((l) => l.design === 'failed'), 3000, 'the log line')
+    // Both failing: a plain failure for the agent, and still no backup model.
+    up.st.seen.length = 0
+    const both = await call(g, T.a, turn({ tag: 'both', status: 500 }, { skill: 'designer' }))
+    assert.equal(both.status, 502)
+    assert.ok(!up.st.seen.some((x) => x.model === 'up/backup-1'), 'never the backup model')
+  } finally {
+    await g.stop()
+  }
+})
+
+test('design: with the everyday model local, design work leaves the machine only for a caller whose owner allowed it', async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'design-'))
+  const file = path.join(dir, 'gateway-design')
+  writeFileSync(file, JSON.stringify({ a: {} }), { mode: 0o600 })
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV, GATEWAY_EVERYDAY_LOCAL: '1', GATEWAY_DESIGN_FILE: file })
+  try {
+    await call(g, T.a, turn({ tag: 'a' }, { skill: 'designer' }))
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1', 'the owner allowed it: the design model')
+    await call(g, T.b, turn({ tag: 'b' }, { skill: 'designer' }))
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'not allowed: Ola’s own model')
+    assert.match(up.st.seen.at(-1).system, /stronger design model is available if the project’s owner turns on the hosted model/)
+    await waitFor(() => g.logs().some((l) => l.design === 'withheld'), 3000, 'the log line')
+    const named = await call(g, T.b, chat({ tag: 'named' }, 'design'))
+    assert.equal(named.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'asking for design by name does not get around it')
+    // The owner turns the hosted model on: the list changes, and within seconds b's design goes out.
+    await sleep(1100)
+    writeFileSync(file, JSON.stringify({ a: {}, b: {} }), { mode: 0o600 })
+    await waitFor(async () => {
+      await call(g, T.b, turn({ tag: 'b2' }, { skill: 'designer' }))
+      return up.st.seen.at(-1).model === 'up/design-1'
+    }, 8000, 'the new list to be read')
+  } finally {
+    await g.stop()
+  }
+})
+
+test('design: its settings are checked; with no design model set and not on Together there is none', async () => {
+  for (const [over, expect] of [
+    [{ GATEWAY_EVERYDAY_LOCAL: 'yes' }, 'GATEWAY_EVERYDAY_LOCAL must be 0 or 1'],
+    [{ GATEWAY_MODELS: `${MODELS},design=up/d`, GATEWAY_BACKUP_MODELS: 'design=up/x' }, 'design takes no backup model'],
+  ]) {
+    const g = run({ ...baseEnv('http://127.0.0.1:9/v1'), ...over })
+    await waitFor(() => g.code !== undefined, 5000, expect)
+    assert.equal(g.code, 1)
+    assert.match(g.err, new RegExp(expect))
+  }
+  const g = await gateway({ ...baseEnv('http://127.0.0.1:9/v1') })
+  try {
+    const m = await call(g, T.a, null, { method: 'GET', path: '/v1/models' })
+    assert.ok(!m.json.data.some((x) => x.id === 'design'), 'not on Together and not set: no design model')
   } finally {
     await g.stop()
   }

@@ -439,10 +439,21 @@ async function fetchText(url) {
  *                        answers 200 with a page that says <words>
  *   says:<regex>         Ola's answer matches (case-insensitive)
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
+ *   served:<name>        the model connection's own record says <name> served at least one of this
+ *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
  */
-export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000 } = {}) {
+export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [] } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
+  if (kind === 'served') {
+    const not = arg.startsWith('!')
+    const name = arg.replace(/^!/, '')
+    const names = await servedNames(T, sessions, since)
+    if (!names) return { ok: false, why: 'the model connection could not be asked which model served this case' }
+    const n = names[name] ?? 0
+    const all = Object.entries(names).map(([k, v]) => `${k} ${v}`).join(', ') || 'no requests'
+    return not ? { ok: n === 0, why: `the model connection served: ${all}` } : { ok: n > 0, why: `the model connection served: ${all}` }
+  }
   if (kind === 'gone') {
     // gone: the page is down. Every sites.ola.cx address Ola gave in the conversation (the turns said
     // first and this one) answers 404, within a minute; at least one address was given.
@@ -501,6 +512,42 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
     return { ok: false, why: `made ${made.join(', ').slice(0, 160)}, none with "${words}"` }
   }
   return { ok: false, why: `unknown outcome kind "${kind}"` }
+}
+
+/**
+ * Which names served this case's requests, from the model connection itself (GET /v1/served with the
+ * front desk's usage token), never from what Ola says. A cloud project's requests are counted by
+ * conversation; the Mac's by the made-up person's caller since the case began (its door does not pass
+ * the conversation id on).
+ */
+async function servedNames(T, sessions, since) {
+  let env
+  try {
+    env = liveEnv()
+  } catch {
+    return null
+  }
+  const token = env.OLA_FD_GATEWAY_USAGE_TOKEN
+  const base = (env.OLA_FD_GATEWAY_URL || `http://127.0.0.1:${env.OLA_GATEWAY_PORT || 4180}`).replace(/\/+$/, '')
+  if (!token) return null
+  let callers
+  if (T.runtime === 'cloud') callers = sessions.map((s) => ({ caller: `ws-${PROJECT}`, session: s }))
+  else {
+    const { DatabaseSync } = await import('node:sqlite')
+    const db = new DatabaseSync(path.join(env.OLA_FD_DATA || path.join(homedir(), '.ola-frontdesk'), 'platform.db'), { readOnly: true })
+    const p = db.prepare('SELECT id FROM people WHERE handle = ?').get(WHO)
+    db.close()
+    if (!p) return null
+    callers = [{ caller: `p-${p.id}`, session: null }]
+  }
+  const out = {}
+  for (const c of callers) {
+    const q = new URLSearchParams({ caller: c.caller, since: String(since), ...(c.session ? { session: c.session } : {}) })
+    const r = await fetch(`${base}/v1/served?${q}`, { headers: { authorization: `Bearer ${token}` } }).catch(() => null)
+    if (!r?.ok) return null
+    for (const [k, v] of Object.entries((await r.json()).names ?? {})) out[k] = (out[k] ?? 0) + v
+  }
+  return out
 }
 
 export function checkNever(c, answer, { done = false } = {}) {

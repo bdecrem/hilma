@@ -23,6 +23,28 @@
 // record in project.db, which ola-made-by reads, still is).
 import { randomBytes } from 'node:crypto'
 
+// Which model served a turn (OLA-168): Ola's turn may run on the design model (gateway/design.mjs)
+// once the designer skill is loaded. The gateway keeps which name served each request, by project and
+// by opencode's conversation id (its X-Session-Id header), and the front desk asks it as the turn
+// ends (GET /v1/served with the usage token). A turn the design model served is recorded with the
+// model `DESIGN_WORDS`, so `ola-made-by` says so. Without a conversation id, or when the gateway
+// cannot be asked, no model is named: the record never claims a model it is not sure of.
+export const designWords = (id) => `the design model, ${String(id ?? '').split('/').pop() || 'Inkling-2-Small'}`
+
+/** What served one conversation since a moment: { names: { general: n, design: n }, design_model } or null. */
+export async function gatewayServed(cc, caller, session, since) {
+  if (!cc?.usageToken || !cc.gateway || !SID.test(session ?? '')) return null
+  try {
+    const q = new URLSearchParams({ caller, session, since: String(Math.max(0, Math.floor(since))) })
+    const r = await fetch(`${cc.gateway}/v1/served?${q}`, { headers: { authorization: `Bearer ${cc.usageToken}` }, signal: AbortSignal.timeout(5000) })
+    if (!r.ok) return null
+    const j = await r.json()
+    return j && typeof j.names === 'object' ? { names: j.names, design_model: typeof j.design_model === 'string' ? j.design_model : null } : null
+  } catch {
+    return null
+  }
+}
+
 export const NOTE_OPEN = '<ola-engines>'
 export const NOTE_CLOSE = '</ola-engines>'
 export const ENGINE_NAME = { ola: 'Ola’s own open model', hosted: 'The hosted open model', claude: 'Claude' }
@@ -86,7 +108,7 @@ function filesOf(x) {
  * `exec(slug, args)` runs `ola-db made-by <args>` in the project's VM ({ code, out }); `executing(slug)`
  * is the set of sessions opencode says are executing (null when it does not answer).
  */
-export function makeMadeBy({ exec, executing, log = () => {}, sweepMs = 10_000, settleMs = 30_000 }) {
+export function makeMadeBy({ exec, executing, served = null, log = () => {}, sweepMs = 10_000, settleMs = 30_000 }) {
   const open = new Map() // slug -> Map(turn -> { session, engine, at, seen, silent, entry })
   const convs = new Map() // `${slug}:${session}` -> [{ engine, request, files, interrupted }]
   const cleaned = new Set() // projects whose turns left open by an earlier front desk were ended
@@ -149,7 +171,14 @@ export function makeMadeBy({ exec, executing, log = () => {}, sweepMs = 10_000, 
     open.get(slug).delete(turn)
     if (!open.get(slug).size) open.delete(slug)
     try {
-      const r = await exec(slug, ['end', '--turn', turn, ...(interrupted ? ['--interrupted'] : [])])
+      // Ola's own turn: did the design model serve it? Asked of the gateway, for this conversation only.
+      let model = null
+      if (t.engine === 'ola' && served && SID.test(t.session ?? '')) {
+        const s = await served(slug, t.session, t.at - 5000).catch(() => null)
+        if (s?.names?.design > 0) model = designWords(s.design_model)
+      }
+      t.entry.model = model
+      const r = await exec(slug, ['end', '--turn', turn, ...(model ? ['--model', model] : []), ...(interrupted ? ['--interrupted'] : [])])
       const files = r.code === 0 ? filesOf(parse(r.out)) : []
       Object.assign(t.entry, { files, interrupted })
       if (r.code !== 0) log(`${slug}: a ${t.engine} turn could not be recorded (made-by end exited ${r.code})`)
