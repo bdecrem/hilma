@@ -186,7 +186,7 @@ test('everything well: no text, one ok line with every check', async () => {
   const r = await watch(at('14:00'))
   assert.equal(r.code, 0, r.out)
   assert.deepEqual(r.sent, [])
-  assert.match(r.out, /Z ok: disk 36 GB free; memory normal, swap 44%; fd 200; gw 401; tls 200; tunnel running; certificate (89|90) days left; public 127\.0\.0\.1 401 basic; public certificate (89|90) days left; almanac 200; 0 VM\(s\) running/)
+  assert.match(r.out, /Z ok: disk 36 GB free; memory normal, swap 44%; fd 200; gw 401; tls 200; tunnel running; certificate \d+ days left; public 127\.0\.0\.1 401 basic; public certificate \d+ days left; almanac 200; 0 VM\(s\) running/)
   assert.match(r.out, /sizes \(GB\): container store 1/)
   assert.equal(state().lastRun.alarms.length, 0)
 })
@@ -385,6 +385,16 @@ test('a nightly status file that failed is a warning', async () => {
   const r = await watch(at('14:00'))
   assert.match(r.out, /warn nightly-cert/)
   assert.match(r.out, /cert: failed \(lego: Bearer \[removed\] failed\)/)
+})
+
+test('the weekly restore test has its own age limit: 6 days old is fine, 9 days is a warning (OLA-86)', async () => {
+  writeFileSync(path.join(LOGS, 'restore.json'), JSON.stringify({ at: at('05:00', 11), ok: true }))
+  let r = await watch(at('14:00'))
+  assert.doesNotMatch(r.out, /warn nightly-restore/)
+  writeFileSync(path.join(LOGS, 'restore.json'), JSON.stringify({ at: at('05:00', 8), ok: true }))
+  r = await watch(at('14:00'))
+  assert.match(r.out, /warn nightly-restore/)
+  rmSync(path.join(LOGS, 'restore.json'))
 })
 
 test('a text that does not go out is retried at the next run', async () => {

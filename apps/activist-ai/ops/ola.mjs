@@ -33,6 +33,8 @@
 //   cx.ola.watch       ops/watch.mjs, every 2 minutes (StartInterval, not kept alive): the alarm
 //                      (disk, memory, the web app's parts, the public address, the Almanac, the
 //                      VMs, the nightly status files); texts the owner; settings ~/.ola/watch.env
+//   cx.ola.backup      ops/backup.mjs run, nightly at 3:30 (only where ~/.ola/backup/key exists)
+//   cx.ola.restoretest ops/backup.mjs restore-test, Sundays at 5:00 (same)
 // and, while a workspace runs, its door and desk (cx.ola.door.<id>, cx.ola.desk.<id>), loaded and
 // unloaded by workspace/ws.mjs start/stop under OLA_LAUNCHD=1 (set in frontdesk.env), with their
 // plists in ~/.ola/launchd/ (not loaded at login: after a reboot no workspace runs).
@@ -75,6 +77,7 @@ const ENV = { gateway: path.join(OLA, 'gateway.env'), frontdesk: path.join(OLA, 
 // The TLS front's settings (ops/tls.mjs); its job is installed only where this file exists.
 const TLS_ENV = path.join(OLA, 'tls.env')
 const TUNNEL_ENV = path.join(OLA, 'tunnel.env')
+const BACKUP_KEY = path.join(OLA, 'backup', 'key')
 const STAGING = process.env.OLA_STAGING || path.join(HOME, 'ola-staging')
 const CURRENT = path.join(STAGING, 'current')
 const SERVED = path.join(CURRENT, 'apps/activist-ai') // what the jobs run, through the symlink
@@ -113,6 +116,10 @@ const JOBS = [
   // The alarm: a short run every 2 minutes. Not kept alive and never kickstarted by a deploy (each
   // run reads the code through `current`, so a deploy changes it without a restart).
   { label: 'cx.ola.watch', args: [NODE, path.join(SERVED, 'ops/watch.mjs')], keepAlive: false, interval: 120, log: 'watch' },
+  // Encrypted backups (OLA-86, ops/backup.mjs): the nightly copy at 3:30 and the restore test on
+  // Sundays at 5:00, local time. Only where the backup key exists; never run at load or by a deploy.
+  { label: 'cx.ola.backup', args: [NODE, path.join(SERVED, 'ops/backup.mjs'), 'run'], keepAlive: false, calendar: { Hour: 3, Minute: 30 }, log: 'backup', optional: BACKUP_KEY },
+  { label: 'cx.ola.restoretest', args: [NODE, path.join(SERVED, 'ops/backup.mjs'), 'restore-test'], keepAlive: false, calendar: { Weekday: 0, Hour: 5, Minute: 0 }, log: 'restoretest', optional: BACKUP_KEY },
 ]
 /** The jobs this machine runs: the TLS front and the tunnel only where their env files exist. */
 const jobsHere = () => JOBS.filter((j) => !j.optional || existsSync(j.optional))
@@ -125,9 +132,9 @@ function plist(job) {
   <key>ProgramArguments</key><array>${job.args.map((a) => `<string>${xml(a)}</string>`).join('')}</array>
   <key>WorkingDirectory</key><string>${xml(SERVED)}</string>
   <key>EnvironmentVariables</key><dict><key>HOME</key><string>${xml(HOME)}</string><key>PATH</key><string>${PATH}</string></dict>
-  <key>RunAtLoad</key><true/>
+  <key>RunAtLoad</key>${job.calendar ? '<false/>' : '<true/>'}
   <key>KeepAlive</key>${job.keepAlive ? '<true/>' : '<false/>'}
-${job.interval ? `  <key>StartInterval</key><integer>${job.interval}</integer>\n` : ''}  <key>ThrottleInterval</key><integer>5</integer>
+${job.interval ? `  <key>StartInterval</key><integer>${job.interval}</integer>\n` : ''}${job.calendar ? `  <key>StartCalendarInterval</key><dict>${Object.entries(job.calendar).map(([k, v]) => `<key>${k}</key><integer>${v}</integer>`).join('')}</dict>\n` : ''}  <key>ThrottleInterval</key><integer>5</integer>
   <key>ProcessType</key><string>Standard</string>
   <key>StandardOutPath</key><string>${xml(log)}</string>
   <key>StandardErrorPath</key><string>${xml(log)}</string>
@@ -511,6 +518,7 @@ async function deploy(ref, { unsigned = false } = {}) {
     ['workspace', ['workspace/check.mjs', '--no-live']],
     ['web', ['web/check.mjs', '--no-live']],
     ['frontdesk', ['frontdesk/check.mjs', '--no-live']],
+    ['backup', ['--test', 'ops/backup-test.mjs']], // encrypted backups (OLA-86), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)

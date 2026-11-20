@@ -115,6 +115,11 @@ never holds user data.
 - **The disk:** every deploy that serves ends with `ops/clean.mjs` (old workspace images, releases
   beyond the current and the previous, the image builder over 15 GB, builders' leftovers on a
   written allowlist); `node ops/ola.mjs clean [--dry]` runs it by hand. README, "Deploying staging".
+- **Backups:** `ops/backup.mjs` (OLA-86): nightly at 3:30 every project, the platform database and
+  the gateway's records, encrypted with age, onto the backup drive plugged in (the SanDisk; a second
+  drive swapped weekly from Bart's home); 14 days plus 8 weekly copies kept; a restore test on
+  Sundays that decrypts, checks every checksum and loads one project into a new workspace.
+  README, "Encrypted backups".
 - **The alarm:** `ops/watch.mjs` every 2 minutes (`cx.ola.watch`) texts Bart when the disk, memory,
   a service, the public address or the certificate fails, and pushes a status to the board every 10
   minutes. README, "When something breaks".
@@ -157,7 +162,7 @@ made-up data; the Mac app download and the iPhone app on TestFlight; the `ola` c
 both fallbacks; skills; batch jobs; Compare with Claude; the alarm.
 
 **Next:** the Mac Studio as the Ola machine (about December 1), then Frances and Ian in December;
-encrypted backups; automatic checks on every change; deploys only from signed commits; the
+the backup drives on the Studio; automatic checks on every change; deploys only from signed commits; the
 open-model quality gap (planted instructions, wrong premises); the phone without Tailscale. The
 tracker holds the full list: `node scripts/venture/issues.mjs list --status open`.
 

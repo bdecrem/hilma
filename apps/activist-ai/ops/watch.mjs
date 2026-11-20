@@ -97,7 +97,7 @@ export const DEFAULTS = {
   SUITE_LOCK: path.join(HOME, 'ola-suite.lock'),
   // 7 nightly
   CERT_WARN_DAYS: 21,
-  STATUS_FILES: 'cert.json,backup.json,snapshot.json', // in the log folder, {at, ok, error?}
+  STATUS_FILES: 'cert.json,backup.json,snapshot.json,restore.json:192', // in the log folder, {at, ok, error?}; name:hours sets its own age limit (the weekly restore test, 8 days)
   STATUS_MAX_AGE_H: 36,
   // noise
   TWO_IN_A_ROW: 2,
@@ -315,13 +315,15 @@ const probes = {
   },
   nightly(S, now) {
     const files = []
-    for (const name of S.STATUS_FILES.split(',').map((s) => s.trim()).filter(Boolean)) {
+    for (const entry of S.STATUS_FILES.split(',').map((s) => s.trim()).filter(Boolean)) {
+      const [name, hours] = entry.split(':')
+      const maxH = Number(hours) > 0 ? Number(hours) : undefined
       const f = path.isAbsolute(name) ? name : path.join(LOGS, name)
       if (!existsSync(f)) continue
       try {
         const j = JSON.parse(readFileSync(f, 'utf8'))
         const ageH = j.at ? (now - Date.parse(j.at)) / 3_600_000 : null
-        files.push({ name: path.basename(f, '.json'), ok: j.ok !== false, ageH: ageH === null ? null : Math.round(ageH), error: j.ok === false ? redact(String(j.error ?? '')).slice(0, 120) : undefined })
+        files.push({ name: path.basename(f, '.json'), ok: j.ok !== false, ageH: ageH === null ? null : Math.round(ageH), maxH, error: j.ok === false ? redact(String(j.error ?? '')).slice(0, 120) : undefined })
       } catch {
         files.push({ name: path.basename(f, '.json'), ok: false, error: 'unreadable' })
       }
@@ -407,8 +409,9 @@ function judge(S, r, now, prev) {
   }
   if (r.nightly) {
     for (const f of r.nightly.files) {
-      const stale = f.ageH !== null && f.ageH > S.STATUS_MAX_AGE_H
-      c.push({ id: `nightly-${f.name}`, item: 7, level: !f.ok || stale ? 'warn' : 'ok', note: !f.ok ? `the nightly ${f.name} job failed` : `the nightly ${f.name} job has not run for ${f.ageH} hours`, detail: `${f.name}: ${f.ok ? 'ok' : `failed (${f.error})`}${f.ageH !== null ? `, ${f.ageH} h ago` : ''}` })
+      const stale = f.ageH !== null && f.ageH > (f.maxH ?? S.STATUS_MAX_AGE_H)
+      const kind = f.maxH ? 'weekly' : 'nightly'
+      c.push({ id: `nightly-${f.name}`, item: 7, level: !f.ok || stale ? 'warn' : 'ok', note: !f.ok ? `the ${kind} ${f.name} job failed` : `the ${kind} ${f.name} job has not run for ${f.ageH} hours`, detail: `${f.name}: ${f.ok ? 'ok' : `failed (${f.error})`}${f.ageH !== null ? `, ${f.ageH} h ago` : ''}` })
     }
   }
   return c

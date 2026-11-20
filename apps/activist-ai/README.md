@@ -2402,7 +2402,65 @@ present), **inside the VM** since review 5's follow-up (`ola-db api snapshot-che
 sha256 is the one the VM's check reported. `workspace/check.mjs` takes a snapshot, loads it into a new project and compares the files,
 the tables, their rows and a document search. Not restored into a running project: the agent's
 history (`.ola`, in `files.tar`), because opencode holds its database open; put it back by hand with the
-project stopped. Encryption and where the copies go are the backup job's (being built separately).
+project stopped. Encryption and where the copies go: "Encrypted backups" below.
+
+### Encrypted backups (OLA-86, 2026-11-19)
+
+The decided shape (Bart, 2026-11-16): the 1 TB SanDisk stays plugged into the Ola machine and takes a
+copy every night; a second drive lives at Bart's home, and once a week he swaps the two, so one copy
+is always out of the building. Both hold only ciphertext. The key is on the machine
+(`~/.ola/backup/key`, mode 600) and on paper at Bart's home (the recovery sheet); with neither, no
+copy can be read. `ops/backup.mjs` does all of it:
+
+```bash
+node ops/backup.mjs key                          # once: makes the key (age X25519); prints only the public half
+node ops/backup.mjs recovery-sheet ~/sheet.html  # once: a page with the key and the restore steps; print, keep at home, delete
+node ops/backup.mjs init-drive /Volumes/<drive> sandisk   # once per drive ("sandisk", "home"); writes ola-backups/drive.json, erases nothing
+node ops/backup.mjs run                          # the nightly copy (job cx.ola.backup, 3:30)
+node ops/backup.mjs restore-test                 # the weekly restore (job cx.ola.restoretest, Sundays 5:00)
+node ops/backup.mjs status                       # key, drives, newest copy on each, last run, swap due
+node ops/backup.mjs restore <copy.tar.age> <empty folder>  # a real restore, step one
+```
+
+**One copy** (`run`): takes the machine's test turn, snapshots every project (above), copies the
+platform database by `VACUUM INTO` (checked with `integrity_check`), the rest of `~/.ola-frontdesk`
+(its key, the sites) and the gateway's usage records, writes a manifest of every file's sha256, and
+streams the folder through `tar | age -r <public key>` into one file. The plaintext folder
+(`~/ola-backup-work/plain`) is removed before anything is written out. The file goes to every
+backup drive attached (a mounted volume with `ola-backups/drive.json`, or a folder listed in
+`OLA_BACKUP_DESTS` in `~/.ola/backup.env`), is read back and its sha256 compared, and gets a
+sidecar `.json` (time, sha256, size, counts; no project names). Named
+`ola-<UTC date>T<hhmmss>Z.tar.age`. **Kept per drive:** every copy of the last 14 days and the newest of
+each week for 8 weeks; the newest is never removed. Not copied: model weights (downloaded again),
+the env files with service keys (the ops vault has them), releases. A run with no drive, a project
+whose snapshot failed, or a drive that did not take the copy fails the run; the status goes to
+`~/Library/Logs/ola/backup.json`, which the alarm reads (a failure or a run older than 36 hours is a
+warning in its digest, never a text).
+
+**The swap.** `~/.ola/backup/drives.json` records when each drive last took a copy. When the drive
+that is away has not taken one for more than 8 days, `status` and `backup.json` say "swap the backup
+drives". Swapping is: unplug the SanDisk (eject first), plug in the one from home; nothing to run.
+
+**The restore test** (`restore-test`, weekly): on every drive attached, the newest copy and the
+oldest one are checked against their sidecar's sha256, decrypted and unpacked, and every file's
+sha256 compared with the manifest; the platform database is opened and checked; and one project of
+the newest copy (a different one each week) is loaded into a new workspace (`restoretest`, removed
+afterwards), whose files, tables, row counts and document count are compared with the copy's
+manifest. Status in `~/Library/Logs/ola/restore.json`; the alarm warns when it failed or is older
+than 8 days. The drive at home is tested in the week it comes back.
+
+**A real restore, on a new Mac:** `brew install age`; the key typed from the recovery sheet into a
+file (mode 600) at `~/.ola/backup/key`; `node ops/backup.mjs restore <copy> <folder>` (checksums
+checked); the platform database from `<folder>/platform/platform.db` into `~/.ola-frontdesk/` with
+the front desk stopped; each project with `ws.mjs create <id>` then
+`ws.mjs load-snapshot <id> <folder>/projects/<id>`.
+
+**Tests:** `node --test ops/backup-test.mjs` (11, seconds, no VM: real age and tar on made-up data in a
+temporary home; one of the deploy's suites). **On the staging mini** no drive is plugged in: its
+`backup.env` lists `~/ola-backup-standin`, a folder on its own disk initialized as the drive
+"mini-standin", which proves the jobs nightly on made-up data and protects against nothing. On the
+Studio: `brew install age`, `backup.mjs key`, the recovery sheet printed, `init-drive` for the
+SanDisk and for the drive from home, then `ola.mjs install` loads the two jobs.
 
 **Measured 2026-11-17 on the mini** (image 2.3.0-8): a 200,000-row CSV loads in 0.5 s and a sorted,
 filtered page of it comes back through `container exec` in 0.3 s; in the page (web/check.mjs, Chromium
