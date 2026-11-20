@@ -1109,19 +1109,26 @@ async function fallbackChecks(engine, label) {
       await waitDone(pg)
       assert((await who()) === 'Ola', 'not sent to Ola')
     })
-    // The simple confidence check (OLA-144): the same card, shown before the run for a kind of
-    // work Ola's own model often fails. An ordinary request right after it gets no card.
-    await check(`${label}: before a run, a design request gets the card with its reason; "Not now" sends it to Ola, and an ordinary request gets no card`, async () => {
+    // The simple confidence check (OLA-144), since OLA-168 (Bart, Nov 20): design is no longer a
+    // stretch, because design work runs on Ola's design model, so a design request gets NO card before
+    // the run and goes straight to Ola; a request that is a stretch for another reason still gets its
+    // card with its reason (the long build just above, and here once more right after the design one).
+    await check(`${label}: before a run, a design request gets no card and goes to Ola; a long build still gets its card, and an ordinary request gets none`, async () => {
       await pg.getByRole('button', { name: 'New conversation' }).click()
       await ask('Design a landing page for the tenants’ union')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      assert((await card().count()) === 0, 'a design request got the card')
+      await waitDone(pg)
+      assert((await who()) === 'Ola', 'not sent to Ola')
+      await shot('design-no-card')
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await ask(LONG_BUILD)
       await card().waitFor({ timeout: 15_000 })
       const why = await card().locator('.stretch-why').innerText()
-      assert((await pg.locator('.drawer .turn').count()) === 0 && /Design is the kind of work Ola’s own model is weakest at today\. Ola has not started on it\./.test(why), `before the run: ${why}`)
-      await shot('card-design')
+      assert((await pg.locator('.drawer .turn').count()) === 0 && /long build in many parts\. Ola has not started on it\./.test(why), `before the run: ${why}`)
       await card().getByRole('button', { name: 'Not now' }).click()
       await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
       await waitDone(pg)
-      assert((await who()) === 'Ola', 'not sent to Ola')
       await pg.getByRole('button', { name: 'New conversation' }).click()
       await ask('Count the rows in survey.csv')
       await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
