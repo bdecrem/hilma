@@ -93,6 +93,9 @@ const STAGING = process.env.OLA_STAGING || path.join(HOME, 'ola-staging')
 const CURRENT = path.join(STAGING, 'current')
 const SERVED = path.join(CURRENT, 'apps/activist-ai') // what the jobs run, through the symlink
 const DEPLOYED = path.join(STAGING, 'deployed.json')
+// A check's results (OLA-84), read by ops/ci.mjs and the alarm. Up here: the commands below run
+// before the rest of the module is evaluated, so a constant declared further down is not yet set.
+const CHECKS_JSON = 'checks.json'
 // Homebrew's stable link, not the versioned Cellar path process.execPath resolves to (a brew
 // upgrade removes that one, and every job with it).
 const NODE = existsSync('/opt/homebrew/bin/node') ? '/opt/homebrew/bin/node' : process.execPath
@@ -536,7 +539,6 @@ function counts(tail) {
 // same unpack, dependencies, web build, image and suites, plus the Mac and iPhone apps' shared code
 // (OlaKit's swift test, no VM), and nothing is served. It returns { ok, commit, suites, why } (ok
 // null and yielded when it gave the turn to a deploy) and records it in checks.json / checks.log.
-export const CHECKS_JSON = 'checks.json'
 async function deploy(ref, { unsigned = false, check = false } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
@@ -588,9 +590,10 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     if (!signed && !unsigned) fail(`${short} is not signed by a key in ${signers}; nothing was changed`)
   } else if (!unsigned) fail(`${signers} is missing, so no commit can be checked: add the deploying key there (see the README, "Deploying staging"), or deploy with --unsigned (recorded in deploys.log)`)
   const before = existsSync(DEPLOYED) ? JSON.parse(readFileSync(DEPLOYED, 'utf8')) : null
-  if (before?.commit === commit) {
+  // A check runs even for the deployed commit: ops/ci.mjs asks for one only when the deploy's
+  // result is not enough (the commit changed the apps' code, whose swift test only a check runs).
+  if (before?.commit === commit && !check) {
     console.log(`${short} is already deployed (${before.at})`)
-    if (check) return recordCheck({ commit, ok: true, suites: before.suites ?? {}, why: null, by: 'deploy', at: before.at })
     return
   }
   const releases = path.join(STAGING, check ? 'checks' : 'releases')
@@ -715,6 +718,12 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
       return { ok: null, yielded: true, commit, suites }
     }
     const t0 = Date.now()
+    // A suite this commit does not have yet (a check of an older commit, or a deploy back to one).
+    const file = args.find((a) => a.endsWith('.mjs'))
+    if (file && !existsSync(path.join(code, file))) {
+      say(`suite ${name}: not in this commit (${file}), skipped`)
+      continue
+    }
     say(`suite ${name}: node ${args.join(' ')}`)
     const s = await runLogged(NODE, args, { cwd: code, out, env: { OLA_TURN_HELD: String(process.pid) } })
     suites[name] = counts(s.tail)
