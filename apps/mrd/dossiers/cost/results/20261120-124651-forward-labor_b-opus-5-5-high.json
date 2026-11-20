@@ -1,0 +1,656 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica labor_b claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "labor_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  101,
+  113,
+  115,
+  117
+ ],
+ "started_at": "2026-11-20T20:46:51.717Z",
+ "meters_before": {
+  "at": "2026-11-20T20:46:47.048Z",
+  "window": {
+   "pct": 35,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 35,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 35% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 53998,
+  "user": 119
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:49:56.115Z",
+ "minutes": 3.07,
+ "meters_after": {
+  "at": "2026-11-20T20:49:56.115Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 43378,
+   "output": 15195,
+   "cache_read": 1632154,
+   "cache_write": 127234,
+   "cost_usd": 1.6238,
+   "total": 1817961
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 43344,
+    "output": 3018,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1015,
+    "cost_usd": 0.0358
+   },
+   "claude-opus-5-5": {
+    "input": 34,
+    "output": 12177,
+    "cache_read": 1632154,
+    "cache_write": 127234,
+    "thinking": 2175,
+    "cost_usd": 1.588
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 34,
+ "duration_ms": 183694,
+ "duration_api_ms": 140799,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-20T20:46:57.575Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 78 | ARTÍCULO 79 | ARTÍCULO 95 | ARTÍCULO 125 | ARTÍCULO 129 | ARTÍCULO 31 | Así reformado",
+   "ok": true,
+   "chars": 20729
+  },
+  {
+   "at": "2026-11-20T20:47:02.432Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "no generarán derechos de permanencia | cambio de categoría migratoria y subcategoría | cancelará la autorización de permanencia | Trabajadores transfronterizos | gerentes y personal técnico",
+   "ok": true,
+   "chars": 11733
+  },
+  {
+   "at": "2026-11-20T20:47:06.751Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 79.-La Dirección General de Migración otorgará | ARTÍCULO 125 | ARTÍCULO 80 | ARTÍCULO 96",
+   "ok": true,
+   "chars": 9695
+  },
+  {
+   "at": "2026-11-20T20:47:10.879Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "10645 | 10493 | nómadas | ley N° 10",
+   "ok": true,
+   "chars": 8521
+  },
+  {
+   "at": "2026-11-20T20:47:15.600Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC",
+   "find": "Artículo 108 | Artículo 109 | Artículo 112 | Artículo 113 | Artículo 289 | 2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 16729
+  },
+  {
+   "at": "2026-11-20T20:47:22.014Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "ARTÍCULO 404 | ARTÍCULO 420 | ARTÍCULO 454 | 10437",
+   "ok": true,
+   "chars": 10586
+  },
+  {
+   "at": "2026-11-20T20:47:31.910Z",
+   "url": "https://www.ecoi.net/en/document/2128437.html",
+   "find": "migrants were employed | lengthy delays | inspectors | intermediaries",
+   "ok": true,
+   "chars": 6083
+  },
+  {
+   "at": "2026-11-20T20:47:37.006Z",
+   "url": "https://www.theadvocatesforhumanrights.org/res/USDOS+Human+Rights+Report+Costa+Rica+2022.pdf",
+   "find": "migrants were employed | lengthy delays | inspectors was insufficient | intermediaries",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:47:42.463Z",
+   "url": "https://ecoi.net/de/dokument/2089463.html",
+   "find": "migrants were employed | lengthy delays | insufficient | intermediaries",
+   "ok": true,
+   "chars": 1149
+  },
+  {
+   "at": "2026-11-20T20:47:51.535Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "migrants were employed | lengthy delays | insufficient | intermediaries",
+   "ok": true,
+   "chars": 5370
+  },
+  {
+   "at": "2026-11-20T20:47:52.337Z",
+   "url": "https://www.dol.gov/sites/dolgov/files/ILAB/child_labor_reports/tda2022/Costa-Rica.pdf",
+   "find": "inspectors | migrant | rural",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:48:26.606Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "San José area | back wages | number of labor inspectors",
+   "ok": true,
+   "chars": 3529
+  },
+  {
+   "at": "2026-11-20T20:48:37.225Z",
+   "url": "https://www.oecd.org/en/publications/2025/11/international-migration-outlook-2025_355ae9fd/full-report/costa-rica_ebb60c0c.html",
+   "find": "permanent | temporary | residence | work permits",
+   "ok": true,
+   "chars": 5609
+  },
+  {
+   "at": "2026-11-20T20:48:49.738Z",
+   "url": "https://www.oecd.org/en/publications/2025/11/international-migration-outlook-2025_355ae9fd/full-report/costa-rica_ebb60c0c.html",
+   "find": "power of attorney | In 2024, Costa Rica | residence permits",
+   "ok": true,
+   "chars": 2380
+  },
+  {
+   "at": "2026-11-20T20:48:54.247Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+   "find": "Artículo 289 | Artículo 113 | Artículo 289.-",
+   "ok": true,
+   "chars": 5489
+  }
+ ],
+ "searches": [
+  "2022 Country Reports on Human Rights Practices Costa Rica migrants labor inspectors rural areas",
+  "\"2022 Country Reports on Human Rights Practices: Costa Rica\" state.gov",
+  "Migración residencias permanentes otorgadas 2024 Costa Rica cifras DGME residencia temporal"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":101,\"answer_2023\":\"Loss of employment automatically implies the loss of immigration status\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"Loss of employment automatically implies the loss of immigration status\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 129(1)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 80\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 96\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 33 (subsec. 5, fees; penultimate paragraph)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Arts. 108, 109\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Arts. 112, 113\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Art. 289\",\"enacted\":\"2012\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2024\",\"instrument\":\"Ley N.º 10493 del 5 de junio del 2024 (reforma de los artículos 33, 241 y 253 de la Ley 8764)\",\"article\":\"Ley 8764 art. 33(5), penultimate paragraph\",\"kind\":\"amended\",\"what_changed\":\"It reworded the annual migration fee paragraph. Cross-border workers stay exempt, and seasonal agricultural harvest workers (nine months or less) now pay up to 50% less. It concerns fees only. It does ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 101,
+    "answer_2023": "Loss of employment automatically implies the loss of immigration status",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "Loss of employment automatically implies the loss of immigration status",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 129(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 80",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 96",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33 (subsec. 5, fees; penultimate paragraph)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Arts. 108, 109",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Arts. 112, 113",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 289",
+      "enacted": "2012",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024",
+      "instrument": "Ley N.º 10493 del 5 de junio del 2024 (reforma de los artículos 33, 241 y 253 de la Ley 8764)",
+      "article": "Ley 8764 art. 33(5), penultimate paragraph",
+      "kind": "amended",
+      "what_changed": "It reworded the annual migration fee paragraph. Cross-border workers stay exempt, and seasonal agricultural harvest workers (nine months or less) now pay up to 50% less. It concerns fees only. It does not change the cancellation of status on job loss, so it does not touch the indicator.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "En el caso de trabajadores del sector agrícola, que atienden labores de cosecha temporales por periodos de nueve meses o inferiores, el costo de estos pagos será de hasta un cincuenta por ciento (50%) menos. (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is Does Not Apply in 2023 and 2026. No documented practice of a grace period for job seekers was found for either period. Nothing in the window changed the rule tying worker categories to the employer, or the cancellation ground in art. 129(1).",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The SINALEVI consolidated texts (current versions) show per-article amendment notes. Arts. 80, 96 and 129 of Ley 8764 carry no amendment note at all. Arts. 108 and 113 of the Reglamento were last amended by Decreto 42389 (Jan. 2022), before the window, and art. 109 carries no note. The 1 Jan 2023 text is therefore reconstructed as identical. The full art. 289 text was only partly visible.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Extranjería, Decreto 37112-G (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería (SINALEVI version 140878)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     }
+    ],
+    "starting_answer_concern": "As the first coder notes, cancellation is not literally automatic. Art. 289 of the Reglamento requires a reasoned resolution following the Title VII procedure, and art. 96 allows a change of category. Some reviewers might prefer the middle option, but there is no 'specified time period', so the 0 option is defensible.",
+    "confidence": "medium",
+    "notes": "No change in the window. Non-work statuses (permanent residence, family-based residence, refugees) are unaffected by job loss on both dates. Ley 10645 (Feb. 2025) amended art. 94(4) on students and teachers, not worker categories."
+   },
+   {
+    "question_id": 113,
+    "answer_2023": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 78(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 79(3), (5)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 125",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 95",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 94(4)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025",
+      "instrument": "Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N.º 10645 del 24 de febrero de 2025",
+      "article": "Ley 8764 art. 94(4) (also arts. 6(8), 105)",
+      "kind": "amended",
+      "what_changed": "It reworded the special category for students, teachers, interns, researchers and volunteers on short stays, and set its validity at 140 days plus extensions. It leaves untouched the worker categories, the art. 78(1) three-year temporary-to-permanent route and art. 95, so it does not touch the indicator.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "4) Personas estudiantes, docentes, pasantes, investigadoras y voluntarios con fines educativos y culturales, incluyendo aquellos invitados, para que realicen actividades de corta estadía. (Así reformado el inciso anterior por el artículo 2° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025)"
+     }
+    ],
+    "implementation_then_now": "No source was found that documents how DGME actually handles temporary-to-permanent changes, for either period. The starting answer's figures come from DGME 2021 statistics reported in the press (El Observador, not reopened here). They predate the window but are the closest thing to evidence for the 2023 date. The OECD International Migration Outlook 2025 describes 2024–2025 procedural changes, such as filing temporary-residence applications from abroad through a power of attorney, aimed at speeding up immigration processing. That is policy, not documented outcomes. No report of the art. 78(1) route being refused as a policy was found for either date, so 'Usually' is kept for both, with low confidence.",
+    "practice_sources": [
+     {
+      "title": "International Migration Outlook 2025 – Costa Rica country note (OECD)",
+      "url": "https://www.oecd.org/en/publications/2025/11/international-migration-outlook-2025_355ae9fd/full-report/costa-rica_ebb60c0c.html",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "In the current SINALEVI text, art. 78 shows only a 2019 note (Ley 9710), and arts. 79, 95 and 125 show none, so the 1 Jan 2023 text is reconstructed as identical. Practice evidence is thin and mostly about law and policy.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "OECD International Migration Outlook 2025 – Costa Rica",
+      "url": "https://www.oecd.org/en/publications/2025/11/international-migration-outlook-2025_355ae9fd/full-report/costa-rica_ebb60c0c.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "No change in the law. The route covers only art. 79 temporary residents (corporate staff, specialised employees, professionals and technicians). Art. 95 bars special-category workers from permanence on both dates. The confidence is low because the implementation evidence is weak, not because the legal history is in doubt."
+   },
+   {
+    "question_id": 115,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 95",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 94(1)-(3), (11)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 108",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025",
+      "instrument": "Ley N.º 10645 del 24 de febrero de 2025",
+      "article": "Ley 8764 art. 94(4)",
+      "kind": "amended",
+      "what_changed": "It reworded only subsection 4 of art. 94 (students, teachers, researchers, volunteers). Subsections 1–3 and 11 (worker categories) and art. 95's bar on permanence are untouched, so it does not touch the indicator.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "(Así reformado el inciso anterior por el artículo 2° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is Does Not Apply. Art. 95 still reads 'Las categorías especiales no generarán derechos de permanencia definitiva, salvo las de asilados y apátridas', with no amendment note.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "In the current SINALEVI text, art. 95 has no amendment note. Art. 94's worker subsections are unamended, and the only in-window note is Ley 10645 on subsec. 4. Art. 108 of the Reglamento was last amended in January 2022.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Extranjería (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "No change in the window."
+   },
+   {
+    "question_id": 117,
+    "answer_2023": "Yes, same as citizens",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes, same as citizens",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 404",
+      "enacted": "2016-01-25",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 406",
+      "enacted": "2016-01-25",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 420",
+      "enacted": "2016-01-25",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 454",
+      "enacted": "2016-01-25",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024",
+      "instrument": "Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales, N.º 10437 del 29 de enero de 2024",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "It added whistleblowing and testimony about corruption as a prohibited ground of workplace discrimination. 'Ascendencia nacional' was already listed (Ley 9343, 2016) and stays. Migrants' access to contractual remedies is unchanged, so it does not touch the indicator's answer.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=8045&param2=150791&param3=1",
+      "passage": "Artículo 404- Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, filiación, ... presentación de denuncias o rendición de testimonio sobre actos de corrupción ... (Así reformado por el artículo 28 de la Ley ... N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "For 2023, the US State Department 2023 Country Report finds the Ministry of Labor enforced wage, overtime and safety laws effectively around San José. Enforcement was weaker in rural areas 'particularly where large numbers of migrants were employed'. The report also notes too few inspectors, no power for inspectors to fine, and back-pay processes 'habitually subject to lengthy delays'. Agricultural migrants hired on short contracts through intermediaries were more vulnerable. The 2024 report repeats the same findings almost word for word. Nothing documents a shift, so 'Sometimes; Usually' holds on both dates. These sources cover migrant workers generally, mostly agricultural, and do not single out irregular workers.",
+    "practice_sources": [
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (US Department of State, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Costa Rica (US Department of State, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128437.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "In the current SINALEVI Labour Code text, arts. 406, 420 and 454 show only Ley 9343 (2016), and art. 404 shows Ley 10437 (2024). The pre-2024 art. 404 wording was not read, but it is known from the 9343 note to include 'ascendencia nacional'. The 2022 State report (Advocates PDF) and the DOL 2022 PDF could not be opened, so the 2023 date rests on the 2023 report.",
+    "sources_opened": [
+     {
+      "title": "Código de Trabajo (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128437.html"
+     },
+     {
+      "title": "ecoi.net 2089463 (access error)",
+      "url": "https://ecoi.net/de/dokument/2089463.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The answer rests on statute (Ley 8764 art. 31; Labour Code arts. 404, 406, 420, 454), not on court decisions. The 2024 Ley 10437 amendment widened art. 404 but did not change migrants' redress."
+   }
+  ]
+ }
+}
