@@ -307,7 +307,9 @@ export function makeFrontDesk(cfg = config()) {
           .get(personId, slug)
       : undefined
 
-  const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
+  // A grant answers only the addresses it knows (OLA-96): the one that opened it, and one that
+  // brings the opener's own session cookie.
+  const views = makeViews({ cfg, db, keys, auth, membership, workspaces, clientOf, sessionIdOf: (req) => auth.session(req)?.id ?? null })
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })

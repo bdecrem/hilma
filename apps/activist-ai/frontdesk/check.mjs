@@ -1595,6 +1595,12 @@ await check('"Open": the headers, a top-level load refused, members only, and a 
   return `wrapper and page CSPs as designed; top-level 403; bob 404, signed out 401, a guessed grant 404; a grant ends with its session (${before} then ${after}); ${rows.length} page_opened rows, no names`
 })
 
+await check('"Open": a grant answers only the address that opened it (a leaked link from elsewhere gets a 404), learns a second address only with the opener\'s cookie, and ends after 2 hours (OLA-96, test/views.test.mjs)', async () => {
+  const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/views.test.mjs')], { encoding: 'utf8', timeout: 60_000 })
+  assert(u.status === 0, u.stdout.split('\n').filter((l) => /not ok|Error|✖/.test(l)).slice(0, 3).join(' | '))
+  return `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} unit checks`
+})
+
 await check('"Open": page files given up on, or left unread, hold no exec (third review)', async () => {
   // A page's script can abort a dozen fetches at once, or leave some unread. Before the fix the
   // ones that waited in line got their exec after their asker had gone and held it for good: the

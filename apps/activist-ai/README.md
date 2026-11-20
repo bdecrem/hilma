@@ -583,7 +583,7 @@ script; `index.html` has none). The Host header must be the origin's, or 421. Th
 Open action on the project home, in the files view and under the reply of the run that wrote it.
 `GET /api/open?w=&path=` (a same-origin navigation, so the session cookie comes along; members of
 any role) mints a **grant**: 32 random bytes in the front desk's memory, tied to that session and
-membership, the page's folder as its scope, 30 minutes idle and 8 hours at most. It answers a small
+membership and to the address it was opened from (OLA-96), the page's folder as its scope, 30 minutes idle and 2 hours at most. It answers a small
 wrapper page of ours (no script; `frame-src` only the grant's path) that frames
 `/v/<grant>/<path>`. Everything under `/v/` carries `Content-Security-Policy: sandbox allow-scripts
 allow-forms` (no `allow-same-origin`, so the page has an opaque origin: no cookie, no storage, and
@@ -1649,6 +1649,47 @@ the app".
   then only Claude Code inside the sealed VM, only through the gateway (which holds the credential
   and replaces the workspace's token with it), marked and logged, with a monthly ceiling.
 
+## Security: what was possible and what stops it now
+
+Findings from the reviews closed after the review itself, newest first: what was possible, what
+stops it now, and the test that proves it (a fix made here has a test that failed before it).
+
+- **A file with a special name changed the agent's settings** (OLA-96, review 3's L4). A
+  `/work/opencode.json` (a plain name a person could upload, or the agent write) was loaded as
+  opencode's project config: its instructions and its `allow` rules for the web and the browser
+  reached the agent. Fixed in review 4 (image 2.3.0-13): opencode runs with
+  `OPENCODE_DISABLE_PROJECT_CONFIG=1` (image and `ws.mjs create`), and the system config in
+  `/etc/opencode` lets only Ola's skills load. Checked again for OLA-96: opencode 2.3.0 still reads
+  skills from its home folders (`~/.agents/skills`, `~/.claude/skills`), and HOME is
+  `/work/.ola/home`, which the agent can write; measured on image 2.3.0-36, a skill planted there
+  (a new one, or one under an Ola skill's name) is neither offered nor loadable, before or after a
+  restart, because the system policy denies every skill but Ola's by name and Ola's folder wins.
+  Proof: `workspace/check.mjs`, "config: a planted /work/opencode.json ..." and "skills: planted in
+  /work ... and the home folders". Not covered: opencode's own database and state
+  (`/work/.ola/data`, `/work/.ola/state`) are written by the same user as the agent's commands, so
+  a command could still edit them; separating the two needs opencode to run as its own user.
+- **A leaked "Open" link worked from anywhere for 8 hours** (OLA-96, review 3's L5). The grant is in
+  the address (`/v/<grant>/`), so a hostile page could leak it (WebRTC, DNS) and so could a copied
+  link, and whoever held it read every file of that page's folder. Now a grant answers only the
+  address that opened it (the relay's PROXY line; an IPv6 client by its /64); another address gets
+  the same 404 as a guess. A request that brings the opener's own session cookie (the frame's
+  document, a picture in the wrapper) adds its address, so a browser on IPv4 and IPv6 at once keeps
+  working; the page's own loads never carry the cookie, so a leaked link cannot add one. A grant
+  ends after 2 hours (was 8). Left: someone behind the same address as the person (one office NAT),
+  within those 2 hours. Proof: `frontdesk/test/views.test.mjs`, run by `frontdesk/check.mjs`.
+- **Downloads reached Stanford's other networks** (OLA-91, review 4). Fetch refused only
+  171.64.0.0/14, so 128.12.0.0/16, Stanford's internet services and Redwood City blocks and all of
+  its IPv6 (2607:f6d0::/32) were still reachable from a project. Now the default refuses every
+  network ARIN lists for Stanford University (the table in "Web search and downloads"), by number,
+  by name, and inside IPv6. Proof: `gateway/test.mjs`, "web fetch refuses the networks set in
+  GATEWAY_FETCH_REFUSE_NETS". A staging `gateway.env` that sets the variable keeps its own value.
+- **The backup copy opened a project's database on this machine** (OLA-91, review 4). `ws.mjs
+  snapshot` used to run SQLite's integrity check on the host against `project.db`, a file the agent
+  writes. It was already moved into the VM (review 5's follow-up, `ola-db api snapshot-check`): the
+  host keeps the bytes only if their sha256 is the one the VM reported, and never parses them.
+  Proof added: `ops/backup-test.mjs`, "the host never opens a project database" (a file that looks
+  like SQLite and is not goes through the nightly copy, the read-back and the restore test).
+
 ## Fallback to Claude (2026-11-16)
 
 Claude Code itself, headless, **inside the project's sealed VM** (image `ola-workspace:2.3.0-7`;
@@ -1998,7 +2039,7 @@ once per project (M2: 20 overlapping requests all passed a ceiling one of them n
 | `SEARCH_API_KEY` | the Brave Search API key (only in `gateway.env`, never in a workspace) |
 | `GATEWAY_WEB_WEEKLY`, `GATEWAY_WEB_PER_MINUTE` | 2000, 30 |
 | `GATEWAY_FETCH_MAX_BYTES`, `GATEWAY_FETCH_MAX_PAGE_BYTES`, `GATEWAY_FETCH_TIMEOUT_MS` | 50 MiB, 5 MiB, 120000 |
-| `GATEWAY_FETCH_REFUSE_NETS` | `171.64.0.0/14` (Stanford's range, where this machine is): more networks fetch refuses, CIDRs separated by commas, on top of every private range and the networks the machine sits on; set it empty, or to the new campus, when the machine moves (review 5) |
+| `GATEWAY_FETCH_REFUSE_NETS` | every network registered to Stanford University, where this machine is (`gateway/web.mjs` `STANFORD_NETS`: 171.64.0.0/14, 128.12.0.0/16, 68.65.160.0/20, 204.63.224.0/21, 2607:f6d0::/32, 2620:6c:40c0::/48; before OLA-91 only the first): more networks fetch refuses, CIDRs separated by commas, on top of every private range and the networks the machine sits on; leave it unset to keep the default, set it empty, or to the new campus, when the machine moves (review 5) |
 | `GATEWAY_FETCH_TEST_HOSTS`, `GATEWAY_FETCH_TEST_CA`, `GATEWAY_SEARCH_UPSTREAM` | tests only (names under `.test`, which never resolve in real DNS) |
 
 **The provider: Brave Search API** (checked on its live pages, 2026-11-16). Its own index ("Every

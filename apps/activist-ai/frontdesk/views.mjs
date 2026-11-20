@@ -30,9 +30,21 @@
 // the Strict cookie is sent). Every later request under the grant is checked against the session
 // and the membership the grant was minted for: sign-out, revocation, expiry, the idle limit,
 // suspension or removal from the team and the grant stops working at once. A grant also ends
-// after 30 minutes unused or 8 hours in all, and with a front desk restart. Its scope is the
+// after 30 minutes unused or 2 hours in all, and with a front desk restart. Its scope is the
 // opened page's folder and below; hidden files (names starting with a dot, where opencode keeps
 // its database) are never served.
+//
+// A grant answers only the address it was opened from (OLA-96). The grant is in the path, so it
+// is a bearer link: a hostile page can leak it (WebRTC and DNS, below), and so can a copied link.
+// Before, anyone holding it could read every file in the page's folder from anywhere for up to 8
+// hours. Now it is tied to the client address that opened it (the relay's PROXY line on the
+// public address, an IPv6 client by its /64, auth.mjs addressKey), and a request from any other
+// address gets the same 404 as a guess. A request under the grant that carries the opener's own
+// session cookie (the frame's document, a picture the wrapper shows: same-origin loads, so the
+// Strict cookie comes along) adds its address too, so a browser that reaches us over IPv4 and IPv6
+// at once keeps working. The page's own loads never carry the cookie (its origin is opaque), so
+// a leaked link from elsewhere can never add an address. What is left: someone on the same
+// network address as the person (the same office or home, behind one NAT) within the two hours.
 //
 // What is not covered on one origin, and would not be by the separate origin either: a WebRTC
 // connection to an outside STUN server (no CSP directive browsers enforce stops it), and DNS
@@ -73,7 +85,7 @@ const PAGE_WIDTH = 1400 // pixels of a rendered PDF page
 const MAX_PDF_PAGES = 3000
 const MAX_BYTES = 32 * 1024 * 1024
 const IDLE_MS = 30 * 60_000
-const ABSOLUTE_MS = 8 * 3600_000
+const ABSOLUTE_MS = 2 * 3600_000
 const PER_PERSON = 100
 const TOTAL = 10_000
 // Execs for page files at once, per workspace; more wait in line (a page with many images).
@@ -117,17 +129,18 @@ const text = (res, status, body) => {
   res.end(body)
 }
 
-export function makeViews({ cfg, db, keys, auth, membership, workspaces }) {
-  const grants = new Map() // grant -> { sess, personId, slug, wsId, scope, at, last }
+export function makeViews({ cfg, db, keys, auth, membership, workspaces, clientOf, sessionIdOf }) {
+  if (typeof clientOf !== 'function' || typeof sessionIdOf !== 'function') throw new Error('views: clientOf and sessionIdOf are required (a grant is tied to its address)')
+  const grants = new Map() // grant -> { sess, personId, slug, wsId, scope, clients, at, last }
   const lines = new Map() // slug -> { n, waiting: [] }
 
-  function mint(sess, ws, rel, kind = 'page', pages = 0) {
+  function mint(req, sess, ws, rel, kind = 'page', pages = 0) {
     const mine = [...grants].filter(([, g]) => g.personId === sess.personId)
     if (mine.length >= PER_PERSON) grants.delete(mine[0][0])
     if (grants.size >= TOTAL) grants.delete(grants.keys().next().value)
     const grant = randomBytes(32).toString('base64url')
     const scope = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/') + 1) : ''
-    grants.set(grant, { sess, personId: sess.personId, slug: ws.slug, wsId: ws.id, scope, kind, rel, pages, at: Date.now(), last: Date.now() })
+    grants.set(grant, { sess, personId: sess.personId, slug: ws.slug, wsId: ws.id, scope, kind, rel, pages, clients: new Set([clientOf(req)]), at: Date.now(), last: Date.now() })
     return grant
   }
 
@@ -158,14 +171,14 @@ ${body}
 
   async function openInert(req, res, sess, ws, rel, kind, name, url) {
     if (kind === 'image') {
-      const grant = mint(sess, ws, rel, kind)
+      const grant = mint(req, sess, ws, rel, kind)
       audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
       return sendWrapper(res, grant, wrapper(name, 'A picture in this project. Only the people in the project can open it.',
         `<main class="pic"><img src="/v/${grant}/${esc(encodePath(rel))}" alt="${esc(name)}"></main>`,
         '.pic{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px}.pic img{max-width:100%;max-height:calc(100vh - 96px);height:auto;background:#fff;box-shadow:0 1px 3px rgba(29,26,22,.18)}'))
     }
     if (kind === 'doc') {
-      const grant = mint(sess, ws, rel, kind)
+      const grant = mint(req, sess, ws, rel, kind)
       audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
       return sendWrapper(res, grant, wrapper(name, 'A document in this project, shown as plain text and headings. Only the people in the project can open it.',
         `<iframe src="/v/${grant}/@doc" sandbox="" referrerpolicy="no-referrer" title="${esc(name)}"></iframe>`,
@@ -175,7 +188,7 @@ ${body}
     const info = await workspaces.viewJson(ws.slug, ['pdf-info', rel])
     const pages = Number.isSafeInteger(info?.pages) ? Math.min(info.pages, MAX_PDF_PAGES) : 0
     if (!pages) return text(res, 404, 'That PDF could not be shown here. Download it instead.')
-    const grant = mint(sess, ws, rel, kind, pages)
+    const grant = mint(req, sess, ws, rel, kind, pages)
     audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
     const cited = Number.parseInt(url.searchParams.get('page') ?? '', 10)
     const sizes = Array.isArray(info.sizes) ? info.sizes : []
@@ -227,10 +240,19 @@ details{margin:8px 0 0;font-size:15px}summary{cursor:pointer;color:#25407a}
       f.kill()
     }
   }
-  /** The grant's workspace if it is still good: in time, its session valid, its person a member. */
-  function live(grant) {
+  /**
+   * The grant's workspace if it is still good: in time, its session valid, its person a member,
+   * and asked for from an address the grant knows (OLA-96; see the header). A request from another
+   * address is answered as if the grant did not exist, and does not end it or count as use.
+   */
+  function live(grant, req) {
     const g = grants.get(grant)
     if (!g) return null
+    const from = clientOf(req)
+    if (!g.clients.has(from)) {
+      if (sessionIdOf(req) !== g.sess.id || g.clients.size >= 4) return null
+      g.clients.add(from)
+    }
     const now = Date.now()
     // A closed workspace (a rotation could not make it safe) ends its grants too, like a removal
     // (third review, 2026-11-16: an earlier grant kept serving a closed workspace's files).
@@ -318,7 +340,7 @@ details{margin:8px 0 0;font-size:15px}summary{cursor:pointer;color:#25407a}
       await workspaces.ensureRunning(ws.slug)
       const name = rel.split('/').pop()
       if (kind !== 'page') return openInert(req, res, sess, ws, rel, kind, name, url)
-      const grant = mint(sess, ws, rel)
+      const grant = mint(req, sess, ws, rel)
       audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
       const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer">
@@ -342,7 +364,7 @@ iframe{flex:1;border:0;width:100%;background:#fff}
     /** GET /v/<grant>/<rel>: one file of an opened page, under its grant (no cookie needed). */
     async serve(req, res, p) {
       const m = /^\/v\/([A-Za-z0-9_-]{43})\/(.+)$/.exec(p)
-      const g = m && live(m[1])
+      const g = m && live(m[1], req)
       // Whatever the answer, it is not a document of ours: the sandbox CSP goes on every one.
       if (m) res.setHeader('content-security-policy', innerCsp(cfg.origin, m[1]))
       res.removeHeader('x-frame-options')
