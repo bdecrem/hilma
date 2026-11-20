@@ -24,7 +24,7 @@
 // A ticket, a hold or a turn whose process is gone is cleared by the next waiter. A turn taken by
 // a shell script (an owner file without a pid) is trusted until that script removes it.
 // OLA_TURN_HOME puts all three in one folder instead (the tests).
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
@@ -244,7 +244,7 @@ export async function takeTurn(label, { deploy = false } = {}) {
 }
 
 // ---------------------------------------------------------------- the command
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const [cmd, ...rest] = process.argv.slice(2)
   const P = turnPaths()
   if (cmd === 'status') {

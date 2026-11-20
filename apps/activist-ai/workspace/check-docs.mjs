@@ -10,7 +10,7 @@
 // addresses (http://127.0.0.1:9) can reach nothing; what is checked here is that nothing of them
 // is run, followed or kept as a link.
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -205,7 +205,7 @@ print(json.dumps(ok))`)
 }
 
 // ---------------------------------------------------------------- alone
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const TAG = process.env.OLA_CHECK_TAG ?? ''
   process.env.OLA_HOME ??= path.join(homedir(), `.ola-check${TAG ? `-${TAG}` : ''}`)
   process.env.OLA_RUNNING_SCOPE = 'home'
