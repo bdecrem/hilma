@@ -1,0 +1,804 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica labor_a claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "labor_a",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  95,
+  97,
+  99,
+  103,
+  135
+ ],
+ "started_at": "2026-11-20T20:42:57.835Z",
+ "meters_before": {
+  "at": "2026-11-20T20:42:53.344Z",
+  "window": {
+   "pct": 34,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 34,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 34% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 66812,
+  "user": 122
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:46:36.517Z",
+ "minutes": 3.64,
+ "meters_after": {
+  "at": "2026-11-20T20:46:36.517Z",
+  "window": {
+   "pct": 35,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 35,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 35% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 86561,
+   "output": 22099,
+   "cache_read": 1322356,
+   "cache_write": 129937,
+   "cost_usd": 1.6887,
+   "total": 1560953
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 86533,
+    "output": 6464,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2602,
+    "cost_usd": 0.0719
+   },
+   "claude-opus-5-5": {
+    "input": 28,
+    "output": 15635,
+    "cache_read": 1322356,
+    "cache_write": 129937,
+    "thinking": 2891,
+    "cost_usd": 1.6168
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 38,
+ "duration_ms": 217928,
+ "duration_api_ms": 182647,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-20T20:43:02.836Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "Artículo 404 | Artículo 167 | Artículo 200 | 10437",
+   "ok": true,
+   "chars": 12584
+  },
+  {
+   "at": "2026-11-20T20:43:09.348Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 19 | ARTÍCULO 33 | ARTÍCULO 56 | ARTÍCULO 68",
+   "ok": true,
+   "chars": 6517
+  },
+  {
+   "at": "2026-11-20T20:43:10.647Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 79 | ARTÍCULO 80 | ARTÍCULO 175",
+   "ok": true,
+   "chars": 8983
+  },
+  {
+   "at": "2026-11-20T20:43:14.426Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "entre costarricenses y extranjeros | ARTÍCULO 60",
+   "ok": true,
+   "chars": 4397
+  },
+  {
+   "at": "2026-11-20T20:43:15.670Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC",
+   "find": "Artículo 86 | Artículo 112 | Artículo 307 | cambio de patrono",
+   "ok": true,
+   "chars": 10167
+  },
+  {
+   "at": "2026-11-20T20:43:21.698Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC",
+   "find": "Discriminación racial | ARTÍCULO 380",
+   "ok": true,
+   "chars": 5504
+  },
+  {
+   "at": "2026-11-20T20:43:30.946Z",
+   "url": "https://www.pgr.go.cr/wp-content/uploads/2026/07/Ley-10437-proteccion-de-denunciantes-y-testigos-de-actos-de-corrupcion.pdf",
+   "find": "artículo 404 | Rige | ARTÍCULO 28",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:43:43.899Z",
+   "url": "https://delfino.cr/2024/02/la-asamblea-legislativa-creo-un-fuero-contra-el-despido-de-trabajadores-que-denuncian-actos-de-corrupcion",
+   "find": "404 | Código de Trabajo | Gaceta",
+   "ok": true,
+   "chars": 2578
+  },
+  {
+   "at": "2026-11-20T20:44:14.360Z",
+   "url": "https://www.ecoi.net/en/document/2128437.html",
+   "find": "migrant | Wage and Hour | discrimination | inspector | Nicaragua",
+   "ok": true,
+   "chars": 10422
+  },
+  {
+   "at": "2026-11-20T20:44:15.430Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "migrant | Wage and Hour | Discrimination with Respect to Employment | inspector",
+   "ok": true,
+   "chars": 10482
+  },
+  {
+   "at": "2026-11-20T20:44:20.843Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "xenophob | Systemic Racial | Ombudsman | Discrimination:",
+   "ok": true,
+   "chars": 5399
+  },
+  {
+   "at": "2026-11-20T20:44:29.223Z",
+   "url": "https://ecoi.net/de/dokument/2089463.html",
+   "find": "rural areas, particularly where | xenophob | Nicaraguan | Discrimination with Respect | work authorization",
+   "ok": true,
+   "chars": 1185
+  },
+  {
+   "at": "2026-11-20T20:45:10.282Z",
+   "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "rural areas, particularly where | xenophob | Discrimination with Respect | less than the minimum wage",
+   "ok": true,
+   "chars": 7589
+  },
+  {
+   "at": "2026-11-20T20:45:14.291Z",
+   "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "The Labor Ministry reported five cases",
+   "ok": true,
+   "chars": 2271
+  },
+  {
+   "at": "2026-11-20T20:45:15.180Z",
+   "url": "https://100noticias.tv/especiales/142042-xenofobia-migrantes-nicaraguenses-costa-rica/",
+   "find": "326 | ONU | discurso de odio | trabajo",
+   "ok": true,
+   "chars": 4462
+  }
+ ],
+ "searches": [
+  "Ley 10437 protección personas denunciantes testigos actos de corrupción represalias laborales artículo 404 Código de Trabajo vigencia",
+  "pgrweb.go.cr scij \"10437\" Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales",
+  "\"Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, filiación, discapacidad, afiliación sindical, situación económica\"",
+  "CERD concluding observations Costa Rica combined reports migrants Nicaraguan discrimination 2023 OR 2024 OR 2025",
+  "2023 Country Reports on Human Rights Practices Costa Rica acceptable conditions of work migrant workers minimum wage",
+  "ecoi.net \"2022 Country Reports on Human Rights Practices: Costa Rica\""
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":95,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política\",\"article\":\"Art. 68\",\"enacted\":\"1949-11-07\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política\",\"article\":\"Art. 19\",\"enacted\":\"1949-11-07\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Código de Trabajo, Ley 2\",\"article\":\"Art. 167\",\"enacted\":\"1943\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Código de Trabajo, Ley 2 (Title VIII as rewritten by Ley 9343)\",\"article\":\"Art. 404\",\"enacted\":\"2016-01-25\",\"history_read\":\"current_text_only\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2024-02\",\"instrument\":\"Ley N° 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales (29 de enero de 2024), artículo 28\",\"article\":\"Código de Trabajo art. 404\",\"kind\":\"amended\",\"what_changed\":\"Article 404 was rewritten to add a new prohibited ground: filing complaints about, or testifying on, acts of corruption. The grounds that matter here (ethnicity, race, national extraction) stayed as they were in the 9343 text. This does not change the equal-pay protection.\",\"url\":\"https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC\",\"passage\":\"Artículo 404- Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, filiación, condición de salud, discapacidad, afiliación sindical, presentación de denuncias o rendición de testimonio sobre actos de corrupción ... (Así reformado por el artículo ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 95,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 68",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2",
+      "article": "Art. 167",
+      "enacted": "1943",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2 (Title VIII as rewritten by Ley 9343)",
+      "article": "Art. 404",
+      "enacted": "2016-01-25",
+      "history_read": "current_text_only",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02",
+      "instrument": "Ley N° 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales (29 de enero de 2024), artículo 28",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "Article 404 was rewritten to add a new prohibited ground: filing complaints about, or testifying on, acts of corruption. The grounds that matter here (ethnicity, race, national extraction) stayed as they were in the 9343 text. This does not change the equal-pay protection.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+      "passage": "Artículo 404- Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, filiación, condición de salud, discapacidad, afiliación sindical, presentación de denuncias o rendición de testimonio sobre actos de corrupción ... (Así reformado por el artículo 28 de la ... Ley N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: the US State Department 2022 report found that MTSS enforced minimum wage and overtime effectively in San José and the formal sector, but less so in rural areas with many migrants. It also found employers used deportation threats to withhold Nicaraguan migrants' wages. 2026: the 2023 and 2024 reports repeat the same urban/rural enforcement gap. The ASIDEHU study (Sept. 2024, reported by 100% Noticias) found 88% of Nicaraguan respondents earned below the minimum wage. The pattern is unchanged: the law is honoured in the formal sector, with systematic gaps in agriculture.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Reports on Human Rights Practices: Costa Rica (US State Dept.)",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128437.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "'No parecés nicaragüense': la xenofobia silenciosa (100% Noticias)",
+      "url": "https://100noticias.tv/especiales/142042-xenofobia-migrantes-nicaraguenses-costa-rica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The current SCIJ texts show each article's amendment notes. Arts. 19, 68 and 167 have no notes inside the window. Art. 404 carries a note for Ley 10437 (Jan. 2024). The pre-2024 wording of art. 404 was rebuilt from the 9343 note and the State Department's 2022 paraphrase of its grounds; I could not read the Ley 10437 PDF (extraction failed).",
+    "sources_opened": [
+     {
+      "title": "Código de Trabajo (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Delfino: fuero contra despido de denunciantes (Ley 10437)",
+      "url": "https://delfino.cr/2024/02/la-asamblea-legislativa-creo-un-fuero-contra-el-despido-de-trabajadores-que-denuncian-actos-de-corrupcion"
+     },
+     {
+      "title": "US State Dept 2022 HR report Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2023 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "US State Dept 2024 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/en/document/2128437.html"
+     },
+     {
+      "title": "100% Noticias xenofobia",
+      "url": "https://100noticias.tv/especiales/142042-xenofobia-migrantes-nicaraguenses-costa-rica/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection answer rests on Const. arts. 19 and 68 and Labour Code art. 167, none of which changed. The Ley 10437 amendment to art. 404 is in the window but does not affect nationality or national-extraction equality. Practice evidence mostly concerns agricultural and irregular migrant workers rather than permit holders."
+   },
+   {
+    "question_id": 97,
+    "answer_2023": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+    "implementation_2023": "Usually",
+    "answer_2026": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería 8764",
+      "article": "Art. 80",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería 8764",
+      "article": "Art. 175",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 307",
+      "enacted": "2012",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Arts. 86, 112",
+      "enacted": "2012",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 56",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No source documents a pattern of DGME refusing change-of-employer applications, either around 2022 or in 2023-2025. The documented problem in both periods is the large share of migrants working without authorisation in agriculture, where enforcement is weak (US State Dept 2022, 2023 and 2024 reports). No shift is documented. The rating is partly inferred, because no source covers change-of-employer processing as such.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Reports on Human Rights Practices: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128437.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The consolidated SCIJ texts of arts. 80 and 175 of Ley 8764 show no amendment notes. Arts. 86, 112 and 307 of the Regulation show only a January 2022 derogation note (Decreto 42389), which predates the window. No in-window amendment appears in the per-article notes.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "US State Dept 2022 HR report Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2024 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/en/document/2128437.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Asylum seekers' work rights did change in the window. Decree 43810 (2022) imposed a three-month wait, which the 2023 State Dept report confirms, and Decree 44501-MGP (2024) restored the right. That concerns asylum seekers, not the labour-migrant permit channels this answer codes; Decree 44501 was not read in this session and is not recorded as an event."
+   },
+   {
+    "question_id": 99,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería 8764",
+      "article": "Art. 80",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería 8764",
+      "article": "Art. 79",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 86(k)",
+      "enacted": "2012",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is not rated. Art. 80 has required prior DGME authorisation for dependants of temporary residents to work throughout the window.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Art. 80 of Ley 8764 shows no amendment note in the consolidated SCIJ text. Art. 79's only note is Ley 9710 (2019), before the window. Art. 86 of the Regulation's only note is Decreto 42389 (Jan. 2022), also before the window.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Art. 80, as read: 'los dependientes de dichos residentes temporales podrán estudiar o laborar, previa autorización de la Dirección.'"
+   },
+   {
+    "question_id": 103,
+    "answer_2023": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Arts. 19, 68",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2",
+      "article": "Art. 200",
+      "enacted": "1982-03-09",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2 (as rewritten by Ley 9343)",
+      "article": "Art. 404",
+      "enacted": "2016-01-25",
+      "history_read": "current_text_only",
+      "status": "amended"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 60",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2",
+      "article": "Art. 13",
+      "enacted": "1943",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02",
+      "instrument": "Ley N° 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales (29 de enero de 2024), artículo 28",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "A ground for whistleblowers and witnesses of corruption was added to art. 404. The national-extraction ground and the rest of the equal-conditions framework are unchanged, so the protection for migrant workers' conditions is the same.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+      "passage": "Artículo 404- Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, ... ascendencia nacional, origen social, ... presentación de denuncias o rendición de testimonio sobre actos de corrupción ... (Así reformado por el artículo 28 de la ... Ley N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: the US State Dept 2022 report found working-hour, overtime and OSH laws enforced effectively mainly in San José and the formal sector. It found weaker enforcement in rural areas with many migrants, and reported that migrant pineapple workers were exposed to hazardous chemicals without training. 2026: the 2023 and 2024 reports repeat these findings almost verbatim and add that agricultural migrants are hired on short-term contracts through intermediaries and are more exposed to exploitation. Inspectors cannot impose sanctions themselves, and court cases are slow. No shift is documented. Much of this evidence concerns agricultural and irregular workers rather than permit holders.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Reports on Human Rights Practices: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128437.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Per-article notes in the current SCIJ texts: arts. 19, 60 and 68 of the Constitution and art. 200 of the Labour Code (last amended by Ley 6727 of 1982) have none inside the window. Art. 404's note is for Ley 10437 (2024). I did not re-read art. 13 in this session.",
+    "sources_opened": [
+     {
+      "title": "Código de Trabajo (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Delfino: Ley 10437",
+      "url": "https://delfino.cr/2024/02/la-asamblea-legislativa-creo-un-fuero-contra-el-despido-de-trabajadores-que-denuncian-actos-de-corrupcion"
+     },
+     {
+      "title": "US State Dept 2022 HR report Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2023 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "US State Dept 2024 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/en/document/2128437.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Ley 10437 also created a special protection against dismissal (fuero) for whistleblowers, open to all workers including foreign ones; it is nationality-neutral. The 2024 State Dept report says foreign workers married to Costa Ricans with five years' legal residence may hold union posts; that is a collective right outside this indicator."
+   },
+   {
+    "question_id": 135,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 33",
+      "enacted": "1999-05-27",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley 2 (as rewritten by Ley 9343)",
+      "article": "Art. 404",
+      "enacted": "2016-01-25",
+      "history_read": "current_text_only",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código Penal, Ley 4573",
+      "article": "Art. 380",
+      "enacted": "1970",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02",
+      "instrument": "Ley N° 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales (29 de enero de 2024), artículo 28",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "Art. 404 was rewritten to add corruption reporting and testimony as a prohibited ground. Ethnicity, race and national extraction were already listed (Ley 9343, 2016) and remain, so the ban on race- or ethnicity-based discrimination is unchanged.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+      "passage": "Artículo 404- Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, ... presentación de denuncias o rendición de testimonio sobre actos de corrupción ... (Así reformado por el artículo 28 de la ... Ley N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: the US State Dept 2022 report records discrimination against Nicaraguan migrant workers, employers using deportation threats, and a UN independent expert's warning of rising xenophobic hate speech. MTSS recorded no nationality or ethnicity discrimination cases (five cases, all disability or gender). 2026: the 2023 State Dept report notes xenophobia among service providers. The 2025 UN/COES study (via 100% Noticias) counted 326,326 xenophobic posts between June 2024 and May 2025. The ASIDEHU 2024 study found 90% of Nicaraguans interviewed had experienced xenophobia, including at work. The pattern of weak enforcement is the same in both periods.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Reports on Human Rights Practices: Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "'No parecés nicaragüense': la xenofobia silenciosa (100% Noticias)",
+      "url": "https://100noticias.tv/especiales/142042-xenofobia-migrantes-nicaraguenses-costa-rica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Const. art. 33's last note is Ley 7880 (1999). Penal Code art. 380's last note is Ley 10156 of 18 March 2022, before the window. Art. 404's in-window note is Ley 10437 (2024); its earlier text was rebuilt from the 9343 note and the State Dept 2022 paraphrase, which already listed ethnicity, race and nationality.",
+    "sources_opened": [
+     {
+      "title": "Código de Trabajo (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Código Penal (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=5027&strTipM=TC"
+     },
+     {
+      "title": "Delfino: Ley 10437",
+      "url": "https://delfino.cr/2024/02/la-asamblea-legislativa-creo-un-fuero-contra-el-despido-de-trabajadores-que-denuncian-actos-de-corrupcion"
+     },
+     {
+      "title": "US State Dept 2022 HR report Costa Rica",
+      "url": "https://www.state.gov/reports/2022-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2023 HR report Costa Rica (ecoi)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     },
+     {
+      "title": "100% Noticias xenofobia",
+      "url": "https://100noticias.tv/especiales/142042-xenofobia-migrantes-nicaraguenses-costa-rica/"
+     }
+    ],
+    "starting_answer_concern": "The starting citation describes Penal Code art. 380 only as 'racial considerations'. The 2022 text (Ley 10156) also lists gender, sexual orientation, age, religion and other grounds, though not nationality. The starting evidence also relies on 2007 CERD observations; a later review exists (CERD/C/CRI/CO/19-22, 2015), seen only in search results.",
+    "confidence": "medium",
+    "notes": "Protection rests on statutes and the Constitution; no court decision was relied on."
+   }
+  ]
+ }
+}
