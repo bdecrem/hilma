@@ -17,7 +17,7 @@ log=${SOUND_LOG:-results/sound-run.log}
 for t in $tasks; do
   while [ -e ~/ola-deploy.hold ]; do sleep 20; done
   until mkdir ~/ola-suite.lock 2>/dev/null; do sleep 10; done
-  echo "sound evals $t $(date)" > ~/ola-suite.lock/owner
+  echo "pid $$ sound evals $t $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
   for arm in on off; do
     echo "== $t $arm $(date)" >> $log
     node run.mjs --config ${SOUND_CONFIG:-configs/nemotron-3.5-super-vl-ws-snd.json} --tasks $t --seeds ${SOUND_SEEDS:-1,2,3} --skills $arm --db ${SOUND_DB:-results/sound.db} \

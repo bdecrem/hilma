@@ -38,6 +38,9 @@ process.env.OLA_MAX_RUNNING = '2'
 process.env.OLA_RUNNING_SCOPE = 'home'
 // --no-live skips the one real task (a live model run on the stand-in); everything else runs.
 const LIVE = !process.argv.includes('--no-live')
+// One turn at a time on the machine's four VMs, deploys first (OLA-83, ops/turn.mjs); a deploy's
+// suites inherit the deploy's turn.
+await (await import('../ops/turn.mjs')).takeTurn(`workspace check${process.env.OLA_CHECK_TAG ? ` ${process.env.OLA_CHECK_TAG}` : ''}`)
 const ws = await import('./ws.mjs')
 const { OpenCode } = await import('@opencode/client')
 

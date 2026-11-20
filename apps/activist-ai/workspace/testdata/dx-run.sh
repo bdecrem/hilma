@@ -6,7 +6,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 cd ~/ola-dx/apps/activist-ai || exit 1
 test -e ~/ola-deploy.hold && { echo "deploy hold; not taking the lock"; exit 1; }
 until mkdir ~/ola-suite.lock 2>/dev/null; do sleep 3; done
-echo "dx $(date)" > ~/ola-suite.lock/owner
+echo "pid $$ dx $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
 trap 'rm -rf ~/ola-suite.lock' EXIT
 want="$1"
 mkdir -p ~/ola-dx/logs

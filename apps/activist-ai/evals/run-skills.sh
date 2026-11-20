@@ -16,7 +16,7 @@ log=${SKILLS_LOG:-results/skills-run.log}
 for s in $skills; do
   while [ -e ~/ola-deploy.hold ]; do sleep 20; done
   until mkdir ~/ola-suite.lock 2>/dev/null; do sleep 5; done
-  echo "skills evals $s $(date)" > ~/ola-suite.lock/owner
+  echo "pid $$ skills evals $s $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
   for arm in on off; do   # both arms in one take of the lock: one skill is 12 runs, about 5 to 15 minutes
     echo "== $s $arm $(date)" >> $log
     node run.mjs --config configs/glm-5.3-flash-ws-sk.json --tasks skill:$s --seeds 1,2,3 --skills $arm --db results/skills.db \

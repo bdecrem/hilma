@@ -17,7 +17,7 @@ log=${DESIGN_LOG:-results/design-run.log}
 for t in $tasks; do
   while [ -e ~/ola-deploy.hold ]; do sleep 20; done
   until mkdir ~/ola-suite.lock 2>/dev/null; do sleep 10; done
-  echo "design evals $t $(date)" > ~/ola-suite.lock/owner
+  echo "pid $$ design evals $t $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
   for arm in on off; do
     echo "== $t $arm $(date)" >> $log
     node run.mjs --config ${DESIGN_CONFIG:-configs/nemotron-3.5-super-vl-ws-ds.json} --tasks $t --seeds ${DESIGN_SEEDS:-1,2,3} --skills $arm --db ${DESIGN_DB:-results/design.db} \

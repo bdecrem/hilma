@@ -54,6 +54,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
+import { acquire as acquireTurn, holder as turnHolder } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -272,6 +273,8 @@ if (cmd === 'container-up') {
   const depOk = dep && target === `releases/${dep.commit.slice(0, 12)}`
   if (!depOk) bad++
   console.log(`${depOk ? 'ok  ' : 'DOWN'}  deployed             ${dep ? `${dep.commit.slice(0, 12)} (${dep.ref}) at ${dep.at}; suites ${Object.entries(dep.suites).map(([k, v]) => `${k} ${v}`).join(', ')}` : 'nothing'}; current -> ${target ?? 'missing'} in ${STAGING}`)
+  const th = turnHolder()
+  console.log(`ok    test turn            ${th ? `${th.label}${th.pid ? ` (pid ${th.pid})` : ' (a shell script)'} for ${Math.round((Date.now() - th.since) / 60000)} min` : 'free'} (node ops/turn.mjs status)`)
   // Every Ola job must run from the staging clone: the three fixed jobs and each workspace's door
   // and desk (whose plists ws.mjs writes at each start).
   const plists = JOBS.map((j) => path.join(AGENTS, `${j.label}.plist`)).filter(existsSync)
@@ -496,6 +499,7 @@ async function deploy(ref, { unsigned = false } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
   const SUITES = [
+    ['turn', ['--test', 'ops/turn-test.mjs']], // the machine's one test turn (OLA-83), seconds
     ['gateway', ['gateway/test.mjs']],
     ['workspace', ['workspace/check.mjs', '--no-live']],
     ['web', ['web/check.mjs', '--no-live']],
@@ -555,10 +559,16 @@ async function deploy(ref, { unsigned = false } = {}) {
     say(`REFUSED: ${m}`)
     say(before ? `The running version (${before.commit.slice(0, 12)}) was left alone; ${short} stays in ${rel} for a look. Log: ${logFile}` : `Nothing was deployed. Log: ${logFile}`)
     history(`refused ${short} (${ref}): ${m}`)
+    turnAbort.abort()
     out.end()
     process.exitCode = 1
   }
   say(`deploying ${short} (${ref}) to ${STAGING}; currently ${before ? before.commit.slice(0, 12) : 'nothing'}`)
+  // The suites start sealed VMs, and the machine runs four (OLA-83): the deploy queues for the
+  // machine's one turn now (ops/turn.mjs), ahead of every waiting builder, and its hold keeps any
+  // new builder turn from starting while it unpacks and builds; the turn is awaited before the suites.
+  const turnAbort = new AbortController()
+  const turnP = acquireTurn({ label: `deploy ${short}`, deploy: true, signal: turnAbort.signal, on: (m) => say(`turn: ${m}`) })
 
   // The commit's apps/activist-ai, unpacked fresh (nothing left over from an earlier try).
   if (rel === realpathSafe(CURRENT)) return refuse(`${short} is the release being served`)
@@ -612,12 +622,17 @@ async function deploy(ref, { unsigned = false } = {}) {
   say(`skills: ${skills.hash} in ${skills.image}`)
   writeFileSync(path.join(code, 'release.json'), JSON.stringify({ commit, skills: { hash: skills.hash, commit } }, null, 2) + '\n')
 
-  // The suites, from the release itself.
+  // The suites, from the release itself, holding the machine's turn (the suites inherit it).
+  const tw = Date.now()
+  const turn = await turnP
+  if (!turn) return refuse('the turn for the suites was given up')
+  process.on('exit', turn.release)
+  say(`turn: the deploy holds it${turn.waitedMs > 2000 ? ` (waited ${Math.round((Date.now() - tw) / 1000)} s after building)` : ''}`)
   const suites = {}
   for (const [name, args] of SUITES) {
     const t0 = Date.now()
     say(`suite ${name}: node ${args.join(' ')}`)
-    const s = await runLogged(NODE, args, { cwd: code, out })
+    const s = await runLogged(NODE, args, { cwd: code, out, env: { OLA_TURN_HELD: String(process.pid) } })
     suites[name] = counts(s.tail)
     say(`suite ${name}: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
     if (s.code !== 0) return refuse(`suite ${name} failed (${suites[name]})`)
@@ -647,6 +662,7 @@ async function deploy(ref, { unsigned = false } = {}) {
   history(`deployed ${short} (${ref})${signed ? '' : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   say(`deployed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   prune(short, before?.commit.slice(0, 12))
+  turn.release()
   out.end()
 }
 function realpathSafe(p) {

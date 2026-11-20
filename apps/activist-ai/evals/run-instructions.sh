@@ -17,7 +17,7 @@ here=${0:A:h}; ai=${here:h}
 export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 export OLA_EVALS_ROOT=$HOME/.ola-fu2-evals OLA_GATEWAY_PORT=4397
 while [[ -e ~/ola-deploy.hold ]] || ! mkdir ~/ola-suite.lock 2>/dev/null; do sleep 20; done
-echo "fu2 $(date)" > ~/ola-suite.lock/owner
+echo "pid $$ fu2 $(date)" > ~/ola-suite.lock/owner; export OLA_TURN_HELD=$$
 ws=$ai/workspace/ws.mjs
 cp $ws $ws.orig
 cleanup() {

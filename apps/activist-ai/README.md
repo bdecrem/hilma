@@ -1199,8 +1199,8 @@ On the Studio, no other agent or service may run under the account that runs Ola
 
 A deploy, one at a time (a lock file): `git fetch`; unpack the commit fresh into its release; per
 package folder (`.`, `frontdesk`, `web`), an APFS clone of the served release's `node_modules` when
-the lockfile is unchanged, `npm ci` when it changed; build `web/dist`; run the four suites from the
-release, `--no-live` (no model call, no key): `gateway/test.mjs`, `workspace/check.mjs`,
+the lockfile is unchanged, `npm ci` when it changed; build `web/dist`; run the suites from the
+release, `--no-live` (no model call, no key): `ops/turn-test.mjs`, `gateway/test.mjs`, `workspace/check.mjs`,
 `web/check.mjs`, `frontdesk/check.mjs`. Only if all pass: `current` is switched, `deployed.json`
 written, the jobs rewritten and restarted (`kickstart -k`; the container job is not restarted), and
 the front desk and the gateway must answer within 30 s or the previous release is switched back and
@@ -1210,6 +1210,29 @@ is in `~/Library/Logs/ola/deploy-<commit12>.log`. The five newest releases are k
 one, the one before and any a running workspace's door or desk still uses. Running workspaces keep
 their door and desk from the release they were started with until they next start. A deploy takes
 about as long as the suites (minutes); run it with `nohup` over ssh.
+
+**One test turn on the machine, and deploys go first** (OLA-83, 2026-11-19). The machine runs at
+most four VMs, and on 2026-11-18 builders running their checks side by side filled all four, so a
+deploy's own suites were refused for a full machine four times. Everything that starts VMs to test
+now waits for the machine's one turn (`ops/turn.mjs`): `workspace/check.mjs`, `frontdesk/check.mjs`,
+`frontdesk/compare-live.mjs` and `frontdesk/claude-live.mjs` take it themselves on their first line
+(printing `turn: … ahead of …` while they wait), so a builder needs to do nothing. Turns are served
+in arrival order, except that a waiting deploy goes before every waiting builder: a deploy queues
+the moment it starts (`~/ola-deploy.hold` goes down, so no new builder turn starts while it unpacks
+and builds), waits only for the turn already running, holds the turn through all its suites (they
+inherit it through `OLA_TURN_HELD`), and gives it back when it ends, passed or refused.
+
+```bash
+node ops/turn.mjs status                                   # who holds the turn, for how long, who waits
+node ops/turn.mjs run --label "my evals" -- zsh my-run.sh  # any other VM work: wait, run, give back
+```
+
+The files: `~/ola-suite.lock/` is the turn (mkdir; its `owner` starts `pid <n>`), `~/ola-deploy.hold`
+is a deploy's pid, `~/.ola-turns/` holds one ticket per waiter. A turn, ticket or hold whose process
+is gone is cleared by the next waiter. The evals' shell scripts take the same lock by `mkdir` and
+write `pid $$` into the owner, exporting `OLA_TURN_HELD=$$` so the suites they start do not queue
+behind their own parent. `OLA_TURN=off` skips the turn (a development machine with nothing else on
+it). The deploy runs `node --test ops/turn-test.mjs` as its first suite (8 tests, seconds).
 
 **State lives outside every release**, so a deploy or a rollback never touches it: the platform
 database and its key in `~/.ola-frontdesk`, workspaces, gateway tokens, door sockets, the staging

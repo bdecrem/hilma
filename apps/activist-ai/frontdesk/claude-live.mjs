@@ -23,6 +23,9 @@ const SHOTS = process.argv.includes('--shots') ? process.argv[process.argv.index
 const tokenFile = process.env.CLAUDE_OAUTH_TOKEN_FILE
 if (!tokenFile) throw new Error('CLAUDE_OAUTH_TOKEN_FILE (a file, mode 600)')
 const secret = readFileSync(tokenFile, 'utf8').trim()
+// One turn at a time on the machine's four VMs, deploys first (OLA-83, ops/turn.mjs); a deploy's
+// suites inherit the deploy's turn.
+await (await import('../ops/turn.mjs')).takeTurn(`claude-live${process.env.OLA_CHECK_TAG ? ` ${process.env.OLA_CHECK_TAG}` : ''}`)
 const ID = 'f2-live'
 const ORIGIN = 'http://localhost:4984'
 const run = mkdtempSync(path.join(tmpdir(), 'ola-f2live-'))

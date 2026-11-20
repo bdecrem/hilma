@@ -40,6 +40,9 @@ const TAG = process.env.OLA_CHECK_TAG ?? ''
 if (TAG && !/^[a-z][a-z0-9]{0,7}$/.test(TAG)) throw new Error('OLA_CHECK_TAG is 1 to 8 lowercase letters or digits')
 const FA = `${TAG ? `${TAG}-` : ''}fd-a`
 const FB = `${TAG ? `${TAG}-` : ''}fd-b`
+// One turn at a time on the machine's four VMs, deploys first (OLA-83, ops/turn.mjs); a deploy's
+// suites inherit the deploy's turn.
+await (await import('../ops/turn.mjs')).takeTurn(`frontdesk check${process.env.OLA_CHECK_TAG ? ` ${process.env.OLA_CHECK_TAG}` : ''}`)
 const FC = `${TAG ? `${TAG}-` : ''}fd-c` // team-a's second workspace, made for the rotation checks at the end
 const PORT = Number(process.env.OLA_CHECK_FD_PORT || 4790)
 const ORIGIN = `http://localhost:${PORT}`

@@ -23,6 +23,9 @@ const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const tokenFile = process.env.CLAUDE_OAUTH_TOKEN_FILE
 if (!tokenFile) throw new Error('CLAUDE_OAUTH_TOKEN_FILE (a file, mode 600)')
 const secret = readFileSync(tokenFile, 'utf8').trim()
+// One turn at a time on the machine's four VMs, deploys first (OLA-83, ops/turn.mjs); a deploy's
+// suites inherit the deploy's turn.
+await (await import('../ops/turn.mjs')).takeTurn(`compare-live${process.env.OLA_CHECK_TAG ? ` ${process.env.OLA_CHECK_TAG}` : ''}`)
 const together = () => {
   const line = readFileSync(path.join(homedir(), 'Documents/code/hilma/.env.local'), 'utf8').split('\n').find((l) => l.startsWith('TOGETHER_API_KEY='))
   return line.slice('TOGETHER_API_KEY='.length).trim().replace(/^["']|["']$/g, '')
