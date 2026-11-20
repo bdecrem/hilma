@@ -46,6 +46,7 @@
 // writes the entry and the weakness's `seen` at once; the escalation rule applies to the fix, which is
 // either given with the correction or owed and settled later with `fix`.
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
 
@@ -107,14 +108,42 @@ async function whereProblem(where) {
   return `--where: "${w}" names no file in this checkout, no command whose script exists and no ticket (OLA-n). Name what carries the fix: the file that refuses it, the command that checks it, or the ticket that holds the check. The fix is recorded after it is built, not before.`
 }
 
-/** A ticket's status in the tracker (read only), or null when there is no such ticket. */
-async function ticketStatus(id) {
+async function trackerDb() {
+  if (process.env.VENTURE_TRACKER_FAKE) return (await import('./_fakedb.mjs')).fakeClient(process.env.VENTURE_TRACKER_FAKE)
   const { createClient } = await import('@supabase/supabase-js')
   const env = existsSync(root + '.env.local') ? Object.fromEntries(readFileSync(root + '.env.local', 'utf8').split('\n').filter((l) => /^[A-Z0-9_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')])) : process.env
-  const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-  const { data, error } = await db.from('venture_issues').select('id, status').eq('id', id).maybeSingle()
+  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+}
+/** A ticket's status in the tracker (read only), or null when there is no such ticket. */
+async function ticketStatus(id) {
+  const { data, error } = await (await trackerDb()).from('venture_issues').select('id, status').eq('id', id).maybeSingle()
   if (error) die(`the tracker could not be read (${error.message})`)
   return data?.status ?? null
+}
+/** Why --where cannot be the fix that settles owed fix o (null when it can) (OLA-251, third pass): a file
+ *  changed by a commit made after the correction was recorded (asked of git), or a ticket that is closed
+ *  with every check passed. The ticket that carries the owed fix, an open ticket, and a file untouched
+ *  since before the correction are refused. */
+async function settleProblem(where, o) {
+  const p = await whereProblem(where)
+  if (p) return p
+  const w = where.trim()
+  if (/^OLA-\d+$/i.test(w)) {
+    const id = w.toUpperCase()
+    if (id === o.issue) return `--where: ${id} is the ticket that carries this owed fix; it settles the fix only by what it built. Name the file it changed, or a ticket closed with every check passed.`
+    const st = await ticketStatus(id)
+    if (st !== 'done') return `--where: ${id} is ${st === 'in_progress' ? 'in progress' : st}; a ticket settles a fix only when it is closed with every check passed.`
+    const acc = (await (await trackerDb()).from('venture_state').select('value').eq('key', 'accept:' + id).maybeSingle()).data?.value
+    const checks = acc?.checks ?? []
+    if (!checks.length || checks.some((c) => c.result !== 'pass')) return `--where: ${id} is closed, but ${checks.length ? `not every check passed (${checks.filter((c) => c.result !== 'pass').map((c) => '#' + c.n).join(', ')})` : 'it has no checks'}; a ticket settles a fix only when every check passed.`
+    return null
+  }
+  const toks = w.split(/\s+/)
+  const file = (RUNNERS.has(toks[0]) ? toks.slice(1).find((t) => !t.startsWith('-') && !RUNNERS.has(t)) : toks[0]).replace(/[,;]$/, '').replace(/:\d+(-\d+)?$/, '')
+  let out = ''
+  try { out = execFileSync('git', ['-C', root, 'log', 'HEAD', 'origin/main', `--since=${o.since}`, '--format=%h %cI', '--', file], { encoding: 'utf8', timeout: 20000 }).trim() } catch {}
+  if (!out) return `--where: ${file} has not been changed by any commit since the correction was recorded (${o.since}); a file settles an owed fix only when a commit after the correction changed it.`
+  return null
 }
 async function ticketMustExist(id) {
   const st = await ticketStatus(id)
@@ -124,6 +153,20 @@ async function ticketMustExist(id) {
 // On a copy of the notes (VENTURE_PRIVATE) nothing goes to the live page: say so instead of "sync.mjs push" (OLA-262).
 const NEXT = process.env.VENTURE_PRIVATE ? `(a copy of the notes, ${process.env.VENTURE_PRIVATE}: nothing to push; sync.mjs push refuses while VENTURE_PRIVATE is set)` : 'next: node scripts/venture/sync.mjs push'
 const TIME = /^(about |around |~)?\d{1,2}(:\d{2})?\s*(am|pm)$/i
+/** Why a time Bart said is refused (null when it is fine) (OLA-251, third pass): a real time of day, and,
+ *  on today's date, not later than the clock. date: "November 20, 2026" or null for today. */
+function timeProblem(said, date = null) {
+  const m = /^(?:about |around |~)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i.exec(said)
+  if (!m) return `--at "${said}": the time he said it, like "10:58 am" or "about 11:15 am"`
+  const h = Number(m[1])
+  const mi = Number(m[2] ?? 0)
+  if (h < 1 || h > 12 || mi > 59) return `--at "${said}" is not a time of day`
+  const isToday = !date || date === pacific({ month: 'long', day: 'numeric', year: 'numeric' })
+  const mins = (h % 12 + (m[3].toLowerCase() === 'pm' ? 12 : 0)) * 60 + mi
+  const [nh, nm] = pacific({ hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).split(':').map(Number)
+  if (isToday && mins > (nh % 24) * 60 + nm) return `--at "${said}" is later than the clock (${pacific({ hour: 'numeric', minute: '2-digit' }).toLowerCase()} now): he cannot have said it yet`
+  return null
+}
 
 if (cmd === 'add') {
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
@@ -159,7 +202,7 @@ if (cmd === 'add') {
   const n = Math.max(0, ...[...text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1]))) + 1
   const date = pacific({ month: 'long', day: 'numeric', year: 'numeric' })
   const said = str('at') ?? str('when')
-  if (said && !TIME.test(said)) die(`--at "${said}": the time he said it, like "10:58 am" or "about 11:15 am"`)
+  if (said && timeProblem(said)) die(timeProblem(said))
   const recordedAt = pacific({ hour: 'numeric', minute: '2-digit' }).toLowerCase()
   const time = said ? said.toLowerCase() : recordedAt
   const entry = [
@@ -198,7 +241,7 @@ if (cmd === 'add') {
   if (!fix || !(level >= 1 && level <= 5)) die(`fix needs --fix "<what changed>" and --level 1..5 (at least ${o.need}, ${KINDS[o.need]})`)
   const req = required(w, { recorded: true })
   const need = Math.max(o.need, req.need)
-  const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last }) ?? (await whereProblem(str('where')))
+  const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last }) ?? (await settleProblem(str('where') ?? '', o))
   if (problem) die(problem)
   w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), settles: o.ref })
   w.owed = w.owed.filter((x) => x !== o)
@@ -226,6 +269,7 @@ if (cmd === 'add') {
   const m = re.exec(text)
   if (!m) die(`correction ${num}: no heading "## ${num}. <Month D, YYYY>, <time>: …" in CORRECTIONS.md`)
   const was = m[2]
+  if (timeProblem(said, m[1])) die(timeProblem(said, m[1]))
   if (was.toLowerCase() === said.toLowerCase()) die(`correction ${num} already says ${was}`)
   const head = text.slice(m.index, text.indexOf('\n', m.index))
   const fixed = head.replace(`${m[1]}, ${was}`, `${m[1]}, ${said.toLowerCase()}`)
