@@ -51,6 +51,21 @@ Before anything else, the three things that say whether "it works" could be trus
 A correction is recorded with `node scripts/venture/correct.mjs add …` and nothing else. A weakness
 that came back gets a stronger kind of fix; the tool refuses another written rule.
 
+## 1b2. The models (since 2026-11-20, OLA-245)
+
+Bart, Nov 20: "are you being deliberste about when to do things yourself (Fable, more expensive)
+and when to delegate to opus subagents?" Rule 43 and the usage readout did not stop the lead from
+rewriting a page from 97 commits on Fable, so the count is the review's, from the transcripts:
+
+    node scripts/venture/delegable.mjs --day 2026-11-20          (on the machine the lead ran on)
+
+It prints the day's shares of output by model and each stretch where the lead, on Fable, made more
+than 15 tool calls in a row that were all reads, searches, edits, writes or shell commands, with no
+message from Bart and no reply to him over 400 characters in between (the rule is printed with it).
+`sweep.mjs template` fills the entry's `models` from it (`--json`), and `post` refuses an entry
+without it. For each stretch, say in the day's `kit` changes or `open` what would have sent it to an
+Opus agent; the Learning page shows the shares and the stretches under the day.
+
 ## 1c. Clean the notes, instead of adding rules (since 2026-11-20)
 
 Bart approved on Nov 20 (OLA-251) that the evening review cleans the notes rather than adding to
@@ -269,6 +284,7 @@ The shape (`Sweep` in `src/lib/venture/board.ts`):
       "ola":   [ … the same … ],
       "open":  [{ "text": "found, not fixed today", "issue": "OLA-175" }],
       "cleaned": [{ "did": "removed", "what": "what changed in the notes and what showed it", "where": "NOW.md" }],
+      "models":  { "shares": [{ "model": "Fable", "share": 60 }, …], "rule": "…", "stretches": [{ "at": "10:51 am to 10:53 am", "calls": 23, "what": "…" }] },
       "build": { "text": "the one thing to build next that removes a whole weakness", "issue": "OLA-175" },
       "ideas": { "kit": { "text": "one sentence: what would be built", "why": "the evidence, and the measure", "issue": "OLA-180" },
                  "ola": { … the same … } } }

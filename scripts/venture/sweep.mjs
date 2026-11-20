@@ -152,6 +152,14 @@ async function facts() {
     add('Ola: the machine now', [`alarm ${s.alarm?.state}: ${(s.alarm?.says ?? []).join(' ') || 'nothing'}`, s.deployed ? `web app ${s.deployed.commit.slice(0, 8)} updated ${s.deployed.at}, checks ${s.checks?.passed} of ${s.checks?.total}` : 'no deploy on record'])
   })
 
+  await tryIt('Models', async () => {
+    // OLA-245: the day's shares of the models, and each stretch where the lead session did on Fable
+    // what an Opus agent could have done (scripts/venture/delegable.mjs, this machine's transcripts).
+    const r = spawnSync('node', [root + 'scripts/venture/delegable.mjs', '--day', day], { encoding: 'utf8', maxBuffer: 16e6 })
+    if (r.status !== 0) throw new Error((r.stderr || r.stdout).trim().split('\n').pop())
+    add("Models: the day's shares, and work the lead did on Fable that an Opus agent could have done (the entry's \"models\": delegable.mjs --json)", r.stdout.trim().split('\n'))
+  })
+
   for (const [f, what] of [['LOG.md', 'the log'], ['JOURNAL.md', "the journal's day notes"]]) if (existsSync(priv(f))) add(`Also read ${what} for that day`, [priv(f)])
   return out
 }
@@ -184,6 +192,11 @@ function checkEntry(e) {
   const CLEAN = ['removed', 'merged', 'corrected']
   if (!Array.isArray(e.cleaned) || e.cleaned.some((c) => !CLEAN.includes(c.did) || !str(c.what) || !str(c.where))) bad.push(`cleaned: [{ did: ${CLEAN.map((x) => `"${x}"`).join(' | ')}, what: "what changed in the notes, and what in the day's record showed it was wrong, stale or a duplicate", where: "the file" }]`)
   else if (!e.quiet && !e.cleaned.length) bad.push("cleaned is empty: the review removes, merges or corrects something in the notes every day (SWEEP.md, \"Clean the notes\"), or the day is quiet")
+  // OLA-245: the day's model shares and the stretches the lead could have handed to an Opus agent
+  // (delegable.mjs --json, which the template fills in); an empty list of stretches is a finding too.
+  const mo = e.models
+  if (!mo || !Array.isArray(mo.shares) || !mo.shares.length || mo.shares.some((x) => !str(x.model) || typeof x.share !== 'number') || !str(mo.rule) || !Array.isArray(mo.stretches) || mo.stretches.some((x) => !str(x.at) || typeof x.calls !== 'number' || !str(x.what)))
+    bad.push(`models: { shares: [{ model, share }], rule, stretches: [{ at, calls, what }], note? }: the day's shares of the models and each stretch the lead did on Fable that an Opus agent could have done. Fill it from: node scripts/venture/delegable.mjs --day ${e.day} --json (on the machine the lead ran on)`)
   // A written rule for a weakness that already has a fix is the fix that failed (correct.mjs): refused.
   const weakById = new Map(loadWeaknesses(rootUrl).map((w) => [w.id, w]))
   for (const side of ['kit', 'ola']) for (const [n, c] of (Array.isArray(e[side]) ? e[side] : []).entries()) {
@@ -243,7 +256,9 @@ if (cmd === '--wait') {
   console.log('Now follow apps/venture/SWEEP.md.')
 } else if (cmd === 'template') {
   const f = await facts()
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', where: '' }], kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
+  const del = spawnSync('node', [root + 'scripts/venture/delegable.mjs', '--day', day, '--json'], { encoding: 'utf8', maxBuffer: 16e6 })
+  const models = del.status === 0 ? JSON.parse(del.stdout.trim().split('\n').pop()) : { shares: [], rule: '', stretches: [], note: `not read: ${(del.stderr || '').trim().split('\n').pop()}` }
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', where: '' }], models, kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
@@ -282,7 +297,7 @@ if (cmd === '--wait') {
   if (args.includes('--dry')) (console.log(`--dry: the entry for ${e.day} passes every check; nothing was stored`), process.exit(0))
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })) }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}) } }
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.
