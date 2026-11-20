@@ -2045,6 +2045,46 @@ three stops above, `claude_auto`) is replaced by the setting both fallbacks shar
 looks like a stretch" (below); migration 7 turned a project's "When Ola gets stuck" or "Always use
 Claude" into "Hand it over without asking", to Claude.
 
+## The design model (OLA-168, 2026-11-20)
+
+Bart judged blind sheets of pages made by five models and decided: design requests go to
+**Inkling-2-Small** (`thinkingmachines/Inkling-2-Small`, Thinking Machines, 594B; serverless on
+Together at $0.30 per million input tokens, $0.03 cached, $1.00 output, from together.ai/pricing on
+Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stays hosted.
+
+- **Which requests** (`gateway/design.mjs`): a request for `general` whose messages, after the
+  person's last message, hold opencode's `skill` tool call for `designer` or `app-designer`. AGENTS.md
+  has Ola load that skill before every page or app screen, so the turn's first request stays on
+  `general` and the rest of the turn goes to `design`. No guessing from the person's words. The
+  same holds on the Mac: its engine sends the same requests through the same gateway.
+- **Limits**: the same caps, log line and weekly allowance as every name (usage `by_model.design`);
+  the log line has `served: design` and `design: served | withheld | failed`, never content. The
+  design model is never asked with less than 16,000 output tokens (with 50 and its reasoning on it
+  answered empty). When it fails, the same request goes once to `general` itself with a line telling
+  Ola to say so; never a backup model (`GATEWAY_BACKUP_MODELS design=` is refused at start).
+- **Settings**: `GATEWAY_MODELS design=<id>` (default on Together: Inkling-2-Small; `design=off` for
+  none). On the Studio, where `general` is local, give it its own server: `GATEWAY_UPSTREAMS
+  design=https://api.together.xyz/v1` and `UPSTREAM_API_KEY_DESIGN`.
+- **The rule for later** (`GATEWAY_EVERYDAY_LOCAL`, 0 or 1; default 1 only when `UPSTREAM_BASE_URL`
+  is 127.0.0.1, so 0 today): when on, design work goes to Together only for a caller listed in
+  `GATEWAY_DESIGN_FILE` (default `gateway-design` beside `GATEWAY_HOSTED_FILE`), which the front desk
+  writes with the hosted grants: projects whose owner switched the hosted model on, people allowed it
+  on their Mac. That switch is the owner's permission for work to leave the office; design still goes
+  only to the design model, never to the hosted slot's model. Anywhere else `general` does the
+  design, and Ola is told to say in one sentence that a stronger design model is available if the
+  owner turns on the hosted model.
+- **Who made it**: the gateway keeps which name served each request by caller and opencode's
+  conversation id (its `X-Session-Id` header), 8 days, ids only. As an Ola turn ends, the front desk
+  asks `GET /v1/served?caller=ws-<slug>&session=<id>&since=<ms>` (usage token) and records the turn
+  with the model "the design model, Inkling-2-Small", which `ola-made-by` prints. With no conversation
+  id, or no answer from the gateway, no model is named. A caller's own token reads its own.
+- **The card**: design is no longer a reason for the "this may be a stretch" card before a run on
+  the website (`web/src/lib/steps.ts`, `designBeforeRun: false`). The Mac and iPhone apps' copy of that
+  check (OlaKit `Fallbacks.swift`) and the Mac's record of the design model wait for a new app build
+  (written on the ticket).
+- **Request tests**: `served:design` / `served:!design` read the gateway's own record, never Ola's
+  words.
+
 ## Fallback to a hosted open model, and the stretch card (2026-11-17)
 
 Bart: "users can say 'fall back to claude' or 'fall back to hosted open weights model', default off

@@ -1,0 +1,15 @@
+{
+  "name": "design-ola168-ws",
+  "harness": "opencode-ws",
+  "model": "general = the live gateway's everyday model; design = thinkingmachines/Inkling-2-Small",
+  "serving": "Together.ai serverless with the live test server's own account, through this checkout's gateway/server.mjs on the Mac mini (evals/start-gateway-design.sh <port>): the design model serves a request once the designer skill is loaded in the turn (gateway/design.mjs, OLA-168). The proof that design requests use it and others do not, five in a row, and what one design request costs.",
+  "machine": "Mac mini (CASBS), Apple container, the current workspace image, 4 CPUs, 6 GB, no network",
+  "ola_home": "~/ola-b168/apps/activist-ai/evals/home-dz",
+  "gateway_db": "~/ola-b168/apps/activist-ai/evals/state/dz-gateway.db",
+  "slots": [
+    "dz-s1",
+    "dz-s2"
+  ],
+  "context": 131072,
+  "max_output": 16000
+}
