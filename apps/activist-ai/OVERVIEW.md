@@ -1,6 +1,6 @@
 # Ola in one page
 
-Last checked against: `d242eeec` (2026-11-20)
+Last checked against: `e7d422f2` (2026-11-20)
 
 This is the map. Every agent reads it first; the detail lives in the docs it points to. When Ola
 code changes, check this page against it and update the line above (procedure at the end).
@@ -110,6 +110,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 | The address and TLS | `ops/tls.mjs`, `ops/cert.mjs`, `ops/dns.mjs`, `ops/tunnel.mjs` | `cx.ola.tls`, `cx.ola.tunnel` on the staging machine; certificate renewal job on the iMac | README, "The address: app.ola.cx" |
 | Skills (chart, workbook, report, designer, app-designer, sound, publish, batch-quotes) | `skills/` | read-only in the image at `/opt/ola/skills`; bundled in the Mac app | `skills/README.md` |
 | Evaluations (checkable tasks, Claude baseline on the Max login, with and without skills; `evals/apps`: real "build me ..." requests scored per model) | `evals/` | the iMac and the staging machine | `evals/README.md` |
+| The asks: real requests sent again as chat after every deploy, and the one list of everything Ola can be asked to do, by place (`evals/asks/abilities.json`; Ola's instructions about its abilities are written from it: the end of `workspace/AGENTS.md` and OlaKit `Abilities.swift`) | `evals/asks/` | the staging machine, after every deploy | README, "The asks" (OLA-231, OLA-232) |
 | The asks: every request of a person that failed, kept as a case and sent again as chat after every update, in a cloud project and on the Mac (22 cases) | `evals/asks/` | the staging machine, started by each update that serves; results in `~/ola-staging/asks-latest.json` and on the board | README, "The asks" |
 | Publishing | `frontdesk/sites.mjs`, `skills/publish/`, `web/src/components/PublishSheet.tsx` | the front desk; pages served at sites.ola.cx | README, "Publish" |
 | Learning from use: conversations kept only with the person's switch (off by default), every switch to Claude labeled and counted | `frontdesk/` | the staging machine; the largest group on the board's Learning page | README, "Learning from every switch to Claude" |
