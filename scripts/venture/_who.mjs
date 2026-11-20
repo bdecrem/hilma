@@ -46,9 +46,16 @@ function callerOnce({ argv, file, now, tool }) {
   const host = shortHost()
   const usedFile = file + '.used'
   // a command that runs the tool n times (comment … && ready …) identifies n calls
-  const used = new Map()
-  for (const k of existsSync(usedFile) ? readFileSync(usedFile, 'utf8').split('\n').slice(-2000) : []) used.set(k, (used.get(k) ?? 0) + 1)
-  const uses = (r) => Math.max(1, norm(r.cmd).split(norm(tool)).length - 1)
+  const used = new Set(existsSync(usedFile) ? readFileSync(usedFile, 'utf8').split('\n').slice(-2000) : [])
+  // a run is "node <path>tool …" up to the next ; & | or line, holding every word of this call; a command
+  // that only names the tool (node --check …/issues.mjs, a message) runs it zero times (OLA-251, eighth pass)
+  const esc = tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const runs = (cmd) => String(cmd).split(new RegExp(`(?=\\bnode\\s+\\S*${esc}\\b)`)).filter((x) => new RegExp(`^node\\s+\\S*${esc}\\b`).test(x)).map((x) => x.split(/[;&|\n]/)[0])
+  // the first run in the record that holds this call's words and has not identified a call yet: its key
+  const free = (r) => {
+    const k = runs(r.cmd).map((x, i) => (want.every((t) => norm(x).includes(t)) ? `${keyOf(r)}#${i}` : null)).find((x) => x && !used.has(x))
+    return k ?? null
+  }
   const keyOf = (r) => `${r.session ?? ''}|${r.agent ?? ''}|${r.at}|${norm(r.cmd).slice(0, 200)}`
   if (!existsSync(file)) return { id: null, host, known: false, why: `no record of the call (${file} does not exist: not run from a Claude Code session with the hook)` }
   // paths are left out of the match: the shell expands ~ and $VARS in them, the command keeps them as typed
@@ -62,14 +69,14 @@ function callerOnce({ argv, file, now, tool }) {
       const c = norm(r.cmd)
       // a commit's record (the hook notes commits naming a ticket) is no run of the tool, whatever its message says
       if (/\bgit\b[^\n;&|]*\bcommit\b/.test(r.cmd)) continue
-      if (c.includes(norm(tool)) && want.every((t) => c.includes(t)) && (used.get(keyOf(r)) ?? 0) < uses(r)) rows.push(r)
+      if (c.includes(norm(tool)) && free(r)) rows.push(r)
     } catch {}
   }
   const ids = [...new Set(rows.map((r) => (r.agent ? `agent ${r.agent}` : `session ${r.session}`)))]
   if (!ids.length) return { id: null, host, known: false, why: 'no record of this call by the hook: not run from a Claude Code session (a plain shell, launchd, a script)' }
   if (ids.length > 1) return { id: null, host, known: false, why: `the same command was run by ${ids.length} sessions or agents in the last two minutes, so the caller is not known` }
   const r = rows.at(-1)
-  try { appendFileSync(usedFile, keyOf(r) + '\n') } catch {}
+  try { appendFileSync(usedFile, free(r) + '\n') } catch {}
   return { id: ids[0], session: r.session, agent: r.agent ?? null, agent_type: r.agent_type ?? null, host, known: true, why: `${r.agent ? `agent ${r.agent.slice(0, 8)} (${r.agent_type ?? 'agent'})` : `session ${String(r.session).slice(0, 8)}`} on ${host}` }
 }
 

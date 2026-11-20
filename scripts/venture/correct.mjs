@@ -165,7 +165,16 @@ async function ticketMustExist(id) {
 // A copy of the notes is a folder that is not any checkout's apps/venture/private (OLA-251, sixth pass: a
 // worktree has no such folder, so comparing with this checkout's let the real notes pass as a copy); any
 // case, since the Mac's disk ignores it
-const onCopy = !!process.env.VENTURE_PRIVATE && (() => { try { return !/\/apps\/venture\/private\/?$/i.test(realpathSync(process.env.VENTURE_PRIVATE)) } catch { return true } })()
+// (and a folder whose ledger files are links into such a folder is that folder, OLA-251 eighth pass)
+const REAL_NOTES = /\/apps\/venture\/private(\/|$)/i
+const onCopy = !!process.env.VENTURE_PRIVATE && (() => {
+  try {
+    const dir = process.env.VENTURE_PRIVATE
+    return ![dir, `${dir}/CORRECTIONS.md`, `${dir}/data`, `${dir}/data/weaknesses.json`].some((x) => existsSync(x) && REAL_NOTES.test(realpathSync(x)))
+  } catch {
+    return true
+  }
+})()
 // the real notes with a copy of the tracker would settle the real ledger and put its line in the copy
 if (process.env.VENTURE_TRACKER_FAKE && !onCopy) die(`Refused: VENTURE_TRACKER_FAKE is set (a copy of the tracker) while the notes are the real ones${process.env.VENTURE_PRIVATE ? ` (${process.env.VENTURE_PRIVATE})` : ''}. Test on a copy of both, or on neither.`)
 // On a copy of the notes (VENTURE_PRIVATE) nothing goes to the live page: say so instead of "sync.mjs push" (OLA-262).
