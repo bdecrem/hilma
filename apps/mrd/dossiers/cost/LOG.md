@@ -14,3 +14,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 11:59 | forward | liberty_a | claude-opus-5-5 | high | 4.47 | 18 | 22,208 | 1,334,525 | 1.62 | 18→20 | 36→36 | 63→63 | 12 | ok | `forward costa_rica liberty_a claude-opus-5-5 high` |
 | 2026-11-20 12:03 | forward | liberty_b | claude-opus-5-5 | high | 5.04 | 24 | 21,401 | 1,449,836 | 1.64 | 20→21 | 36→36 | 63→63 | 17 | ok | `forward costa_rica liberty_b claude-opus-5-5 high` |
 | 2026-11-20 12:09 | forward | personhood | claude-opus-5-5 | high | 4.92 | 31 | 25,984 | 2,106,875 | 1.97 | 21→23 | 36→37 | 63→63 | 22 | ok | `forward costa_rica personhood claude-opus-5-5 high` |
+| 2026-11-20 12:14 | forward | due_process | claude-opus-5-5 | high | 3.18 | 16 | 15,796 | 1,015,076 | 1.52 | 23→25 | 37→37 | 63→63 | 13 | ok | `forward costa_rica due_process claude-opus-5-5 high` |

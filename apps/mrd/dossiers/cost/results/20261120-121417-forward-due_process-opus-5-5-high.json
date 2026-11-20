@@ -1,0 +1,790 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica due_process claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "due_process",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  35,
+  37,
+  39,
+  41,
+  43,
+  45
+ ],
+ "started_at": "2026-11-20T20:14:17.592Z",
+ "meters_before": {
+  "at": "2026-11-20T20:14:13.083Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 75045,
+  "user": 125
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:17:28.423Z",
+ "minutes": 3.18,
+ "meters_after": {
+  "at": "2026-11-20T20:17:28.423Z",
+  "window": {
+   "pct": 25,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 25,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 25% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 15245,
+   "output": 15796,
+   "cache_read": 851893,
+   "cache_write": 132142,
+   "cost_usd": 1.5242,
+   "total": 1015076
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 15227,
+    "output": 1580,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 513,
+    "cost_usd": 0.0123
+   },
+   "claude-opus-5-5": {
+    "input": 18,
+    "output": 14216,
+    "cache_read": 851893,
+    "cache_write": 132142,
+    "thinking": 2326,
+    "cost_usd": 1.5119
+   }
+  }
+ },
+ "turns": 16,
+ "calls": 25,
+ "duration_ms": 189824,
+ "duration_api_ms": 142992,
+ "pages_read": 13,
+ "pages": [
+  {
+   "at": "2026-11-20T20:14:23.681Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Artículo 31 | Artículo 33 | Artículo 94 | Artículo 107 | Artículo 183 | Artículo 249 | Ficha articulo | Reformado",
+   "ok": true,
+   "chars": 18712
+  },
+  {
+   "at": "2026-11-20T20:14:25.134Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC",
+   "find": "ARTÍCULO 14 | ARTÍCULO 70 | ARTÍCULO 71 | ARTÍCULO 75 | ARTÍCULO 130 | ARTÍCULO 265 | ARTÍCULO 13",
+   "ok": true,
+   "chars": 20723
+  },
+  {
+   "at": "2026-11-20T20:14:44.127Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 94.- | ARTÍCULO 107 | ARTÍCULO 183 | ARTÍCULO 249 | víctimas de trata | Ley N° 10263",
+   "ok": true,
+   "chars": 15652
+  },
+  {
+   "at": "2026-11-20T20:14:47.332Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "denunciantes o testigo | hijos sobrevivientes | razones humanitarias",
+   "ok": true,
+   "chars": 2989
+  },
+  {
+   "at": "2026-11-20T20:14:48.726Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC",
+   "find": "ARTÍCULO 2 | ARTÍCULO 37 | ARTÍCULO 70 | Así reformado",
+   "ok": true,
+   "chars": 15530
+  },
+  {
+   "at": "2026-11-20T20:14:52.943Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=74132&param2=150701&param3=1",
+   "find": "Protección migratoria | ARTÍCULO 70 | no son punibles",
+   "ok": true,
+   "chars": 6328
+  },
+  {
+   "at": "2026-11-20T20:14:54.232Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 19 | ARTÍCULO 33 | ARTÍCULO 39 | ARTÍCULO 41",
+   "ok": true,
+   "chars": 8548
+  },
+  {
+   "at": "2026-11-20T20:15:00.478Z",
+   "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+   "find": "temporary residency | work permits | foreign victims | legal alternatives",
+   "ok": true,
+   "chars": 5979
+  },
+  {
+   "at": "2026-11-20T20:15:01.181Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+   "find": "temporary residency | work permits | foreign victims | foreign nationals",
+   "ok": true,
+   "chars": 5994
+  },
+  {
+   "at": "2026-11-20T20:15:13.391Z",
+   "url": "https://revistasalacons.poder-judicial.go.cr/images/2025/PDF/Voto_nro_2025-019485.pdf",
+   "find": "Por tanto | asesoría legal | abogado | intérprete",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:15:58.865Z",
+   "url": "https://www.delfino.cr/2023/05/estado-suma-17-condenas-por-decreto-presidencial-que-prohibe-a-refugiados-salir-del-pais",
+   "find": "17 | hábeas corpus | Sala",
+   "ok": true,
+   "chars": 4489
+  },
+  {
+   "at": "2026-11-20T20:15:59.855Z",
+   "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica",
+   "find": "Sala | libertad | CATEM",
+   "ok": true,
+   "chars": 4514
+  },
+  {
+   "at": "2026-11-20T20:16:10.808Z",
+   "url": "https://vlex.co.cr/vid/sentencia-n-2025029339-sala-1093589974",
+   "find": "traductor | intérprete | indagatoria",
+   "ok": true,
+   "chars": 4397
+  }
+ ],
+ "searches": [
+  "Sala Constitucional 2023 inconstitucional decreto 43810 refugio salida del país desistimiento voto"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":35,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política\",\"article\":\"Art. 19\",\"enacted\":\"1949-11-07\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política\",\"article\":\"Art. 33\",\"enacted\":\"1949-11-07\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política\",\"article\":\"Art. 41\",\"enacted\":\"1949-11-07\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(1)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"2023: the Sala Constitucional granted habeas corpus to asylum seekers refused exit permits under Decree 43810-MGP. Seventeen such rulings had gone against the State by May 2023, ordering it to pay costs and damages, and the exit rule was struck down in August 2023. Migrants clearly had working access to the courts against the administration. 2025/26: in Voto 2025-019485 the Sala partly upheld the habeas corpus brought for US deportees held at CATEM. It ordered their release and individual status decisions, and found they had been held without clear information or legal advice. Courts are open and effective, but there are recurring gaps for people held by migration authorities. Usually on both dates; no shift.\",\"practice_sources\":[{\"title\":\"Delfino: Estado suma 17 condenas por decreto presidencial que prohíbe a refugiados salir del país\",\"url\":\"https://www.delfino.cr/2023/05/estado-suma-17-condenas-por-decreto-presidencial-que-prohibe-a-refugiados-salir-del-pais\",\"year\":2023,\"shows\":\"practice\",\"groups\":[\"refugees_asylum_seekers\"],\"period\":\"2023_2026\"},",
+ "output": {
+  "answers": [
+   {
+    "question_id": 35,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 33",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 41",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the Sala Constitucional granted habeas corpus to asylum seekers refused exit permits under Decree 43810-MGP. Seventeen such rulings had gone against the State by May 2023, ordering it to pay costs and damages, and the exit rule was struck down in August 2023. Migrants clearly had working access to the courts against the administration. 2025/26: in Voto 2025-019485 the Sala partly upheld the habeas corpus brought for US deportees held at CATEM. It ordered their release and individual status decisions, and found they had been held without clear information or legal advice. Courts are open and effective, but there are recurring gaps for people held by migration authorities. Usually on both dates; no shift.",
+    "practice_sources": [
+     {
+      "title": "Delfino: Estado suma 17 condenas por decreto presidencial que prohíbe a refugiados salir del país",
+      "url": "https://www.delfino.cr/2023/05/estado-suma-17-condenas-por-decreto-presidencial-que-prohibe-a-refugiados-salir-del-pais",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Delfino: Sala Constitucional ordena liberar a migrantes deportados desde Estados Unidos",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The SINALEVI current versions of Const. arts 19, 33, 41 and Ley 8764 art 31 carry no amendment notes after 1999, so the 2023 text is the same as today's. The CATEM ruling PDF could not be opened (no PDF tool), so it is known from Delfino's report.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Delfino 2023 – 17 condenas",
+      "url": "https://www.delfino.cr/2023/05/estado-suma-17-condenas-por-decreto-presidencial-que-prohibe-a-refugiados-salir-del-pais"
+     },
+     {
+      "title": "Delfino 2025 – CATEM",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2023 Sala rulings on Decree 43810 are practice evidence (they concern freedom of movement) and do not change the protection answer. Practice evidence covers asylum seekers and deportees, not regular labour migrants."
+   },
+   {
+    "question_id": 37,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(7)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 13",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 9095",
+      "article": "Art. 37(d)",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Law guarantees only counsel at one's own expense throughout. In 2025 the CATEM deportees were held without access to legal advice (Sala Constitucional per Delfino). Does not apply on either date.",
+    "practice_sources": [
+     {
+      "title": "Delfino: Sala Constitucional ordena liberar a migrantes deportados desde Estados Unidos",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Art. 31(7) in the current SINALEVI text reads 'acceso a un abogado por cuenta propia' and carries no amendment note. Ley 9095 art. 37 also has no amendment note (Ley 10886 of March 2026 amended other articles).",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Código Procesal Penal (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "Delfino 2025 – CATEM",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": null
+   },
+   {
+    "question_id": 39,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 14",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Arts. 130-131",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 265",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In 2025 an Indian defendant had a Spanish-English translator from the moment of arrest, at the indagatoria and its extension, alongside a public defender (Sala Constitucional Voto 2025-029339). Around 2023, the Sala Tercera decision 2023-00162 (cited in the starting answer, not reopened here) shows the court routinely asked a defendant whether he needed a translator. The known weak point, rare languages, persists. The July 2026 budget warnings fall after the window. Usually on both dates.",
+    "practice_sources": [
+     {
+      "title": "Sala Constitucional, Sentencia 2025029339 (vLex)",
+      "url": "https://vlex.co.cr/vid/sentencia-n-2025029339-sala-1093589974",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "CPP arts 14, 130, 131 and 265 carry no amendment notes in the current SINALEVI version, so they are unchanged since 1996. The 2023-period practice source (Sala Tercera 2023-00162) was not reopened in this session.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC"
+     },
+     {
+      "title": "Sala Constitucional 2025029339 (vLex)",
+      "url": "https://vlex.co.cr/vid/sentencia-n-2025029339-sala-1093589974"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The migration status of the defendant in the 2025 case is not stated in the decision."
+   },
+   {
+    "question_id": 41,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 183",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 249",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33(3)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 9095",
+      "article": "Art. 70",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 39",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024",
+      "instrument": "Ley N.º 10493 del 5 de junio del 2024",
+      "article": "Ley 8764 art. 33 (penultimate paragraph, para. 5)",
+      "kind": "amended",
+      "what_changed": "Amended the fee-exemption paragraph of art. 33 (Fondo Social de Migración payments; 50% reduction for seasonal agricultural workers). It does not touch the art. 33(3) overstay fine or create any offence, so the indicator is unaffected.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "En el caso de trabajadores del sector agrícola, que atienden labores de cosecha temporales por periodos de nueve meses o inferiores, el costo de estos pagos será de hasta un cincuenta por ciento (50%) menos. (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "No reports of criminal prosecution for irregular entry on either date; art. 249 targets smugglers. Administrative sanctions continue. In 2025 the Sala found the holding of US deportees at CATEM to be an unlawful de facto deprivation of liberty. The SINALEVI notes show no decree after 2020 starting collection of the overstay fine. Usually on both dates.",
+    "practice_sources": [
+     {
+      "title": "Delfino: Sala Constitucional ordena liberar a migrantes deportados desde Estados Unidos",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts 183 and 249 show only their original text or the 2012 Ley 9095 reform. Art 33(3) shows only the 2018/2020 notes postponing the fine. The only amendment in the window is Ley 10493, to another paragraph; its gazette date (Aug. 2024 per the brief) was not read, so the event is dated to the year.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Delfino 2025 – CATEM",
+      "url": "https://delfino.cr/2025/06/sala-constitucional-ordena-liberar-a-migrantes-deportados-desde-estados-unidos-y-acogidos-por-costa-rica"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The evidence that no one is criminally prosecuted rests on the absence of reports."
+   },
+   {
+    "question_id": 43,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 70",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 71",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal, Ley 7594",
+      "article": "Art. 75",
+      "enacted": "1996",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 9095",
+      "article": "Art. 2(a)",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-10",
+      "instrument": "Ley N° 10380 del 2 de octubre de 2023",
+      "article": "CPP art. 71 bis (new)",
+      "kind": "amended",
+      "what_changed": "Added art. 71 bis, which gives priority to cases with victim-protection orders. It applies to all victims regardless of nationality; it slightly strengthens, and does not change, the indicator.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC",
+      "passage": "Artículo 71 bis- Protección de la víctima. Aquellas causas donde se haya ordenado protección procesal y extraprocesal, conforme al numeral 71, tendrán prioridad para la realización de cualquier diligencia o pericia... (Así adicionado por el artículo 1° de la ley N° 10380 del 2 de octubre de 2023)"
+     },
+     {
+      "date": "2024-09",
+      "instrument": "Ley contra la desaparición forzada de personas, N° 10534 del 18 de setiembre de 2024",
+      "article": "CPP art. 70(e)",
+      "kind": "amended",
+      "what_changed": "Added inciso (e) to the victim definition, covering victims of enforced disappearance. Not nationality-specific; no effect on migrants' standing as victims.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC",
+      "passage": "e) Para los efectos del delito de desaparición forzada de personas, tipificado en el Código Penal, se considerará como víctima a toda persona física que haya sufrido un perjuicio directo por este. (Así adicionado el inciso anterior por el artículo 2° de la Ley contra la desaparición forzada de personas, N° 10534 del 18 de setiembre de 2024)"
+     }
+    ],
+    "implementation_then_now": "2023 TIP report (2022 data): 18 of 38 identified victims were foreign, and all received ERI services. 2025 TIP report (2024 data): OAPVD gave legal and psychosocial assistance to victims taking part in prosecutions, and at least 9 foreign victims were identified. Fear of migration consequences limits access. Usually on both dates. The evidence covers trafficking victims only, not migrant victims of ordinary crime.",
+    "practice_sources": [
+     {
+      "title": "US State Dept, 2023 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "US State Dept, 2025 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The SINALEVI amendment notes give the two in-window changes to the CPP victim provisions; neither is migrant-specific. Arts 71, 75 and Ley 8764 art 31 are unchanged.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=41297&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "2023 TIP Report Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/"
+     },
+     {
+      "title": "2025 TIP Report Costa Rica",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": null
+   },
+   {
+    "question_id": 45,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 94(5), (10), (12)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 107",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 9095",
+      "article": "Art. 37(i)-(j)",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 9095",
+      "article": "Art. 70",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-02",
+      "instrument": "Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025",
+      "article": "Ley 8764 art. 94(4)",
+      "kind": "amended",
+      "what_changed": "Rewrote inciso 4 of art. 94 (students, teachers, researchers). Incisos 5, 10 and 12, on witnesses/complainants, trafficking and femicide survivors, and humanitarian grounds, are untouched; no effect on the indicator.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "4) Personas estudiantes, docentes, pasantes, investigadoras y voluntarios con fines educativos y culturales... (Así reformado el inciso anterior por el artículo 2° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025)"
+     }
+    ],
+    "implementation_then_now": "2023 TIP report: 75 temporary residence permits issued or renewed for trafficking victims in 2022 (58 in 2021). 2025 TIP report: 46 permits in 2023, and the government did not report whether any were issued in 2024, although foreign victims were identified. FONATT funds were not fully disbursed. No data on the witness or femicide-survivor categories in either period. The fall in reporting after 2024 is not a documented failure, so Sometimes is kept on both dates.",
+    "practice_sources": [
+     {
+      "title": "US State Dept, 2023 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "US State Dept, 2025 Trafficking in Persons Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Art. 94(10) was last amended by Ley 10263 (May 2022), before the window. Art. 107 was last amended by Ley 9095 (2012). Ley 9095 arts 37 and 70 carry no amendment notes, and the Ley 10886 reform (March 2026) touches other articles and falls after the window.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "2023 TIP Report Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/"
+     },
+     {
+      "title": "2025 TIP Report Costa Rica",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2022 permit numbers could support 'Sometimes; Usually' for 2023 for trafficking victims, but the other victim categories have no data; the rating is kept unchanged."
+   }
+  ]
+ }
+}
