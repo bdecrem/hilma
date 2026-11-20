@@ -1,0 +1,236 @@
+{
+ "status": "stopped",
+ "job_id": "back costa_rica expulsion_b claude-opus-5-5 medium",
+ "step": "back",
+ "slug": "costa_rica",
+ "chunk": "expulsion_b",
+ "model": "claude-opus-5-5",
+ "effort": "medium",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  55,
+  57,
+  59,
+  61
+ ],
+ "started_at": "2026-11-20T21:12:50.677Z",
+ "meters_before": {
+  "at": "2026-11-20T21:12:45.313Z",
+  "window": {
+   "pct": 60,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 40,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 65,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 60,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 40,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 65,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 60% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 40% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 65% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 162 requests · 2 sessions\n  48%  Start fresh when you switch tasks · run /clear\n  34%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 173 requests · 3 sessions\n  46%  Start fresh when you switch tasks · run /clear\n  36%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 59349,
+  "user": 130
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T21:14:50.693Z",
+ "minutes": 2,
+ "meters_after": {
+  "at": "2026-11-20T21:14:50.693Z",
+  "window": {
+   "pct": 66,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 40,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 66,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 66,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 40,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 66,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 66% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 40% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 66% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 165 requests · 2 sessions\n  48%  Start fresh when you switch tasks · run /clear\n  34%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 176 requests · 3 sessions\n  46%  Start fresh when you switch tasks · run /clear\n  36%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 0,
+   "output": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0,
+   "total": 0
+  },
+  "by_model": {}
+ },
+ "turns": null,
+ "calls": 13,
+ "duration_ms": null,
+ "duration_api_ms": null,
+ "pages_read": 5,
+ "pages": [
+  {
+   "at": "2026-11-20T21:12:59.496Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31 | ARTÍCULO 65 | ARTÍCULO 115 | ARTÍCULO 122 | ARTÍCULO 183 | ARTÍCULO 186 | ARTÍCULO 209 | ARTÍCULO 210 | ARTÍCULO 215 | ARTÍCULO 216 | ARTÍCULO 222",
+   "ok": true,
+   "chars": 18863
+  },
+  {
+   "at": "2026-11-20T21:13:04.900Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 209.- | ARTÍCULO 210.- | ARTÍCULO 214.- | ARTÍCULO 215.- | ARTÍCULO 216.- | ARTÍCULO 222.- | ARTÍCULO 184.-",
+   "ok": true,
+   "chars": 13395
+  },
+  {
+   "at": "2026-11-20T21:13:09.914Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 39. | Artículo 40. | Artículo 123. | Artículo 127. | Artículo 134. | Así reformado",
+   "ok": true,
+   "chars": 15226
+  },
+  {
+   "at": "2026-11-20T21:13:23.945Z",
+   "url": "https://www.ecoi.net/de/dokument/2027487.html",
+   "find": "refoulement | asylum | deport | Refugees",
+   "ok": true,
+   "chars": 6352
+  },
+  {
+   "at": "2026-11-20T21:13:26.364Z",
+   "url": "https://reporting.unhcr.org/sites/default/files/pdfsummaries/GR2019-CostaRica-eng.pdf",
+   "find": "border | asylum | detention | access",
+   "ok": true,
+   "chars": 878
+  }
+ ],
+ "searches": [
+  "Costa Rica 2020 human rights report deportation rechazo frontera solicitantes de refugio Defensoría 2019"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.6,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.61,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.62,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.63,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": null,
+ "output": null
+}
