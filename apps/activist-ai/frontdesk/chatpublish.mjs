@@ -53,6 +53,21 @@ export function makeChatPublish(deps) {
       }
     }
   }
+  // "Take it down" in the conversation: `ola-publish unpublish`, the same yes, the Unpublish button's work.
+  async function takeDown(ws, sess) {
+    const hand = (outcome) => deps.publishResult(ws.slug, { target: '(unpublish)', files: [], ...outcome })
+    if (ws.role !== 'owner') return (await hand({ state: 'failed', message: 'Only the project’s owner can take its pages down. Nothing changed.' }), { decision: 'once', done: Promise.resolve() })
+    const was = sites.status(ws.slug)
+    if (!was) return (await hand({ state: 'failed', message: 'Nothing of this project is published, so there is nothing to take down.' }), { decision: 'once', done: Promise.resolve() })
+    if (!(await hand({ state: 'publishing' }))) return { decision: 'reject', done: Promise.resolve() }
+    const done = (async () => {
+      const r = await sites.unpublish(ws.slug)
+      deps.unaudited?.(ws, sess, was, r)
+      if (r.status !== 200) return hand({ state: 'failed', message: r.body?.message ?? 'The pages could not be taken down just now. They are still public.' })
+      return hand({ state: 'done', unpublished: true, url: r.body.url, live: r.body.gone !== false, ...(r.body.message ? { message: r.body.message } : {}) })
+    })().catch((e) => (log(`${ws.slug}: an unpublish from the conversation failed (${e?.message ?? e})`), hand({ state: 'failed', message: 'The pages could not be taken down just now. They are still public.' })))
+    return { decision: 'once', done }
+  }
   return {
     /** The person's answer to a permission request, before it goes on to opencode. */
     async onReply(ws, sess, sessionID, requestID, decision, body, ocAsk) {
@@ -64,6 +79,7 @@ export function makeChatPublish(deps) {
       if (decision === 'reject' || !['once', 'always'].includes(decision)) return { decision, done: Promise.resolve() }
       // A command in a form we do not act on runs and prints its own usage sentence; nothing is published.
       if (parsed.bad) return { decision: 'once', done: Promise.resolve() }
+      if (parsed.unpublish) return takeDown(ws, sess)
       const ask = { sel: parsed.sel, files: parsed.files, target: parsed.sel.page ?? parsed.sel.folder }
       const fingerprint = typeof body?.fingerprint === 'string' && /^[0-9a-f]{64}$/.test(body.fingerprint) ? body.fingerprint : ''
       let later

@@ -136,3 +136,28 @@ test('a page instead of a folder: published as that page', async () => {
   await (await answer('once', { fingerprint: FP })).done
   assert.deepEqual(calls.publish[0].sel, { page: 'flyer.html' })
 })
+
+test('"take it down" in the conversation: ola-publish unpublish, the owner’s yes takes the pages down and the command is told', async () => {
+  const outcomes = []
+  let down = 0
+  const cp = makeChatPublish({
+    sites: { configured: () => true, status: () => ({ url: 'https://sites.ola.cx/tenants/' }), unpublish: async () => (down++, { status: 200, body: { unpublished: true, url: 'https://sites.ola.cx/tenants/', gone: true, files: 2 } }) },
+    siteCtx: () => ({}),
+    heldByPerson: () => false,
+    publishResult: async (slug, o) => (outcomes.push(o), true),
+  })
+  const oc = async () => ({ json: [{ id: 'per_1', action: 'shell', resources: ['ola-publish unpublish'] }] })
+  const r = await cp.onReply({ slug: 'tenants', id: 1, role: 'owner' }, { personId: 7 }, 'ses_1', 'per_1', 'once', {}, oc)
+  assert.equal(r.decision, 'once')
+  await r.done
+  assert.equal(down, 1)
+  assert.deepEqual(outcomes.map((o) => o.state), ['publishing', 'done'])
+  assert.equal(outcomes[1].unpublished, true)
+  const member = await cp.onReply({ slug: 'tenants', id: 1, role: 'member' }, { personId: 8 }, 'ses_1', 'per_1', 'once', {}, oc)
+  await member.done
+  assert.equal(down, 1, 'a member’s yes takes nothing down')
+  assert.equal(outcomes.at(-1).state, 'failed')
+  const no = await cp.onReply({ slug: 'tenants', id: 1, role: 'owner' }, { personId: 7 }, 'ses_1', 'per_1', 'reject', {}, oc)
+  assert.equal(no.decision, 'reject')
+  assert.equal(down, 1)
+})

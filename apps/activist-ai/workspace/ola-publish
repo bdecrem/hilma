@@ -8,6 +8,8 @@
 #       again (secrets, private data, kinds of files), publishes them at sites.ola.cx/<project>/
 #       and hands the outcome back here; this command waits for it and prints it. A "no" means the
 #       command never runs. --files is the list `publish.py check` printed (paths inside the folder).
+#   ola-publish unpublish
+#       Takes the project's published pages down, after the person's yes (also always asked).
 #   ola-publish status
 #       The last publish's outcome (never asked): use it when the publish above was still going.
 #
@@ -52,6 +54,10 @@ def write(r):
 def tell(r):
     """Prints an outcome for the agent; returns the exit code."""
     st = r.get("state")
+    if st == "done" and r.get("unpublished"):
+        say(f"Taken down: {r.get('url')} now shows nothing." if r.get("live") else (r.get("message") or f"Taken down; {r.get('url')} stops showing it within a few minutes."),
+            "Tell the person the page is no longer on the web.")
+        return 0
     if st == "done":
         lines = [("Published again" if r.get("again") else "Published") + f": {r.get('url')} ({r.get('count')} file(s)).",
                  "It answers with the new page now." if r.get("live") else (r.get("message") or "The host is still putting it up; it shows within a few minutes."),
@@ -83,7 +89,11 @@ def main(argv):
             say("Nothing has been published from this project's conversation yet.")
             return 1
         return tell(r)
-    target, files, i = None, None, 0
+    if argv == ["unpublish"]:
+        argv, target_fixed = [], "(unpublish)"
+    else:
+        target_fixed = None
+    target, files, i = target_fixed, ([] if target_fixed else None), 0
     while i < len(argv):
         a = argv[i]
         if a == "--files":
@@ -98,9 +108,10 @@ def main(argv):
         i += 1
     if not target:
         usage("name the folder to publish")
-    if not files:
+    if not files and not target_fixed:
         usage("list every file that will be public after --files")
-    target = target.removeprefix("/work/").removeprefix("./").rstrip("/")
+    if not target_fixed:
+        target = target.removeprefix("/work/").removeprefix("./").rstrip("/")
     # The person's yes came before this ran: the front desk wrote "publishing" for exactly this
     # folder and list, then let the command go. Without that, nobody said yes to it.
     end = time.time() + WAIT

@@ -344,6 +344,7 @@ export function makeFrontDesk(cfg = config()) {
     publishResult: (slug, outcome) => workspaces.publishResult(slug, outcome),
     holdBusy: (slug) => workspaces.holdBusy(slug),
     audited: auditSitePublish,
+    unaudited: (ws, sess, m, r) => r.status === 200 && audit(db, { actor: sess.personId, action: 'site_unpublished', workspace: ws.id, nameRef: nameRef(keys, ws.id, m?.page ?? m?.folder ?? ''), size: r.body.files }),
     log,
   })
 

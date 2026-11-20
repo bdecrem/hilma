@@ -137,6 +137,11 @@ skill = (HERE / "SKILL.md").read_text()
 case("the skill offers Ola's address locally, asks which only when the request does not say, and always asks before publishing",
      all(s in skill for s in ("## Locally, at Ola's address", "Ask only when the request does not say", "ola-publish preview site --name", "ola-publish publish site --name", "ola-publish unpublish --name", "even with \"Lots of permissions\" on", "ola login")))
 
+# In the cloud the skill publishes from the conversation (OLA-230): ola-publish, one yes, never "go press Publish".
+cloud = skill[skill.index("## In the cloud"):skill.index("## Locally, at Ola's address")]
+case("the cloud: ola-publish with the list, publish again, take it down; never sends the person to press Publish",
+     all(x in cloud for x in ("ola-publish site --files", "ola-publish unpublish", "do not ask again in words")) and "press **Publish**" not in skill.split("## In the cloud")[0] and "the person presses Publish" not in skill)
+
 r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(bad), "--json"], capture_output=True, text=True)
 case("the command line: check --json exits 1 with the problems", r.returncode == 1 and json.loads(r.stdout)["problems"])
 r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(site)], capture_output=True, text=True)

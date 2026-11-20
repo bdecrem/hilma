@@ -93,9 +93,9 @@ databases, lists of people (a table with emails or phone numbers), `.env` files,
 the folder or start with `/`, files that are missing. Fix every PROBLEM line and run it again until
 it says `ready to publish`. Hidden files are left out by itself.
 
-**Locally**, show the person the list, in plain words: the files, what each one is, and the
-address it will get. Say what you left out and why. Ask: "Shall I publish these files?" Wait for
-the yes. **In the cloud**, do not ask in words: `ola-publish` asks with the exact list (below), and
+**Locally, for GitHub and Vercel**, show the person the list, in plain words: the files, what each
+one is, and the address it will get. Say what you left out and why. Ask: "Shall I publish these
+files?" Wait for the yes. (At Ola's address the app asks instead: see below.) **In the cloud**, do not ask in words: `ola-publish` asks with the exact list (below), and
 a question in words first would make the person say yes twice.
 
 ## In the cloud: `ola-publish`, one yes, the address
@@ -119,6 +119,11 @@ ola-publish site --files index.html,style.css,picture.png
   person still wants it, run `ola-publish` again with the list it names. **Still being
   published**: run `ola-publish status` a minute later (it is never asked) and tell them then.
 - If they say not now, nothing was published: say so in one line and leave the page in the project.
+- **Publish again** ("publish it again", after a change): Step 3 `check`, then `ola-publish` with
+  the new list; it replaces what is there, after the same one yes. Say the address again.
+- **Take it down** ("take it down", "unpublish"): run `ola-publish unpublish` as a command of its
+  own. It asks the person; on the yes the pages come down and the command says so. Tell them the
+  address now shows nothing.
 
 The page in the project also keeps a **Publish** button (under what Ola made): it does the same
 thing, and **Unpublish** there takes the pages down. Mention it only if the person asks how to
@@ -152,10 +157,11 @@ After Steps 2 and 3, with the folder ready (`site/`):
    run it again. If it says publishing to sites.ola.cx is not switched on yet, tell the person
    exactly that (nothing was published, the page is still on their Mac) and offer GitHub and
    Vercel instead; do not ask for a yes.
-4. **Ask, every time**, even with "Lots of permissions" on: show the files, the address and the
-   rule line, and ask "Shall I publish these N files at https://sites.ola.cx/<name>/?" Wait for
-   the yes. A yes for one list is not a yes for another.
-5. **Publish**, with the fingerprint the preview printed (the app asks the person once more):
+4. **Show the list, then let the app ask**: write the files, the address and the rule line in your
+   message, then go straight to step 5 in the same turn. The app asks the person for `ola-publish
+   publish` every time, even with "Lots of permissions" on, and that is their one yes: do not
+   also ask in words (they would say yes twice). A yes for one list is not a yes for another.
+5. **Publish**, with the fingerprint the preview printed (the app asks the person here):
 
    ```bash
    ola-publish publish site --name <name> --fingerprint <fingerprint>
@@ -165,9 +171,10 @@ After Steps 2 and 3, with the folder ready (`site/`):
 6. **See it live:** `python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/<name>/ --expect site`.
    Only when it says `live`, tell the person it is published, with the address as a link.
 
-**Publish again** (they changed the page): Step 3 `check`, then preview, ask, publish with the same
-name; it replaces what is there. **Unpublish** ("take it down"): ask first ("Shall I take
-sites.ola.cx/<name>/ down now?"), then `ola-publish unpublish --name <name>`, and tell them the
+**Publish again** (they changed the page): Step 3 `check`, then preview, show the list, publish with the same
+name; it replaces what is there. **Unpublish** ("take it down"): run
+`ola-publish unpublish --name <name>` (the app asks the person; that is the yes, do not ask in
+words first), and tell them the
 address now shows nothing. The name stays theirs, so nobody else can use its old links.
 
 Pages at Ola's address work like the cloud's: they load only their own files, keep nothing per

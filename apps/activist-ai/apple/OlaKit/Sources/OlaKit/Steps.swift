@@ -240,6 +240,22 @@ public enum Plain {
     return WebAsk.leaves(w.first)
   }
 
+  /// The cloud form of `ola-publish` (web/server/publishask.mjs): the folder or page, and the list.
+  public static func cloudPublish(_ cmd: String) -> (target: String, files: [String])? {
+    guard let w = WebAsk.shellWords(cmd.trimmingCharacters(in: .whitespaces)), w.count == 4,
+          w[0] == "ola-publish" || w[0] == "/opt/ola/bin/ola-publish", !["preview", "publish", "unpublish", "status"].contains(w[1]) else { return nil }
+    var target: String? = nil
+    var files: [String] = []
+    var i = 1
+    while i < w.count {
+      if w[i] == "--files", i + 1 < w.count { files = w[i + 1].split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }; i += 2 }
+      else if w[i].hasPrefix("-") || target != nil { return nil }
+      else { target = w[i]; i += 1 }
+    }
+    guard let t = target, !files.isEmpty else { return nil }
+    return (t, files)
+  }
+
   /// A permission request as a question Bart can answer.
   public static func describeApproval(action: String, resources: [String], metadata: JSON, dir: String?) -> (title: String, items: [ApprovalItem]) {
     let files = metadata["files"].array
@@ -250,6 +266,16 @@ public enum Plain {
       return (WebAsk.title(w.first), w.webs.map { r in
         ApprovalItem(label: WebAsk.label(r), detail: r.item == nil || w.extra ? resources.joined(separator: "\n") : nil, isCommand: r.item == nil)
       })
+    }
+    // Publish from a cloud project's conversation (OLA-230): `ola-publish <folder> --files a,b`. The
+    // question names every file that goes public (the yes is for exactly that list); the command
+    // stays under it. The Mac's own `ola-publish preview|publish` (local runtime) is a command as before.
+    if action == "shell" || action == "bash", resources.count == 1, ["ola-publish unpublish", "/opt/ola/bin/ola-publish unpublish"].contains(resources[0].trimmingCharacters(in: .whitespaces)) {
+      return ("Ola wants to take this project\u{2019}s pages off the web", [ApprovalItem(label: "Take down what is published at sites.ola.cx", detail: resources[0], isCommand: true)])
+    }
+    if action == "shell" || action == "bash", resources.count == 1, let p = cloudPublish(resources[0]) {
+      return ("Ola wants to publish \(p.files.count == 1 ? "this file" : "these \(p.files.count) files") on the web, at sites.ola.cx",
+              p.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) } + [ApprovalItem(label: "Publish from \(p.target)", detail: resources[0], isCommand: true)])
     }
     if action == "shell" || action == "bash" {
       return ("Ola wants to run a command", resources.map { cmd in

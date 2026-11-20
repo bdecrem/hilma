@@ -1,6 +1,7 @@
 // Publish from the conversation (OLA-230): the agent in a cloud project runs
 //
 //   ola-publish <folder | page.html> --files index.html,style.css,…
+//   ola-publish unpublish                 (the project's pages taken down, also asked)
 //
 // as a command of its own. opencode asks the person first, always, whatever "Lots of permissions"
 // says (proxy.mjs permissionsFor). The page shows that question as the Publish sheet's list (the
@@ -26,6 +27,7 @@ export function publishRequestOf(cmd) {
   const w = shellWords(String(cmd).trim())
   if (!w || !TOOLS.has(w[0])) return { bad: 'Run ola-publish as a command of its own, with nothing before or after it (no pipes, ; or &&).' }
   if (w[1] === 'status' && w.length === 2) return { status: true }
+  if (w[1] === 'unpublish') return w.length === 2 ? { unpublish: true } : { bad: 'In a project, take its pages down with just: ola-publish unpublish' }
   let target = null
   let files = null
   for (let i = 1; i < w.length; i++) {

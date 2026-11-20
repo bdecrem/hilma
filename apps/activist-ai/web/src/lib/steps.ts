@@ -42,6 +42,7 @@ export function describeCommand(command: string): Words {
   if (web?.kind === 'lookup') return { icon: 'search', verb: 'Looked up a paper:', object: web.item ? `“${web.item}”` : 'a reference' }
   const pub = publishRequestOf(c)
   if (pub?.status) return { icon: 'look', verb: 'Checked', object: 'whether the page is published' }
+  if (pub?.unpublish) return { icon: 'change', verb: 'Took down', object: 'the published pages' }
   if (pub?.sel) return { icon: 'change', verb: 'Published', object: `${pub.files.length === 1 ? 'one file' : `${pub.files.length} files`} at sites.ola.cx` }
   if (/^ola-db\s+search\b/.test(c)) return { icon: 'search', verb: 'Searched the documents', object: '' }
   if (/^ola-db\s+load\b/.test(c)) return { icon: 'change', verb: 'Loaded a table into', object: 'the project’s data' }
@@ -242,6 +243,7 @@ export function describeApproval(action: string, resources: string[], metadata: 
   const files = Array.isArray(metadata?.files) ? (metadata.files as { file?: string; patch?: string; status?: string }[]) : []
   // Publishing from the conversation (OLA-230): the sheet shows the list that would go public.
   const pub = publishAskOf(action, resources)
+  if (pub?.unpublish) return { title: 'Ola wants to take this project’s pages off the web', items: resources.map((cmd) => ({ label: 'Take down what is published at sites.ola.cx', detail: cmd })), publish: null }
   if (pub && !pub.status) return { title: 'Ola wants to publish this on the web', items: resources.map((cmd) => ({ label: pub.sel ? `Publish ${pub.files.length === 1 ? 'one file' : `${pub.files.length} files`} from ${'folder' in pub.sel ? pub.sel.folder : pub.sel.page}` : 'Publish', detail: cmd })), publish: pub.sel ? { sel: pub.sel, files: pub.files } : null }
   // A web search or download: the question says exactly what would leave the machine.
   const webs = action === 'shell' || action === 'bash' ? resources.map((r) => webRequestOf(r)).filter((x) => !!x) : []

@@ -84,6 +84,18 @@ final class CommandsTests: XCTestCase {
     XCTAssertEqual(t.reaction, .eyes)
   }
 
+  /// Publish from a cloud project's conversation (OLA-230): the question names every file.
+  func testCloudPublishQuestion() {
+    let a = Plain.describeApproval(action: "shell", resources: ["ola-publish site --files index.html,style.css"], metadata: .null, dir: nil)
+    XCTAssertEqual(a.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx")
+    XCTAssertEqual(a.items.map(\.label), ["index.html", "style.css", "Publish from site"])
+    XCTAssertEqual(a.items.last?.detail, "ola-publish site --files index.html,style.css")
+    // The Mac's own ola-publish (local runtime) and anything else stay commands.
+    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish publish site --name x --fingerprint abc"], metadata: .null, dir: nil).title, "Ola wants to run a command")
+    XCTAssertNil(Plain.cloudPublish("ola-publish site --files a | cat"))
+    XCTAssertNil(Plain.cloudPublish("ola-publish status"))
+  }
+
   /// Ola's web commands ask the web app's question, not "run a command".
   func testWebQuestions() {
     let a = Plain.describeApproval(action: "shell", resources: [#"ola-search "AI news this week""#], metadata: .null, dir: nil)

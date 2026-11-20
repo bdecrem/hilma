@@ -10,6 +10,8 @@ test('a simple call: the folder or the page, and the list', () => {
   assert.deepEqual(publishRequestOf("/opt/ola/bin/ola-publish /work/site/ --files 'index.html, a b.png'"), { sel: { folder: 'site' }, files: ['index.html', 'a b.png'] })
   assert.deepEqual(publishRequestOf('ola-publish ./flyer.html --files index.html'), { sel: { page: 'flyer.html' }, files: ['index.html'] })
   assert.deepEqual(publishRequestOf('ola-publish status'), { status: true })
+  assert.deepEqual(publishRequestOf('ola-publish unpublish'), { unpublish: true })
+  assert.ok(publishRequestOf('ola-publish unpublish --name x').bad)
 })
 
 test('forms we do not act on say why; other commands are not ours', () => {
