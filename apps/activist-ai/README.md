@@ -1292,7 +1292,11 @@ stream again at once and says "Lost the connection" only after 5 s without it. A
 drains the same way, and a door waits up to 20 s for the gateway's socket. Measure it across a deploy
 with `node ops/probe.mjs` (a new connection every 200 ms; it prints the failures and the longest
 gap) and `node ops/probe.mjs <event url> --stream --token-file <device token>` (one stream held
-open, each cut and how long it was gone). **On a failed suite nothing that runs is touched**: the message names the suite and its
+open, each cut and how long it was gone). Measured on staging, 2026-11-20, from the iMac through
+app.ola.cx: before (deploy of 61c52d12), 27 failed requests in a 5.7 s gap (6 resets while the TLS
+front restarted, then 21 of ngrok's 404 while the tunnel reconnected) and the stream gone 5.9 s. The
+first deploy carrying this change (a896f4a5) still restarted all four jobs, since the deploying code
+is the release being replaced: 5 of ngrok's 404 (1 s) and the stream gone 1.5 s. **On a failed suite nothing that runs is touched**: the message names the suite and its
 count, says the running version was left alone, and keeps the release for a look; the whole output
 is in `~/Library/Logs/ola/deploy-<commit12>.log`. Running workspaces keep their door and desk from
 the release they were started with until they next start. A deploy takes about as long as the
