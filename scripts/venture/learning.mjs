@@ -19,7 +19,7 @@
 // Run it at every checkpoint (sync.mjs push calls it).
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { loadWeaknesses, weaknessStatus } from './_weak.mjs'
+import { loadWeaknesses, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dry = process.argv.includes('--dry')
@@ -86,6 +86,7 @@ const ola = {
 // a named weakness, with whether its guard is holding.
 const weaknesses = weaknessStatus(loadWeaknesses(root), new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }))
 const filed = loadWeaknesses(root).flatMap((w) => w.seen.map((s) => s.ref)).filter((r) => /^correction \d+$/.test(r)).length
+for (const h of unnumberedCorrections(text)) console.log(`corrections: "${h.slice(0, 80)}" has no number, so it is not counted or filed: make it "## N. …" in CORRECTIONS.md`)
 if (weaknesses.length && filed !== entries.length) console.log(`weaknesses: ${entries.length - filed} correction(s) are not filed under a weakness yet (apps/venture/private/data/weaknesses.json)`)
 const value = { at: new Date().toISOString(), kit, ola, weaknesses, doc: 'how-we-learn' }
 console.log(`Kit: ${kit.percent}% of ${kit.corrections} corrections were new (${kit.repeats} repeats); latest day ${kit.latest_day?.day}: ${kit.latest_day?.corrections} corrections, ${kit.latest_day?.repeats} repeats`)

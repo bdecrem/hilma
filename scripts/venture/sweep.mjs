@@ -26,7 +26,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
-import { loadWeaknesses, weaknessStatus, WEAK_FILE } from './_weak.mjs'
+import { loadWeaknesses, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { openCounts } from './_plate.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -87,6 +87,8 @@ async function facts() {
     const rep = parts.filter((p) => /\bREPEAT\b/.test(p) || /(third|second|three|two) times?|asked (three|twice)/i.test(p.split('\n')[0])).length
     count(parts.length, `corrections${parts.length ? `, ${rep} ${rep === 1 ? 'repeat' : 'repeats'}` : ''}`)
     add(`Corrections written on ${long} (CORRECTIONS.md; read each in full there)`, parts.map((p) => p.split('\n')[0].slice(0, 200)))
+    const loose = unnumberedCorrections(readFileSync(priv('CORRECTIONS.md'), 'utf8'))
+    if (loose.length) add('Corrections written WITHOUT a number (not counted above, not filed; number them before posting)', loose)
   })
 
   await tryIt('Tracker', async () => {
@@ -121,8 +123,10 @@ async function facts() {
   })
 
   await tryIt('Ola: requests', async () => {
-    // the turns people chose to keep on the Ola machine, and those handed to another engine after a first try
-    const ssh = (c) => spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@171.66.240.175', `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${c}`], { encoding: 'utf8', timeout: 30000 })
+    // the turns people chose to keep on the Ola machine, and those handed to another engine after a first try.
+    // Over Tailscale (100.95.51.98): the public address's port 22 timed out on Nov 19 and the day's
+    // requests went unread; Tailscale reaches the mini from this iMac and from the mini itself.
+    const ssh = (c) => spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${c}`], { encoding: 'utf8', timeout: 30000 })
     const r = ssh('kept --days 3 --json')
     if (r.status !== 0) throw new Error((r.stderr || 'the Ola machine did not answer').trim().split('\n').pop())
     const rows = JSON.parse(r.stdout.trim().split('\n').pop()).filter((k) => new Date(k.at).toISOString() >= from && new Date(k.at).toISOString() < to)
@@ -225,7 +229,10 @@ if (cmd === '--wait') {
   // agent made"): every correction written down is filed under a weakness, and the grader's count
   // of corrections in his messages (when it has graded the day) is not larger than what was written.
   {
-    const heads = readFileSync(priv('CORRECTIONS.md'), 'utf8').split(/^## (?=\d+\. )/m).slice(1).map((p) => p.split('\n')[0])
+    const corrText = readFileSync(priv('CORRECTIONS.md'), 'utf8')
+    const unnumbered = unnumberedCorrections(corrText)
+    if (unnumbered.length) bad.push(`corrections written without a number, so nothing counts or files them: give each "## N. <Month D, YYYY>, <time>: …" in CORRECTIONS.md (${unnumbered.map((h) => `"${h.slice(0, 60)}"`).join('; ')})`)
+    const heads = corrText.split(/^## (?=\d+\. )/m).slice(1).map((p) => p.split('\n')[0])
     const filed = new Set(loadWeaknesses(rootUrl).flatMap((w) => w.seen.map((x) => x.ref)))
     const unfiled = heads.map((h) => Number(/^\d+/.exec(h)[0])).filter((n) => !filed.has(`correction ${n}`))
     if (unfiled.length) bad.push(`corrections not filed under a weakness in ${WEAK_FILE}: ${unfiled.join(', ')}`)
