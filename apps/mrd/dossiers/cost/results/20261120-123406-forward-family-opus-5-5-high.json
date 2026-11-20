@@ -1,0 +1,613 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica family claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "family",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  73,
+  75,
+  77,
+  79
+ ],
+ "started_at": "2026-11-20T20:34:06.406Z",
+ "meters_before": {
+  "at": "2026-11-20T20:34:01.783Z",
+  "window": {
+   "pct": 30,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 30,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 30% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 57484,
+  "user": 115
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:36:57.960Z",
+ "minutes": 2.86,
+ "meters_after": {
+  "at": "2026-11-20T20:36:57.960Z",
+  "window": {
+   "pct": 31,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 31,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 31% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 59812,
+   "output": 15943,
+   "cache_read": 1145048,
+   "cache_write": 119904,
+   "cost_usd": 1.4729,
+   "total": 1340707
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 59786,
+    "output": 4118,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1278,
+    "cost_usd": 0.048
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 11825,
+    "cache_read": 1145048,
+    "cache_write": 119904,
+    "thinking": 2105,
+    "cost_usd": 1.4248
+   }
+  }
+ },
+ "turns": 17,
+ "calls": 31,
+ "duration_ms": 170859,
+ "duration_api_ms": 168417,
+ "pages_read": 11,
+ "pages": [
+  {
+   "at": "2026-11-20T20:34:13.012Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC",
+   "find": "Artículo 137 | Artículo 138 | Artículo 31 | Dependiente",
+   "ok": true,
+   "chars": 12625
+  },
+  {
+   "at": "2026-11-20T20:34:24.882Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+   "find": "Artículo 137.- | Artículo 138.- | Artículo 100.- | vínculo con residente permanente | Así reformado | Artículo 203.-",
+   "ok": true,
+   "chars": 15721
+  },
+  {
+   "at": "2026-11-20T20:34:37.793Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+   "find": "categorías contempladas en el artículo 94 incisos 4 y | su alcance es individu | Ficha Artículo 137 | Ficha Artículo 138 | Ficha Artículo 100",
+   "ok": true,
+   "chars": 12720
+  },
+  {
+   "at": "2026-11-20T20:34:44.511Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 78.- | ARTÍCULO 79.- | ARTÍCULO 73.- | ARTÍCULO 25.- | ARTÍCULO 29.- | ARTÍCULO 225.-",
+   "ok": true,
+   "chars": 11542
+  },
+  {
+   "at": "2026-11-20T20:34:48.511Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "Personas indígenas transfronterizas | Ficha Artículo 78 | Ficha Artículo 79 | Quien haya convivido con su cónyuge",
+   "ok": true,
+   "chars": 10646
+  },
+  {
+   "at": "2026-11-20T20:34:52.844Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "Los inversionistas | Los pensionados | menores o con discapacidad | Ficha Artículo 79",
+   "ok": true,
+   "chars": 3026
+  },
+  {
+   "at": "2026-11-20T20:35:23.212Z",
+   "url": "https://semanariouniversidad.com/pais/migracion-nego-estatus-de-residentes-a-ninos-que-le-ganaron-recurso-de-amparo/",
+   "find": "Sala | residencia | dependiente | meses",
+   "ok": true,
+   "chars": 4470
+  },
+  {
+   "at": "2026-11-20T20:35:45.949Z",
+   "url": "https://ticotimes.net/2025/10/24/costa-rica-residency-backlog-hits-38000-in-october",
+   "find": "38,000 | backlog | months | family",
+   "ok": true,
+   "chars": 3698
+  },
+  {
+   "at": "2026-11-20T20:35:46.945Z",
+   "url": "https://www.dhr.go.cr/informacion_relevante/comunicados/2021/setiembre/47_boletin_atrasos_resolucion_tramites_migratorios.pdf",
+   "find": "7.762 | pendientes | residencia | vínculo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:35:52.832Z",
+   "url": "https://www.larepublica.net/noticia/defensoria-de-los-habitantes-migracion-tiene-pendiente-de-resolver-mas-de-7-mil-solicitudes-de-regularizacion",
+   "find": "7 | pendientes | 2019 | Defensoría",
+   "ok": true,
+   "chars": 3089
+  },
+  {
+   "at": "2026-11-20T20:35:59.481Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+   "find": "constituirá condición para fundamentar el otorgamiento de condición migratoria a terceras personas. (Así reformado | Ficha Artículo 203",
+   "ok": true,
+   "chars": 2345
+  }
+ ],
+ "searches": [
+  "Decreto 41329-MGP Reglamento reconocimiento derechos migratorios parejas del mismo sexo",
+  "\"41329\" decreto parejas mismo sexo migración sinalevi OR pgrweb",
+  "Migración atraso solicitudes residencia vínculo familiar Sala Constitucional amparo 2023 OR 2024 OR 2025",
+  "Migración Costa Rica rezago trámites residencia temporal permanente 2022 2023 solicitudes pendientes"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":73,\"answer_2023\":\"Conditional\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Conditional\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 78(1)\",\"enacted\":\"2009-09-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 79(8)\",\"enacted\":\"2009-09-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Art. 137(b)-(c), (e)\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Art. 138\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto Ejecutivo 37112-G\",\"article\":\"Art. 203\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-01\",\"instrument\":\"Decreto Ejecutivo N° 43932 del 25 de enero de 2023\",\"article\":\"Reglamento de Extranjería art. 137 inciso j) (added) and art. 138 bis (added)\",\"kind\":\"amended\",\"what_changed\":\"Added a new special category for charter-boat workers (art. 137(j)) and its requirements (art. 138 bis). The family-link subsections (a)-(e) of art. 137 and the family-link rules of art. 138 were left untouched, so the indicator is not affected. The exact date of entry into force was not read; the decree is dated 25 Jan. 2023, after 1 Jan. 2023 in any case.\",\"url\":\"https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1\",\"passage\":\"j) Categoría especial de Trabajadores de charteo, creada para las personas físicas extranjeras que pretendan laborar para empresas cuyas embarcacio",
+ "output": {
+  "answers": [
+   {
+    "question_id": 73,
+    "answer_2023": "Conditional",
+    "implementation_2023": "Usually",
+    "answer_2026": "Conditional",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 78(1)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 79(8)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 137(b)-(c), (e)",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 138",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 203",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-01",
+      "instrument": "Decreto Ejecutivo N° 43932 del 25 de enero de 2023",
+      "article": "Reglamento de Extranjería art. 137 inciso j) (added) and art. 138 bis (added)",
+      "kind": "amended",
+      "what_changed": "Added a new special category for charter-boat workers (art. 137(j)) and its requirements (art. 138 bis). The family-link subsections (a)-(e) of art. 137 and the family-link rules of art. 138 were left untouched, so the indicator is not affected. The exact date of entry into force was not read; the decree is dated 25 Jan. 2023, after 1 Jan. 2023 in any case.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+      "passage": "j) Categoría especial de Trabajadores de charteo, creada para las personas físicas extranjeras que pretendan laborar para empresas cuyas embarcaciones cuentan con licencia de charteo previamente autorizada por el Instituto Costarricense de Turismo. (Así adicionado el inciso anterior por el artículo 1° del decreto ejecutivo N° 43932 del 25 de enero de 2023)"
+     }
+    ],
+    "implementation_then_now": "In both periods the DGME processes the family-link categories routinely, with long delays and strict documentary demands but no documented systematic denial. Before 2023: the Defensoría (reported by La República, Sept. 2021) found 7,762 regularisation applications pending, some dating from 2019. 2023-2026: Tico Times (Oct. 2025) reports 38,000 pending applications and decision times of 12-20 months. In Nov. 2024 the Sala Constitucional condemned the DGME for 4-5 month delays on children's dependant-residence applications, which the DGME then rejected on documentary grounds (Semanario Universidad, Dec. 2024). Delays grew, but the rights are still granted in the main, so 'Usually' holds on both dates.",
+    "practice_sources": [
+     {
+      "title": "Defensoría de los Habitantes: Migración tiene pendiente de resolver más de 7 mil solicitudes de regularización (La República)",
+      "url": "https://www.larepublica.net/noticia/defensoria-de-los-habitantes-migracion-tiene-pendiente-de-resolver-mas-de-7-mil-solicitudes-de-regularizacion",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Costa Rica Residency Backlog Hits 38,000 in October (Tico Times)",
+      "url": "https://ticotimes.net/2025/10/24/costa-rica-residency-backlog-hits-38000-in-october",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Migración negó estatus de residentes a niños que le ganaron recurso de amparo (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/pais/migracion-nego-estatus-de-residentes-a-ninos-que-le-ganaron-recurso-de-amparo/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "SINALEVI's consolidated text was read with its per-article amendment notes. The last notes on Ley 8764 arts. 78-79 date from Ley 9710 (2019). On Reglamento arts. 137, 138 and 203, the only notes date from Decree 38844 (2015), Decree 42389 (2022) and Decree 43932 (2023, non-family subsection). No family-relevant amendment falls in the window. Practice evidence is from the press, not from DGME statistics broken down by family category.",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI consolidated text)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI version 140878)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated text)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Semanario Universidad, Dec. 2024",
+      "url": "https://semanariouniversidad.com/pais/migracion-nego-estatus-de-residentes-a-ninos-que-le-ganaron-recurso-de-amparo/"
+     },
+     {
+      "title": "Tico Times, Oct. 2025",
+      "url": "https://ticotimes.net/2025/10/24/costa-rica-residency-backlog-hits-38000-in-october"
+     },
+     {
+      "title": "La República, Sept. 2021",
+      "url": "https://www.larepublica.net/noticia/defensoria-de-los-habitantes-migracion-tiene-pendiente-de-resolver-mas-de-7-mil-solicitudes-de-regularizacion"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The worsening backlog (approval times reported as 6-8 months formerly vs 14-18+ months in 2025) is a degradation within the 'Usually' band, not a shift between levels. Refugee family-unity provisions were not reviewed."
+   },
+   {
+    "question_id": 75,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Arts. 41, 48, 49",
+      "enacted": "1949-11-07",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 25",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 29",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 225",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Sala Constitucional, Voto 2009-01024",
+      "article": "Considerandos III-IV",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Both before and after 2023 the Sala Constitucional hears amparo claims against the DGME on residence and family matters and rules against it. The Nov. 2024 ruling on children's dependant-residence delays (Semanario Universidad, Dec. 2024) shows the remedy working in the window. It also shows its limits: the DGME complied by deciding, then rejected the applications. Pre-2023 practice rests on the 2009 ruling (Voto 2009-01024) and on Defensoría findings on delays (2021). No shift in access to the courts is documented, so 'Usually' holds on both dates.",
+    "practice_sources": [
+     {
+      "title": "Migración negó estatus de residentes a niños que le ganaron recurso de amparo (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/pais/migracion-nego-estatus-de-residentes-a-ninos-que-le-ganaron-recurso-de-amparo/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Defensoría de los Habitantes: Migración tiene pendiente de resolver más de 7 mil solicitudes de regularización (La República)",
+      "url": "https://www.larepublica.net/noticia/defensoria-de-los-habitantes-migracion-tiene-pendiente-de-resolver-mas-de-7-mil-solicitudes-de-regularizacion",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The amendment notes on Ley 8764 arts. 25, 29 and 225 show no change in the window (the only 2024 amendment, Ley 10493, touched arts. 33, 241 and 253). The Constitution arts. 41/48/49 and the Código Procesal Contencioso-Administrativo were not re-read in this pass, and no constitutional amendment to those articles in 2023-2025 is known. Voto 2009-01024 was not re-opened.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI consolidated text)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Semanario Universidad, Dec. 2024",
+      "url": "https://semanariouniversidad.com/pais/migracion-nego-estatus-de-residentes-a-ninos-que-le-ganaron-recurso-de-amparo/"
+     },
+     {
+      "title": "La República, Sept. 2021",
+      "url": "https://www.larepublica.net/noticia/defensoria-de-los-habitantes-migracion-tiene-pendiente-de-resolver-mas-de-7-mil-solicitudes-de-regularizacion"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Ley 10493 (5 June 2024) amended Ley 8764 art. 33 (fees), which has no bearing on remedies. Practice evidence specific to contentious-administrative litigation on family refusals was not found for either period."
+   },
+   {
+    "question_id": 77,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Decreto Ejecutivo N.º 41329-MGP, Reglamento para el Reconocimiento de Derechos Migratorios a Parejas del Mismo Sexo",
+      "article": "Art. 1",
+      "enacted": "2019-01-18",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 137(b)",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 73",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Same-sex marriage has been legal since May 2020, and same-sex spouses use the ordinary gender-neutral spousal routes. The first recognition under Decree 41329 dates from 2019 (El Mundo CR). No report of refusals or of a policy change in 2023-2025 was found, so 'Usually' is kept on both dates. Practice evidence for either period is thin and mostly pre-2023.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Arts. 137(b) of the Reglamento and 73 of Ley 8764 were read in SINALEVI with their amendment notes, and neither changed in the window. Decree 41329-MGP could not be located in SINALEVI, and searches returned only secondary sources, so its status is not established. The equal-marriage ruling and its 2020 entry into force predate the window.",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI version 140878)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' rests mainly on Decree 41329, whose official text and current status were not verified, and on the gender-neutral 'cónyuge' wording after marriage equality. The answer looks right, but its sourcing is weak.",
+    "confidence": "low",
+    "notes": "No practice source was opened in this session for either period; the starting answer's evidence (El Mundo CR 2019) predates both dates."
+   },
+   {
+    "question_id": 79,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 31",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 2 ('Dependiente')",
+      "enacted": "2012",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 100(k)-(l)",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 78 (final paragraph)",
+      "enacted": "2009-09-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto Ejecutivo 37112-G",
+      "article": "Art. 137(b)-(c), 203",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-02",
+      "instrument": "Reglamento a la Ley N° 9996, Ley para la atracción de inversionistas, rentistas y pensionados, Decreto Ejecutivo N° 43926 del 14 de febrero del 2023, art. 31",
+      "article": "Reglamento de Extranjería arts. 87-88 (investors and their dependants)",
+      "kind": "repealed",
+      "what_changed": "Repealed the Reglamento's provisions on investors and their dependants; that category moved to the Ley 9996 regulation, which keeps investment thresholds. The dependants route therefore stays tied to the principal's financial requirements. Arts. 31, 100 and 137, which carry the No, were untouched, so the answer does not change.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+      "passage": "INVERSIONISTAS Y SUS DEPENDIENTES Artículo 87.- (Derogado por el artículo 31 del Reglamento a la Ley N° 9996, Ley para la atracción de inversionistas, rentistas y pensionados, aprobado mediante decreto ejecutivo N° 43926 del 14 de febrero del 2023)"
+     },
+     {
+      "date": "2024",
+      "instrument": "Ley N° 10493 del 5 de junio del 2024",
+      "article": "Ley 8764 art. 33, penultimate paragraph (fee exemptions)",
+      "kind": "amended",
+      "what_changed": "Extended the fee exemptions to cross-border indigenous persons and cut fees by up to 50% for seasonal agricultural workers. It does not touch family-reunification resource conditions (CCSS insurance, economic dependence).",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "En el caso de trabajadores del sector agrícola, que atienden labores de cosecha temporales por periodos de nueve meses o inferiores, el costo de estos pagos será de hasta un cincuenta por ciento (50%) menos. (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation does not apply. The CCSS-insurance and economic-dependence conditions stayed in force throughout the window.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "SINALEVI's amendment notes show art. 31 with no amendment note. Art. 100's last note is from Decree 42389 (2022), art. 203's last note is from Decree 42389 (2022), and Ley 8764 art. 78's last note is from Ley 9710 (2019), so all predate the window. The article number of the 'Dependiente' definition was still not seen.",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI consolidated text)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI version 140878)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 145230)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The exact entry-into-force dates of Decree 43926 (dated 14 Feb. 2023) and Ley 10493 (dated 5 June 2024) were not read; both fall after 1 Jan. 2023 and before 1 Jan. 2026, and neither changes the answer."
+   }
+  ]
+ }
+}

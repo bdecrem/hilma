@@ -18,3 +18,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 12:17 | forward | expulsion_a | claude-opus-5-5 | high | 7.16 | 31 | 29,077 | 2,744,529 | 2.14 | 25→27 | 37→37 | 63→63 | 20 | ok | `forward costa_rica expulsion_a claude-opus-5-5 high` |
 | 2026-11-20 12:25 | forward | nationality_a | claude-opus-5-5 | high | 2.88 | 16 | 17,944 | 937,039 | 1.33 | 27→28 | 37→37 | 63→63 | 9 | ok | `forward costa_rica nationality_a claude-opus-5-5 high` |
 | 2026-11-20 12:28 | forward | nationality_b | claude-opus-5-5 | high | 5.58 | 32 | 33,755 | 1,901,862 | 1.99 | 28→30 | 37→37 | 63→63 | 18 | ok | `forward costa_rica nationality_b claude-opus-5-5 high` |
+| 2026-11-20 12:34 | forward | family | claude-opus-5-5 | high | 2.86 | 17 | 15,943 | 1,340,707 | 1.47 | 30→31 | 37→37 | 63→63 | 11 | ok | `forward costa_rica family claude-opus-5-5 high` |
