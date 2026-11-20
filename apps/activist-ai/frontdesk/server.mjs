@@ -38,6 +38,7 @@ import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
+import { ACCEPTABLE_USE, makeSites, sitesConfig } from './sites.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -117,6 +118,8 @@ export function config(env = process.env) {
     // Devices (devices.mjs): the Mac app and the command line signed in to an account. Off unless
     // OLA_GATE_PASS_KEY is set (the same value as the TLS front's).
     devices: devicesConfig(env, { home: WS_HOME, proxyProtocol: env.OLA_FD_PROXY_PROTOCOL === '1' }),
+    // Publish (sites.mjs): where published pages go, and the deploy credential's file.
+    sites: sitesConfig(env),
     // Passwords (auth.mjs, passwords.mjs): the shortest allowed.
     passwordMin: minLength(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
@@ -306,6 +309,7 @@ export function makeFrontDesk(cfg = config()) {
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log })
+  const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -600,6 +604,42 @@ export function makeFrontDesk(cfg = config()) {
       }
     }
 
+    // Publish (sites.mjs, OLA-209): what is published (any member), and the list, the publish and
+    // the takedown (the owner only, each one a yes in the sheet, whatever "Lots of permissions" says).
+    if (p === '/api/site' && req.method === 'GET') return json(res, 200, { published: sites.status(ws.slug), canPublish: ws.role === 'owner', configured: sites.configured(), origin: sites.origin, acceptableUse: ACCEPTABLE_USE })
+    if (p === '/api/site/preview' || p === '/api/site/publish' || p === '/api/site/unpublish') {
+      if (ws.role !== 'owner') return json(res, 403, { error: 'owner_only', message: 'Only the project’s owner can publish its pages, or take them down.' })
+      if ((p === '/api/site/preview') !== (req.method === 'GET') || !['GET', 'POST'].includes(req.method)) return json(res, 405, { error: 'method' })
+      const body = req.method === 'POST' ? await readJson(req) : null
+      if (req.method === 'POST' && !body) return json(res, 400, { error: 'bad_json' })
+      if (p === '/api/site/unpublish') {
+        const m = sites.status(ws.slug)
+        const r = await sites.unpublish(ws.slug)
+        if (r.status === 200) audit(db, { actor: sess.personId, action: 'site_unpublished', workspace: ws.id, nameRef: nameRef(keys, ws.id, m?.page ?? m?.folder ?? ''), size: r.body.files })
+        return json(res, r.status, r.body)
+      }
+      const sel = req.method === 'GET' ? { page: url.searchParams.get('page') ?? undefined, folder: url.searchParams.get('folder') ?? undefined } : { page: body.page, folder: body.folder }
+      if (sel.page === undefined) delete sel.page
+      if (sel.folder === undefined || sel.page !== undefined) delete sel.folder
+      if (p === '/api/site/publish' && body.confirm !== true) return json(res, 400, { error: 'confirm', message: 'Publishing needs your yes in the sheet.' })
+      const slot = takeSlot(sess.personId, ws.slug)
+      if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
+      const busy = workspaces.holdBusy(ws.slug)
+      try {
+        await workspaces.ensureRunning(ws.slug)
+        const ctx = siteCtx(ws)
+        const was = sites.status(ws.slug)
+        const r = p === '/api/site/preview' ? await sites.preview(ctx, sel) : await sites.publish(ctx, sel, typeof body.fingerprint === 'string' ? body.fingerprint : '')
+        const ref = nameRef(keys, ws.id, sel.page ?? sel.folder ?? '')
+        if (r.body?.error === 'secret') audit(db, { actor: sess.personId, action: 'site_refused', workspace: ws.id, nameRef: ref, ok: false })
+        if (p === '/api/site/publish' && r.status === 200) audit(db, { actor: sess.personId, action: was ? 'site_updated' : 'site_published', workspace: ws.id, nameRef: ref, size: r.body.total, sha256: r.body.fingerprint })
+        return json(res, r.status, r.body)
+      } finally {
+        slot.release()
+        busy()
+      }
+    }
+
     // Every other route runs at least one `container exec`: one transfer slot each.
     const upload = p === '/api/files' && req.method === 'POST'
     let slot = null
@@ -621,6 +661,38 @@ export function makeFrontDesk(cfg = config()) {
     } finally {
       slot.release()
       busy()
+    }
+  }
+
+  // What Publish reads of a workspace (sites.mjs): its file list as the VM reports it (hidden files
+  // too, so a .env in a folder is refused rather than quietly skipped), each file through ola-get
+  // like a download, whether a file was uploaded by a person, and the workspace's own secrets.
+  function siteCtx(ws) {
+    return {
+      slug: ws.slug,
+      list: () => workspaces.filesAsync(ws.slug),
+      async read(rel, max) {
+        if (!workspaces.validRel(rel)) return null
+        const f = await workspaces.getStream(ws.slug, rel)
+        if (!f) return null
+        if (f.size > max) return f.kill(), null
+        const parts = []
+        let n = 0
+        try {
+          for await (const c of f.stream) {
+            n += c.length
+            if (n > max) return null
+            parts.push(c)
+          }
+        } catch {
+          return null
+        } finally {
+          f.kill()
+        }
+        return n === f.size ? Buffer.concat(parts) : null
+      },
+      uploaded: (rel) => !!db.prepare('SELECT 1 FROM uploads WHERE workspace_id = ? AND name_ref = ?').get(ws.id, nameRef(keys, ws.id, rel)),
+      secrets: () => workspaces.secretValues(ws.slug),
     }
   }
 
@@ -1170,7 +1242,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, close: () => (devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, close: () => (devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

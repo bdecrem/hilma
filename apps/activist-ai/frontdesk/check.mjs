@@ -27,6 +27,7 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { startFakeModel } from '../web/server/fake-model.mjs'
 import { startFakeAnthropic } from '../web/server/fake-anthropic.mjs'
+import { startFakeVercel } from '../web/server/fake-vercel.mjs'
 import { ALLOWED } from '../web/server/proxy.mjs'
 import { SoftAuthn } from './review/softauthn.mjs'
 
@@ -51,6 +52,11 @@ const GW_PORT = Number(process.env.OLA_CHECK_GW_PORT || 4182)
 const CK = (await import('./auth.mjs')).sessionCookie(ORIGIN).name
 const CK_RE = new RegExp(`${CK}=([^;]+)`)
 const run = mkdtempSync(path.join(tmpdir(), 'ola-fdcheck-'))
+// Publish (sites.mjs): a stand-in for Vercel's deploy API and the published site, in this process
+// (so the admin CLI's unpublish goes through adminAsync, never the blocking admin()).
+const SITES_TOKEN = randomBytes(16).toString('hex')
+const vercel = await startFakeVercel({ token: SITES_TOKEN })
+writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${SITES_TOKEN}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
 const env = {
   ...process.env,
   OLA_HOME: path.join(homedir(), `.ola-fdcheck${TAG ? `-${TAG}` : ''}`),
@@ -80,6 +86,11 @@ const env = {
   // 6 s (120 by default) so the check can watch one expire.
   OLA_GATE_PASS_KEY: randomBytes(32).toString('hex'),
   OLA_FD_DEVICE_CODE_SECONDS: '6',
+  OLA_FD_SITES_API: vercel.api,
+  OLA_FD_SITES_ORIGIN: vercel.origin,
+  OLA_FD_SITES_FILE: path.join(run, 'sites.env'),
+  OLA_FD_SITES_POLL_MS: '100',
+  OLA_FD_SITES_VERIFY_MS: '8000',
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -1562,6 +1573,142 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
   assert(!(await V.page.locator('#askbar-input').isVisible()) && !(await V.page.getByRole('button', { name: 'Add files' }).count()), 'the viewer sees Ask Ola or Add files')
   return `${sampleRoutes.filter(([m]) => m !== 'GET').length + 2} writes refused`
 })
+
+// ---------------------------------------------------------------- Publish (OLA-209)
+// Pages written inside alice's sealed VM, published through the front desk to the stand-in for
+// Vercel (web/server/fake-vercel.mjs), whose own origin plays sites.ola.cx.
+const plantFiles = (files) => {
+  const py = 'import json, os, sys\nfor k, v in json.loads(sys.stdin.read()).items():\n    os.makedirs(os.path.dirname("/work/" + k), exist_ok=True)\n    open("/work/" + k, "w").write(v)\n'
+  const w = spawnSync(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', py], { input: JSON.stringify(files), encoding: 'utf8' })
+  assert(w.status === 0, `could not write inside the workspace: ${w.stderr}`)
+}
+const flyerPage = (title) =>
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><link rel="stylesheet" href="look.css"></head>` +
+  `<body><h1 id="h">${title}</h1><p>Thursday at 7, the community room.</p><img id="pic" src="pics/dot.svg" alt="A dot" width="9" height="9">` +
+  `<script>try { localStorage.setItem('x', '1'); document.body.dataset.storage = 'open' } catch { document.body.dataset.storage = 'blocked' }</script></body></html>`
+const auditOf = (actions) => JSON.parse(admin('audit', '--workspace', FA, '--json', '--limit', '200')).filter((r) => actions.includes(r.action))
+await check('Publish: the owner gets exactly the files that go public and the address; a member, a viewer and bob are refused; nothing leaves on a look', async () => {
+  plantFiles({ 'flyer/flyer.html': flyerPage('Made-up tenants flyer'), 'flyer/look.css': 'h1 { color: rgb(1, 2, 3) } body { margin: 16px }', 'flyer/pics/dot.svg': '<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9"><rect width="9" height="9"/></svg>', 'flyer/notes.txt': 'not used by the page' })
+  const calls = vercel.calls.length
+  const r = await api('/api/site/preview?page=flyer%2Fflyer.html', { cookie: a.cookie, ws: FA })
+  assert(r.status === 200, `owner preview ${r.status} ${r.text.slice(0, 200)}`)
+  const names = r.json.items.map((i) => i.as)
+  assert(JSON.stringify(names) === JSON.stringify(['index.html', 'look.css', 'pics/dot.svg']), `files ${JSON.stringify(names)}`)
+  assert(r.json.url === `${vercel.origin}/${FA}/` && /takes down/.test(r.json.acceptableUse), `${r.json.url}`)
+  const st = await api('/api/site', { cookie: v.cookie, ws: FA })
+  assert(st.status === 200 && st.json.canPublish === false && st.json.published === null, `viewer status ${st.status} ${st.text}`)
+  const viewer = await api('/api/site/preview?page=flyer%2Fflyer.html', { cookie: v.cookie, ws: FA })
+  const viewerPub = await api('/api/site/publish', { method: 'POST', cookie: v.cookie, csrf: v.csrf, ws: FA, body: JSON.stringify({ page: 'flyer/flyer.html', fingerprint: r.json.fingerprint, confirm: true }) })
+  const bobs = await api('/api/site/preview?page=flyer%2Fflyer.html', { cookie: b.cookie, ws: FA })
+  admin('add-member', 'team-a', 'vera', 'member')
+  let member
+  try {
+    member = await api('/api/site/publish', { method: 'POST', cookie: v.cookie, csrf: v.csrf, ws: FA, body: JSON.stringify({ page: 'flyer/flyer.html', fingerprint: r.json.fingerprint, confirm: true }) })
+  } finally {
+    admin('add-member', 'team-a', 'vera', 'viewer')
+  }
+  assert(viewer.status === 403 && viewerPub.status === 403 && member.status === 403 && /owner/.test(member.json?.message) && bobs.status === 404, `viewer ${viewer.status}/${viewerPub.status}, member ${member.status}, bob ${bobs.status}`)
+  const noYes = await api('/api/site/publish', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ page: 'flyer/flyer.html', fingerprint: r.json.fingerprint }) })
+  assert(noYes.status === 400, `a publish without the yes: ${noYes.status}`)
+  assert(vercel.calls.length === calls, 'something was sent to the host')
+  return `${names.length} files at ${r.json.url}; notes.txt left out`
+})
+await check('Publish: a key in what a page uses, the workspace’s own key, a .env in a folder, the database: refused in plain words, nothing leaves, audited', async () => {
+  const own = secretsOf(FA).BOX_API_KEY
+  plantFiles({ 'leak/index.html': '<!doctype html><title>Made-up leaky page</title><script src="app.js"></script>', 'leak/app.js': 'const key = "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789"', 'mine/index.html': `<!doctype html><title>Mine</title><p>${own}</p>`, 'envy/index.html': '<p>hi</p>', 'envy/.env': 'TOKEN=abc', 'dbpage/index.html': '<img src="../project.db">' })
+  const calls = vercel.calls.length
+  const before = auditOf(['site_refused']).length
+  const tries = [['page=leak%2Findex.html', /leak\/app\.js/], ['page=mine%2Findex.html', /own keys/], ['folder=envy', /\.env/], ['page=dbpage%2Findex.html', null]]
+  const bad = []
+  for (const [q, re] of tries) {
+    const r = await api(`/api/site/preview?${q}`, { cookie: a.cookie, ws: FA })
+    if (re ? r.status !== 422 || !re.test(r.json?.message) : r.status !== 200 || r.json.items.length !== 1 || !r.json.warnings.some((w) => /outside/.test(w))) bad.push(`${q}: ${r.status} ${r.json?.message ?? r.json?.warnings}`)
+    if (/sk-ant|abc/.test(r.text) || (own && r.text.includes(own))) bad.push(`${q}: the secret was echoed`)
+  }
+  const pub = await api('/api/site/publish', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ page: 'leak/index.html', fingerprint: 'x', confirm: true }) })
+  if (pub.status !== 422) bad.push(`publish ${pub.status}`)
+  if (vercel.calls.length !== calls) bad.push('something was sent to the host')
+  const refused = auditOf(['site_refused']).length - before
+  if (refused !== 4) bad.push(`${refused} site_refused rows`)
+  assert(!bad.length, bad.join('; '))
+  return 'four refusals, one database left out as outside its folder'
+})
+let publicUrl = null
+await check('Publish through the page: the sheet lists the files and the address, a yes publishes; signed out at 390 px the page loads with its own style and picture, sandboxed (no storage)', async () => {
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+  const card = A.page.locator('.thing-slot[data-kind="site"]', { hasText: 'Made-up tenants flyer' })
+  await card.waitFor({ timeout: 30_000 })
+  await card.getByRole('button', { name: /^Publish/ }).click()
+  const sheet = A.page.locator('dialog.publish-sheet')
+  await sheet.locator('.publish-files li').first().waitFor({ timeout: 30_000 })
+  const names = await sheet.locator('.publish-name').allInnerTexts()
+  assert(JSON.stringify(names) === JSON.stringify(['index.html', 'look.css', 'pics/dot.svg']), `files ${JSON.stringify(names)}`)
+  await sheet.getByRole('button', { name: 'Publish these 3 files', exact: true }).click()
+  await sheet.locator('.publish-done').waitFor({ timeout: 30_000 })
+  publicUrl = await sheet.locator('.publish-done a').getAttribute('href')
+  assert(publicUrl === `${vercel.origin}/${FA}/`, publicUrl)
+  if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'publish-sheet.png') })
+  await A.page.keyboard.press('Escape')
+  const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  try {
+    const p = await visitor.newPage()
+    const res = await p.goto(publicUrl)
+    const s = await p.evaluate(() => ({ title: document.title, color: getComputedStyle(document.getElementById('h')).color, img: document.getElementById('pic').naturalWidth, storage: document.body.dataset.storage, wide: document.documentElement.scrollWidth > innerWidth }))
+    const csp = res.headers()['content-security-policy'] ?? ''
+    if (SHOTS) await p.screenshot({ path: path.join(SHOTS, 'published-390.png') })
+    assert(res.status() === 200 && s.title === 'Made-up tenants flyer' && s.color === 'rgb(1, 2, 3)' && s.img === 9 && !s.wide, JSON.stringify(s))
+    assert(s.storage === 'blocked' && /^sandbox allow-scripts/.test(csp) && !csp.includes('allow-same-origin'), `storage ${s.storage}, csp ${csp}`)
+  } finally {
+    await visitor.close()
+  }
+  const rows = auditOf(['site_published'])
+  assert(rows.length === 1 && rows[0].actor === 'alice' && rows[0].size > 0 && rows[0].sha256, JSON.stringify(rows))
+  return publicUrl
+})
+await check('Publish again updates the public page (audited as an update); Unpublish in the sheet takes it down: 404, and the host keeps no older deployment', async () => {
+  plantFiles({ 'flyer/flyer.html': flyerPage('Made-up tenants flyer, new time') })
+  const pre = await api('/api/site/preview?page=flyer%2Fflyer.html', { cookie: a.cookie, ws: FA })
+  assert(pre.json?.published?.url === publicUrl, `published ${JSON.stringify(pre.json?.published)}`)
+  const r = await api('/api/site/publish', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ page: 'flyer/flyer.html', fingerprint: pre.json.fingerprint, confirm: true }) })
+  assert(r.status === 200 && r.json.again === true && r.json.live === true, `republish ${r.status} ${r.text.slice(0, 200)}`)
+  assert((await (await fetch(publicUrl)).text()).includes('new time'), 'not updated')
+  assert(vercel.deployments().length === 1, `${vercel.deployments().length} deployments kept`)
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+  const card = A.page.locator('.thing-slot[data-kind="site"]', { hasText: 'Made-up tenants flyer, new time' })
+  await card.waitFor({ timeout: 30_000 })
+  await card.getByRole('button', { name: /^Published/ }).click()
+  const sheet = A.page.locator('dialog.publish-sheet')
+  await sheet.getByRole('button', { name: 'Unpublish' }).click({ timeout: 30_000 })
+  await sheet.getByRole('button', { name: 'Yes, take it down now' }).click()
+  await sheet.locator('.publish-done', { hasText: 'Taken down' }).waitFor({ timeout: 30_000 })
+  await A.page.keyboard.press('Escape')
+  assert((await fetch(publicUrl)).status === 404, 'still up')
+  assert(auditOf(['site_updated']).length === 1 && auditOf(['site_unpublished']).length === 1, 'audit rows')
+})
+await check('Publish: admin.mjs unpublish takes a project down (a takedown), audited as the admin’s', async () => {
+  const pre = await api('/api/site/preview?page=flyer%2Fflyer.html', { cookie: a.cookie, ws: FA })
+  const r = await api('/api/site/publish', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ page: 'flyer/flyer.html', fingerprint: pre.json.fingerprint, confirm: true }) })
+  assert(r.status === 200 && (await fetch(publicUrl)).status === 200, `publish ${r.status}`)
+  const listed = await adminAsync('sites')
+  assert(listed.out.includes(FA), listed.out)
+  const down = await adminAsync('unpublish', FA)
+  assert(down.code === 0 && /taken down/.test(down.out), `${down.code} ${down.err}`)
+  assert((await fetch(publicUrl)).status === 404, 'still up')
+  const rows = auditOf(['site_unpublished'])
+  assert(rows.length === 2 && rows[0].actor_kind === 'admin', JSON.stringify(rows.map((x) => x.actor_kind)))
+  return down.out.trim()
+})
+await check('the sign-in cookie is host-only: no Domain attribute, so sites.ola.cx never gets it (and __Host- on https, test/sites.test.mjs)', async () => {
+  const r = await fetch(`${ORIGIN}/api/auth/password`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ handle: 'nell', password: 'wrong-password-here' }) })
+  const signIn = await api('/api/signout', { method: 'POST', cookie: 'x', origin: ORIGIN })
+  const set = [r.headers.get('set-cookie') ?? '', signIn.headers.get('set-cookie') ?? ''].join('\n')
+  const c = await cookieOf(A.ctx)
+  assert(!/domain=/i.test(set) && c && !c.domain.startsWith('.'), `${set} ${c?.domain}`)
+})
+// The planted pages go, so the checks below see the project as before.
+spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-rf', '/work/flyer', '/work/leak', '/work/mine', '/work/envy', '/work/dbpage'])
 
 // ---------------------------------------------------------------- Data and the web (2.3.0-8)
 const PDF = spawnSync('python3', [path.join(AI, 'workspace/testdata/mkpdf.py'), 'Page one is about drought in the Sahel.', 'Page two covers mangrove restoration in Tanzania.', 'Page three is about flood insurance.']).stdout

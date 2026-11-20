@@ -32,6 +32,8 @@ import { makeHostedStandin } from './server/hosted-standin.mjs'
 import { makeCompareStandin } from './server/compare-standin.mjs'
 import { openDb } from '../frontdesk/db.mjs'
 import { makeJobs } from '../frontdesk/jobs.mjs'
+import { ACCEPTABLE_USE, folderCtx, makeSites, sitesConfig } from '../frontdesk/sites.mjs'
+import { startFakeVercel } from './server/fake-vercel.mjs'
 const fixtureName = fixture.project.name
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -310,6 +312,13 @@ devJobs = makeJobs({
     },
   },
 })
+// Publish (../frontdesk/sites.mjs), against the stand-in for Vercel (server/fake-vercel.mjs): the
+// same module as the front desk, over the dev folder; the "public" site is the stand-in's origin.
+const fakeToken = randomBytes(16).toString('hex')
+const fakeVercel = await startFakeVercel({ token: fakeToken })
+fs.writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${fakeToken}\n`, { mode: 0o600 })
+const devSites = makeSites({ cfg: sitesConfig({ OLA_FD_SITES_ORIGIN: fakeVercel.origin, OLA_FD_SITES_API: fakeVercel.api, OLA_FD_SITES_FILE: path.join(run, 'sites.env'), OLA_FD_SITES_POLL_MS: '50', OLA_FD_SITES_VERIFY_MS: '5000' }), dataDir: path.join(run, 'fd'), log })
+const uploadedHere = new Set()
 let pagePort = PORT
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
@@ -334,6 +343,29 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { role: devRole, claudeOnce: claudeStandin.st.onceRuns ?? 0 })
     }
     if (p === '/api/project' && req.method === 'GET') return json(res, 200, await projectPayload(files))
+    if (p === '/api/site' && req.method === 'GET') return json(res, 200, { published: devSites.status('dev-project'), canPublish: devRole === 'owner', configured: true, origin: fakeVercel.origin, acceptableUse: ACCEPTABLE_USE })
+    if (p.startsWith('/api/site/')) {
+      if (devRole !== 'owner') return json(res, 403, { error: 'owner_only', message: 'Only the project’s owner can publish its pages, or take them down.' })
+      for (const f of await files.list()) if (f.origin === 'uploaded') uploadedHere.add(f.path)
+      const ctx = folderCtx('dev-project', work, { uploaded: (rel) => uploadedHere.has(rel) })
+      if (p === '/api/site/preview' && req.method === 'GET') {
+        const sel = url.searchParams.has('page') ? { page: url.searchParams.get('page') } : { folder: url.searchParams.get('folder') ?? '' }
+        const r = await devSites.preview(ctx, sel)
+        return json(res, r.status, r.body)
+      }
+      let raw = ''
+      for await (const c of req) raw += c
+      const body = JSON.parse(raw || '{}')
+      if (p === '/api/site/publish' && req.method === 'POST') {
+        if (body.confirm !== true) return json(res, 400, { error: 'confirm', message: 'Publishing needs your yes in the sheet.' })
+        const r = await devSites.publish(ctx, typeof body.page === 'string' ? { page: body.page } : { folder: body.folder }, body.fingerprint)
+        return json(res, r.status, r.body)
+      }
+      if (p === '/api/site/unpublish' && req.method === 'POST') {
+        const r = await devSites.unpublish('dev-project')
+        return json(res, r.status, r.body)
+      }
+    }
     if (p === '/api/files' && req.method === 'GET') return json(res, 200, { files: await files.list() })
     if (p === '/api/files' && req.method === 'POST') {
       const r = await files.upload(url.searchParams.get('name') ?? '', req, { replace: url.searchParams.get('replace') === '1' })

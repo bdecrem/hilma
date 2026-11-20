@@ -47,6 +47,9 @@
 //                  a device made here, for when the browser is not at hand: writes ONLY its token to
 //                  stdout (one line; everything else to stderr), so it can go straight into the app's
 //                  Keychain: ... add-device bart --name X --kind mac | (the app's import), never to a screen
+//   node admin.mjs sites                              what is published at sites.ola.cx: project, address, files, when
+//   node admin.mjs unpublish <workspace>               takes that project's published pages down now (a takedown:
+//                  the acceptable-use line in the Publish sheet); audited as the admin's
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
@@ -60,7 +63,7 @@ import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { audit, openDb } from './db.mjs'
+import { audit, loadKeys, nameRef, openDb } from './db.mjs'
 import { createWorkspace } from './projects.mjs'
 import { makeInvite, makePasswordLink } from './auth.mjs'
 import { config } from './server.mjs'
@@ -70,6 +73,7 @@ import { writeBatchGrants } from './jobs.mjs'
 import { leftovers, weekly } from './compare.mjs'
 import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
+import { makeSites } from './sites.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -504,6 +508,22 @@ switch (cmd) {
   }
   case 'claude-grants': {
     console.log(`grants file written: ${Object.keys(grants()).length} project(s) with Claude on`)
+    break
+  }
+  case 'sites': {
+    const list = makeSites({ cfg: cfg.sites, dataDir: cfg.data }).list()
+    if (!list.length) console.log('nothing is published')
+    for (const s of list) console.log(`${s.slug.padEnd(24)} ${s.url}  ${s.files} file(s)  since ${s.at}`)
+    break
+  }
+  case 'unpublish': {
+    const w = workspace(args[0] ?? fail('unpublish <workspace>'))
+    const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log: (m) => console.error(m) })
+    const was = sites.status(w.slug)
+    const r = await sites.unpublish(w.slug)
+    if (r.status !== 200) fail(r.body.message)
+    admin({ action: 'site_unpublished', workspace: w.id, nameRef: nameRef(loadKeys(cfg.data), w.id, was?.page ?? was?.folder ?? ''), size: r.body.files })
+    console.log(`${w.slug}: taken down (${r.body.files} file(s)); ${r.body.url} ${r.body.gone ? 'now answers 404' : 'did not answer 404 yet: check it again in a minute'}`)
     break
   }
   case 'shown-to-cloud': {

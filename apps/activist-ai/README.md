@@ -246,7 +246,7 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-35` (2.3.0-35: the `designer` CHANGELOG carries the Bold evals' numbers, no change in what the skill does; 2.3.0-34: the `designer` skill 7, working files in a hidden `.shots/`, never invented schedules, Bold in small edits, OLA-134; 2.3.0-33: the `designer` skill 6, Bold step by step in SKILL.md from the worked examples, OLA-134; 2.3.0-32: the `designer` skill 5, the Bold register, `references/bold.md`, `palette.py --bold`, four display faces and three worked examples, OLA-134; 2.3.0-31: the designer skill 4, concepts mode and the same-layout check in `sheet.py`, OLA-130; 2.3.0-30: the `sound` skill, its kit and `listen.py`, see skills/README.md, on top of 2.3.0-29; its evals ran on 2.3.0-26, built before 2.3.0-27; 2.3.0-25 and 2.3.0-27 to 2.3.0-29: see the git log of workspace/ws.mjs; 2.3.0-24: the skills declare what they need and whether they work on a Mac, `ola/needs` and `ola/mac`, for the Mac app's bundled copy, see apple/README.md "Ola's skills on the Mac"; 2.3.0-21 to 2.3.0-23: see the git log of workspace/ws.mjs; 2.3.0-20: review 5's follow-up, the users `twin` and group `olarun`, see [Compare with Claude](#compare-with-claude-scoring-real-work-against-claude-2026-11-17-image-2300-18) and [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-19: the copy's generator jailed, review 5; 2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-36` (2.3.0-36: the `publish` skill, OLA-209, see skills/README.md; 2.3.0-35: the `designer` CHANGELOG carries the Bold evals' numbers, no change in what the skill does; 2.3.0-34: the `designer` skill 7, working files in a hidden `.shots/`, never invented schedules, Bold in small edits, OLA-134; 2.3.0-33: the `designer` skill 6, Bold step by step in SKILL.md from the worked examples, OLA-134; 2.3.0-32: the `designer` skill 5, the Bold register, `references/bold.md`, `palette.py --bold`, four display faces and three worked examples, OLA-134; 2.3.0-31: the designer skill 4, concepts mode and the same-layout check in `sheet.py`, OLA-130; 2.3.0-30: the `sound` skill, its kit and `listen.py`, see skills/README.md, on top of 2.3.0-29; its evals ran on 2.3.0-26, built before 2.3.0-27; 2.3.0-25 and 2.3.0-27 to 2.3.0-29: see the git log of workspace/ws.mjs; 2.3.0-24: the skills declare what they need and whether they work on a Mac, `ola/needs` and `ola/mac`, for the Mac app's bundled copy, see apple/README.md "Ola's skills on the Mac"; 2.3.0-21 to 2.3.0-23: see the git log of workspace/ws.mjs; 2.3.0-20: review 5's follow-up, the users `twin` and group `olarun`, see [Compare with Claude](#compare-with-claude-scoring-real-work-against-claude-2026-11-17-image-2300-18) and [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-19: the copy's generator jailed, review 5; 2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
 node workspace/ws.mjs image                    # build ola-workspace:2.3.0-17 (about an 810 MB download the first time; --missing: only if absent)
@@ -611,7 +611,7 @@ agent builds will be served from a **separate registrable domain** (for example
 `ola-preview.net`, not `preview.ola.cx`: a subdomain is the same site, so SameSite=Strict
 cookies would be sent to it and its pages could be "same-site" to the app), each preview on its
 own subdomain, with a sandboxed CSP, no cookies of ours, and access by a short-lived signed
-link minted here for members. The seam is the "Open" action on a thing; today it downloads.
+link minted here for members. The seam is the "Open" action on a thing; today it downloads. Published pages, which are public by design, are another matter: they are on `sites.ola.cx`, served by Vercel, never by this front desk (see [Publish](#publish-pages-on-the-public-web-2026-11-19-ola-209)).
 
 **The project view** (M4; v0.1 shows only what is really there: no made-up examples, an empty
 project says so and points at Ask Ola, every other file is listed with its size and a download)
@@ -2049,6 +2049,101 @@ an **Open \<name\>** for every other kind. A citation in the agreed form, writte
 the file at that page (`web/src/lib/cite.ts`; any other link form stays text). The project home
 lists what Ola made in groups: Pages, Charts and images, Tables, Documents. AGENTS.md also asks for
 drawings to be drawn in code as SVG.
+
+## Publish: pages on the public web (2026-11-19, OLA-209)
+
+Bart: "users will want to publish stuff, 'for real'. so we should help with that." In the **cloud
+runtime** Ola hosts published pages itself, at **`https://sites.ola.cx/<project>/`** (one subdomain,
+a folder per project). In the **local runtime** the work goes to GitHub and Vercel serves it: that
+is the `publish` skill (`skills/publish/`, below).
+
+**In the web app.** A page Ola made (Pages, on the project home) has **Publish** beside Open and
+Download, for the project's **owner** only (members and viewers see none; the routes answer them
+403, anyone outside the team 404). The sheet (`web/src/components/PublishSheet.tsx`) lists exactly
+the files that will be public (their public names and sizes, which ones the group uploaded), the
+address, what was left out and why, and one acceptable-use line ("Publish only what your group may
+share with everyone…; Ola's team takes down pages that break this"). For a page in a folder it also
+offers "Everything in <folder>/". It publishes only on the button that names the count ("Publish
+these 3 files"), every time, whatever "Lots of permissions" says: the agent in the VM has no way to
+publish at all. "Publish again" updates the site; "Unpublish" (a second click to confirm) takes it
+down. The card then says "Public at sites.ola.cx/…".
+
+**What leaves, and how** (`frontdesk/sites.mjs`). The VM has no network. The front desk reads the
+chosen files out through `ola-get`, the way it serves downloads (`GET /api/site/preview?page=|folder=`
+reads them; nothing leaves). A page goes with exactly what it uses: its stylesheets, scripts,
+pictures and the other pages of its folder it links to, followed through the files; a page that is
+not `index.html` is published as `index.html`. A folder goes whole, hidden files left out. Before
+anything leaves, each file is checked, and a publish is refused with one plain sentence naming the
+file (never the secret) for: a `.env`-like or key-like name (`.env`, `*.pem`, `id_rsa`, …), a
+database (by name or by the SQLite header; the project's own `project.db` included), a key or
+password in the content (Anthropic, OpenAI, AWS, GitHub, Slack, Google, Stripe, SendGrid, Vercel,
+JWTs, private keys, `SECRET=…` lines, `apiKey: "…"`), and the workspace's own opencode password and
+gateway key. The publish (`POST /api/site/publish`) carries the fingerprint of the list the owner
+saw; if the files changed since, nothing leaves (409) and the sheet shows the new list. Caps: 300
+files, 20 MB a file, 50 MB in all. The audit log gets `site_published`, `site_updated`,
+`site_unpublished` (the actor `admin` for a takedown) and `site_refused` (migration 14), with the
+keyed name hash, the bytes and the fingerprint only.
+
+**Where they are served, and why.** A separate Vercel project, **`ola-sites`** (team "bart r
+decrem's projects", Pro plan, static files only: no build, no functions), with `sites.ola.cx` as its
+domain (a CNAME on Namecheap, `30ed23a73a1decbe.vercel-dns-016.com`, the target Vercel recommended).
+The front desk deploys through Vercel's deploy API: each file uploaded by its sha1, then one
+production deployment that names every published project's files (the manifests are in
+`~/.ola-frontdesk/sites/<project>.json`, our copy of each published file's bytes in `sites/blobs/`,
+so a deploy never depends on Vercel keeping old files). After the new deployment is ready the one
+before it is deleted, so a taken-down page is not kept at a deployment address either (those are
+behind Vercel's login anyway). One publish at a time (a lock file, also for the admin CLI). Chosen
+over the alternatives because: the public pages never run on the Ola machine or through its ngrok
+tunnel (a busy or hostile page costs the machine nothing, and the machine going down does not take
+them down); it is static hosting we already pay for, with TLS, a CDN and an API; nothing new to run.
+
+**Headers** (every file, from the deployment's `vercel.json`, `SITE_HEADERS` in `sites.mjs`): a CSP
+that starts with `sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads
+allow-modals` and **no `allow-same-origin`**, then `default-src 'self'`, inline scripts and styles
+allowed, images, fonts and media from the page's own site and `data:`, `connect-src 'self'`,
+`worker-src 'none'`, `object-src 'none'`, `form-action 'none'`, `frame-ancestors 'none'`;
+`nosniff`, `no-referrer`, `X-Frame-Options: DENY`, COOP same-origin, a Permissions-Policy, HSTS,
+and `Access-Control-Allow-Origin: *` (a sandboxed page's own fonts and fetches are cross-origin to
+it; everything there is public anyway). `trailingSlash: true`; an address with nothing answers 404
+with a plain page; the root says only that groups publish here, and lists no one.
+
+**What one shared origin means** (said plainly, because it matters): every project's pages are at
+`https://sites.ola.cx`, so in the browser's terms they share one origin. The sandbox gives each page
+an opaque origin of its own when it runs, so a page has **no cookies and no storage** (localStorage
+throws), cannot register a service worker, and cannot script another project's page. But a page can
+still link to, frame or fetch another project's public files, as any site on the web can. So:
+nothing published may hold a secret (the check above), a published page cannot keep anything per
+visitor (no storage: a page that needs it must work without it), and a form posts nowhere
+(`form-action 'none'`). **The sign-in is out of reach:** app.ola.cx's cookies are host-only
+`__Host-` cookies (`__Host-ola`, `__Host-ola-known`: no `Domain`, so never sent to sites.ola.cx, and
+a page there cannot set or overwrite them; checked in `test/sites.test.mjs` and `check.mjs`), the
+app refuses any `/api` or `/oc` request marked same-site or cross-site (`Sec-Fetch-Site`), and every
+write needs our exact Origin and the CSRF token. sites.ola.cx is a subdomain of ola.cx, so it is the *same site* as the app (the reason the preview origin above was to be another domain); the sandbox is what closes that: a sandboxed page's requests and navigations come from an opaque origin, so they are cross-site to app.ola.cx and the Strict cookie is not sent with them, and the front desk refuses `/api` and `/oc` requests marked same-site anyway.
+
+**The credential.** A Vercel token for the `ola-sites` project, in `~/.ola/sites.env` on the
+machine (600): `OLA_SITES_VERCEL_TOKEN=…`, `OLA_SITES_PROJECT=ola-sites` (and `OLA_SITES_TEAM_ID`
+only for a token that is not scoped to the project). The front desk reads the file at each deploy
+and keeps the token in no environment variable, so no child process and no VM inherits it; it goes
+only to api.vercel.com. Without the file, Publish does not show and the routes say "Publishing is not
+set up on this Ola machine yet". Settings: `OLA_FD_SITES_FILE`, `OLA_FD_SITES_ORIGIN`
+(`https://sites.ola.cx`), `OLA_FD_SITES_API`, `OLA_FD_SITES_MAX_FILES|MAX_FILE_MB|MAX_TOTAL_MB`.
+
+**Takedown.** `node admin.mjs unpublish <project>` takes a project's pages down at once (audited as
+the admin's); `node admin.mjs sites` lists what is published.
+
+**Checks.** `frontdesk/test/sites.test.mjs` (the list, what a page uses, secrets refused, publish,
+publish again, unpublish, the headers, the cookie scope) against `web/server/fake-vercel.mjs`, a
+stand-in for the deploy API that also serves the "public" site; `frontdesk/check.mjs` (owner only,
+the file list, a key, the workspace's own key, a `.env` folder, publish through the page and the page
+signed out at 390 px, sandboxed; publish again; unpublish; `admin.mjs unpublish`; the cookie);
+`web/check.mjs` (the sheet, a refusal in words, a member sees no Publish). Against the real host:
+`node frontdesk/sites-live.mjs <shots dir>` from a Mac where the Vercel CLI is signed in publishes a
+made-up page to sites.ola.cx through the same module (its calls go through `vercel api`, so the
+script holds no token), checks it signed out at 390 px, then unpublishes it. First run, 2026-11-19:
+published in 18 s, all checks good, screenshots in `~/Desktop/Ola/sites/`.
+
+**Not done.** A custom domain per project in the cloud (locally, the skill does domains); a size
+quota per project beyond the caps; a person's "report this page" link on published pages.
 
 ## Specialists and paper lookup (2026-11-17)
 

@@ -80,7 +80,16 @@ export const ACTIONS_V12 = [
   'password_set', 'password_changed', 'password_reset_issued', 'sign_in_burst',
   'passkey_required_on', 'passkey_required_off', 'passkey_added', 'app_allowance_set',
 ]
-export const ACTIONS = ACTIONS_V12
+/** Migration 14's list: what the audit log may say now. */
+export const ACTIONS_V14 = [
+  ...ACTIONS_V12,
+  // migration 14: Publish (sites.mjs, OLA-209): a project's pages put on the public web (name_ref:
+  // the page or folder chosen; size: the bytes; sha256: the list's fingerprint), published again,
+  // taken down (by its owner, or by the admin: actor_kind 'admin'), and a publish refused because a
+  // file held a secret or private data.
+  'site_published', 'site_updated', 'site_unpublished', 'site_refused',
+]
+export const ACTIONS = ACTIONS_V14
 
 // The comparisons' fixed words (frontdesk/compare.mjs; the labels are the eval set's own list).
 const COMPARE_KINDS = ['clean', 'sql', 'coding', 'legal', 'site', 'honesty', 'pdf', 'writing', 'chart', 'other']
@@ -577,6 +586,30 @@ const MIGRATIONS = [
     UNIQUE (person_id, session, turn)
   ) STRICT;
   CREATE INDEX kept_turns_person ON kept_turns(person_id, at);
+  `,
+  // 14: Publish (OLA-209): four audit words. The table is rebuilt for the CHECK, as in 12.
+  `
+  CREATE TABLE audit_v14 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V14)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v14 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v14 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]
 

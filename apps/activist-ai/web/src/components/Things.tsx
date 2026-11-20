@@ -14,7 +14,8 @@ function byline(b: Byline): string {
   return parts.join(' · ')
 }
 
-export function ThingCard(props: { thing: Thing }) {
+/** `onPublish`: the owner's Publish on a page (OLA-209); `published`: its public address, when it is. */
+export function ThingCard(props: { thing: Thing; onPublish?: (file: string) => void; published?: string | null }) {
   const t = () => props.thing
   const headingId = () => `thing-${t().id.replace(/[^a-z0-9]/gi, '-')}`
   return (
@@ -46,6 +47,12 @@ export function ThingCard(props: { thing: Thing }) {
             <a class="thing-action" href={desk.downloadUrl(t().file!)} download="">
               Download<span class="sr-only"> {t().title}</span>
             </a>
+            <Show when={props.onPublish}>
+              <button type="button" class="thing-action thing-publish" onClick={() => props.onPublish!(t().file!)}>
+                {props.published ? 'Published' : 'Publish'}
+                <span class="sr-only"> {t().title} on the web</span>
+              </button>
+            </Show>
           </div>
         </Show>
       </header>
@@ -64,7 +71,7 @@ export function ThingCard(props: { thing: Thing }) {
             <Table thing={t() as TableThing} />
           </Match>
           <Match when={t().kind === 'site'}>
-            <Site thing={t() as SiteThing} />
+            <Site thing={t() as SiteThing} published={props.published ?? null} />
           </Match>
           <Match when={t().kind === 'image'}>
             <Picture thing={t() as ImageThing} />
@@ -239,13 +246,19 @@ function Table(props: { thing: TableThing }) {
   )
 }
 
-function Site(props: { thing: SiteThing }) {
+function Site(props: { thing: SiteThing; published: string | null }) {
   const s = () => props.thing
   return (
     <div class="site">
       <p class="site-summary">{s().summary}</p>
       <p class="site-meta">
-        {s().pages === 1 ? 'One page' : `${s().pages} pages`} · {s().visibility === 'private' ? 'Private: only the people in this project can open it. It is not on the public web.' : 'Public'}
+        {s().pages === 1 ? 'One page' : `${s().pages} pages`} ·{' '}
+        <Show when={props.published} fallback={s().visibility === 'private' ? 'Private: only the people in this project can open it. It is not on the public web.' : 'Public'}>
+          Public at{' '}
+          <a href={props.published!} target="_blank" rel="noopener noreferrer">
+            {props.published!.replace(/^https?:\/\//, '')}
+          </a>
+        </Show>
       </p>
     </div>
   )

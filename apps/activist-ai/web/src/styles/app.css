@@ -1314,6 +1314,80 @@ code {
   padding-left: 1.2em;
 }
 
+/* Publish (OLA-209): the list of what goes public, in the sheets' own style. */
+button.thing-action {
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.publish-choice {
+  margin-top: var(--s4);
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s2);
+  font-size: 17px;
+}
+.publish-choice label {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  min-height: 44px;
+}
+.publish-status,
+.publish-done,
+.publish-address {
+  margin-top: var(--s4);
+  font-family: var(--font-read);
+  font-size: var(--fs-read);
+  line-height: var(--lh-read);
+}
+.publish-done a,
+.site-meta a {
+  color: var(--link);
+  overflow-wrap: anywhere;
+}
+.publish-address strong {
+  overflow-wrap: anywhere;
+}
+.publish-heading {
+  margin-top: var(--s4);
+  font-weight: 650;
+  font-size: 17px;
+}
+.publish-files {
+  margin-top: var(--s2);
+  border-top: 1px solid var(--rule);
+}
+.publish-files li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s1) var(--s3);
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 16px;
+}
+.publish-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.publish-meta {
+  color: var(--ink-2);
+}
+.publish-warning {
+  margin-top: var(--s3);
+  padding-left: var(--s3);
+  border-left: 3px solid var(--vermilion);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.publish-aup {
+  margin-top: var(--s4);
+}
+
 /* ---------------------------------------------------------------- files */
 .back-link {
   display: inline-flex;

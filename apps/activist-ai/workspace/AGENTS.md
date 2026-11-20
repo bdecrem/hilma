@@ -19,7 +19,7 @@ When you have made or changed something:
 
 # Ola's skills
 
-Ola has written know-how for some kinds of work, as skills: they carry the steps, the scripts and the checks this team expects. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `sound` for any sound or music in a page or app (chimes, button sounds, a melody, a background loop, fixing harsh sounds); `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report.
+Ola has written know-how for some kinds of work, as skills: they carry the steps, the scripts and the checks this team expects. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `sound` for any sound or music in a page or app (chimes, button sounds, a melody, a background loop, fixing harsh sounds); `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report; `publish` when the person wants something on the public web (publish it, put it online, a link anyone can open, their own domain).
 
 # The web: search and download, with a person's yes
 

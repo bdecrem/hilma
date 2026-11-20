@@ -84,7 +84,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 | Sealed workspaces (image, `ws.mjs`, door, desk, the `ola-*` tools inside) | `workspace/` | VMs on the staging machine, image `ola-workspace:2.3.0-30` | README, "The workspace" |
 | Model gateway (callers, caps, web search, specialists, fallbacks, batch lane) | `gateway/` | launchd `cx.ola.gateway`, 127.0.0.1:4180 and one socket per workspace | README, "The gateway" |
 | The address and TLS | `ops/tls.mjs`, `ops/cert.mjs`, `ops/dns.mjs`, `ops/tunnel.mjs` | `cx.ola.tls`, `cx.ola.tunnel` on the staging machine; certificate renewal job on the iMac | README, "The address: app.ola.cx" |
-| Skills (chart, workbook, report, designer, app-designer, sound) | `skills/` | read-only in the image at `/opt/ola/skills`; bundled in the Mac app | `skills/README.md` |
+| Skills (chart, workbook, report, designer, app-designer, sound, publish) | `skills/` | read-only in the image at `/opt/ola/skills`; bundled in the Mac app | `skills/README.md` |
 | Evaluations (checkable tasks, Claude baseline, with and without skills) | `evals/` | the iMac and the staging machine | `evals/README.md` |
 | Compare with Claude, batch jobs, reading real documents | `frontdesk/compare.mjs`, `frontdesk/jobs.mjs`, `workspace/` | inside each project's VM | README, those sections |
 | Mac and iPhone apps, OlaKit | `apple/` | Bart's Mac and phone; TestFlight; the download | `apple/README.md`, `apple/testflight/README.md` |

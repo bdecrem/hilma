@@ -218,6 +218,33 @@ export const devicesApi = {
   list: () => call<{ enabled: boolean; allowed: boolean; devices: import('./types.ts').Device[] }>('/api/devices'),
   remove: (id: number) => call<{ ok: true }>(`/api/devices/${id}`, { method: 'DELETE' }),
 }
+/** Publish (frontdesk/sites.mjs): what is published (anyone in the project), and for the owner the
+ * list of what would go public, the publish (a yes for exactly that list) and the takedown. */
+export interface SiteStatus {
+  published: { url: string; at: string; files: number; page: string | null; folder: string | null } | null
+  canPublish: boolean
+  configured: boolean
+  origin: string
+  acceptableUse: string
+}
+export type SiteChoice = { page: string } | { folder: string }
+export interface SitePreview {
+  url: string
+  page: string
+  items: { path: string; as: string; size: number; uploaded: boolean }[]
+  leftOut: { path: string; why: string }[]
+  warnings: string[]
+  total: number
+  fingerprint: string
+  published: SiteStatus['published']
+  acceptableUse: string
+}
+export const site = {
+  status: () => call<SiteStatus>('/api/site'),
+  preview: (sel: SiteChoice) => call<SitePreview>(`/api/site/preview?${'page' in sel ? `page=${encodeURIComponent(sel.page)}` : `folder=${encodeURIComponent(sel.folder)}`}`),
+  publish: (sel: SiteChoice, fingerprint: string) => post<{ url: string; again: boolean; files: number; live: boolean }>('/api/site/publish', { ...sel, fingerprint, confirm: true }),
+  unpublish: () => post<{ unpublished: true; url: string; gone: boolean }>('/api/site/unpublish', {}),
+}
 /** The Quality page (admins only). */
 export const qualityApi = { get: () => call<import('./types.ts').Quality>('/api/quality') }
 

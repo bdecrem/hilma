@@ -3,7 +3,7 @@
 // Routes are hash routes (#/ and #/files) so the front desk serves one page for every path.
 import type { Me, Role, SourceThing } from './lib/types.ts'
 import { createEffect, createResource, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import { desk, DeskError } from './lib/api.ts'
+import { desk, DeskError, site } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
 import { count, people } from './lib/format.ts'
 import { Icon, Wordmark } from './components/Icon.tsx'
@@ -11,6 +11,7 @@ import { EmptyProject, groupThings, OtherFiles, Sources, ThingCard } from './com
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
+import { PublishSheet } from './components/PublishSheet.tsx'
 import { SettingsView } from './components/Settings.tsx'
 import { DataView, FileTableView } from './components/DataView.tsx'
 import { JobsView } from './components/JobsView.tsx'
@@ -57,6 +58,15 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   })
   const ola = createOla({ live: !STILL })
   onCleanup(() => ola.dispose())
+  // Publish (OLA-209): what of this project is on the public web, and the owner's sheet.
+  const [siteStatus, { refetch: refetchSite }] = createResource(() => site.status().catch(() => undefined))
+  const [publishing, setPublishing] = createSignal<string | null>(null)
+  const canPublish = () => props.role === 'owner' && !!siteStatus()?.configured
+  const publishedFor = (file: string | null | undefined) => {
+    const s = siteStatus()?.published
+    if (!s || !file) return null
+    return s.page === file || (s.folder && file.startsWith(`${s.folder}/`)) ? s.url : null
+  }
 
   const [drawer, setDrawer] = createSignal(false)
   const [draft, setDraft] = createSignal('')
@@ -338,7 +348,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                         <For each={g.things}>
                           {(t) => (
                             <div role="listitem" class="thing-slot" data-kind={t.kind}>
-                              <ThingCard thing={t} />
+                              <ThingCard thing={t} onPublish={canPublish() && t.kind === 'site' && /\.html?$/i.test(t.file ?? '') ? setPublishing : undefined} published={publishedFor(t.file)} />
                             </div>
                           )}
                         </For>
@@ -405,6 +415,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
 
       <Drawer ola={ola} open={drawer()} onClose={closeDrawer} onAddFiles={addFiles} onFiles={showFiles} draft={draft()} setDraft={setDraft} inputRef={(el) => (drawerInput = el)} />
       <ApprovalSheet ola={ola} provider={props.me.policy.searchProvider} />
+      <PublishSheet page={publishing()} status={siteStatus()} onClose={() => setPublishing(null)} onChanged={() => void refetchSite()} />
 
  <dialog ref={menuDialog} class="sheet menu-sheet" aria-labelledby="menu-title" onClose={() => setMenu(false)} onClick={(e) => e.target === menuDialog && setMenu(false)}>
         <div class="sheet-inner">

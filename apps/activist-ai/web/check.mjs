@@ -406,6 +406,96 @@ await check('reduced motion stops the lamp and the slides', async () => {
   assert(s.animation === 'none' && /^0s/.test(s.transition), JSON.stringify(s))
 })
 
+// ---------------------------------------------------------------- Publish (OLA-209)
+// A page Ola made, published through the same module as the front desk (../frontdesk/sites.mjs) to
+// the stand-in for Vercel (server/fake-vercel.mjs), whose origin plays sites.ola.cx.
+{
+  const put = (rel, body) => (fs.mkdirSync(path.dirname(path.join(dev.work, rel)), { recursive: true }), fs.writeFileSync(path.join(dev.work, rel), body))
+  const flyer = (title) =>
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><link rel="stylesheet" href="style.css"></head>` +
+    `<body><h1>${title}</h1><p>Thursday at 7, the community room.</p><img src="pics/dot.svg" alt="A dot" width="40" height="40">` +
+    `<script>document.body.dataset.ran = '1'; try { localStorage.setItem('x', '1'); document.body.dataset.storage = 'open' } catch { document.body.dataset.storage = 'blocked' } try { document.cookie = 'tossed=1; domain=ola.cx'; document.body.dataset.cookie = document.cookie ? 'set' : 'none' } catch { document.body.dataset.cookie = 'blocked' }</script></body></html>`
+  put('flyer/index.html', flyer('Tenants meeting flyer'))
+  put('flyer/style.css', 'body { background: rgb(246, 241, 231); font: 18px/1.5 Georgia, serif; margin: 16px }')
+  put('flyer/pics/dot.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="18" fill="#b93d17"/></svg>')
+  put('flyer/notes-unused.txt', 'not used by the page')
+  const sheet = page.locator('dialog.publish-sheet')
+  const card = () => page.locator('.thing', { hasText: 'Tenants meeting flyer' }).first()
+  let publicUrl = null
+  const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const vp = await visitor.newPage()
+  const look = async () => {
+    const r = await vp.goto(publicUrl)
+    await vp.waitForLoadState('load')
+    return { status: r.status(), ...(await vp.evaluate(() => ({ title: document.title, ran: document.body?.dataset.ran, storage: document.body?.dataset.storage, cookie: document.body?.dataset.cookie, bg: document.body ? getComputedStyle(document.body).backgroundColor : '', img: document.images[0]?.naturalWidth ?? 0, wide: document.documentElement.scrollWidth > innerWidth }))) }
+  }
+
+  await check('Publish: the owner sees exactly the files that go public and the address; a yes publishes', async () => {
+    await page.goto(`${dev.url}#/`)
+    await card().waitFor({ timeout: 20_000 })
+    await card().getByRole('button', { name: /^Publish/ }).click()
+    await sheet.locator('.publish-files li').first().waitFor({ timeout: 20_000 })
+    const names = await sheet.locator('.publish-name').allInnerTexts()
+    assert(JSON.stringify(names) === JSON.stringify(['index.html', 'pics/dot.svg', 'style.css']), `files ${JSON.stringify(names)}`)
+    const address = await sheet.locator('.publish-address').innerText()
+    assert(/\/dev-project\/$/.test(address.trim()), address)
+    assert(/Ola’s team takes down/.test(await sheet.locator('.publish-aup').innerText()), 'the acceptable-use line')
+    await sheet.getByRole('button', { name: 'Publish these 3 files', exact: true }).click()
+    await sheet.locator('.publish-done').waitFor({ timeout: 20_000 })
+    publicUrl = await sheet.locator('.publish-done a').getAttribute('href')
+    assert(publicUrl?.endsWith('/dev-project/'), publicUrl)
+    return publicUrl
+  })
+  await check('Publish: signed out, at 390 px, the page loads with its own style and picture, its script runs with no storage and no cookies', async () => {
+    const s = await look()
+    assert(s.status === 200 && s.title === 'Tenants meeting flyer', JSON.stringify(s))
+    assert(s.bg === 'rgb(246, 241, 231)' && s.img === 40 && s.ran === '1', `style, picture, script ${JSON.stringify(s)}`)
+    assert(s.storage === 'blocked' && s.cookie !== 'set', `sandboxed ${JSON.stringify(s)}`)
+    assert(!s.wide, 'sideways scroll')
+  })
+  await check('Publish again updates the page; Unpublish takes it down', async () => {
+    put('flyer/index.html', flyer('Tenants meeting flyer, new time'))
+    await page.keyboard.press('Escape')
+    await page.reload()
+    await card().waitFor({ timeout: 20_000 })
+    await card().getByRole('button', { name: /^Published/ }).click()
+    await sheet.getByRole('button', { name: 'Publish these 3 files again', exact: true }).click({ timeout: 20_000 })
+    await sheet.locator('.publish-done', { hasText: 'Published again' }).waitFor({ timeout: 20_000 })
+    assert((await look()).title === 'Tenants meeting flyer, new time', 'not updated')
+    await sheet.getByRole('button', { name: 'Unpublish' }).click()
+    await sheet.getByRole('button', { name: 'Yes, take it down now' }).click()
+    await sheet.locator('.publish-done', { hasText: 'Taken down' }).waitFor({ timeout: 20_000 })
+    assert((await look()).status === 404, 'still up')
+    await page.keyboard.press('Escape')
+  })
+  await check('Publish: a page that holds a key is refused in plain words, and nothing leaves', async () => {
+    put('leaky/index.html', '<!doctype html><title>Leaky page</title><script src="app.js"></script>')
+    put('leaky/app.js', 'const key = "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789"')
+    await page.reload()
+    const leaky = page.locator('.thing', { hasText: 'Leaky page' }).first()
+    await leaky.waitFor({ timeout: 20_000 })
+    await leaky.getByRole('button', { name: /^Publish/ }).click()
+    const problem = sheet.locator('.problem, [role="alert"]').first()
+    await problem.waitFor({ timeout: 20_000 })
+    const text = await problem.innerText()
+    assert(/Ola will not publish this: leaky\/app\.js/.test(text) && !/sk-ant/.test(text), text)
+    assert((await sheet.getByRole('button', { name: /^Publish these/ }).count()) === 0, 'a Publish button')
+    await page.keyboard.press('Escape')
+  })
+  await check('Publish: a member sees no Publish, and the routes refuse them', async () => {
+    await page.request.post(`${dev.origin}/__dev/role?to=member`, { headers: { origin: dev.origin } })
+    await page.reload()
+    await card().waitFor({ timeout: 20_000 })
+    const buttons = await card().getByRole('button', { name: /^Publish/ }).count()
+    const r = await page.request.get(`${dev.origin}/api/site/preview?page=flyer%2Findex.html`)
+    await page.request.post(`${dev.origin}/__dev/role?to=owner`, { headers: { origin: dev.origin } })
+    assert(buttons === 0 && r.status() === 403, `buttons ${buttons}, preview ${r.status()}`)
+  })
+  await visitor.close()
+  for (const d of ['flyer', 'leaky']) fs.rmSync(path.join(dev.work, d), { recursive: true, force: true })
+  await page.goto(`${dev.url}#/`)
+}
+
 // ---------------------------------------------------------------- Data, Settings and the web approval
 // The project database of the dev folder, made up: a 200,000-row table and a three-page PDF,
 // through the real ola-db (../workspace/ola-db) as the agent would make them.

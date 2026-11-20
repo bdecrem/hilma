@@ -1,0 +1,559 @@
+// Publish: a page Ola made, put on the public web at https://sites.ola.cx/<project>/ (OLA-209).
+//
+// Bart (2026-11-19): "users will want to publish stuff, 'for real'. so we should help with that",
+// and for the cloud runtime "do something like sites.ola.cx/myproject - so ONE new subdomain then
+// everyone gets a folder name there."
+//
+// Where the pages are served, and why (README, "Publish"):
+//   - Not on the Ola machine and not through its tunnel: a separate Vercel project (`ola-sites`,
+//     static files only, no functions, no build), deployed by this front desk through Vercel's
+//     deploy API. The machine is never the server of a public page, so a busy or hostile public
+//     page costs it nothing, and taking the machine down does not take the pages down.
+//   - The deploy credential is a token scoped to that ONE Vercel project, in an env file on the
+//     machine (~/.ola/sites.env, 600). It is read from the file at each deploy and kept in no
+//     environment variable, so no child process (no `container exec`, no VM) inherits it; it is
+//     never logged or sent anywhere but api.vercel.com.
+//   - The files leave the sealed VM the way downloads do (ola-get, through the front desk): the VM
+//     has no network and is never given a way to publish. Only the files the owner saw in the
+//     list leave, and only after a check for secrets and private data (below).
+//   - Every page there is served with a CSP `sandbox` (no allow-same-origin): each page runs with
+//     an opaque origin, so it has no cookies and no storage, cannot register a service worker,
+//     and cannot reach into another project's pages. app.ola.cx's sign-in cookies are host-only
+//     `__Host-` cookies, never sent to sites.ola.cx and impossible for it to overwrite.
+//
+// What one shared origin still means (said plainly in the README and the sheet): every project's
+// pages are under the same address, https://sites.ola.cx, so in the browser's terms they share an
+// origin. Nothing published may hold a secret; a page can link to, frame or fetch another
+// project's public files like any other site can.
+import { createHash } from 'node:crypto'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+const posix = path.posix
+
+export function sitesConfig(env = process.env) {
+  const origin = new URL(env.OLA_FD_SITES_ORIGIN ?? 'https://sites.ola.cx').origin
+  return {
+    origin,
+    api: (env.OLA_FD_SITES_API ?? 'https://api.vercel.com').replace(/\/$/, ''),
+    // KEY=VALUE lines: OLA_SITES_VERCEL_TOKEN (scoped to the one project), OLA_SITES_PROJECT
+    // (default ola-sites), OLA_SITES_TEAM_ID (only for a token that is not project-scoped).
+    file: env.OLA_FD_SITES_FILE ?? path.join(os.homedir(), '.ola', 'sites.env'),
+    maxFiles: Number(env.OLA_FD_SITES_MAX_FILES) || 300,
+    maxFile: (Number(env.OLA_FD_SITES_MAX_FILE_MB) || 20) * 1024 * 1024,
+    maxTotal: (Number(env.OLA_FD_SITES_MAX_TOTAL_MB) || 50) * 1024 * 1024,
+    readyMs: Number(env.OLA_FD_SITES_READY_MS) || 180_000,
+    verifyMs: Number(env.OLA_FD_SITES_VERIFY_MS) || 90_000,
+    pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
+  }
+}
+
+/** The one line shown in the Publish sheet (and the README). */
+export const ACCEPTABLE_USE = 'Publish only what your group may share with everyone: nothing about a person they have not agreed to make public, nothing unlawful, nothing meant to deceive. Ola’s team takes down pages that break this.'
+
+/** The headers every published file is served with (vercel.json, written at each deploy). */
+export const SITE_CSP = [
+  'sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals',
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "connect-src 'self'",
+  "frame-src 'self'",
+  "worker-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join('; ')
+export const SITE_HEADERS = [
+  { key: 'Content-Security-Policy', value: SITE_CSP },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'no-referrer' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), usb=(), payment=(), interest-cohort=()' },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000' },
+  // A sandboxed page has an opaque origin, so its own fonts and fetches are cross-origin to it.
+  // Everything here is public anyway.
+  { key: 'Access-Control-Allow-Origin', value: '*' },
+]
+
+// ---------------------------------------------------------------- what may not leave
+// Names that hold secrets or private data, wherever they are.
+const SECRET_NAME = /(^|\/)(\.env(\.[^/]*)?|[^/]*\.env|env|\.npmrc|\.netrc|\.pypirc|\.git-credentials|\.htpasswd|id_(rsa|dsa|ecdsa|ed25519)(\.pub)?|credentials(\.json)?|[^/]*\.(pem|key|p8|p12|pfx|jks|keystore|kdbx|ovpn|gpg|asc))$/i
+const SECRET_DIR = /(^|\/)\.(git|ssh|aws|gnupg|config|opencode|claude|ola)(\/|$)/
+const DATA_NAME = /\.(db|sqlite|sqlite3|db3|mdb|accdb)(-wal|-shm|-journal)?$/i
+// Contents that are keys or passwords (never echoed back: the refusal names the file and the kind).
+const SECRET_PATTERNS = [
+  [/-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/, 'a private key'],
+  [/\bsk-ant-[A-Za-z0-9_-]{20,}/, 'an Anthropic API key'],
+  [/\bsk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{32,}/, 'an API key'],
+  [/\bAKIA[0-9A-Z]{16}\b/, 'an Amazon key'],
+  [/\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}\b|\bgithub_pat_[A-Za-z0-9_]{40,}/, 'a GitHub token'],
+  [/\bxox[abprs]-[A-Za-z0-9-]{10,}/, 'a Slack token'],
+  [/\bAIza[0-9A-Za-z_-]{35}\b/, 'a Google API key'],
+  [/\b[sr]k_live_[0-9A-Za-z]{20,}/, 'a Stripe key'],
+  [/\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}\b/, 'a SendGrid key'],
+  [/\b(?:vcp|vck|vca)_[A-Za-z0-9]{24,}/, 'a Vercel token'],
+  [/\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/, 'a sign-in token'],
+  [/^(?:export\s+)?[A-Z][A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|PASSWD|PASS)[A-Z0-9_]*\s*=\s*\S{8,}/m, 'a password or key'],
+  [/["']?\b(?:api[_-]?key|secret[_-]?key|client[_-]?secret|passw(?:or)?d|access[_-]?token|auth[_-]?token|private[_-]?key)\b["']?\s*[:=]\s*["'][^"'\s]{12,}["']/i, 'a password or key'],
+]
+
+/** Why a file may not be published, in a few words, or null. `secrets`: the workspace's own. */
+export function secretIn(rel, buf, secrets = []) {
+  if (SECRET_NAME.test(rel) || SECRET_DIR.test(rel)) return 'its name says it holds passwords or keys'
+  if (DATA_NAME.test(rel) || /^project\.db/.test(rel)) return 'it is a database, and the project’s data stays private'
+  if (!buf) return null
+  if (buf.subarray(0, 16).toString('latin1') === 'SQLite format 3\0') return 'it is a database, and the project’s data stays private'
+  const text = buf.toString('latin1')
+  for (const s of secrets) if (s && text.includes(s)) return 'it holds one of this project’s own keys'
+  for (const [re, what] of SECRET_PATTERNS) if (re.test(text)) return `it seems to hold ${what}`
+  return null
+}
+
+// ---------------------------------------------------------------- what a page uses
+const ATTR = /\b(src|href|poster|data|srcset|imagesrcset|action)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi
+const TAG = /<([a-zA-Z][a-zA-Z0-9-]*)\b([^>]*)>/g
+const CSS_URL = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]+))\s*\)|@import\s+(?:"([^"]*)"|'([^']*)')/gi
+const JS_IMPORT = /(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.{1,2}\/[^"']+)["']/g
+
+/**
+ * The references in a page, a stylesheet or a script: [{ ref, use }] where use is 'link' (an
+ * <a href>: another page, fine to leave out or point elsewhere) or 'load' (something the page
+ * itself loads: a picture, a script, a stylesheet, a font).
+ */
+export function referencesIn(rel, text) {
+  const out = []
+  if (/\.(html?|svg)$/i.test(rel)) {
+    for (const t of text.matchAll(TAG)) {
+      const tag = t[1].toLowerCase()
+      for (const a of t[2].matchAll(ATTR)) {
+        const name = a[1].toLowerCase()
+        const v = a[2] ?? a[3] ?? a[4] ?? ''
+        if (name === 'srcset' || name === 'imagesrcset') {
+          for (const part of v.split(',')) out.push({ ref: part.trim().split(/\s+/)[0], use: 'load' })
+        } else out.push({ ref: v, use: name === 'href' && (tag === 'a' || tag === 'area') ? 'link' : 'load' })
+      }
+    }
+    for (const s of text.matchAll(/style\s*=\s*"([^"]*)"|<style[^>]*>([\s\S]*?)<\/style>/gi)) out.push(...referencesIn('x.css', s[1] ?? s[2] ?? ''))
+    for (const s of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) out.push(...referencesIn('x.js', s[1] ?? ''))
+  } else if (/\.css$/i.test(rel)) {
+    for (const m of text.matchAll(CSS_URL)) out.push({ ref: m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '', use: 'load' })
+  } else if (/\.m?js$/i.test(rel)) {
+    for (const m of text.matchAll(JS_IMPORT)) out.push({ ref: m[1], use: 'load' })
+  }
+  return out.filter((r) => r.ref)
+}
+
+/** One reference, from a file in `dir`, as a path in the project: { kind: 'local'|'outside'|'absolute'|'external'|'skip', path? }. */
+export function resolveRef(dir, ref) {
+  const r = ref.trim().replace(/[#?].*$/, '')
+  if (!r || /^(data|mailto|tel|javascript|blob|about|sms):/i.test(ref.trim()) || ref.trim().startsWith('#')) return { kind: 'skip' }
+  if (/^[a-z][a-z0-9+.-]*:/i.test(r) || r.startsWith('//')) {
+    let host = ''
+    try {
+      host = new URL(r.startsWith('//') ? `https:${r}` : r).hostname
+    } catch {}
+    return { kind: 'external', host }
+  }
+  if (r.startsWith('/')) return { kind: 'absolute', ref: r }
+  let dec = r
+  try {
+    dec = decodeURIComponent(r)
+  } catch {}
+  let p = posix.normalize(posix.join(dir || '.', dec))
+  if (dec.endsWith('/')) p = posix.join(p, 'index.html')
+  if (p === '..' || p.startsWith('../')) return { kind: 'outside', ref: r }
+  return { kind: 'local', path: p.replace(/^\.\//, '') }
+}
+
+const sha1 = (b) => createHash('sha1').update(b).digest('hex')
+const parse = (text) => Object.fromEntries(String(text).split('\n').map((l) => /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2].replace(/^(['"])(.*)\1$/, '$2')]))
+
+const ROOT_PAGE = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pages made with Ola</title>
+<style>body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f6f1e7;color:#1d1a16;font:18px/1.5 Georgia,serif;padding:24px;box-sizing:border-box}main{max-width:32em}a{color:#1d1a16}</style>
+</head><body><main><h1>Pages made with Ola</h1><p>Groups who work with Ola publish their pages here, each at its own address. This page lists none of them.</p><p><a href="https://ola.cx">What Ola is</a></p></main></body></html>
+`
+const NOT_FOUND_PAGE = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not here</title>
+<style>body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f6f1e7;color:#1d1a16;font:18px/1.5 Georgia,serif;padding:24px;box-sizing:border-box}main{max-width:32em}</style>
+</head><body><main><h1>Nothing is published at this address</h1><p>It may have been taken down by the group that published it.</p></main></body></html>
+`
+// Compact, as JSON.stringify writes it (a tool that re-serializes JSON on the way, as the Vercel CLI's
+// `api --input` does for sites-live.mjs, then sends the very same bytes).
+export const vercelJson = () => JSON.stringify({ trailingSlash: true, headers: [{ source: '/(.*)', headers: SITE_HEADERS }] })
+
+/**
+ * What Publish reads, for a plain folder on this computer (the dev server and the tests; the front
+ * desk reads a workspace through its VM instead, server.mjs siteCtx). Lists hidden files too.
+ */
+export function folderCtx(slug, root, { uploaded = () => false, secrets = () => [] } = {}) {
+  const walk = (d, pre = '') =>
+    fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+      const rel = pre ? `${pre}/${e.name}` : e.name
+      if (e.isSymbolicLink()) return [{ path: rel, type: 'link', size: 0 }]
+      if (e.isDirectory()) return walk(path.join(d, e.name), rel)
+      return [{ path: rel, type: e.isFile() ? 'file' : 'other', size: e.isFile() ? fs.statSync(path.join(d, e.name)).size : 0 }]
+    })
+  return {
+    slug,
+    list: async () => walk(root),
+    async read(rel, max) {
+      const f = path.join(root, rel)
+      if (!f.startsWith(root + path.sep)) return null
+      try {
+        const st = fs.lstatSync(f)
+        return st.isFile() && st.size <= max ? fs.readFileSync(f) : null
+      } catch {
+        return null
+      }
+    },
+    uploaded,
+    secrets,
+  }
+}
+
+// ---------------------------------------------------------------- the module
+/** `request`: how calls reach the deploy API (fetch by default; sites-live.mjs goes through the Vercel CLI). */
+export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, request = fetch }) {
+  const dir = path.join(dataDir, 'sites')
+  const blobs = path.join(dir, 'blobs')
+  const mk = () => (fs.mkdirSync(blobs, { recursive: true, mode: 0o700 }), fs.chmodSync(dir, 0o700))
+  const manifestFile = (slug) => path.join(dir, `${slug}.json`)
+  const stateFile = path.join(dir, 'state.json')
+
+  function cred() {
+    let c
+    try {
+      c = parse(fs.readFileSync(cfg.file, 'utf8'))
+    } catch {
+      return null
+    }
+    if (!c.OLA_SITES_VERCEL_TOKEN) return null
+    return { token: c.OLA_SITES_VERCEL_TOKEN, project: c.OLA_SITES_PROJECT || 'ola-sites', team: c.OLA_SITES_TEAM_ID || null }
+  }
+  const readJson = (f) => {
+    try {
+      return JSON.parse(fs.readFileSync(f, 'utf8'))
+    } catch {
+      return null
+    }
+  }
+  const writeJson = (f, v) => {
+    mk()
+    const tmp = `${f}.${process.pid}.tmp`
+    fs.writeFileSync(tmp, JSON.stringify(v, null, 1), { mode: 0o600 })
+    fs.renameSync(tmp, f)
+  }
+  const manifests = () => {
+    if (!fs.existsSync(dir)) return {}
+    const out = {}
+    for (const f of fs.readdirSync(dir)) {
+      const m = /^([a-z0-9][a-z0-9-]{1,30}[a-z0-9])\.json$/.exec(f)
+      if (m) {
+        const v = readJson(path.join(dir, f))
+        if (v?.files) out[m[1]] = v
+      }
+    }
+    return out
+  }
+  const urlOf = (slug, page = 'index.html') => `${cfg.origin}/${slug}/${page === 'index.html' ? '' : page.split('/').map(encodeURIComponent).join('/')}`
+
+  // One deploy at a time: in this process (a chain) and across processes (the admin CLI) by a lock
+  // file. A lock older than ten minutes is a crashed holder's.
+  let chain = Promise.resolve()
+  const serial = (fn) => {
+    const run = chain.then(async () => {
+      mk()
+      const lock = path.join(dir, 'deploy.lock')
+      const until = Date.now() + 5 * 60_000
+      for (;;) {
+        try {
+          fs.closeSync(fs.openSync(lock, 'wx', 0o600))
+          break
+        } catch {
+          try {
+            if (Date.now() - fs.statSync(lock).mtimeMs > 10 * 60_000) fs.rmSync(lock, { force: true })
+          } catch {}
+          if (Date.now() > until) throw Object.assign(new Error('another publish is under way'), { code: 'BUSY' })
+          await new Promise((r) => setTimeout(r, 250))
+        }
+      }
+      try {
+        return await fn()
+      } finally {
+        fs.rmSync(lock, { force: true })
+      }
+    })
+    chain = run.catch(() => {})
+    return run
+  }
+
+  // ------------------------------------------------ Vercel's deploy API
+  async function api(c, method, pathname, { body, headers = {}, ok = [200] } = {}) {
+    const u = new URL(cfg.api + pathname)
+    if (c.team) u.searchParams.set('teamId', c.team)
+    const r = await request(u, { method, headers: { authorization: `Bearer ${c.token}`, ...headers }, body, signal: AbortSignal.timeout(60_000) })
+    const j = await r.json().catch(() => null)
+    if (!ok.includes(r.status)) throw Object.assign(new Error(`host ${method} ${u.pathname} ${r.status} ${String(j?.error?.code ?? '').slice(0, 40)}`), { code: 'HOST', status: r.status, body: j })
+    return j
+  }
+  const upload = (c, buf, sha) => api(c, 'POST', '/v2/files', { body: buf, headers: { 'content-type': 'application/octet-stream', 'x-vercel-digest': sha, 'content-length': String(buf.length) } })
+  const blobPut = (sha, buf) => {
+    mk()
+    const f = path.join(blobs, sha)
+    if (!fs.existsSync(f)) fs.writeFileSync(f, buf, { mode: 0o600 })
+  }
+
+  /** Deploys every project's manifest as one site, waits for it, removes the one before. */
+  async function deployAll(c, all) {
+    const files = []
+    for (const [slug, m] of Object.entries(all)) for (const f of m.files) files.push({ file: `${slug}/${f.as}`, sha: f.sha, size: f.size })
+    for (const [name, text] of [['index.html', ROOT_PAGE], ['404.html', NOT_FOUND_PAGE], ['vercel.json', vercelJson()]]) {
+      const buf = Buffer.from(text)
+      const sha = sha1(buf)
+      await upload(c, buf, sha)
+      files.push({ file: name, sha, size: buf.length })
+    }
+    const body = JSON.stringify({ name: c.project, project: c.project, target: 'production', files, projectSettings: { framework: null, buildCommand: null, installCommand: null, outputDirectory: null } })
+    let d
+    for (let i = 0; i < 2; i++) {
+      try {
+        d = await api(c, 'POST', '/v13/deployments?skipAutoDetectionConfirmation=1', { body, headers: { 'content-type': 'application/json' } })
+        break
+      } catch (e) {
+        // The host no longer has some bytes (it forgets files no deployment uses): send them again
+        // from our copy, once.
+        const missing = e.body?.error?.code === 'missing_files' ? e.body.error.missing ?? [] : null
+        if (!missing || i) throw e
+        for (const sha of missing) {
+          const f = path.join(blobs, String(sha).replace(/[^0-9a-f]/g, ''))
+          if (!fs.existsSync(f)) throw e
+          await upload(c, fs.readFileSync(f), sha)
+        }
+      }
+    }
+    const until = Date.now() + cfg.readyMs
+    let state = d.readyState
+    while (state !== 'READY') {
+      if (['ERROR', 'CANCELED'].includes(state) || Date.now() > until) throw Object.assign(new Error(`deployment ${state}`), { code: 'HOST' })
+      await new Promise((r) => setTimeout(r, cfg.pollMs))
+      state = (await api(c, 'GET', `/v13/deployments/${encodeURIComponent(d.id)}`)).readyState
+    }
+    // The deployment before this one held what was just taken down or replaced: it goes too, so an
+    // unpublished page is not kept at a deployment address either.
+    const before = readJson(stateFile)?.deployment
+    writeJson(stateFile, { deployment: d.id, at: new Date().toISOString() })
+    if (before && before !== d.id) await api(c, 'DELETE', `/v13/deployments/${encodeURIComponent(before)}`, { ok: [200, 404] }).catch((e) => log(`sites: the earlier deployment was not removed (${e.status ?? e.code})`))
+    return d.id
+  }
+  // The public address answers with what was published (or, after an unpublish, with 404).
+  async function verify(url, expect) {
+    const until = Date.now() + cfg.verifyMs
+    let last = ''
+    while (Date.now() < until) {
+      try {
+        const r = await fetch(url, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15_000) })
+        const b = Buffer.from(await r.arrayBuffer())
+        last = String(r.status)
+        if (expect === null ? r.status === 404 : r.ok && sha1(b) === expect) return true
+      } catch (e) {
+        last = e.code ?? e.name
+      }
+      await new Promise((r) => setTimeout(r, cfg.pollMs))
+    }
+    log(`sites: ${url} did not show the change yet (${last})`)
+    return false
+  }
+
+  // ------------------------------------------------ what would leave
+  /**
+   * The plan for a page (`sel.page`, a .html file and what it uses, from its folder) or a folder
+   * (`sel.folder`, everything in it): the files, their public paths, what was left out and why,
+   * and the address. Reads every file (to find what a page uses, and to check it). Returns
+   * { plan } or { refused: { status, body } }.
+   */
+  async function prepare(ctx, sel) {
+    const no = (status, message, extra = {}) => ({ refused: { status, body: { error: extra.error ?? 'not_publishable', message, ...extra } } })
+    const entries = await ctx.list()
+    const byPath = new Map(entries.map((e) => [e.path, e]))
+    const plain = (p) => typeof p === 'string' && p.length > 0 && p.length <= 1300 && !p.split('/').some((x) => !x || x.startsWith('.') || x === '..')
+    let base
+    let start = []
+    const warnings = []
+    const leftOut = []
+    if (typeof sel?.page === 'string') {
+      if (!plain(sel.page) || !/\.html?$/i.test(sel.page) || byPath.get(sel.page)?.type !== 'file') return no(404, 'That page is not in this project any more.', { error: 'not_found' })
+      base = posix.dirname(sel.page) === '.' ? '' : posix.dirname(sel.page)
+      start = [sel.page]
+    } else if (typeof sel?.folder === 'string') {
+      const f = sel.folder.replace(/\/+$/, '')
+      if (!plain(f)) return no(400, 'Choose a folder inside the project. The whole project can’t be published at once: it holds your uploads too.')
+      base = f
+      const inside = entries.filter((e) => e.path.startsWith(`${f}/`))
+      if (!inside.length) return no(404, 'That folder is empty, or not in this project any more.', { error: 'not_found' })
+      for (const e of inside) {
+        const rel = e.path.slice(f.length + 1)
+        if (SECRET_NAME.test(e.path) || SECRET_DIR.test(e.path)) return no(422, `Ola will not publish ${f}/: ${rel} is in it, and ${rel.split('/').pop()} usually holds passwords or keys. Move it out of the folder (or ask Ola to), then try again.`, { error: 'secret' })
+        if (e.type !== 'file') leftOut.push({ path: e.path, why: 'a link or something that is not a plain file' })
+        else if (rel.split('/').some((x) => x.startsWith('.') || x === 'node_modules' || x === '__pycache__')) leftOut.push({ path: e.path, why: 'hidden, or a working folder' })
+        else start.push(e.path)
+      }
+      if (!start.some((p) => p === `${f}/index.html`)) return no(422, `${f}/ has no index.html, the page a visitor sees first. Publish one page instead, or ask Ola to name the first page index.html.`, { error: 'no_index' })
+    } else return no(400, 'Choose a page or a folder to publish.')
+
+    // The files, and (for a page) everything it uses, followed through stylesheets, scripts and
+    // the other pages of its folder it links to.
+    const chosen = new Map() // path -> Buffer
+    const queue = [...start]
+    const seen = new Set(queue)
+    const warn = (key, text) => warnings.some((w) => w.key === key) || warnings.push({ key, text })
+    let total = 0
+    while (queue.length) {
+      const p = queue.shift()
+      const e = byPath.get(p)
+      if (chosen.size >= cfg.maxFiles) return no(413, `That is more than ${cfg.maxFiles} files, the most one publish takes.`, { error: 'too_many' })
+      if (e.size > cfg.maxFile) return no(413, `${p} is ${Math.ceil(e.size / 1024 / 1024)} MB; one published file can be ${Math.round(cfg.maxFile / 1024 / 1024)} MB at most.`, { error: 'too_large' })
+      total += e.size
+      if (total > cfg.maxTotal) return no(413, `Together these files are more than ${Math.round(cfg.maxTotal / 1024 / 1024)} MB, the most one publish takes.`, { error: 'too_large' })
+      const named = secretIn(p, null)
+      if (named) return no(422, `Ola will not publish ${p}: ${named}. Nothing was published.${p === sel.page ? '' : ' Ask Ola to take it out of the page, then try again.'}`, { error: 'secret', file: p })
+      const buf = await ctx.read(p, cfg.maxFile)
+      if (!buf) return no(409, `${p} could not be read from the project just now. Try again in a minute.`, { error: 'unreadable' })
+      const why = secretIn(p, buf, ctx.secrets?.() ?? [])
+      if (why) return no(422, `Ola will not publish this: ${p} ${why.replace(/^it /, '')}. Nothing was published. Take it out (or ask Ola to remove it from the page), then try again.`, { error: 'secret', file: p })
+      chosen.set(p, buf)
+      if (typeof sel.page !== 'string' || !/\.(html?|css|m?js|svg)$/i.test(p)) continue
+      const from = posix.dirname(p) === '.' ? '' : posix.dirname(p)
+      for (const r of referencesIn(p, buf.toString('utf8'))) {
+        const x = resolveRef(from, r.ref)
+        if (x.kind === 'external') {
+          if (r.use === 'load') warn(`ext:${x.host}`, `It loads something from ${x.host || 'another site'}. Published pages may only load their own files, so that part will not show.`)
+          continue
+        }
+        if (x.kind === 'absolute') {
+          warn(`abs:${x.ref}`, `It refers to ${x.ref}, which starts with “/” and so points outside the page’s folder once published. Ask Ola to make it a relative link.`)
+          continue
+        }
+        if (x.kind === 'outside') {
+          warn(`out:${x.ref}`, `It uses ${x.ref}, which is outside the page’s folder, so it is not published. Ask Ola to move it next to the page.`)
+          continue
+        }
+        if (x.kind !== 'local' || seen.has(x.path)) continue
+        const inBase = !base || x.path.startsWith(`${base}/`)
+        const t = byPath.get(x.path)
+        if (!inBase) {
+          warn(`out:${x.path}`, `It uses ${x.path}, which is outside the page’s folder, so it is not published. Ask Ola to move it next to the page.`)
+          continue
+        }
+        if (!t || t.type !== 'file') {
+          if (r.use === 'load') warn(`miss:${x.path}`, `It uses ${x.path}, which is not in the project.`)
+          continue
+        }
+        if (x.path.split('/').some((s) => s.startsWith('.'))) {
+          if (secretIn(x.path, null)) return no(422, `Ola will not publish this: the page uses ${x.path}, which usually holds passwords or keys. Nothing was published.`, { error: 'secret', file: x.path })
+          continue
+        }
+        seen.add(x.path)
+        queue.push(x.path)
+      }
+    }
+
+    // Public paths: relative to the folder; a single page that is not index.html becomes it, so the
+    // address is the project's own.
+    const rel = (p) => (base ? p.slice(base.length + 1) : p)
+    const items = [...chosen].map(([p, buf]) => ({ path: p, as: rel(p), size: buf.length, sha: sha1(buf), uploaded: !!ctx.uploaded?.(p) }))
+    let page = 'index.html'
+    if (typeof sel.page === 'string') {
+      const me = items.find((i) => i.path === sel.page)
+      if (me.as !== 'index.html' && !items.some((i) => i.as === 'index.html')) me.as = 'index.html'
+      page = me.as
+    }
+    items.sort((a, b) => (a.as === page ? -1 : b.as === page ? 1 : a.as.localeCompare(b.as)))
+    const up = items.filter((i) => i.uploaded).length
+    if (up) warn('uploaded', `${up === 1 ? 'One of these files was' : `${up} of these files were`} added by your group, not made by Ola. Make sure ${up === 1 ? 'it is' : 'they are'} meant to be public.`)
+    const fingerprint = createHash('sha256').update(JSON.stringify(items.map((i) => [i.as, i.sha]))).digest('hex')
+    return { plan: { slug: ctx.slug, sel: sel.page ? { page: sel.page } : { folder: base }, url: urlOf(ctx.slug, page), page, items, leftOut: leftOut.slice(0, 50), warnings: warnings.map((w) => w.text), total, fingerprint }, buffers: chosen }
+  }
+
+  return {
+    origin: cfg.origin,
+    configured: () => !!cred(),
+    /** What is published for a project now, or null. */
+    status(slug) {
+      const m = readJson(manifestFile(slug))
+      return m?.files ? { url: m.url, at: m.at, files: m.files.length, page: m.sel?.page ?? null, folder: m.sel?.folder ?? null } : null
+    },
+    list: () => Object.entries(manifests()).map(([slug, m]) => ({ slug, url: m.url, at: m.at, files: m.files.length })),
+    /** The sheet's list (nothing leaves). */
+    async preview(ctx, sel) {
+      const r = await prepare(ctx, sel)
+      if (r.refused) return r.refused
+      const { plan } = r
+      return { status: 200, body: { ...plan, items: plan.items.map(({ sha, ...i }) => i), published: this.status(ctx.slug), acceptableUse: ACCEPTABLE_USE } }
+    },
+    /**
+     * Publishes exactly what the person saw: `fingerprint` is the preview's; if the files changed
+     * since, nothing leaves and the sheet is shown again.
+     */
+    async publish(ctx, sel, fingerprint) {
+      const c = cred()
+      if (!c) return { status: 503, body: { error: 'not_set_up', message: 'Publishing is not set up on this Ola machine yet. Nothing was published.' } }
+      const r = await prepare(ctx, sel)
+      if (r.refused) return r.refused
+      const { plan, buffers } = r
+      if (fingerprint !== plan.fingerprint) return { status: 409, body: { error: 'changed', message: 'The files changed since you looked. Look at the list again before publishing.' } }
+      const again = !!readJson(manifestFile(ctx.slug))
+      try {
+        await serial(async () => {
+          for (const i of plan.items) {
+            const buf = buffers.get(i.path)
+            await upload(c, buf, i.sha)
+            blobPut(i.sha, buf)
+          }
+          const all = manifests()
+          all[ctx.slug] = { url: plan.url, at: new Date().toISOString(), sel: plan.sel, files: plan.items.map((i) => ({ as: i.as, sha: i.sha, size: i.size })) }
+          await deployAll(c, all)
+          writeJson(manifestFile(ctx.slug), all[ctx.slug])
+        })
+      } catch (e) {
+        log(`sites: publish of ${ctx.slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
+        return { status: e.code === 'BUSY' ? 429 : 502, body: { error: 'publish_failed', message: e.code === 'BUSY' ? 'Another page is being published just now. Try again in a minute.' : 'The page could not be published just now: the host did not take it. Nothing changed. Try again in a few minutes.' } }
+      }
+      const index = plan.items.find((i) => i.as === plan.page)
+      const live = await verify(plan.url, index.sha)
+      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, fingerprint: plan.fingerprint }, plan }
+    },
+    /** Takes a project's pages down (the owner's Unpublish, or `admin.mjs unpublish`). */
+    async unpublish(slug) {
+      const c = cred()
+      if (!c) return { status: 503, body: { error: 'not_set_up', message: 'Publishing is not set up on this Ola machine yet.' } }
+      const m = readJson(manifestFile(slug))
+      if (!m) return { status: 404, body: { error: 'not_published', message: 'Nothing of this project is published.' } }
+      try {
+        await serial(async () => {
+          const all = manifests()
+          delete all[slug]
+          await deployAll(c, all)
+          fs.rmSync(manifestFile(slug), { force: true })
+          // Our copies of its bytes go too, unless another project published the same file.
+          const used = new Set(Object.values(all).flatMap((x) => x.files.map((f) => f.sha)))
+          for (const f of m.files) if (!used.has(f.sha)) fs.rmSync(path.join(blobs, f.sha), { force: true })
+        })
+      } catch (e) {
+        log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
+        return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
+      }
+      const gone = await verify(m.url, null)
+      return { status: 200, body: { unpublished: true, url: m.url, gone, files: m.files.length } }
+    },
+  }
+}
