@@ -96,6 +96,7 @@ struct SettingsView: View {
   @ViewBuilder func content(_ p: SettingsPane) -> some View {
     switch p {
     case .general:
+      AppearanceSettings(applies: only == nil)
       // The setup of each runtime; which one a session works in is chosen in New Session.
       machine
       if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }

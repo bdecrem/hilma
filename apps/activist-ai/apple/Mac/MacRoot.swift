@@ -4,11 +4,12 @@ import UniformTypeIdentifiers
 import SwiftUI
 import WebKit
 
-/// Two looks were drawn for the window (see apple/README.md), both "paper laid on the blue room":
-/// `sheet` lays the conversation and the files on the room as two sheets; `desk` lays one sheet,
-/// with the files as its ruled right margin.
-enum Treatment: String { case sheet, desk }
-private struct TreatmentKey: EnvironmentKey { static let defaultValue = Treatment.desk }
+/// How the conversation sits in the window. `plain` (OLA-207, chosen): the page fills the window
+/// edge to edge, as in Notes and Mail, with the files beside it past a hairline. The two earlier
+/// looks, "paper laid on the room", are kept: `sheet` (two inset sheets) and `desk` (one inset sheet
+/// with the files as its margin). Bart on `desk`: "something kinda of big or square": a box in a box.
+enum Treatment: String { case plain, sheet, desk }
+private struct TreatmentKey: EnvironmentKey { static let defaultValue = Treatment.plain }
 
 /// The paper's edge on the room: a small radius and one soft shadow.
 enum Sheet {
@@ -20,6 +21,8 @@ extension View {
   /// The files panel's paper: its own sheet, or the right margin of the one sheet.
   @ViewBuilder func filesPaper(_ t: Treatment) -> some View {
     switch t {
+    case .plain:
+      overlay(alignment: .leading) { Rectangle().fill(Ola.rule).frame(width: 1) }
     case .sheet:
       clipShape(RoundedRectangle(cornerRadius: Sheet.radius))
         .overlay(RoundedRectangle(cornerRadius: Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1)).shadow(color: .black.opacity(0.06), radius: 2, y: 1)
@@ -36,6 +39,8 @@ extension View {
   /// The conversation's paper.
   @ViewBuilder func conversationPaper(_ t: Treatment, filesShown: Bool) -> some View {
     switch t {
+    case .plain:
+      self
     case .sheet:
       clipShape(RoundedRectangle(cornerRadius: Sheet.radius))
         .overlay(RoundedRectangle(cornerRadius: Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1)).shadow(color: .black.opacity(0.06), radius: 2, y: 1)
@@ -48,6 +53,13 @@ extension View {
     }
   }
 }
+extension ToolbarContent {
+  /// A toolbar button as a plain symbol: no glass capsule of its own behind it (macOS 26 and later).
+  @ToolbarContentBuilder func plainToolbarItem() -> some ToolbarContent {
+    if #available(macOS 26, *) { sharedBackgroundVisibility(.hidden) } else { self }
+  }
+}
+
 extension EnvironmentValues {
   var treatment: Treatment {
     get { self[TreatmentKey.self] }
@@ -80,15 +92,19 @@ struct MacRoot: View {
         ConversationPane(store: store, draft: $draft)
           .conversationPaper(treatment, filesShown: filesShown)
       }
-      .background(Ola.room)
+      .background(treatment == .plain ? Ola.paper : Ola.room)
       .inspector(isPresented: $filesShown) {
-        FilesPanel(store: store).filesPaper(treatment)
-          .inspectorColumnWidth(min: 200, ideal: 248, max: 400)
+        // The plain window: the system's own inspector edge, no drawn margin.
+        Group {
+          if treatment == .plain { FilesPanel(store: store) } else { FilesPanel(store: store).filesPaper(treatment) }
+        }
+        .inspectorColumnWidth(min: 200, ideal: 248, max: 400)
       }
     }
     .navigationTitle(store.selected?.title ?? "New session")
     .navigationSubtitle(subtitle)
     .toolbar {
+      // The system's toolbar with plain symbols (OLA-207: no chunky backgrounds behind them).
       if store.gatewayModels.count > 1 {
         ToolbarItem {
           Picker("Model", selection: Binding(get: { store.model }, set: { m in if let m { Task { await store.choose(m) } } })) {
@@ -96,14 +112,14 @@ struct MacRoot: View {
           }
           .help("The model for this session")
         }
+        .plainToolbarItem()
       }
       ToolbarItem {
         Button { filesShown.toggle() } label: { Label("Files", systemImage: "sidebar.right") }
           .help(filesShown ? "Hide the project\u{2019}s files" : "Show the project\u{2019}s files")
       }
+      .plainToolbarItem()
     }
-    .toolbarBackground(Ola.room, for: .windowToolbar)
-    .toolbarBackground(.visible, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
     .quickLookPreview($viewed)
     .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac && whereOla?.readiness(.local).ready != true) || connectShown }, set: { connectShown = $0 })) {
@@ -146,7 +162,6 @@ struct Sidebar: View {
   @State private var renaming: SessionInfo?
   @State private var newTitle = ""
   @State private var deleting: SessionInfo?
-  @FocusState private var focused: Bool
   /// A click or a double click on "Cloud" or "Local" hides or shows that runtime's sessions
   /// (OLA-167; Bart, 2026-11-18). Kept across launches.
   @AppStorage("ola.sessions.hidden.cloud") private var cloudHidden = false
@@ -175,74 +190,59 @@ struct Sidebar: View {
     if st === store { store.selectedID = s.id } else { whereOla?.show(r, select: s.id) }
   }
 
+  /// The list's selection: "<runtime>/<session id>", so a session of either runtime can be chosen.
+  var selection: Binding<String?> {
+    Binding(get: {
+      guard let id = store.selectedID, let r = store.runtime else { return nil }
+      return "\(r.rawValue)/\(id)"
+    }, set: { key in
+      guard let key, let slash = key.firstIndex(of: "/"), let r = Runtime(rawValue: String(key[..<slash])) else { return }
+      let id = String(key[key.index(after: slash)...])
+      guard let sec = sections.first(where: { $0.runtime == r }), let s = sec.store.sessions.first(where: { $0.id == id }) else { return }
+      open(r, s, in: sec.store)
+    })
+  }
+
+  /// The system's own sidebar (OLA-207): a source list with collapsible sections, the system's row
+  /// height, type, selection and keyboard handling, as in Notes and Mail.
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 1) {
-          Button { if whereOla != nil { NewSessionChooser.shared.shown = true } else { store.newSession() } } label: {
-            HStack(spacing: 6) {
-              Image(systemName: "square.and.pencil").font(.system(size: Metrics.ui - 1, weight: .medium)).frame(width: SessionRow.markColumn)
-              Text("New session").font(OlaFont.sans(Metrics.ui, .medium))
-              Spacer()
-              Text("\u{2318}N").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim)
-            }
-            .foregroundStyle(Ola.onRoom)
-            .padding(.horizontal, Space.s).frame(height: SessionRow.height)
-            .contentShape(Rectangle())
-            .hoverFill(Ola.roomHover, radius: 6, selected: store.selectedID == nil ? Ola.roomRaised : nil)
-          }
-          .buttonStyle(.plain)
-          .help("Start a new session, in the cloud or on this Mac (\u{2318}N)")
-          ForEach(sections) { sec in
-            let r = sec.runtime, st = sec.store
-            HStack(spacing: 5) {
-              Image(systemName: r.symbol).font(.system(size: Metrics.meta, weight: .semibold))
-              Text(r.name).font(OlaFont.sans(Metrics.meta, .semibold))
-              Text(r.place(phone: false)).font(OlaFont.sans(Metrics.meta))
-              Spacer(minLength: 4)
-              if hidden(r) { Text("\(st.sessions.count)").font(OlaFont.sans(Metrics.meta)).monospacedDigit() }
-              Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).rotationEffect(.degrees(hidden(r) ? -90 : 0))
-            }
-            .foregroundStyle(Ola.dim)
-            .padding(.horizontal, Space.s).padding(.top, Space.l).padding(.bottom, Space.xs)
-            .contentShape(Rectangle())
-            // One toggle for a double click, one for a single click.
-            .onTapGesture(count: 2) { toggle(r) }
-            .onTapGesture { toggle(r) }
-            .help(hidden(r) ? "Show the \(r.name.lowercased()) sessions" : "Hide the \(r.name.lowercased()) sessions")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityLabel("\(r.name) sessions, \(hidden(r) ? "hidden" : "shown")")
-            if !hidden(r) {
-            ForEach(st.sessions) { s in
-              SessionRow(session: s, selected: st === store && store.selectedID == s.id, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
-                .onTapGesture { open(r, s, in: st) }
-                .contextMenu {
-                  if st === store {
-                    Button("Rename\u{2026}") { newTitle = s.title; renaming = s }
-                    Button("Delete\u{2026}", role: .destructive) { deleting = s }
-                  } else {
-                    Button("Open") { open(r, s, in: st) }
-                  }
-                }
-            }
-            if st.sessions.isEmpty {
-              Text(st.connection == .open ? "No sessions yet." : st.connection == .connecting ? "Connecting\u{2026}" : r == .local ? "Starting\u{2026}" : "Not answering.")
-                .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(.horizontal, Space.s).padding(.vertical, 6)
-            }
-            }
-          }
-        }
-        .padding(.horizontal, Space.s).padding(.top, Space.xs).padding(.bottom, Space.s)
+    List(selection: whereOla == nil ? .constant(nil) : selection) {
+      Button { if whereOla != nil { NewSessionChooser.shared.shown = true } else { store.newSession() } } label: {
+        Label("New Session", systemImage: "square.and.pencil").foregroundStyle(Ola.onRoom).contentShape(Rectangle())
       }
-      MachineFooter(store: store)
+      .buttonStyle(.plain)
+      .help("Start a new session, in the cloud or on this Mac (\u{2318}N)")
+      ForEach(sections) { sec in
+        let r = sec.runtime, st = sec.store
+        Section(isExpanded: Binding(get: { !hidden(r) }, set: { if $0 == hidden(r) { toggle(r) } })) {
+          ForEach(st.sessions) { s in
+            SessionRow(session: s, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
+              .tag("\(r.rawValue)/\(s.id)")
+              // Screenshots (no app around the list): the system's selection does not draw off
+              // screen, so the selected row gets the sidebar's selection tone instead.
+              .listRowBackground(whereOla == nil && st === store && store.selectedID == s.id ? RoundedRectangle(cornerRadius: 6).fill(Ola.roomRaised).padding(.horizontal, 10) : nil)
+              .contextMenu {
+                if st === store {
+                  Button("Rename\u{2026}") { newTitle = s.title; renaming = s }
+                  Button("Delete\u{2026}", role: .destructive) { deleting = s }
+                } else {
+                  Button("Open") { open(r, s, in: st) }
+                }
+              }
+          }
+          if st.sessions.isEmpty {
+            Text(st.connection == .open ? "No sessions yet." : st.connection == .connecting ? "Connecting\u{2026}" : r == .local ? "Starting\u{2026}" : "Not answering.")
+              .foregroundStyle(.secondary).selectionDisabled()
+          }
+        } header: {
+          Text("\(r.name) \u{00B7} \(r.place(phone: false))")
+            .help(hidden(r) ? "Show the \(r.name.lowercased()) sessions" : "Hide the \(r.name.lowercased()) sessions")
+        }
+      }
     }
-    .background(Ola.room)
-    .focusable()
-    .focused($focused)
-    .focusEffectDisabled()
-    .onKeyPress(.upArrow) { move(-1) }
-    .onKeyPress(.downArrow) { move(1) }
-    .onKeyPress(.delete) { if let s = store.selected { deleting = s }; return .handled }
+    .listStyle(.sidebar)
+    .safeAreaInset(edge: .bottom, spacing: 0) { MachineFooter(store: store) }
+    .onDeleteCommand { if let s = store.selected { deleting = s } }
     .alert("Rename session", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
       TextField("Name", text: $newTitle)
       Button("Rename") { if let s = renaming { Task { await store.rename(s.id, to: newTitle) } } }
@@ -255,12 +255,6 @@ struct Sidebar: View {
     }
   }
 
-  func move(_ by: Int) -> KeyPress.Result {
-    guard !store.sessions.isEmpty else { return .ignored }
-    let i = store.sessions.firstIndex { $0.id == store.selectedID } ?? -1
-    store.selectedID = store.sessions[max(0, min(store.sessions.count - 1, i + by))].id
-    return .handled
-  }
 }
 
 struct RuntimeSection: Identifiable {
@@ -269,36 +263,30 @@ struct RuntimeSection: Identifiable {
   var id: Runtime { runtime }
 }
 
+/// A session in the sidebar: the system's row, its title, the time, and a dot only when there is
+/// something to see (working, needs a yes, finished unseen).
 struct SessionRow: View {
   var session: SessionInfo
-  var selected: Bool
   var running: Bool
   var unseen: Bool
   var needsYou: Bool
-  static let height: CGFloat = 28
-  static let markColumn: CGFloat = 14
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 6) {
+      VStack(alignment: .leading, spacing: 1) {
+        Text(session.title).foregroundStyle(Ola.onRoom).lineLimit(1).truncationMode(.tail)
+        if needsYou { Text("Needs your yes").font(.system(size: Metrics.meta, weight: .medium)).foregroundStyle(Ola.vermilionText) }
+      }
+      Spacer(minLength: Space.xs)
       ZStack {
         if needsYou { Circle().fill(Ola.vermilion).frame(width: 7, height: 7) }
         else if running { LampDot() }
         else if unseen { Circle().fill(Ola.vermilion).frame(width: 6, height: 6) }
       }
-      .frame(width: Self.markColumn, height: 8)
+      .frame(width: needsYou || running || unseen ? 10 : 0, height: 8)
       .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 3.5 }
-      VStack(alignment: .leading, spacing: 1) {
-        Text(session.title).font(OlaFont.sans(Metrics.ui, selected ? .medium : .regular)).foregroundStyle(selected ? Ola.onRoom : Ola.mist)
-          .lineLimit(1).truncationMode(.tail)
-        if needsYou { Text("Needs your yes").font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.vermilion) }
-      }
-      Spacer(minLength: Space.xs)
-      Text(running ? "now" : shortTime(session.updated)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).monospacedDigit()
+      Text(running ? "now" : shortTime(session.updated)).font(.system(size: Metrics.meta)).foregroundStyle(.secondary).monospacedDigit()
     }
-    .padding(.horizontal, Space.s).padding(.vertical, 6)
-    .frame(minHeight: Self.height)
-    .contentShape(Rectangle())
-    .hoverFill(Ola.roomHover, radius: 6, selected: selected ? Ola.roomRaised : nil)
     .help(session.title)
   }
 }

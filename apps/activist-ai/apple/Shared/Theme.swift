@@ -102,10 +102,35 @@ struct Palette {
     return p
   }()
 
+  /// N: the Mac's own (OLA-207, 2026-11-19). Bart on 0.1 (16): "something kinda of big or square
+  /// ... and the dark-grey on darker-grey mode is obviously a dark mode where i would expect a light
+  /// mode". The Mac now looks like the Mac: a white page in light (the near-black #1e1e1e of Notes
+  /// and Mail in dark), neutral grays where the warm ramp was, text at the system's label contrast
+  /// (#1d1d1f on white, 16.8:1; #f2f2f4 on #1e1e1e, 15.6:1), and the brand's blue as the accent.
+  /// The sidebar and toolbar are the system's own (their values here only draw the screenshots).
+  static let native: Palette = {
+    var p = blueInk
+    p.id = "N"
+    p.chrome = .ola(0xe9e9eb, 0x2a2a2c); p.chromeHover = .ola(0xdedee1, 0x353538); p.chromeSelected = .ola(0xd5d5d9, 0x3d3d41)
+    p.chromeRule = .ola(0xd6d6d9, 0x3a3a3d); p.chromeText = .ola(0x1d1d1f, 0xf2f2f4); p.chromeText2 = .ola(0x3c3c41, 0xd1d1d6); p.chromeText3 = .ola(0x6e6e73, 0x98989d)
+    p.page = .ola(0xffffff, 0x1e1e1e); p.margin = .ola(0xfbfbfc, 0x232325); p.code = .ola(0xf4f4f6, 0x2a2a2d); p.field = .ola(0xffffff, 0x262628)
+    p.separator = .ola(0xe5e5e8, 0x343437); p.separatorStrong = .ola(0xcfcfd4, 0x4a4a4e)
+    p.hover = .ola(0xf2f2f4, 0x2c2c2f); p.pressed = .ola(0xe8e8eb, 0x343437)
+    p.text = .ola(0x1d1d1f, 0xf2f2f4); p.text2 = .ola(0x48484d, 0xc7c7cc); p.text3 = .ola(0x6e6e73, 0x98989d)
+    p.accent = .ola(0x2f5597, 0x4a72b8); p.accentText = .ola(0x2c5194, 0x9db8e8)
+    p.attentionWash = .ola(0xfcefe9, 0x3a2620); p.runningWash = .ola(0xfaf3dc, 0x353020)
+    return p
+  }()
+
+  #if os(macOS)
+  static let all = [native, ink, blueInk, dusk]
+  static let chosen = native
+  #else
   static let all = [ink, blueInk, dusk]
+  static let chosen = blueInk
+  #endif
   /// The one in use: the hidden default `OlaPalette`, else the chosen one.
   nonisolated(unsafe) static var current: Palette = all.first { $0.id == UserDefaults.standard.string(forKey: "OlaPalette") } ?? chosen
-  static let chosen = blueInk
 }
 
 /// The roles under the names the views use. The old names (room, paper, ink, vermilion) stay so
@@ -146,19 +171,49 @@ enum Ola {
 }
 
 /// Bricolage Grotesque for the interface, Literata for what Ola writes, IBM Plex Mono in details.
+///
+/// On the Mac, one family: the system's (OLA-207). Notes, Mail and ChatGPT set the interface and
+/// what you read in San Francisco; Bricolage beside Literata beside a system sidebar and menus read
+/// as three voices at once, and both run large for their point size (Bricolage's x-height; Literata
+/// at 15 looked like 17). The phone keeps the brand's faces.
 enum OlaFont {
   static func sans(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
+    #if os(macOS)
+    .system(size: size, weight: weight.system)
+    #else
     .custom(weight.sans, size: size)
+    #endif
   }
   static func serif(_ size: CGFloat, _ style: SerifStyle = .regular) -> Font {
+    #if os(macOS)
+    switch style {
+    case .regular: .system(size: size)
+    case .semibold: .system(size: size, weight: .semibold)
+    case .heading: .system(size: size, weight: .bold)
+    case .italic: .system(size: size).italic()
+    }
+    #else
     .custom(style.rawValue, size: size)
+    #endif
   }
   static func mono(_ size: CGFloat, medium: Bool = false) -> Font {
+    #if os(macOS)
+    .system(size: size, weight: medium ? .medium : .regular, design: .monospaced)
+    #else
     .custom(medium ? "IBMPlexMono-Medium" : "IBMPlexMono-Regular", size: size)
+    #endif
   }
 
   enum Weight {
     case regular, medium, semibold, display
+    var system: Font.Weight {
+      switch self {
+      case .regular: .regular
+      case .medium: .medium
+      case .semibold: .semibold
+      case .display: .bold
+      }
+    }
     var sans: String {
       switch self {
       case .regular: "OlaSans-Regular"
@@ -190,12 +245,13 @@ enum OlaFont {
 /// 11 secondary) and only what Ola writes sits a step above, at 15; the phone keeps its larger sizes.
 enum Metrics {
   #if os(macOS)
-  /// Sheet and empty-state titles (Bricolage display).
-  static let title: CGFloat = 20
+  /// Sheet and empty-state titles.
+  static let title: CGFloat = 17
   /// The approval's question.
-  static let heading: CGFloat = 15
-  /// What Ola writes (Literata), and what you write to it.
-  static let reading: CGFloat = 15
+  static let heading: CGFloat = 14
+  /// What Ola writes, and what you write to it: one step above the interface, as Mail sets a
+  /// message (OLA-207: 15-point Literata read as 17).
+  static let reading: CGFloat = 14
   /// Every control, row and label.
   static let ui: CGFloat = 13
   /// Times, counts, captions, section labels.
@@ -211,7 +267,12 @@ enum Metrics {
   static let mono: CGFloat = 12.5
   #endif
   /// Extra space between lines of reading text, on top of Literata's own (1.49 em): about 1.58 in all.
+  /// On the Mac, San Francisco's own line is about 1.19 em: about 1.45 in all.
+  #if os(macOS)
+  static var readingLeading: CGFloat { reading * 0.26 }
+  #else
   static var readingLeading: CGFloat { reading * 0.09 }
+  #endif
 }
 
 /// The spacing scale (points). Nothing outside it.

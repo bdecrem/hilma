@@ -94,7 +94,8 @@ final class SessionYesTests: XCTestCase {
     st.add("per_3", "ses_a", "bash", ["ola-lookup \"doi:10.1/x\""])
     store.handle(asked("per_3", "ses_a", "bash", ["ola-lookup \"doi:10.1/x\""]))
     await waitFor { st.got.count >= 3 }
-    XCTAssertEqual(st.got.map(\.0), ["per_1", "per_2", "per_3"])
+    // per_2 and per_3 are answered at once, so they can reach the server in either order.
+    XCTAssertEqual(st.got.map(\.0).sorted(), ["per_1", "per_2", "per_3"])
     XCTAssertEqual(st.got.map(\.1), ["once", "once", "once"])
 
     // A command in that session, and a web step in another session: not covered.
