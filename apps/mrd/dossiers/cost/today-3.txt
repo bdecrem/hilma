@@ -1,0 +1,18 @@
+# 2026-11-20, window 1: forward on Opus high (the plan's setting) over the rest of Costa Rica: the first whole-country number
+forward costa_rica --chunk vulnerable --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk life --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk liberty_a --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk liberty_b --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk personhood --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk due_process --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk expulsion_a --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk nationality_a --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk nationality_b --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk family --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk civil_liberties --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk political --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk labor_a --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk labor_b --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk labor_c --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk health_housing --model claude-opus-5-5 --effort high --to-the-limit
+forward costa_rica --chunk education --model claude-opus-5-5 --effort high --to-the-limit

@@ -217,8 +217,10 @@ async function commitAndPush(msg) {
     say(`commit failed: ${out.slice(-300)}`); return
   }
   const push = async () => run('bash', [join(homedir(), '.claude', 'push-via-mini.sh')], { cwd: REPO, timeout: 180_000 })
+  await git(['pull', '-q', '--rebase', '--autostash', 'origin', 'main'])   // other machines push to main all day
   let p = await push()
-  const bad = r => r.code !== 0 || /rejected|non-fast-forward|fetch first|failed to push/i.test(r.stdout + r.stderr)
+  // the helper ends with `git status -sb`: still "ahead" means the push did not land
+  const bad = r => r.code !== 0 || /rejected|non-fast-forward|fetch first|failed to push|\[ahead/i.test(r.stdout + r.stderr)
   if (bad(p)) {
     say(`push failed, rebasing and retrying once: ${(p.stdout + p.stderr).trim().slice(-200)}`)
     await git(['pull', '-q', '--rebase', '--autostash', 'origin', 'main'])

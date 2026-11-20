@@ -1,0 +1,11 @@
+# 2026-11-20, window 1: the model and effort grid on expulsion_b
+forward claude-opus-5-5 medium costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+forward claude-sonnet-5-5 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+back claude-opus-5-5 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+back claude-opus-5-5 medium costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+back claude-sonnet-5-5 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+timeline claude-opus-5-5 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+timeline claude-opus-5-5 medium costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+timeline claude-sonnet-5-5 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+timeline claude-fable-5-2 high costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
+forward claude-opus-5-5 xhigh costa_rica --chunk expulsion_b --model  --effort  --to-the-limit
