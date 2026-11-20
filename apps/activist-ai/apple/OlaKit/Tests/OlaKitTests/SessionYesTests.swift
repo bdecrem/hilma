@@ -161,6 +161,10 @@ final class SessionYesTests: XCTestCase {
       if req.method == "POST", req.path == "/api/session" {
         return await res.send(200, JSON.object(["data": ["id": "ses_l", "title": "t", "time": ["created": 1_800_000_000_000, "updated": 1_800_000_000_000]]]).data)
       }
+      // This Mac's own engine offers Ola's model (the store checks before each request, OLA-249/287).
+      let general: JSON = ["providerID": "ola", "id": "general", "name": "General"]
+      if req.path == "/api/model" { return await res.send(200, JSON.object(["data": .array([general])]).data) }
+      if req.path == "/api/model/default" { return await res.send(200, JSON.object(["data": general]).data) }
       await res.send(200, Data("{}".utf8))
     }
     let port2 = try await s2.start()
