@@ -39,6 +39,8 @@ export function instructions(abilities, runtime) {
     ``,
     ...can.map((a) => `- ${a.what}: ${a[runtime].tell}.`),
     ``,
+    // On a Mac a skill can be unavailable (the Ola app closed, a library missing): the skills note says which.
+    ...(runtime === 'local' ? [`If the note on Ola's skills says a skill is not available on this Mac right now, say that in one sentence with what would make it available, and do the work as well as you can without it.`, ``] : []),
     `Not offered here. When asked for one of these, say the sentence given, in your own language if the person writes in another, and do the part you can (write the message, the post, the plan). Never say or imply that you did it:`,
     ``,
     ...cannot.map((a) => `- ${a.what}: "${a[runtime].notOffered}"`),
