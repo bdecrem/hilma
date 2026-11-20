@@ -140,7 +140,8 @@ export async function ciOnce({ STAGING, check, dry = false }) {
       busy = holder > 0 && process.kill(holder, 0)
     } catch {}
     if (busy) return say(`${short}: another check is running (pid ${holder}); tried again next run`), 0
-    post(tip,{ state: 'pending', description: 'Ola checks running on the staging machine' })
+    // No 'pending' is posted first: a check that gives its turn to a deploy, or a tip that main
+    // moves past, would leave the commit pending on GitHub for good (d1917909, cfea28b8, 56f05fc7).
     say(`${short}: checking`)
     result = await check(tip)
     if (!result || result.yielded) return say(`${short}: gave the turn to a deploy; tried again next run`), 0
