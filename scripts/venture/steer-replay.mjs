@@ -6,6 +6,10 @@
 //                                                         fails with the rules gets 2 more tries
 //   node scripts/venture/steer-replay.mjs --tries 1 --only c05-design-slop,c13-ai-disclosure
 //   node scripts/venture/steer-replay.mjs --dry           run, print, store nothing
+//   node scripts/venture/steer-replay.mjs --dry --tries 1 --with-only --rules-text <file> --json <out>
+//                                                         the rules given as that text (a digest, for
+//                                                         rules-trim.mjs), only the with-rules arm, the run
+//                                                         written to <out>; stores nothing (OLA-251)
 // A case is one past correction turned into a test (scripts/venture/_replay.mjs; the cases are
 // private, apps/venture/private/data/replay-cases/*.json: his words and the situations never go in
 // git): the situation Kit was in just before the mistake, a rubric (must / must_not) and the
@@ -31,7 +35,7 @@ import { askClaude } from './_claude.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, pacificDay } from './_state.mjs'
 import { loadCases } from './_replay.mjs'
-import { WEAK_FILE, loadWeaknesses } from './_weak.mjs'
+import { WEAK_FILE, loadWeaknesses, privPath } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const env = Object.fromEntries(
@@ -41,7 +45,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
 const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-const priv = (f) => new URL(`apps/venture/private/${f}`, root)
+const priv = (f) => privPath(root, f)
 const MODEL = 'claude-opus-5-5'
 const args = process.argv.slice(2)
 const after = (f) => (args.includes(f) ? args[args.indexOf(f) + 1] : null)
@@ -49,12 +53,16 @@ const nightly = args.includes('--nightly')
 const tries = Number(after('--tries') ?? (nightly ? 1 : 3))
 const only = after('--only')?.split(',')
 const dry = args.includes('--dry')
+const withOnly = args.includes('--with-only') // skip the arm without rules (rules-trim.mjs compares two rule texts)
+const rulesText = after('--rules-text')
+const jsonOut = after('--json')
+if ((rulesText || jsonOut || withOnly) && !dry) { console.error('--rules-text, --with-only and --json are for comparison runs: add --dry, so nothing is stored'); process.exit(1) }
 const NEED = 2 // of 3 tries with the rules
 const started = new Date().toISOString()
 
 const cases = loadCases(root).filter((c) => !only || only.includes(c.id))
 if (!cases.length) { console.error('no cases (apps/venture/private/data/replay-cases/ is empty: run sync.mjs pull)'); process.exit(1) }
-const RULES = readFileSync(priv('RULES.md'), 'utf8')
+const RULES = rulesText ? readFileSync(rulesText, 'utf8') : readFileSync(priv('RULES.md'), 'utf8')
 
 const BASE = `You are Kit, an AI agent (a Claude model working through Claude Code with a shell, the web, subagents, a browser, and iMessage and voice lines to Bart) who runs Kochito Labs, a small company, with Bart Decrem. Bart holds the accounts and the money; you pick the ideas, build, find customers and run the work.
 
@@ -120,7 +128,7 @@ async function attempt(c, withRules) {
   }
 }
 
-await setState(db, 'steer_replay_attempt', { at: started, host: hostname(), nightly, running: true }).catch(() => {})
+if (!dry) await setState(db, 'steer_replay_attempt', { at: started, host: hostname(), nightly, running: true }).catch(() => {})
 const results = []
 const passes = (xs) => xs.filter((x) => x.pass).length
 const graded = (xs) => xs.filter((x) => !x.error)
@@ -128,7 +136,7 @@ await Promise.all(
   cases.map(async (c) => {
     const r = { id: c.id, source: c.source, title: c.title, weakness: c.weakness ?? null, with: [], without: [] }
     const jobs = []
-    for (let t = 0; t < tries; t++) for (const w of [true, false]) jobs.push(attempt(c, w).then((x) => (w ? r.with : r.without).push(x)))
+    for (let t = 0; t < tries; t++) for (const w of withOnly ? [true] : [true, false]) jobs.push(attempt(c, w).then((x) => (w ? r.with : r.without).push(x)))
     await Promise.all(jobs)
     // nightly: one try; a fail with the rules gets two more, so one unlucky answer does not file a case
     if (nightly && graded(r.with).length && passes(r.with) === 0) {
@@ -173,6 +181,7 @@ console.log(`\nwith the rules: ${run.prevented} of ${run.graded} cases prevented
 console.log(`without rules:  ${run.prevented_without} of ${run.graded} (${run.without_rules.passed}/${run.without_rules.tries} tries, ${pct(run.without_rules)}%); lift ${pct(run.with_rules) - pct(run.without_rules)} points`)
 console.log(`rules too weak (fail with the rules): ${run.weak.length ? run.weak.map((w) => `${w.id} (${w.weakness})`).join(', ') : 'none'}`)
 console.log(`${cost.calls} calls (${cost.errors} failed) on the Max plan, no charge on the API key; the same calls on a key would be about $${run.equiv_dollars}`)
+if (jsonOut) writeFileSync(jsonOut, JSON.stringify({ ...run, rules_text: rulesText, with_only: withOnly }, null, 2) + '\n')
 if (dry) process.exit(run_ok ? 0 : 1)
 
 const attemptRec = { at: started, ended: run.ended, host: hostname(), nightly, running: false, ok: run_ok, graded: run.graded, cases: run.cases, errors: cost.errors }
@@ -204,7 +213,7 @@ if (only) {
   }
   const unknown = results.filter((r) => r.weakness && !list.some((w) => w.id === r.weakness)).map((r) => `${r.id} (${r.weakness})`)
   if (unknown.length) console.log(`cases filed under a weakness that is not in ${WEAK_FILE}: ${unknown.join(', ')}`)
-  writeFileSync(new URL(WEAK_FILE, root), JSON.stringify(list, null, 2) + '\n')
+  writeFileSync(privPath(root, 'data/weaknesses.json'), JSON.stringify(list, null, 2) + '\n')
   await setState(db, 'steer_replay', { ...run, history })
 }
 await setState(db, 'steer_replay_attempt', attemptRec)
