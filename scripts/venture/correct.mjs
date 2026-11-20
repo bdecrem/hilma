@@ -23,9 +23,17 @@
 //        [--cannot "<why no stronger fix exists>"]        records the weakness as open, on the Learning page
 //        [--owed OLA-n]    the stronger fix is not built yet: the correction is recorded NOW and the fix is
 //                          listed as owed, carried by that ticket (it must exist; --fix/--level may be left out)
-//        [--when "9:28 am"] [--side ola] [--new "Name of a new weakness|what it is"]
+//        [--at "9:28 am"]  the time Bart said it (the heading shows it; "Recorded at" shows when the tool ran);
+//                          --when is the same; "about 9:28 am" is kept as said
+//        [--side ola] [--new "Name of a new weakness|what it is"]
+//   --where, for a fix of kind 3 or stronger, names something that exists (OLA-251 check #6): a file in this
+//   checkout (path[:line]), a command whose script exists (node scripts/x.mjs …), or a ticket in the tracker
+//   (OLA-n). A plain word, a file or script that is not there, or a ticket that does not exist is refused.
 //   node scripts/venture/correct.mjs fix <correction> --fix "<what changed>" --level 3 --where "<file>" [--why-last "…"]
 //                                              settles an owed fix; refused when not stronger than the last or not built
+//   node scripts/venture/correct.mjs at <correction> --at "10:58 am" [--day YYYY-MM-DD]
+//                                              corrects the time of an entry recorded later than Bart said it (OLA-258):
+//                                              the heading gets his time, the entry keeps the time it was recorded
 //   node scripts/venture/correct.mjs owed      every owed fix, oldest first (sweep.mjs post refuses while one is
 //                                              older than two days; the prompt hook and the Learning page show them)
 //   node scripts/venture/correct.mjs list      every weakness: times seen, came back, strongest fix
@@ -37,7 +45,7 @@
 // stronger fix existed, so corrections waited unrecorded (Nov 18: 9 written, 27 real). Now `add` always
 // writes the entry and the weakness's `seen` at once; the escalation rule applies to the fix, which is
 // either given with the correction or owed and settled later with `fix`.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
 
@@ -77,25 +85,45 @@ function fixProblem(w, level, { prev, cameBack, need }, { whyLast = str('why-las
     `The next fix must be at least ${need} (${KINDS[need]}); you gave ${level} (${KINDS[level]}).\n` +
     `Another rule of the same kind is what failed. Build the stronger fix first, then record it with --where.\n` +
     `If no stronger fix exists, say so: --cannot "<why>". The weakness then shows as open on the Learning page.`)
-  if (level >= 3) {
-    const where = str('where')
-    if (!where) return `a fix of kind ${level} (${KINDS[level]}) names what carries it: --where "<file, command or ticket>"`
-    const path = where.split(/[\s:]/)[0]
-    if (/[/.]/.test(path) && !/^OLA-\d+$/.test(path) && !existsSync(root + path) && !existsSync(path)) return `--where: ${path} does not exist. The fix is recorded after it is built, not before.`
-  }
+  if (level >= 3 && !str('where')) return `a fix of kind ${level} (${KINDS[level]}) names what carries it: --where "<file, command or ticket>"`
   return null
 }
 
-/** The ticket must exist in the tracker (read only). */
-async function ticketMustExist(id) {
+const RUNNERS = new Set(['node', 'python3', 'python', 'bash', 'sh', 'zsh', 'npx', 'tsx', 'pnpm', 'deno'])
+const isFile = (p) => [root + p, p].some((x) => existsSync(x) && statSync(x).isFile())
+/** Why --where names nothing that exists (null when it does): a file, a command whose script exists, or a ticket. */
+async function whereProblem(where) {
+  if (!where) return null
+  const w = where.trim()
+  if (/^OLA-\d+$/i.test(w)) return (await ticketStatus(w.toUpperCase())) ? null : `--where: there is no ticket ${w} in the tracker.`
+  const toks = w.split(/\s+/)
+  if (RUNNERS.has(toks[0])) {
+    const script = toks.slice(1).find((t) => !t.startsWith('-') && !RUNNERS.has(t))
+    if (!script) return `--where: "${w}" is a command with no script to run.`
+    return isFile(script.replace(/:\d+$/, '')) ? null : `--where: the command runs ${script}, which does not exist in this checkout.`
+  }
+  const path = toks[0].replace(/[,;]$/, '').replace(/:\d+(-\d+)?$/, '')
+  if (isFile(path)) return null
+  return `--where: "${w}" names no file in this checkout, no command whose script exists and no ticket (OLA-n). Name what carries the fix: the file that refuses it, the command that checks it, or the ticket that holds the check. The fix is recorded after it is built, not before.`
+}
+
+/** A ticket's status in the tracker (read only), or null when there is no such ticket. */
+async function ticketStatus(id) {
   const { createClient } = await import('@supabase/supabase-js')
   const env = existsSync(root + '.env.local') ? Object.fromEntries(readFileSync(root + '.env.local', 'utf8').split('\n').filter((l) => /^[A-Z0-9_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')])) : process.env
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   const { data, error } = await db.from('venture_issues').select('id, status').eq('id', id).maybeSingle()
-  if (error) die(`--owed: the tracker could not be read (${error.message})`)
-  if (!data) die(`--owed: there is no ticket ${id}. Open it first: node scripts/venture/issues.mjs add "…" --area ops --pri P1`)
-  if (['done', 'dropped'].includes(data.status)) die(`--owed: ${id} is ${data.status}; a fix that is still owed needs an open ticket`)
+  if (error) die(`the tracker could not be read (${error.message})`)
+  return data?.status ?? null
 }
+async function ticketMustExist(id) {
+  const st = await ticketStatus(id)
+  if (!st) die(`--owed: there is no ticket ${id}. Open it first: node scripts/venture/issues.mjs add "…" --area ops --pri P1`)
+  if (['done', 'dropped'].includes(st)) die(`--owed: ${id} is ${st}; a fix that is still owed needs an open ticket`)
+}
+// On a copy of the notes (VENTURE_PRIVATE) nothing goes to the live page: say so instead of "sync.mjs push" (OLA-262).
+const NEXT = process.env.VENTURE_PRIVATE ? `(a copy of the notes, ${process.env.VENTURE_PRIVATE}: nothing to push; sync.mjs push refuses while VENTURE_PRIVATE is set)` : 'next: node scripts/venture/sync.mjs push'
+const TIME = /^(about |around |~)?\d{1,2}(:\d{2})?\s*(am|pm)$/i
 
 if (cmd === 'add') {
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
@@ -120,17 +148,20 @@ if (cmd === 'add') {
   if (owedIssue) {
     if (!/^OLA-\d+$/.test(owedIssue)) die('--owed names the ticket that builds the fix, like OLA-251')
     await ticketMustExist(owedIssue)
-    if (fix && level >= need && !fixProblem(w, level, { prev, cameBack, need })) die(`--owed: the fix you gave (kind ${level}) is strong enough and built; record it without --owed`)
+    if (fix && level >= need && !fixProblem(w, level, { prev, cameBack, need }) && !(await whereProblem(str('where')))) die(`--owed: the fix you gave (kind ${level}) is strong enough and built; record it without --owed`)
     owed = { issue: owedIssue, need }
   } else if (!cannot) {
     if (!fix || !(level >= 1 && level <= 5)) die(`add needs --fix "<what changed>" and --level 1..5:\n${Object.entries(KINDS).map(([n, k]) => `  ${n}  ${k}`).join('\n')}\nor, when that fix is not built yet: --owed OLA-n (the ticket that builds it). The correction is then recorded now.`)
-    const problem = fixProblem(w, level, { prev, cameBack, need })
+    const problem = fixProblem(w, level, { prev, cameBack, need }) ?? (level >= 3 || str('where') ? await whereProblem(str('where')) : null)
     if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
   const text = readFileSync(COR, 'utf8')
   const n = Math.max(0, ...[...text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1]))) + 1
   const date = pacific({ month: 'long', day: 'numeric', year: 'numeric' })
-  const time = str('when') ?? pacific({ hour: 'numeric', minute: '2-digit' }).toLowerCase()
+  const said = str('at') ?? str('when')
+  if (said && !TIME.test(said)) die(`--at "${said}": the time he said it, like "10:58 am" or "about 11:15 am"`)
+  const recordedAt = pacific({ hour: 'numeric', minute: '2-digit' }).toLowerCase()
+  const time = said ? said.toLowerCase() : recordedAt
   const entry = [
     `## ${n}. ${date}, ${time}: ${title}${repeat ? ` (REPEAT: "${w.name}", seen ${w.seen.length} time(s) before)` : ''}`,
     '',
@@ -138,6 +169,7 @@ if (cmd === 'add') {
     `What happened: ${did}`,
     `Cause: ${cause}`,
     `Weakness: ${w.id}${opt.escape ? ' (ESCAPE: he met it after being told it was done or working)' : ''}`,
+    ...(said && said.toLowerCase() !== recordedAt ? [`Recorded at: ${recordedAt} (Bart said it at ${said.toLowerCase()})`] : []),
     ...(str('why-last') ? [`Why the last fix did not hold: ${str('why-last')}`] : []),
     cannot ? `No stronger fix found: ${cannot}` : owed ? `Fix OWED (kind ${need} or stronger, ${KINDS[need]}; ${owed.issue}): not built yet. Settle with: correct.mjs fix ${n} --fix … --level ${need} --where …` : `Fix (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}): ${fix}`,
     '',
@@ -152,7 +184,7 @@ if (cmd === 'add') {
   }
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
-  console.log('next: node scripts/venture/sync.mjs push')
+  console.log(NEXT)
 } else if (cmd === 'fix') {
   // Settles an owed fix. The escalation rule is the same as for a fix given with the correction.
   const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
@@ -166,7 +198,7 @@ if (cmd === 'add') {
   if (!fix || !(level >= 1 && level <= 5)) die(`fix needs --fix "<what changed>" and --level 1..5 (at least ${o.need}, ${KINDS[o.need]})`)
   const req = required(w, { recorded: true })
   const need = Math.max(o.need, req.need)
-  const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last })
+  const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last }) ?? (await whereProblem(str('where')))
   if (problem) die(problem)
   w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), settles: o.ref })
   w.owed = w.owed.filter((x) => x !== o)
@@ -183,7 +215,27 @@ if (cmd === 'add') {
   writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)
-  console.log('next: node scripts/venture/sync.mjs push')
+  console.log(NEXT)
+} else if (cmd === 'at') {
+  // OLA-258: an entry recorded later than Bart said it gets his time in its heading; the time it was recorded stays in the entry
+  const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
+  const said = str('at')
+  if (!num || !said || !TIME.test(said)) die('usage: correct.mjs at <correction number> --at "10:58 am" (the time Bart said it; "about 11:15 am" is kept as said)')
+  const text = readFileSync(COR, 'utf8')
+  const re = new RegExp(`^## ${num}\\. ([A-Z][a-z]+ \\d{1,2}, \\d{4}), ([^:]*?\\d{1,2}:\\d{2} ?[ap]m)((?: \\([^)]*\\))?): `, 'm')
+  const m = re.exec(text)
+  if (!m) die(`correction ${num}: no heading "## ${num}. <Month D, YYYY>, <time>: …" in CORRECTIONS.md`)
+  const was = m[2]
+  if (was.toLowerCase() === said.toLowerCase()) die(`correction ${num} already says ${was}`)
+  const head = text.slice(m.index, text.indexOf('\n', m.index))
+  const fixed = head.replace(`${m[1]}, ${was}`, `${m[1]}, ${said.toLowerCase()}`)
+  const end = text.slice(m.index).search(/\n## /)
+  const block = text.slice(m.index, end < 0 ? text.length : m.index + end)
+  if (/^Recorded at: /m.test(block)) die(`correction ${num} has a "Recorded at" line already; its time was set before`)
+  const newBlock = block.replace(head, fixed).replace(/^(Weakness: .*)$/m, `$1\nRecorded at: ${was} (Bart said it at ${said.toLowerCase()}; time corrected ${pacific({ month: 'long', day: 'numeric' })}, ${pacific({ hour: 'numeric', minute: '2-digit' }).toLowerCase()})`)
+  writeFileSync(COR, text.slice(0, m.index) + newBlock + text.slice(m.index + block.length))
+  console.log(`correction ${num}: heading now says ${said.toLowerCase()}; recorded at ${was} kept in the entry`)
+  console.log(NEXT)
 } else if (cmd === 'owed') {
   const rows = owedFixes(weak())
   for (const o of rows) console.log(`${o.ref.padEnd(15)} owed ${String(o.days).padStart(2)} day(s)${o.days >= OWED_DAYS ? ' OVERDUE' : '        '}  ${o.issue.padEnd(8)} kind ${o.need}+ (${KINDS[o.need]})  ${o.name}`)

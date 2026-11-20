@@ -129,6 +129,10 @@ function journalAhead(body) {
 
 const cmd = process.argv[2]
 if (cmd === 'push') {
+  // A copy of the notes (VENTURE_PRIVATE, for tests) never reaches the live store (OLA-262): this push
+  // reads the real folder, but the learning.mjs it runs would read the copy.
+  const { refuseOnCopy } = await import('./_weak.mjs')
+  refuseOnCopy('sync.mjs push (it runs learning.mjs, which stores the Learning numbers)')
   const have = new Map((await rows()).map((r) => [r.slug, r]))
   // `push --only <file.md>`: that one document and nothing else (the terminal conversation, after
   // every message: scripts/venture/chat-export.py).
@@ -243,6 +247,9 @@ if (cmd === 'push') {
     // What Bart typed on this machine, for the steer count on the other machines (steers.mjs --export).
     const typed = spawnSync('node', [fileURLToPath(new URL('scripts/venture/steers.mjs', root)), '--export'], { encoding: 'utf8' })
     if (typed.status !== 0) console.log(`typed messages NOT exported: ${(typed.stderr || typed.stdout || '').trim().split('\n').pop()}`)
+    // The lead's model use on this machine, for the evening review on any machine (delegable.mjs --export, OLA-261).
+    const del = spawnSync('node', [fileURLToPath(new URL('scripts/venture/delegable.mjs', root)), '--export'], { encoding: 'utf8' })
+    if (del.status !== 0) console.log(`model use NOT exported: ${(del.stderr || del.stdout || '').trim().split('\n').pop()}`)
   }
 } else if (cmd === 'drop') {
   // `drop <slug>`: removes one document's row (a note that was renamed or replaced). The file is yours to delete.

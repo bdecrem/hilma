@@ -20,10 +20,11 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
+import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dry = process.argv.includes('--dry')
+if (!dry) refuseOnCopy('storing venture_state "learning"')
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const pct = (a, b) => (b ? Math.round((100 * a) / b) : null)
 

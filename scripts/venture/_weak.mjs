@@ -26,6 +26,15 @@ export function privPath(root, rel = '') {
   return fileURLToPath(new URL('apps/venture/private/' + rel, base))
 }
 
+/** Tools that write the live Learning page or the live database call this first (OLA-262): with
+ *  VENTURE_PRIVATE pointing at a copy of the notes, the copy's made-up numbers must never reach them. */
+export function refuseOnCopy(what) {
+  const p = process.env.VENTURE_PRIVATE
+  if (!p) return
+  console.error(`Refused: VENTURE_PRIVATE is set (${p}), so the notes read here are a copy, and ${what} would put the copy's numbers on the live page or in the live database. Unset it (unset VENTURE_PRIVATE) to work on the real notes, or use --dry.`)
+  process.exit(1)
+}
+
 export function loadWeaknesses(root) {
   const f = privPath(root, 'data/weaknesses.json')
   return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : []
