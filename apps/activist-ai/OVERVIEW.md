@@ -207,7 +207,7 @@ never holds user data. The install list, and the check that says which of it is 
 **Live now:** ola.cx; app.ola.cx in public with a normal sign-in; the web app on staging with
 made-up data; the Mac app download and the iPhone app on TestFlight; the `ola` command; web search;
 both fallbacks; skills; batch jobs; Compare with Claude; the alarm; one cloud in the apps;
-encrypted nightly backups to a drive on the mini (no offsite copy yet); automatic checks on every
+encrypted nightly backups, kept in a folder on the mini's own disk until a backup drive is set up (OLA-286; no offsite copy yet); automatic checks on every
 change; publishing on the website in a cloud project (the apps and the Mac's local runtime: see
 "Publishing" above).
 
