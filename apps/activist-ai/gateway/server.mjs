@@ -398,9 +398,26 @@ function personQuota(name) {
   return C.peopleQuotas.get(name) ?? C.envPeopleQuotas.get(name) ?? C.peopleWeekly
 }
 
-/** What a caller is told when the week's tokens are used up: a person in their own words. */
+/**
+ * What a caller is told when the week's tokens are used up, in plain words with the day it
+ * starts again (OLA-205): a person's own computer hears "Your", a project's workspace "This
+ * project's". The week starts Monday 00:00 UTC, so the time is said in Pacific time, where the
+ * Ola machine and its first users are; the apps say the same moment in the reader's own time zone
+ * (OlaKit Plain.quotaProblem, web steps.ts quotaProblem). No token counts, no settings.
+ */
 function quotaWords(who, q) {
-  return isPersonName(who) ? 'Your weekly allowance on Ola is used up. It starts again on Monday.' : `this week's quota of ${q.quota} tokens is used up; it resets at ${q.resets_at}`
+  const whose = isPersonName(who) ? 'Your' : "This project's"
+  return `${whose} weekly allowance of Ola's model is used up. It starts again on ${resetWords(q.resets_at)}.`
+}
+/** "Sunday, November 22, at 4 pm Pacific time" for an ISO instant. */
+function resetWords(iso) {
+  const d = new Date(iso)
+  const tz = 'America/Los_Angeles'
+  const day = d.toLocaleDateString('en-US', { timeZone: tz, weekday: 'long', month: 'long', day: 'numeric' })
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).formatToParts(d)
+  const get = (t) => parts.find((p) => p.type === t)?.value ?? ''
+  const time = `${get('hour')}${get('minute') === '00' ? '' : `:${get('minute')}`} ${get('dayPeriod').toLowerCase()}`
+  return `${day}, at ${time} Pacific time`
 }
 
 function sha(s) {

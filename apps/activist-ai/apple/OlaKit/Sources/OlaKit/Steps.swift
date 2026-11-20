@@ -170,6 +170,48 @@ public enum Plain {
     return Problem(text: f.isEmpty ? "This step did not work." : f, detail: m.isEmpty ? nil : m)
   }
 
+  /// The week's allowance of Ola's model is used up (OLA-205): whose it is and the moment it
+  /// starts again, in the reader's own time zone ("Your weekly allowance of Ola's model is used up.
+  /// It starts again on Sunday, November 22, at 4 pm."). The moment is the instant in the
+  /// gateway's message when it carries one, else the gateway's rule: weeks start Monday 00:00 UTC.
+  /// A person's own computer hears "Your", a project's workspace "This project's". The same words
+  /// as the web app (web/src/lib/steps.ts quotaProblem). No token counts, no settings, no names.
+  public static func quotaProblem(_ message: String, now: Date = Date(), timeZone: TimeZone = .current) -> String {
+    let has = { (p: String) in message.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil }
+    let whose = has("your weekly allowance") ? "Your" : has("project|this week's quota") ? "This project's" : "Your"
+    var at = nextWeekStart(now)
+    if let r = message.range(of: #"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z"#, options: .regularExpression) {
+      let iso = ISO8601DateFormatter()
+      let frac = ISO8601DateFormatter()
+      frac.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+      let s = String(message[r])
+      if let d = frac.date(from: s) ?? iso.date(from: s) { at = d }
+    }
+    return "\(whose) weekly allowance of Ola's model is used up. It starts again \(when(at, timeZone))."
+  }
+
+  static func nextWeekStart(_ now: Date) -> Date {
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = TimeZone(identifier: "UTC")!
+    let today = cal.startOfDay(for: now)
+    let fromMonday = (cal.component(.weekday, from: today) + 5) % 7 // Monday = 0
+    return cal.date(byAdding: .day, value: 7 - fromMonday, to: today)!
+  }
+
+  static func when(_ d: Date, _ tz: TimeZone) -> String {
+    let f = DateFormatter()
+    f.locale = Locale(identifier: "en_US_POSIX")
+    f.timeZone = tz
+    f.dateFormat = "EEEE, MMMM d"
+    let day = f.string(from: d)
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = tz
+    let h = cal.component(.hour, from: d), m = cal.component(.minute, from: d)
+    if h == 0 && m == 0 { return "at the start of \(day)" }
+    let time = "\(h % 12 == 0 ? 12 : h % 12)\(m == 0 ? "" : String(format: ":%02d", m)) \(h < 12 ? "am" : "pm")"
+    return "on \(day), at \(time)"
+  }
+
   /// Why a whole request failed, in plain words, from opencode's structured error.
   public static func runProblem(_ error: JSON) -> Problem {
     let m = error["message"].str
@@ -177,8 +219,8 @@ public enum Plain {
     let detail = [error["type"].string, status.map(String.init), m.isEmpty ? nil : m].compactMap { $0 }.joined(separator: " \u{00B7} ")
     let d = detail.isEmpty ? nil : detail
     let has = { (p: String) in m.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil }
-    if status == 429 || has("quota|insufficient_quota") { return Problem(text: "The weekly share of the model is used up. Raise it in the gateway's settings.", detail: d) }
-    if status == 401 || status == 403 { return Problem(text: "The gateway refused this server's token. On the machine, run ola-bart.sh token.", detail: d) }
+    if status == 429 || has("quota|insufficient_quota|weekly allowance") { return Problem(text: quotaProblem(m), detail: d) }
+    if status == 401 || status == 403 { return Problem(text: "Ola's model did not accept this computer's sign-in. Sign out and sign in again in Settings, Account.", detail: d) }
     if status == 503 || status == 504 || has("overloaded|timeout") { return Problem(text: "The model is busy or did not answer in time. Nothing was lost; try again in a minute.", detail: d) }
     if let s = status, s >= 500 { return Problem(text: "The model server had a problem. Nothing was lost; try again in a minute.", detail: d) }
     if let s = status, s >= 400 { return Problem(text: "The model could not take this request. Try saying it another way, or in smaller steps.", detail: d) }

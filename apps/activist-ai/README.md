@@ -1511,7 +1511,10 @@ the browser way stays, and the app gains a sign-in with a name and password.
   person's own weekly tokens at the gateway: `admin.mjs app-allowance <handle> <tokens|default>` sets
   theirs (`people.app_weekly_tokens`, written to `gateway-people-quotas` beside the people file, mode
   600, which the gateway reloads on change and prefers), else `GATEWAY_PEOPLE_WEEKLY_TOKENS`. Used up:
-  "Your weekly allowance on Ola is used up. It starts again on Monday."
+  "Your weekly allowance of Ola's model is used up. It starts again on Sunday, November 22, at 4 pm
+  Pacific time." (a project's workspace hears "This project's weekly allowance ..."; weeks start Monday
+  00:00 UTC). The Mac, iPhone and web apps say the same moment in the reader's own time zone, with no
+  token counts and nothing about settings (OLA-205).
   Removal (Your account, the app's Sign Out, `revoke-device`) is at once. A password change, a reset
   for someone who had a password, Sign out everywhere, `revoke-sessions` and `suspend` sign out every
   computer of theirs too.

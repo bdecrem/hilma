@@ -8,7 +8,7 @@ final class SkillsTests: XCTestCase {
 
   func testEverySkillDeclaresWhatItNeeds() {
     let skills = OlaSkills.read(at: repo)
-    XCTAssertEqual(skills.map(\.name), ["app-designer", "batch-quotes", "chart", "designer", "report", "sound", "workbook"])
+    XCTAssertEqual(skills.map(\.name), ["app-designer", "batch-quotes", "chart", "designer", "publish", "report", "sound", "workbook"])
     let chart = skills.first { $0.name == "chart" }!
     XCTAssertEqual(chart.needs, [.python("matplotlib"), .python("PIL")])
     XCTAssertNil(chart.notOnMac)

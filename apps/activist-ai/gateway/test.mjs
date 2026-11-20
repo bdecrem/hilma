@@ -391,6 +391,8 @@ test('the weekly quota is counted from upstream usage, refuses when used up, and
   const over = await call(g, T.a, chat({ tag: 'over' }))
   assert.equal(over.status, 429)
   assert.equal(over.json.error.type, 'insufficient_quota')
+  // A project's workspace hears it in plain words too, with the day it starts again (OLA-205).
+  assert.match(over.json.error.message, /^This project's weekly allowance of Ola's model is used up\. It starts again on (Sunday|Monday), [A-Z][a-z]+ \d{1,2}, at \d{1,2}(:\d\d)? (am|pm) Pacific time\.$/)
   assert.ok(Number(over.headers.get('retry-after')) > 0 && Number(over.headers.get('retry-after')) <= 7 * 86400)
   assert.ok(!up.st.seen.some((s) => s.tag === 'over'), 'a refused request never reaches the model server')
   // a reply rejected and retried still cost tokens, on every try
@@ -1945,13 +1947,14 @@ test('people: the quotas file beside the people file (admin.mjs app-allowance) w
     const none = await call(g, P.two, chat({ usage: [1, 1] }))
     assert.equal(none.status, 429)
     assert.equal(none.json.error.type, 'insufficient_quota')
-    assert.equal(none.json.error.message, 'Your weekly allowance on Ola is used up. It starts again on Monday.')
+    assert.match(none.json.error.message, /^Your weekly allowance of Ola's model is used up\. It starts again on (Sunday|Monday), [A-Z][a-z]+ \d{1,2}, at \d{1,2}(:\d\d)? (am|pm) Pacific time\.$/)
+    assert.doesNotMatch(none.json.error.message, /token|quota|gateway|setting/i, 'no machine words')
     // p-1 uses up its 20.
     assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
     assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
     const over = await call(g, P.one, chat({ usage: [10, 5] }))
     assert.equal(over.status, 429)
-    assert.equal(over.json.error.message, 'Your weekly allowance on Ola is used up. It starts again on Monday.')
+    assert.equal(over.json.error.message, none.json.error.message)
     // The admin raises it, and removes p-2's line: picked up without a restart.
     writeQuotas('p-1=100')
     await waitFor(async () => (await q(P.one)).quota === 100, 8000, 'the new allowance')

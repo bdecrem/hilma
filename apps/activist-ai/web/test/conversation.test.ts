@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, precheck, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -122,7 +122,18 @@ test('words for common commands and tools', () => {
   assert.equal(describeTool('grep', { pattern: 'eviction' }, null).object, '“eviction”')
   assert.equal(describeTool('mystery', {}, null).verb, 'Used')
   assert.equal(shortPath('/w/x/notes/a.md', '/w/x'), 'notes/a.md')
-  assert.match(runProblem({ status: 429, message: 'insufficient_quota' }).text, /share/)
+  // The allowance used up, in plain words with the day it starts again (OLA-205).
+  const quota = runProblem({ status: 429, message: 'insufficient_quota' }).text
+  assert.match(quota, /^Your weekly allowance of Ola's model is used up\. It starts again (on|at the start of) [A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}/)
+  assert.doesNotMatch(quota, /gateway|setting|raise|Bart|token|share/i)
+  const proj = runProblem({ status: 429, message: "This project's weekly allowance of Ola's model is used up. It starts again on Sunday, November 22, at 4 pm Pacific time." }).text
+  assert.match(proj, /^This project's weekly allowance/)
+  const old = quotaProblem("this week's quota of 100 tokens is used up; it resets at 2026-11-23T00:00:00.000Z")
+  const local = new Date('2026-11-23T00:00:00.000Z')
+  assert.match(old, /^This project's weekly allowance of Ola's model is used up\. It starts again (on|at the start of) /)
+  assert.ok(old.includes(local.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })), old)
+  // No instant in the message: the next Monday 00:00 UTC after now.
+  assert.ok(quotaProblem('insufficient_quota', Date.parse('2026-11-19T12:00:00Z')).includes(new Date('2026-11-23T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })))
 })
 
 test('before a run, the stretch checks fire only on far-too-large named files and long multi-part builds', () => {

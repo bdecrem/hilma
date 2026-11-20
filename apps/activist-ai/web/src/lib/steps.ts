@@ -174,12 +174,37 @@ export function stepProblem(error: { type?: string; message?: string } | undefin
   return { text: 'This step did not work. Ola can try another way.', detail: message || null }
 }
 
+/**
+ * The week's allowance of Ola's model is used up (OLA-205): whose it is and the moment it starts
+ * again, in the reader's own time zone ("Your weekly allowance of Ola's model is used up. It starts
+ * again on Sunday, November 22, at 4 pm."). The moment is the instant in the gateway's message when
+ * it carries one, else the gateway's rule: weeks start Monday 00:00 UTC. A person's own computer
+ * hears "Your", a project's workspace "This project's". No token counts, no settings, no names.
+ */
+export function quotaProblem(message: string, now: number = Date.now()): string {
+  const whose = /your weekly allowance/i.test(message) ? 'Your' : /project|this week's quota/i.test(message) ? "This project's" : 'Your'
+  const iso = message.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z/)?.[0]
+  const at = iso ? new Date(iso) : nextWeekStart(now)
+  return `${whose} weekly allowance of Ola's model is used up. It starts again ${when(at)}.`
+}
+function nextWeekStart(now: number): Date {
+  const d = new Date(now)
+  const day = (d.getUTCDay() + 6) % 7 // Monday = 0
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day + 7))
+}
+function when(d: Date): string {
+  const day = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const h = d.getHours(), m = d.getMinutes()
+  const time = `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h < 12 ? 'am' : 'pm'}`
+  return h === 0 && m === 0 ? `at the start of ${day}` : `on ${day}, at ${time}`
+}
+
 /** Why a whole request failed, in plain words, from opencode's structured error. */
 export function runProblem(error: { type?: string; message?: string; status?: number } | undefined): Problem {
   const message = error?.message ?? ''
   const status = error?.status
   const detail = [error?.type, status, message].filter(Boolean).join(' · ') || null
-  if (status === 429 || /quota|insufficient_quota/i.test(message)) return { text: 'Your share of the machine is used up for this week. Bart can raise it.', detail }
+  if (status === 429 || /quota|insufficient_quota|weekly allowance/i.test(message)) return { text: quotaProblem(message), detail }
   if (status === 503 || status === 504 || /overloaded|timeout/i.test(message)) return { text: 'The model is busy or did not answer in time. Nothing was lost; try again in a minute.', detail }
   if (status && status >= 500) return { text: 'The model server had a problem. Nothing was lost; try again in a minute.', detail }
   if (status && status >= 400) return { text: 'The model could not take this request. Try saying it another way, or in smaller steps.', detail }
