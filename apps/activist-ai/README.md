@@ -1296,7 +1296,10 @@ open, each cut and how long it was gone). Measured on staging, 2026-11-20, from 
 app.ola.cx: before (deploy of 61c52d12), 27 failed requests in a 5.7 s gap (6 resets while the TLS
 front restarted, then 21 of ngrok's 404 while the tunnel reconnected) and the stream gone 5.9 s. The
 first deploy carrying this change (a896f4a5) still restarted all four jobs, since the deploying code
-is the release being replaced: 5 of ngrok's 404 (1 s) and the stream gone 1.5 s. **On a failed suite nothing that runs is touched**: the message names the suite and its
+is the release being replaced: 5 of ngrok's 404 (1 s) and the stream gone 1.5 s. The next one
+(0abcbd59) restarted only the front desk: 0 of 602 requests failed in the two minutes around it, the
+longest gap 0.43 s (the TLS front held 3 requests), and the stream back after 0.46 s. A probe this
+fast also meets ngrok's own limit on new connections now and then (a minute of resets, not a deploy). **On a failed suite nothing that runs is touched**: the message names the suite and its
 count, says the running version was left alone, and keeps the release for a look; the whole output
 is in `~/Library/Logs/ola/deploy-<commit12>.log`. Running workspaces keep their door and desk from
 the release they were started with until they next start. A deploy takes about as long as the
