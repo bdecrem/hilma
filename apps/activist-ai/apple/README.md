@@ -162,8 +162,19 @@ not on the screen, covered or disabled cannot be tapped, and the run fails there
 phone's size. The mini has no Homebrew xcodegen; the driver uses a private copy in
 `~/ola-drive/xcodegen/` (copy `/opt/homebrew/Cellar/xcodegen/<version>/` there from any Mac that has it).
 
-**Not built yet:** check 4 (the phone through the Mac app, Ola working on the Mac) needs the Mac copy
-running with its phone link on and the simulator paired to it; `drive.sh phone --where local` says so.
+The simulator build is signed ad hoc (`CODE_SIGN_IDENTITY=-`): an unsigned one has no Keychain, and the
+app then says "This phone couldn't keep the sign-in".
+
+**Not built yet:** check 4 (the phone through the Mac app, Ola working on the Mac). The Mac app's relay
+listens only on the Mac's Tailscale address, and a Mac cannot reach its own Tailscale address (the
+phone-pairing section below), so a simulator on the mini cannot reach a Mac copy on the mini without a
+change to where the relay listens. `drive.sh phone --where local` says so and fails.
+
+**Measured 2026-11-20 on the mini** (pictures under `~/ola-b237/runs/`): Mac cloud, the publish card
+answered, 3 of 3 passed (`cloud-mac-1..3`); iPhone cloud 2 of 2 after the signing fix (`cloud-phone-2,3`);
+Mac local with `--file index.html` passed (`local-mac-5`); `--wait 5` failed with exit 1 and the
+picture of where it stopped, on both apps (`cloud-mac-fail`, `cloud-phone-fail`). Fresh sign-ins of the Mac app sometimes sign themselves out or crash
+(OLA-252); the tool reports that as a failure.
 
 ## Shipping: TestFlight for the phone, a signed download for the Mac (2026-11-17)
 
