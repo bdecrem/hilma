@@ -69,6 +69,11 @@ cd apps/activist-ai/apple/OlaKit && swift test          # the fold, on the web a
 OLA_PASSWORD_FILE=<file> swift run olakit-selftest      # against the real server (see below)
 ```
 
+Simulator runs (`tools/sim-shots.sh`, `phone-app-shots.sh`, `sim-dark-shots.sh`, `xcodebuild test` on a
+Simulator) happen on the Mac mini, never on Bart's 8 GB iMac: `.claude/hooks/sim-guard.py` refuses them
+on any Mac with 8 GB or less (OLA-215). Run them as `ssh admin@100.95.51.98 'cd ~/ola-ship/apple && tools/build.sh sim && tools/sim-shots.sh /tmp/ola-shots'`
+(rsync the branch's `apple/` there first, as `ship-via-mini.sh` does) and scp the PNGs back; `build.sh sim` alone is fine here.
+
 ## Shipping: TestFlight for the phone, a signed download for the Mac (2026-11-17)
 
 `testflight/README.md`: `bump-build.sh`, then `testflight/asc-setup.mjs` once and

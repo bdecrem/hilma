@@ -258,7 +258,7 @@ Key files (`apps/feynd/Feynd/`):
 1. Edit Swift files in `apps/feynd/Feynd/`.
 2. After adding/removing files (or changing `project.yml`): `cd apps/feynd && xcodegen generate`.
 3. Verify compile: `xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd -destination 'generic/platform=iOS Simulator' build` (must say `** BUILD SUCCEEDED **` before declaring done — this is a standing rule).
-4. End-to-end CLI test (recommended when the change is more than a one-liner):
+4. End-to-end CLI test (recommended when the change is more than a one-liner): **on an 8 GB Mac (the M1 iMac) run it on the Mac mini, never locally:** `.claude/hooks/sim-guard.py` refuses `simctl boot`, `open -a Simulator`/DeviceHub, `xcodebuild test` on a Simulator destination and the shot scripts that boot one on any Mac with 8 GB or less (OLA-215, Nov 19: a builder's simulator ran 230 processes while Bart worked); `ssh admin@100.95.51.98 '...'` stays allowed, and so does compiling for the simulator.
    - `xcrun simctl boot "iPhone 16"` (skips if already booted)
    - Rebuild with `-destination 'platform=iOS Simulator,name=iPhone 16'`
    - `xcrun simctl install "iPhone 16" <DerivedData>/Build/Products/Debug-iphonesimulator/Feynd.app`

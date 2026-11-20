@@ -44,6 +44,11 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/issue-guard.py"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/sim-guard.py",
+            "timeout": 10
           }
         ]
       }
