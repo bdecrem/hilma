@@ -54,7 +54,12 @@ const CLAIMS = [
       { test: () => true, why: '"a tracker issue before it starts" is not code: only the commit is checked, after the work' },
     ] },
   { rule: 45, file: 'scripts/venture/chat-export.py', hook: true, proof: /terminal-chat/, weakness: 'unread-channel', full: true,
-    how: 'The Stop and UserPromptSubmit hook copies the terminal conversation to venture_docs "terminal-chat" after every turn, which the voice and texting Kit load.' },
+    how: 'The Stop and UserPromptSubmit hook copies the terminal conversation to venture_docs "terminal-chat" after every turn, which the voice and texting Kit load.',
+    // OLA-251, second checker: the exporter runs only from the terminal entry point and drops push errors
+    holes: [
+      { test: () => /CLAUDE_CODE_ENTRYPOINT[^\n]*!=\s*["']cli["']/.test(read('scripts/venture/chat-export.py')), why: 'chat-export.py exports nothing for a session whose CLAUDE_CODE_ENTRYPOINT is not cli (the desktop app, the SDK)' },
+      { test: () => /stdout=subprocess\.DEVNULL,\s*stderr=subprocess\.DEVNULL/.test(read('scripts/venture/chat-export.py')), why: 'the push to venture_docs runs detached with its output thrown away, so a failed push is seen by nobody' },
+    ] },
   { rule: 54, file: 'scripts/venture/issues.mjs', proof: /cannot be closed yet/, weakness: 'not-your-path', full: true,
     how: '`issues.mjs done` refuses until every check has passed, each passed by someone who did not build it, with a file that shows it; for the product every place (cloud and local; web, Mac, phone; chat and screen) is covered by a check or skipped with a reason.',
     holes: [
@@ -190,13 +195,13 @@ Bart approved on Nov 20: "a rule leaves the always-loaded list only when code al
 
 ${rejudged ? `## Judged again, ${new Date(p.judged).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}: enforced only when every caller is refused
 
-A checker found that the first version of this note called rule 7 enforced by code when it is enforced only in part (OLA-251, check #5). A rule now counts as enforced by code only when the code refuses the action for every caller; each rule below lists the ways a session could still get through. Under that judgment ${leaving.length ? `only rule${leaving.length > 1 ? 's' : ''} ${leaving.map((c) => c.rule).join(', ')} would leave` : 'no rule would leave'}; the replay below tested a shorter list without rules ${replayed.join(', ')}, which did worse, so no rule leaves the loaded list and no new shorter list was run.
+A checker found that the first version of this note called rule 7 enforced by code when it is enforced only in part (OLA-251, check #5), and a second checker found the same of rule 45, which the second version said held for every caller: its exporter runs only from the terminal entry point and drops push errors. A rule now counts as enforced by code only when the code refuses the action for every caller; each rule below lists the ways a session could still get through. Under that judgment ${leaving.length ? `only rule${leaving.length > 1 ? 's' : ''} ${leaving.map((c) => c.rule).join(', ')} would leave` : 'no rule would leave'}; the replay below tested a shorter list without rules ${replayed.join(', ')}, which did worse, so no rule leaves the loaded list and no new shorter list was run.
 
 ` : ''}## What would leave the list (${leaving.length} of ${p.rules} rules)
 
 The always-loaded list is the digest every session gets at its start (one line per rule, \`.claude/hooks/venture-rules.py\`). A rule that leaves it stays in RULES.md with its full text; only its line in the digest goes, and the digest names it as enforced by code.
 
-${leaving.map((c) => `- **Rule ${c.rule}: ${c.lead}** Enforced by \`${c.file}\`. ${c.how}${c.guards.length ? ` The weakness ledger records the same guard: "${c.guards[0].replace(/\.$/, "")}".` : ''}`).join('\n')}
+${leaving.length ? '' : 'None. No rule is shown to be refused by code for every caller.\n'}${leaving.map((c) => `- **Rule ${c.rule}: ${c.lead}** Enforced by \`${c.file}\`. ${c.how}${c.guards.length ? ` The weakness ledger records the same guard: "${c.guards[0].replace(/\.$/, "")}".` : ''}`).join('\n')}
 
 ## Enforced in part, so they stay
 
