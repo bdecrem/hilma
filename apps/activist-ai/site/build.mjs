@@ -263,7 +263,7 @@ html,body{width:1200px;height:630px;overflow:hidden;padding:0}
 
 // ---------- How Ola works: the architecture page, served at ola.cx/architecture by a host rewrite ----------
 const ARCH_TITLE = 'How Ola works'
-const ARCH_DESCRIPTION = 'How Ola is built: one sealed computer per project with no internet, one gate out to the model, where your files live, who can see them, and what is live today and what is planned.'
+const ARCH_DESCRIPTION = 'A technical overview of Ola: a dedicated Linux virtual machine per project with no internet connection, one gateway to the models, where data is stored, who can access it, and what is live today.'
 function architecture() {
   return `${head({ title: `${ARCH_TITLE} · Ola`, description: ARCH_DESCRIPTION, base: BASE, canonical: `${SITE_URL}/architecture`, fonts: ['literata', 'bricolage'], css: DIAGRAM_CSS + ARCH_CSS, extra: `<meta property="og:type" content="article">
 <meta property="og:site_name" content="Ola">
@@ -273,7 +273,7 @@ function architecture() {
 <meta property="og:image" content="${SITE_URL}${BASE}architecture-og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="How Ola works: a drawing of a request's path, from your device to the Ola machine, into your project's sealed computer, and out through one gate to the model.">
+<meta property="og:image:alt" content="How Ola works: a drawing of a request's path, from your device to the Ola machine, into the project's dedicated Linux VM, and out through the model gateway.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${ARCH_TITLE}">
 <meta name="twitter:description" content="${ARCH_DESCRIPTION}">
@@ -293,7 +293,7 @@ html,body{width:1200px;height:630px;overflow:hidden;padding:0}
 .og .clip{align-self:start;justify-self:center;height:630px;overflow:hidden;padding-top:44px}
 .og .clip svg{width:430px;height:auto}`
   return head({ title: 'How Ola works, share card', description: '', base: fontsDir, fonts: [], css }) + `
-<body><div class="og"><div>${word('display', { cls: 'hello', label: 'Ola' })}<span class="tl">How Ola works</span><span class="sub">One sealed computer per project, no internet, and one gate out to the model.</span></div>
+<body><div class="og"><div>${word('display', { cls: 'hello', label: 'Ola' })}<span class="tl">How Ola works</span><span class="sub">A dedicated Linux VM per project, no internet connection, one gateway to the models.</span></div>
 <div class="clip">${diagram({ id: 'og' })}</div><span class="url">ola.cx/architecture</span></div></body></html>`
 }
 
