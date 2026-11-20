@@ -42,7 +42,7 @@ targets:
         group: WebTools
       # ola-page on this Mac: asks this app to render a page in its own web view (Mac/PageRender.swift).
       - path: ../bart
-        includes: [ola-page-mac]
+        includes: [ola-page-mac, ola-publish]
         buildPhase: resources
         group: WebTools
       # Ola's own skills (designer, app-designer, chart, ...), staged fresh from ../skills at the

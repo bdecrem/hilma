@@ -679,6 +679,18 @@ const MIGRATIONS = [
   ALTER TABLE audit_v16 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // 17: Publish from a Mac (OLA-223, sites.mjs makeSiteNames): a site name on sites.ola.cx belongs to
+  // the person who first published there (from their signed-in Mac), and stays theirs after they take
+  // it down. taken_down_at: an admin's takedown, which holds the name until admin.mjs site-release.
+  `
+  CREATE TABLE site_names (
+    name TEXT PRIMARY KEY CHECK (length(name) BETWEEN 3 AND 32 AND name NOT GLOB '*[^a-z0-9-]*' AND name NOT GLOB '-*' AND name NOT GLOB '*-'),
+    person_id INTEGER NOT NULL REFERENCES people(id),
+    created_at INTEGER NOT NULL,
+    taken_down_at INTEGER
+  ) STRICT;
+  CREATE INDEX site_names_person ON site_names(person_id);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */

@@ -36,6 +36,36 @@ final class PermissionsTests: XCTestCase {
     XCTAssertTrue(PermissionSettings.goesAhead(action: "shell", resources: ["cd x && ola-fetch https://example.org"]))
   }
 
+  /// Publishing to Ola's sites address, or taking a site down, always asks (OLA-223); a preview
+  /// and the status go ahead like any command.
+  func testPublishingAlwaysAsks() {
+    for c in ["ola-publish publish site --name tenants-flyer --fingerprint abc", "cd /tmp/x && ola-publish publish site --name a-b-c --fingerprint f",
+              "/Users/x/Library/Application Support/Ola/web-tools/ola-publish unpublish --name a-b-c", "ola-publish  unpublish --name a-b-c 2>&1", "(ola-publish publish site --name x-y-z --fingerprint 1)"] {
+      XCTAssertTrue(PermissionSettings.alwaysAsks(c), c)
+      XCTAssertFalse(PermissionSettings.goesAhead(action: "bash", resources: [c]), c)
+      XCTAssertFalse(PermissionSettings.goesAhead(action: "shell", resources: ["ls", c]), c)
+    }
+    for c in ["ola-publish preview site --name tenants-flyer", "ola-publish status", "echo publish", "python3 publish.py check site"] {
+      XCTAssertFalse(PermissionSettings.alwaysAsks(c), c)
+      XCTAssertTrue(PermissionSettings.goesAhead(action: "bash", resources: [c]), c)
+    }
+    let config = LocalServer.config(modelURL: "http://127.0.0.1:1/v1", instructionsPath: "/x", askFirst: false)
+    XCTAssertTrue(config.contains(#"{ "action": "bash", "resource": "*ola-publish publish*", "effect": "ask" }"#))
+    XCTAssertTrue(config.contains(#"{ "action": "shell", "resource": "*ola-publish unpublish*", "effect": "ask" }"#))
+    // After the rules that Lots turns to allow, so they win.
+    XCTAssertLessThan(config.range(of: #""resource": "*", "effect": "allow" },"#, options: .backwards)!.lowerBound, config.range(of: "*ola-publish publish*")!.lowerBound)
+    XCTAssertTrue(LocalServer.webToolNames.contains("ola-publish"))
+  }
+
+  /// The door sends `sites…` to the front desk's Publish from a Mac, everything else to the gateway.
+  func testTheDoorReachesPublish() {
+    let api = AccountAPI(base: URL(string: "https://app.example.test/")!)
+    XCTAssertEqual(api.gateway("sites/preview")?.absoluteString, "https://app.example.test/api/device/sites/preview")
+    XCTAssertEqual(api.gateway("sites")?.absoluteString, "https://app.example.test/api/device/sites")
+    XCTAssertEqual(api.gateway("v1/models")?.absoluteString, "https://app.example.test/api/device/gw/v1/models")
+    XCTAssertEqual(api.gateway("sitesx/a")?.absoluteString, "https://app.example.test/api/device/gw/sitesx/a")
+  }
+
 
   /// The phone through its Mac: the relay answers with the Mac's choice and takes a change.
   func testThePhoneReadsAndSetsItThroughTheRelay() async throws {

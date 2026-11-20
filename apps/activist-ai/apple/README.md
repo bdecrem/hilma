@@ -791,6 +791,19 @@ swift run olakit-selftest` records Claude writing index.html in a scratch projec
 index.html?" with no note, and passes when the model ran `ola-made-by`, nothing was asked, the answer
 names Claude and claims nothing. 5 of 5 on 2026-11-19 after the two fixes (3 of 5 before).
 
+## Publish to Ola's address (OLA-223)
+
+On this Mac, signed in, the agent can put a folder on `https://sites.ola.cx/<name>/` (the `publish`
+skill; the rules and who owns a name are in `../README.md`, "Publish from a Mac"). The app carries
+`../bart/ola-publish` in its Resources (project.yml, beside `ola-page-mac`) and installs it with the
+web commands; it reaches Ola through the model door with the door's key, and the door
+(`AccountAPI.gateway`) sends `sites…` to the front desk's `/api/device/sites…` with the account's
+token, which the agent never sees. Not signed in (or the pasted token through the machine's
+forwarder), it sends nothing and says how to sign in. `ola-publish publish` and `ola-publish
+unpublish` always ask, "Lots of permissions" or not: the app never answers them itself
+(`PermissionSettings.alwaysAsks`), and the config written for `ola` asks for them after its allow
+rules. Preview and status go ahead like any command.
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

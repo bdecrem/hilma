@@ -52,9 +52,13 @@
 //                  a device made here, for when the browser is not at hand: writes ONLY its token to
 //                  stdout (one line; everything else to stderr), so it can go straight into the app's
 //                  Keychain: ... add-device bart --name X --kind mac | (the app's import), never to a screen
-//   node admin.mjs sites                              what is published at sites.ola.cx: project, address, files, when
-//   node admin.mjs unpublish <workspace>               takes that project's published pages down now (a takedown:
-//                  the acceptable-use line in the Publish sheet); audited as the admin's
+//   node admin.mjs sites                              what is published at sites.ola.cx: project or Mac site (and
+//                  whose), address, files, when; then the names people hold with nothing up
+//   node admin.mjs unpublish <workspace|site name>     takes that project's (or a Mac site's) pages down now (a
+//                  takedown: the acceptable-use line in the Publish sheet); audited as the admin's. A Mac
+//                  site's name stays held: nobody publishes there again until site-release
+//   node admin.mjs site-release <site name> [--free]   lifts a takedown's hold, so its owner can publish there
+//                  again; --free gives the name up altogether (anyone may then take it)
 //   node admin.mjs link <workspace> --label "Adaptation Almanac" --url https://… [--note "Runs on Claude, outside Ola"]
 //                  a link on the project's home to what its people already use elsewhere (OLA-103); at most 6
 //   node admin.mjs links <workspace>                  the project's links, with their ids
@@ -83,7 +87,7 @@ import { leftovers, weekly } from './compare.mjs'
 import { drafts, KINDS as WORK_KINDS, summary as switchSummary } from './switches.mjs'
 import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
-import { makeSites } from './sites.mjs'
+import { makeSiteNames, makeSites } from './sites.mjs'
 import { addLink, linksOf, removeLink } from './links.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -97,7 +101,7 @@ const [cmd, ...rest] = argv
 const flags = {}
 const args = []
 for (let i = 0; i < rest.length; i++) {
-  if (['--admin', '--json', '--add-device', '--wake', '--link', '--switched', '--full'].includes(rest[i])) flags[rest[i].slice(2)] = true
+  if (['--admin', '--json', '--add-device', '--wake', '--link', '--switched', '--full', '--free'].includes(rest[i])) flags[rest[i].slice(2)] = true
   else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
   else args.push(rest[i])
 }
@@ -522,19 +526,47 @@ switch (cmd) {
     break
   }
   case 'sites': {
-    const list = makeSites({ cfg: cfg.sites, dataDir: cfg.data }).list()
+    const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data })
+    const names = makeSiteNames(db, sites)
+    const list = sites.list()
     if (!list.length) console.log('nothing is published')
-    for (const s of list) console.log(`${s.slug.padEnd(24)} ${s.url}  ${s.files} file(s)  since ${s.at}`)
+    for (const s of list) {
+      const r = names.row(s.slug)
+      console.log(`${s.slug.padEnd(24)} ${(r ? `mac site of ${r.handle}` : 'project').padEnd(28)} ${s.url}  ${s.files} file(s)  since ${s.at}`)
+    }
+    for (const r of db.prepare('SELECT s.name, s.taken_down_at, p.handle FROM site_names s JOIN people p ON p.id = s.person_id ORDER BY s.name').all()) {
+      if (!sites.status(r.name)) console.log(`${r.name.padEnd(24)} ${`held by ${r.handle}`.padEnd(28)} nothing up${r.taken_down_at ? ' (taken down by an admin; site-release lifts it)' : ''}`)
+    }
     break
   }
   case 'unpublish': {
-    const w = workspace(args[0] ?? fail('unpublish <workspace>'))
+    const target = args[0] ?? fail('unpublish <workspace|site name>')
     const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log: (m) => console.error(m) })
+    const names = makeSiteNames(db, sites)
+    const held = names.row(target)
+    if (held) {
+      // A Mac's site (OLA-223): taken down, and its name held so nobody publishes there again.
+      const r = sites.status(target) ? await sites.unpublish(target) : { status: 200, body: { files: 0, url: `${sites.origin}/${target}/`, gone: true } }
+      if (r.status !== 200) fail(r.body.message)
+      names.hold(target)
+      admin({ action: 'site_unpublished', subject: held.person_id, nameRef: nameRef(loadKeys(cfg.data), 0, `site:${target}`), size: r.body.files })
+      console.log(`${target} (${held.handle}'s Mac site): taken down (${r.body.files} file(s)), the name held; ${r.body.url} ${r.body.gone ? 'now answers 404' : 'did not answer 404 yet: check it again in a minute'}`)
+      break
+    }
+    const w = workspace(target)
     const was = sites.status(w.slug)
     const r = await sites.unpublish(w.slug)
     if (r.status !== 200) fail(r.body.message)
     admin({ action: 'site_unpublished', workspace: w.id, nameRef: nameRef(loadKeys(cfg.data), w.id, was?.page ?? was?.folder ?? ''), size: r.body.files })
     console.log(`${w.slug}: taken down (${r.body.files} file(s)); ${r.body.url} ${r.body.gone ? 'now answers 404' : 'did not answer 404 yet: check it again in a minute'}`)
+    break
+  }
+  case 'site-release': {
+    const name = args[0] ?? fail('site-release <site name> [--free]')
+    const names = makeSiteNames(db, makeSites({ cfg: cfg.sites, dataDir: cfg.data }))
+    const r = names.row(name) ?? fail(`no Mac site is called ${name}`)
+    names.unhold(name, { free: !!flags.free })
+    console.log(flags.free ? `${name}: given up; anyone may publish there now` : `${name}: the hold is lifted; ${r.handle} may publish there again`)
     break
   }
   case 'shown-to-cloud': {

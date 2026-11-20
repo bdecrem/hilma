@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Publish a page or a small site: the mechanical parts, standard library only.
 
-    publish.py where                         cloud or local; on a Mac, which tools are there (git, gh, vercel)
+    publish.py where                         cloud or local; on a Mac, whether Ola's sites address is open (signed
+                                             in, with ola-publish) and which tools are there (git, gh, vercel)
     publish.py prepare <page.html> [--out site] [--json]
                                              a clean site folder: the page as index.html, the files it uses
                                              copied next to it, links made relative; nothing outside it needed
@@ -34,6 +35,16 @@ def runtime():
 
 def have(cmd):
     return shutil.which(cmd) is not None
+
+
+def ola_sites():
+    """On a Mac, whether Ola's own sites address (sites.ola.cx/<name>) is open from here: 'yes' (the Ola
+    app or `ola` carries ola-publish and its door is on this Mac, so the Mac is signed in), 'not signed
+    in' (the command is there, no account behind it), or 'no' (this Ola has no ola-publish)."""
+    if not have("ola-publish"):
+        return "no"
+    host = os.environ.get("OLA_GATEWAY_HOSTPORT", "").rsplit(":", 1)[0]
+    return "yes" if host in ("127.0.0.1", "localhost") and os.environ.get("BOX_API_KEY") else "not signed in"
 
 
 # ------------------------------------------------------------------ what may not go public
@@ -431,6 +442,7 @@ def main(argv=None):
         rt = runtime()
         print(rt)
         if rt == "local":
+            print(f"ola sites: {ola_sites()}")
             for tool in ("git", "gh", "vercel"):
                 print(f"{tool}: {'yes' if have(tool) else 'no'}")
         return 0

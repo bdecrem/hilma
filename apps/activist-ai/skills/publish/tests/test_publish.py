@@ -112,6 +112,31 @@ case("vercel, dry run: link, connect the repository, first deploy", code == 0 an
 
 # ---- where, and the command line itself
 case("where says local outside Ola's workspace", P.runtime() == ("cloud" if os.environ.get("HOME", "").startswith("/work/.ola") and Path("/opt/ola/skills").is_dir() else "local"))
+# ---- Ola's sites address from a Mac (OLA-223): open only with ola-publish and the app's door on this Mac
+bin_dir = Path(tempfile.mkdtemp(prefix="olapub-bin-"))
+(bin_dir / "ola-publish").write_text("#!/bin/sh\nexit 0\n")
+(bin_dir / "ola-publish").chmod(0o755)
+saved = {k: os.environ.get(k) for k in ("PATH", "OLA_GATEWAY_HOSTPORT", "BOX_API_KEY")}
+try:
+    os.environ["PATH"] = "/usr/bin:/bin"
+    case("where: no ola-publish, no Ola sites address", P.ola_sites() == "no")
+    os.environ["PATH"] = f"{bin_dir}:/usr/bin:/bin"
+    os.environ["OLA_GATEWAY_HOSTPORT"], os.environ["BOX_API_KEY"] = "127.0.0.1:50123", "oladoor-made-up"
+    case("where: the app's door on this Mac, Ola's sites address is open", P.ola_sites() == "yes")
+    os.environ["OLA_GATEWAY_HOSTPORT"] = "10.0.0.1:4311"
+    case("where: a forwarder with no account behind it is not signed in", P.ola_sites() == "not signed in")
+    r = subprocess.run([sys.executable, "-I", str(SCRIPT), "where"], capture_output=True, text=True)
+    case("the command line: where names Ola's sites address on a Mac", P.runtime() == "cloud" or "ola sites: not signed in" in r.stdout, r.stdout)
+finally:
+    for k, val in saved.items():
+        if val is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = val
+skill = (HERE / "SKILL.md").read_text()
+case("the skill offers Ola's address locally, asks which only when the request does not say, and always asks before publishing",
+     all(s in skill for s in ("## Locally, at Ola's address", "Ask only when the request does not say", "ola-publish preview site --name", "ola-publish publish site --name", "ola-publish unpublish --name", "even with \"Lots of permissions\" on", "ola login")))
+
 r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(bad), "--json"], capture_output=True, text=True)
 case("the command line: check --json exits 1 with the problems", r.returncode == 1 and json.loads(r.stdout)["problems"])
 r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(site)], capture_output=True, text=True)

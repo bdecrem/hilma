@@ -104,6 +104,12 @@ const SECRET_PATTERNS = [
   [/["']?\b(?:api[_-]?key|secret[_-]?key|client[_-]?secret|passw(?:or)?d|access[_-]?token|auth[_-]?token|private[_-]?key)\b["']?\s*[:=]\s*["'][^"'\s]{12,}["']/i, 'a password or key'],
 ]
 
+// The kinds of file a published site may hold: what a browser shows or a page uses (pages, styles,
+// scripts, pictures, fonts, sound, video, PDF, plain text and data). Anything else (a Word file, a
+// spreadsheet, an archive, a program) is left out of a folder, and a page that uses one is told so:
+// the host serves static files only, and a document the group keeps is not a web page.
+export const STATIC_TYPE = /\.(html?|css|m?js|json|map|svg|png|jpe?g|gif|webp|avif|ico|bmp|woff2?|ttf|otf|eot|mp3|m4a|aac|ogg|oga|opus|wav|flac|mp4|m4v|webm|ogv|mov|vtt|pdf|txt|md|csv|tsv|xml|webmanifest|wasm|glb|gltf)$/i
+
 /** Why a file may not be published, in a few words, or null. `secrets`: the workspace's own. */
 export function secretIn(rel, buf, secrets = []) {
   if (SECRET_NAME.test(rel) || SECRET_DIR.test(rel)) return 'its name says it holds passwords or keys'
@@ -218,6 +224,114 @@ export function folderCtx(slug, root, { uploaded = () => false, secrets = () => 
     },
     uploaded,
     secrets,
+  }
+}
+
+// ---------------------------------------------------------------- a Mac's site (OLA-223)
+// Bart (2026-11-19): "when i'm on the local computer, there's no reason it shouldn't be able to
+// publish to the ola server if the user asks for it". A signed-in Mac (the app or `ola`, its device
+// pass) sends a folder's files to /api/device/sites/* (server.mjs deviceSites); they go through the
+// very same prepare() as a cloud project's folder, so every rule above holds for them too.
+
+/** A site's name, the folder under sites.ola.cx: what a project's slug may be. */
+export const SITE_NAME = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/
+/** Names nobody publishes under: Ola's own words, the host's (`api` is Vercel's functions folder). */
+export const RESERVED_NAMES = new Set(['api', 'www', 'ola', 'app', 'admin', 'sites', 'site', 'help', 'support', 'login', 'signin', 'sign-in', 'account', 'security', 'official', 'status', 'static', 'assets', 'public', 'vercel', 'index', 'abuse', 'report'])
+/** The largest listing a Mac may send (names only for what is not sent: hidden files, working folders). */
+export const MAX_LISTED = 5000
+
+/**
+ * What Publish reads, for files a Mac sent: `folder` (a plain name, the folder's own) holds them, so
+ * prepare() sees exactly what it sees in a cloud project's folder. `files`: [{ path, size, data? }],
+ * `data` a Buffer for the files sent, none for the ones only named (hidden files and the like, whose
+ * bytes never leave the Mac; a secret-looking name among them still refuses the whole folder), and
+ * `link: true` for a symbolic link (named, never followed: left out, as in a project).
+ */
+export function sentCtx(name, folder, files) {
+  const byPath = new Map(files.map((f) => [`${folder}/${f.path}`, f]))
+  return {
+    slug: name,
+    list: async () => [...byPath].map(([p, f]) => ({ path: p, type: f.link ? 'link' : 'file', size: f.size })),
+    async read(rel, max) {
+      const f = byPath.get(rel)
+      return f?.data && !f.link && f.data.length === f.size && f.size <= max ? f.data : null
+    },
+    uploaded: () => false,
+    secrets: () => [],
+  }
+}
+
+/**
+ * The body a Mac sends, checked: { name, folder, files: [{ path, size, data? }] } with `data` as
+ * base64. Returns { ok: { name, folder, files } } or { refused: { status, body } }. `maxTotal`: the
+ * most bytes one publish takes (what was sent, before prepare() looks at any of it).
+ */
+export function readSent(body, { maxTotal, maxFile }) {
+  const no = (status, message, error = 'bad_request') => ({ refused: { status, body: { error, message } } })
+  const name = typeof body?.name === 'string' ? body.name.trim().toLowerCase() : ''
+  if (!SITE_NAME.test(name) || name.includes('--')) return no(400, 'A site name is 3 to 32 lowercase letters, digits and single dashes, starting and ending with a letter or digit (for example tenants-flyer).', 'bad_name')
+  const folder = typeof body.folder === 'string' && /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,60}$/.test(body.folder) && !body.folder.includes('..') ? body.folder : 'site'
+  if (!Array.isArray(body.files) || !body.files.length) return no(400, 'Choose a folder with an index.html to publish.')
+  if (body.files.length > MAX_LISTED) return no(413, `That folder holds more than ${MAX_LISTED} files. Publish a smaller folder (the site alone).`, 'too_many')
+  const seen = new Set()
+  const files = []
+  let total = 0
+  for (const f of body.files) {
+    const p = f?.path
+    if (typeof p !== 'string' || !p || p.length > 1300 || p.startsWith('/') || /[\\\0]/.test(p) || p.split('/').some((x) => !x || x === '.' || x === '..') || seen.has(p)) return no(400, 'The list of files was not one Ola can read. Nothing was published.')
+    if (!Number.isSafeInteger(f.size) || f.size < 0) return no(400, 'The list of files was not one Ola can read. Nothing was published.')
+    seen.add(p)
+    let data
+    if (f.data !== undefined) {
+      if (typeof f.data !== 'string' || f.size > maxFile) return no(413, `${p} is larger than one published file can be (${Math.round(maxFile / 1024 / 1024)} MB).`, 'too_large')
+      data = Buffer.from(f.data, 'base64')
+      if (data.length !== f.size) return no(400, `${p} did not arrive whole. Nothing was published; try again.`)
+      total += data.length
+      if (total > maxTotal) return no(413, `Together these files are more than ${Math.round(maxTotal / 1024 / 1024)} MB, the most one publish takes.`, 'too_large')
+    }
+    if (f.link === true && data) return no(400, 'The list of files was not one Ola can read. Nothing was published.')
+    files.push({ path: p, size: f.size, data, link: f.link === true })
+  }
+  return { ok: { name, folder, files } }
+}
+
+/**
+ * Who a site name belongs to (migration 17, site_names): a name is the person's who first published
+ * there, and stays theirs after they take the site down, so nobody else can pick up its old links. A
+ * name that is a project's slug (any project, open or closed), or that a project published under,
+ * is that project's address and never a person's. An admin's takedown holds the name: nobody
+ * publishes there again until `admin.mjs site-release <name>`.
+ */
+export function makeSiteNames(db, sites) {
+  const row = (name) => db.prepare('SELECT s.name, s.person_id, s.created_at, s.taken_down_at, p.handle FROM site_names s JOIN people p ON p.id = s.person_id WHERE s.name = ?').get(name)
+  const isProject = (name) => !!db.prepare('SELECT 1 FROM workspaces WHERE slug = ?').get(name)
+  const taken = (name) => ({ status: 409, body: { error: 'taken', message: `sites.ola.cx/${name}/ belongs to someone else. Choose another name for this site.` } })
+  return {
+    row,
+    /** Whether `personId` may publish under `name` now: null, or the refusal. */
+    problem(name, personId) {
+      if (RESERVED_NAMES.has(name)) return { status: 409, body: { error: 'taken', message: `“${name}” is kept for Ola itself. Choose another name for this site.` } }
+      const r = row(name)
+      if (r && r.person_id !== personId) return taken(name)
+      if (r?.taken_down_at) return { status: 403, body: { error: 'taken_down', message: `Ola’s team took sites.ola.cx/${name}/ down, so it cannot be published again. If you think that is a mistake, write to Ola’s team.` } }
+      if (!r && (isProject(name) || sites.status(name))) return taken(name)
+      return null
+    },
+    /** Takes the name for `personId` (after problem() said yes, with no await between). True if new. */
+    claim(name, personId) {
+      return db.prepare('INSERT OR IGNORE INTO site_names (name, person_id, created_at) VALUES (?, ?, ?)').run(name, personId, Date.now()).changes === 1
+    },
+    /** A failed first publish gives the name back. */
+    release(name, personId) {
+      db.prepare('DELETE FROM site_names WHERE name = ? AND person_id = ? AND taken_down_at IS NULL').run(name, personId)
+    },
+    /** A cloud project's slug a person's site already holds (the cloud route refuses it). */
+    heldByPerson: (slug) => !!row(slug),
+    mine: (personId) => db.prepare('SELECT name, created_at, taken_down_at FROM site_names WHERE person_id = ? ORDER BY name').all(personId),
+    /** The admin's takedown: the name stays held. */
+    hold: (name) => db.prepare('UPDATE site_names SET taken_down_at = ? WHERE name = ?').run(Date.now(), name).changes === 1,
+    /** `admin.mjs site-release`: the hold lifted (`free`: the name given up altogether). */
+    unhold: (name, { free = false } = {}) => (free ? db.prepare('DELETE FROM site_names WHERE name = ?').run(name) : db.prepare('UPDATE site_names SET taken_down_at = NULL WHERE name = ?').run(name)).changes === 1,
   }
 }
 
@@ -405,6 +519,8 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         if (SECRET_NAME.test(e.path) || SECRET_DIR.test(e.path)) return no(422, `Ola will not publish ${f}/: ${rel} is in it, and ${rel.split('/').pop()} usually holds passwords or keys. Move it out of the folder (or ask Ola to), then try again.`, { error: 'secret' })
         if (e.type !== 'file') leftOut.push({ path: e.path, why: 'a link or something that is not a plain file' })
         else if (rel.split('/').some((x) => x.startsWith('.') || x === 'node_modules' || x === '__pycache__')) leftOut.push({ path: e.path, why: 'hidden, or a working folder' })
+        // A database stays in the list, so it is refused below rather than quietly left out.
+        else if (!STATIC_TYPE.test(e.path) && !secretIn(e.path, null)) leftOut.push({ path: e.path, why: 'not a kind of file a web page uses' })
         else start.push(e.path)
       }
       if (!start.some((p) => p === `${f}/index.html`)) return no(422, `${f}/ has no index.html, the page a visitor sees first. Publish one page instead, or ask Ola to name the first page index.html.`, { error: 'no_index' })
@@ -460,6 +576,10 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         }
         if (x.path.split('/').some((s) => s.startsWith('.'))) {
           if (secretIn(x.path, null)) return no(422, `Ola will not publish this: the page uses ${x.path}, which usually holds passwords or keys. Nothing was published.`, { error: 'secret', file: x.path })
+          continue
+        }
+        if (!STATIC_TYPE.test(x.path) && !secretIn(x.path, null)) {
+          warn(`type:${x.path}`, `It ${r.use === 'link' ? 'links to' : 'uses'} ${x.path}, which is not a kind of file a web page uses, so it is not published.`)
           continue
         }
         seen.add(x.path)

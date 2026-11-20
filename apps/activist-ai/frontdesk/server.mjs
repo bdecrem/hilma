@@ -40,7 +40,7 @@ import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
-import { ACCEPTABLE_USE, makeSites, sitesConfig } from './sites.mjs'
+import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
@@ -328,6 +328,7 @@ export function makeFrontDesk(cfg = config()) {
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log, switches })
   const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
+  const siteNames = makeSiteNames(db, sites)
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -661,6 +662,8 @@ export function makeFrontDesk(cfg = config()) {
     if (p === '/api/site' && req.method === 'GET') return json(res, 200, { published: sites.status(ws.slug), canPublish: ws.role === 'owner', configured: sites.configured(), origin: sites.origin, acceptableUse: ACCEPTABLE_USE })
     if (p === '/api/site/preview' || p === '/api/site/publish' || p === '/api/site/unpublish') {
       if (ws.role !== 'owner') return json(res, 403, { error: 'owner_only', message: 'Only the project’s owner can publish its pages, or take them down.' })
+      // A site published from a Mac holds this address (OLA-223): the project's pages never replace it.
+      if (siteNames.heldByPerson(ws.slug)) return json(res, 409, { error: 'taken', message: `sites.ola.cx/${ws.slug}/ already holds a site someone published from their Mac, so this project’s pages cannot go there. Write to Ola’s team.` })
       if ((p === '/api/site/preview') !== (req.method === 'GET') || !['GET', 'POST'].includes(req.method)) return json(res, 405, { error: 'method' })
       const body = req.method === 'POST' ? await readJson(req) : null
       if (req.method === 'POST' && !body) return json(res, 400, { error: 'bad_json' })
@@ -1123,6 +1126,71 @@ export function makeFrontDesk(cfg = config()) {
     return workspaceRoute(req, res, sess, url, rest)
   }
 
+  // ---------------------------------------------------------------- Publish from a Mac (OLA-223)
+  //
+  // Bart, 2026-11-19: "when i'm on the local computer, there's no reason it shouldn't be able to
+  // publish to the ola server if the user asks for it". A signed-in device (the Mac app or `ola`,
+  // through its model door: the agent's `ola-publish` never holds the device's pass) publishes a
+  // folder of its files at sites.ola.cx/<name>/, under the rules of cloud Publish (sites.mjs prepare:
+  // the list, the secret and private-data check, the caps, the kinds of file, the fingerprint of the
+  // list the person saw) and a name the person owns (makeSiteNames):
+  //   GET  /api/device/sites             the person's sites: names, addresses, what is up
+  //   POST /api/device/sites/preview     {name, folder, files}: the exact list and the address; nothing leaves
+  //   POST /api/device/sites/publish     the same, with {fingerprint, confirm: true}: published
+  //   POST /api/device/sites/unpublish   {name}: taken down (the name stays the person's)
+  // The files come in the body as base64; hidden files and working folders only by name.
+  async function deviceSites(req, res, p) {
+    const dev = devices.deviceFor(req)
+    if (!dev) return json(res, 401, { error: 'signed_out' })
+    seen(dev.personId)
+    if (p === '/api/device/sites') {
+      if (req.method !== 'GET') return json(res, 405, { error: 'method' })
+      const list = siteNames.mine(dev.personId).map((r) => ({ name: r.name, url: `${sites.origin}/${r.name}/`, published: sites.status(r.name), takenDown: !!r.taken_down_at }))
+      return json(res, 200, { sites: list, origin: sites.origin, configured: sites.configured(), acceptableUse: ACCEPTABLE_USE })
+    }
+    const what = { '/api/device/sites/preview': 'preview', '/api/device/sites/publish': 'publish', '/api/device/sites/unpublish': 'unpublish' }[p]
+    if (!what) return json(res, 404, NOT_FOUND)
+    if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+    const body = await readJson(req, what === 'unpublish' ? 4096 : Math.ceil((cfg.sites.maxTotal * 4) / 3) + 4 * 1024 * 1024, 120_000)
+    if (!body) return json(res, 400, { error: 'bad_json', message: 'The request was not one Ola can read, or larger than one publish takes. Nothing was published.' })
+    const ref = (name) => nameRef(keys, 0, `site:${name}`)
+    if (what === 'unpublish') {
+      const name = typeof body.name === 'string' ? body.name.trim().toLowerCase() : ''
+      const r = siteNames.row(name)
+      if (!r || r.person_id !== dev.personId) return json(res, 404, { error: 'not_yours', message: `You have no site at sites.ola.cx/${name}/.` })
+      const out = await sites.unpublish(name)
+      if (out.status === 200) audit(db, { actor: dev.personId, action: 'site_unpublished', nameRef: ref(name), size: out.body.files })
+      return json(res, out.status, out.body)
+    }
+    const sent = readSent(body, cfg.sites)
+    if (sent.refused) return json(res, sent.refused.status, sent.refused.body)
+    const { name, folder, files } = sent.ok
+    const problem = siteNames.problem(name, dev.personId)
+    if (problem) return json(res, problem.status, problem.body)
+    if (what === 'publish' && body.confirm !== true) return json(res, 400, { error: 'confirm', message: 'Publishing needs the person’s yes for this list.' })
+    const slot = takeSlot(dev.personId, `site:${name}`)
+    if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
+    try {
+      const ctx = sentCtx(name, folder, files)
+      if (what === 'preview') {
+        const r = await sites.preview(ctx, { folder })
+        if (r.body?.error === 'secret') audit(db, { actor: dev.personId, action: 'site_refused', nameRef: ref(name), ok: false })
+        return json(res, r.status, r.status === 200 ? { ...r.body, name } : r.body)
+      }
+      // The name is taken now, with no await since problem() said yes; a first publish that fails
+      // gives it back.
+      const fresh = siteNames.claim(name, dev.personId)
+      const was = sites.status(name)
+      const r = await sites.publish(ctx, { folder }, typeof body.fingerprint === 'string' ? body.fingerprint : '')
+      if (r.status !== 200 && fresh) siteNames.release(name, dev.personId)
+      if (r.body?.error === 'secret') audit(db, { actor: dev.personId, action: 'site_refused', nameRef: ref(name), ok: false })
+      if (r.status === 200) audit(db, { actor: dev.personId, action: was ? 'site_updated' : 'site_published', nameRef: ref(name), size: r.body.total, sha256: r.body.fingerprint })
+      return json(res, r.status, r.status === 200 ? { ...r.body, name } : r.body)
+    } finally {
+      slot.release()
+    }
+  }
+
   async function handle(req, res) {
     // A request pipelined behind one already refused and closing is not answered.
     if (lingering(req)) return req.socket.destroy()
@@ -1137,6 +1205,7 @@ export function makeFrontDesk(cfg = config()) {
     if (p === '/api/device/version' && req.method === 'GET') return json(res, 200, release)
     // A signed-in device (the Mac app, the command line): its pass, no cookie, no Origin (devices.mjs).
     if (devices.enabled && (p === '/api/device/projects' || p.startsWith('/api/device/w/'))) return deviceCloud(req, res, url, p)
+    if (devices.enabled && (p === '/api/device/sites' || p.startsWith('/api/device/sites/'))) return deviceSites(req, res, p)
     if (devices.isDeviceRoute(p)) return devices.handle(req, res, p)
     const writes = req.method !== 'GET' && req.method !== 'HEAD'
     if (writes && req.headers.origin !== cfg.origin) return json(res, 403, { error: 'wrong_origin' })

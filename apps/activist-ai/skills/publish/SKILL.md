@@ -1,9 +1,9 @@
 ---
 name: publish
-description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud by the person pressing Publish, on their own Mac through GitHub and Vercel, step by step.
+description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud by the person pressing Publish; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "1"
+  ola/version: "2"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -30,12 +30,29 @@ and copies can outlive a takedown. So three things hold in every case:
 python3 /opt/ola/skills/publish/scripts/publish.py where
 ```
 
-It prints `cloud` or `local` (and, locally, whether `git`, `gh` and `vercel` are installed).
+It prints `cloud` or `local` (and, locally, `ola sites: yes|not signed in|no` and whether `git`,
+`gh` and `vercel` are installed).
 
 - **`cloud`** (Ola's machine): this computer has no network and you cannot publish from it. Do
   Step 2 and Step 3 only, then tell the person to press **Publish** on the page in the project
   (see "In the cloud" below). Never try GitHub, Vercel, git pushes or the web from here.
-- **`local`** (the person's own Mac): Steps 2 to 8.
+- **`local`** (the person's own Mac): Steps 2 and 3, then one of two homes (below).
+
+### Locally: which home
+
+There are two, and both are fine:
+
+- **Ola's own address, `https://sites.ola.cx/<name>/`**: Ola hosts it. Nothing to sign up for;
+  this Mac must be signed in to an Ola account. No custom domain there.
+- **Their own hosting, GitHub and Vercel**: their own accounts, their own domain if they want one.
+
+Choose from what the person said: "publish this to Ola", "put it on sites.ola.cx", "on Ola" means
+Ola's address; "GitHub", "Vercel", "our own domain", "our own hosting" means GitHub and Vercel.
+Ask only when the request does not say (a plain "publish this"), once, in about these words:
+"Where should it live: at Ola's own address, sites.ola.cx/<name> (nothing to sign up for), or on
+your own hosting with GitHub and Vercel (accounts needed; your own domain possible)?" A site
+published at Ola's address before (`ola-publish status` lists the person's names) is published
+again there unless they say otherwise.
 
 ## Step 2: a clean site folder
 
@@ -92,10 +109,56 @@ the cloud: pages there live at `sites.ola.cx/<project>/`. If the person wants th
 say that this needs the Mac app (the local runtime) and GitHub and Vercel, and offer to walk them
 through it there.
 
-## Locally: GitHub holds the work, Vercel serves it
+## Locally, at Ola's address: sites.ola.cx/<name>/
 
-Ola recommends one host: **Vercel**, deploying from **GitHub**. Not GitHub Pages, not another
-host. The work lives in a GitHub repository; every push to it updates the site by itself.
+After Steps 2 and 3, with the folder ready (`site/`):
+
+1. **Signed in?** `where` said `ola sites: yes`. If it said `not signed in` (or `ola-publish`
+   says so), tell the person plainly: "This Mac isn't signed in to Ola, so I can't publish to
+   Ola's address from here. Sign in in the Ola app (Settings, Account, Sign In), or in Terminal
+   with `ola login`, then ask me again. Or I can publish it with GitHub and Vercel instead." Stop
+   there until they choose. `no` means this Ola has no way to Ola's address: use GitHub and Vercel.
+2. **A name**: the folder under sites.ola.cx, 3 to 32 lowercase letters, digits and dashes, from
+   the page's subject (`tenants-meeting`, not `site` or `page1`). Use one the person named, or one
+   of theirs from `ola-publish status` when they publish again.
+3. **The list, from Ola:**
+
+   ```bash
+   ola-publish preview site --name <name>
+   ```
+
+   It sends the folder to Ola's server to be checked (nothing goes public, nothing is kept) and
+   prints the files that would be public, the address, what was left out and why, notes, the
+   rule line and a fingerprint. If it refuses (a key, a `.env`, a database, a name that belongs to
+   someone else), say its sentence to the person, fix what it names (or choose another name), and
+   run it again.
+4. **Ask, every time**, even with "Lots of permissions" on: show the files, the address and the
+   rule line, and ask "Shall I publish these N files at https://sites.ola.cx/<name>/?" Wait for
+   the yes. A yes for one list is not a yes for another.
+5. **Publish**, with the fingerprint the preview printed (the app asks the person once more):
+
+   ```bash
+   ola-publish publish site --name <name> --fingerprint <fingerprint>
+   ```
+
+   "The files changed since you looked" means: preview again and ask again.
+6. **See it live:** `python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/<name>/ --expect site`.
+   Only when it says `live`, tell the person it is published, with the address as a link.
+
+**Publish again** (they changed the page): Step 3 `check`, then preview, ask, publish with the same
+name; it replaces what is there. **Unpublish** ("take it down"): ask first ("Shall I take
+sites.ola.cx/<name>/ down now?"), then `ola-publish unpublish --name <name>`, and tell them the
+address now shows nothing. The name stays theirs, so nobody else can use its old links.
+
+Pages at Ola's address work like the cloud's: they load only their own files, keep nothing per
+visitor (no storage, no cookies) and a form posts nowhere. For their own domain, use GitHub and
+Vercel (below).
+
+## Locally, on their own hosting: GitHub holds the work, Vercel serves it
+
+For their own hosting Ola recommends one host: **Vercel**, deploying from **GitHub**. Not GitHub
+Pages, not another host. The work lives in a GitHub repository; every push to it updates the site
+by itself.
 
 ### Step 4: git and a GitHub sign-in
 
@@ -167,6 +230,8 @@ not before.
 - Do not publish without the list and a yes; do not publish more than the list.
 - Do not put a key, a password, a database, a `.env` file or a list of people on the web, even
   when asked: say why, and offer the version without it.
-- Do not use GitHub Pages or another host; do not make the repository public unless asked.
+- Do not use GitHub Pages or a host other than Ola's address or Vercel; do not make the
+  repository public unless asked.
+- Do not run `ola-publish publish` or `ola-publish unpublish` without the person's yes for it.
 - Do not say "it is live" before `live` (or, for a domain, `dns`) says so.
-- In the cloud, do not try to reach GitHub or Vercel: the person presses Publish.
+- In the cloud, do not try to reach GitHub, Vercel or `ola-publish`: the person presses Publish.

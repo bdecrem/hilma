@@ -246,7 +246,7 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-40` (2.3.0-40: `ola-made-by` and the record of which engine made each file, OLA-224, see "Who made a file" in workspace/AGENTS.md, on top of 2.3.0-39; 2.3.0-39, not 37 or 38, which other branches built on the mini: AGENTS.md asks the agent to list what was asked and try each item on the page before saying it works, with `ola-page --do ... --text` (fill, click and press steps, then the words on the page), and the `designer` skill 8 says the same, OLA-174; 2.3.0-36: the `publish` skill, OLA-209, see skills/README.md; 2.3.0-35: the `designer` CHANGELOG carries the Bold evals' numbers, no change in what the skill does; 2.3.0-34: the `designer` skill 7, working files in a hidden `.shots/`, never invented schedules, Bold in small edits, OLA-134; 2.3.0-33: the `designer` skill 6, Bold step by step in SKILL.md from the worked examples, OLA-134; 2.3.0-32: the `designer` skill 5, the Bold register, `references/bold.md`, `palette.py --bold`, four display faces and three worked examples, OLA-134; 2.3.0-31: the designer skill 4, concepts mode and the same-layout check in `sheet.py`, OLA-130; 2.3.0-30: the `sound` skill, its kit and `listen.py`, see skills/README.md, on top of 2.3.0-29; its evals ran on 2.3.0-26, built before 2.3.0-27; 2.3.0-25 and 2.3.0-27 to 2.3.0-29: see the git log of workspace/ws.mjs; 2.3.0-24: the skills declare what they need and whether they work on a Mac, `ola/needs` and `ola/mac`, for the Mac app's bundled copy, see apple/README.md "Ola's skills on the Mac"; 2.3.0-21 to 2.3.0-23: see the git log of workspace/ws.mjs; 2.3.0-20: review 5's follow-up, the users `twin` and group `olarun`, see [Compare with Claude](#compare-with-claude-scoring-real-work-against-claude-2026-11-17-image-2300-18) and [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-19: the copy's generator jailed, review 5; 2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-41` (2.3.0-41: the `publish` skill 2, Ola's own address from a Mac, OLA-223, on top of 2.3.0-40; 2.3.0-40: `ola-made-by` and the record of which engine made each file, OLA-224, see "Who made a file" in workspace/AGENTS.md, on top of 2.3.0-39; 2.3.0-39, not 37 or 38, which other branches built on the mini: AGENTS.md asks the agent to list what was asked and try each item on the page before saying it works, with `ola-page --do ... --text` (fill, click and press steps, then the words on the page), and the `designer` skill 8 says the same, OLA-174; 2.3.0-36: the `publish` skill, OLA-209, see skills/README.md; 2.3.0-35: the `designer` CHANGELOG carries the Bold evals' numbers, no change in what the skill does; 2.3.0-34: the `designer` skill 7, working files in a hidden `.shots/`, never invented schedules, Bold in small edits, OLA-134; 2.3.0-33: the `designer` skill 6, Bold step by step in SKILL.md from the worked examples, OLA-134; 2.3.0-32: the `designer` skill 5, the Bold register, `references/bold.md`, `palette.py --bold`, four display faces and three worked examples, OLA-134; 2.3.0-31: the designer skill 4, concepts mode and the same-layout check in `sheet.py`, OLA-130; 2.3.0-30: the `sound` skill, its kit and `listen.py`, see skills/README.md, on top of 2.3.0-29; its evals ran on 2.3.0-26, built before 2.3.0-27; 2.3.0-25 and 2.3.0-27 to 2.3.0-29: see the git log of workspace/ws.mjs; 2.3.0-24: the skills declare what they need and whether they work on a Mac, `ola/needs` and `ola/mac`, for the Mac app's bundled copy, see apple/README.md "Ola's skills on the Mac"; 2.3.0-21 to 2.3.0-23: see the git log of workspace/ws.mjs; 2.3.0-20: review 5's follow-up, the users `twin` and group `olarun`, see [Compare with Claude](#compare-with-claude-scoring-real-work-against-claude-2026-11-17-image-2300-18) and [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-19: the copy's generator jailed, review 5; 2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
 node workspace/ws.mjs image                    # build ola-workspace:2.3.0-17 (about an 810 MB download the first time; --missing: only if absent)
@@ -2221,8 +2221,9 @@ drawings to be drawn in code as SVG.
 
 Bart: "users will want to publish stuff, 'for real'. so we should help with that." In the **cloud
 runtime** Ola hosts published pages itself, at **`https://sites.ola.cx/<project>/`** (one subdomain,
-a folder per project). In the **local runtime** the work goes to GitHub and Vercel serves it: that
-is the `publish` skill (`skills/publish/`, below).
+a folder per project). In the **local runtime** a signed-in Mac publishes at
+`https://sites.ola.cx/<name>/` too (below, "Publish from a Mac", OLA-223), or the work goes to GitHub
+and Vercel serves it: both are the `publish` skill (`skills/publish/`).
 
 **In the web app.** A page Ola made (Pages, on the project home) has **Publish** beside Open and
 Download, for the project's **owner** only (members and viewers see none; the routes answer them
@@ -2297,6 +2298,71 @@ set up on this Ola machine yet". Settings: `OLA_FD_SITES_FILE`, `OLA_FD_SITES_OR
 
 **Takedown.** `node admin.mjs unpublish <project>` takes a project's pages down at once (audited as
 the admin's); `node admin.mjs sites` lists what is published.
+
+### Publish from a Mac (2026-11-19, OLA-223)
+
+Bart: "for the publish feature, when i'm on the local computer, there's no reason it shouldn't be
+able to publish to the ola server if the user asks for it". In the **local runtime** a Mac signed in
+to an Ola account (the Mac app or `ola`) publishes a folder at **`https://sites.ola.cx/<name>/`**,
+beside the cloud's projects, under the same rules.
+
+**The route** (`frontdesk/server.mjs` `deviceSites`, a device's pass only: no cookie, nothing
+unauthenticated; under `/api/device/`, so the TLS front lets the pass through):
+`GET /api/device/sites` (the person's names and what is up), `POST /api/device/sites/preview`
+(`{name, folder, files}`: the exact list, the address, what was left out, a fingerprint; nothing
+leaves, no name is taken), `POST /api/device/sites/publish` (the same with `fingerprint` and
+`confirm: true`), `POST /api/device/sites/unpublish` (`{name}`). The files come in the body,
+base64; hidden files and working folders by name only (their bytes never leave the Mac, and a
+`.env` among them still refuses the folder), `.git` not at all. The body is capped at what one
+publish takes (50 MB of files) and read within two minutes.
+
+**The same rules, one copy.** The files go through `sites.mjs` `prepare()` exactly as a cloud
+project's folder does (`sentCtx` makes them look like one): the explicit list and its fingerprint
+(a changed folder is a 409 and a new look), the secret and private-data check on the server (names,
+databases, keys in the content), 300 files, 20 MB a file, 50 MB in all, and the kinds of file a web
+page uses (`STATIC_TYPE`, new with this and applied to the cloud too: pages, styles, scripts,
+pictures, fonts, sound, video, PDF, text and data; a `.docx`, a spreadsheet, an archive or a program
+is left out of a folder, and a page that uses one is told so). The audit log gets the same four
+words (`site_published`, `site_updated`, `site_unpublished`, `site_refused`) with the person as the
+actor, no project, and the keyed hash of the name. The deploy is the same single deployment of every
+site, so a Mac's site and the projects' are served alike (sandboxed, the same headers).
+
+**Who owns a name** (`sites.mjs` `makeSiteNames`, migration 17 `site_names`):
+- A name is 3 to 32 lowercase letters, digits and single dashes. A few words are kept for Ola
+  (`RESERVED_NAMES`: `api`, which Vercel would treat as functions, `ola`, `www`, `admin`, `login`, …).
+- A name belongs to the account that **first published** there from a Mac. It stays theirs after
+  they take the site down, so nobody else can pick up its old links; only they can publish there
+  again or take it down.
+- A name that is **any project's slug** (open or closed), or that a project has published under, is
+  that project's address and never a person's. The other way round, a project whose slug a Mac site
+  already holds is refused by cloud Publish ("…someone published from their Mac…"): no one
+  overwrites another person's site or a project's.
+- The name is taken at the first publish that succeeds (a preview takes none; a failed first publish
+  gives it back), in the same synchronous step as the check, so two people cannot both get it.
+- **An admin's takedown holds the name:** `node admin.mjs unpublish <name>` takes a Mac site down and
+  nobody publishes there again (its owner is told Ola's team took it down) until
+  `node admin.mjs site-release <name>` lifts the hold, or `site-release <name> --free` gives the name
+  up for anyone. `admin.mjs sites` lists each site as a project's or a Mac's (whose), and the names
+  held with nothing up.
+
+**On the Mac** (`bart/ola-publish`, carried by the app beside the web commands and installed with
+them, `apple/README.md` "Publish to Ola's address"): `ola-publish preview|publish|unpublish|status`
+talks to the app's model door with the door's key, exactly as `ola-search` does, and the door adds
+the device's pass and forwards `sites…` to `/api/device/sites…` (`AccountAPI.gateway`). The agent
+never holds the pass. Without the door (not signed in, or Bart's pasted setup through the machine's
+forwarder) it sends nothing and says how to sign in. `ola-publish publish` and `unpublish` always ask
+the person, "Lots of permissions" or not (`PermissionSettings.alwaysAsks` in the app, `ask` rules in
+the config for `ola`), on top of the skill's own question. The skill (`skills/publish`, version 2)
+offers Ola's address or GitHub and Vercel, and asks which only when the request does not say.
+
+**Checks.** `frontdesk/test/sites-device.test.mjs` (run by `frontdesk/check.mjs`, with
+`test/sites.test.mjs`): a real front desk in the process, two people's device passes and the Vercel
+stand-in; the list, a `.env` refused with its bytes never sent, a key, a database, no yes, another
+list, live, publish again, the names (another person's, a project's, a reserved word, a project
+never taking a Mac site's address), unpublish, an admin's takedown held until `site-release`, no
+deploy token said plainly, a body over the cap; and `ola-publish` itself through a door like the
+app's, preview to unpublish, with not signed in said plainly. The live publish waits for the deploy
+token on the machine (`~/.ola/sites.env`), as cloud Publish does.
 
 **Checks.** `frontdesk/test/sites.test.mjs` (the list, what a page uses, secrets refused, publish,
 publish again, unpublish, the headers, the cookie scope) against `web/server/fake-vercel.mjs`, a

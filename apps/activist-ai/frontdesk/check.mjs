@@ -1810,6 +1810,18 @@ await check('the sign-in cookie is host-only: no Domain attribute, so sites.ola.
 })
 // The planted pages go, so the checks below see the project as before.
 spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-rf', '/work/flyer', '/work/leak', '/work/mine', '/work/envy', '/work/dbpage'])
+{
+  // Publish's rules without a VM (test/sites.test.mjs), and Publish from a Mac (OLA-223,
+  // test/sites-device.test.mjs: a real front desk in that process, two people's device passes, the
+  // stand-in host): the exact list, secrets refused with a .env's bytes never sent, the yes and the
+  // fingerprint, live, publish again, names nobody else can take (another person's, a project's, a
+  // reserved word, and a project never taking a Mac site's address), unpublish, an admin's takedown
+  // holding the name until site-release, not set up said plainly.
+  for (const [file, what] of [['sites.test.mjs', 'Publish’s rules without a VM'], ['sites-device.test.mjs', 'Publish from a Mac: the list, secrets, the yes, live, names owned, unpublish, a takedown held']]) {
+    const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test', file)], { encoding: 'utf8', timeout: 180_000 })
+    ok(`${what} (test/${file})`, u.status === 0, `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} passed${u.status ? `: ${u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}` : ''}`)
+  }
+}
 
 // ---------------------------------------------------------------- Data and the web (2.3.0-8)
 const PDF = spawnSync('python3', [path.join(AI, 'workspace/testdata/mkpdf.py'), 'Page one is about drought in the Sahel.', 'Page two covers mangrove restoration in Tanzania.', 'Page three is about flood insurance.']).stdout

@@ -161,10 +161,12 @@ public struct AccountAPI: Sendable {
     return URL(string: s + path)!
   }
 
-  /// Where the model door forwards `<rest>` to.
+  /// Where the model door forwards `<rest>` to: the model gateway, and for `sites…` (the agent's
+  /// `ola-publish`, OLA-223) the front desk's Publish from a Mac, `/api/device/sites…`.
   public func gateway(_ rest: String) -> URL? {
     var s = base.absoluteString
     if s.hasSuffix("/") { s.removeLast() }
+    if rest == "sites" || rest.hasPrefix("sites/") { return URL(string: s + "/api/device/" + rest) }
     return URL(string: s + "/api/device/gw/" + rest)
   }
 

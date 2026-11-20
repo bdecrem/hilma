@@ -46,9 +46,23 @@ public enum PermissionSettings {
   /// Ola's own web commands (shell commands: under Lots they go ahead like any other).
   public static let webCommands = ["ola-search", "ola-fetch", "ola-lookup"]
 
+  /// What always asks, Lots or not (OLA-223): putting something on the public web, or taking it
+  /// down. `ola-publish preview` and `status` change nothing and go ahead like any command.
+  public static let alwaysAsk = ["publish", "unpublish"]
+
+  /// Whether a command runs `ola-publish publish|unpublish`, however it is written (a path to the
+  /// command, a `cd` before it, extra spaces, quotes).
+  public static func alwaysAsks(_ command: String) -> Bool {
+    let words = command.split(whereSeparator: { " \t\n;&|()'\"".contains($0) }).map(String.init)
+    for (i, w) in words.enumerated() where (w as NSString).lastPathComponent == "ola-publish" {
+      if i + 1 < words.count, alwaysAsk.contains(words[i + 1]) { return true }
+    }
+    return false
+  }
+
   /// Whether an opencode approval goes ahead without asking under Lots (the caller checks the mode).
   public static func goesAhead(action: String, resources: [String]) -> Bool {
-    askFirstActions.contains(action)
+    askFirstActions.contains(action) && !resources.contains(where: alwaysAsks)
   }
 
   #if os(macOS)

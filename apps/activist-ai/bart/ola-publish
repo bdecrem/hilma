@@ -1,0 +1,194 @@
+#!/usr/bin/python3 -I
+"""ola-publish: put a folder from this Mac on Ola's own sites address, https://sites.ola.cx/<name>/
+(OLA-223). Only on a Mac signed in to an Ola account: the Mac app (or `ola`) carries this command,
+and it reaches Ola through the app's model door, like ola-search, so it never holds the account's
+key (the door's key for this launch only, in BOX_API_KEY).
+
+    ola-publish status                                       this person's sites: names, addresses, what is up
+    ola-publish preview <folder> --name <name>               the exact files that would go public and the
+                                                             address; Ola's server checks them; nothing goes public
+    ola-publish publish <folder> --name <name> --fingerprint <fp>
+                                                             publishes exactly the list the preview showed (its
+                                                             fingerprint), after the person said yes; publish again
+                                                             the same way to update the site
+    ola-publish unpublish --name <name>                      takes the site down (the name stays theirs)
+    add --json for the server's answer as JSON
+
+What leaves this Mac: for the preview and the publish, every plain file in the folder goes to Ola's
+server to be checked (passwords and keys, databases, the kinds of file a web page uses, the caps);
+hidden files and working folders (node_modules, __pycache__) by name only, `.git` not at all. Nothing
+is kept on the server by a preview and nothing goes public until the publish. The server's check is
+the one that counts; run the publish skill's `check` first so a problem is found here.
+
+Exit status: 0 done, 1 refused (the sentence to say to the person is printed), 2 usage, 3 not signed
+in to Ola on this Mac, 4 Ola could not be reached.
+"""
+import base64, http.client, json, os, sys
+from pathlib import Path
+
+MAX_SEND = 20 * 1024 * 1024  # one file's bytes are sent only up to this; the server names a larger one
+SIGN_IN = ("This Mac is not signed in to an Ola account, so it cannot publish to Ola's sites address. "
+           "Sign in first: in the Ola app, Settings, Account, Sign In (in Terminal: ola login). "
+           "Or publish with GitHub and Vercel instead (the publish skill's own steps).")
+
+
+def door():
+    hp = os.environ.get("OLA_GATEWAY_HOSTPORT", "")
+    host = hp.rsplit(":", 1)[0]
+    # Only the app's own door on this Mac: anything else (the machine's forwarder of Bart's pasted
+    # setup) has no account behind it, and the key is never sent elsewhere.
+    if host not in ("127.0.0.1", "localhost") or not os.environ.get("BOX_API_KEY"):
+        return None
+    return hp
+
+
+def call(method, path, body=None):
+    hp = door()
+    if not hp:
+        print(SIGN_IN)
+        sys.exit(3)
+    data = json.dumps(body).encode() if body is not None else None
+    c = http.client.HTTPConnection(hp, timeout=600)
+    try:
+        c.request(method, "/sites" + path, data, {"Authorization": "Bearer " + os.environ["BOX_API_KEY"], "Content-Type": "application/json"})
+        r = c.getresponse()
+        raw = r.read()
+    except OSError:
+        print("Ola could not be reached from this Mac just now (is it online, and the Ola app open?). Nothing was published. Try again in a minute.")
+        sys.exit(4)
+    finally:
+        c.close()
+    try:
+        j = json.loads(raw or b"{}")
+    except ValueError:
+        j = {}
+    err = j.get("error")
+    # The door's own answers (no account behind it, or signed out) carry an object, the front desk's a word.
+    if r.status == 401 or (r.status == 404 and not isinstance(err, str)):
+        print(SIGN_IN if r.status == 404 else "This Mac was signed out of Ola. Sign in again (the Ola app: Settings, Account; Terminal: ola login), then try again. Nothing was published.")
+        sys.exit(3)
+    return r.status, j
+
+
+def listing(folder):
+    """Every entry of the folder, as the server's check wants it: bytes for the plain files that can go
+    public, names and sizes only for the rest."""
+    out = []
+    for dirpath, dirnames, filenames in os.walk(folder, followlinks=False):
+        rel_dir = Path(dirpath).relative_to(folder).as_posix()
+        if ".git" in dirnames:
+            dirnames.remove(".git")
+        for d in list(dirnames):
+            p = Path(dirpath) / d
+            if p.is_symlink():
+                dirnames.remove(d)
+                out.append({"path": d if rel_dir == "." else f"{rel_dir}/{d}", "size": 0, "link": True})
+        for name in sorted(filenames):
+            p = Path(dirpath) / name
+            rel = name if rel_dir == "." else f"{rel_dir}/{name}"
+            if p.is_symlink():
+                out.append({"path": rel, "size": 0, "link": True})
+                continue
+            if not p.is_file():
+                continue
+            size = p.stat().st_size
+            entry = {"path": rel, "size": size}
+            parts = rel.split("/")
+            named_only = any(x.startswith(".") or x in ("node_modules", "__pycache__") for x in parts) or size > MAX_SEND
+            if not named_only:
+                entry["data"] = base64.b64encode(p.read_bytes()).decode()
+            out.append(entry)
+    return out
+
+
+def body_for(folder, name):
+    f = Path(folder).expanduser().resolve()
+    if not f.is_dir():
+        print(f"ola-publish: {folder} is not a folder")
+        sys.exit(2)
+    if not (f / "index.html").is_file():
+        print(f"{f.name}/ has no index.html, the page a visitor sees first. Make one (the publish skill's prepare does), then try again.")
+        sys.exit(1)
+    label = "".join(ch for ch in f.name if ch.isalnum() or ch in " ._-")[:60].lstrip("._- ") or "site"
+    return {"name": name, "folder": label, "files": listing(f)}
+
+
+def size(n):
+    return f"{n} bytes" if n < 1024 else f"{n / 1024:.0f} KB" if n < 1024 * 1024 else f"{n / 1024 / 1024:.1f} MB"
+
+
+def refused(j):
+    print(j.get("message") or "Ola did not take it just now. Nothing was published.")
+    return 1
+
+
+def main(argv):
+    as_json = "--json" in argv
+    argv = [a for a in argv if a != "--json"]
+    opts, pos = {}, []
+    i = 0
+    while i < len(argv):
+        if argv[i] in ("--name", "--fingerprint") and i + 1 < len(argv):
+            opts[argv[i][2:]] = argv[i + 1]
+            i += 2
+            continue
+        pos.append(argv[i])
+        i += 1
+    cmd = pos[0] if pos else ""
+    if cmd == "status" and len(pos) == 1:
+        status, j = call("GET", "")
+        if as_json:
+            print(json.dumps(j, indent=1))
+        if status != 200:
+            return refused(j)
+        if not as_json:
+            if not j.get("sites"):
+                print("No sites of yours on sites.ola.cx yet.")
+            for s in j.get("sites", []):
+                up = s.get("published")
+                print(f"{s['name']}: {s['url']}  " + ("taken down by Ola's team" if s.get("takenDown") else f"public, {up['files']} file(s), since {up['at'][:10]}" if up else "nothing up (the name is yours)"))
+        return 0
+    if cmd in ("preview", "publish") and len(pos) == 2 and opts.get("name") and (cmd == "preview" or opts.get("fingerprint")):
+        body = body_for(pos[1], opts["name"])
+        if cmd == "publish":
+            body.update({"fingerprint": opts["fingerprint"], "confirm": True})
+        status, j = call("POST", "/" + cmd, body)
+        if as_json:
+            print(json.dumps(j, indent=1))
+            return 0 if status == 200 else 1
+        if status != 200:
+            return refused(j)
+        if cmd == "preview":
+            items = j["items"]
+            print(f"These {len(items)} file(s) would be public at {j['url']}")
+            for it in items:
+                print(f"  {it['as']}  ({size(it['size'])})")
+            for x in j.get("leftOut", []):
+                print(f"left out: {x['path'].split('/', 1)[-1]} ({x['why']})")
+            for w in j.get("warnings", []):
+                print(f"note: {w}")
+            if j.get("published"):
+                print(f"This replaces what is public there now (since {j['published']['at'][:10]}).")
+            print(f"rule: {j.get('acceptableUse', '')}")
+            print(f"fingerprint: {j['fingerprint']}")
+            print(f"Show the person this list and the address, and ask: \"Shall I publish these {len(items)} file(s) at {j['url']}?\" Publish only after their yes:")
+            print(f"  ola-publish publish {pos[1]} --name {j['name']} --fingerprint {j['fingerprint']}")
+            return 0
+        print(f"{'published again' if j.get('again') else 'published'}: {j['url']}  ({j['files']} file(s), {size(j['total'])})")
+        print("It answers with the new page now." if j.get("live") else "The address did not show the new page yet; check it again in a minute.")
+        return 0
+    if cmd == "unpublish" and len(pos) == 1 and opts.get("name"):
+        status, j = call("POST", "/unpublish", {"name": opts["name"]})
+        if as_json:
+            print(json.dumps(j, indent=1))
+            return 0 if status == 200 else 1
+        if status != 200:
+            return refused(j)
+        print(f"taken down: {j['url']} " + ("now answers 404." if j.get("gone") else "did not answer 404 yet; check it again in a minute.") + " The name stays yours.")
+        return 0
+    print(__doc__.split("\n\n")[1], file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
