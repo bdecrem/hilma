@@ -27,6 +27,11 @@ export async function POST(req: Request) {
     const m = v.match(/^(\d+) of (\d+)$/)
     if (m) (passed += Number(m[1]), (total += Number(m[2])))
   }
+  // The automatic checks on main (OLA-84, apps/activist-ai/ops/ci.mjs): the newest result.
+  const c = s.ci as Record<string, unknown> | null | undefined
+  const ciSuites: Record<string, string> = {}
+  if (c && typeof c.suites === 'object' && c.suites) for (const [k, v] of Object.entries(c.suites as Record<string, unknown>).slice(0, 12)) if (typeof v === 'string') ciSuites[k.slice(0, 40)] = v.slice(0, 40)
+  const ci = c && str(c.commit, 64) && typeof c.ok === 'boolean' ? { commit: str(c.commit, 64), at: iso(c.at), ok: c.ok, by: str(c.by, 20), suites: ciSuites, why: c.ok ? null : str(c.why, 160) } : null
   const alarm = (s.alarm ?? {}) as Record<string, unknown>
   const list = (v: unknown) => (Array.isArray(v) ? v.map((x) => str(x)).filter((x): x is string => !!x).slice(0, 12) : [])
   const parts: Record<string, boolean> = {}
@@ -36,6 +41,7 @@ export async function POST(req: Request) {
     from: str(s.host, 60),
     deployed: dep && str(dep.commit, 64) ? { commit: str(dep.commit, 64), at: iso(dep.at), suites } : null,
     checks: total ? { passed, total } : null,
+    ci,
     alarm: { state: ['ok', 'warn', 'alarm'].includes(String(alarm.state)) ? alarm.state : 'ok', says: list(alarm.says), warns: list(alarm.warns), runAt: iso(alarm.runAt) },
     disk: num((s.disk as Record<string, unknown> | undefined)?.freeGB) !== null ? { freeGB: num((s.disk as Record<string, unknown>).freeGB) } : null,
     memory: str(s.memory, 80),

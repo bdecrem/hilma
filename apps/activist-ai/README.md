@@ -1257,6 +1257,27 @@ is in `~/Library/Logs/ola/deploy-<commit12>.log`. Running workspaces keep their 
 the release they were started with until they next start. A deploy takes about as long as the
 suites (minutes); run it with `nohup` over ssh.
 
+**Automatic checks on every change to main** (OLA-84, 2026-11-20, `ops/ci.mjs`). Not every commit
+is deployed (a change to the Mac and iPhone apps never is, and a builder can forget), so launchd
+`cx.ola.ci` (installed with the other jobs) runs `node ops/ola.mjs ci` every 10 minutes. It looks at
+the newest commit on `origin/main` and settles it once: a check's or a deploy's result for it is
+its result (a deploy's only when the commit leaves `apple/` alone, since a deploy runs no swift
+test); a commit that changes nothing under `apps/activist-ai` since the newest commit with a result
+carries that result; a commit younger than 20 minutes waits, because whoever pushed it usually
+deploys it in that time; anything else gets `node ops/ola.mjs check <commit>`. A check is the
+deploy's own steps and suites (unpacked into `~/ola-staging/checks/<commit12>`, `npm ci`, the web
+build, the image, every `--no-live` suite) plus OlaKit's `swift test`, and serves nothing, so it
+needs no signature. It takes the turn as a builder, and a deploy that arrives while it runs goes
+first: the check gives the turn back before its next suite and is tried again next run. Results:
+`~/ola-staging/checks.json` (newest first, the last 50), `checks.log`, the log in
+`~/Library/Logs/ola/check-<commit12>.log`; a passed check's folder is removed, a failed one stays
+for a look until the next check. Each result is posted once to GitHub as the commit status
+`ola/checks` (the `gh` login on the machine), the alarm puts the newest on the board ("Checks on
+main"), and when main goes from passing to failing a P1 tracker issue is opened for the runner
+(`scripts/venture/issues.mjs` in `~/hilma-venture`), one per failure. Nothing is texted. `node
+ops/ola.mjs ci --dry` says what the next run would do; tests `node --test ops/ci-test.mjs` (also a
+deploy suite, `ci`).
+
 **The disk is cleaned after every deploy that serves** (OLA-135, `ops/clean.mjs`), still holding the
 turn, and on demand with `node ops/ola.mjs clean --dry` (what it would delete) and `clean`. On
 2026-11-17 the mini fell to 3.5 GB free twice; the image builder's cache alone held 49 GB. The rules:

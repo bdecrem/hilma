@@ -477,7 +477,7 @@ test('the board: a compact status every 10 minutes, with the key, and nothing th
   assert.match(r.out, /status pushed to the board/)
   assert.equal(statuses.length, before + 1)
   const s = statuses.at(-1)
-  assert.deepEqual(Object.keys(s).sort(), ['alarm', 'deployed', 'disk', 'host', 'memory', 'parts', 'projects'])
+  assert.deepEqual(Object.keys(s).sort(), ['alarm', 'ci', 'deployed', 'disk', 'host', 'memory', 'parts', 'projects'])
   assert.equal(typeof s.alarm.state, 'string')
   assert.ok(!JSON.stringify(s).includes('ola-'), 'a project id reached the board')
   await watch(at('16:02'), [], board)

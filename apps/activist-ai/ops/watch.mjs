@@ -33,7 +33,7 @@
 // The board: every PUSH_EVERY_MIN minutes (10; 0 turns it off) a run also posts a compact status to
 // <base>/api/venture/status for app.kochitolabs.com (Bart, 2026-11-17: "make sure it is updated at
 // least every few hours"): the deployed version, when and its suites' counts (~/ola-staging/
-// deployed.json), the alarm's state in the words of its texts, free disk, memory, how many projects
+// deployed.json), the newest automatic check of main (checks.json, ops/ci.mjs), the alarm's state in the words of its texts, free disk, memory, how many projects
 // run, and which parts answer. No file names, no project names, no keys; the board marks it stale
 // after 30 minutes. A failed push is retried at the next run and noted in `show`.
 //
@@ -535,6 +535,12 @@ export function boardStatus(S, state, r, conds, now) {
     const d = JSON.parse(readFileSync(path.join(S.STAGING, 'deployed.json'), 'utf8'))
     deployed = { commit: String(d.commit ?? ''), at: d.at ?? null, suites: d.suites ?? {} }
   } catch {}
+  // The automatic checks on main (OLA-84, ops/ci.mjs): the newest result, commit and counts only.
+  let ci = null
+  try {
+    const c = JSON.parse(readFileSync(path.join(S.STAGING, 'checks.json'), 'utf8')).runs?.find((r) => r.ok === true || r.ok === false)
+    if (c) ci = { commit: String(c.commit ?? ''), at: c.at ?? null, ok: c.ok, by: c.by ?? null, suites: c.suites ?? {}, why: c.ok ? null : String(c.why ?? 'failed').slice(0, 160) }
+  } catch {}
   // The alarm sentences come from this run's own readings: a condition that is in alarm now and
   // has been for long enough to text (state.active), or a disk alarm, which is shown but never
   // texted. Never from state.active alone: an entry there keeps the sentence of the run that set
@@ -550,6 +556,7 @@ export function boardStatus(S, state, r, conds, now) {
   return {
     host: 'mini',
     deployed,
+    ci,
     alarm: { state: alarms.length ? 'alarm' : warns.length ? 'warn' : 'ok', says: alarms.map((a) => a.say), warns, runAt: new Date(now).toISOString() },
     disk: r.disk && !r.disk.error ? { freeGB: r.disk.freeGB } : null,
     memory: r.memory ? `${r.memory.pressure}, swap ${r.memory.swapPct}%` : null,

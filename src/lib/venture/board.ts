@@ -54,6 +54,8 @@ export type LiveStatus = {
   at: string
   deployed: { commit: string; at: string; suites: Record<string, string> } | null
   checks: { passed: number; total: number } | null
+  /** The newest automatic check of main (OLA-84): by 'check', 'deploy', or 'same' (no Ola change since a checked commit). */
+  ci?: { commit: string; at: string | null; ok: boolean; by: string | null; suites: Record<string, string>; why: string | null } | null
   alarm: { state: 'ok' | 'warn' | 'alarm'; says: string[]; warns: string[]; runAt: string | null }
   disk: { freeGB: number } | null
   memory: string | null

@@ -9,6 +9,15 @@
 //                                     suites, and only if all pass point `current` at it and
 //                                     restart the jobs; on a failed suite the running version is
 //                                     left alone and the release is kept for a look
+//   node ops/ola.mjs check [<commit>] the deploy's steps and suites for one commit (default
+//                                     origin/main) without serving it (OLA-84): unpacked into
+//                                     checks/<commit12>, the turn taken as a builder (a deploy that
+//                                     arrives meanwhile goes first: the check gives the turn back
+//                                     between suites and is retried later), no signature needed
+//                                     (nothing is served); the result in checks.json and checks.log,
+//                                     the folder removed when it passed
+//   node ops/ola.mjs ci [--dry]       what cx.ola.ci runs every 10 minutes (ops/ci.mjs): every
+//                                     change to main is checked automatically, once
 //   node ops/ola.mjs install          write and load the jobs below, pointed at the deployed release
 //                                     (needs the two env files and a deploy)
 //   node ops/ola.mjs status           every job (state, pid, last exit), the front desk, the
@@ -33,6 +42,8 @@
 //   cx.ola.watch       ops/watch.mjs, every 2 minutes (StartInterval, not kept alive): the alarm
 //                      (disk, memory, the web app's parts, the public address, the Almanac, the
 //                      VMs, the nightly status files); texts the owner; settings ~/.ola/watch.env
+//   cx.ola.ci          ops/ola.mjs ci, every 10 minutes (StartInterval, not kept alive): the
+//                      automatic checks on every change to main (ops/ci.mjs, OLA-84)
 //   cx.ola.backup      ops/backup.mjs run, nightly at 3:30 (only where ~/.ola/backup/key exists)
 //   cx.ola.restoretest ops/backup.mjs restore-test, Sundays at 5:00 (same)
 // and, while a workspace runs, its door and desk (cx.ola.door.<id>, cx.ola.desk.<id>), loaded and
@@ -61,7 +72,7 @@ import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
-import { acquire as acquireTurn, holder as turnHolder } from './turn.mjs'
+import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -116,6 +127,9 @@ const JOBS = [
   // The alarm: a short run every 2 minutes. Not kept alive and never kickstarted by a deploy (each
   // run reads the code through `current`, so a deploy changes it without a restart).
   { label: 'cx.ola.watch', args: [NODE, path.join(SERVED, 'ops/watch.mjs')], keepAlive: false, interval: 120, log: 'watch' },
+  // The automatic checks (OLA-84, ops/ci.mjs): every 10 minutes, the newest change to main that no
+  // deploy or check has covered yet goes through the deploy's suites without being served.
+  { label: 'cx.ola.ci', args: [NODE, path.join(SERVED, 'ops/ola.mjs'), 'ci'], keepAlive: false, interval: 600, log: 'ci' },
   // Encrypted backups (OLA-86, ops/backup.mjs): the nightly copy at 3:30 and the restore test on
   // Sundays at 5:00, local time. Only where the backup key exists; never run at load or by a deploy.
   { label: 'cx.ola.backup', args: [NODE, path.join(SERVED, 'ops/backup.mjs'), 'run'], keepAlive: false, calendar: { Hour: 3, Minute: 30 }, log: 'backup', optional: BACKUP_KEY },
@@ -269,6 +283,12 @@ if (cmd === 'container-up') {
   install({ restart: false })
 } else if (cmd === 'deploy') {
   await deploy(process.argv.slice(3).find((a) => !a.startsWith('--')) || 'origin/main', { unsigned: process.argv.includes('--unsigned') })
+} else if (cmd === 'check') {
+  const r = await deploy(process.argv.slice(3).find((a) => !a.startsWith('--')) || 'origin/main', { check: true })
+  if (!r?.ok) process.exitCode = r?.yielded ? 3 : 1
+} else if (cmd === 'ci') {
+  const { ciOnce } = await import('./ci.mjs')
+  process.exitCode = await ciOnce({ STAGING, check: (ref) => deploy(ref, { check: true }), dry: process.argv.includes('--dry') })
 } else if (cmd === 'uninstall') {
   for (const j of JOBS) {
     sh('/bin/launchctl', ['bootout', `${DOMAIN}/${j.label}`])
@@ -382,7 +402,7 @@ if (cmd === 'container-up') {
 } else if (cmd === 'clean') {
   clean({ dry: process.argv.includes('--dry') })
 } else {
-  console.error('usage: node ops/ola.mjs deploy [<commit> | origin/main] | install | status | prove-restarts | uninstall | container-up | clean [--dry]')
+  console.error('usage: node ops/ola.mjs deploy [<commit> | origin/main] | check [<commit>] | ci [--dry] | install | status | prove-restarts | uninstall | container-up | clean [--dry]')
   process.exit(2)
 }
 
@@ -505,11 +525,19 @@ function counts(tail) {
   const pass = /^(?:ℹ|#) pass (\d+)$/m.exec(tail)
   const failN = /^(?:ℹ|#) fail (\d+)$/m.exec(tail)
   if (pass && failN) return `${pass[1]} of ${Number(pass[1]) + Number(failN[1])}`
+  // XCTest's summary (swift test): "Executed 104 tests, with 1 test skipped and 0 failures"
+  const xc = [...tail.matchAll(/Executed (\d+) tests?, with (\d+) tests? skipped and (\d+) failures?/g)].at(-1)
+  if (xc) return `${Number(xc[1]) - Number(xc[2]) - Number(xc[3])} of ${Number(xc[1]) - Number(xc[2])}`
   const all = [...tail.matchAll(/(\d+) of (\d+)( checks)? passed/g)]
   return all.length ? `${all.at(-1)[1]} of ${all.at(-1)[2]}` : '?'
 }
 
-async function deploy(ref, { unsigned = false } = {}) {
+// A check (OLA-84, `ola.mjs check`, run by ops/ci.mjs) is this same function with check: true: the
+// same unpack, dependencies, web build, image and suites, plus the Mac and iPhone apps' shared code
+// (OlaKit's swift test, no VM), and nothing is served. It returns { ok, commit, suites, why } (ok
+// null and yielded when it gave the turn to a deploy) and records it in checks.json / checks.log.
+export const CHECKS_JSON = 'checks.json'
+async function deploy(ref, { unsigned = false, check = false } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
   const SUITES = [
@@ -519,12 +547,13 @@ async function deploy(ref, { unsigned = false } = {}) {
     ['web', ['web/check.mjs', '--no-live']],
     ['frontdesk', ['frontdesk/check.mjs', '--no-live']],
     ['backup', ['--test', 'ops/backup-test.mjs']], // encrypted backups (OLA-86), seconds, no VM
+    ['ci', ['--test', 'ops/ci-test.mjs']], // the automatic checks' decisions (OLA-84), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
   const git = (...a) => sh('/usr/bin/git', ['-C', STAGING, ...a])
   // One deploy at a time.
-  const lockFile = path.join(STAGING, 'deploy.lock')
+  const lockFile = path.join(STAGING, check ? 'check.lock' : 'deploy.lock')
   try {
     closeSync(openSync(lockFile, 'wx'))
   } catch {
@@ -533,7 +562,7 @@ async function deploy(ref, { unsigned = false } = {}) {
     try {
       alive = pid > 0 && process.kill(pid, 0)
     } catch {}
-    if (alive) fail(`another deploy is running (pid ${pid})`)
+    if (alive) fail(`another ${check ? 'check' : 'deploy'} is running (pid ${pid})`)
   }
   writeFileSync(lockFile, String(process.pid))
   process.on('exit', () => rmSync(lockFile, { force: true }))
@@ -551,7 +580,9 @@ async function deploy(ref, { unsigned = false } = {}) {
   // with --unsigned, which deploys.log records.
   const signers = path.join(OLA, 'allowed-signers')
   let signed = false
-  if (existsSync(signers)) {
+  if (check) {
+    // A check serves nothing, so no signature is asked for; it runs the same code a deploy would.
+  } else if (existsSync(signers)) {
     const v = git('-c', `gpg.ssh.allowedSignersFile=${signers}`, 'verify-commit', commit)
     signed = v.status === 0
     if (!signed && !unsigned) fail(`${short} is not signed by a key in ${signers}; nothing was changed`)
@@ -559,18 +590,28 @@ async function deploy(ref, { unsigned = false } = {}) {
   const before = existsSync(DEPLOYED) ? JSON.parse(readFileSync(DEPLOYED, 'utf8')) : null
   if (before?.commit === commit) {
     console.log(`${short} is already deployed (${before.at})`)
+    if (check) return recordCheck({ commit, ok: true, suites: before.suites ?? {}, why: null, by: 'deploy', at: before.at })
     return
   }
-  const releases = path.join(STAGING, 'releases')
+  const releases = path.join(STAGING, check ? 'checks' : 'releases')
   const rel = path.join(releases, short)
   const code = path.join(rel, 'apps/activist-ai')
   mkdirSync(releases, { recursive: true })
   mkdirSync(LOGS, { recursive: true, mode: 0o700 })
-  const logFile = path.join(LOGS, `deploy-${short}.log`)
+  const logFile = path.join(LOGS, `${check ? 'check' : 'deploy'}-${short}.log`)
   const out = createWriteStream(logFile)
   const say = (m) => (console.log(m), out.write(`${m}\n`))
-  const history = (line) => writeFileSync(path.join(STAGING, 'deploys.log'), `${new Date().toISOString()} ${line}\n`, { flag: 'a' })
+  const history = (line) => writeFileSync(path.join(STAGING, check ? 'checks.log' : 'deploys.log'), `${new Date().toISOString()} ${line}\n`, { flag: 'a' })
+  const suites = {}
   const refuse = (m) => {
+    if (check) {
+      say(`CHECK FAILED: ${m}`)
+      say(`${short} stays in ${rel} for a look. Log: ${logFile}`)
+      history(`failed ${short} (${ref}): ${m}`)
+      turnAbort.abort()
+      out.end()
+      return recordCheck({ commit, ok: false, suites, why: m, by: 'check', log: logFile })
+    }
     say(`REFUSED: ${m}`)
     say(before ? `The running version (${before.commit.slice(0, 12)}) was left alone; ${short} stays in ${rel} for a look. Log: ${logFile}` : `Nothing was deployed. Log: ${logFile}`)
     history(`refused ${short} (${ref}): ${m}`)
@@ -578,15 +619,17 @@ async function deploy(ref, { unsigned = false } = {}) {
     out.end()
     process.exitCode = 1
   }
-  say(`deploying ${short} (${ref}) to ${STAGING}; currently ${before ? before.commit.slice(0, 12) : 'nothing'}`)
+  say(check ? `checking ${short} (${ref}) in ${releases}; nothing is served` : `deploying ${short} (${ref}) to ${STAGING}; currently ${before ? before.commit.slice(0, 12) : 'nothing'}`)
   // The suites start sealed VMs, and the machine runs four (OLA-83): the deploy queues for the
   // machine's one turn now (ops/turn.mjs), ahead of every waiting builder, and its hold keeps any
   // new builder turn from starting while it unpacks and builds; the turn is awaited before the suites.
   const turnAbort = new AbortController()
-  const turnP = acquireTurn({ label: `deploy ${short}`, deploy: true, signal: turnAbort.signal, on: (m) => say(`turn: ${m}`) })
+  const turnP = acquireTurn({ label: `${check ? 'check' : 'deploy'} ${short}`, deploy: !check, signal: turnAbort.signal, on: (m) => say(`turn: ${m}`) })
 
   // The commit's apps/activist-ai, unpacked fresh (nothing left over from an earlier try).
   if (rel === realpathSafe(CURRENT)) return refuse(`${short} is the release being served`)
+  // A check keeps only its own folder: an earlier failed check's is removed now.
+  if (check && existsSync(releases)) for (const f of readdirSync(releases)) if (f !== short) rmSync(path.join(releases, f), { recursive: true, force: true })
   rmSync(rel, { recursive: true, force: true })
   mkdirSync(rel, { recursive: true })
   const a = sh('/bin/sh', ['-c', 'git -C "$1" archive "$2" apps/activist-ai | tar -x -C "$3"', 'sh', STAGING, commit, rel])
@@ -618,6 +661,23 @@ async function deploy(ref, { unsigned = false } = {}) {
   // Claude Code, about 370 MB): its own step, before the suites, with its own retries, built under
   // a temporary tag (ws.mjs buildImage), so a slow download only makes this step longer and never
   // leaves a half-built image or fails a suite on time.
+  // The Mac and iPhone apps' shared code (OlaKit), a check only: no VM, so before the turn.
+  if (check && existsSync(path.join(code, 'apple/OlaKit/Package.swift'))) {
+    const t0 = Date.now()
+    say('suite apps: swift test (apple/OlaKit)')
+    const s = await runLogged('/usr/bin/swift', ['test'], { cwd: path.join(code, 'apple/OlaKit'), out })
+    suites.apps = counts(s.tail)
+    say(`suite apps: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites.apps}, ${Math.round((Date.now() - t0) / 1000)} s`)
+    if (s.code !== 0) return refuse(`suite apps failed (${suites.apps})`)
+  }
+  // A check builds the image holding the turn, so it never builds beside a deploy.
+  let turn = null
+  if (check) {
+    turn = await turnP
+    if (!turn) return refuse('the turn for the suites was given up')
+    process.on('exit', turn.release)
+    say('turn: the check holds it')
+  }
   say('workspace image: built if missing (node workspace/ws.mjs image --missing)')
   const img = await runLogged(NODE, ['workspace/ws.mjs', 'image', '--missing'], { cwd: code, out })
   if (img.code !== 0) return refuse('the workspace image could not be built (the log has the build output)')
@@ -639,18 +699,35 @@ async function deploy(ref, { unsigned = false } = {}) {
 
   // The suites, from the release itself, holding the machine's turn (the suites inherit it).
   const tw = Date.now()
-  const turn = await turnP
-  if (!turn) return refuse('the turn for the suites was given up')
-  process.on('exit', turn.release)
-  say(`turn: the deploy holds it${turn.waitedMs > 2000 ? ` (waited ${Math.round((Date.now() - tw) / 1000)} s after building)` : ''}`)
-  const suites = {}
+  if (!check) {
+    turn = await turnP
+    if (!turn) return refuse('the turn for the suites was given up')
+    process.on('exit', turn.release)
+    say(`turn: the deploy holds it${turn.waitedMs > 2000 ? ` (waited ${Math.round((Date.now() - tw) / 1000)} s after building)` : ''}`)
+  }
   for (const [name, args] of SUITES) {
+    // A deploy waiting for the turn goes first: the check gives it back and is tried again later.
+    if (check && deployWaiting()) {
+      say(`a deploy is waiting: the check gives the turn back before suite ${name} and will be tried again`)
+      turn.release()
+      out.end()
+      rmSync(rel, { recursive: true, force: true })
+      return { ok: null, yielded: true, commit, suites }
+    }
     const t0 = Date.now()
     say(`suite ${name}: node ${args.join(' ')}`)
     const s = await runLogged(NODE, args, { cwd: code, out, env: { OLA_TURN_HELD: String(process.pid) } })
     suites[name] = counts(s.tail)
     say(`suite ${name}: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
     if (s.code !== 0) return refuse(`suite ${name} failed (${suites[name]})`)
+  }
+  if (check) {
+    history(`passed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+    say(`check passed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+    turn.release()
+    out.end()
+    rmSync(rel, { recursive: true, force: true })
+    return recordCheck({ commit, ok: true, suites, why: null, by: 'check', log: logFile })
   }
 
   // Serve it: switch `current` by rename (atomic), restart the jobs, wait for both answers.
@@ -686,6 +763,29 @@ async function deploy(ref, { unsigned = false } = {}) {
   }
   turn.release()
   out.end()
+}
+/** A deploy is waiting for (or holds) the machine's turn: ops/turn.mjs's hold file, with a live pid. */
+function deployWaiting() {
+  const hold = turnPaths().hold
+  if (!existsSync(hold)) return false
+  const pid = Number(readFileSync(hold, 'utf8').trim()) || 0
+  try {
+    return pid > 0 && pid !== process.pid && process.kill(pid, 0)
+  } catch {
+    return false
+  }
+}
+/** One check's result, newest first in checks.json (the last 50), for ops/ci.mjs and the board. */
+function recordCheck(r) {
+  const file = path.join(STAGING, CHECKS_JSON)
+  let all = []
+  try {
+    all = JSON.parse(readFileSync(file, 'utf8')).runs ?? []
+  } catch {}
+  const run = { commit: r.commit, ok: r.ok, suites: r.suites, why: r.why, by: r.by, at: r.at ?? new Date().toISOString(), ...(r.log ? { log: r.log } : {}) }
+  all = [run, ...all.filter((x) => x.commit !== r.commit)].slice(0, 50)
+  writeFileSync(file, JSON.stringify({ runs: all }, null, 2) + '\n')
+  return run
 }
 function realpathSafe(p) {
   try {
