@@ -1,0 +1,526 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica health_housing claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "health_housing",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  119,
+  123
+ ],
+ "started_at": "2026-11-20T20:54:11.740Z",
+ "meters_before": {
+  "at": "2026-11-20T20:54:07.150Z",
+  "window": {
+   "pct": 39,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 39,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 39% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 45739,
+  "user": 107
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:57:18.069Z",
+ "minutes": 3.11,
+ "meters_after": {
+  "at": "2026-11-20T20:57:18.069Z",
+  "window": {
+   "pct": 40,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 40,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 40% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 46411,
+   "output": 13888,
+   "cache_read": 1012796,
+   "cache_write": 110856,
+   "cost_usd": 1.3394,
+   "total": 1183951
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 46385,
+    "output": 3205,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 758,
+    "cost_usd": 0.0362
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 10683,
+    "cache_read": 1012796,
+    "cache_write": 110856,
+    "thinking": 2294,
+    "cost_usd": 1.3032
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 37,
+ "duration_ms": 185581,
+ "duration_api_ms": 126710,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-20T20:54:16.935Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 7 | seguridad social | ARTÍCULO 31 | Así reformado",
+   "ok": true,
+   "chars": 10590
+  },
+  {
+   "at": "2026-11-20T20:54:18.097Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=40634&strTipM=TC",
+   "find": "Artículo 6 | Nacionalidad | extranjeros | Así reformado",
+   "ok": true,
+   "chars": 8551
+  },
+  {
+   "at": "2026-11-20T20:54:33.906Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 31.- | derechos y las garantías individuales y sociales",
+   "ok": true,
+   "chars": 2342
+  },
+  {
+   "at": "2026-11-20T20:54:35.244Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC",
+   "find": "Artículo 41 | Artículo 42 | Artículo 50 | Artículo 3",
+   "ok": true,
+   "chars": 9548
+  },
+  {
+   "at": "2026-11-20T20:54:41.960Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&nValor3=0&strTipM=FN",
+   "find": "Afectaciones | artículo 7 | artículo 31 | Reforma",
+   "ok": true,
+   "chars": 2083
+  },
+  {
+   "at": "2026-11-20T20:54:44.656Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2",
+   "find": "Versión de la Norma | vigencia desde | Normativa que la afectó | Ley",
+   "ok": true,
+   "chars": 1964
+  },
+  {
+   "at": "2026-11-20T20:54:47.763Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=6",
+   "find": "2023 | 2024 | 2025 | Artículo",
+   "ok": true,
+   "chars": 1354
+  },
+  {
+   "at": "2026-11-20T20:54:51.065Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=5",
+   "find": "2023 | 2024 | 2025 | Ley N°",
+   "ok": true,
+   "chars": 1864
+  },
+  {
+   "at": "2026-11-20T20:55:01.319Z",
+   "url": "https://banhvi.fi.cr/perfiles/cfosuvi/2026/BANHVI-DF-CI-0002-2026 Lineamientos para tramite solicitudes de personas refugiadas o con carne provisional de refugio.pdf",
+   "find": null,
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:55:04.455Z",
+   "url": "https://www.lateja.cr/nacional/pueden-negarle-el-bono-de-la-vivienda-a-alguien/EVJTBFQBKBC7PFQ5PB643SQPSA/story/",
+   "find": null,
+   "ok": true,
+   "chars": 3274
+  },
+  {
+   "at": "2026-11-20T20:55:09.699Z",
+   "url": "https://banhvi.fi.cr/perfiles/cfosuvi/2026/BANHVI-DF-CI-0002-2026%20Lineamientos%20para%20tramite%20solicitudes%20de%20personas%20refugiadas%20o%20con%20carne%20provisional%20de%20refugio.pdf",
+   "find": null,
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:55:29.816Z",
+   "url": "https://semanariouniversidad.com/?p=274617",
+   "find": null,
+   "ok": true,
+   "chars": 5023
+  },
+  {
+   "at": "2026-11-20T20:55:35.458Z",
+   "url": "https://dhr.go.cr/informacion_relevante/publicaciones/poblacion_migrante_2024/Perfil_Poblacional_poblacion_migrante_refugiada.pdf",
+   "find": "salud | CCSS | seguro | vivienda",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:55:42.191Z",
+   "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/",
+   "find": null,
+   "ok": true,
+   "chars": 5464
+  },
+  {
+   "at": "2026-11-20T20:55:44.988Z",
+   "url": "https://help.unhcr.org/costarica/convenio-acnur-ccss",
+   "find": null,
+   "ok": true,
+   "chars": 5002
+  },
+  {
+   "at": "2026-11-20T20:55:53.582Z",
+   "url": "https://help.unhcr.org/costarica/salud",
+   "find": null,
+   "ok": true,
+   "chars": 5794
+  },
+  {
+   "at": "2026-11-20T20:56:07.311Z",
+   "url": "https://delfino.cr/2024/01/acnur-y-ccss-renuevan-convenio-para-dar-seguro-a-personas-en-condiciones-migratorias-vulnerables",
+   "find": null,
+   "ok": true,
+   "chars": 4480
+  },
+  {
+   "at": "2026-11-20T20:56:08.156Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=40634&param2=147964&param3=2",
+   "find": "Versión de la Norma | vigencia desde",
+   "ok": true,
+   "chars": 1983
+  }
+ ],
+ "searches": [
+  "Sala Constitucional bono de vivienda refugiados BANHVI 2023 voto amparo",
+  "\"bono de vivienda\" refugiada Sala Constitucional 2023 \"Banco Hipotecario de la Vivienda\" \"estatus de refugiada\" resolución nexus",
+  "CCSS migrantes no asegurados atención salud 2024 2025 reforma reglamento cobro extranjeros Defensoría"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":119,\"answer_2023\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 7(7)\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 31\",\"enacted\":\"2009-08-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Código de la Niñez y la Adolescencia, Ley 7739\",\"article\":\"Arts. 3, 41, 42\",\"enacted\":\"1998\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Código de la Niñez y la Adolescencia, Ley 7739\",\"article\":\"Art. 50\",\"enacted\":\"1998\",\"history_read\":\"current_text_only\",\"status\":\"could_not_establish\"}],\"events\":[],\"implementation_then_now\":\"Around January 2023, regular migrants and asylum seekers with a provisional card could join the CCSS. Uninsured adults without status got emergency care, billed afterwards. Children and pregnant women were covered whatever their status, and the ACNUR–CCSS collective-insurance agreement covered a few thousand refugees and asylum seekers a year. The situation was the same around January 2026. The agreement was renewed for 2024 for about 5,000 people (Delfino, Jan. 2024). UNHCR's help portal still describes emergency-only care, billed afterwards, for uninsured people. The CCSS inspection director told La Nación in Dec. 2025 that uninsured people get emergency care and are billed later, and must pay ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 119,
+    "answer_2023": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 7(7)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley 7739",
+      "article": "Arts. 3, 41, 42",
+      "enacted": "1998",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley 7739",
+      "article": "Art. 50",
+      "enacted": "1998",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Around January 2023, regular migrants and asylum seekers with a provisional card could join the CCSS. Uninsured adults without status got emergency care, billed afterwards. Children and pregnant women were covered whatever their status, and the ACNUR–CCSS collective-insurance agreement covered a few thousand refugees and asylum seekers a year. The situation was the same around January 2026. The agreement was renewed for 2024 for about 5,000 people (Delfino, Jan. 2024). UNHCR's help portal still describes emergency-only care, billed afterwards, for uninsured people. The CCSS inspection director told La Nación in Dec. 2025 that uninsured people get emergency care and are billed later, and must pay in advance for outpatient care. I found no documented shift within the window. The end of the ACNUR–CCSS agreement (December 2026) falls after the window.",
+    "practice_sources": [
+     {
+      "title": "ACNUR Ayuda Costa Rica – Acceso y derecho a la salud",
+      "url": "https://help.unhcr.org/costarica/salud",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "ACNUR Ayuda Costa Rica – Convenio ACNUR – CCSS (agreement ends Dec. 2026)",
+      "url": "https://help.unhcr.org/costarica/convenio-acnur-ccss",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "ACNUR y CCSS renuevan convenio para dar seguro a personas en condiciones migratorias vulnerables (Delfino)",
+      "url": "https://delfino.cr/2024/01/acnur-y-ccss-renuevan-convenio-para-dar-seguro-a-personas-en-condiciones-migratorias-vulnerables",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "360.000 personas no tienen seguro de salud en Costa Rica (La Nación)",
+      "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "SINALEVI shows Ley 8764 at version 19 of 19 (24/02/2025). The current texts of arts. 7 and 31 carry no 'Así reformado' note, so they were not amended in the window. The 2024 amendment (Ley 10493) touched arts. 33, 241 and 253 only, per the law map. The 'Normativa que la afectó' tab did not render, so the version list itself could not be read. Arts. 3, 41 and 42 of Ley 7739 show no amendment notes; the text of art. 50 was cut off before its note area. CCSS regulations were not read.",
+    "sources_opened": [
+     {
+      "title": "Ley 8764 – SINALEVI texto vigente",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI texto (art. 31)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Ley 8764 – Ficha de la norma",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=2"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI tab (did not render)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=5"
+     },
+     {
+      "title": "Ley 8764 – SINALEVI tab (did not render)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=6"
+     },
+     {
+      "title": "Ley 8764 – nrm_norma (empty)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=66139&nValor3=0&strTipM=FN"
+     },
+     {
+      "title": "Código de la Niñez y la Adolescencia – SINALEVI",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC"
+     },
+     {
+      "title": "ACNUR Ayuda – Salud",
+      "url": "https://help.unhcr.org/costarica/salud"
+     },
+     {
+      "title": "ACNUR Ayuda – Convenio ACNUR-CCSS",
+      "url": "https://help.unhcr.org/costarica/convenio-acnur-ccss"
+     },
+     {
+      "title": "Delfino – renovación convenio ACNUR-CCSS 2024",
+      "url": "https://delfino.cr/2024/01/acnur-y-ccss-renuevan-convenio-para-dar-seguro-a-personas-en-condiciones-migratorias-vulnerables"
+     },
+     {
+      "title": "La Nación – 360.000 personas sin seguro",
+      "url": "https://www.nacion.com/el-pais/me-devolvieron-del-ebais-por-no-estar-asegurada-la/L7GV54MUVRHQTPYS42ZH46VQ44/story/"
+     },
+     {
+      "title": "Defensoría – Perfil poblacional migrante 2024 (failed: PDF reader unavailable)",
+      "url": "https://dhr.go.cr/informacion_relevante/publicaciones/poblacion_migrante_2024/Perfil_Poblacional_poblacion_migrante_refugiada.pdf"
+     }
+    ],
+    "starting_answer_concern": "The middle option rests partly on CCSS rules (emergency care for everyone, State insurance for the poor needing an IMAS assessment and an ID document) that were described second-hand and not read in a regulation. The starting answer is plausible but its legal basis for the limits is unread.",
+    "confidence": "medium",
+    "notes": "No statute, decree or ruling in the window changed migrants' health-care access. Decree 43810 (in force Dec. 2022) delayed asylum seekers' work permits, which indirectly limited contributory insurance; Decree 44501 (2024) undid that. Neither is a cited health provision. The ACNUR–CCSS agreement ends 31 Dec. 2026, after the window, which may matter for later implementation coding. Practice evidence is mostly about refugees and asylum seekers. The La Nación 2025 piece covers uninsured people generally, not migrants specifically. No source specific to irregular labour migrants was read."
+   },
+   {
+    "question_id": 123,
+    "answer_2023": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Reglamento de Operaciones del Sistema Financiero Nacional para la Vivienda (BANHVI)",
+      "article": "Art. 6",
+      "enacted": "1996-05-20",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Operaciones del Sistema Financiero Nacional para la Vivienda (BANHVI)",
+      "article": "Art. 5",
+      "enacted": "1996-05-20",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "BANHVI Circular BANHVI-DF-CI-0002-2026",
+      "article": "Whole circular",
+      "enacted": "2026",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Around January 2023, lawfully settled foreigners received the bono. BANHVI, however, was telling refugees they could not apply: one refusal email was dated 19 January 2023. The Sala Constitucional upheld that refugee's amparo in March 2023 (Semanario Universidad, 24 Mar. 2023; La Teja, 31 Mar. 2023). BANHVI admitted to the Sala that its information was outdated and that including refugees and asylum seekers was legally viable. Around January 2026, BANHVI's own circular, as summarised in the starting answer, admits that improper rejections of refugee applications continued. So the pattern of partial exclusion persisted, and 'Sometimes' holds at both dates. The circular itself is dated 2026, so it falls after 1 January 2026, and I could not open it.",
+    "practice_sources": [
+     {
+      "title": "Sala IV ratifica derecho de personas refugiadas a optar por obtener bono de vivienda (Semanario Universidad)",
+      "url": "https://semanariouniversidad.com/?p=274617",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "¿Pueden negarle el bono de la vivienda a alguien por ser refugiado? (La Teja)",
+      "url": "https://www.lateja.cr/nacional/pueden-negarle-el-bono-de-la-vivienda-a-alguien/EVJTBFQBKBC7PFQ5PB643SQPSA/story/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "SINALEVI shows the BANHVI regulation at version 35 of 35 (16/09/2025). Art. 6 ('Nacionalidad') and art. 5 carry no amendment note, while other articles do (e.g., art. 8, 2017), so they were not amended in the window. The 2023 Sala ruling is known only from press reports. Its number was not found and it was not read, so it is treated as practice evidence: per the press, it is an order confined to the parties. The 2026 BANHVI circular could not be opened (PDF reader failure).",
+    "sources_opened": [
+     {
+      "title": "Reglamento de Operaciones del SFNV – SINALEVI texto vigente",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=40634&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Operaciones del SFNV – Ficha de la norma",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=40634&param2=147964&param3=2"
+     },
+     {
+      "title": "La Teja – bono de vivienda y refugiados (2023)",
+      "url": "https://www.lateja.cr/nacional/pueden-negarle-el-bono-de-la-vivienda-a-alguien/EVJTBFQBKBC7PFQ5PB643SQPSA/story/"
+     },
+     {
+      "title": "Semanario Universidad – Sala IV ratifica derecho de personas refugiadas (2023)",
+      "url": "https://semanariouniversidad.com/?p=274617"
+     },
+     {
+      "title": "BANHVI-DF-CI-0002-2026 (failed to open)",
+      "url": "https://banhvi.fi.cr/perfiles/cfosuvi/2026/BANHVI-DF-CI-0002-2026%20Lineamientos%20para%20tramite%20solicitudes%20de%20personas%20refugiadas%20o%20con%20carne%20provisional%20de%20refugio.pdf"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2023 Sala Constitucional amparo (March 2023) falls inside the window. As reported, it is confined to the parties: it voids the email and orders BANHVI not to repeat the conduct. It is not recorded as a legal event and does not change the protection answer. The starting answer's coverage of refugees rests on art. 6 read with DGME's view that refugees have the rights of permanent residents. The BANHVI 2026 circular postdates 1 Jan. 2026, so it does not affect the 2026 answer either way. The practice evidence covers refugees only; nothing was read on regular labour migrants within the window, apart from the 2020 La Nación figure in the starting answer."
+   }
+  ]
+ }
+}
