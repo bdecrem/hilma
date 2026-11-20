@@ -1342,28 +1342,41 @@ function stageContext() {
   const ctx = mkdtempSync(path.join(BUILD_TMP, 'ola-image-'))
   cpSync(here, ctx, { recursive: true, filter: (src) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(src) })
   for (const s of skillFolders()) cpSync(path.join(SKILLS_SRC, s), path.join(ctx, 'skills', s), { recursive: true, filter: (src) => !/[\\/](__pycache__|\.DS_Store)([\\/]|$)/.test(src) })
+  // The builder gets the Containerfile without its comment lines (OLA-283). Apple's builder ends
+  // the build at once with 'Stream unexpectedly closed' when the Containerfile it is sent is larger
+  // than about 15 KB (measured on the mini, Nov 20: 15,029 bytes built, 15,477 failed, the same file
+  // without comments, 4,455, built); the comments, one per image version, had grown past that.
+  // Comment lines are nothing to the build, and the image is the same.
+  const cf = path.join(ctx, 'Containerfile')
+  writeFileSync(cf, readFileSync(cf, 'utf8').split('\n').filter((l) => !/^\s*#/.test(l)).join('\n'))
   return ctx
 }
 export function buildImage({ tries = 3 } = {}) {
   const tmp = `${IMAGE}-building`
   const ctx = stageContext()
   const hash = skillsHash()
+  let why = 'no output'
   try {
     for (let i = 1; i <= tries; i++) {
       ctr(['image', 'delete', tmp], { allowFail: true })
-      const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '--build-arg', `OLA_SKILLS_HASH=${hash}`, '-t', tmp, '-f', path.join(ctx, 'Containerfile'), ctx], { stdio: 'inherit' })
+      // stdout to the log as it comes; stderr kept too, so a failure can say why (OLA-283).
+      const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '--build-arg', `OLA_SKILLS_HASH=${hash}`, '-t', tmp, '-f', path.join(ctx, 'Containerfile'), ctx], { stdio: ['ignore', 'inherit', 'pipe'], encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
+      if (r.stderr) process.stderr.write(r.stderr)
       if (r.status === 0) {
         ctr(['image', 'tag', tmp, IMAGE])
         ctr(['image', 'delete', tmp], { allowFail: true })
         return
       }
-      console.error(`ws: the image build failed (try ${i} of ${tries})`)
+      const last = (r.stderr || '').trim().split('\n').filter(Boolean).pop() || (r.error ? String(r.error.message) : `exit ${r.status}`)
+      const size = statSync(path.join(ctx, 'Containerfile')).size
+      why = /Stream unexpectedly closed/.test(r.stderr || '') ? `${last} (the builder closed the build at once; the Containerfile sent was ${size} bytes, and above about 15 KB it does that: see stageContext)` : last
+      console.error(`ws: the image build failed (try ${i} of ${tries}): ${why}`)
     }
   } finally {
     rmSync(ctx, { recursive: true, force: true })
   }
   ctr(['image', 'delete', tmp], { allowFail: true })
-  refuse('the image build failed')
+  refuse(`the image build failed: ${why}`)
 }
 /** Builds IMAGE if this machine does not have it yet. */
 export function ensureImage() {
