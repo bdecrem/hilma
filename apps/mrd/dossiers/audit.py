@@ -3,7 +3,8 @@ the shaky answers, and the decision. The sessions run through Claude Code (cc/ch
 builds their prompts, takes their results, decides, and writes.
 
     python3 audit.py <slug> --seed                          # one dossier_checks row per indicator, from work/
-    python3 audit.py <slug> --emit sources|verify|redo|sources2 <path> [--only key,key] [--again]
+    python3 audit.py <slug> --emit sources|verify|redo|sources2 <path> [--only key,key] [--again] [--readonly]
+                                                            # --readonly: the cost tests (COST-TEST.md): writes nothing, redo takes the whole chunk
     python3 audit.py <slug> --ingest <phase> <key> <file>
     python3 audit.py <slug> --decide [--dry]                # verified / changed / review; writes changes, rescores
     python3 audit.py <slug> --resolve <qid> original|redo "<reason>" --by <name>    # a person's decision
@@ -305,11 +306,13 @@ def lawmap_of(c):
     return m[0]["map"] if m else None
 
 
-def emit(c, slug, phase, path, only=None, again=False):
+def emit(c, slug, phase, path, only=None, again=False, readonly=False):
+    """readonly (the cost tests): no row is patched, done chunks are not skipped, and redo codes every
+    indicator of the chunk again (with the checks' findings where there are any)."""
     R = rows(c)
     if not R:
         sys.exit("no rows: run --seed first")
-    done = set() if again else {r["key"] for r in sb_all(f"dossier_check_runs?select=key&country_id=eq.{c['id']}&phase=eq.{phase}&status=eq.done")}
+    done = set() if (again or readonly) else {r["key"] for r in sb_all(f"dossier_check_runs?select=key&country_id=eq.{c['id']}&phase=eq.{phase}&status=eq.done")}
     lawmap = lawmap_of(c) if phase in ("verify", "redo") else None
     jobs = []
     for ch in CODEBOOK["chunks"]:
@@ -321,6 +324,12 @@ def emit(c, slug, phase, path, only=None, again=False):
             job = sources_prompt(c, key, [r["original"] for r in rs], False) if rs else None
         elif phase == "verify":
             job = verify_prompt(c, key, [r["original"] for r in rs], lawmap) if rs else None
+        elif phase == "redo" and readonly:
+            items = []
+            for r in rs:
+                why = needs_redo(r) if (r.get("source_check") and r.get("verifier")) else []
+                items.append(dict(r, failed=why or ["cost test: coded again to measure what a redo costs; nothing is published"]))
+            job = redo_prompt(c, key, items, lawmap) if items else None
         elif phase == "redo":
             items = []
             for r in rs:
@@ -522,6 +531,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("slug"); ap.add_argument("--seed", action="store_true")
     ap.add_argument("--emit", nargs=2, metavar=("PHASE", "PATH")); ap.add_argument("--only"); ap.add_argument("--again", action="store_true")
+    ap.add_argument("--readonly", action="store_true", help="with --emit: write nothing (the cost tests)")
     ap.add_argument("--ingest", nargs=3, metavar=("PHASE", "KEY", "FILE"))
     ap.add_argument("--decide", action="store_true"); ap.add_argument("--dry", action="store_true")
     ap.add_argument("--resolve", nargs=3, metavar=("QID", "WHICH", "REASON")); ap.add_argument("--by")
@@ -531,7 +541,7 @@ def main():
     if a.seed:
         seed(c, a.slug)
     if a.emit:
-        emit(c, a.slug, a.emit[0], a.emit[1], only=set(a.only.split(",")) if a.only else None, again=a.again)
+        emit(c, a.slug, a.emit[0], a.emit[1], only=set(a.only.split(",")) if a.only else None, again=a.again, readonly=a.readonly)
     if a.ingest:
         sys.exit(ingest(c, a.slug, *a.ingest))
     if a.decide:

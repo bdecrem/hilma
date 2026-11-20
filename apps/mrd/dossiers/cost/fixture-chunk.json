@@ -1,0 +1,93 @@
+{
+ "_note": "Invented but realistic Costa Rica rows (chunk labor_c: q109 social security, q111 unemployment benefits) in the exact shape of the answers and citations tables, for `node cc/cost.mjs <step> costa_rica --chunk labor_c --fixture cost/fixture-chunk.json --dry` only. Not real coding: never run a session on it.",
+ "country": "costa_rica",
+ "chunk": "labor_c",
+ "answers": [
+  {
+   "country_id": 1004,
+   "year": 2026,
+   "question_id": 109,
+   "answer": "Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)",
+   "subscore": 50.0,
+   "confidence": "medium",
+   "notes": "Contributory insurance (SEM, IVM) reaches every salaried worker regardless of nationality under Ley 17 art. 3; voluntary insurance and the non-contributory pension (RNC) require regular status or a minimum residence. Invented for the cost-test fixture.",
+   "evidence": null,
+   "sources": null,
+   "experimental": true
+  },
+  {
+   "country_id": 1004,
+   "year": 2026,
+   "question_id": 110,
+   "answer": "Usually",
+   "subscore": 75,
+   "confidence": "medium",
+   "notes": null,
+   "evidence": "The CCSS insures documented migrant workers on the same terms as nationals; the Defensoría de los Habitantes and IOM report that irregular workers, mostly Nicaraguan agricultural and domestic workers, are often left uninsured by employers. Invented for the cost-test fixture.",
+   "sources": [
+    {
+     "title": "Informe anual de labores 2024-2025",
+     "url": "https://www.dhr.go.cr/transparencia/informes_institucionales/informes/labores/informe_anual_2024_2025.pdf",
+     "year": 2025
+    },
+    {
+     "title": "OIM Costa Rica: Acceso a la seguridad social de personas migrantes",
+     "url": "https://costarica.iom.int/es/resources/acceso-la-seguridad-social",
+     "year": 2023
+    }
+   ],
+   "experimental": true
+  },
+  {
+   "country_id": 1004,
+   "year": 2026,
+   "question_id": 111,
+   "answer": "Access to some, but not all types of unemployment benefits; OR not to the same extent as citizens; OR it depends on their visa type (e.g., temporary vs. permanent, high-skill vs. low skill)",
+   "subscore": 50.0,
+   "confidence": "medium",
+   "notes": "Costa Rica has no unemployment insurance; the closest benefits are auxilio de cesantía (Código de Trabajo art. 29) and the Fondo de Capitalización Laboral (Ley 7983 art. 3), open to any salaried worker. Invented for the cost-test fixture.",
+   "evidence": null,
+   "sources": null,
+   "experimental": true
+  },
+  {
+   "country_id": 1004,
+   "year": 2026,
+   "question_id": 112,
+   "answer": "Sometimes",
+   "subscore": 50,
+   "confidence": "low",
+   "notes": null,
+   "evidence": "MTSS inspection reports show cesantía paid on dismissal in formal employment; informal migrant workers rarely receive it. Invented for the cost-test fixture.",
+   "sources": [
+    {
+     "title": "MTSS: Informe de inspección laboral 2024",
+     "url": "https://www.mtss.go.cr/elministerio/despacho/transparencia/informes/informe_inspeccion_2024.pdf",
+     "year": 2024
+    }
+   ],
+   "experimental": true
+  }
+ ],
+ "citations": [
+  {
+   "id": 1004109,
+   "country_id": 1004,
+   "question_id": 109,
+   "text_en": "National law in Costa Rica protects this right in part in the Constitutive Law of the Costa Rican Social Security Fund (Ley Constitutiva de la Caja Costarricense de Seguro Social, N.º 17), article 3, and the General Law on Migration and Immigration (Ley General de Migración y Extranjería N.º 8764), article 7. Article 3 makes health and pension insurance compulsory for every salaried worker, without distinction of nationality, and the migration law makes insurance with the CCSS a condition of residence. Access is not equal for all: the non-contributory pension and voluntary insurance depend on regular status and periods of residence. (Invented for the cost-test fixture.)",
+   "local_text_en": "• Ley Constitutiva de la Caja Costarricense de Seguro Social, N.º 17 (Constitutive Law of the CCSS), Art. 3 — https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=7212\n  «Insurance is compulsory for all salaried workers.»\n• Ley General de Migración y Extranjería N.º 8764 (General Law on Migration), Art. 7 — https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=66139\n  «Migration policy shall guarantee the integration of foreigners into the social security system.»",
+   "international_text_en": "ILO Convention No. 102 (ratified 1972) applies directly under Constitution art. 7.",
+   "experimental": true
+  },
+  {
+   "id": 1004111,
+   "country_id": 1004,
+   "question_id": 111,
+   "text_en": "No unemployment insurance exists in Costa Rica; the protections closest to it are open to migrant workers on the same terms as nationals. The Labour Code (Código de Trabajo), article 29, grants auxilio de cesantía on dismissal without cause, and the Worker Protection Law (Ley de Protección al Trabajador N.º 7983), article 3, creates the Fondo de Capitalización Laboral, paid out on termination. Both depend on formal salaried employment. (Invented for the cost-test fixture.)",
+   "local_text_en": "• Código de Trabajo (Labour Code), Art. 29 — https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=8045\n  «If the employment contract is terminated by the employer without just cause, the employer shall pay the worker severance.»\n• Ley de Protección al Trabajador N.º 7983 (Worker Protection Law), Art. 3 — https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=44011\n  «Every employer shall contribute three percent of the monthly wage to the labour capitalisation fund.»",
+   "international_text_en": null,
+   "experimental": true
+  }
+ ],
+ "lawmap": null
+}

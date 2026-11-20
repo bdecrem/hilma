@@ -102,6 +102,19 @@ alone failed every detention answer, because evidence about detained irregular m
 about all migrants"; the check now asks whether the evidence fits the people the right matters for.
 A quote the check marks "partly" (an ellipsis, a longer article) is not a failure.
 
+## Cost tests (since 2026-11-20)
+
+What each step costs by model and effort, on one chunk at a time: the why, the tests and the schedule are in `COST-TEST.md`.
+Nothing is ingested or written to a table; each run leaves a row in `cost/LOG.md` and a file in `cost/results/`, committed and pushed.
+
+```bash
+node cc/cost.mjs sources costa_rica --chunk labor_c --model claude-sonnet-5-5 --effort low       # sources | verify | redo (audit.py --emit --readonly)
+node cc/cost.mjs forward costa_rica --chunk labor_c --model claude-opus-5-5 --effort high        # forward | back | timeline (history.py)
+node cc/cost.mjs back costa_rica --fixture cost/fixture-chunk.json --model claude-opus-5-5 --effort high --dry   # print the job and the meters, run nothing
+./cost-run.sh cost/<list>.txt      # one cost.mjs line per job; skips what LOG.md has as ok, stops at the plan limit
+```
+Above 85% of the window or 90% of the week a run refuses to start unless `--to-the-limit`.
+
 ## What the data taught us
 
 - **The MRD's answers and citations point at the wrong question ids from id 73 on.** Its `questions`
