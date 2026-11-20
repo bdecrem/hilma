@@ -302,7 +302,8 @@ async function workRun(issue, tickets) {
       const made = run('git', ['log', 'origin/main', `--since=${started}`, '-E', `--grep=OLA-${n}([^0-9]|$)`, '--format=%h']).stdout.trim()
       const now = (await db.from('venture_issues').select('status, updated_at').eq('id', id).maybeSingle()).data
       const blocked = /RUNNER:\s*blocked by (OLA-\d+)/i.exec(res.result)?.[1] ?? null
-      const r = afterRun(before, { status: now?.status, made: !!made, blockedBy: blocked })
+      const waitUntil = /RUNNER:\s*waiting until (\S+)/i.exec(res.result)?.[1] ?? null
+      const r = afterRun(before, { status: now?.status, made: !!made, blockedBy: blocked, waitUntil: waitUntil && !Number.isNaN(Date.parse(waitUntil)) ? waitUntil : null })
       outcome = r.outcome
       if (r.giveUp) {
         run('node', ['scripts/venture/issues.mjs', 'comment', id, `The runner on the mini worked on this ${r.next.runs} time(s) and could not finish it. Its last words: ${res.result.replace(/\s+/g, ' ').slice(0, 300)}. It has moved on to the next ticket; a comment or an edit here puts this one back in its queue.`, '--who', 'runner'])

@@ -41,6 +41,9 @@ close it with proof. Nobody will answer a question in this run.
   exactly what is done and what is left. The next run continues.
 - **It waits on another ticket** that is not done: comment which one and why, change nothing
   else, and end your summary with the line `RUNNER: blocked by OLA-n`.
+- **It waits on a time**, not a ticket or Bart (an allowance that resets, a date): comment when it
+  comes back, change nothing else, and end with `RUNNER: waiting until <ISO time>`, e.g.
+  `RUNNER: waiting until 2026-11-23T00:00Z`. The runner leaves it alone until then.
 
 ## Never, in any run
 
@@ -67,4 +70,4 @@ You have about 80 minutes. Before you stop: the ticket's comment, a line in
 line in `LOG.md` starting "runner:". The runner pushes the private folder when you exit.
 
 End with a short plain summary of what you did (it goes to a log file), and as its last line one of:
-`RUNNER: done`, `RUNNER: waiting on Bart`, `RUNNER: progress`, `RUNNER: blocked by OLA-n`.
+`RUNNER: done`, `RUNNER: waiting on Bart`, `RUNNER: progress`, `RUNNER: blocked by OLA-n`, `RUNNER: waiting until <ISO time>`.

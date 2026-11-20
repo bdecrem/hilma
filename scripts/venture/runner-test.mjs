@@ -114,4 +114,17 @@ ok('the line: working, IDLE, the limit', () => {
   assert.match(leadLine(issues, { claims: { 'OLA-1': { who: 'builder', at: ago(5), since: ago(40) } }, now: NOW }).text, /Working on OLA-1 since .* \(builder\)/)
   assert.match(leadLine(issues, { runner: { running: false, ended: ago(90) }, limit: { kind: 'limit', until: new Date(NOW + 3600e3).toISOString() }, now: NOW }).text, /limit reached, starts again/)
 })
+ok('a run that waits on a time is left alone until then, and is not a failed run', () => {
+  const r = afterRun({ runs: 2, fails: 1 }, { status: 'in_progress', made: false, waitUntil: '2026-11-23T00:00Z', now: NOW })
+  assert.equal(r.giveUp, false)
+  assert.equal(r.next.fails, 0)
+  assert.equal(r.next.waitUntil, '2026-11-23T00:00:00.000Z')
+  const issues = [I(174, 'P1', 'in_progress', { who: 'runner' }), I(200, 'P2')]
+  const p = pickTicket(issues, { tickets: { 'OLA-174': r.next }, now: NOW })
+  assert.equal(p.pick.id, 'OLA-200')
+  assert.match(p.passed[0].why, /waits until 2026-11-23/)
+  assert.equal(pickTicket(issues, { tickets: { 'OLA-174': r.next }, now: Date.parse('2026-11-23T00:01Z') }).pick.id, 'OLA-174')
+  assert.equal(afterRun({}, { status: 'in_progress', made: false, waitUntil: ago(5), now: NOW }).next.fails, 1)
+})
+
 console.log(`${n} checks passed`)

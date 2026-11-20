@@ -150,7 +150,8 @@ goes to sleep for no reason and FOREVER." A tick now:
    each run the clone is reset to `origin/main` (anything left over is saved to
    the log folder first). A ticket that two runs could not move (no commit, not
    finished), or four runs in all, gets a comment and is passed over until it
-   changes; a run that says `RUNNER: blocked by OLA-n` waits for that ticket.
+   changes; a run that says `RUNNER: blocked by OLA-n` waits for that ticket, and one that says
+   `RUNNER: waiting until <ISO time>` waits for that time (no failed run counted).
    What a work run must never do (destructive operations, spending, anything
    sent outside, who can sign in, a Chinese open-weights model in Ola without
    his yes) goes to Bart as waiting, with one line saying what he must decide.

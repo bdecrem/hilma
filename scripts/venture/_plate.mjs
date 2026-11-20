@@ -53,6 +53,7 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
     if (isRecurring(i, recurring)) { passed.push({ id: i.id, why: 'a recurring job (it runs on its own schedule)' }); continue }
     if (/^bart$/i.test(i.who ?? '')) { passed.push({ id: i.id, why: "Bart's own" }); continue }
     if (t.blockedBy && byId.get(t.blockedBy) && !['done', 'dropped'].includes(byId.get(t.blockedBy).status)) { passed.push({ id: i.id, why: `waits for ${t.blockedBy}` }); continue }
+    if (t.waitUntil && Date.parse(t.waitUntil) > now) { passed.push({ id: i.id, why: `waits until ${t.waitUntil.slice(0, 16)}Z (a time, not a ticket or Bart)` }); continue }
     if (t.skippedAt && Date.parse(i.updated_at ?? 0) <= Date.parse(t.skippedAt)) { passed.push({ id: i.id, why: `the runner gave up on it ${new Date(t.skippedAt).toISOString().slice(0, 16)}Z (a comment or an edit puts it back)` }); continue }
     return { pick: i, passed }
   }
@@ -60,8 +61,10 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
 }
 
 /** After a run: what to record for the ticket. made: commits naming it landed on main during the run. */
-export function afterRun(prev = {}, { status, made, blockedBy = null, now = Date.now() }) {
+export function afterRun(prev = {}, { status, made, blockedBy = null, waitUntil = null, now = Date.now() }) {
   if (['done', 'dropped', 'waiting'].includes(status)) return { next: { runs: 0, fails: 0 }, giveUp: false, outcome: status }
+  // "RUNNER: waiting until <time>": blocked by the clock (an allowance that resets, a date). Not a failed run.
+  if (waitUntil && Date.parse(waitUntil) > now) return { next: { runs: prev.runs ?? 0, fails: 0, waitUntil: new Date(Date.parse(waitUntil)).toISOString() }, giveUp: false, outcome: `waits until ${waitUntil}` }
   if (blockedBy) return { next: { ...prev, blockedBy }, giveUp: false, outcome: `blocked by ${blockedBy}` }
   const runs = (prev.runs ?? 0) + 1
   const fails = made ? 0 : (prev.fails ?? 0) + 1
