@@ -196,13 +196,41 @@ final class AccountController {
   /// request was sent with (OLA-252: a fresh sign-in was forgotten a second later, or the app crashed,
   /// when an answer about an older sign-in came back after it). Only the sign-in kept now is ended;
   /// nil (the caller cannot tell) ends it only when this Mac no longer holds one at all.
-  func signedOutByServer(token: String?) {
+  ///
+  /// A 401 about the current sign-in is then checked with the server's own sign-in check
+  /// (AccountAPI.confirmsSignedOut): the model gateway refuses a person's brand-new token for about
+  /// 100 ms after their first device signs in, and that was the "signed out a second after signing
+  /// in" of OLA-252's second round (2 of 20 fresh sign-ins). Only a refusal there ends the sign-in.
+  func signedOutByServer(token: String?, from what: String = "") {
     guard signedIn else { return }
     if let token {
-      guard AccountKeeper.isCurrent(token) else { return }
+      guard AccountKeeper.isCurrent(token) else { Self.trace?("a 401 \(what) about an earlier sign-in: ignored"); return }
     } else if AccountKeeper.session != nil {
       return
     }
+    guard let s = AccountKeeper.session else { endSignIn(); return }
+    guard !checking else { return }
+    checking = true
+    Self.trace?("a 401 \(what) for this sign-in: asking the server whether it is over")
+    Task {
+      let over = await api.confirmsSignedOut(s)
+      checking = false
+      guard signedIn, AccountKeeper.isCurrent(s.token) else { return }
+      if over {
+        Self.trace?("the server says this sign-in is over")
+        endSignIn()
+      } else {
+        Self.trace?("the server says this sign-in is good: kept (the 401 was the gateway's)")
+        door?.reopen()
+        if usage == nil { try? await Task.sleep(nanoseconds: 2_000_000_000); refreshUsage() }
+      }
+    }
+  }
+  private var checking = false
+  /// What happens to the sign-in, for a drive's log (MacDrive sets it; nil in the app).
+  nonisolated(unsafe) static var trace: ((String) -> Void)?
+
+  private func endSignIn() {
     forgetHere()
     phase = .expired
     onSignedOut?()
@@ -221,7 +249,7 @@ final class AccountController {
   func refreshUsage() {
     Task {
       guard let s = AccountKeeper.session else { return }
-      do { usage = try await api.usage(s) } catch AccountError.signedOut { signedOutByServer(token: s.token) } catch {}
+      do { usage = try await api.usage(s) } catch AccountError.signedOut { signedOutByServer(token: s.token, from: "to usage") } catch {}
     }
   }
 
@@ -237,7 +265,7 @@ final class AccountController {
       // from a door this controller has since replaced says nothing about the current sign-in.
       d.onSignedOut = { [weak d] in Task { @MainActor [weak self] in
         guard let self, let d, self.door === d else { return }
-        self.signedOutByServer(token: AccountKeeper.session?.token)
+        self.signedOutByServer(token: AccountKeeper.session?.token, from: "through the model door")
       } }
       d.allowHosted = { [g = hostedGate] in g.isOpen }
       door = d

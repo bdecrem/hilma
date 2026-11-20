@@ -54,6 +54,9 @@ public final class ModelDoor: @unchecked Sendable {
   /// The server said this sign-in is over (sticky for this door; a new sign-in makes a new door).
   public var isSignedOut: Bool { lock.withLock { signedOut } }
 
+  /// The app checked and the sign-in is still good (AccountAPI.confirmsSignedOut): open again.
+  public func reopen() { lock.withLock { signedOut = false } }
+
   /// Tells the app once, however many requests saw it.
   func markSignedOut() {
     let first = lock.withLock { () -> Bool in

@@ -126,7 +126,7 @@ struct MacRoot: View {
     }
     // The cloud refused this Mac's key (signed out on the website, or removed under Your devices):
     // the sign-in screen asks again (OLA-150; the cloud has no password of its own).
-    .onChange(of: store.connection) { _, c in if c == .refused, store.config?.account == true { whereOla?.account?.signedOutByServer(token: store.config?.password) } }
+    .onChange(of: store.connection) { _, c in if c == .refused, store.config?.account == true { whereOla?.account?.signedOutByServer(token: store.config?.password, from: "from the cloud project") } }
     .onAppear {
       if store.selectedID == nil, let s = savedSelection { store.selectedID = s }
       store.onFiles = { filesShown.toggle() }

@@ -264,6 +264,17 @@ public struct AccountAPI: Sendable {
   }
 
   /// Who this device is signed in as (also proves the token still works).
+  /// Whether the server's own sign-in check says this device is signed out (OLA-252). A 401 from the
+  /// model gateway behind /api/device/gw is not that check: right after a person's first device signs
+  /// in (or signs in again after "sign out everywhere"), the front desk writes the person a new
+  /// gateway token and the gateway takes about 100 ms to read it, and answers "unknown caller" (401)
+  /// until then (gateway.log on the mini, 2026-11-20 22:31:36: the 401 27 ms before the reload).
+  /// So a 401 ends the sign-in only when /api/device/me refuses it too; an answer that does not come
+  /// (offline, the server down) keeps it.
+  public func confirmsSignedOut(_ s: AccountSession) async -> Bool {
+    do { _ = try await me(s); return false } catch AccountError.signedOut { return true } catch { return false }
+  }
+
   public func me(_ s: AccountSession) async throws -> AccountSession {
     var r = URLRequest(url: url("/api/device/me"))
     r.setValue("Bearer \(s.token)", forHTTPHeaderField: "Authorization")

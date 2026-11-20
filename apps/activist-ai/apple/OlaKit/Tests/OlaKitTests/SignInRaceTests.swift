@@ -61,6 +61,39 @@ final class SignInRaceTests: XCTestCase {
     XCTAssertEqual(told.value, 1)
   }
 
+  /// The second round (2 of 20 fresh sign-ins): the model gateway answered a brand-new sign-in's
+  /// first usage request with 401 "unknown caller" before it had read the person's new token. A 401
+  /// through /api/device/gw is not the server's sign-in check: /api/device/me is, and only its
+  /// refusal ends the sign-in. Offline (no answer) keeps it too.
+  func testAGateway401IsNotASignOutWhenTheServerSaysTheSignInIsGood() async throws {
+    let revoked = Box("")
+    let server = try MiniHTTPServer(host: "127.0.0.1", port: 0) { req, res in
+      let bearer = (req.header("authorization") ?? "").replacingOccurrences(of: "Bearer ", with: "")
+      if req.path.hasPrefix("/api/device/gw/") { return await res.send(401, JSON.object(["error": "unknown caller"]).data) }
+      if req.path == "/api/device/me" {
+        if bearer == revoked.get() { return await res.send(401, JSON.object(["error": "signed_out"]).data) }
+        return await res.send(200, StubOla.session(bearer).data)
+      }
+      return await res.send(404, Data())
+    }
+    let port = try await server.start()
+    let api = AccountAPI(base: URL(string: "http://127.0.0.1:\(port)")!)
+    func s(_ t: String) -> AccountSession { AccountSession(token: t, expiresAt: nil, person: .init(handle: "appdriver", name: "Made up", admin: false), device: .init(id: "1", name: "Test Mac", kind: "mac")) }
+    // The usage request is refused by the gateway, as it was in the failed runs...
+    do { _ = try await api.usage(s("token-new")); XCTFail("no error") } catch let e as AccountError { XCTAssertEqual(e, .signedOut) }
+    // ...but the server's own check says the sign-in is good: not over.
+    let goodOver = await api.confirmsSignedOut(s("token-new"))
+    XCTAssertFalse(goodOver, "a gateway 401 ended a sign-in the server still holds")
+    // A sign-in the server ended is over.
+    revoked.set("token-old")
+    let revokedOver = await api.confirmsSignedOut(s("token-old"))
+    XCTAssertTrue(revokedOver)
+    // No answer at all: kept.
+    server.stop()
+    let offlineOver = await api.confirmsSignedOut(s("token-new"))
+    XCTAssertFalse(offlineOver)
+  }
+
   /// Which sign-in a refused request was about: only the one kept now counts.
   func testOnlyTheSignInKeptNowIsCurrent() {
     let saved = (SecretStore.backend, AccountKeeper.defaults)

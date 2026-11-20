@@ -137,6 +137,7 @@ enum MacDrive {
     record = Record(bundle: Bundle.main.bundlePath, version: info["CFBundleShortVersionString"] as? String ?? "?", build: info["CFBundleVersion"] as? String ?? "?",
                     where: s.where, project: s.project, handle: s.handle, started: ISO8601DateFormatter().string(from: Date()))
     say("Ola \(record.version) (\(record.build)) at \(record.bundle), \(s.where)")
+    AccountController.trace = { line in Task { @MainActor in say("account: " + line) } }
     Task { @MainActor in
       do {
         try await run(s, delegate: delegate)
