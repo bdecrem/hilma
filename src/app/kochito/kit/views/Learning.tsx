@@ -1,4 +1,4 @@
-import type { BoardData, Issue, Learning, Sweep, SweepChange, SweepIdea, Sweeps, Weakness } from '@/lib/venture/board'
+import { openCounts, type BoardData, type Issue, type Learning, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
@@ -252,7 +252,7 @@ function Ideas({ days, base, issues }: { days: Sweep[]; base: string; issues: Is
   )
 }
 
-function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak: Weakness[] }) {
+function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string; weak: Weakness[]; open: { n: number; yesterday: number } }) {
   return (
     <>
       <div className="bd-sweep-head">
@@ -261,6 +261,9 @@ function Day({ s, now, base, weak }: { s: Sweep; now: string; base: string; weak
           swept {pday(s.at) === s.day ? clock(s.at) : at(s.at, now)} by {s.by}
         </span>
       </div>
+      <p className="bd-sweep-count">
+        Open issues: <b>{open.n}</b> <span className="faint">(yesterday: {open.yesterday})</span>
+      </p>
       <p className="bd-sweep-sum">{inline(s.summary)}</p>
       {s.pattern && (
         <p className="bd-sweep-sum pattern">
@@ -399,7 +402,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
               shown++
               return shown <= OPEN ? (
                 <li key={day} id={`d-${day}`}>
-                  <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} />
+                  <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} open={s.openIssues ?? openCounts(d.issues ?? [], Date.parse(now), s.day)} />
                 </li>
               ) : (
                 <li key={day} id={`d-${day}`} className="fold">
@@ -411,7 +414,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
                         {s.kit.length + s.ola.length} {s.kit.length + s.ola.length === 1 ? 'change' : 'changes'}
                       </span>
                     </summary>
-                    <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} />
+                    <Day s={s} now={now} base={base} weak={l?.weaknesses ?? []} open={s.openIssues ?? openCounts(d.issues ?? [], Date.parse(now), s.day)} />
                   </details>
                 </li>
               )

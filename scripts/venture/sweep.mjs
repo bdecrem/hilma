@@ -27,6 +27,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
 import { loadWeaknesses, weaknessStatus, WEAK_FILE } from './_weak.mjs'
+import { openCounts } from './_plate.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = Object.fromEntries(
@@ -244,6 +245,14 @@ if (cmd === '--wait') {
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
   const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}) }
+  // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
+  // "the daily update on the dashboard should always list the open issues count from now on"), kept
+  // with the entry so a past day keeps its own number.
+  {
+    const r = await db.from('venture_issues').select('status, opened_at, finished_at').eq('project', 'ola')
+    if (r.error) die(`venture_issues: ${r.error.message}`)
+    entry.openIssues = openCounts(r.data, Date.now(), entry.day)
+  }
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
   await setState(db, 'sweeps', value)

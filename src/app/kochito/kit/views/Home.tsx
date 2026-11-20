@@ -1,8 +1,8 @@
-import type { BoardData } from '@/lib/venture/board'
+import { openCounts, type BoardData } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { Health } from '../health'
 import { firstLink, inline } from '../inline'
-import { ago, clock, dayShort, pday, shiftDay, since } from '../time'
+import { clock, dayShort, pday, shiftDay, since } from '../time'
 import { LearningFigures, sweepStats } from './Learning'
 
 // Home (app.kochitolabs.com/): what needs Bart and the state of things, on one screen at 1440 x 900.
@@ -10,14 +10,14 @@ import { LearningFigures, sweepStats } from './Learning'
 // through, each item with a link to read up on it during the call; Bart, Nov 19, 2026: "the agenda
 // for the check-in list should be on the app homepage, and it should have a link to each item");
 // Needs you (everything else that waits on him, nothing that is already on the agenda, every line
-// with something to click); Now (counts that open the tracker filtered, and Kit's latest "Now");
+// with something to click); Issues (the open count beside yesterday's, every ticket blocking on him
+// as a link, and who is working or since when no one is: OLA-211, OLA-212);
 // Health (the one reading) and This week in the plan beside Learning (the two headline figures
-// and the latest daily sweep in a line; the rest is on the Learning page). No issue list
-// other than Needs you: every issue is listed in the Issue Tracker only.
+// and the latest daily sweep in a line; the rest is on the Learning page). No issue list other
+// than Needs you and the tickets blocking on him: every issue is listed in the Issue Tracker only.
 
 const plain = (s: string) => s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 const firstSentence = (s: string) => plain(s).split(/(?<=[.!?])\s+(?=[A-Z])/)[0] ?? ''
-const LEAD_STALE = 3 * 3600e3
 
 export default function Home({ d, base }: { d: BoardData; base: string }) {
   const now = d.now
@@ -33,15 +33,13 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
   const waiting = issues.filter((i) => i.status === 'waiting' && !onAgenda.has(i.id)).sort((a, b) => a.priority.localeCompare(b.priority))
   const toDecide = d.journal.toDecide.filter((x) => !/^nothing/i.test(x.text) && !ids(x.text).some((id) => onAgenda.has(id)))
   const needs = waiting.length + toDecide.length
-  const count = {
-    doing: issues.filter((i) => i.status === 'in_progress').length,
-    next: issues.filter((i) => i.status === 'open').length,
-    waiting: issues.filter((i) => i.status === 'waiting').length,
-    doneToday: issues.filter((i) => i.status === 'done' && i.day === today).length,
-    openedToday: issues.filter((i) => pday(i.opened_at) === today).length,
-  }
-  const nowText = plain(d.journal.now.replace(/^\*([^*]+)\*\s*/, ''))
-  const leadStale = !d.journal.at || Date.parse(now) - Date.parse(d.journal.at) > LEAD_STALE
+  // Issues (Bart, Nov 19, OLA-212: "rename it from Now to Issues and just list them as bullets ...
+  // the layout is passive and discourages me from engaging"): the open count and yesterday's, both
+  // from the tracker's records; every ticket waiting on him, each a link; who is working (OLA-211).
+  const open = openCounts(issues, Date.parse(now))
+  const blocking = issues.filter((i) => i.status === 'waiting').sort((a, b) => a.priority.localeCompare(b.priority) || a.num - b.num)
+  const lead = d.lead
+  const when = (t: string) => (pday(t) === today ? clock(t) : `${dayShort(pday(t))}, ${clock(t)}`)
 
   // the plan's current week
   const plan = d.plan
@@ -123,34 +121,50 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
         )}
       </section>
 
-      <section className="bd-sec" aria-labelledby="now-h">
-        <h2 id="now-h">Now</h2>
+      <section className="bd-sec" aria-labelledby="issues-h">
+        <h2 id="issues-h">Issues</h2>
         {d.issues === null ? (
           <p className="bd-empty">The tracker is not set up yet.</p>
         ) : (
-          <nav className="bd-now" aria-label="Work by status">
-            <a href={T('tab=doing')}>
-              Doing <b>{count.doing}</b>
-            </a>
-            <a href={T('tab=next')}>
-              Next up <b>{count.next}</b>
-            </a>
-            <a href={T('tab=waiting')} className={count.waiting ? 'hot' : ''}>
-              Waiting on you <b>{count.waiting}</b>
-            </a>
-            <a href={T('tab=done&day=today')}>
-              Done today <b>{count.doneToday}</b>
-            </a>
-            <a href={T('tab=all&opened=today')}>
-              Opened today <b>{count.openedToday}</b>
-            </a>
-          </nav>
-        )}
-        {nowText && (
-          <p className={`bd-lead${leadStale ? ' stale' : ''}`} title={nowText}>
-            <span className="m">Kit, {d.journal.at ? (pday(d.journal.at) === today ? clock(d.journal.at) : ago(d.journal.at, now)) : 'never'}</span>
-            {nowText}
-          </p>
+          <ul className="bd-issues">
+            <li>
+              Open issues:{' '}
+              <a href={T('tab=open')} className="num">
+                {open.n}
+              </a>{' '}
+              <span className="faint">(yesterday: {open.yesterday})</span>
+            </li>
+            <li>
+              Blocking on input from you:{' '}
+              <a href={T('tab=waiting')} className={`num${blocking.length ? ' red' : ''}`}>
+                {blocking.length}
+              </a>
+              {blocking.length > 0 && (
+                <ul>
+                  {blocking.map((i) => (
+                    <li key={i.id}>
+                      <a href={issueHref(i.id)}>
+                        <span className="id">{i.id}</span> {i.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+            <li className={lead.idle ? 'idle' : ''}>
+              {lead.working ? (
+                <>
+                  Working on <a href={issueHref(lead.working.id)}>{lead.working.id}</a> since {when(lead.working.since)}
+                  {lead.working.who !== 'runner' && <span className="faint"> ({lead.working.who})</span>}
+                </>
+              ) : (
+                <>
+                  Idle since {lead.lastActive ? when(lead.lastActive) : 'the start'}, {open.n} open
+                </>
+              )}
+              {lead.paused && <span className="faint"> · {lead.paused.kind === 'error' ? 'paused after a failed start' : 'the plan’s limit was reached'}, starts again {when(lead.paused.until)}</span>}
+            </li>
+          </ul>
         )}
       </section>
 

@@ -91,7 +91,20 @@ export type BoardData = {
   sweeps: Sweeps | null // venture_state "sweeps", written by scripts/venture/sweep.mjs post
   learnNote: { slug: string; title: string; lede: string } | null // the note on the two learning loops: its title and first paragraph, shown at the top of Learning
   apiUse: Record<string, Record<string, { calls: number; in: number; write: number; read: number; out: number }>> | null // venture_state "api_use" (the meter in talk.ts), by day and kind
+  lead: Lead // who is working right now (the runner on the mini, or a session's claim), or idle since when
 }
+/** Who is working (OLA-211), the line `runner.mjs status` prints: the runner's record (venture_state
+ *  "runner"), the live claims ("claim:OLA-n", 45 minutes) and the usage-limit pause ("runner_limit").
+ *  Same rule as leadLine() in scripts/venture/_plate.mjs: idle in red when P0/P1 tickets are open and
+ *  no run and no claim in the last hour. */
+export type Lead = {
+  working: { id: string; since: string; who: string } | null
+  idle: boolean
+  lastActive: string | null
+  paused: { kind: 'limit' | 'error'; until: string; text: string } | null
+}
+export type RunnerState = { running?: boolean; ticket?: string | null; started?: string; ended?: string; why?: string[] }
+export type Claim = { who: string; since?: string; at: string }
 /** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
  *  the share of Bart's corrections that were new, not repeats; Ola, its own model's score on the
  *  test tasks as a share of Claude's. Missing or older than a day: the board says so. */
@@ -139,6 +152,9 @@ export type Sweep = {
    *  system itself, and on Nov 26 the review. */
   learning?: { changed: string; why: string; where: string; enforced?: boolean; issue?: string }
   learningReview?: { text: string; issue?: string }
+  /** The tracker's open count when the entry was posted, and at the end of the day before (OLA-212;
+   *  sweep.mjs post computes both from the records). Older entries have none: the page counts them. */
+  openIssues?: { n: number; yesterday: number }
 }
 export type Sweeps = { at: string; since: string; days: Sweep[] }
 
@@ -225,18 +241,58 @@ export function parsePlan(slug: string, title: string, body: string, written: st
   return weeks.length ? { slug, title, start: (start && weekDates(`${start} to 1`, year)?.[0]) || weeks[0].from, end: end ?? weeks[weeks.length - 1].to, weeks } : null
 }
 
+// ---------------------------------------------------------------- open counts and who is working
+/** Epoch ms of midnight Pacific at the start of a Pacific day (YYYY-MM-DD). */
+export function pacificMidnight(day: string): number {
+  const guess = Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10)))
+  const off = (t: number) => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }).formatToParts(new Date(t)).map((x) => [x.type, x.value]))
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute) - t
+  }
+  return guess - off(guess - off(guess))
+}
+type Countable = Pick<Issue, 'status' | 'opened_at' | 'finished_at'>
+/** Tickets open at time t: opened before it, and not done or dropped before it. */
+export const openAt = (issues: Countable[], t: number) => issues.filter((i) => Date.parse(i.opened_at) < t && !((i.status === 'done' || i.status === 'dropped') && i.finished_at && Date.parse(i.finished_at) < t)).length
+/** "Open issues: N (yesterday: M)" from the tracker's records: N now (or at the end of a past day),
+ *  M at the end of the day before. Needs every ticket that was open in that span (loadBoard's set). */
+export function openCounts(issues: Countable[], now: number, day?: string): { n: number; yesterday: number } {
+  const today = pacificDay(now)
+  const d = day ?? today
+  const end = d >= today ? now : pacificMidnight(pacificDay(pacificMidnight(d) + 36 * 3600e3))
+  return { n: openAt(issues, end), yesterday: openAt(issues, pacificMidnight(d)) }
+}
+const CLAIM_TTL = 45 * 60e3
+export function leadFrom(issues: Pick<Issue, 'status' | 'priority'>[], runner: RunnerState | null, claims: Record<string, Claim>, limit: Lead['paused'] | null, now: number): Lead {
+  const live = Object.entries(claims).filter(([, c]) => now - Date.parse(c.at) < CLAIM_TTL)
+  const runStale = !!runner?.running && now - Date.parse(runner.started ?? '') > 3 * 3600e3
+  let working: Lead['working'] = null
+  if (runner?.running && !runStale && runner.ticket && runner.started) working = { id: runner.ticket, since: runner.started, who: 'runner' }
+  else if (live.length) {
+    const [id, c] = live.sort((a, b) => Date.parse(a[1].since ?? a[1].at) - Date.parse(b[1].since ?? b[1].at))[0]
+    working = { id, since: c.since ?? c.at, who: c.who }
+  }
+  const times = [runner?.ended, runner?.started, ...Object.values(claims).map((c) => c.at)].filter((t): t is string => !!t).map((t) => Date.parse(t))
+  const last = times.length ? Math.max(...times) : null
+  const urgent = issues.some((i) => ['open', 'in_progress', 'waiting'].includes(i.status) && (i.priority === 'P0' || i.priority === 'P1'))
+  const busy = !!working || (!!runner?.running && !runStale)
+  return { working, idle: urgent && !busy && (last === null || now - last > 3600e3), lastActive: last === null ? null : new Date(last).toISOString(), paused: limit && Date.parse(limit.until) > now ? limit : null }
+}
+
 const missing = (e: { code?: string; message?: string } | null) => !!e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? ''))
 
 export async function loadBoard(): Promise<BoardData> {
   const db = f2Supabase()
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
-  const [docs, state, issuesR, commitsR] = await Promise.all([
+  const [docs, state, issuesR, commitsR, claimsR] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG, LEARN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
+    db.from('venture_state').select('key, value, at').like('key', 'claim:%'),
   ])
   if (docs.error) throw new Error(`venture_docs read failed: ${docs.error.message}`)
+  if (claimsR.error) throw new Error(`venture_state read failed: ${claimsR.error.message}`)
   if (state.error) throw new Error(`venture_state read failed: ${state.error.message}`)
   if (issuesR.error && !missing(issuesR.error)) throw new Error(`venture_issues read failed: ${issuesR.error.message}`)
   if (commitsR.error && !missing(commitsR.error)) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
@@ -267,6 +323,13 @@ export async function loadBoard(): Promise<BoardData> {
     sweeps: (st('sweeps')?.value ?? null) as Sweeps | null,
     learnNote: learnRow ? { slug: LEARN_SLUG, title: learnRow.title, lede: firstParagraph(learnRow.body ?? '') } : null,
     apiUse: ((st('api_use')?.value as { days?: BoardData['apiUse'] } | undefined)?.days ?? null) as BoardData['apiUse'],
+    lead: leadFrom(
+      issues ?? [],
+      (st('runner')?.value ?? null) as RunnerState | null,
+      Object.fromEntries((claimsR.data ?? []).map((r) => [String(r.key).slice('claim:'.length), { ...(r.value as Omit<Claim, 'at'>), at: r.at as string }])),
+      (st('runner_limit')?.value ?? null) as Lead['paused'],
+      Date.now(),
+    ),
   }
 }
 

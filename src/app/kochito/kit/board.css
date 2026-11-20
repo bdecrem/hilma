@@ -8,7 +8,7 @@
      figures); JetBrains Mono only for identifiers (OLA-150, a version). Faces from src/fonts
      (--bd-instrument in kit/layout.tsx, --kl-mono in the /kochito layout).
    - sizes: body and tables 14px, secondary 12.5px, page title 22px, section titles 15px in
-     sentence case. The five counts under "Now" on Home are the one loud thing (28px).
+     sentence case. The counts under "Issues" on Home are the loud figures (20px; OLA-212).
    - density: table rows 30 to 32px, sections 20 to 24px apart, the menu 208px wide with 30px rows,
      content up to 1180px.
    - color: Ola's "paper under the lamp" (apps/activist-ai/apple/Shared/Theme.swift): the menu is
@@ -156,6 +156,21 @@
 .bd-lead { margin-top: 10px; color: var(--ink); max-width: 76em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .bd-lead .m { color: var(--ink-3); margin-right: 8px; }
 .bd-lead.stale .m { color: var(--amber); }
+/* Issues on Home (OLA-212, replaced "Now"): three bullets he can act on, the counts in the loud
+   figure face, the blocking tickets as links under the second, the lead's line last (red when idle). */
+.bd .bd-issues { list-style: disc; margin: 0; padding: 0 0 0 20px; color: var(--ink); font-size: 15px; line-height: 1.5; }
+.bd-issues > li { padding: 3px 0; }
+.bd .bd-issues > li::marker { color: var(--ink-3); }
+.bd .bd-issues .num { font-family: var(--num, inherit); font-variant-numeric: tabular-nums; font-weight: 650; font-size: 20px; letter-spacing: -0.01em; color: var(--acc); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.bd .bd-issues .num.red { color: var(--red); }
+.bd-issues .faint { color: var(--ink-3); }
+.bd .bd-issues ul { list-style: none; margin: 2px 0 0; padding: 0; }
+.bd-issues ul li { padding: 2px 0; font-size: 14px; }
+.bd-issues ul .id { font-family: var(--mono); font-size: 12.5px; color: var(--red); margin-right: 6px; }
+.bd-issues > li.idle { color: var(--red); font-weight: 600; }
+.bd .bd-issues > li.idle::marker { color: var(--red); }
+.bd .bd-sweep-count { margin: 2px 0 6px; font-size: 13.5px; color: var(--ink-2); }
+.bd-sweep-count b { font-variant-numeric: tabular-nums; color: var(--ink); }
 .bd-home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 32px; }
 .bd-health { display: grid; grid-template-columns: 110px minmax(0, 1fr); border-top: 1px solid var(--line); }
 .bd-health dt, .bd-health dd { padding: 6px 0; border-bottom: 1px solid var(--line); min-height: 31px; }
