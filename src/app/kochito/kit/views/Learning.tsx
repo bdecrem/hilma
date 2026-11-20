@@ -702,13 +702,13 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
           </li>
           {d.status?.asks?.summary && (
             <li>
-              {/* OLA-251: "works" is two passes in a row; two passes with a fail between is "works sometimes (2 of 3)". */}
+              {/* OLA-251: the tests call two passes in a row "works" and 2 of 3 "works sometimes". OLA-298: the page says what was measured, because two in a row does not prove a request works (Nov 20: a request that failed 4 of 19 tries). */}
               <b>{d.status.asks.summary.passing}</b>
               <span>
-                of the request tests work (two passes in a row) on the test server
-                {d.status.asks.release ? ` (version ${d.status.asks.release})` : ''}; {d.status.asks.summary.worksSometimes} work sometimes (2 of 3)
-                {d.status.asks.worksSometimes?.length ? `: ${d.status.asks.worksSometimes.map((c) => c.case).join(', ')}` : ''}; {d.status.asks.summary.notWorkingYet} do not work yet
-                {d.status.asks.summary.stoppedWorking ? `, and ${d.status.asks.summary.stoppedWorking} stopped working` : ''}.
+                of the request tests passed two tries in a row on the test server
+                {d.status.asks.release ? ` (version ${d.status.asks.release})` : ''}; {d.status.asks.summary.worksSometimes} passed 2 of 3
+                {d.status.asks.worksSometimes?.length ? `: ${d.status.asks.worksSometimes.map((c) => c.case).join(', ')}` : ''}; {d.status.asks.summary.notWorkingYet} have not passed yet
+                {d.status.asks.summary.stoppedWorking ? `, and ${d.status.asks.summary.stoppedWorking} stopped passing` : ''}. Two passes in a row do not prove a request works: one that fails one try in five passes two in a row about two times in three.
               </span>
               <span className="t">{d.status.asks.at ? at(d.status.asks.at, now) : 'not run yet'}</span>
             </li>
@@ -718,7 +718,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
               {/* OLA-232: one line per thing Ola can be asked to do, at each place (evals/asks/abilities.json). */}
               <b>{d.status.asks.abilities.notRun}</b>
               <span>
-                of the {d.status.asks.abilities.lines} things Ola can be asked to do, counted once per place (a cloud project or the Mac; the website, the Mac app or the iPhone; chat or a screen), have not been tried on the live server by anyone: {d.status.asks.abilities.passing} passed when asked{d.status.asks.abilities.sometimes ? `, ${d.status.asks.abilities.sometimes} work sometimes (2 of 3)` : ''}, {d.status.asks.abilities.failing} failed, and {d.status.asks.abilities.notOffered} are not offered, with the sentence Ola gives instead.
+                of the {d.status.asks.abilities.lines} things Ola can be asked to do, counted once per place (a cloud project or the Mac; the website, the Mac app or the iPhone; chat or a screen), have not been tried on the live server by anyone: {d.status.asks.abilities.passing} passed when asked{d.status.asks.abilities.sometimes ? `, ${d.status.asks.abilities.sometimes} passed 2 of 3` : ''}, {d.status.asks.abilities.failing} failed, and {d.status.asks.abilities.notOffered} are not offered, with the sentence Ola gives instead.
               </span>
               <span className="t">{d.status.asks.at ? at(d.status.asks.at, now) : 'not run yet'}</span>
             </li>
