@@ -56,8 +56,15 @@ async function prepare(file, { local = false } = {}) {
 }
 
 function emptyProject() {
-  live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
-  const e = spawnSync('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'], { encoding: 'utf8' })
+  // Right after the last run stopped it, a start can return before the computer runs again: tried
+  // for up to a minute.
+  let e
+  for (let i = 0; i < 12; i++) {
+    live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
+    e = spawnSync('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'], { encoding: 'utf8' })
+    if (e.status === 0 || !/not running/.test(e.stderr || '')) break
+    spawnSync('/bin/sleep', ['5'])
+  }
   if (e.status !== 0) throw new Error(`emptying the project: ${(e.stderr || '').trim().slice(0, 200)}`)
 }
 
