@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Ola's services as launchd user agents (no sudo), one deploy command, and one status command.
 //
-//   node ops/ola.mjs deploy [<commit> | origin/main] [--unsigned]   (default origin/main; the commit
+//   node ops/ola.mjs deploy [<commit> | origin/main] [--unsigned] [--all]   (default origin/main; the commit
 //                                     must be signed by a key in ~/.ola/allowed-signers, or
 //                                     --unsigned, which is logged) the only way staging
 //                                     changes: fetch, unpack that commit as a new release, npm ci
@@ -11,8 +11,13 @@
 //                                     it drains, and the TLS front holds requests meanwhile, so a
 //                                     deploy drops none: OLA-94); on a failed suite the running version is
 //                                     left alone and the release is kept for a look
-//   node ops/ola.mjs check [<commit>] the deploy's steps and suites for one commit (default
-//                                     origin/main) without serving it (OLA-84): unpacked into
+//                                     The suites run are those the change since the deployed
+//                                     commit can affect, side by side (ops/select.mjs, OLA-283);
+//                                     --all runs every one; the log and deploys.log name the skipped
+//   node ops/ola.mjs check [<commit>] [--base <commit>] [--all]
+//                                     the deploy's steps and suites for one commit (default
+//                                     origin/main) without serving it (OLA-84), the suites picked
+//                                     against --base (default: the deployed commit): unpacked into
 //                                     checks/<commit12>, the turn taken as a builder (a deploy that
 //                                     arrives meanwhile goes first: the check gives the turn back
 //                                     between suites and is retried later), no signature needed
@@ -76,6 +81,7 @@ import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
 import { deployable } from './signers.mjs'
 import { unchanged } from './restart.mjs'
+import { changedFiles, lanes, plan } from './select.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -287,6 +293,16 @@ function install({ restart }) {
 
 // ---------------------------------------------------------------- commands
 const cmd = process.argv[2]
+/** The value after a flag (--base <commit>), or null. */
+function optArg(flag) {
+  const i = process.argv.indexOf(flag)
+  return i > 2 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : null
+}
+/** The commit to deploy or check: the first word that is no flag and no flag's value. */
+function refArg() {
+  const a = process.argv.slice(3)
+  return a.find((x, i) => !x.startsWith('--') && a[i - 1] !== '--base') || 'origin/main'
+}
 if (cmd === 'container-up') {
   const s = sh(CONTAINER, ['system', 'status'])
   if (s.status === 0 && /running/i.test(s.stdout)) console.log(`${new Date().toISOString()} container system already running`)
@@ -298,9 +314,9 @@ if (cmd === 'container-up') {
 } else if (cmd === 'install') {
   install({ restart: false })
 } else if (cmd === 'deploy') {
-  await deploy(process.argv.slice(3).find((a) => !a.startsWith('--')) || 'origin/main', { unsigned: process.argv.includes('--unsigned') })
+  await deploy(refArg(), { unsigned: process.argv.includes('--unsigned'), all: process.argv.includes('--all') })
 } else if (cmd === 'check') {
-  const r = await deploy(process.argv.slice(3).find((a) => !a.startsWith('--')) || 'origin/main', { check: true })
+  const r = await deploy(refArg(), { check: true, all: process.argv.includes('--all'), base: optArg('--base') })
   if (!r?.ok) process.exitCode = r?.yielded ? 3 : 1
 } else if (cmd === 'ci') {
   const { ciOnce } = await import('./ci.mjs')
@@ -552,7 +568,7 @@ function counts(tail) {
 // same unpack, dependencies, web build, image and suites, plus the Mac and iPhone apps' shared code
 // (OlaKit's swift test, no VM), and nothing is served. It returns { ok, commit, suites, why } (ok
 // null and yielded when it gave the turn to a deploy) and records it in checks.json / checks.log.
-async function deploy(ref, { unsigned = false, check = false } = {}) {
+async function deploy(ref, { unsigned = false, check = false, all = false, base = null } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
   const SUITES = [
@@ -567,6 +583,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     ['tls', ['--test', 'ops/tls-test.mjs']], // the TLS front (app.ola.cx's door), about a minute, no VM
     ['restart', ['--test', 'ops/restart-test.mjs']], // a deploy drops no request (OLA-94), seconds, no VM
     ['asks', ['--test', 'evals/asks/test.mjs']], // the asks' own checks, and Ola's instructions match abilities.json (OLA-232), seconds, no VM
+    ['select', ['--test', 'ops/select-test.mjs']], // which suites an update runs (OLA-283), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
@@ -658,6 +675,24 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
   const a = sh('/bin/sh', ['-c', 'git -C "$1" archive "$2" apps/activist-ai | tar -x -C "$3"', 'sh', STAGING, commit, rel])
   if (a.status !== 0 || !existsSync(path.join(code, 'ops/ola.mjs'))) return refuse(`could not unpack ${short}: ${a.stderr.trim()}`)
 
+  // Which suites run (OLA-283, ops/select.mjs): those the change since the last passed commit (the
+  // deployed one, or --base) can affect; every suite when it cannot tell, or with --all.
+  const baseRef = base ?? before?.commit ?? null
+  const baseCommit = baseRef ? git('rev-parse', '--verify', '--quiet', `${baseRef}^{commit}`).stdout.trim() || null : null
+  const names = [...(check ? ['apps'] : []), ...SUITES.map(([n]) => n)]
+  const changed = all ? null : changedFiles(git, baseCommit, commit)
+  const pick = all
+    ? { run: names, skip: [], all: '--all was asked for', why: {} }
+    : plan({ root: code, changed, suites: names, before: (f) => (baseCommit ? (git('show', `${baseCommit}:apps/activist-ai/${f}`).stdout ?? null) : null) })
+  const since = baseCommit ? ` since ${baseCommit.slice(0, 12)}` : ''
+  if (pick.all) say(`suites: all ${names.length} (${pick.all}${changed ? `; ${changed.length} file(s) changed${since}` : ''})`)
+  else {
+    say(`suites: ${pick.run.length} of ${names.length} for ${changed.length} changed file(s)${since}: ${pick.run.join(', ')}`)
+    for (const s of pick.run) say(`  runs ${s}: ${pick.why[s]}`)
+    for (const s of pick.skip) say(`  skipped ${s.name}: ${s.why}`)
+  }
+  const skipped = pick.skip.map((s) => s.name)
+
   // Dependencies: an APFS clone of the served release's node_modules where the lockfile is the
   // same, npm ci where it changed.
   const served = realpathSafe(SERVED)
@@ -685,7 +720,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
   // a temporary tag (ws.mjs buildImage), so a slow download only makes this step longer and never
   // leaves a half-built image or fails a suite on time.
   // The Mac and iPhone apps' shared code (OlaKit), a check only: no VM, so before the turn.
-  if (check && existsSync(path.join(code, 'apple/OlaKit/Package.swift'))) {
+  if (check && existsSync(path.join(code, 'apple/OlaKit/Package.swift')) && pick.run.includes('apps')) {
     const t0 = Date.now()
     say('suite apps: swift test (apple/OlaKit)')
     const s = await runLogged('/usr/bin/swift', ['test'], { cwd: path.join(code, 'apple/OlaKit'), out })
@@ -747,30 +782,61 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     process.on('exit', turn.release)
     say(`turn: the deploy holds it${turn.waitedMs > 2000 ? ` (waited ${Math.round((Date.now() - tw) / 1000)} s after building)` : ''}`)
   }
-  for (const [name, args] of SUITES) {
-    // A deploy waiting for the turn goes first: the check gives it back and is tried again later.
-    if (check && deployWaiting()) {
-      say(`a deploy is waiting: the check gives the turn back before suite ${name} and will be tried again`)
-      turn.release()
-      out.end()
-      rmSync(rel, { recursive: true, force: true })
-      return { ok: null, yielded: true, commit, suites }
-    }
-    const t0 = Date.now()
+  // Side by side in lanes (ops/select.mjs LANES): the VM suites one after the other, every other
+  // suite beside them. Each suite's output goes to the log in one piece when it ends. The front desk
+  // (and anything else that starts frontdesk/server.mjs) serves a copy of web/dist taken now, since
+  // the web suite builds web/dist again meanwhile. On a failure no new suite starts, the running
+  // ones finish, and the update is refused; a check gives the turn back the same way when a deploy
+  // waits.
+  const fdDist = path.join(rel, 'fd-dist')
+  rmSync(fdDist, { recursive: true, force: true })
+  if (sh('/bin/cp', ['-c', '-R', path.join(code, 'web/dist'), fdDist]).status !== 0) return refuse('could not copy web/dist for the suites')
+  const plannedLanes = lanes(pick.run.filter((n) => n !== 'apps'))
+  say(`lanes: ${plannedLanes.map((l) => l.join(' → ')).join(' | ')}`)
+  const failures = []
+  let yielded = false
+  const ts = Date.now()
+  const runOne = async (name) => {
+    const args = SUITES.find(([n]) => n === name)[1]
     // A suite this commit does not have yet (a check of an older commit, or a deploy back to one).
-    const file = args.find((a) => a.endsWith('.mjs'))
-    if (file && !existsSync(path.join(code, file))) {
-      say(`suite ${name}: not in this commit (${file}), skipped`)
-      continue
-    }
+    const file = args.find((x) => x.endsWith('.mjs'))
+    if (file && !existsSync(path.join(code, file))) return say(`suite ${name}: not in this commit (${file}), skipped`)
+    const t0 = Date.now()
     say(`suite ${name}: node ${args.join(' ')}`)
-    const s = await runLogged(NODE, args, { cwd: code, out, env: { OLA_TURN_HELD: String(process.pid) } })
+    let text = ''
+    const s = await runLogged(NODE, args, { cwd: code, out: { write: (d) => (text += d) }, env: { OLA_TURN_HELD: String(process.pid), ...(name === 'web' ? {} : { OLA_FD_DIST: fdDist }) } })
     suites[name] = counts(s.tail)
+    out.write(`---- suite ${name} output ----\n${text}${text.endsWith('\n') ? '' : '\n'}---- end of ${name} ----\n`)
     say(`suite ${name}: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
-    if (s.code !== 0) return refuse(`suite ${name} failed (${suites[name]})`)
+    if (s.code !== 0) failures.push(`suite ${name} failed (${suites[name]})`)
   }
+  await Promise.all(
+    plannedLanes.map(async (lane) => {
+      for (const name of lane) {
+        if (failures.length || yielded) return
+        // A deploy waiting for the turn goes first: the check gives it back and is tried again later.
+        if (check && deployWaiting()) {
+          if (!yielded) say(`a deploy is waiting: the check gives the turn back before suite ${name} (the running suites finish first) and will be tried again`)
+          yielded = true
+          return
+        }
+        await runOne(name)
+      }
+    }),
+  )
+  const took = Math.round((Date.now() - ts) / 1000)
+  if (failures.length) return refuse(`${failures.join('; ')}${skipped.length ? `; skipped ${skipped.join(', ')}` : ''}`)
+  if (yielded) {
+    turn.release()
+    out.end()
+    rmSync(rel, { recursive: true, force: true })
+    return { ok: null, yielded: true, commit, suites }
+  }
+  // For deploys.log and checks.log: which ran, which were skipped, how long the suites took.
+  const picked = `${pick.all ? `all suites (${pick.all})` : `skipped ${skipped.length ? skipped.join(', ') : 'none'} (nothing they use changed${since})`}; suites ${took} s side by side`
+  say(`suites: ${Object.keys(suites).length} ran in ${took} s; ${skipped.length ? `skipped ${skipped.join(', ')}` : 'none skipped'}`)
   if (check) {
-    history(`passed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+    history(`passed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}; ${picked}`)
     say(`check passed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
     turn.release()
     out.end()
@@ -783,7 +849,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
   rmSync(tmp, { force: true })
   symlinkSync(`releases/${short}`, tmp)
   renameSync(tmp, CURRENT)
-  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, skills: { hash: skills.hash, image: skills.image, commit }, previous: before?.commit ?? null }
+  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, skipped: Object.fromEntries(pick.skip.map((x) => [x.name, x.why])), base: baseCommit, skills: { hash: skills.hash, image: skills.image, commit }, previous: before?.commit ?? null }
   writeFileSync(DEPLOYED, JSON.stringify(record, null, 2) + '\n')
   if (existsSync(ENV.frontdesk) && existsSync(ENV.gateway)) {
     install({ restart: true })
@@ -799,7 +865,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     }
     if (!healthy) return refuse('after the restart the front desk or the gateway did not answer')
   } else say('no env files in ~/.ola: nothing to restart (node ops/ola.mjs install once they exist)')
-  history(`deployed ${short} (${ref})${signed ? ` (${signedHow})` : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  history(`deployed ${short} (${ref})${signed ? ` (${signedHow})` : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}; ${picked}`)
   say(`deployed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   // The disk (OLA-135): old images, releases beyond the current and the previous, an oversized
   // builder, builders' leftovers. Still holding the turn, so no suite starts a VM meanwhile. A
