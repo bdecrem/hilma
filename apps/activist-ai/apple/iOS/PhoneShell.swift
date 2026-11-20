@@ -189,13 +189,14 @@ struct SessionsHome: View {
             }
             .listRowBackground(Ola.paper)
             .task { await st.loadPreview(s.id) }
+            // A cloud session stays in its project, as on the website (OLA-150): no Delete there.
             .swipeActions {
-              Button("Delete", systemImage: "trash") { target = st; deleting = s }.tint(Ola.vermilion)
+              if r != .cloud { Button("Delete", systemImage: "trash") { target = st; deleting = s }.tint(Ola.vermilion) }
               Button("Rename", systemImage: "pencil") { target = st; newTitle = s.title; renaming = s }.tint(Ola.ink3)
             }
             .contextMenu {
               Button("Rename", systemImage: "pencil") { target = st; newTitle = s.title; renaming = s }
-              Button("Delete", systemImage: "trash", role: .destructive) { target = st; deleting = s }
+              if r != .cloud { Button("Delete", systemImage: "trash", role: .destructive) { target = st; deleting = s } }
             }
           }
           if !hidden(r), st.sessions.isEmpty, !allEmpty || st !== store {
@@ -261,7 +262,7 @@ struct SessionsHome: View {
     .confirmationDialog("Delete \u{201C}\(deleting?.title ?? "")\u{201D}?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
       Button("Delete", role: .destructive) { if let s = deleting { Task { await (target ?? store).delete(s.id) } } }
     } message: {
-      Text((target ?? store).runtime == .cloud ? "This deletes it on the Ola machine, for your Mac too. Files stay." : "This deletes it on your Mac too. Files stay.")
+      Text("This deletes it on your Mac too. Files stay.")
     }
   }
 
@@ -271,7 +272,7 @@ struct SessionsHome: View {
     case .open: return "No sessions here yet."
     case .connecting: return "Connecting\u{2026}"
     case .refused: return r == .cloud ? "Signed out. Sign in again in Settings." : "Pair with your Mac again in Settings."
-    default: return r == .cloud ? "The Ola machine is not answering." : "Your Mac is not reachable."
+    default: return r == .cloud ? "Ola is not answering." : "Your Mac is not reachable."
     }
   }
 }
@@ -317,8 +318,8 @@ struct NotReachable: View {
     HStack(spacing: 10) {
       Image(systemName: store.onMachine ? "exclamationmark.triangle" : "desktopcomputer.trianglebadge.exclamationmark").foregroundStyle(Ola.vermilionText)
       VStack(alignment: .leading, spacing: 2) {
-        Text(store.onMachine ? "The Ola machine is not reachable" : "Your Mac is not reachable").font(.subheadline.weight(.semibold))
-        Text(store.onMachine ? PhoneWhere.unreachableLine(tailscaleOn: PhoneWhere.tailscaleOn || PhoneWhereState.shared.fixture) : "Ola on your phone works through the Mac app.").font(.footnote).foregroundStyle(Ola.ink2)
+        Text(store.onMachine ? "Ola is not reachable" : "Your Mac is not reachable").font(.subheadline.weight(.semibold))
+        Text(store.onMachine ? PhoneWhere.unreachableLine : "Ola on your phone works through the Mac app.").font(.footnote).foregroundStyle(Ola.ink2)
       }
       Spacer()
       Button("Try Again") { store.reconnect() }.buttonStyle(.bordered).controlSize(.small)
@@ -336,7 +337,7 @@ struct SignedOutRow: View {
       Image(systemName: "person.crop.circle.badge.exclamationmark").foregroundStyle(Ola.vermilionText)
       VStack(alignment: .leading, spacing: 2) {
         Text("Signed out on this phone").font(.subheadline.weight(.semibold))
-        Text("Sign in again to keep working on the Ola machine.").font(.footnote).foregroundStyle(Ola.ink2)
+        Text("Sign in again to keep working in the cloud.").font(.footnote).foregroundStyle(Ola.ink2)
       }
       Spacer()
       Button("Sign In") { signingIn = true }.buttonStyle(.bordered).controlSize(.small)
@@ -376,15 +377,13 @@ struct SettingsScreen: View {
     }
   }
 
-  /// The Cloud section's one line: "Connected as Bart", "Connecting…", or "Not connected" (with
-  /// the one reason a person can act on: Tailscale off on this phone).
+  /// The Cloud section's one line: "Connected as Bart", "Connecting…", or "Not connected".
   var machineLine: String {
     switch cloud?.connection ?? .notSetUp {
     case .open:
       let first = place.shownName.split(separator: " ").first.map(String.init) ?? place.shownName
       return first.isEmpty ? "Connected" : "Connected as \(first)"
     case .connecting: return "Connecting\u{2026}"
-    case .lost where !PhoneWhere.tailscaleOn && !place.fixture: return "Not connected. Turn on Tailscale on this phone."
     case .lost, .refused, .notSetUp: return "Not connected"
     }
   }
@@ -414,10 +413,10 @@ struct SettingsScreen: View {
           if machineNeedsConnecting { Button("Connect Again\u{2026}") { place.setup = .machine } }
           Button("Sign Out", role: .destructive) { signingOut = true }
         } else {
-          Button("Sign In to the Ola Machine\u{2026}") { place.setup = .machine }
+          Button("Sign In to Ola\u{2026}") { place.setup = .machine }
         }
       } header: { Text("Cloud: on the Ola machine") } footer: {
-        Text(cloudReady ? "Works with your Mac off." : "Your phone works with the Ola machine directly, even when your Mac is off.")
+        Text(cloudReady ? "The same sessions as on the website. Works with your Mac off." : "Your phone works in your Ola projects, the same sessions as the website, even when your Mac is off.")
       }
       Section {
         if localReady {
@@ -500,7 +499,7 @@ struct SettingsScreen: View {
     .confirmationDialog("Forget this Mac?", isPresented: $forgetting, titleVisibility: .visible) {
       Button("Forget", role: .destructive) { place.forgetMac(store: store) }
     } message: { Text("You can pair again later.") }
-    .confirmationDialog("Sign out of the Ola machine?", isPresented: $signingOut, titleVisibility: .visible) {
+    .confirmationDialog("Sign out of Ola?", isPresented: $signingOut, titleVisibility: .visible) {
       Button("Sign Out", role: .destructive) { Task { await place.signOut(store: store) } }
     } message: { Text(PhoneWhere.paired ? "Your phone goes back to working through your Mac." : "You can sign in again later.") }
   }
@@ -574,7 +573,7 @@ struct PhoneKeptSection: View {
         Button("Delete What Is Kept (\(n))", role: .destructive) { deleting = true }
       }
     } header: { Text("Advanced") } footer: {
-      Text(signedIn ? "Off unless you turn it on. On: each request you finish and Ola\u{2019}s answer are kept on the Ola machine, with the steps in words. Never your files." : "Sign in to the Ola machine first.")
+      Text(signedIn ? "Off unless you turn it on. On: each request you finish and Ola\u{2019}s answer are kept on the Ola machine, with the steps in words. Never your files." : "Sign in to Ola first.")
     }
     .task(id: on) { if signedIn, let s = await KeptConversations.status() { count = s.count } }
     .confirmationDialog("Delete every conversation kept on ola.cx?", isPresented: $deleting, titleVisibility: .visible) {

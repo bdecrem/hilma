@@ -8,8 +8,9 @@ public struct ServerConfig: Equatable, Sendable {
   /// to the Mac app's relay, which adds the real credentials.
   public var viaMac: Bool
   public var macName: String?
-  /// The phone on the Ola machine directly (PhoneWhere): `password` is this phone's Ola device key,
-  /// sent as a Bearer token to the machine's phone door (bart/phone-door.mjs), which adds opencode's.
+  /// The cloud (OLA-150): one of the person's projects through the front desk's device routes
+  /// (`OlaCloud`, `<base>/api/device/w/<project>/oc`); `password` is this device's Ola account key,
+  /// sent as a Bearer token. The same conversations the website shows.
   public var account: Bool
   public init(url: URL, password: String, viaMac: Bool = false, macName: String? = nil, account: Bool = false) {
     self.url = url
@@ -140,9 +141,16 @@ public final class OpenCodeClient: @unchecked Sendable {
   /// What the Mac app says about itself (only through its relay).
   public func hello() async throws -> JSON { try await json("GET", "/ola/hello") }
 
+  /// A path starting `/project/` is the cloud project's own (beside its `/oc`: its files).
   func url(_ path: String, _ query: [URLQueryItem] = []) -> URL {
     var c = URLComponents(url: config.url, resolvingAgainstBaseURL: false)!
-    c.percentEncodedPath = (c.percentEncodedPath.hasSuffix("/") ? String(c.percentEncodedPath.dropLast()) : c.percentEncodedPath) + path
+    var base = c.percentEncodedPath.hasSuffix("/") ? String(c.percentEncodedPath.dropLast()) : c.percentEncodedPath
+    var path = path
+    if config.account, path.hasPrefix("/project/"), base.hasSuffix("/oc") {
+      base.removeLast(3)
+      path.removeFirst("/project".count)
+    }
+    c.percentEncodedPath = base + path
     if !query.isEmpty { c.queryItems = query }
     return c.url!
   }
@@ -202,10 +210,18 @@ public final class OpenCodeClient: @unchecked Sendable {
     SessionInfo(try await json("GET", "/api/session/\(id)")["data"])
   }
 
-  public func createSession(title: String? = nil) async throws -> SessionInfo {
+  /// `autonomy` is the cloud's "Lots of permissions" for the new conversation (CloudAutonomy), as
+  /// the website sends it; the front desk turns it into the rules. Sent only to the cloud.
+  public func createSession(title: String? = nil, autonomy: String? = nil) async throws -> SessionInfo {
     var body: [String: JSON] = [:]
     if let title { body["title"] = .string(title) }
+    if let autonomy, config.account { body["metadata"] = ["autonomy": .string(autonomy)] }
     return SessionInfo(try await json("POST", "/api/session", body: .object(body))["data"])
+  }
+
+  /// The cloud: a conversation's "Lots of permissions" changed (`go` or `ask`), as the website does.
+  public func setAutonomy(_ id: String, _ autonomy: String) async throws {
+    try await send("PATCH", "/api/session/\(id)", body: ["metadata": ["autonomy": .string(autonomy)]])
   }
 
   public func rename(_ id: String, to title: String) async throws {
@@ -260,12 +276,15 @@ public final class OpenCodeClient: @unchecked Sendable {
 
   /// Models the server offers through Ola's gateway (the config allows no other provider).
   public func models() async throws -> [ModelInfo] {
-    try await json("GET", "/api/model")["data"].array.map {
+    // The cloud's model is the project's (the website offers no choice either).
+    if config.account { return [] }
+    return try await json("GET", "/api/model")["data"].array.map {
       ModelInfo(providerID: $0["providerID"].str, modelID: $0["id"].str, name: $0["name"].string ?? $0["id"].str)
     }
   }
 
   public func defaultModel() async throws -> ModelInfo? {
+    if config.account { return nil }
     let d = try await json("GET", "/api/model/default")["data"]
     return d.isNull ? nil : ModelInfo(providerID: d["providerID"].str, modelID: d["id"].str, name: d["name"].string ?? d["id"].str)
   }
@@ -277,6 +296,8 @@ public final class OpenCodeClient: @unchecked Sendable {
   // MARK: files of the project
 
   public func files(in path: String? = nil) async throws -> [FileEntry] {
+    // The cloud: the website's list of the project's files, one folder of it.
+    if config.account { return Self.folder(try await json("GET", "/project/api/files")["files"].array.map { $0["path"].str }, path ?? "") }
     let q = path.map { [URLQueryItem(name: "path", value: $0)] } ?? []
     return try await json("GET", "/api/fs/list", query: q)["data"].array.map {
       FileEntry(path: $0["path"].str, isDirectory: $0["type"].str == "directory")
@@ -287,7 +308,26 @@ public final class OpenCodeClient: @unchecked Sendable {
   /// A file's bytes, relative to the project folder.
   public func read(_ path: String) async throws -> Data {
     let encoded = path.split(separator: "/").map { $0.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String($0) }.joined(separator: "/")
+    // The cloud: the website's own download of one of the project's files.
+    if config.account { return try await send("GET", "/project/api/files/\(encoded)").0 }
     return try await send("GET", "/api/fs/read/\(encoded)").0
+  }
+
+  /// One folder's entries from the website's flat list of the project's files: the files in it and
+  /// the folders under it, as opencode's own list gives them.
+  static func folder(_ paths: [String], _ dir: String) -> [FileEntry] {
+    let prefix = dir.isEmpty ? "" : (dir.hasSuffix("/") ? dir : dir + "/")
+    var out: [String: FileEntry] = [:]
+    for p in paths where p.hasPrefix(prefix) && p.count > prefix.count {
+      let rest = p.dropFirst(prefix.count)
+      if let slash = rest.firstIndex(of: "/") {
+        let d = prefix + rest[..<slash]
+        out[d] = FileEntry(path: d, isDirectory: true)
+      } else {
+        out[p] = FileEntry(path: p, isDirectory: false)
+      }
+    }
+    return out.values.sorted { ($0.isDirectory ? 0 : 1, $0.name.lowercased()) < ($1.isDirectory ? 0 : 1, $1.name.lowercased()) }
   }
 
   // MARK: the event stream

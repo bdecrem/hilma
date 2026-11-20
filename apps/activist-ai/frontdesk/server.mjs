@@ -385,9 +385,11 @@ export function makeFrontDesk(cfg = config()) {
     // while it runs: removal from the team, sign-out, revocation, suspension, expiry or the idle
     // limit cuts it within RECHECK_MS. Checked once at the start only, a removed member's or a
     // thief's open stream kept receiving every event of the workspace (review of 2026-11-16, H1).
+    // A device (the apps' cloud, deviceCloud below) is checked by its pass, a browser by its session.
+    const still = () => (sess.device ? devices.stillValid(sess.device) : auth.stillValid(sess))
     const hold = () => {
       const timer = setInterval(() => {
-        if (auth.stillValid(sess) && membership(sess.personId, ws.slug)?.status === 'active') return
+        if (still() && membership(sess.personId, ws.slug)?.status === 'active') return
         clearInterval(timer)
         res.destroy()
       }, RECHECK_MS)
@@ -1031,6 +1033,46 @@ export function makeFrontDesk(cfg = config()) {
     return json(res, 404, NOT_FOUND)
   }
 
+  // ---------------------------------------------------------------- the apps' cloud (OLA-150)
+  //
+  // Bart, 2026-11-18: "cloud sessions that I can see from the website or the apps". The Mac and
+  // iPhone apps signed in to an account (devices.mjs: name and password, a device pass, no cookie)
+  // reach the same projects, conversations and files as that person's browser, through the same
+  // membership checks (workspaceRoute), and nothing else:
+  //   GET /api/device/projects                     the person's projects, as /api/me lists them
+  //   ANY /api/device/w/<project>/oc/<opencode>    the web's one list of opencode routes (proxy.mjs)
+  //   GET /api/device/w/<project>/oc/api/info      answered here: the pass and the membership work
+  //   GET /api/device/w/<project>/api/files[/<f>]  the file list and a download
+  // Under /api/device/ the TLS front lets a pass through (ops/tls.mjs) and nowhere else. A write
+  // needs no Origin or CSRF token: the pass is never sent by a browser on its own.
+  const projectsOf = (personId) =>
+    db
+      .prepare(
+        `SELECT w.slug, w.name, t.name AS team, m.role FROM memberships m JOIN teams t ON t.id = m.team_id JOIN workspaces w ON w.team_id = t.id
+         WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
+      )
+      .all(personId)
+  async function deviceCloud(req, res, url, p) {
+    const dev = devices.deviceFor(req)
+    if (!dev) return json(res, 401, { error: 'signed_out' })
+    seen(dev.personId)
+    if (p === '/api/device/projects') return req.method === 'GET' ? json(res, 200, { projects: projectsOf(dev.personId) }) : json(res, 405, { error: 'method' })
+    const m = /^\/api\/device\/w\/([^/]{1,40})(\/.*)$/.exec(p)
+    const rest = m?.[2] ?? ''
+    const files = req.method === 'GET' && (rest === '/api/files' || rest.startsWith('/api/files/'))
+    if (!m || (!rest.startsWith('/oc/') && !files)) return json(res, 404, NOT_FOUND)
+    // The project is named by the path; whatever the device sent as X-Ola-Workspace is replaced.
+    req.headers['x-ola-workspace'] = m[1]
+    if (rest === '/oc/api/info' && req.method === 'GET') {
+      const ws = membership(dev.personId, m[1])
+      if (!ws) return json(res, 404, NOT_FOUND)
+      if (ws.status !== 'active') return json(res, 423, CLOSED)
+      return json(res, 200, { data: { project: ws.slug, name: ws.name, role: ws.role } })
+    }
+    const sess = { personId: dev.personId, handle: dev.person.handle, name: dev.person.name, isAdmin: dev.person.admin, device: dev }
+    return workspaceRoute(req, res, sess, url, rest)
+  }
+
   async function handle(req, res) {
     // A request pipelined behind one already refused and closing is not answered.
     if (lingering(req)) return req.socket.destroy()
@@ -1044,6 +1086,7 @@ export function makeFrontDesk(cfg = config()) {
     // What this release serves (only past the door with a device's pass): the Mac app compares skills.
     if (p === '/api/device/version' && req.method === 'GET') return json(res, 200, release)
     // A signed-in device (the Mac app, the command line): its pass, no cookie, no Origin (devices.mjs).
+    if (devices.enabled && (p === '/api/device/projects' || p.startsWith('/api/device/w/'))) return deviceCloud(req, res, url, p)
     if (devices.isDeviceRoute(p)) return devices.handle(req, res, p)
     const writes = req.method !== 'GET' && req.method !== 'HEAD'
     if (writes && req.headers.origin !== cfg.origin) return json(res, 403, { error: 'wrong_origin' })

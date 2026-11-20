@@ -49,7 +49,6 @@ struct SettingsView: View {
   var fallbacksPreview: FallbackSettings? = nil
   /// Screenshots: Advanced as it would look (on, with a count), without asking the server.
   var keptPreview: KeptSettings.Preview? = nil
-  @State private var connecting = false
   @AppStorage("ola.settingsPane") private var chosen = SettingsPane.general.rawValue
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
   static let width: CGFloat = 560
@@ -79,10 +78,6 @@ struct SettingsView: View {
       }
     }
     .environment(\.settingsLook, look)
-    .sheet(isPresented: $connecting) {
-      // Connecting saves the machine; `apply` then puts it in whichever store holds the cloud.
-      ConnectForm(store: cloudStore) { connecting = false; Task { await whereOla?.apply() } }.frame(width: 400)
-    }
   }
 
   @ViewBuilder func pane(_ p: SettingsPane) -> some View {
@@ -100,7 +95,7 @@ struct SettingsView: View {
       // The setup of each runtime; which one a session works in is chosen in New Session.
       machine
       if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
-      PermissionsSettings(cloudSetUp: cloudStore.config != nil || Credentials.savedAddress != nil)
+      PermissionsSettings(cloudSetUp: cloudStore.config != nil || (account?.signedIn ?? AccountKeeper.signedIn))
       updates
     case .account:
       if let account { AccountSettings(account: account, cli: cli) }
@@ -133,15 +128,28 @@ struct SettingsView: View {
 
   /// The cloud runtime: one status line, and "Connect Again…" only when it is not connected
   /// (OLA-210, Bart: "it should just show status and 'connect again' if the status is Not
-  /// Connected"). No address and no "Forget This Machine": the address is set up once in the
-  /// connect sheet, and signing out is Account's own control.
+  /// Connected"). The cloud is the signed-in person's project on app.ola.cx (OLA-150): no address,
+  /// no password of its own; signing out is Account's own control. A picker only when the person
+  /// has more than one project.
   var machine: some View {
     SettingsGroup(title: "Cloud: on the Ola machine") {
       HStack(alignment: .firstTextBaseline) {
         StatusLine(kind: statusKind, text: statusText)
         Spacer(minLength: Space.s)
-        if needsConnecting { Button("Connect Again\u{2026}") { connecting = true } }
+        if needsConnecting {
+          if account?.signedIn ?? AccountKeeper.signedIn {
+            Button("Connect Again\u{2026}") { cloudStore.reconnect(); Task { await whereOla?.refreshCloud() } }
+          } else {
+            Button("Sign In\u{2026}") { account?.wantsGate = true }
+          }
+        }
       }
+      if let w = whereOla, w.cloudProjects.count > 1 {
+        Picker("Project", selection: Binding(get: { OlaCloud.project(of: w.cloudConfig) ?? "" }, set: { w.chooseProject($0) })) {
+          ForEach(w.cloudProjects) { Text($0.name).tag($0.slug) }
+        }
+      }
+      if let p = whereOla?.cloudProblem { SettingNote(p) }
     }
   }
 
@@ -176,8 +184,8 @@ struct SettingsView: View {
 }
 
 /// Permissions: "Lots of permissions", one switch per runtime (OLA-142, meeting of 2026-11-18:
-/// "settings follow the runtime, not the product"). Cloud: kept and applied on the Ola machine, the
-/// same switch the phone shows there. Local: this Mac's agent, the `ola` command, and the phone
+/// "settings follow the runtime, not the product"). Cloud: sent with each cloud session from this
+/// Mac, as the website sends its own switch (OLA-150). Local: this Mac's agent, the `ola` command, and the phone
 /// through this Mac. Off is "Ask before each step".
 struct PermissionsSettings: View {
   var cloudSetUp: Bool
@@ -198,7 +206,7 @@ struct PermissionsSettings: View {
           }
         }))
         .disabled(!cloudSetUp)
-        SettingNote(cloudSetUp ? (cloud == PermissionMode.lots.rawValue ? PermissionMode.lots.note : PermissionMode.ask.note) + " Kept on the Ola machine, the same on your phone there." : "Set up the Ola machine first.")
+        SettingNote(cloudSetUp ? (cloud == PermissionMode.lots.rawValue ? PermissionMode.lots.note : PermissionMode.ask.note) + " For the cloud sessions you work in from this Mac." : "Sign in to Ola first.")
       }
       VStack(alignment: .leading, spacing: 2) {
         Toggle("Lots of permissions on this Mac", isOn: Binding(get: { local == PermissionMode.lots.rawValue }, set: { on in
@@ -210,7 +218,6 @@ struct PermissionsSettings: View {
       }
       if let problem { StatusLine(kind: .problem, text: problem) }
     }
-    .task { await PermissionSettings.pull() }
   }
 }
 

@@ -40,6 +40,16 @@ if env["OLA_PUSH_SEND"] == "1" {
   exit(ok ? 0 : 1)
 }
 
+if env["OLA_CLOUD_CHECK"] == "1" {
+  var bad = 0
+  await CloudCheck.go(env: env) { ok, what, note in
+    if !ok { bad += 1 }
+    print("\(ok ? "PASS" : "FAIL")  \(what)\(note.isEmpty ? "" : "  (\(note))")")
+  }
+  print(bad == 0 ? "ALL PASSED" : "\(bad) FAILED")
+  exit(bad == 0 ? 0 : 1)
+}
+
 if env["OLA_WEB_CHECK"] == "1" {
   var bad = 0
   await WebCheck.go(env: env) { ok, what, note in

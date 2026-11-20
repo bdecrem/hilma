@@ -131,14 +131,14 @@ enum Snapshot {
     for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
       let window = CGSize(width: 1100, height: 720)
       let gates: [(String, AnyView)] = [
-        ("signin-1-signed-out", AnyView(SignInScreen(account: AccountController(preview: .idle), useOwnSetup: {}))),
-        ("signin-1b-signing-in", AnyView(SignInScreen(account: AccountController(preview: .working), useOwnSetup: {}))),
-        ("signin-1c-wrong-password", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.wrongPassword.errorDescription!)), useOwnSetup: {}))),
-        ("signin-1d-service-down", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.serviceDown.errorDescription!)), useOwnSetup: {}))),
+        ("signin-1-signed-out", AnyView(SignInScreen(account: AccountController(preview: .idle)))),
+        ("signin-1b-signing-in", AnyView(SignInScreen(account: AccountController(preview: .working)))),
+        ("signin-1c-wrong-password", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.wrongPassword.errorDescription!))))),
+        ("signin-1d-service-down", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.serviceDown.errorDescription!))))),
         ("signin-2-passkey-sheet", AnyView(SignInScreen(account: AccountController(preview: .passkey)))),
-        ("signin-2b-passkey-not-in-this-version", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.passkeysNotInThisVersion.errorDescription!), passkeys: false), useOwnSetup: {}))),
-        ("signin-2c-signed-out-no-passkeys", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeys: false), useOwnSetup: {}))),
-        ("signin-1e-passkey-used-here", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeyUsed: true), useOwnSetup: {}))),
+        ("signin-2b-passkey-not-in-this-version", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.passkeysNotInThisVersion.errorDescription!), passkeys: false)))),
+        ("signin-2c-signed-out-no-passkeys", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeys: false)))),
+        ("signin-1e-passkey-used-here", AnyView(SignInScreen(account: AccountController(preview: .idle, passkeyUsed: true)))),
         ("signin-4-not-open-yet", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.notAvailableYet.errorDescription!))))),
         ("signin-4b-failed", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.unreachable.errorDescription!))))),
         ("signin-5-expired", AnyView(SignInScreen(account: AccountController(preview: .expired)))),
@@ -254,9 +254,6 @@ enum Snapshot {
       let store = OlaStore(fixture: Fixture.named(fixture))
       writeLive(MacRoot(store: store), size: CGSize(width: 1280, height: 820), appearance: appearance, to: dir.appendingPathComponent("\(name)-composited.png"))
     }
-    // The connect sheet on its own.
-    let connect = ConnectForm(store: OlaStore(config: nil)).frame(width: 400)
-    write(connect, size: CGSize(width: 400, height: 330), appearance: .aqua, to: dir.appendingPathComponent("mac-connect.png"), titled: false)
     // The pairing sheet, with a made-up code.
     let sample = PairingCode(host: "imac-m1.tail1234.ts.net", port: 4330, secret: "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ-23", name: "Bart\u{2019}s iMac")
     write(PairingSheet(code: sample) {}, size: CGSize(width: 400, height: 560), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)

@@ -78,6 +78,8 @@ struct OlaPhoneApp: App {
             }
             s.start()
           }
+          // The cloud is the person's project on app.ola.cx: which one, asked again at each launch.
+          Task { await PhoneWhereState.shared.refreshCloud(store: store) }
         }
         // Each runtime's switch, read again whenever the runtime on screen changes.
         .task(id: store.config?.url) { if !PhoneWhereState.shared.fixture { await PhonePermissions.shared.refresh() } }
@@ -208,12 +210,12 @@ struct SessionsScreen: View {
           .listRowBackground(Ola.room)
           .listRowSeparatorTint(Ola.roomRule)
           .swipeActions {
-            Button("Delete") { deleting = s }.tint(Ola.vermilion)
+            if store.runtime != .cloud { Button("Delete") { deleting = s }.tint(Ola.vermilion) }
             Button("Rename") { newTitle = s.title; renaming = s }.tint(Ola.roomRaised)
           }
           .contextMenu {
             Button("Rename", systemImage: "pencil") { newTitle = s.title; renaming = s }
-            Button("Delete", systemImage: "trash", role: .destructive) { deleting = s }
+            if store.runtime != .cloud { Button("Delete", systemImage: "trash", role: .destructive) { deleting = s } }
           }
         }
       } header: {

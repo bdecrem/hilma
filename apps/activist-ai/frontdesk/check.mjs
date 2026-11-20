@@ -712,6 +712,82 @@ await check("bob cannot reach alice's workspace by direct URL in his browser", a
   const dl = await B.page.evaluate((w) => fetch(`/api/files/survey.csv?w=${w}`).then((r) => r.status), FA)
   assert(dl === 404, `download ${dl}`)
 })
+// ---------------------------------------------------------------- the apps' cloud (OLA-150)
+// The Mac and iPhone apps, signed in with a name and password, reach the person's projects through
+// /api/device/ with their pass: the same conversations and files as the browser, the same checks.
+await check("the apps' cloud: a device signed in as alice lists her project and sees the conversations her browser sees, makes one both see, reads the files; vera (viewer) reads but cannot ask; bob and no pass are refused; an open stream ends at sign-out", async () => {
+  const signIn = async (handle) => {
+    const r = await fetch(`${ORIGIN}/api/device/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ handle, password: PW[handle], name: 'Made-up iPhone', kind: 'mac' }) })
+    const j = await r.json()
+    assert(r.status === 200 && j.token, `${handle}'s device sign-in: ${r.status}`)
+    return j.token
+  }
+  const dev = async (token, p, init = {}) => {
+    const r = await fetch(`${ORIGIN}${p}`, { ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.body ? { 'content-type': 'application/json' } : {}) } })
+    const text = await r.text()
+    let json = null
+    try {
+      json = JSON.parse(text)
+    } catch {}
+    return { status: r.status, json }
+  }
+  const [ta, tv, tb] = [await signIn('alice'), await signIn('vera'), await signIn('bob')]
+  const W = `/api/device/w/${FA}`
+  const pr = await dev(ta, '/api/device/projects')
+  assert(pr.status === 200 && pr.json.projects.map((x) => `${x.slug}:${x.role}`).join() === `${FA}:owner`, `alice's projects: ${JSON.stringify(pr.json)}`)
+  const info = await dev(ta, `${W}/oc/api/info`)
+  assert(info.status === 200 && info.json.data.project === FA, `info ${info.status}`)
+  const ids = (r) => (Array.isArray(r.json) ? r.json : r.json?.data ?? []).map((x) => x.id).sort().join()
+  const web0 = await api('/oc/api/session', { cookie: a.cookie, ws: FA })
+  const app0 = await dev(ta, `${W}/oc/api/session?limit=100`)
+  assert(web0.status === 200 && app0.status === 200 && ids(web0) === ids(app0), `before: web ${web0.status} [${ids(web0)}], app ${app0.status} [${ids(app0)}]`)
+  const made = await dev(ta, `${W}/oc/api/session`, { method: 'POST', body: JSON.stringify({ title: 'Made-up, from the app', metadata: { autonomy: 'ask' } }) })
+  const id = made.json?.data?.id ?? made.json?.id
+  assert(made.status === 200 && id, `a new conversation from the app: ${made.status}`)
+  const web1 = await api('/oc/api/session', { cookie: a.cookie, ws: FA })
+  const app1 = await dev(ta, `${W}/oc/api/session?limit=100`)
+  assert(ids(web1) === ids(app1) && ids(web1).split(',').includes(id), `after: web [${ids(web1)}], app [${ids(app1)}]`)
+  const active = await dev(ta, `${W}/oc/api/session/active`)
+  assert(active.status === 200, `active ${active.status}`)
+  const fw = await api('/api/files', { cookie: a.cookie, ws: FA })
+  const fa = await dev(ta, `${W}/api/files`)
+  assert(fa.status === 200 && JSON.stringify(fa.json.files.map((f) => f.path)) === JSON.stringify(fw.json.files.map((f) => f.path)), `files: app ${fa.status}`)
+  // vera, a viewer: reads, cannot ask Ola.
+  assert((await dev(tv, `${W}/oc/api/session`)).status === 200, "vera's list")
+  const vp = await dev(tv, `${W}/oc/api/session/${id}/prompt`, { method: 'POST', body: JSON.stringify({ text: 'hello' }) })
+  assert(vp.status === 403, `vera's prompt: ${vp.status}`)
+  // bob: his own project only; alice's is not there for him at all.
+  const bp = await dev(tb, '/api/device/projects')
+  assert(bp.json.projects.map((x) => x.slug).join() === FB, `bob's projects: ${JSON.stringify(bp.json)}`)
+  const wrong = []
+  const cases = [
+    [tb, 'GET', `${W}/oc/api/session`, 404], [tb, 'GET', `${W}/oc/api/info`, 404], [tb, 'GET', `${W}/api/files`, 404],
+    [null, 'GET', '/api/device/projects', 401], [null, 'GET', `${W}/oc/api/session`, 401], ['olap1.made-up', 'GET', `${W}/oc/api/session`, 401],
+    [ta, 'GET', `${W}/oc/api/config`, 403], [ta, 'GET', `${W}/api/project`, 404], [ta, 'DELETE', `${W}/api/files/x.csv`, 404], [ta, 'POST', '/api/device/projects', 405],
+  ]
+  for (const [t, m, p, want] of cases) {
+    const r = await dev(t, p, { method: m })
+    if (r.status !== want) wrong.push(`${m} ${p} ${r.status} (wanted ${want})`)
+  }
+  assert(!wrong.length, wrong.join(', '))
+  // An open event stream through the device route ends within seconds of the device's sign-out.
+  const ctl = new AbortController()
+  const st = { open: true, status: null }
+  fetch(`${ORIGIN}${W}/oc/api/event`, { headers: { authorization: `Bearer ${tv}`, accept: 'text/event-stream' }, signal: ctl.signal })
+    .then(async (r) => {
+      st.status = r.status
+      for await (const _ of r.body);
+    })
+    .catch(() => {})
+    .finally(() => (st.open = false))
+  await until(() => st.status === 200, 15_000, "vera's event stream opening")
+  assert((await dev(tv, '/api/device/signout', { method: 'POST', body: '{}' })).status === 200, "vera's sign-out")
+  await until(() => !st.open, 8000, "vera's stream ending after her sign-out")
+  ctl.abort()
+  for (const t of [ta, tb]) await dev(t, '/api/device/signout', { method: 'POST', body: '{}' })
+  return `the same ${ids(web1).split(',').length} conversation(s) on both paths, one made from the app; ${fa.json.files.length} file(s); viewer 403 on asking; ${cases.length} refusals as wanted; the stream cut at sign-out`
+})
+
 // ---------------------------------------------------------------- devices (devices.mjs)
 // The Mac app and the command line sign in through the browser. Here a made-up app: a secret, its
 // challenge, and a listener on 127.0.0.1 where the browser lands with the code. This front desk runs

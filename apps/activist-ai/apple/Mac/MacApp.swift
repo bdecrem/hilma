@@ -39,9 +39,10 @@ enum Main {
 }
 
 struct OlaMacApp: App {
-  /// The machine's password is read only when Ola works on the machine (once per launch).
-  /// The runtime on screen; `peer` holds the other one's sessions (WhereOlaWorks, OLA-143).
-  @State private var store = OlaStore(config: LocalSettings.onThisMac || Credentials.savedAddress == nil ? nil : Credentials.load())
+  /// The runtime on screen; `peer` holds the other one's sessions (WhereOlaWorks, OLA-143). The
+  /// cloud is the signed-in person's project on app.ola.cx (OLA-150): its key is read from the
+  /// Keychain only when the cloud is on screen (once per launch).
+  @State private var store = OlaStore(config: LocalSettings.onThisMac || !AccountKeeper.signedIn ? nil : OlaCloud.saved())
   @State private var peer = OlaStore(config: nil)
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
@@ -60,20 +61,22 @@ struct OlaMacApp: App {
           guard whereOla == nil else { return }
           // ola-page for the agent "On this Mac" (bart/ola-page-mac): rendered here, off screen.
           PageRender.shared.start()
+          // The cloud before OLA-150: a machine address and its own password, kept on this Mac.
+          // One sign-in reaches the cloud now, so a signed-in Mac forgets them.
+          if account.signedIn, Credentials.savedAddress != nil { Credentials.forget() }
           let w = WhereOlaWorks(store: store, peer: peer, account: account)
           whereOla = w
           account.onSignedIn = { [weak w] in
-            // A Mac set up for nothing else goes straight to working here.
-            if Credentials.savedAddress == nil { LocalSettings.defaults.set("mac", forKey: LocalSettings.modeKey) }
+            if Credentials.savedAddress != nil { Credentials.forget() }
             Task { await w?.apply() }
           }
+          account.onSignedOut = { [weak w] in Task { await w?.apply() } }
           if account.signedIn { account.refreshUsage() }
           delegate.store = store
           delegate.peer = peer
           delegate.whereOla = w
           // Both runtimes, live: notifications, and Lots of permissions, each store by its own
-          // runtime's switch (answered here "On this Mac", by the machine itself in the cloud,
-          // whose switch this Mac reads at launch).
+          // runtime's switch (answered here "On this Mac"; in the cloud sent with the session).
           for s in [store, peer] {
             Notifier.wire(s)
             PermissionSettings.wire(s)
@@ -82,7 +85,6 @@ struct OlaMacApp: App {
               KeptConversations.turnEnded(turn, previous: previous, session: session, runtime: s?.runtime, product: "mac", model: s?.model?.id)
             }
           }
-          Task { await PermissionSettings.pull() }
           w.configureClaude()
           let link = PhoneLink(store: store, whereOla: w)
           phoneLink = link
@@ -118,16 +120,12 @@ struct MacGate: View {
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   @AppStorage(LocalSettings.tokenSavedKey) private var pastedToken = false
-  @AppStorage("ola.serverAddress") private var machineAddress = ""
-  /// The owner chose his own setup on the first-run screen (before the machine's address was saved).
-  @AppStorage("ola.ownSetup") private var ownSetup = false
 
   var body: some View {
     Group {
       if needsSignIn {
-        // The first-run choice: the owner's own setup (the machine directly) is offered only while
-        // this Mac has no other way to work; it opens the machine's connect sheet, as before.
-        SignInScreen(account: account, useOwnSetup: account.wantsGate ? nil : { ownSetup = true; mode = "machine" })
+        // One sign-in reaches both runtimes (OLA-150): no machine address or second password.
+        SignInScreen(account: account)
       } else if mode == "mac", folder.isEmpty {
         FolderScreen { whereOla?.chooseFolder() }
       } else if mode == "mac", let w = whereOla, w.installing || w.installProblem != nil {
@@ -139,8 +137,8 @@ struct MacGate: View {
     .animation(.easeOut(duration: 0.18), value: needsSignIn)
   }
 
-  /// Sign in first, unless this Mac already has another way to work (the Ola machine, or the
-  /// pasted model token, both from before sign-in existed). A sign-in the server ended asks again.
+  /// Sign in first, unless this Mac works on this Mac with the owner's pasted model token (from
+  /// before sign-in existed). A sign-in the server ended asks again.
   var needsSignIn: Bool {
     if account.phase == .expired { return true }
     // The passkey sheet finishing a sign-in stays on this screen.
@@ -150,9 +148,8 @@ struct MacGate: View {
     if account.wantsGate { return true }
     // Started from this screen: it stays until the sign-in finishes or is cancelled.
     if account.fromGate, account.phase != .idle { return true }
-    // The owner's setup from before sign-in (the machine's address, or the pasted token) never
-    // asks: his app works exactly as it did, and his settings are untouched by this update.
-    return machineAddress.isEmpty && !pastedToken && !ownSetup
+    // The pasted token works "On this Mac" only; the cloud needs the sign-in (OLA-150).
+    return !(pastedToken && mode == "mac")
   }
 }
 
@@ -217,8 +214,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if case .lost = s.connection { s.reconnect() }
       }
     }
-    // A change made on the phone shows here when Bart comes back.
-    Task { await PermissionSettings.pull() }
   }
   func applicationDidResignActive(_ notification: Notification) {
     MainActor.assumeIsolated { store?.isActive = false; peer?.isActive = false }

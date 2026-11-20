@@ -1525,6 +1525,30 @@ the browser way stays, and the app gains a sign-in with a name and password.
   chats through the door, is refused after Sign out in Your account), OlaKit `PasswordSignInTests`, and
   end to end from the iMac (`OLA_ACCOUNT_CHECK=1 swift run olakit-selftest`, apple/README.md).
 
+### One cloud: the apps' Cloud is the website's projects (OLA-150, 2026-11-19)
+
+Bart: "one user bart and he's an admin, and he has local sessions on a Mac that the connected phones
+also see, and cloud sessions that I can see from the website or the apps." Before this, the apps'
+Cloud was a second Ola (`bart/`, Bart's own opencode, its own address and password, Tailscale only),
+so its sessions were never the website's. Now a signed-in device reaches the person's projects
+through the front desk, by its pass, with the web's own checks (`server.mjs`, `deviceCloud`):
+
+- `GET /api/device/projects`: the person's active projects, as `/api/me` lists them.
+- `ANY /api/device/w/<project>/oc/<route>`: the web's one list of opencode routes (`web/server/proxy.mjs`
+  `ALLOWED`), through `workspaceRoute` exactly as `/oc/` with `X-Ola-Workspace`: membership on every
+  request (not a member: 404), viewers read only, session creation rewritten from its autonomy, the
+  permission reply's "always" kept for the conversation, an open stream cut within a second when the
+  device is signed out or the person removed. `GET .../oc/api/info` is answered here (the pass and the
+  membership work).
+- `GET /api/device/w/<project>/api/files[/<file>]`: the file list and a download, the web's own.
+
+No Origin or CSRF token on these (the pass is a bearer no browser sends on its own); the TLS front lets
+a pass through only under `/api/device/`. The apps' "Lots of permissions" in the cloud is the
+conversation's autonomy, sent the way the website sends its switch. Proved: `frontdesk/check.mjs`
+("the apps' cloud": the same conversations by both paths, a viewer refused, ten refusals, a stream cut
+at sign-out), and the three paths end to end, `frontdesk/test/cloud-stage.mjs` with OlaKit's
+`OLA_CLOUD_CHECK=1` (`apple/README.md`, "One cloud").
+
 **After deploying** (the lead): restart the front desk (migration 12 runs by itself) and the TLS front
 (the login route at the door). Bart's own password: `node admin.mjs reset-password bart` prints a
 one-time link for his existing account; he chooses a password there and keeps his passkey (he had no

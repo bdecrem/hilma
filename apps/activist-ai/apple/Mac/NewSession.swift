@@ -20,7 +20,6 @@ struct NewSessionSheet: View {
   /// Screenshots: a fixed readiness per runtime, so drawing never reads the app's own setup.
   var preview: [Runtime: String?]? = nil
   @State private var picked: Runtime = .cloud
-  @State private var connecting = false
   @Environment(\.openSettings) private var openSettings
 
   var body: some View {
@@ -48,13 +47,6 @@ struct NewSessionSheet: View {
     .onAppear { picked = whereOla.defaultRuntime }
     .onKeyPress(.upArrow) { picked = .cloud; return .handled }
     .onKeyPress(.downArrow) { picked = .local; return .handled }
-    .sheet(isPresented: $connecting) {
-      ConnectForm(store: whereOla.store(.cloud)) {
-        connecting = false
-        Task { await whereOla.apply() }
-      }
-      .frame(width: 400)
-    }
   }
 
   /// Why a runtime cannot start a session yet, or nil.
@@ -69,12 +61,13 @@ struct NewSessionSheet: View {
     done()
   }
 
-  /// "Set Up…" on a runtime that is not ready: the machine's connect sheet, the folder, or Settings.
+  /// "Set Up…" on a runtime that is not ready: the sign-in (the cloud needs nothing else, OLA-150),
+  /// the folder, or Settings.
   func setUp(_ r: Runtime) {
     switch r {
     case .cloud:
-      if whereOla.account?.signedIn == true, Credentials.savedAddress == nil { return }
-      connecting = true
+      done()
+      if whereOla.account?.signedIn == true { Task { await whereOla.refreshCloud() } } else { whereOla.account?.wantsGate = true }
     case .local:
       if LocalSettings.folder == nil { whereOla.chooseFolder() } else { done(); openSettings() }
     }

@@ -47,19 +47,52 @@ final class WhereOlaWorks {
     return store.config == c ? store : peer.config == c ? peer : nil
   }
 
-  /// The machine, when this Mac has the owner's setup for it (its address and password). Reads the
-  /// password (once per launch) only when an address is saved.
-  var cloudConfig: ServerConfig? { Self.cloudOverride ?? (Credentials.savedAddress == nil ? nil : Credentials.load()) }
-  /// A self-test's stand-in for the Ola machine (never set by the app).
+  /// The cloud (OLA-150): the signed-in person's project on app.ola.cx, the same sessions the
+  /// website shows (`OlaCloud`). No address and no second password: the account's sign-in is all.
+  var cloudConfig: ServerConfig? { Self.cloudOverride ?? (account?.signedIn == true ? accountCloud : nil) }
+  /// The project's config: the remembered one at launch, then what the server says (`refreshCloud`).
+  private(set) var accountCloud: ServerConfig? = AccountKeeper.signedIn ? OlaCloud.saved() : nil
+  /// The person's projects as the server last listed them (a picker in Settings when more than one).
+  private(set) var cloudProjects: [CloudProject] = []
+  /// Why the cloud has nothing to show (no project yet), or nil.
+  private(set) var cloudProblem: String?
+  /// A self-test's stand-in for the cloud (never set by the app).
   nonisolated(unsafe) static var cloudOverride: ServerConfig?
+
+  /// Asks the server for the person's projects and attaches the chosen one (at launch, after a
+  /// sign-in, Connect Again). Quiet when it does not answer: the remembered project stays.
+  func refreshCloud() async {
+    guard account?.signedIn == true, let s = AccountKeeper.session else {
+      accountCloud = nil
+      cloudProjects = []
+      return
+    }
+    do {
+      let (c, list) = try await OlaCloud.resolve(s)
+      cloudProjects = list
+      cloudProblem = c == nil ? OlaCloud.noProject : nil
+      accountCloud = c
+    } catch {
+      return
+    }
+    attachBoth()
+  }
+
+  /// Settings' project picker: the cloud shows that project's sessions from now on.
+  func chooseProject(_ slug: String) {
+    guard let s = AccountKeeper.session, cloudProjects.contains(where: { $0.slug == slug }) else { return }
+    OlaCloud.chosen = slug
+    accountCloud = OlaCloud.config(token: s.token, project: slug)
+    attachBoth()
+  }
 
   /// Whether a runtime can start a session now, and if not, what New Session says.
   func readiness(_ r: Runtime) -> (ready: Bool, why: String?) {
     switch r {
     case .cloud:
-      if Self.cloudOverride != nil || (Credentials.savedAddress != nil && !Credentials.disabled) { return (true, nil) }
-      if account?.signedIn == true { return (false, "Not yet for your account.") }
-      return (false, "Not set up on this Mac yet.")
+      if cloudConfig != nil { return (true, nil) }
+      if account?.signedIn == true { return (false, cloudProblem ?? "Connecting\u{2026}") }
+      return (false, "Sign in to Ola first.")
     case .local:
       if LocalSettings.folder == nil { return (false, "Choose the folder Ola works in first.") }
       if account?.signedIn != true, (LocalSettings.tokenOverride ?? (LocalSettings.defaults.bool(forKey: LocalSettings.tokenSavedKey) ? "saved" : nil)) == nil {
@@ -112,6 +145,7 @@ final class WhereOlaWorks {
     let mine = generation
     problem = nil
     attachBoth()
+    await refreshCloud()
     guard let folder = LocalSettings.folder else {
       stopLocal()
       if shown == .local { problem = "Choose the folder Ola should work in." }
@@ -161,7 +195,7 @@ final class WhereOlaWorks {
   }
 
   /// The runtime on screen to `store`, the other to `peer`; a store already there is left alone.
-  private func attachBoth() {
+  func attachBoth() {
     let cloud = cloudConfig
     let (front, back) = shown == .local ? (localConfig, cloud) : (cloud, localConfig)
     if store.config != front { store.attach(front, orSaved: false) }
@@ -395,7 +429,6 @@ struct SettingsGroup<Content: View>: View {
 struct WhereSettings: View {
   var controller: WhereOlaWorks
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
-  @AppStorage("ola.serverAddress") private var machineAddress = ""
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   /// Screenshots pass this, so drawing Settings never reads the Keychain.
   var tokenKnown: Bool? = nil

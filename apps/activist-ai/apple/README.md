@@ -1,8 +1,8 @@
 # Ola for Bart: the Mac and iPhone apps
 
-Bart's own front end to the opencode agent on the Ola machine (Part I: full privileges, no sealed VM).
-Both apps are clients of one `opencode serve` on the machine (`../bart/`), so sessions live there:
-the phone shows the Mac's sessions live, and the Mac need not be on.
+The Mac and iPhone apps of Ola. Two runtimes: **Cloud** is the signed-in person's project on
+app.ola.cx, the same sessions the website shows (since OLA-150; before, a separate opencode of Bart's,
+`../bart/`); **Local** is opencode in a folder on the Mac, which the paired phone follows.
 
 ```
 apple/
@@ -42,11 +42,11 @@ through its Mac). `OlaKit/Runtime.swift` has the words every screen uses.
   phone. No "Where Ola works" choice there any more.
 - **Cloud in Settings is one status line** (OLA-210, Bart: "it should just show status and
   'connect again' if the status is Not Connected"): "Connected as Bart" or "Not connected", and
-  Connect Again… only when not connected. No address field and no Forget This Machine on the Mac
-  (the address is typed once in the connect sheet); the phone's Cloud section is the same line,
-  with its own Sign Out. Screens: `OLA_ONLY=settings-cloud tools/build.sh mac <dir>`.
-- **Lots of permissions is one switch per runtime.** Cloud: kept and applied on the machine
-  (`../bart/approver.mjs`, through its phone door). Local: this Mac's (`ola.permissions`), used by
+  Connect Again… only when not connected (Sign In… when signed out). No address field and no Forget
+  This Machine (since OLA-150 the cloud is the account's: "One cloud" below); the phone's Cloud
+  section is the same line, with its own Sign Out. Screens: `OLA_ONLY=settings-cloud tools/build.sh mac <dir>`.
+- **Lots of permissions is one switch per runtime.** Cloud: each app's own, sent as the
+  conversation's autonomy as the website does (OLA-150). Local: this Mac's (`ola.permissions`), used by
   the app, `ola` and the phone through this Mac. Every product shows the switch of each runtime.
 - **"Yes, for the rest of this session"** is kept per session and by kind by whoever answers for the
   runtime (`SessionYes`, `OlaStore.answerForSession`, the approver), never sent to opencode as its
@@ -178,6 +178,48 @@ picked (and at launch for that folder, silently once answered). **A Mac with no 
 gets an ad-hoc build and a printed warning: macOS will ask after every build until one exists (Xcode,
 Settings, Accounts, add the Apple ID, Manage Certificates, +, Apple Development).
 
+## One cloud (OLA-150, 2026-11-19)
+
+Bart: "my cloud sessions are not showing ... Clean all that up so there's one user bart and he's an
+admin, and he has local sessions on a Mac that the connected phones also see, and cloud sessions that
+I can see from the website or the apps." The apps' Cloud was Bart's own opencode on the mini
+(`../bart/`: an address and a password on the Mac, a Tailscale-only phone door on the phone), never the
+website's projects. Now:
+
+- **Signing in is all it takes.** The Cloud is the person's project on app.ola.cx through the front
+  desk's device routes (`OlaKit/Cloud.swift`, `OlaCloud`; the server's half: `../README.md`, "One
+  cloud"), with the account's own device key: no address, no second password, no Tailscale. A
+  `ServerConfig` with `account: true` is `https://app.ola.cx/api/device/w/<project>/oc`.
+- **Which project:** the remembered one (`ola.cloud.project`), else the first; asked again at each
+  launch and sign-in (`WhereOlaWorks.refreshCloud`, `PhoneWhereState.refreshCloud`). Settings shows a
+  Project picker only when the account has more than one. No project: "Your account has no project on
+  Ola yet."
+- **Lots of permissions in the cloud** is each app's own switch, sent as the conversation's autonomy
+  (`go` or `ask`) when it is made and again before a request when the switch changed, as the website
+  does (`OlaStore.cloudLots`, `CloudAutonomy`). "Yes, for the rest of this session" goes to the front
+  desk as `always`, which keeps it for the conversation.
+- **The same as the website:** the model is the project's (no picker), files are the project's own list
+  and downloads, and a cloud session cannot be deleted from the apps (the website keeps them all).
+- **Gone from the apps:** the connect sheet (address and password), "Use my own Ola machine instead",
+  the phone door and every "Turn on Tailscale" line for the cloud. A signed-in Mac forgets the old
+  machine address and password at launch. Local, and the phone through its Mac (Tailscale), are as before.
+- **Bart's sessions moved** (2026-11-19, on the mini): his two sessions in his own opencode ("hi", "Hey")
+  were exported (`opencode session export`) and imported into his project `hello`, so they are in his
+  one list beside his website sessions; the files of `~/ola-bart` are in the project's `earlier-cloud/`.
+  Backups beside the originals: `~/.ola-bart/data/opencode/opencode.db.before-ola150`,
+  `/work/.ola/data/opencode/opencode.db.before-ola150` inside `hello`, and
+  `~/.ola-frontdesk/platform.db.before-ola150`.
+
+**The check, all three paths** (a made-up account only): on the mini, from a copy of the branch,
+`ssh -t -L 4796:127.0.0.1:4796 admin@100.95.51.98 'cd <copy>/apps/activist-ai && node frontdesk/test/cloud-stage.mjs'`
+(its own gateway with the scripted model, a made-up admin and project; Ctrl-C ends it and destroys the
+project), then here, with the password file it names copied over:
+`OLA_CLOUD_CHECK=1 OLA_ACCOUNT_BASE=http://localhost:4796 OLA_HANDLE=cloudadmin OLA_ACCOUNT_PASSWORD_FILE=<file> swift run olakit-selftest`.
+It lists the cloud sessions through the website's path (cookie, `/oc/api/session`), the Mac's
+(`OlaCloud.resolve`, the store) and the phone's (`PhoneWhere.signIn`, `config(.machine)`, the store),
+shows the three are the same before and after one session is made from each, that each app's switch
+reached its conversation, and that a signed-out key lists nothing. 2026-11-19: 11 of 11, twice.
+
 ## Sign in with a name and password (2026-11-17, the Mac app for anyone with a login)
 
 The first screen on a Mac with nothing set up is **Sign in to Ola**: the account's name and password,
@@ -187,12 +229,10 @@ wrong name or password (one sentence for both), the server's own wait after too 
 answering just now", each one plain line under the fields. An account that asks for its passkey too
 gets the system's passkey sheet in this window (below, "Passkeys in the app"); nothing ever opens a
 browser (2026-11-17: "normal means you'd never leave the app"). Under the form: "Sign in with a
-passkey" (only in a build that can use passkeys), and **"Use my own Ola machine
-instead"**: the owner's setup (the machine's address and password, the pasted model token over his
-private network, the phone's pairing), which is untouched: a Mac that already has a machine address or
-a pasted token never sees this screen, and its settings are not changed by the update. After signing
-in, "On this Mac" works through the model door with the Mac's key; "On the Ola machine" shows "Not
-yet" for anyone signed in without the owner's setup. Settings, Account, Sign In… opens the same screen
+passkey" (only in a build that can use passkeys). Since OLA-150 there is no "Use my own Ola machine
+instead": the sign-in reaches both runtimes (Cloud is the account's project, "One cloud" above); only a
+Mac working On this Mac with the owner's pasted model token skips this screen. After signing in, "On
+this Mac" works through the model door with the Mac's key. Settings, Account, Sign In… opens the same screen
 (Cancel goes back). The Mac keeps a known-device token from the server in plain settings
 (`ola.account.known`): it signs nobody in, it only spares this Mac the wait a stranger's guesses put on
 the name. Screens: `OLA_ONLY=signin tools/build.sh mac <dir>` (signin-1 to 1d are new).
@@ -475,6 +515,9 @@ used loopback: that proves pairing, the relay and the app, not the phone's Tails
 the same route the mini used.
 
 ## Where Ola works, on the phone (2026-11-17)
+
+**Superseded for the cloud by "One cloud" (OLA-150):** the phone's Cloud is the person's project on
+app.ola.cx, over the internet; the phone door and Tailscale below are history.
 
 Bart: "the same 'where Ola works' switch from the macOS app should also be in the iPhone app - so
 not just the mirroring of the Mac app." Settings, **Where Ola works** (`iOS/PhoneWhereViews.swift`,

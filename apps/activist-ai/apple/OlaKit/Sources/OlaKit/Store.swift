@@ -66,6 +66,11 @@ public final class OlaStore {
   /// step still be waiting `serverGrace` seconds later. False: the store answers ("On this Mac").
   public var serverAnswers: () -> Bool = { false }
   public var serverGrace: TimeInterval = 4
+  /// The cloud runtime's "Lots of permissions" (each app wires its switch): sent with a new cloud
+  /// conversation as its autonomy, and again before a request when it changed (CloudAutonomy).
+  public var cloudLots: () -> Bool = { true }
+  /// The autonomy each cloud conversation was last given from here.
+  private var autonomySent: [String: String] = [:]
   /// How many approvals went ahead without asking (checks).
   public private(set) var wentAhead = 0
   /// "Yes, for the rest of this session" (OLA-142): session id -> the kinds said yes to
@@ -226,6 +231,9 @@ public final class OlaStore {
         return
       } catch {
         if !current() { return }
+        // A cloud project rests after a while unused, and its event stream alone does not wake it
+        // (as a website tab's does not). With the app in front, any other request does: the list.
+        if case OlaError.server(503, _) = error, config?.account == true, isActive { _ = try? await client.sessions() }
         if case .lost = connection {} else { connection = .lost(since: .now, why: (error as? OlaError)?.detail ?? error.localizedDescription) }
         try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
         backoff = min(backoff * 2, 10)
@@ -466,7 +474,9 @@ public final class OlaStore {
     guard let client else { return nil }
     do {
       let title = request.count > 60 ? String(request.prefix(57)) + "\u{2026}" : request
-      let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "))
+      let autonomy = config?.account == true ? CloudAutonomy.word(cloudLots()) : nil
+      let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "), autonomy: autonomy)
+      if let autonomy { autonomySent[s.id] = autonomy }
       if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
       conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
       selectedID = s.id
@@ -487,6 +497,12 @@ public final class OlaStore {
     conversations[id]!.startTurn(request)
     running.insert(id)
     do {
+      // The cloud: the conversation follows this runtime's switch, as on the website, so a change of
+      // the switch (or a conversation started on the website) applies from this request on.
+      if config?.account == true, autonomySent[id] != CloudAutonomy.word(cloudLots()) {
+        let want = CloudAutonomy.word(cloudLots())
+        if (try? await client.setAutonomy(id, want)) != nil { autonomySent[id] = want }
+      }
       try await client.prompt(id, text: request)
     } catch {
       running.remove(id)
@@ -538,8 +554,6 @@ public final class OlaStore {
     do {
       if config.account || config.viaMac {
         try await client.reply(session: session, request: request, decision: .always)
-      } else if Runtime.of(config) == .cloud {
-        try await OpenCodeClient(MachinePermissions.door(for: config)).reply(session: session, request: request, decision: .always)
       } else {
         try await client.reply(session: session, request: request, decision: .once)
         for o in waiting where o["id"].str != request && covered(session, o["action"].str, o["resources"].array.map(\.str)) {
@@ -564,6 +578,11 @@ public final class OlaStore {
 
   public func delete(_ id: String) async {
     guard let client else { return }
+    // A cloud conversation belongs to the project, as on the website, which keeps them all.
+    if config?.account == true {
+      problem = Problem(text: "Cloud sessions stay in the project, as on the website. Rename it instead.")
+      return
+    }
     do {
       try await client.deleteSession(id)
       sessions.removeAll { $0.id == id }

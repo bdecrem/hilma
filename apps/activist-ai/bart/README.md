@@ -1,5 +1,14 @@
 # Bart's opencode
 
+**Retired from the apps (OLA-150, 2026-11-19).** The Mac and iPhone apps' Cloud is now the signed-in
+person's project on app.ola.cx, the same sessions the website shows (`../apple/README.md`, "One
+cloud"). Bart's two sessions here ("hi", "Hey") were imported into his project `hello`, and this
+folder's files are in its `earlier-cloud/`; the database before that is
+`~/.ola-bart/data/opencode/opencode.db.before-ola150`. App builds from 0.1 (18) on no longer reach this
+server, its password or its phone door. The job still runs because the `bart` gateway caller and its
+forwarder (port 4311) serve the eval tools (`evals/apps/run.mjs`); when nothing uses them,
+`ola-bart.sh uninstall` removes the job and the token and keeps the folder and the sessions.
+
 The server half of Bart's own apps (`../apple/`): one `opencode serve` on the Ola machine, with
 Bart's full privileges on it, no sealed VM. Both apps are its clients, so a session started on the
 Mac is on the phone at once, and the Mac need not be on.

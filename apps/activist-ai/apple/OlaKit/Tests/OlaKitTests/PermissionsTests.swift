@@ -36,18 +36,6 @@ final class PermissionsTests: XCTestCase {
     XCTAssertTrue(PermissionSettings.goesAhead(action: "shell", resources: ["cd x && ola-fetch https://example.org"]))
   }
 
-  /// The machine's choice through the Mac's phone door port, and the phone's own configs as they are.
-  func testWhereTheMachinesChoiceIsAsked() {
-    let mac = ServerConfig(url: URL(string: "http://admins-mac-mini.tailde799a.ts.net:4310")!, password: "pw")
-    let door = MachinePermissions.door(for: mac)
-    XCTAssertEqual(door.url.absoluteString, "http://admins-mac-mini.tailde799a.ts.net:4312")
-    XCTAssertEqual(door.password, "pw")
-    XCTAssertFalse(door.account || door.viaMac)
-    let phone = ServerConfig(url: URL(string: "http://admins-mac-mini.tailde799a.ts.net:4312")!, password: "key", account: true)
-    XCTAssertEqual(MachinePermissions.door(for: phone), phone)
-    let relay = ServerConfig(url: URL(string: "http://imac.tailde799a.ts.net:4330")!, password: "s", viaMac: true)
-    XCTAssertEqual(MachinePermissions.door(for: relay), relay)
-  }
 
   /// The phone through its Mac: the relay answers with the Mac's choice and takes a change.
   func testThePhoneReadsAndSetsItThroughTheRelay() async throws {

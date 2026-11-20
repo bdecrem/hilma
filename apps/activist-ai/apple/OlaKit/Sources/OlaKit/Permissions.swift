@@ -14,9 +14,10 @@ import Foundation
 /// iPhone, `ola settings permissions`, and the web app's project switch.
 ///
 /// **One switch per runtime** (OLA-142, meeting of 2026-11-18: "settings follow the runtime, not the
-/// product"). The cloud runtime's is kept and applied on the machine (`../bart/approver.mjs`, read
-/// and set through its phone door, `MachinePermissions`), so the phone alone, the Mac off, gets no
-/// question. The local runtime's is this Mac's (`ola.permissions`): applied by the app itself ("On
+/// product"). The cloud runtime's (OLA-150: the person's project on app.ola.cx) is each app's own
+/// switch, sent as the conversation's autonomy the way the website sends its switch (`CloudAutonomy`):
+/// the front desk then answers web steps itself, so the phone alone, the Mac off, gets no question.
+/// The local runtime's is this Mac's (`ola.permissions`): applied by the app itself ("On
 /// this Mac"), by `ola` in its config, and through the relay for the phone. Every product shows and
 /// changes the switch of the runtime it is in.
 public enum PermissionMode: String, CaseIterable, Sendable {
@@ -53,8 +54,8 @@ public enum PermissionSettings {
   #if os(macOS)
   /// The local runtime's choice ("On this Mac", the `ola` command, the phone through this Mac).
   public static let key = "ola.permissions"
-  /// This Mac's copy of the cloud runtime's choice, which is kept on the Ola machine
-  /// (`../bart/approver.mjs`): read from there (`pullCloud`), changed there (`setCloud`).
+  /// The cloud runtime's choice on this Mac (OLA-150): sent with each cloud conversation as its
+  /// autonomy (`OlaStore.cloudLots`), as the website sends its own switch.
   public static let cloudKey = "ola.permissions.cloud"
 
   /// The local runtime's choice. Since OLA-142 one per runtime (meeting of 2026-11-18: "settings
@@ -66,7 +67,7 @@ public enum PermissionSettings {
 
   public static var lots: Bool { mode == .lots }
 
-  /// The cloud runtime's choice as last read from the machine (Lots until it answers, its default).
+  /// The cloud runtime's choice (Lots by default, as on the website).
   public static var cloudMode: PermissionMode {
     get { LocalSettings.defaults.string(forKey: cloudKey).flatMap(PermissionMode.init(rawValue:)) ?? .lots }
     set { LocalSettings.defaults.set(newValue.rawValue, forKey: cloudKey) }
@@ -75,52 +76,33 @@ public enum PermissionSettings {
   public static func mode(_ r: Runtime) -> PermissionMode { r == .cloud ? cloudMode : mode }
 
   /// A store: under its runtime's Lots the ask-first steps go ahead. "On this Mac" the store answers
-  /// them itself, "once", as they come; on the Ola machine the machine answers them and the store
-  /// only keeps the card away (`OlaStore.serverAnswers`).
+  /// them itself, "once", as they come; in the cloud the conversation's autonomy lets them run and
+  /// the front desk answers web steps, so the store only keeps the card away (`serverAnswers`).
   @MainActor public static func wire(_ store: OlaStore) {
     store.goesAhead = { [weak store] action, resources in
       (store?.runtime == .cloud ? cloudMode : mode) == .lots && goesAhead(action: action, resources: resources)
     }
     store.serverAnswers = { [weak store] in store?.runtime == .cloud }
+    store.cloudLots = { cloudMode == .lots }
   }
 
-  /// The Ola machine this Mac knows (the saved address and password), as its phone door, or nil.
-  public static var machine: ServerConfig? { Credentials.load().map(MachinePermissions.door(for:)) }
-
-  /// Changes the local runtime's choice (this Mac, `ola`, the phone through this Mac). Never the
-  /// machine's. Returns nil (a line to show, for symmetry with `setCloud`).
+  /// Changes the local runtime's choice (this Mac, `ola`, the phone through this Mac). Returns nil
+  /// (a line to show, for symmetry with `setCloud`).
   @discardableResult
   public static func set(_ m: PermissionMode) async -> String? {
     mode = m
     return nil
   }
 
-  /// Changes the cloud runtime's choice, on the Ola machine. Returns a line to show when the
-  /// machine did not take it.
+  /// Changes the cloud runtime's choice: the next request in a cloud conversation carries it.
   @discardableResult
   public static func setCloud(_ m: PermissionMode) async -> String? {
-    // A self-test's own settings suite never reaches the real machine (it names its own door).
-    guard let machine = testMachine ?? (LocalSettings.defaults === UserDefaults.standard ? machine : nil) else {
-      return "The Ola machine isn\u{2019}t set up on this Mac."
-    }
-    do {
-      cloudMode = try await MachinePermissions.set(m, machine)
-      return nil
-    } catch {
-      return "The Ola machine didn\u{2019}t answer, so it keeps its own setting for now."
-    }
+    cloudMode = m
+    return nil
   }
 
-  /// A self-test's stand-in for the Ola machine's door (never the real one).
-  nonisolated(unsafe) public static var testMachine: ServerConfig?
-
-  /// Reads the cloud runtime's choice from the machine (at launch, in front, when Settings opens).
-  /// Quiet when it does not answer. Never touches the local runtime's.
-  public static func pull() async {
-    guard let machine = testMachine ?? (LocalSettings.defaults === UserDefaults.standard ? machine : nil),
-          let m = try? await MachinePermissions.get(machine) else { return }
-    if m != cloudMode { cloudMode = m }
-  }
+  /// Kept for the callers of the time the machine held the cloud's choice: it is this Mac's now.
+  public static func pull() async {}
 
   // MARK: Claude Code (Fallback to Claude)
 
@@ -176,25 +158,10 @@ public enum PermissionSettings {
   #endif
 }
 
-/// The Ola machine's own choice (Bart's opencode, `../bart/approver.mjs`), read and set through its
-/// phone door: `GET|PUT /ola/permissions`, `{ "mode": "lots" | "ask" }`. The phone on the machine
-/// uses its Ola device key there; the phone through its Mac asks the Mac's relay, which answers with
-/// the Mac's choice and passes a change on; the Mac uses the machine's password.
+/// The Mac's local switch, as the phone through its Mac reads and sets it: the Mac's relay answers
+/// `GET|PUT /ola/permissions`, `{ "mode": "lots" | "ask" }`, with the Mac's choice and keeps a change.
+/// (The cloud's switch is each app's own since OLA-150, `CloudAutonomy`.)
 public enum MachinePermissions {
-  /// The phone door's port beside Bart's opencode (`OLA_BART_PHONE_PORT`).
-  public static let doorPort = 4312
-  /// A check's scratch door on another port (never set by the apps).
-  nonisolated(unsafe) public static var doorPortOverride: Int?
-
-  /// Where to ask, for a server config: the phone's own configs as they are (the door, or the Mac's
-  /// relay); the Mac's Basic-auth config for opencode moved to the door's port on the same host.
-  public static func door(for c: ServerConfig) -> ServerConfig {
-    guard !c.account, !c.viaMac, var u = URLComponents(url: c.url, resolvingAgainstBaseURL: false) else { return c }
-    u.port = doorPortOverride ?? doorPort
-    u.path = ""
-    return ServerConfig(url: u.url ?? c.url, password: c.password)
-  }
-
   public static func get(_ c: ServerConfig) async throws -> PermissionMode {
     try parse(try await OpenCodeClient(c).json("GET", "/ola/permissions"))
   }

@@ -46,29 +46,40 @@ final class PhoneWhereTests: XCTestCase {
     XCTAssertEqual(PhoneWhere.mode, .mac)
   }
 
-  func testTheDoorIsATailscaleNameAndCanBePointedElsewhere() {
-    XCTAssertEqual(PhoneWhere.door.host, "admins-mac-mini.tailde799a.ts.net")
-    XCTAssertEqual(PhoneWhere.door.port, 4312)
-    PhoneWhere.environment = ["OLA_MACHINE_DOOR": "http://127.0.0.1:4999"]
-    XCTAssertEqual(PhoneWhere.door.port, 4999)
-  }
-
-  func testTheDeviceKeyGoesAsABearerAndNeverAsTheMachinePassword() {
-    let c = OpenCodeClient(PhoneWhere.machineConfig(token: "olap1.abcdefgh"))
-    XCTAssertEqual(c.request("GET", "/api/session").value(forHTTPHeaderField: "Authorization"), "Bearer olap1.abcdefgh")
+  /// The cloud is the website's project, over the internet (OLA-150): no machine address, no
+  /// Tailscale, the device key as a Bearer token, never the machine's password.
+  func testTheCloudIsTheProjectOnTheAccountsServer() {
+    let c = OlaCloud.config(token: "olap1.abcdefgh", project: "hello", base: URL(string: "https://app.ola.cx")!)
+    XCTAssertEqual(c.url.absoluteString, "https://app.ola.cx/api/device/w/hello/oc")
+    XCTAssertTrue(c.account)
+    XCTAssertEqual(Runtime.of(c), .cloud)
+    let client = OpenCodeClient(c)
+    XCTAssertEqual(client.request("GET", "/api/session").value(forHTTPHeaderField: "Authorization"), "Bearer olap1.abcdefgh")
+    XCTAssertEqual(client.url("/api/session").absoluteString, "https://app.ola.cx/api/device/w/hello/oc/api/session")
+    // The project's files are the website's, beside its opencode.
+    XCTAssertEqual(client.url("/project/api/files").absoluteString, "https://app.ola.cx/api/device/w/hello/api/files")
+    XCTAssertEqual(OlaCloud.project(of: c), "hello")
     let mac = OpenCodeClient(ServerConfig(url: URL(string: "http://m.ts.net:4310")!, password: "pw"))
     XCTAssertTrue(mac.request("GET", "/api/session").value(forHTTPHeaderField: "Authorization")!.hasPrefix("Basic "))
+    XCTAssertEqual(mac.url("/project/api/files").absoluteString, "http://m.ts.net:4310/project/api/files")
+  }
+
+  func testThePhonesCloudIsTheRememberedProjectOnceSignedIn() {
+    XCTAssertNil(PhoneWhere.config(.machine))
+    OlaCloud.defaults = suite
+    defer { OlaCloud.defaults = .standard }
+    OlaCloud.chosen = "hello"
+    XCTAssertNil(PhoneWhere.config(.machine), "not signed in")
   }
 
   func testWords() {
-    XCTAssertEqual(PhoneWhere.unreachableLine(tailscaleOn: false), "Turn on Tailscale on this phone.")
-    XCTAssertTrue(PhoneWhere.unreachableLine(tailscaleOn: true).hasPrefix("It isn\u{2019}t answering"))
+    XCTAssertFalse(PhoneWhere.unreachableLine.contains("Tailscale"))
     XCTAssertTrue(PhoneWhere.words(AccountError.unreachable).contains("this phone"))
     XCTAssertTrue(PhoneWhere.words(AccountError.passkeysNotInThisVersion).contains("Ola on the phone can\u{2019}t use passkeys yet"))
     XCTAssertEqual(PhoneWhere.words(AccountError.wrongPassword), AccountError.wrongPassword.errorDescription)
     // Nothing Bart reads names the plumbing.
-    for line in [PhoneWhere.unreachableLine(tailscaleOn: true), PhoneWhere.notAllowed, PhoneWhere.passkeyWords, PhoneWhere.words(AccountError.unreachable)] {
-      for word in ["relay", "opencode", "made-up", "Tailscale name"] { XCTAssertFalse(line.contains(word), line) }
+    for line in [PhoneWhere.unreachableLine, OlaCloud.noProject, PhoneWhere.passkeyWords, PhoneWhere.words(AccountError.unreachable)] {
+      for word in ["relay", "opencode", "made-up", "Tailscale", "device/w"] { XCTAssertFalse(line.contains(word), line) }
     }
   }
 }

@@ -619,69 +619,6 @@ struct EmptyConversation: View {
   }
 }
 
-/// The connect sheet: the address and the password, kept in the Keychain.
-struct ConnectForm: View {
-  var store: OlaStore
-  var onDone: () -> Void = {}
-  @State private var address = Credentials.savedAddress ?? ServerConfig.defaultAddress
-  @State private var password = ""
-  @State private var busy = false
-  @State private var problem: String?
-  @FocusState private var focus: Field?
-  enum Field { case address, password }
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: Space.l) {
-      HStack(spacing: Space.m) {
-        Image("Mark").resizable().frame(width: 36, height: 36).clipShape(RoundedRectangle(cornerRadius: 8))
-        Text("Connect to your machine").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
-      }
-      Text("Ola runs on your own machine, and this app talks to it over Tailscale. The password is on the machine; it goes into this device\u{2019}s Keychain.")
-        .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2).lineSpacing(2).fixedSize(horizontal: false, vertical: true)
-      VStack(alignment: .leading, spacing: 6) {
-        Text("Address").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2)
-        TextField("http://admins-mac-mini.tailde799a.ts.net:4310", text: $address).textFieldStyle(.plain).font(OlaFont.mono(Metrics.mono))
-          .focused($focus, equals: .address).field(focused: focus == .address)
-          #if os(iOS)
-          .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-          #endif
-        Text("Password").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2).padding(.top, Space.xs)
-        SecureField("From ola-bart.sh password", text: $password).textFieldStyle(.plain).font(OlaFont.sans(Metrics.ui))
-          .focused($focus, equals: .password).field(focused: focus == .password).onSubmit(connect)
-      }
-      if let problem {
-        Label(problem, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
-      }
-      HStack(spacing: Space.s) {
-        if busy { ProgressView().controlSize(.small); Text("Connecting\u{2026}").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
-        Spacer()
-        Button("Connect", action: connect).buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-          .disabled(busy || password.isEmpty || URL(string: address)?.host == nil)
-      }
-    }
-    .padding(Space.xl)
-    .background(Ola.paper)
-    .onAppear { focus = .password }
-  }
-
-  func connect() {
-    guard let url = URL(string: address.trimmingCharacters(in: .whitespaces)), url.host != nil, !password.isEmpty else { return }
-    busy = true
-    problem = nil
-    Task {
-      do {
-        try await store.connect(ServerConfig(url: url, password: password))
-        onDone()
-      } catch let e as OlaError {
-        problem = e == .unauthorized ? "The machine refused that password. On the machine: ola-bart.sh password." : "\(e.errorDescription ?? "") (\(e.detail))"
-      } catch {
-        problem = error.localizedDescription
-      }
-      busy = false
-    }
-  }
-}
-
 extension View {
   /// A text field on paper: a lighter field, a hairline, and when focused the system's focus ring
   /// (its color, about 3 pt, outside the edge).
@@ -719,16 +656,16 @@ struct ConnectionBar: View {
       bar(icon: "wifi.exclamationmark") {
         TimelineView(.periodic(from: .now, by: 5)) { ctx in
           (Text("The machine is not answering. ").font(OlaFont.sans(Metrics.ui, .semibold))
-           + Text("Is it on, and is this device on Tailscale? Trying again (\(waited(ctx.date.timeIntervalSince(since)))).").font(OlaFont.sans(Metrics.ui)))
+           + Text("\(store.config?.account == true ? "Is this device online?" : "Is it on, and is this device on Tailscale?") Trying again (\(waited(ctx.date.timeIntervalSince(since)))).").font(OlaFont.sans(Metrics.ui)))
             .monospacedDigit().lineLimit(2)
         }
       } action: {
         Button("Try Now") { store.reconnect() }.buttonStyle(OlaButton(kind: .onRoom))
       }
     case .refused where store.config?.account == true:
-      // The phone on the Ola machine with its own sign-in (PhoneWhere): its key stopped working.
+      // The cloud (OLA-150): this device's Ola sign-in stopped working.
       bar(icon: "lock") {
-        (Text("Signed out on this phone. ").font(OlaFont.sans(Metrics.ui, .semibold)) + Text("Sign in again from the session list.").font(OlaFont.sans(Metrics.ui)))
+        (Text("Signed out on this device. ").font(OlaFont.sans(Metrics.ui, .semibold)) + Text("Sign in to Ola again.").font(OlaFont.sans(Metrics.ui)))
       } action: { EmptyView() }
     case .refused:
       bar(icon: "lock") {

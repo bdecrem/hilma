@@ -38,7 +38,7 @@ struct PairScreen: View {
         }
         if let problem { Text(problem).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true) }
         if let other {
-          Button("Sign in to the Ola machine instead", action: other).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.blue).padding(.top, 8)
+          Button("Sign in to Ola instead", action: other).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.blue).padding(.top, 8)
         }
       }
       .padding(24)

@@ -102,7 +102,18 @@ final class PhoneWhereState {
     }
   }
 
-  /// Signs this phone out of the Ola machine. If it is paired with a Mac, it goes back to the Mac.
+  /// The cloud's project, asked of the server (at launch; OLA-150): attached to whichever store
+  /// holds the cloud, when it differs from the remembered one (or none was remembered yet).
+  func refreshCloud(store: OlaStore) async {
+    guard !fixture, PhoneWhere.signedIn, let c = await PhoneWhere.refreshCloud() else { return }
+    if mode == .machine {
+      if store.config != c { store.attach(c, orSaved: false) }
+    } else if let peer, peer.config != c {
+      peer.attach(c, orSaved: false)
+    }
+  }
+
+  /// Signs this phone out of Ola. If it is paired with a Mac, it goes back to the Mac.
   func signOut(store: OlaStore) async {
     await PhoneWhere.signOut()
     signedInName = nil
@@ -127,7 +138,8 @@ final class PhoneWhereState {
 extension PhoneMode: Identifiable { public var id: String { rawValue } }
 
 /// "Lots of permissions" on the phone, one switch per runtime (OLA-142, meeting of 2026-11-18:
-/// "settings follow the runtime, not the product"): the cloud's, kept on the Ola machine (its phone
+/// "settings follow the runtime, not the product"): the cloud's, this phone's own, sent with each cloud
+/// conversation as its autonomy (OLA-150; formerly kept on the Ola machine, its phone
 /// door; the machine goes ahead by itself, Mac off), and the local runtime's, kept on the Mac
 /// (through its relay). The phone never answers a step itself; under its runtime's Lots it only
 /// keeps the card away while that runtime answers it (OlaStore.serverAnswers), and shows it should
@@ -151,6 +163,7 @@ final class PhonePermissions {
       PhonePermissions.lots(store?.runtime ?? .cloud) && PermissionSettings.goesAhead(action: action, resources: resources)
     }
     store.serverAnswers = { true }
+    store.cloudLots = { PhonePermissions.lots(.cloud) }
   }
 
   private func keep(_ m: PermissionMode, _ r: Runtime) {
@@ -164,16 +177,20 @@ final class PhonePermissions {
     return PhoneWhere.ready(m) ? PhoneWhere.config(m) : nil
   }
 
-  /// Reads both switches (at launch, a switch, back in front, Settings). Quiet when one is away.
+  /// Reads the Mac's switch (at launch, a switch, back in front, Settings). Quiet when it is away.
+  /// The cloud's is this phone's own (OLA-150), sent with each cloud conversation.
   func refresh() async {
-    for r in Runtime.allCases {
-      guard let c = config(r), let m = try? await MachinePermissions.get(c) else { continue }
-      keep(m, r)
-      problem[r] = nil
-    }
+    guard let c = config(.local), let m = try? await MachinePermissions.get(c) else { return }
+    keep(m, .local)
+    problem[.local] = nil
   }
 
   func set(_ m: PermissionMode, _ r: Runtime) async {
+    if r == .cloud {
+      keep(m, .cloud)
+      problem[.cloud] = nil
+      return
+    }
     guard let c = config(r) else { return }
     let was = mode(r)
     modes[r] = m
@@ -202,7 +219,7 @@ struct PermissionsSection: View {
             Text(r == .cloud ? "In the cloud" : "Through your Mac")
           }
           .disabled(!ready)
-          Text(!ready ? (r == .cloud ? "Sign in to the Ola machine first." : "Pair with your Mac first.") : perms.mode(r) == .lots ? "Ola goes ahead without asking." : "Ola asks before each step.")
+          Text(!ready ? (r == .cloud ? "Sign in to Ola first." : "Pair with your Mac first.") : perms.mode(r) == .lots ? "Ola goes ahead without asking." : "Ola asks before each step.")
             .font(.footnote).foregroundStyle(Ola.ink2)
           if let p = perms.problem[r] { Text(p).font(.footnote).foregroundStyle(Ola.vermilionText) }
         }
@@ -254,7 +271,7 @@ struct PhoneStart: View {
         Text("Choose where Ola works for this phone. You can change it later in Settings.")
           .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
         StartChoice(title: "Pair with your Mac", detail: "Your phone shows what Ola on your Mac is doing, including work on the Mac itself.", symbol: "laptopcomputer") { picked = .mac }
-        StartChoice(title: "Sign in to the Ola machine", detail: "Your phone works with the Ola machine directly, even when your Mac is off.", symbol: "server.rack") { picked = .machine }
+        StartChoice(title: "Sign in to Ola", detail: "Your phone works in your Ola projects, the same sessions as the website, even when your Mac is off.", symbol: "cloud") { picked = .machine }
       }
       .padding(24)
     }
@@ -304,19 +321,14 @@ struct MachineSignIn: View {
   @State private var password = ""
   @State private var busy = false
   @FocusState private var field: Int?
-  private let tailscaleOn = PhoneWhere.tailscaleOn
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
         Image("Mark").resizable().frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 11))
-        Text("Sign in to the Ola machine").font(OlaFont.sans(26, .display)).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
-        Text(reason ?? "Your phone works with Ola on the Ola machine directly, even when your Mac is off. Use your Ola name and password.")
+        Text("Sign in to Ola").font(OlaFont.sans(26, .display)).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
+        Text(reason ?? "Your phone works in your Ola projects, the same sessions as the website, even when your Mac is off. Use your Ola name and password.")
           .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
-        if !tailscaleOn && !place.fixture {
-          Label("Turn on Tailscale on this phone.", systemImage: "exclamationmark.circle")
-            .font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
-        }
         VStack(spacing: 10) {
           TextField("Name", text: $name).textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled()
             .font(OlaFont.sans(Metrics.ui + 1)).field().focused($field, equals: 0).submitLabel(.next).onSubmit { field = 1 }
@@ -400,7 +412,7 @@ struct PhoneNewSessionSheet: View {
         Image(systemName: r.symbol).font(.title3).foregroundStyle(ok ? Ola.blue : Ola.ink3).frame(width: 30)
         VStack(alignment: .leading, spacing: 2) {
           Text("\(r.name): \(r.place(phone: true))").foregroundStyle(ok ? Ola.ink : Ola.ink2)
-          Text(ok ? r.detail(phone: true) : r == .cloud ? "Not set up yet. Tap to sign in to the Ola machine." : "Not set up yet. Tap to pair with your Mac.")
+          Text(ok ? r.detail(phone: true) : r == .cloud ? "Not set up yet. Tap to sign in to Ola." : "Not set up yet. Tap to pair with your Mac.")
             .font(.footnote).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
         }
         Spacer(minLength: 8)

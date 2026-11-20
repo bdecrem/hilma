@@ -25,6 +25,9 @@
 //   GET  /api/device/me          who, which device, until when
 //   POST /api/device/signout     this device is revoked
 //   ANY  /api/device/gw/<rest>   the model gateway, as the person's own caller p-<id> (GW_ALLOWED)
+//   GET  /api/device/projects    the person's projects, and under /api/device/w/<project>/ the
+//        project's conversations, files and event stream, with the web's own membership checks
+//        (the cloud of the Mac and iPhone apps, OLA-150: server.mjs, deviceCloud)
 // Each person who signs in a device has one gateway caller, p-<person id>, with its own token, in
 // a file this module keeps (OLA_FD_PEOPLE_TOKENS_FILE, ~/.ola/gateway-people, mode 600, written by
 // rename) and the gateway reads beside its tokens file (GATEWAY_PEOPLE_TOKENS_FILE). The file
@@ -508,5 +511,8 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     req.on('error', () => up.destroy())
   }
 
-  return { enabled, grant, list, remove, isDeviceRoute, handle, sync, codesHeld: () => codes.size, close: () => tidy && clearInterval(tidy) }
+  /** The live device behind a request (its pass), or null: for the cloud routes in server.mjs. */
+  const deviceFor = (req) => (enabled ? deviceOf(passOf(req)) : null)
+
+  return { enabled, grant, list, remove, isDeviceRoute, handle, sync, deviceFor, stillValid, codesHeld: () => codes.size, close: () => tidy && clearInterval(tidy) }
 }

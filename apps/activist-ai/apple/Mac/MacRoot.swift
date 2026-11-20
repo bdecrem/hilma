@@ -76,7 +76,6 @@ struct MacRoot: View {
   @SceneStorage("selected") private var savedSelection: String?
   @SceneStorage("filesShown") private var filesShown = true
   @State private var draft = ""
-  @State private var connectShown = false
   @State private var viewed: URL?
   @Bindable private var chooser = NewSessionChooser.shared
   @Environment(\.openWindow) private var openWindow
@@ -122,13 +121,12 @@ struct MacRoot: View {
     }
     .focusedSceneValue(\.olaDraft, $draft)
     .quickLookPreview($viewed)
-    .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac && whereOla?.readiness(.local).ready != true) || connectShown }, set: { connectShown = $0 })) {
-      ConnectForm(store: store) { connectShown = false; Task { await whereOla?.apply() } }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
-    }
     .sheet(isPresented: Binding(get: { chooser.shown && whereOla != nil }, set: { chooser.shown = $0 })) {
       if let whereOla { NewSessionSheet(whereOla: whereOla) { chooser.shown = false } }
     }
-    .onChange(of: store.connection) { _, c in if c == .refused { connectShown = true } }
+    // The cloud refused this Mac's key (signed out on the website, or removed under Your devices):
+    // the sign-in screen asks again (OLA-150; the cloud has no password of its own).
+    .onChange(of: store.connection) { _, c in if c == .refused, store.config?.account == true { whereOla?.account?.signedOutByServer() } }
     .onAppear {
       if store.selectedID == nil, let s = savedSelection { store.selectedID = s }
       store.onFiles = { filesShown.toggle() }
@@ -224,7 +222,8 @@ struct Sidebar: View {
               .contextMenu {
                 if st === store {
                   Button("Rename\u{2026}") { newTitle = s.title; renaming = s }
-                  Button("Delete\u{2026}", role: .destructive) { deleting = s }
+                  // A cloud session stays in its project, as on the website (OLA-150).
+                  if r != .cloud { Button("Delete\u{2026}", role: .destructive) { deleting = s } }
                 } else {
                   Button("Open") { open(r, s, in: st) }
                 }
@@ -242,7 +241,7 @@ struct Sidebar: View {
     }
     .listStyle(.sidebar)
     .safeAreaInset(edge: .bottom, spacing: 0) { MachineFooter(store: store) }
-    .onDeleteCommand { if let s = store.selected { deleting = s } }
+    .onDeleteCommand { if let s = store.selected, store.runtime != .cloud { deleting = s } }
     .alert("Rename session", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
       TextField("Name", text: $newTitle)
       Button("Rename") { if let s = renaming { Task { await store.rename(s.id, to: newTitle) } } }

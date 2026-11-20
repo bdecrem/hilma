@@ -19,7 +19,6 @@ final class SessionYesTests: XCTestCase {
   override func tearDown() async throws {
     UserDefaults.standard.removePersistentDomain(forName: suite)
     LocalSettings.defaults = saved
-    MachinePermissions.doorPortOverride = nil
   }
 
   func testTheKinds() {
@@ -105,21 +104,94 @@ final class SessionYesTests: XCTestCase {
     XCTAssertEqual(st.got.count, 3, "a command or another session's search was answered")
   }
 
-  /// The Mac on the Ola machine: the yes goes to the machine's door (its approver keeps it),
-  /// never to opencode directly.
-  func testTheMacOnTheMachineSendsTheYesToTheDoor() async throws {
-    let (oc, ocStub, ocPort) = try await stub()
-    let (door, doorStub, doorPort) = try await stub()
-    defer { oc.stop(); door.stop() }
-    MachinePermissions.doorPortOverride = Int(doorPort)
-    // "localhost", not 127.0.0.1: the machine as seen from the Mac (the cloud runtime).
-    let store = OlaStore(config: ServerConfig(url: URL(string: "http://localhost:\(ocPort)")!, password: "pw"))
+  /// The cloud (OLA-150): the yes goes to the front desk as "always", which keeps it for the
+  /// conversation and gives opencode "once" (frontdesk/server.mjs, the permission reply).
+  func testTheCloudSendsTheYesToTheFrontDesk() async throws {
+    let (fd, fdStub, fdPort) = try await stub()
+    defer { fd.stop() }
+    let store = OlaStore(config: ServerConfig(url: URL(string: "http://127.0.0.1:\(fdPort)")!, password: "olap1.key", account: true))
     XCTAssertEqual(store.runtime, .cloud)
-    ocStub.add("per_1", "ses_a", "shell", ["ola-search \"x\""])
+    fdStub.add("per_1", "ses_a", "shell", ["ola-search \"x\""])
     let status = await store.answerForSession(session: "ses_a", request: "per_1")
     XCTAssertEqual(status, 204)
-    XCTAssertEqual(doorStub.got.map(\.1), ["always"], "the door got the session yes")
-    XCTAssertTrue(ocStub.got.isEmpty, "opencode was answered directly")
+    XCTAssertEqual(fdStub.got.map(\.1), ["always"])
+    XCTAssertEqual(store.yesKinds("ses_a"), ["web"])
+  }
+
+  /// A stand-in front desk that records every request: method, path and body.
+  final class Recorder: @unchecked Sendable {
+    let lock = NSLock()
+    var seen: [(String, String, JSON)] = []
+    func add(_ m: String, _ p: String, _ b: JSON) { lock.withLock { seen.append((m, p, b)) } }
+    var all: [(String, String, JSON)] { lock.withLock { seen } }
+  }
+
+  /// The cloud's "Lots of permissions" is the conversation's autonomy, as on the website: a new
+  /// conversation carries the switch, and a request after the switch changed carries it again first.
+  func testTheCloudSwitchTravelsWithTheConversation() async throws {
+    let rec = Recorder()
+    let s = try MiniHTTPServer(host: "127.0.0.1", port: 0) { req, res in
+      rec.add(req.method, req.path, JSON.parse(req.body) ?? .null)
+      if req.method == "POST", req.path == "/api/session" {
+        return await res.send(200, JSON.object(["data": ["id": "ses_new", "title": "t", "time": ["created": 1_800_000_000_000, "updated": 1_800_000_000_000]]]).data)
+      }
+      await res.send(200, Data("{}".utf8))
+    }
+    let port = try await s.start()
+    defer { s.stop() }
+    var lots = true
+    let store = OlaStore(config: ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: "olap1.key", account: true))
+    store.cloudLots = { lots }
+    await store.sendToOla("Count the rows")
+    let create = rec.all.first { $0.0 == "POST" && $0.1 == "/api/session" }
+    XCTAssertEqual(create?.2["metadata"]["autonomy"].str, "go")
+    XCTAssertFalse(rec.all.contains { $0.0 == "PATCH" }, "the switch had not changed")
+    XCTAssertTrue(rec.all.contains { $0.0 == "POST" && $0.1 == "/api/session/ses_new/prompt" })
+    lots = false
+    await store.sendToOla("And the columns")
+    let patches = rec.all.filter { $0.0 == "PATCH" }
+    XCTAssertEqual(patches.map(\.1), ["/api/session/ses_new"])
+    XCTAssertEqual(patches.first?.2["metadata"]["autonomy"].str, "ask")
+    let order = rec.all.map { "\($0.0) \($0.1)" }
+    XCTAssertLessThan(order.lastIndex(of: "PATCH /api/session/ses_new")!, order.lastIndex(of: "POST /api/session/ses_new/prompt")!, "the switch went before the request")
+    // Anywhere else (this Mac's own agent) no autonomy is sent: the switch is the Mac's.
+    let rec2 = Recorder()
+    let s2 = try MiniHTTPServer(host: "127.0.0.1", port: 0) { req, res in
+      rec2.add(req.method, req.path, JSON.parse(req.body) ?? .null)
+      if req.method == "POST", req.path == "/api/session" {
+        return await res.send(200, JSON.object(["data": ["id": "ses_l", "title": "t", "time": ["created": 1_800_000_000_000, "updated": 1_800_000_000_000]]]).data)
+      }
+      await res.send(200, Data("{}".utf8))
+    }
+    let port2 = try await s2.start()
+    defer { s2.stop() }
+    let local = OlaStore(config: ServerConfig(url: URL(string: "http://127.0.0.1:\(port2)")!, password: "pw"))
+    await local.sendToOla("Hello")
+    XCTAssertTrue(rec2.all.first { $0.1 == "/api/session" }?.2["metadata"].isNull ?? false)
+  }
+
+  /// A cloud conversation stays in its project, as on the website: the app does not delete it.
+  func testTheCloudKeepsItsConversations() async throws {
+    let rec = Recorder()
+    let s = try MiniHTTPServer(host: "127.0.0.1", port: 0) { req, res in
+      rec.add(req.method, req.path, .null)
+      await res.send(200, Data("{}".utf8))
+    }
+    let port = try await s.start()
+    defer { s.stop() }
+    let store = OlaStore(config: ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: "olap1.key", account: true))
+    await store.delete("ses_a")
+    XCTAssertFalse(rec.all.contains { $0.0 == "DELETE" })
+    XCTAssertNotNil(store.problem)
+  }
+
+  /// The cloud's files are the website's list, one folder at a time.
+  func testTheCloudsFilesAreTheWebsitesList() {
+    let paths = ["survey.csv", "charts/rent.png", "charts/old/a.png", "sources/law.pdf", "notes.md"]
+    XCTAssertEqual(OpenCodeClient.folder(paths, "").map(\.path), ["charts", "sources", "notes.md", "survey.csv"])
+    XCTAssertEqual(OpenCodeClient.folder(paths, "").map(\.isDirectory), [true, true, false, false])
+    XCTAssertEqual(OpenCodeClient.folder(paths, "charts").map(\.path), ["charts/old", "charts/rent.png"])
+    XCTAssertEqual(OpenCodeClient.folder(paths, "charts/old/").map(\.path), ["charts/old/a.png"])
   }
 
   /// The phone through its Mac: the relay hands the session yes to the Mac app; anything else

@@ -186,6 +186,7 @@ final class AccountController {
     if let s = AccountKeeper.session { try? await api.signOut(s) }
     forgetHere()
     phase = .idle
+    onSignedOut?()
   }
 
   /// The server ended this Mac's sign-in: forget it and say so.
@@ -268,13 +269,11 @@ struct GateText: View {
   }
 }
 
-/// The first screen on a Mac with nothing set up: sign in with your Ola name and password (what
-/// everyone uses), or, for the owner, his own setup (the Ola machine directly). After a right password
+/// The first screen on a Mac with nothing set up: sign in with your Ola name and password, which
+/// reaches both runtimes (OLA-150: the cloud has no address or password of its own). After a right password
 /// for an account that asks for its passkey too, the system's passkey sheet finishes it, here.
 struct SignInScreen: View {
   var account: AccountController
-  /// The owner's way: the Ola machine directly (its address and password, as before sign-in existed).
-  var useOwnSetup: (() -> Void)?
   @State private var handle = AccountKeeper.defaults.string(forKey: "ola.account.lastHandle") ?? ""
   @State private var password = ""
   @FocusState private var focus: Field?
@@ -318,7 +317,6 @@ struct SignInScreen: View {
         Divider().overlay(Ola.rule).padding(.vertical, Space.xs)
         VStack(alignment: .leading, spacing: Space.xs) {
           if account.offersPasskey { Button("Use a passkey instead") { account.signInWithPasskey() }.buttonStyle(LinkButton()) }
-          if let useOwnSetup { Button("Use my own Ola machine instead", action: useOwnSetup).buttonStyle(LinkButton()) }
           Text("Forgot your password? Ask Bart for a link to choose a new one.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
         }
       }
