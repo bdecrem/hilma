@@ -6,6 +6,7 @@ import type { Ola } from '../lib/ola.ts'
 import type { CompareInfo, CompareResultLine, Fallback, Problem, Question, Step, Turn } from '../lib/types.ts'
 import { runSummary, stepVerb } from '../lib/conversation.ts'
 import { JOB_PROPOSED } from '../lib/steps.ts'
+import { projectPaths } from '../lib/blocks.ts'
 import { COMMANDS, commandMatches, parseCommand, reactionOnly, REACTIONS, shown, turnReaction, type CommandName } from '../lib/commands.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
@@ -610,7 +611,7 @@ function StepRow(props: { step: Step; current: boolean; engine?: Turn['engine'] 
             <span class="sr-only"> (did not work)</span>
           </Show>
           <Show when={s().result}>
-            <span class="step-result-inline"> · {s().result}</span>
+            <span class="step-result-inline"> · {projectPaths(s().result!)}</span>
           </Show>
         </p>
         <Show when={s().error}>
@@ -635,7 +636,7 @@ function StepRow(props: { step: Step; current: boolean; engine?: Turn['engine'] 
         </Show>
       </div>
       <Show when={s().result}>
-        <span class="step-result" aria-hidden="true">{s().result}</span>
+        <span class="step-result" aria-hidden="true">{projectPaths(s().result!)}</span>
       </Show>
     </li>
   )

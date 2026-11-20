@@ -190,7 +190,10 @@ async function step(run, journey, name, limitS, fn) {
     detail = (await Promise.race([fn(), sleep(limit).then(() => Promise.reject(new Error(`took more than ${Math.round(limit / 1000)} s`)))])) ?? ''
   } catch (e) {
     ok = false
-    detail = String(e?.message ?? e).split('\n')[0].slice(0, 300)
+    // The first line, and for a Playwright timeout the element it waited for.
+    const lines = String(e?.message ?? e).split('\n')
+    const waited = lines.find((l) => /waiting for (locator|getBy)/.test(l))
+    detail = [lines[0], waited?.trim()].filter(Boolean).join(' ').slice(0, 400)
     failedJourney = `${run.label}:${journey}`
   }
   const ms = Date.now() - t0
@@ -257,7 +260,15 @@ async function finishRun(run, limitMs, answer = () => 'Yes, this once') {
   throw new Error(`the run did not end in ${Math.round(limitMs / 1000)} s (asked: ${asked.join('; ') || 'nothing'})`)
 }
 async function openDrawer(page) {
-  if (!(await page.locator('.drawer.open').count())) await page.locator('.askbar-open').click()
+  // On a phone the conversation is a tab of the project page (on "Made by Ola" there is no drawer
+  // button to press); on a laptop the ask bar's button opens the drawer.
+  // The page may still be drawing the project (WebKit is slower to): wait for one of the three.
+  await page.locator('.drawer.open, .tabs [role="tab"], .askbar-open').first().waitFor({ timeout: 15_000 }).catch(() => {})
+  if (!(await page.locator('.drawer.open').count())) {
+    const tab = page.getByRole('tab', { name: 'Conversation' })
+    if (await tab.isVisible().catch(() => false)) await tab.click()
+    else await page.locator('.askbar-open').click()
+  }
   await page.locator('.drawer.open').waitFor({ timeout: 5000 })
 }
 /** A request in a new conversation (or this one, `fresh: false`); returns once it is on the page. */
@@ -328,13 +339,17 @@ try {
       })
       // A normal sign-in since 2026-11-17: the person chooses a password (the passkey way is
       // first-user-more.mjs's journey and frontdesk/check.mjs's).
-      await step(run, 'A', 'choose a password and land in the project', 30, async () => {
+      await step(run, 'A', 'choose a password and land in the project', 60, async () => {
         await page.getByLabel('Choose a password').fill('a kettle on the windowsill')
+        const t0 = Date.now()
         await page.getByRole('button', { name: 'Make my account' }).click()
-        await page.waitForSelector('.project-title', { timeout: 30_000 })
-        // A phone opens a project on its conversation; a laptop on its things.
-        await page.waitForSelector('.empty-title, .thing, .drawer.open #ask-input', { timeout: 30_000 })
-        return `"${await page.locator('.project-title').innerText()}"`
+        await page.waitForSelector('.project-title', { timeout: 60_000 })
+        // A phone opens a project on its conversation; a laptop on its things. A project asleep
+        // wakes first ("Waking your project…"): the time is said, so a slow wake shows.
+        const waking = await page.locator('.loading').innerText().catch(() => '')
+        // :visible: on a phone the empty "Made by Ola" tab is in the page, hidden, and is the first match.
+        await page.locator('.empty-title:visible, .thing:visible, .drawer.open #ask-input:visible').first().waitFor({ timeout: 60_000 })
+        return `"${await page.locator('.project-title').innerText()}" in ${((Date.now() - t0) / 1000).toFixed(1)} s${waking ? ` (said "${waking}")` : ''}`
       })
       await step(run, 'A', 'the empty project says what to do', 10, async () => {
         const t = await page.locator('main').innerText()
@@ -437,7 +452,7 @@ try {
         if (!/sources\/.+\.pdf/i.test(data)) throw new Error('the downloaded PDF is not among the documents in Data')
       })
     }
-    if ([...ONLY].some((j) => 'CEFGHI'.includes(j))) {
+    if ([...ONLY].some((j) => 'CEFGHIJ'.includes(j))) {
       failedJourney = null
       let n = 0
       const newPerson = async (role) => {
@@ -449,10 +464,13 @@ try {
         return { who, page: p, run: sub, close: () => ctx.close() }
       }
       const { moreJourneys } = await import('./first-user-more.mjs')
-      await moreJourneys({ run, step, ask, finishRun, answerText, openIn, admin, ORIGIN, sleep, until, ONLY, AI, SHOTS, env, newPerson })
+      await moreJourneys({ run, step, ask, finishRun, answerText, openIn, admin, ORIGIN, sleep, until, ONLY, AI, SHOTS, env, newPerson, fresh: () => (failedJourney = null) })
     }
     if (run.foreign.size) results.push({ run: run.label, journey: '-', name: 'no request to another origin', ok: false, ms: 0, detail: [...run.foreign].slice(0, 3).join(' ') })
     await browser.close()
+    // This run's project goes to sleep, as an idle one does: the next run's Compare with Claude
+    // needs the room for its own sealed copies (OLA_MAX_RUNNING is 2 here).
+    node('workspace/ws.mjs', ['stop', run.id])
   }
 } finally {
   writeFileSync(path.join(SHOTS, 'frontdesk.log'), fd.log) // the front desk's own lines (no secrets: it logs none)

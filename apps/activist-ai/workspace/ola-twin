@@ -254,13 +254,21 @@ def make_in(tid, folder, request, context, seed, g):
     tokens_in = tokens_out = 0
     note = ""
     last = None
-    for attempt in range(3):
+    unreached = None
+    unusable = None
+    # Four tries: the everyday model's generator sometimes fails to run three times in a row
+    # (first-user walk J on WebKit, OLA-87), and a person told "could not make a copy" is left stuck.
+    for attempt in range(4):
         files_dir = folder / f"try{attempt}"
         user = "The task:\n" + request + "\n\nThe files it read, described (structure only):\n" + json.dumps(profiles, indent=1)[:40000] + (("\n\n" + note) if note else "")
         try:
             text, ti, to = ask_model([{"role": "system", "content": SYSTEM % {"kinds": T.KINDS, "labels": [l for l in T.LABELS if l != "success"]}}, {"role": "user", "content": user}])
         except (OSError, http.client.HTTPException, RuntimeError, ValueError) as e:
-            fail("the model could not be reached: " + type(e).__name__, 3)
+            # One attempt lost, not the copy: the everyday model sometimes gives an empty reply to
+            # this long prompt (the gateway's 502 after its own three tries; first-user walk J,
+            # OLA-87), and the next attempt usually answers.
+            unreached = type(e).__name__
+            continue
         tokens_in += ti
         tokens_out += to
         try:
@@ -275,6 +283,7 @@ def make_in(tid, folder, request, context, seed, g):
             # tests on a Mac, against the scripted model's own generators.
             truth, names = T.run_generator(source, files_dir, seed, allow_host=os.environ.get("OLA_TWIN_ALLOW_HOST") == "1")
         except (ValueError, RuntimeError, OSError) as e:
+            unusable = type(e).__name__ + ": " + str(e)[:80]
             note = "Your last answer could not be used (" + str(e)[:200] + "). Answer again with the JSON object only."
             continue
         checks = checks + [c for c in T.family_checks(kind) if c["name"] not in {x["name"] for x in checks}]
@@ -285,7 +294,9 @@ def make_in(tid, folder, request, context, seed, g):
             break
         note = "Your last copy still carried things from the task: " + ", ".join(sorted({f["text"] for f in leak["findings"] if f["severity"] == "leak"}))[:1500] + ". Invent them instead."
     if not last:
-        fail("no usable copy could be made", 4)
+        if unreached:
+            fail("the model could not be reached: " + unreached, 3)
+        fail("no usable copy could be made" + ((" (last: " + unusable + ")") if unusable else ""), 4)
     kind, treq, source, checks, truth, names, files_dir, leak = last
     files = []
     total = 0

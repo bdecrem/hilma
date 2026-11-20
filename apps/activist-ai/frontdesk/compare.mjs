@@ -183,6 +183,19 @@ export async function judgeTwice({ kind, request, x, y, names, ask, coin = Math.
 }
 
 /** Checks first, then the judge (README, "Compare with Claude"). */
+/**
+ * The sentence under the verdict. The judge's, when it agrees with the outcome; when the copy's
+ * checks decided against the judge, theirs: "Ola did better: Both did the same." read as a
+ * contradiction (first-user walk J, OLA-87).
+ */
+export function differenceOf({ outcome, judged, ola, claude }) {
+  const won = outcome === 'ola_better' ? 'x' : outcome === 'claude_better' ? 'y' : null
+  if (!won || judged.verdict === won) return judged.difference
+  const [w, l, wn, ln] = won === 'x' ? [ola, claude, 'Ola', 'Claude'] : [claude, ola, 'Claude', 'Ola']
+  if (!w?.total || !l?.total) return judged.difference
+  return `${wn}’s result passed all ${w.total} checks of the task; ${ln}’s passed ${l.passed} of ${l.total}.`
+}
+
 export function outcomeOf({ ola, claude, judged }) {
   const hasChecks = ola?.total > 0 && claude?.total > 0
   if (hasChecks && ola.all !== claude.all) return claude.all ? 'claude_better' : 'ola_better'
@@ -769,6 +782,8 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       const gathered = await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'gather'], { input: JSON.stringify({ files: turn.read }), ms: 5 * 60_000, max: 96 * 1024 * 1024 })
       const out = gathered?.read && Array.isArray(gathered.names) && Array.isArray(gathered.texts) ? await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'make', id], { input: JSON.stringify({ request: turn.request, context: turn.context, gathered }), ms: 15 * 60_000, user: `${TWIN_UID}:${TWIN_UID}` }) : null
       if (!out?.leak || !Array.isArray(out.files)) {
+        // Why, for whoever reads the log: the copy-maker's own words, never the person's content.
+        log(`compare: no made-up copy for ${id} (${String((out ?? gathered)?.error ?? 'no answer').slice(0, 120)})`)
         set(id, { state: 'failed', finished_at: Date.now() })
         return { status: 502, body: { error: 'twin_failed', id, message: 'Ola could not make a made-up copy of this task just now. Nothing left this machine.' } }
       }
@@ -925,7 +940,7 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       kind,
       twin: twin ? { request: twin.request, kind: twin.kind, seed: twin.seed, checks: twin.checks, files: twin.files.map((f) => ({ name: f.name, size: f.size })) } : null,
       engines: Object.fromEntries(Object.entries(engines).map(([k, e]) => [k, { final: e.final, end: e.end, ms: e.ms, tokensIn: e.tokensIn, tokensOut: e.tokensOut, model: e.model, score: e.score ?? null, outputs: (e.outputs ?? []).map((f) => ({ name: f.name, size: f.size, text: f.text ?? null, input: Boolean(f.input) })) }])),
-      judge: { verdict: judged.verdict, difference: judged.difference, runs: judged.runs.map((r) => ({ winner: r.winner, points: r.points, difference: r.difference })) },
+      judge: { verdict: judged.verdict, difference: differenceOf({ outcome, judged, ola: o, claude: c }), runs: judged.runs.map((r) => ({ winner: r.winner, points: r.points, difference: r.difference })) },
       outcome,
       label,
       finishedAt: Date.now(),

@@ -4,6 +4,7 @@
 // is held. Then the unit tests of the leak check and the sandbox (twin_test.py). Run by
 // workspace/check.mjs; on its own: node workspace/twin.test.mjs
 import { spawn, spawnSync } from 'node:child_process'
+import http from 'node:http'
 import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -29,7 +30,7 @@ writeFileSync(path.join(work, 'memo.md'), 'The Ostrander committee kept the thaw
 // Two steps, as the front desk runs them (review 5 follow-up): `gather` as the agent's user hands
 // over the files the run read and the project's text; `make` (in the VM a user of its own) works
 // only from that, in a private folder it removes, never in /work.
-const twin = (id, request) =>
+const twin = (id, request, gw = port) =>
   new Promise((resolve) => {
     const g = spawnSync('python3', ['-I', path.join(HERE, 'ola-twin'), 'gather'], { input: JSON.stringify({ files: ['harbor_roster.csv'] }), encoding: 'utf8', env: { PATH: process.env.PATH, OLA_TWIN_WORK: work }, maxBuffer: 64 * 1024 * 1024 })
     let gathered = null
@@ -38,7 +39,7 @@ const twin = (id, request) =>
     } catch {
       return resolve({ error: g.stdout + g.stderr })
     }
-    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: path.join(dir, 'nowhere'), OLA_TWIN_TMP: dir, OLA_BATCH_GATEWAY: `http://127.0.0.1:${port}`, BOX_API_KEY: 'x'.repeat(32), OLA_TWIN_ALLOW_HOST: '1' } })
+    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: path.join(dir, 'nowhere'), OLA_TWIN_TMP: dir, OLA_BATCH_GATEWAY: `http://127.0.0.1:${gw}`, BOX_API_KEY: 'x'.repeat(32), OLA_TWIN_ALLOW_HOST: '1' } })
     let out = ''
     c.stdout.on('data', (d) => (out += d))
     c.stderr.on('data', (d) => (out += d))
@@ -74,6 +75,18 @@ try {
   ok('a copy that carries a name from the project is refused (it stays in the project)', leak.leak?.verdict === 'leak' && leak.leak.counts?.name >= 1, JSON.stringify(leak.leak))
   const unsure = await twin('0123456789ad', 'Count the volunteers. PLANT-UNSURE:thaw')
   ok('a copy that carries a rare word from the project is held for the owner (unsure)', unsure.leak?.verdict === 'unsure' && unsure.leak.findings.some((f) => f.text === 'thaw'), JSON.stringify(unsure.leak))
+  // The everyday model sometimes gives an empty reply to the copy's long prompt, and the gateway
+  // answers 502 (first-user walk J, OLA-87): that attempt is lost, not the copy.
+  let calls = 0
+  const flaky = http.createServer((req, res) => {
+    if (calls++ === 0) return req.resume(), res.writeHead(502, { 'content-type': 'application/json' }).end('{"error":{"message":"the model produced an empty reply, 3 times"}}')
+    const up = http.request({ host: '127.0.0.1', port, method: req.method, path: req.url, headers: req.headers }, (r) => (res.writeHead(r.statusCode, r.headers), r.pipe(res)))
+    req.pipe(up)
+  })
+  await new Promise((r) => flaky.listen(0, '127.0.0.1', r))
+  const again = await twin('0123456789ae', 'Clean harbor_roster.csv: drop the repeated volunteers and say how many there were.', flaky.address().port)
+  flaky.close()
+  ok('a lost model reply costs one attempt, not the copy: the next attempt makes it', calls >= 2 && again.leak?.verdict === 'clean' && again.files?.length === 1, JSON.stringify(again).slice(0, 300))
 } finally {
   model.server.close()
   rmSync(dir, { recursive: true, force: true })

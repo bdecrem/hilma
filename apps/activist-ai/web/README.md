@@ -150,10 +150,19 @@ Claude, one real download (the made-up search's UN PDF); everything is destroyed
 used 0.8 million tokens of the everyday model (12 cents on Together) and about 5 minutes.
 The model's quality is printed, not failed on (did it name the duplicate row, did it quote Article 1).
 
+`--only J` (OLA-87) walks the four things a first person runs into that the other journeys only
+looked at, and fails on each when the person would be left wondering: **Compare with Claude** under
+a finished reply, through the made-up copy (read, then sent) to the side-by-side and the verdict
+left under the reply; **two tabs**, the second showing the run going on and both ending on the same
+reply; **a moment offline**, said at once ("Lost the connection to Ola's computer"), gone when the
+network is back, and a request then run to its end; **a 60 MB scan** (a real one-page PDF), sent in
+pieces with its progress and then in Files at its size. `node web/first-user.mjs --only A,J` runs it
+in both browsers in about ten minutes.
+
 `--only C,E,F,G,H,I` adds the longer walk in `first-user-more.mjs` (six studies and a job, a
 site made to look better, a drawing and a translation, every switch in Settings and every `/`
-command, a second member removed mid-visit, reloads, two tabs, offline, a too-big file, a
-sleeping project with `OLA_FU_IDLE_MIN=1`); `OLA_FU_SPECIALISTS=<model>` and `OLA_FU_HOSTED=<model>`
+command, a second member removed mid-visit, a reload mid-run, the back button, a weird file name,
+a passkey this machine does not know, a sleeping project with `OLA_FU_IDLE_MIN=1`); `OLA_FU_SPECIALISTS=<model>` and `OLA_FU_HOSTED=<model>`
 turn on the specialists and the hosted open model on Together for it. What the first pass found
 is in `FIRST-USER-NOTES.md`.
 

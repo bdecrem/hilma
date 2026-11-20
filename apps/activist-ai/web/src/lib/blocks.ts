@@ -6,6 +6,13 @@ export type Block = { kind: 'p' | 'h'; text: string } | { kind: 'ul' | 'ol'; ite
 const cells = (line: string): string[] => line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim())
 const isRule = (line: string) => /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(line)
 
+/**
+ * The project's own folder said the way the person knows it: a reply that names
+ * "/work/The Cupboard on Main Street.docx" reads "The Cupboard on Main Street.docx" (first-user
+ * walk J, OLA-87). Only a path that starts at /work/, at the start of a word.
+ */
+export const projectPaths = (text: string) => text.replace(/(^|[\s(`"'*[])\/work\/(?=\S)/g, '$1')
+
 export function blocks(text: string): Block[] {
   const out: Block[] = []
   let para: string[] = []

@@ -131,7 +131,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
     if (ask) {
       setDrawer(true)
       void ola.open(ask)
-    }
+    } else void ola.resumeWorking()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && drawer() && !document.querySelector('dialog[open]')) closeDrawer()
     }

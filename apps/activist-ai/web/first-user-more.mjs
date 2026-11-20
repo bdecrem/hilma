@@ -13,7 +13,7 @@
 //   I  reload mid-run, two tabs, the back button, a sleeping project, a long reply, a weird file
 //      name, a file over the size limit, a passkey this machine does not know, a moment offline
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, readdirSync } from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -35,17 +35,39 @@ Artículo 5. Fin del uso.
 El uso termina con un aviso de seis meses, salvo emergencia declarada.
 `
 
+// A small volunteer log with two repeated rows (journey J's Compare with Claude). Right answer:
+// Kitchen 14, Pantry 13, Delivery 11 hours once the repeats are left out.
+const HOURS = ['date,team,volunteer,hours', '2026-10-01,Kitchen,Ana,4', '2026-10-01,Kitchen,Ana,4', '2026-10-02,Pantry,Ben,5', '2026-10-03,Delivery,Cy,3', '2026-10-04,Kitchen,Dee,6', '2026-10-05,Pantry,Eli,4', '2026-10-05,Pantry,Eli,4', '2026-10-06,Delivery,Fay,8', '2026-10-07,Kitchen,Gus,4', '2026-10-08,Pantry,Hal,4', ''].join('\n')
+
 export async function moreJourneys(h) {
   const { run, step, ask, finishRun, answerText, openIn, admin, ORIGIN, sleep, until, ONLY, AI, newPerson } = h
+  // J's steps are independent: one failing does not skip the next.
+  const jstep = async (...a) => {
+    h.fresh?.()
+    // A sheet an earlier step left open would take every click.
+    for (const d of await page.locator('dialog[open]').all()) await d.getByRole('button', { name: /^(Close|Not now|Don’t send)$/ }).first().click().catch(() => {})
+    return step(...a)
+  }
   const page = run.page
   const home = async () => {
     await page.goto(`${ORIGIN}/?w=${run.id}#/`)
     await page.waitForSelector('.project-title')
   }
   const closeDrawer = async () => {
-    if (await page.locator('.drawer.open').count()) await page.getByRole('button', { name: 'Close the drawer' }).click()
+    // On a phone the conversation is the page itself (its tab), with nothing to close.
+    const close = page.getByRole('button', { name: 'Close the drawer' })
+    if ((await page.locator('.drawer.open').count()) && (await close.isVisible().catch(() => false))) await close.click()
   }
   const lastTurnText = async () => (await page.locator('.drawer .turn').last().innerText().catch(() => '')).replace(/\s+/g, ' ')
+  // The conversation: on a phone its tab, on a laptop the ask bar's button.
+  const openDrawer = async (pg = page) => {
+    await pg.locator('.drawer.open, .tabs [role="tab"], .askbar-open').first().waitFor({ timeout: 15_000 }).catch(() => {})
+    if (await pg.locator('.drawer.open').count()) return
+    const tab = pg.getByRole('tab', { name: 'Conversation' })
+    if (await tab.isVisible().catch(() => false)) await tab.click()
+    else await pg.locator('.askbar-open').click()
+    await pg.locator('.drawer.open').waitFor({ timeout: 5000 })
+  }
 
   if (ONLY.has('C')) {
     const dir = mkdtempSync(path.join(tmpdir(), 'ola-fu-docs-'))
@@ -225,19 +247,7 @@ export async function moreJourneys(h) {
       const t = page.locator('.drawer .turn').last()
       return `ended ${r.status}; reaction ${await t.locator('.reaction').getAttribute('data-reaction').catch(() => 'none')}; reply shown: ${(await t.locator('.said-ola').count()) ? (await t.locator('.said-ola').innerText()).replace(/\s+/g, ' ').slice(0, 120) : 'none'}`
     })
-    await step(run, 'G', 'Compare with Claude under a reply, through to the side-by-side', 600, async () => {
-      const t = page.locator('.drawer .turn').nth(-2)
-      const btn = t.getByRole('button', { name: 'Compare with Claude' })
-      if (!(await btn.count())) return 'no Compare with Claude under the reply'
-      await btn.click()
-      await page.waitForSelector('dialog[open]')
-      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-G-compare-ask.png`) })
-      const go = page.getByRole('button', { name: 'Make a made-up copy' })
-      await go.click()
-      await until(async () => (await page.locator('.compare-sides').count()) || /could not|did not/.test(await page.locator('dialog[open]').innerText()), 560_000, 'the side-by-side')
-      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-G-compare-sides.png`) })
-      return (await page.locator('dialog[open]').innerText()).replace(/\s+/g, ' ').slice(0, 300)
-    })
+    // Compare with Claude is journey J's (judged there, through to the side-by-side).
   }
 
   if (ONLY.has('H')) {
@@ -282,7 +292,7 @@ export async function moreJourneys(h) {
   }
 
   if (ONLY.has('I')) {
-    await step(run, 'I', 'reload mid-run, then a second tab', 300, async () => {
+    await step(run, 'I', 'reload mid-run', 300, async () => {
       await home()
       await ask(run, 'Write a 600-word history of community food banks in a made-up town, as a document.')
       await sleep(4000)
@@ -290,16 +300,9 @@ export async function moreJourneys(h) {
       await page.waitForSelector('.project-title')
       await sleep(2500)
       const afterReload = (await page.locator('.askdock, .drawer.open').first().innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160)
-      const tab2 = await run.ctx.newPage()
-      await tab2.goto(page.url())
-      await tab2.waitForSelector('.project-title')
-      await sleep(2000)
-      const inTab2 = (await tab2.locator('.askdock').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160)
-      await tab2.screenshot({ path: path.join(h.SHOTS, `${run.label}-I-second-tab.png`) })
-      await tab2.close()
-      await page.locator('.askbar-open').click()
+      await openDrawer()
       const r = await finishRun(run, 280_000)
-      return `after the reload: "${afterReload}"; second tab: "${inTab2}"; ended ${r.status}`
+      return `after the reload: "${afterReload}"; ended ${r.status}`
     })
     await step(run, 'I', 'the back button', 20, async () => {
       await closeDrawer()
@@ -310,30 +313,16 @@ export async function moreJourneys(h) {
       await page.waitForSelector('.project-title')
       return page.url()
     })
-    await step(run, 'I', 'a file with a weird name; one over the size limit', 60, async () => {
+    await step(run, 'I', 'a file with a weird name', 60, async () => {
       await page.goto(`${ORIGIN}/?w=${run.id}#/files`)
       await page.waitForSelector('#file-picker', { state: 'attached' })
       await page.locator('#file-picker').setInputFiles({ name: 'Résumé (final) v2 — copy #3?.csv', mimeType: 'text/csv', buffer: Buffer.from('a,b\n1,2\n') })
       await sleep(4000)
       const weird = (await page.locator('.files-status, .upload-note, .problem').allInnerTexts()).join(' ').replace(/\s+/g, ' ')
       await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-I-weird-name.png`) })
-      await page.locator('#file-picker').setInputFiles({ name: 'big scan.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(60 * 1024 * 1024, 1) })
-      await sleep(6000)
-      const big = (await page.locator('.files-status, .upload-note, .problem').allInnerTexts()).join(' ').replace(/\s+/g, ' ')
-      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-I-too-big.png`) })
-      return `weird name: "${weird.slice(0, 200)}"; 60 MB: "${big.slice(0, 200)}"`
+      return `weird name: "${weird.slice(0, 200)}"`
     })
-    await step(run, 'I', 'a moment offline', 60, async () => {
-      await home()
-      await run.ctx.setOffline(true)
-      await sleep(5000)
-      const off = (await page.locator('body').innerText()).replace(/\s+/g, ' ')
-      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-I-offline.png`) })
-      await run.ctx.setOffline(false)
-      await sleep(8000)
-      const back = (await page.locator('body').innerText()).replace(/\s+/g, ' ')
-      return `offline: ${/connection/i.test(off) ? off.match(/[^.]*connection[^.]*\./i)?.[0] : 'NOTHING SAID'}; back: ${/connection/i.test(back) ? 'still says lost' : 'recovered'}`
-    })
+    // Two tabs, a moment offline and a 60 MB upload are journey J's (judged there).
     await step(run, 'I', 'a passkey this machine does not know (a browser that used one before, so the quiet link shows)', 30, async () => {
       const o = await newPerson('stranger')
       await o.page.goto(`${ORIGIN}/`)
@@ -358,6 +347,152 @@ export async function moreJourneys(h) {
       })
     }
   }
+
+  // J: the four things a first person runs into that the other journeys only looked at (OLA-87).
+  // Each step judges: it fails when the person would be left wondering.
+  if (ONLY.has('J')) {
+    await jstep(run, 'J', 'Compare with Claude under a reply: the made-up copy read, sent, and the side-by-side', 600, async () => {
+      // The made-up copy is built for work on the person's data: a small spreadsheet and a question.
+      await page.goto(`${ORIGIN}/?w=${run.id}#/files`)
+      await page.waitForSelector('#file-picker', { state: 'attached' })
+      await page.locator('#file-picker').setInputFiles({ name: 'volunteer hours.csv', mimeType: 'text/csv', buffer: Buffer.from(HOURS) })
+      await page.waitForSelector('table.files .file-name:has-text("volunteer hours.csv")', { timeout: 25_000 })
+      await home()
+      await ask(run, 'In volunteer hours.csv, how many hours did each team give in total? Leave out the repeated rows.')
+      const r0 = await finishRun(run, 200_000)
+      if (r0.status !== 'done') throw new Error(`the request ended "${r0.status}"`)
+      const btn = page.locator('.drawer .turn').last().getByRole('button', { name: 'Compare with Claude' })
+      await btn.waitFor({ timeout: 15_000 }).catch(() => {})
+      if (!(await btn.count())) throw new Error('no Compare with Claude under a finished reply (the owner)')
+      await btn.click()
+      const dlg = page.locator('dialog.compare-sheet[open]')
+      await dlg.waitFor({ timeout: 5000 })
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-compare-ask.png`) })
+      await dlg.getByRole('button', { name: 'Make a made-up copy' }).click()
+      // The copy is made by Ola's own model; the person reads it, then says send (or "anyway" when it
+      // may still hold something of theirs).
+      const send = dlg.getByRole('button', { name: /^(Send it to Claude|Send it anyway)$/ })
+      await until(async () => (await send.count()) || /did not finish|stayed on this machine|could not make|could not read/.test(await dlg.innerText()), 300_000, 'the made-up copy to read')
+      if (!(await send.count())) throw new Error(`no copy to read: ${(await dlg.innerText()).replace(/\s+/g, ' ').slice(0, 200)}`)
+      const copy = (await dlg.innerText()).replace(/\s+/g, ' ')
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-compare-copy.png`) })
+      const sent = await send.innerText()
+      await send.click()
+      await until(async () => (await dlg.locator('.compare-sides').count()) || /did not finish/.test(await dlg.innerText()), 280_000, 'the side-by-side')
+      const done = (await dlg.innerText()).replace(/\s+/g, ' ')
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-compare-sides.png`) })
+      if (!(await dlg.locator('.compare-sides').count())) throw new Error(`the comparison did not finish: ${done.slice(0, 200)}`)
+      if ((await dlg.locator('.compare-sides > *').count()) !== 2) throw new Error('the side-by-side does not show Ola and Claude')
+      const verdict = (await dlg.locator('.compare-verdict').innerText()).replace(/\s+/g, ' ')
+      if (!verdict.trim()) throw new Error('no verdict line over the side-by-side')
+      await dlg.getByRole('button', { name: 'Close' }).click()
+      // Under the reply, the result stays: "How did Ola do?" and the verdict.
+      await until(() => page.locator('.drawer .turn').last().locator('.compare-q').count(), 15_000, 'the verdict under the reply')
+      return `${sent}; copy shown (${copy.length} characters); "${verdict.slice(0, 120)}"`
+    })
+
+    await jstep(run, 'J', 'two tabs: the second shows the run going on, and both end with the same reply', 300, async () => {
+      await home()
+      await ask(run, 'Write a 1,500-word history of community food banks in a made-up town, in six sections with headings, as a document.')
+      await sleep(1000)
+      const tab2 = await run.ctx.newPage()
+      try {
+        await tab2.goto(`${ORIGIN}/?w=${run.id}#/`)
+        await tab2.waitForSelector('.project-title')
+        // The run is said in the second tab: in its ask bar (laptop) or its conversation (phone).
+        const said = await until(async () => {
+          if (/Ola is working on your request/.test(await tab2.locator('.askbar-status').innerText().catch(() => ''))) return 'the ask bar says Ola is working'
+          const st = await tab2.locator('.drawer.open .turn').last().getAttribute('data-status').catch(() => null)
+          return st === 'working' || st === 'sending' ? 'its conversation shows the run working' : st === 'done' ? 'the run had already ended' : null
+        }, 30_000, 'the second tab showing the run going on')
+        await tab2.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-second-tab-working.png`) })
+        const r = await finishRun(run, 280_000)
+        if (r.status !== 'done') throw new Error(`the run ended "${r.status}"`)
+        const reply = await answerText(page)
+        await openDrawer(tab2)
+        const same = await until(async () => {
+          const t = tab2.locator('.drawer .turn').last()
+          if ((await t.getAttribute('data-status')) !== 'done') return null
+          const r2 = ((await t.locator('.said-ola').innerText().catch(() => '')) || '').replace(/\s+/g, ' ')
+          return r2 && r2.slice(0, 80) === reply.slice(0, 80) ? r2 : null
+        }, 30_000, 'the same reply in the second tab').catch(async (e) => {
+          // What the second tab shows instead, for whoever reads the failure.
+          await tab2.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-second-tab-not-done.png`) })
+          const t = tab2.locator('.drawer .turn').last()
+          throw new Error(`${e.message}: its last turn is "${await t.getAttribute('data-status').catch(() => '?')}", says "${((await t.innerText().catch(() => '')) || '').replace(/\s+/g, ' ').slice(0, 160)}"; the first tab's reply starts "${reply.slice(0, 60)}"`)
+        })
+        await tab2.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-second-tab-done.png`) })
+        return `${said}; the same reply in both (${same.length} characters)`
+      } finally {
+        await tab2.close()
+      }
+    })
+
+    await jstep(run, 'J', 'a moment offline: said at once, and a request works when it is back', 180, async () => {
+      await home()
+      await openDrawer()
+      await run.ctx.setOffline(true)
+      const off = await until(async () => /Lost the connection/.test(await page.locator('body').innerText()), 15_000, 'the page saying the connection is lost').then(() => 'said').catch((e) => e.message)
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-offline.png`) })
+      await run.ctx.setOffline(false)
+      if (off !== 'said') throw new Error(off)
+      await until(async () => !/Lost the connection/.test(await page.locator('body').innerText()), 30_000, 'the lost-connection line going away when it is back')
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-back-online.png`) })
+      await ask(run, 'Say hello in one short sentence.')
+      const r = await finishRun(run, 150_000)
+      if (r.status !== 'done') throw new Error(`the request after coming back ended "${r.status}"`)
+      return `said, recovered, then a request ran to its end: ${(await answerText(page)).slice(0, 80)}`
+    })
+
+    await jstep(run, 'J', 'a 60 MB scan: sent in pieces with its progress, then in Files at its size', 240, async () => {
+      await closeDrawer()
+      await page.goto(`${ORIGIN}/?w=${run.id}#/files`)
+      await page.waitForSelector('#file-picker', { state: 'attached' })
+      const dir = mkdtempSync(path.join(tmpdir(), 'ola-fu-big-'))
+      const file = path.join(dir, 'field survey scan.pdf')
+      writeFileSync(file, bigScan(60 * 1024 * 1024))
+      const t0 = Date.now()
+      // The browser reads the file as it sends it: it stays until the upload is done.
+      await page.locator('#file-picker').setInputFiles(file)
+      const progress = await until(() => page.locator('.upload-progress').innerText().catch(() => ''), 20_000, 'the upload showing its progress').catch(() => '')
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-big-upload-progress.png`) })
+      await until(async () => (await page.locator('table.files .file-name').allInnerTexts()).some((t) => t.includes('field survey scan.pdf')), 200_000, 'the 60 MB scan in Files').finally(() => rmSync(dir, { recursive: true, force: true }))
+      const secs = ((Date.now() - t0) / 1000).toFixed(1)
+      await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-J-big-upload-done.png`) })
+      const problem = (await page.locator('.problem').allInnerTexts()).join(' ')
+      if (problem) throw new Error(`a problem was said: ${problem.replace(/\s+/g, ' ').slice(0, 200)}`)
+      const row = (await page.locator('table.files tr', { hasText: 'field survey scan.pdf' }).first().innerText()).replace(/\s+/g, ' ')
+      if (!/\b(6\d|5\d)(\.\d)? MB\b/.test(row)) throw new Error(`its size in Files: ${row}`)
+      return `${progress ? `progress "${progress.replace(/\s+/g, ' ').slice(0, 80)}"` : 'no progress shown'}; in Files after ${secs} s: ${row.slice(0, 120)}`
+    })
+  }
+}
+
+/** A one-page PDF that is a scan: one uncompressed grey-paper picture, `bytes` long or a little more. */
+function bigScan(bytes) {
+  const side = Math.ceil(Math.sqrt(bytes / 3))
+  const pixels = Buffer.alloc(side * side * 3, 0xee)
+  for (let i = 0; i < pixels.length; i += 4099) pixels[i] = 0x60 // specks, so it is not one flat color
+  const parts = []
+  const offsets = []
+  let at = 0
+  const put = (b) => (parts.push(b), (at += b.length))
+  const obj = (n, body, stream) => {
+    offsets[n] = at
+    put(Buffer.from(`${n} 0 obj\n${body}\n${stream ? 'stream\n' : ''}`, 'latin1'))
+    if (stream) put(stream), put(Buffer.from('\nendstream'))
+    put(Buffer.from('\nendobj\n'))
+  }
+  put(Buffer.from('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n', 'latin1'))
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>')
+  obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>')
+  obj(3, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>')
+  const content = Buffer.from('q 612 0 0 792 0 0 cm /Im0 Do Q')
+  obj(4, `<< /Length ${content.length} >>`, content)
+  obj(5, `<< /Type /XObject /Subtype /Image /Width ${side} /Height ${side} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ${pixels.length} >>`, pixels)
+  const xref = at
+  put(Buffer.from(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map((n) => `${String(offsets[n]).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`, 'latin1'))
+  return Buffer.concat(parts)
 }
 
 export const listShots = (dir) => readdirSync(dir)

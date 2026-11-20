@@ -11,7 +11,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { openDb } from '../db.mjs'
-import { compareConfig, judgeTwice, leftovers, makeCompare, outcomeOf, quality, readJudgement, realFiles, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
+import { compareConfig, differenceOf, judgeTwice, leftovers, makeCompare, outcomeOf, quality, readJudgement, realFiles, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
 import { GENERATOR } from '../../web/server/fake-twin.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -56,6 +56,16 @@ test('a judged point whose quote is not in that result is dropped, and an overal
   const k = readJudgement(judgeReply('A', 'I removed 4 repeated rows', 'The export has 30 data rows'), good, poor)
   assert.equal(k.overall, 'A')
   assert.equal(readJudgement('not json', good, poor), null)
+})
+
+test('the sentence under the verdict never contradicts it: the judge’s when it agrees, the checks’ when they decided', () => {
+  const pass = { all: true, total: 4, passed: 4 }
+  const fail = { all: false, total: 4, passed: 1 }
+  const same = { verdict: 'same', difference: 'Both did the same.' }
+  assert.equal(differenceOf({ outcome: 'ola_better', judged: same, ola: pass, claude: fail }), 'Ola’s result passed all 4 checks of the task; Claude’s passed 1 of 4.')
+  assert.equal(differenceOf({ outcome: 'claude_better', judged: { verdict: 'x', difference: 'Ola wins.' }, ola: fail, claude: pass }), 'Claude’s result passed all 4 checks of the task; Ola’s passed 1 of 4.')
+  assert.equal(differenceOf({ outcome: 'ola_better', judged: { verdict: 'x', difference: 'Ola named the repeats.' }, ola: pass, claude: fail }), 'Ola named the repeats.')
+  assert.equal(differenceOf({ outcome: 'both_right', judged: same, ola: pass, claude: pass }), 'Both did the same.')
 })
 
 test('outcomes: the checks decide when they differ, then the judge; both right, both wrong, unsure', () => {

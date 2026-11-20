@@ -83,6 +83,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
   const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false })
   let disposed = false
+  /** Counts what the person did to the conversation (sent, opened, started one): resumeWorking yields to it. */
+  let acted = 0
   let streamAbort: AbortController | null = null
 
   const fold = (ev: any) => {
@@ -223,6 +225,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   async function send(text: string, via: Engine = state.engine) {
     const request = text.trim()
     if (!request) return
+    acted++
     setState({ suggestion: null, said: null, help: false }) // a new request answers an open card by moving on
     if (state.claude?.enabled && via === 'claude') return sendClaude(request, 'asked')
     if (state.hosted?.enabled && via === 'hosted') return sendHosted(request)
@@ -565,6 +568,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
 
   function newConversation() {
+    acted++
     if (state.sessionID) void refreshEarlier()
     setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [], said: null, help: false, autonomy: rememberedAutonomy() })
   }
@@ -629,11 +633,25 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
 
   async function open(id: string) {
+    acted++
+    return load(id)
+  }
+  /** `still`: false once the person has done something since, and then nothing is changed. */
+  async function load(id: string, still: () => boolean = () => true) {
     try {
       const session = await client.session.get({ sessionID: id })
       const list = await client.message.list({ sessionID: id, limit: 200 })
+      if (!still()) return
       setState({ ...emptyConversation(), suggestion: null, declined: [], sessionID: id, directory: session.location?.directory ?? null, problem: null, autonomy: (session.metadata as any)?.autonomy === 'ask' ? 'ask' : 'go' })
-      setState('turns', await withClaude(id, turnsFromMessages((list as any).data ?? [], session.location?.directory ?? null)))
+      const msgs = (list as any).data ?? []
+      const turns = await withClaude(id, turnsFromMessages(msgs, session.location?.directory ?? null))
+      setState('turns', turns)
+      // Opened while a reply is being written (a second tab): its next words continue the text
+      // already loaded instead of starting the answer over and pushing the start into the notes.
+      if (turns.at(-1)?.status === 'working') {
+        const writing = [...msgs].filter((m: any) => m.type === 'assistant').sort((a: any, b: any) => (b.time?.created ?? 0) - (a.time?.created ?? 0))[0]
+        setState('answerMessage', writing?.id ?? null)
+      }
       void noteCeiling(id)
       const pending = (await client.permission.list({ sessionID: id })) as any[]
       const p = pending[0]
@@ -642,6 +660,37 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       void refreshEarlier()
     } catch (e) {
       setState('problem', { text: 'That conversation could not be opened.', detail: String((e as any)?.message ?? e) })
+    }
+  }
+
+  /**
+   * A second tab, or the page opened again, while Ola works (first-user walk J, OLA-87): the
+   * conversation that is working right now is opened, so the person sees the run and its end
+   * instead of an empty conversation with the work under "earlier conversations". Only the newest
+   * conversation, only when it changed in the last 10 minutes (a run cut by a restart never ends in
+   * the history) and its last request has not ended. True when it opened one.
+   */
+  async function resumeWorking(): Promise<boolean> {
+    if (state.sessionID) return false
+    // Whatever the person does first wins: a request sent, a conversation opened or started while
+    // this looks (the web check's phone page types at once) is never replaced by this one.
+    const at = acted
+    const still = () => acted === at && !state.sessionID
+    try {
+      // opencode's own word on what is running now (GET /api/session/active), not the history: a
+      // run cut short by a restart has no end marker there and would look like it was still going.
+      const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/session/active`, { headers: deskHeaders(), credentials: 'same-origin' })
+      if (!res.ok) return false
+      const data = ((await res.json()) as any)?.data
+      const active = data && typeof data === 'object' && !Array.isArray(data) ? Object.keys(data).filter((id) => data[id]?.type === 'running') : []
+      if (!active.length || !still()) return false
+      const list = await client.session.list({ limit: 20, order: 'desc' })
+      const s = list.data.find((x) => active.includes(x.id))
+      if (!s || !still()) return false
+      await load(s.id, still)
+      return state.sessionID === s.id
+    } catch {
+      return false
     }
   }
 
@@ -677,6 +726,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     setAutonomy,
     newConversation,
     open,
+    resumeWorking,
     dispose() {
       disposed = true
       if (lostTimer) clearTimeout(lostTimer)

@@ -3,7 +3,7 @@
 import { For, Match, Switch, type JSX } from 'solid-js'
 import { desk } from '../lib/api.ts'
 import { citation, CITE_SPLIT } from '../lib/cite.ts'
-import { blocks } from '../lib/blocks.ts'
+import { blocks, projectPaths } from '../lib/blocks.ts'
 
 /** Inline **bold**, `code` and citations (lib/cite.ts); everything else is text. */
 export function Inline(props: { text: string }): JSX.Element {
@@ -34,7 +34,7 @@ export function Inline(props: { text: string }): JSX.Element {
 export function Answer(props: { text: string; class?: string }) {
   return (
     <div class={`answer ${props.class ?? ''}`}>
-      <For each={blocks(props.text)}>
+      <For each={blocks(projectPaths(props.text))}>
         {(b) => (
           <Switch>
             <Match when={b.kind === 'p'}>
