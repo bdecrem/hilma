@@ -55,10 +55,12 @@ test('each missing piece is named, with what to do', () => {
   assert.equal(r['key-cancel'].ok, true)
 })
 
-test('a key change is proven live only when it reached the gateway after its last start', () => {
-  // The only reload is from before the gateway started (it restarted since): not proven live.
-  assert.equal(byId(check(machine({ reloadAt: null })))['key-cancel'].ok, false)
-  assert.match(byId(check(machine({ reloadAt: null })))['key-cancel'].what, /has not reloaded/)
+test('the key item passes on the setup, and says whether a key change was seen live since the gateway last started', () => {
+  // The only reload is from before the gateway started (it restarted since): set up, not seen live.
+  const quiet = byId(check(machine({ reloadAt: null })))['key-cancel']
+  assert.equal(quiet.ok, true)
+  assert.match(quiet.what, /no key change has reached/)
+  assert.match(byId(check(machine()))['key-cancel'].what, /without a restart \(last at 2026-12-02T11:59/)
   // No door per project: not set up, whatever the log says.
   const r = byId(check(machine({ door: false })))['key-cancel']
   assert.equal(r.ok, false)

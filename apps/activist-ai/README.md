@@ -1205,14 +1205,14 @@ settings in `gateway.env`. Exit 0 only when all seven are done. Test: `node --te
    old key at once (it watches the file, and stats it every 3 seconds) and ws.mjs confirms it through the project's door, and the
    gateway is not restarted; the project's VM is stopped and made again with a new key at its next
    start. Proven by `gateway/test.mjs` ("takes effect without a restart", "works only through its
-   own door"); the check passes only when the running gateway has picked up a key change since it
-   last started (on the mini on 2026-11-19: one key removed at 23:00 Pacific, and the gateway had not restarted since before it).
+   own door"); the check passes on those settings and also says whether the running gateway has picked up a key change
+   since it last started (on the mini on 2026-11-19: one key removed at 23:00 Pacific, and the gateway had not restarted since before it).
 6. **Backups** (`backups`): the key made, the recovery sheet printed, the drives set up, the nightly
    job loaded ("Encrypted backups").
 7. **Deploys only from signed commits** (`signed-deploys`): `~/.ola/allowed-signers` holds Bart's
    signing key, made on a device of his, so a deploy no longer needs `--unsigned`.
 
-On the mini (staging, made-up data only) on 2026-11-19, as `admin`: 2 of 7 (key-cancel, backups).
+On the mini (staging, made-up data only) on 2026-11-19, as `admin`: 2 of 7 done (key-cancel, backups).
 Not in this list, still open from the front desk review (L4): the front desk in an account apart
 from the one that owns the `container` system, reaching it through a narrow helper.
 

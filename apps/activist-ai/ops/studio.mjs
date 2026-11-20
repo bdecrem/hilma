@@ -8,7 +8,7 @@
 // no secret: from an env file it reads only which settings are named, never their values.
 // The steps that make each item true are in the README, "The Studio's install list".
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { homedir, userInfo } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -108,8 +108,8 @@ export function check(io = {}) {
   }
   add(
     'key-cancel',
-    configured && !!seen,
-    !configured ? 'the gateway does not read its callers from ~/.ola/gateway-tokens with a door per project' : seen ? `a key change reached the running gateway without a restart (last at ${seen})` : 'set up, but the running gateway has not reloaded a key since it started',
+    configured,
+    !configured ? 'the gateway does not read its callers from ~/.ola/gateway-tokens with a door per project' : seen ? `a key change reached the running gateway without a restart (last at ${seen})` : 'set up (no key change has reached the running gateway since it last started; gateway/test.mjs proves the reload)',
     !configured ? 'Set GATEWAY_TOKENS_FILE and GATEWAY_DOOR_DIR in ~/.ola/gateway.env (README, "Start at boot"), tokens file mode 600' : 'Create a throwaway project and destroy it (ws.mjs create / destroy), then run this again',
   )
 
@@ -125,7 +125,7 @@ export function check(io = {}) {
   return rows
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const [cmd] = process.argv.slice(2)
   if (cmd !== 'check') {
     console.error('usage: node ops/studio.mjs check [--json]')
