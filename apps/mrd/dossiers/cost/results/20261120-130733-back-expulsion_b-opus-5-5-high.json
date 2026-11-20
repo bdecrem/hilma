@@ -1,0 +1,902 @@
+{
+ "status": "ok",
+ "job_id": "back costa_rica expulsion_b claude-opus-5-5 high",
+ "step": "back",
+ "slug": "costa_rica",
+ "chunk": "expulsion_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  55,
+  57,
+  59,
+  61
+ ],
+ "started_at": "2026-11-20T21:07:33.267Z",
+ "meters_before": {
+  "at": "2026-11-20T21:07:28.838Z",
+  "window": {
+   "pct": 44,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 44,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 44% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 143 requests · 2 sessions\n  48%  Start fresh when you switch tasks · run /clear\n  36%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%\n\nLast 7d · 154 requests · 3 sessions\n  46%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  26%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 26%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 59349,
+  "user": 130
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T21:12:34.781Z",
+ "minutes": 5.03,
+ "meters_after": {
+  "at": "2026-11-20T21:12:34.782Z",
+  "window": {
+   "pct": 60,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 40,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 65,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 60,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 40,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 65,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 60% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 40% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 65% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 162 requests · 2 sessions\n  48%  Start fresh when you switch tasks · run /clear\n  34%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 173 requests · 3 sessions\n  46%  Start fresh when you switch tasks · run /clear\n  36%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 59334,
+   "output": 22443,
+   "cache_read": 1455462,
+   "cache_write": 133074,
+   "cost_usd": 1.7577,
+   "total": 1670313
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 59304,
+    "output": 4764,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1658,
+    "cost_usd": 0.0483
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 17679,
+    "cache_read": 1455462,
+    "cache_write": 133074,
+    "thinking": 3436,
+    "cost_usd": 1.7094
+   }
+  }
+ },
+ "turns": 21,
+ "calls": 37,
+ "duration_ms": 300545,
+ "duration_api_ms": 216878,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-20T21:07:40.364Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31 | ARTÍCULO 183 | ARTÍCULO 186 | ARTÍCULO 209 | ARTÍCULO 210 | ARTÍCULO 215 | ARTÍCULO 216 | ARTÍCULO 222 | ARTÍCULO 65",
+   "ok": true,
+   "chars": 18602
+  },
+  {
+   "at": "2026-11-20T21:07:50.829Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 215.- | ARTÍCULO 216.- | ARTÍCULO 222.- | ARTÍCULO 184.- | ARTÍCULO 64.- | ARTÍCULO 122.- | ARTÍCULO 214.-",
+   "ok": true,
+   "chars": 13391
+  },
+  {
+   "at": "2026-11-20T21:07:55.147Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "Así reformado | Así adicionado | Así modificado | Anulado | anulado",
+   "ok": true,
+   "chars": 15100
+  },
+  {
+   "at": "2026-11-20T21:08:01.030Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&nValor3=1&strTipM=TC",
+   "find": "ARTÍCULO 209.- | ARTÍCULO 222.- | 9) Ningún extranjero | Versión | vigencia",
+   "ok": true,
+   "chars": 1730
+  },
+  {
+   "at": "2026-11-20T21:08:22.641Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 39 | Artículo 40 | Artículo 123 | Artículo 124 | Artículo 127 | Artículo 134",
+   "ok": true,
+   "chars": 16583
+  },
+  {
+   "at": "2026-11-20T21:08:30.232Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+   "find": "Así reformado | Así adicionado | Así derogado | anulado | Anulad",
+   "ok": true,
+   "chars": 9649
+  },
+  {
+   "at": "2026-11-20T21:08:44.487Z",
+   "url": "https://dhr.go.cr/images/informes-anuales/Anexos_IF2019_2020/2_igualdad_y_no_discriminacion.pdf",
+   "find": "deport | rechazo | refugio | CATEM | aprehensión | debido proceso",
+   "ok": true,
+   "chars": 662
+  },
+  {
+   "at": "2026-11-20T21:09:25.950Z",
+   "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "Refoulement | Access to Asylum | deport | refugee",
+   "ok": true,
+   "chars": 7376
+  },
+  {
+   "at": "2026-11-20T21:09:26.841Z",
+   "url": "https://globaldetentionproject.org/costa-rica-immigration-detention-data-profile-2020",
+   "find": "appeal | procedural | deport | asylum | information | lawyer",
+   "ok": true,
+   "chars": 1408
+  },
+  {
+   "at": "2026-11-20T21:09:35.267Z",
+   "url": "https://www.state.gov/reports/2020-country-reports-on-human-rights-practices/costa-rica/",
+   "find": "Access to Asylum | Abuse of Migrants | border | deport | expel",
+   "ok": true,
+   "chars": 8561
+  },
+  {
+   "at": "2026-11-20T21:09:36.185Z",
+   "url": "https://www.globaldetentionproject.org/wp-content/uploads/2020/11/Costa-Rica-Detention-Data-Profile-2020.pdf",
+   "find": "appeal | Information | legal | deport | refoul",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T21:09:55.276Z",
+   "url": "https://revistas.ucr.ac.cr/index.php/juridicas/article/download/48855/48547/196873",
+   "find": "deportación | audiencia | recurso | práctica | rechazo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T21:10:20.751Z",
+   "url": "https://www.fidh.org/IMG/pdf/CostaRica517e.pdf",
+   "find": "deportación | audiencia | recurso | refugio | informa",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T21:10:33.032Z",
+   "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+   "find": "appeal | deport | asylum | information | lawyer | 2019 | 2020",
+   "ok": true,
+   "chars": 10470
+  },
+  {
+   "at": "2026-11-20T21:10:42.403Z",
+   "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica",
+   "find": "deport | asylum | Covid | released | removal",
+   "ok": true,
+   "chars": 5108
+  }
+ ],
+ "searches": [
+  "Costa Rica deportación rechazo frontera información solicitar refugio 2019 2020 informe Defensoría migrantes",
+  "Global Detention Project Costa Rica immigration detention deportation appeal 2020",
+  "Sala Constitucional hábeas corpus deportación \"audiencia oral\" artículo 209 Ley 8764 2019 OR 2020",
+  "Sala Constitucional 2019 deportación persona extranjera debido proceso \"con lugar\" hábeas corpus Migración nicaragüense"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.38,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.38,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.38,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.39,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":55,\"answer_2020\":\"No\",\"implementation_2020\":\"Does Not Apply\",\"change_2020_2026\":\"There have been no right protections neither in 2020 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(8)\",\"enacted\":\"2009\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Arts. 64, 65 (rechazo)\",\"enacted\":\"2009\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G\",\"article\":\"Arts. 123(a), 124, 127, 134\",\"enacted\":\"2011\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2009\",\"instrument\":\"Ley General de Migración y Extranjería, Ley N.º 8764\",\"article\":\"Art. 31(8)\",\"kind\":\"enacted\",\"what_changed\":\"Original text: right to seek and receive asylum. The consolidated SINALEVI text has no amendment note on art. 31. It sets no duty to inform anyone about asylum before rejection or deportation.\",\"url\":\"https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1\",\"passage\":\"8) Toda persona extranjera tiene derecho a buscar y recibir asilo en el territorio nacional, en razón de los convenios internacionales suscritos y ratificados por el país.\"},{\"date\":\"2009\",\"instrument\":\"Ley General de Migración y Extranjería, Ley N.º 8764\",\"article\":\"Art. 65\",\"kind\":\"enacted\",\"what_changed\":\"The rejection record must state the reasons and observe Const. art. 31. It contains no duty to advise about asylum. No amendment note appears in the consolidated text.\",\"url\":\"https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1\",\"passage\":\"un acta en la que se indiquen los motivos del rechazo, la autoridad policial y migratoria que determinó los supuestos y la indicación de que podrá impugnarse en la sede consular costarricense, y que tal impugnación no tendrá efecto suspensivo alguno.",
+ "output": {
+  "answers": [
+   {
+    "question_id": 55,
+    "answer_2020": "No",
+    "implementation_2020": "Does Not Apply",
+    "change_2020_2026": "There have been no right protections neither in 2020 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(8)",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 64, 65 (rechazo)",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Arts. 123(a), 124, 127, 134",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 31(8)",
+      "kind": "enacted",
+      "what_changed": "Original text: right to seek and receive asylum. The consolidated SINALEVI text has no amendment note on art. 31. It sets no duty to inform anyone about asylum before rejection or deportation.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "8) Toda persona extranjera tiene derecho a buscar y recibir asilo en el territorio nacional, en razón de los convenios internacionales suscritos y ratificados por el país."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 65",
+      "kind": "enacted",
+      "what_changed": "The rejection record must state the reasons and observe Const. art. 31. It contains no duty to advise about asylum. No amendment note appears in the consolidated text.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "un acta en la que se indiquen los motivos del rechazo, la autoridad policial y migratoria que determinó los supuestos y la indicación de que podrá impugnarse en la sede consular costarricense, y que tal impugnación no tendrá efecto suspensivo alguno."
+     },
+     {
+      "date": "2011",
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 127",
+      "kind": "enacted",
+      "what_changed": "A claim may be referred by another authority or inferred, including for people who do not know they may be refugees. This is a duty to refer, not to advise. The consolidated text shows no amendment note; the 2022 and 2024 reforms touched arts. 14, 54, 58, 59 and a transitorio, not this article.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "La persona interesada puede ser referida por alguna otra autoridad, incluso inferirse cuando existan problemas de comunicación, barreras idiomáticas, culturales, personas en detención administrativa o judicial y casos de personas que desconozcan su posible condición de persona refugiada."
+     },
+     {
+      "date": "2011",
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 134",
+      "kind": "enacted",
+      "what_changed": "An official who learns, in writing or orally, that a person wishes to seek refugee status must ensure non-refoulement and notify the Refugee Unit. The duty arises only once the wish is expressed. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "Las autoridades, judiciales, administrativas, o cualquier otro funcionario habilitado que conozca mediante escrito o verbalmente del deseo de una persona extranjera de acceder al procedimiento para el reconocimiento de la condición de persona refugiada, es responsable de garantizar el respeto al principio de no devolución"
+     },
+     {
+      "date": "2024-05-28",
+      "instrument": "Decreto Ejecutivo N.º 44501-MGP",
+      "article": "Reglamento de Personas Refugiadas art. 14 (not a cited article)",
+      "kind": "amended",
+      "what_changed": "Restored the rule that asylum seekers have protection against return and the same guarantees as recognised refugees. It does not touch arts. 123, 124, 127 or 134 and creates no duty to inform before expulsion.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "la persona solicitante gozará de protección contra una devolución y de las mismas garantías que una persona refugiada reconocida, hasta tanto no se haya resuelto su solicitud. (Así reformado por el artículo 1° del decreto ejecutivo N° 44501 del 28 de mayo del 2024)"
+     }
+    ],
+    "repealed_search": "I checked the SINALEVI consolidated texts of Ley 8764 and Decreto 36831-G for amendment notes ('Así reformado', 'Así adicionado', 'Derogado') on the cited articles. None appear on arts. 31, 64 or 65 of the Law or on arts. 123, 124, 127 or 134 of the Regulation. The Regulation's amendments (43810 of 2022, 44501 of 2024) touched arts. 14, 54, 58, 59 and a transitorio. So no duty to advise existed in 2020 and was later removed. I did not read the repealed predecessor law (Ley 8487 of 2005); it was replaced in 2010, well before 2020, so it has no bearing on 1 January 2020.",
+    "rulings": [
+     {
+      "court": "Sala Constitucional",
+      "reference": "Voto N.º 2025-019485 (exp. 25-006713-0007-CO)",
+      "date": "2025-06-24",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "Not checked in this session. The starting coder lists Votos 2025-022749, 2025-027425 and 2026-037342 as citing it, unread.",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     }
+    ],
+    "implementation_2020_evidence": "Not rated, because there was no protection in 2020. For the record: according to the DGME's own reply to the Global Detention Project in July 2020, asylum could be requested at border posts during the COVID closure and Refugee Unit staff were sent once a person stated the wish to apply. That describes referral, not proactive advice. The US State Department's 2019 and 2020 reports describe a functioning but backlogged asylum system and say nothing about advising people before removal.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Covid-19 and Detention (Global Detention Project, 27 July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2020_2023"
+     },
+     {
+      "title": "2020 Country Reports on Human Rights Practices: Costa Rica (US State Department)",
+      "url": "https://www.state.gov/reports/2020-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2020_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I dated the history from the SINALEVI consolidated texts, which note each amendment inline; the cited articles carry no notes, so the 2020 text matches today's. The 'versión original' view of Ley 8764 would not load, and the 2025 Sala ruling was not re-read in this session; it postdates 2020 anyway.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "GDP: Costa Rica Covid-19 and Detention (July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica"
+     },
+     {
+      "title": "US State Dept 2020 Country Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2020-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2019 Country Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Same answer on both dates. The only post-2020 development, Sala Constitucional Voto 2025-019485, did not exist on 1 January 2020. Even read broadly, it could only add a protection after 2020; it could not have removed one."
+   },
+   {
+    "question_id": 57,
+    "answer_2020": "No",
+    "implementation_2020": "Does Not Apply",
+    "change_2020_2026": "There have been no right protections neither in 2020 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(9)",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 64, 184",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Arts. 39, 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 31",
+      "enacted": "1949",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 31(9)",
+      "kind": "enacted",
+      "what_changed": "Direct non-refoulement to any country, of origin or not, where the asylum seeker's or refugee's life is at risk. It does not address onward (chain) refoulement. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "9) Ningún extranjero solicitante de refugio o que se le haya otorgado dicha condición, podrá ser expulsado, deportado o rechazado a otro país, sea o no de origen, donde su derecho a la vida esté en riesgo."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 184",
+      "kind": "enacted",
+      "what_changed": "Deportation may go to the country of origin or any third country that admits the person, with no check on onward protection. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "ARTÍCULO 184.- En los casos citados, la Dirección General ordenará la deportación de la persona extranjera a su país de origen o a un tercer país que lo admita."
+     },
+     {
+      "date": "2011",
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 39",
+      "kind": "enacted",
+      "what_changed": "Bars expelling or returning a refugee or pending applicant to a country where their life, safety or freedom is in danger. It is a direct rule only. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "Ninguna persona refugiada o solicitante de esta condición pendiente de resolución firme e inapelable, podrá ser expulsado o devuelto al territorio de un país donde su vida, seguridad o libertad peligre por causa de su raza, religión, nacionalidad, género, pertenencia a determinado grupo social o de sus opiniones políticas."
+     }
+    ],
+    "repealed_search": "I searched the SINALEVI consolidated Ley 8764 and Decreto 36831-G for amendment or repeal notes on arts. 31, 64 and 184 of the Law and arts. 39 and 40 of the Regulation and found none. The Regulation's 2022 and 2024 amendments touched other articles (14, 54, 58, 59, transitorio). No chain-refoulement clause was found in any version. I did not read the earlier Ley 8487; it was replaced in 2010, before the date in question.",
+    "rulings": [],
+    "implementation_2020_evidence": "Not rated, because there was no specific protection. For context: in July 2020 the DGME reported that deportations continued only by land, to Nicaragua and Panama, and that removals to other countries were suspended (GDP survey). The chain-deportation criticisms date from 2025 and concern US deportees.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Covid-19 and Detention (Global Detention Project, 27 July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2020_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited statutory and regulatory articles have no amendment notes in SINALEVI, so the 2020 text matches today's. I did not re-read Constitution art. 31 in this session; it has been in place since 1949 and is cited only as a direct-refoulement rule.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "GDP: Costa Rica Covid-19 and Detention (July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "No change between the two dates. ACHR art. 22(8), as read in OC-21/14 (2014), was equally applicable in 2020. If the MRD counted it, the answer would change on both dates alike."
+   },
+   {
+    "question_id": 59,
+    "answer_2020": "Yes",
+    "implementation_2020": "Usually",
+    "change_2020_2026": "There have been right protections both in 2020 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 31(1), 183, 186, 209, 210, 214, 215",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 122",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Art. 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 31(1)",
+      "kind": "enacted",
+      "what_changed": "Guarantees every foreigner access to justice, due process and defence. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "1) Toda persona extranjera tendrá derecho de acceso a la justicia, al respeto de las garantías del debido proceso, al derecho de defensa y al derecho de petición y respuesta."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 183",
+      "kind": "enacted",
+      "what_changed": "Lists the individual grounds for deportation. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "Entiéndese por deportación, el acto ordenado por la Dirección General para poner, fuera del territorio nacional, a la persona extranjera que se encuentre en cualquiera de las siguientes situaciones: 1) Cuando haya ingresado clandestinamente al país..."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 186",
+      "kind": "enacted",
+      "what_changed": "Expulsion of lawful residents requires a reasoned ministerial resolution on stated grounds. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "La expulsión es la orden emanada del Ministerio de Gobernación y Policía, en resolución razonada, por medio de la cual la persona extranjera que goce de permanencia legal, bajo cualquier categoría migratoria, deberá abandonar el territorio nacional"
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 210",
+      "kind": "enacted",
+      "what_changed": "A deportation resolution follows only after the illegal entry or stay is established, and it must be notified. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "Completado el trámite inicial del procedimiento y comprobada la ilegalidad del ingreso o la permanencia de la persona extranjera, la Dirección General dictará la resolución de deportación que corresponda, la cual deberá ser notificada debidamente."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 122",
+      "kind": "enacted",
+      "what_changed": "Lawfully present refugees may be expelled only on national-security or public-order grounds, by a decision taken under the legal procedures. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "La expulsión de un refugiado que se halle legalmente en el territorio nacional, únicamente se efectuará por razones de seguridad nacional o de orden público, en virtud de una decisión tomada conforme a los procedimientos legales vigentes."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Sala Constitucional",
+      "reference": "Voto N.º 2025-019485",
+      "date": "2025-06-24",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "Not checked in this session",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     }
+    ],
+    "implementation_2020_evidence": "Around 2020 deportations ran through the DGME's ordinary individual procedure. In its July 2020 survey reply to the Global Detention Project, the DGME said deportations continued under Ley 8764, by land to Nicaragua and Panama only, and that apprehension was ordered on an individual risk basis. The US State Department's 2019 report says the government generally observed the constitutional bar on arbitrary detention, and that the Heredia migration facility held irregular migrants until deportation or regularisation, with UNHCR visiting monthly. I found no documented pattern of collective removals without individual decisions for 2019–2020; the major documented breach (US deportees held at CATEM without individual resolutions) dates from 2025. The evidence is thin and partly the government's own account, so confidence is limited.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Covid-19 and Detention (Global Detention Project, 27 July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2020_2023"
+     },
+     {
+      "title": "2019 Country Reports on Human Rights Practices: Costa Rica (US State Department)",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2020"
+     },
+     {
+      "title": "Global Detention Project, Costa Rica country page (2015 report content)",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited articles carry no amendment notes in the SINALEVI consolidated texts, so the 2020 text matches today's. The Law's version-history view would not load. Practice evidence for 2019–2020 is thin: two HTML sources, one of them a government self-report. The FIDH and UCR PDFs could not be opened because the PDF reader failed.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "US State Dept 2019 Country Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "US State Dept 2020 Country Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2020-country-reports-on-human-rights-practices/costa-rica/"
+     },
+     {
+      "title": "GDP: Costa Rica country page",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica"
+     },
+     {
+      "title": "GDP: Costa Rica Covid-19 and Detention (July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica"
+     },
+     {
+      "title": "GDP: Costa Rica Detention Data Profile 2020 (landing page)",
+      "url": "https://globaldetentionproject.org/costa-rica-immigration-detention-data-profile-2020"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The law is the same on both dates. Implementation is rated Usually on both. The 2025 CATEM breach is a documented gap within the Usually band and does not move the rating."
+   },
+   {
+    "question_id": 61,
+    "answer_2020": "Yes",
+    "implementation_2020": "Sometimes; Usually",
+    "change_2020_2026": "There have been right protections both in 2020 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 31(1), 209, 215, 216, 217",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 65, 122, 222",
+      "enacted": "2009",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo 36831-G",
+      "article": "Art. 40",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 209",
+      "kind": "enacted",
+      "what_changed": "Deportation proceedings must state the facts and charges and give an immediate oral hearing for the defence. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "mediante la indicación de los hechos y cargos que se imputan y el objeto del procedimiento, en el cual otorgará, de manera inmediata, audiencia oral para que la persona extranjera pueda ejercer su derecho de defensa."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 215",
+      "kind": "enacted",
+      "what_changed": "In expulsion cases, three working days to offer exculpatory evidence before an opinion and a decision. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "conferirá a la persona extranjera un plazo de tres días hábiles para que ofrezca pruebas de descargo."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 216",
+      "kind": "enacted",
+      "what_changed": "Revocation or appeal to the Tribunal Administrativo Migratorio against an expulsion order, with suspensive effect. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "podrá interponer, en el acto de notificación o dentro de los tres días hábiles siguientes a la notificación, recurso de revocatoria ante la Dirección General o de apelación ante el Tribunal Administrativo Migratorio. ... La impugnación de la orden de expulsión suspenderá la ejecución de esta."
+     },
+     {
+      "date": "2009",
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 222",
+      "kind": "enacted",
+      "what_changed": "No appeal against rejection or deportation. This limit existed in 2020 as it does today. No amendment note.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "No cabrá recurso alguno contra el rechazo y las deportaciones ordenadas por autoridad competente, ni contra la denegatoria de visa dictada por parte de la Comisión de Visas Restringidas y Refugio."
+     },
+     {
+      "date": "2011",
+      "instrument": "Reglamento de Personas Refugiadas, Decreto Ejecutivo N.º 36831-G",
+      "article": "Art. 40",
+      "kind": "enacted",
+      "what_changed": "A lawfully present refugee facing expulsion gets a confidential oral hearing with exculpatory evidence, and the resolution is open to appeal. No amendment note; the 2022 and 2024 decrees did not touch it.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+      "passage": "en atención al debido proceso se deberá realizar una audiencia oral confidencial a la persona refugiada, en la cual podrá presentar las pruebas exculpatorias, evaluado el caso se emitirá por parte de la Dirección General, la resolución correspondiente, que de proceder será recurrible ante el órgano competente."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "implementation_2020_evidence": "The structural limits were the same in 2020: deportation was a summary DGME procedure with no administrative appeal (art. 222). According to the Global Detention Project (2015 data, still on its country page), detention orders are reviewed by the Tribunal Administrativo Migratorio only if the detainee appeals, and bail or home detention are rarely used. The DGME told GDP in July 2020 that deportations continued, by land, to Nicaragua and Panama. The State Department's 2019 report says the government generally observed detention safeguards and that UNHCR monitored the migration facility. I found no source documenting how often oral hearings were actually held in 2019–2020. The rating carries the structural assessment forward and is based on thin, partly government-sourced evidence about irregular migrants; I found nothing on 2020 expulsions of lawful residents.",
+    "practice_sources": [
+     {
+      "title": "Global Detention Project, Costa Rica country page (2015 report content)",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2020"
+     },
+     {
+      "title": "Costa Rica: Covid-19 and Detention (Global Detention Project, 27 July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2020_2023"
+     },
+     {
+      "title": "2019 Country Reports on Human Rights Practices: Costa Rica (US State Department)",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited articles of Ley 8764 and Decreto 36831-G have no amendment notes in SINALEVI, so the 2020 text matches today's. Practice evidence for 2020 is thin, and the FIDH and UCR PDFs could not be opened because the PDF reader failed.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "GDP: Costa Rica country page",
+      "url": "https://www.globaldetentionproject.org/countries/americas/costa-rica"
+     },
+     {
+      "title": "GDP: Costa Rica Covid-19 and Detention (July 2020)",
+      "url": "https://www.globaldetentionproject.org/27-july-2020-costa-rica"
+     },
+     {
+      "title": "US State Dept 2019 Country Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": "The Yes rests on the oral hearing in art. 209 for deportation. An independent review exists only for expulsion and refugee cases, since art. 222 bars appeals against deportation and rejection. A stricter reading of 'reviewed by the competent authority' could put deportees outside the protection. This concern applies equally on both dates.",
+    "confidence": "low",
+    "notes": "The law is unchanged between the two dates and the implementation rating is carried over. Confidence is low because 2020 practice evidence on hearings is sparse and partly a government self-report."
+   }
+  ]
+ }
+}
