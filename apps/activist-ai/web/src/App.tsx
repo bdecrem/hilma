@@ -7,7 +7,7 @@ import { desk, DeskError, site } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
 import { count, people } from './lib/format.ts'
 import { Icon, Wordmark } from './components/Icon.tsx'
-import { EmptyProject, groupThings, OtherFiles, Sources, ThingCard } from './components/Things.tsx'
+import { Elsewhere, EmptyProject, groupThings, OtherFiles, Sources, ThingCard } from './components/Things.tsx'
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
@@ -309,6 +309,15 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <Show when={props.me.person.admin}>
                 <a href="#/quality">Quality</a>
               </Show>
+              {/* What its people already use elsewhere (OLA-103): first in the row's second half, opens in a new tab. */}
+              <For each={project()?.links ?? []}>
+                {(l) => (
+                  <a class="project-away" href={l.url} target="_blank" rel="noopener noreferrer">
+                    {l.label} <Icon name="away" size={14} />
+                    <span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
+              </For>
               <Show when={canRun()}>
                 <button type="button" class="link-button on-room" onClick={addFiles}>
                   <Icon name="plus" size={16} /> Add files
@@ -368,6 +377,12 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                   <Sources sources={sources()} />
                 </div>
               </Show>
+            </Show>
+            {/* What the project's people already use elsewhere: under what Ola made (on a phone, in its tab and the Menu). */}
+            <Show when={project()!.links?.length}>
+              <div classList={{ 'tab-hidden': isNarrow() && tab() !== 'made' }}>
+                <Elsewhere links={project()!.links!} />
+              </div>
             </Show>
           </Show>
         </Show>
@@ -486,6 +501,19 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                 </a>
               </li>
             </Show>
+            <For each={project()?.links ?? []}>
+              {(l) => (
+                <li>
+                  <a class="menu-item" href={l.url} target="_blank" rel="noopener noreferrer" onClick={() => setMenu(false)}>
+                    <Icon name="away" size={20} />
+                    <span>
+                      <span class="menu-name">{l.label}</span>
+                      <span class="menu-what">{l.note ?? 'At its own address, in a new tab'}</span>
+                    </span>
+                  </a>
+                </li>
+              )}
+            </For>
             <li>
               <button type="button" class="menu-item" onClick={() => (setMenu(false), setPromise(true))}>
                 <Icon name="machine" size={20} />

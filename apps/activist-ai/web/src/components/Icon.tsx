@@ -84,6 +84,7 @@ const PATHS: Record<string, () => JSX.Element> = {
     </>
   ),
   file: () => <path d="M5.5 2.75h6.5l3 3v11.5h-9.5zM12 2.75v3h3" />,
+  away: () => <path d="M11.5 3.5h5v5M16.5 3.5 9 11M14 11.5v4.5H4V6h4.5" />,
   machine: () => (
     <>
       <circle cx="10" cy="10" r="6.5" />

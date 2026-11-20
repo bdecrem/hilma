@@ -40,6 +40,7 @@ import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSites, sitesConfig } from './sites.mjs'
+import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -478,6 +479,8 @@ export function makeFrontDesk(cfg = config()) {
         files: otherFiles(entries, made),
         otherTotal: otherCount(entries, made),
         role: ws.role,
+        // What its people already use elsewhere (links.mjs): shown, never fetched.
+        links: linksOf(db, ws.id).map(({ label, url, note }) => ({ label, url, ...(note ? { note } : {}) })),
       })
     }
     // Fallback to Claude (claude.mjs). Reading the setting: any member. Changing it: an owner.

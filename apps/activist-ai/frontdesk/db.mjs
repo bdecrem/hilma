@@ -89,7 +89,14 @@ export const ACTIONS_V14 = [
   // file held a secret or private data.
   'site_published', 'site_updated', 'site_unpublished', 'site_refused',
 ]
-export const ACTIONS = ACTIONS_V14
+/** Migration 16's list: what the audit log may say now. */
+export const ACTIONS_V16 = [
+  ...ACTIONS_V14,
+  // migration 16: a project's links to what its people use elsewhere (links.mjs, OLA-103), added or
+  // removed by the admin.
+  'link_added', 'link_removed',
+]
+export const ACTIONS = ACTIONS_V16
 
 // The comparisons' fixed words (frontdesk/compare.mjs; the labels are the eval set's own list).
 const COMPARE_KINDS = ['clean', 'sql', 'coding', 'legal', 'site', 'honesty', 'pdf', 'writing', 'chart', 'other']
@@ -635,6 +642,42 @@ const MIGRATIONS = [
   ) STRICT;
   CREATE INDEX switches_at ON switches(at);
   CREATE INDEX switches_waiting ON switches(workspace_id, copy_state);
+  `,
+  // 16: a project's links to what its people already use elsewhere (links.mjs, OLA-103): the
+  // Adaptation Almanac in Frances's project home, the MRD library in Ian's. A label, an https address
+  // and a one-line note; set by the admin. Two audit words: the table is rebuilt for the CHECK, as in 14.
+  `
+  CREATE TABLE project_links (
+    id INTEGER PRIMARY KEY,
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    label TEXT NOT NULL CHECK (length(label) BETWEEN 1 AND 60),
+    url TEXT NOT NULL CHECK (url GLOB 'https://*' AND length(url) <= 300),
+    note TEXT CHECK (note IS NULL OR length(note) <= 140),
+    position INTEGER NOT NULL,
+    added_at INTEGER NOT NULL,
+    UNIQUE (workspace_id, url)
+  ) STRICT;
+  CREATE TABLE audit_v16 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V16)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v16 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v16 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]
 

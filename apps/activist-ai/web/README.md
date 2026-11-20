@@ -11,6 +11,14 @@ under the name and keeps the things with the bar at the bottom. "Lots of permiss
 there (POST /api/projects, the same code as `admin.mjs create-workspace`). Screens:
 `node scripts/project-shots.mjs <dir>`.
 
+**Also yours (2026-11-20, OLA-103).** A project can link to what its people already use elsewhere:
+the Adaptation Almanac in Frances's project, the MRD law library in Ian's. The admin sets them
+(`node frontdesk/admin.mjs link <project> --label "…" --url https://… [--note "…"]`, `links`,
+`unlink`; at most six, https only, audited); the home shows them in the laptop's row of links, as
+an "Also yours" list under what Ola made (on a phone, in the Made by Ola tab) and in the Menu, each
+opening in a new tab. The front desk only shows them; Ola does not fetch them. Look at them with
+`OLA_DEV_LINKS=1 node scripts/project-shots.mjs <dir>`.
+
 **The simple confidence check (2026-11-18, OLA-144).** Before a run, `precheck` (`src/lib/steps.ts`,
 ported in `apple/OlaKit/.../Fallbacks.swift`) offers the "this may be a stretch" card when the
 request is big (it names 8 or more of the project's files, or asks for all of them in a project

@@ -55,6 +55,10 @@
 //   node admin.mjs sites                              what is published at sites.ola.cx: project, address, files, when
 //   node admin.mjs unpublish <workspace>               takes that project's published pages down now (a takedown:
 //                  the acceptable-use line in the Publish sheet); audited as the admin's
+//   node admin.mjs link <workspace> --label "Adaptation Almanac" --url https://… [--note "Runs on Claude, outside Ola"]
+//                  a link on the project's home to what its people already use elsewhere (OLA-103); at most 6
+//   node admin.mjs links <workspace>                  the project's links, with their ids
+//   node admin.mjs unlink <workspace> <id>            one link off the project's home
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
@@ -80,6 +84,7 @@ import { drafts, KINDS as WORK_KINDS, summary as switchSummary } from './switche
 import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 import { makeSites } from './sites.mjs'
+import { addLink, linksOf, removeLink } from './links.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -539,6 +544,32 @@ switch (cmd) {
     console.log(`recorded: ${w.slug} shown to a cloud agent, with ${by.handle}'s yes`)
     break
   }
+  case 'link': {
+    const w = workspace(args[0])
+    try {
+      addLink(db, w.id, { label: flags.label, url: flags.url, note: flags.note })
+    } catch (e) {
+      fail(e.message)
+    }
+    for (const l of linksOf(db, w.id)) console.log(`#${l.id} ${l.label} ${l.url}${l.note ? ` (${l.note})` : ''}`)
+    console.log(`${w.slug}: shown on the project's home to its members from their next page load.`)
+    break
+  }
+  case 'links': {
+    const w = workspace(args[0])
+    const list = linksOf(db, w.id)
+    for (const l of list) console.log(`#${l.id} ${l.label} ${l.url}${l.note ? ` (${l.note})` : ''}`)
+    if (!list.length) console.log(`${w.slug}: no links`)
+    break
+  }
+  case 'unlink': {
+    const w = workspace(args[0])
+    const id = Number(args[1])
+    if (!Number.isSafeInteger(id)) fail('say which link by its id (node admin.mjs links <workspace>)')
+    if (!removeLink(db, w.id, id)) fail(`${w.slug} has no link #${id}`)
+    console.log(`${w.slug}: link #${id} removed`)
+    break
+  }
   case 'audit': {
     const limit = Math.min(1000, Number(flags.limit ?? 50))
     const w = flags.workspace ? workspace(flags.workspace) : null
@@ -655,7 +686,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | app-hosted | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | app-hosted | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | link | links | unlink | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

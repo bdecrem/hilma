@@ -189,5 +189,7 @@ export async function projectPayload(files) {
     things: [...fixture.things, ...made],
     files: otherFiles(list, made),
     otherTotal: otherCount(list, made),
+    // OLA_DEV_LINKS=1: the project's links to what its people use elsewhere (OLA-103), made up.
+    ...(process.env.OLA_DEV_LINKS === '1' ? { links: fixture.links } : {}),
   }
 }

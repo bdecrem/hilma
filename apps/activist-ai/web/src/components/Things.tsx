@@ -1,7 +1,7 @@
 // The project's things, each as paper on the desk: a header band (icon, title, who made it and
 // when) and a body that shows the thing itself, never a thumbnail too small to read.
 import { createResource, createSignal, For, Match, Show, Switch } from 'solid-js'
-import type { Byline, ChartThing, DashboardThing, DocumentThing, FileDocThing, FileEntry, ImageThing, SiteThing, SourceThing, TableThing, Thing } from '../lib/types.ts'
+import type { Byline, ChartThing, DashboardThing, DocumentThing, FileDocThing, FileEntry, ImageThing, ProjectLink, SiteThing, SourceThing, TableThing, Thing } from '../lib/types.ts'
 import { bytes, count, when } from '../lib/format.ts'
 import { canOpen, desk } from '../lib/api.ts'
 import { Icon } from './Icon.tsx'
@@ -402,6 +402,44 @@ export function Sources(props: { sources: SourceThing[] }) {
               </li>
             )
           }}
+        </For>
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * What the project's people already use somewhere else (OLA-103): the Adaptation Almanac in
+ * Frances's project, the MRD law library in Ian's. Set by the admin (`admin.mjs link`); each opens
+ * at its own address in a new tab. Ola does not read them.
+ */
+export function Elsewhere(props: { links: ProjectLink[] }) {
+  return (
+    <section class="elsewhere" aria-labelledby="elsewhere-title" data-group="elsewhere">
+      <h2 id="elsewhere-title" class="group-title">
+        Also yours <span class="group-count">{props.links.length}</span>
+      </h2>
+      <p class="sources-lede">Made for this work before Ola. Each one stays at its own address.</p>
+      <ul class="source-list">
+        <For each={props.links}>
+          {(l) => (
+            <li class="source-row elsewhere-row">
+              <span class="source-icon" aria-hidden="true">
+                <Icon name="away" size={18} />
+              </span>
+              <a class="elsewhere-main" href={l.url} target="_blank" rel="noopener noreferrer">
+                <span class="source-title">{l.label}</span>
+                <span class="source-address">{shortAddress(l.url)}</span>
+                <Show when={l.note}>
+                  <span class="source-meta">{l.note}</span>
+                </Show>
+                <span class="sr-only"> (opens in a new tab)</span>
+              </a>
+              <span class="source-open" aria-hidden="true">
+                Open
+              </span>
+            </li>
+          )}
         </For>
       </ul>
     </section>

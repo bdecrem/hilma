@@ -90,6 +90,13 @@
 .project-links .link-button.on-room {
   color: var(--lamp);
 }
+/* A link to what the project's people use elsewhere (OLA-103): the same row, marked as leaving. */
+.project-links a.project-away {
+  gap: 6px;
+}
+.project-links a.project-away svg {
+  color: var(--mist);
+}
 
 /* ---- the three tabs (phone) */
 .tabs {
@@ -131,6 +138,41 @@
   color: var(--mist);
   font-size: 17px;
   padding: var(--s2) var(--s2) var(--s5);
+}
+
+/* ---- also yours: what the project's people use elsewhere (OLA-103), in the sources' list style */
+.elsewhere {
+  margin-top: var(--s6);
+}
+.elsewhere-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.elsewhere-main::after {
+  /* the whole row is the link */
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.elsewhere-row {
+  position: relative;
+}
+.elsewhere-row:hover .source-title,
+.elsewhere-main:focus-visible .source-title {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.elsewhere-main:focus-visible {
+  outline: none;
+}
+.elsewhere-row:has(.elsewhere-main:focus-visible) {
+  outline: 2px solid var(--link);
+  outline-offset: -2px;
+  border-radius: var(--radius);
 }
 
 /* ---- sources: what Ola downloaded, apart from what it made */

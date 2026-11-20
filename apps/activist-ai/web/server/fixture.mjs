@@ -9,6 +9,11 @@ export const fixture = {
     people: ['you', 'Dana'],
     filesUploaded: 0,
   },
+  // What the union already uses elsewhere (OLA-103; shown only with OLA_DEV_LINKS=1). Made up.
+  links: [
+    { label: 'Repairs hotline log', url: 'https://example.org/north-district/repairs', note: 'The union’s own tracker, kept by volunteers. Not part of Ola' },
+    { label: 'Court calendar', url: 'https://example.org/court/calendar' },
+  ],
   // How many people are working on the machine right now (never who).
   machine: { working: 3, capacity: 4 },
   things: [

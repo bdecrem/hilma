@@ -119,6 +119,17 @@ export interface ProjectPayload {
   otherTotal?: number
   /** The signed-in person's role in this workspace (the dev server leaves it out: owner). */
   role?: Role
+  /** What the project's people already use elsewhere (set by the admin; OLA-103): shown, never fetched. */
+  links?: ProjectLink[]
+}
+
+/** A link on the project home to something outside Ola: the Almanac, the MRD library. */
+export interface ProjectLink {
+  label: string
+  /** Always https (the front desk refuses anything else). */
+  url: string
+  /** One line: what it is and what it runs on. */
+  note?: string
 }
 
 /** GET /api/me: the signed-in person, their workspaces, and the front desk's wording. */
