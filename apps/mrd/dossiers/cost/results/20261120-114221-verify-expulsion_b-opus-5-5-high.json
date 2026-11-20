@@ -1,0 +1,421 @@
+{
+ "status": "ok",
+ "job_id": "verify costa_rica expulsion_b claude-opus-5-5 high",
+ "step": "verify",
+ "slug": "costa_rica",
+ "chunk": "expulsion_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  55,
+  57,
+  59,
+  61
+ ],
+ "started_at": "2026-11-20T19:42:21.152Z",
+ "meters_before": {
+  "at": "2026-11-20T19:42:16.702Z",
+  "window": {
+   "pct": 10,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 35,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 10,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 35,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 10% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 35% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 130 requests · 2 sessions\n  39%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  32%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 32%, statusline 1%\n\nLast 7d · 141 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  37%  Start fresh when you switch tasks · run /clear\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 54060,
+  "user": 66
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T19:46:33.676Z",
+ "minutes": 4.21,
+ "meters_after": {
+  "at": "2026-11-20T19:46:33.676Z",
+  "window": {
+   "pct": 12,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 62,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 12,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 62,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 12% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 62% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 130 requests · 2 sessions\n  39%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  32%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 32%, statusline 1%\n\nLast 7d · 141 requests · 3 sessions\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  37%  Start fresh when you switch tasks · run /clear\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 101807,
+   "output": 19848,
+   "cache_read": 1896241,
+   "cache_write": 143222,
+   "cost_usd": 1.845,
+   "total": 2161118
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 101771,
+    "output": 8065,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1877,
+    "cost_usd": 0.0842
+   },
+   "claude-opus-5-5": {
+    "input": 36,
+    "output": 11783,
+    "cache_read": 1896241,
+    "cache_write": 143222,
+    "thinking": 4013,
+    "cost_usd": 1.7608
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 42,
+ "duration_ms": 252028,
+ "duration_api_ms": 188017,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-20T19:42:26.630Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31 | ARTÍCULO 65 | ARTÍCULO 183 | ARTÍCULO 184 | ARTÍCULO 186 | ARTÍCULO 209 | ARTÍCULO 210 | ARTÍCULO 214 | ARTÍCULO 215 | ARTÍCULO 216 | ARTÍCULO 222 | ARTÍCULO 122",
+   "ok": true,
+   "chars": 18605
+  },
+  {
+   "at": "2026-11-20T19:42:32.520Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 207 | ARTÍCULO 209 | ARTÍCULO 210 | ARTÍCULO 211 | ARTÍCULO 214 | ARTÍCULO 215 | ARTÍCULO 216 | ARTÍCULO 217 | ARTÍCULO 222 | ARTÍCULO 185",
+   "ok": true,
+   "chars": 19178
+  },
+  {
+   "at": "2026-11-20T19:42:51.251Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 217 | ARTÍCULO 222 | rechazos y deportaciones | ARTÍCULO 64 | ARTÍCULO 115",
+   "ok": true,
+   "chars": 11261
+  },
+  {
+   "at": "2026-11-20T19:42:55.681Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 39 | Artículo 40 | Artículo 123 | Artículo 124 | Artículo 127 | Artículo 134 | Artículo 135 | tercer país",
+   "ok": true,
+   "chars": 18456
+  },
+  {
+   "at": "2026-11-20T19:43:08.377Z",
+   "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+   "find": "refugio | desde su ingreso | tome nota | individualizada | POR TANTO",
+   "ok": true,
+   "chars": 15553
+  },
+  {
+   "at": "2026-11-20T19:43:12.985Z",
+   "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500",
+   "find": "derecho a solicitar refugio | posibilidad de solicitar refugio | obligación de informar | protección internacional",
+   "ok": true,
+   "chars": 10616
+  },
+  {
+   "at": "2026-11-20T19:43:27.036Z",
+   "url": "https://webarchive.archive.unhcr.org/20230530043427if_/https://www.refworld.org/pdfid/5d0218174.pdf",
+   "find": "refugio | rechazo | informar",
+   "ok": true,
+   "chars": 847
+  },
+  {
+   "at": "2026-11-20T19:44:12.667Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+   "find": "derecho a solicitar | se le informará | deberá informar | informarle | Artículo 43 | devolución indirecta",
+   "ok": true,
+   "chars": 6972
+  },
+  {
+   "at": "2026-11-20T19:44:28.290Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 31 | ARTÍCULO 39",
+   "ok": true,
+   "chars": 4457
+  },
+  {
+   "at": "2026-11-20T19:44:41.483Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 116",
+   "ok": true,
+   "chars": 2815
+  },
+  {
+   "at": "2026-11-20T19:44:42.472Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+   "find": "país seguro | tercer Estado | primer país de asilo",
+   "ok": true,
+   "chars": 3441
+  },
+  {
+   "at": "2026-11-20T19:44:55.381Z",
+   "url": "https://www.dhr.go.cr/informacion_relevante/comunicados/2026/marzo/014_Costa_Rica_tardo_corregir_atencion_integral_personas_migrantes_deportadas.pdf",
+   "find": "refugio | protección internacional | resolución | individual",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:45:16.636Z",
+   "url": "https://www.globaldetentionproject.org/costa-rica-joint-submission-to-the-committee-against-torture",
+   "find": "deport | asylum | rejection | appeal | CATEM | due process",
+   "ok": true,
+   "chars": 4241
+  },
+  {
+   "at": "2026-11-20T19:45:35.753Z",
+   "url": "https://www.ecoi.net/de/dokument/2107651.html",
+   "find": "refoulement | deport | Protection of Refugees | asylum",
+   "ok": true,
+   "chars": 2658
+  }
+ ],
+ "searches": [
+  "reglamento control migratorio Costa Rica rechazo \"informar\" \"derecho a solicitar refugio\" persona extranjera aprehendida",
+  "\"Reglamento de Control Migratorio\" 36769 Costa Rica rechazo solicitud de refugio puesto fronterizo artículo",
+  "pgrweb.go.cr scij \"Reglamento de Control Migratorio\" Decreto 36769-G nValor2",
+  "Sala Constitucional Costa Rica \"devolución indirecta\" refugio expulsión tercer país",
+  "Costa Rica deportaciones rechazos migratorios debido proceso Defensoría de los Habitantes informe 2024 2025 Policía Profesional de Migración",
+  "Costa Rica concluding observations 2023 2024 committee migrants deportation \"due process\" rejection at border asylum seekers Costa Rica",
+  "Costa Rica 2023 Country Reports on Human Rights Practices refoulement deportation \"Costa Rica\" migrants rejected border Nicaraguans"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"reviews\":[{\"question_id\":55,\"protection_verdict\":\"confirmed\",\"protection_answer\":\"No\",\"protection_reason\":\"I read Ley 8764 in the current SINALEVI version. Art. 31(8) grants the right to \\\"buscar y recibir asilo\\\". Arts. 64–65 (rechazo: an acta stating the grounds, a consular challenge \\\"sin efecto suspensivo\\\", \\\"plena observancia del artículo 31\\\" of the Constitution) and arts. 183–184 and 207–210 (deportation) impose no duty to tell the person that asylum is available. In the Refugee Regulation (36831-G), art. 123(a) (the Refugee Unit gives information on the procedure), art. 124 (border and police authorities must know the referral procedure), art. 127 (a claim may be inferred, including for detainees and people \\\"que desconozcan su posible condición\\\"), art. 129 (information once the applicant appears) and art. 134 (an official who learns of the wish to apply must refer it and respect non-refoulement) are all referral duties that start once a claim is expressed or apparent. I read Voto 2025-019485 itself, considerando X. It says it was not shown that information on seeking refuge was given \\\"desde el momento de su ingreso\\\", calls that a breach of \\\"esta obligación\\\", and tells DGME to \\\"tome nota\\\" for future humanitarian entry authorisations. It names no legal source and confines itself to that group admitted on humanitarian grounds; it states no general rule for expulsion or refusal of entry. So the answer is No.\",\"implementation_verdict\":\"not_applicable\",\"implementation_answer\":\"Does Not Apply\",\"evidence_is_practice\":true,\"evidence_covers_same_people\":true,\"implementation_reason\":\"The protection answer is the lowest option, so implementation does not apply. For the record, the decision itself (considerando X) and the HRW, Defensoría and GDP/Cristosal material document that deportees from the US were not told of asylum from the moment they arrived. That evidence is practice, but it covers only that group.\",\"read\":[{\"title\":\"Ley General de Migración y Extra",
+ "output": {
+  "reviews": [
+   {
+    "question_id": 55,
+    "protection_verdict": "confirmed",
+    "protection_answer": "No",
+    "protection_reason": "I read Ley 8764 in the current SINALEVI version. Art. 31(8) grants the right to \"buscar y recibir asilo\". Arts. 64–65 (rechazo: an acta stating the grounds, a consular challenge \"sin efecto suspensivo\", \"plena observancia del artículo 31\" of the Constitution) and arts. 183–184 and 207–210 (deportation) impose no duty to tell the person that asylum is available. In the Refugee Regulation (36831-G), art. 123(a) (the Refugee Unit gives information on the procedure), art. 124 (border and police authorities must know the referral procedure), art. 127 (a claim may be inferred, including for detainees and people \"que desconozcan su posible condición\"), art. 129 (information once the applicant appears) and art. 134 (an official who learns of the wish to apply must refer it and respect non-refoulement) are all referral duties that start once a claim is expressed or apparent. I read Voto 2025-019485 itself, considerando X. It says it was not shown that information on seeking refuge was given \"desde el momento de su ingreso\", calls that a breach of \"esta obligación\", and tells DGME to \"tome nota\" for future humanitarian entry authorisations. It names no legal source and confines itself to that group admitted on humanitarian grounds; it states no general rule for expulsion or refusal of entry. So the answer is No.",
+    "implementation_verdict": "not_applicable",
+    "implementation_answer": "Does Not Apply",
+    "evidence_is_practice": true,
+    "evidence_covers_same_people": true,
+    "implementation_reason": "The protection answer is the lowest option, so implementation does not apply. For the record, the decision itself (considerando X) and the HRW, Defensoría and GDP/Cristosal material document that deportees from the US were not told of asylum from the moment they arrived. That evidence is practice, but it covers only that group.",
+    "read": [
+     {
+      "title": "Ley General de Migración y Extranjería N.º 8764 (SINALEVI, versión vigente) arts. 31, 64, 65, 183, 184",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas, Decreto 36831-G (SINALEVI, versión 3 de 3) arts. 123, 124, 127, 129, 134",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485 (Nexus PJ), considerando X and dissent",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "GDP and Cristosal, Costa Rica: Joint Submission to the Committee against Torture",
+      "url": "https://www.globaldetentionproject.org/costa-rica-joint-submission-to-the-committee-against-torture"
+     }
+    ]
+   },
+   {
+    "question_id": 57,
+    "protection_verdict": "confirmed",
+    "protection_answer": "No",
+    "protection_reason": "I read Const. art. 31: \"nunca podrá enviársele al país donde fuere perseguido\". In Ley 8764 I read art. 31(9): no asylum seeker or refugee may be expelled, deported or rejected \"a otro país, sea o no de origen, donde su derecho a la vida esté en riesgo\". Art. 115 bars deportation to the country of origin. Art. 116 covers extradition only. Arts. 64 and 184 allow removal \"a su país de origen o a un tercer país que lo admita\", with no check on onward protection. In Regulation 36831-G, art. 39 bars return to a country where life, safety or freedom \"peligre\", and art. 40 gives a refugee time to seek admission in another country. All these rules look only at the danger in the receiving country itself. None bars sending a person to a state likely to send them onward, and none is like the Argentine clause requiring the receiving state to guarantee protection against further expulsion. The regulation has no safe-third-country clause (searched 'país seguro', 'tercer Estado': none). I found no Sala decision applying indirect refoulement.",
+    "implementation_verdict": "not_applicable",
+    "implementation_answer": "Does Not Apply",
+    "evidence_is_practice": true,
+    "evidence_covers_same_people": true,
+    "implementation_reason": "The protection answer is the lowest option, so implementation does not apply. For context, Refugees International and others criticise 'chain deportations' of US third-country deportees through Costa Rica. GDP reports 478 people received under the 2026 MoU by October 2026, of whom 269 had departed.",
+    "read": [
+     {
+      "title": "Constitución Política (SINALEVI) art. 31",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI) arts. 31(9), 64, 115, 116, 184",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI) arts. 39, 40, search for safe-third-country terms",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "GDP and Cristosal submission to CAT on Costa Rica",
+      "url": "https://www.globaldetentionproject.org/costa-rica-joint-submission-to-the-committee-against-torture"
+     }
+    ]
+   },
+   {
+    "question_id": 59,
+    "protection_verdict": "confirmed",
+    "protection_answer": "Yes",
+    "protection_reason": "I read the current Ley 8764. Art. 31(1) guarantees \"acceso a la justicia, al respeto de las garantías del debido proceso, al derecho de defensa\". Art. 183 limits deportation to listed individual situations: clandestine or irregular entry, false documents, overstay, failure to leave when ordered. Art. 209 opens the procedure \"mediante la indicación de los hechos y cargos que se imputan\". Under art. 210 a deportation resolution issues only once \"comprobada la ilegalidad del ingreso o la permanencia\", and it must be duly notified. Art. 186 requires a \"resolución razonada\" to expel a lawful resident whose activities compromise public order, and art. 215 requires the charges to be verified. Art. 122 and Regulation art. 40 allow expulsion of a lawfully present refugee only on national-security or public-order grounds \"en virtud de una decisión tomada conforme a los procedimientos legales vigentes\". Art. 185 bars deportation or expulsion of minors except in their own interest. One limit: art. 214 needs no further procedure for deportation after an unheeded conminación, but the conminación is itself an appealable resolution (art. 128). Yes is correct.",
+    "implementation_verdict": "confirmed",
+    "implementation_answer": "Usually",
+    "evidence_is_practice": true,
+    "evidence_covers_same_people": false,
+    "implementation_reason": "I read Voto 2025-019485 itself rather than the Delfino report. It shows about 200 US deportees held at CATEM-Sur under collective DGME resolutions (D.JUR-0057-02-2025-JM, and later a normalisation covering \"la totalidad\" of them) until the Sala ordered individual decisions and release. Defensoría statements (2025–2026) call the procedures improvised. This is practice evidence, but it covers only the third-country deportees, not the routine deportation of irregular migrants or the expulsion of residents. I found no in-window evidence of a systematic failure for those groups; the 2023 US State Department report raises no deportation concerns. 'Usually' with one major documented breach is reasonable, with low confidence.",
+    "read": [
+     {
+      "title": "Ley 8764 (SINALEVI) arts. 31, 122, 183, 185, 186, 209, 210, 214, 215",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G art. 40",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485 (Nexus PJ)",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "2023 Country Report on Human Rights Practices: Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2107651.html"
+     }
+    ]
+   },
+   {
+    "question_id": 61,
+    "protection_verdict": "confirmed",
+    "protection_answer": "Yes",
+    "protection_reason": "I read the current Ley 8764. In deportation proceedings, art. 209 requires the DGME to state the facts and charges and to grant \"de manera inmediata, audiencia oral para que la persona extranjera pueda ejercer su derecho de defensa\" before the art. 210 resolution. Art. 207 makes the procedure \"sumarísima\". For expulsion, art. 215 gives \"un plazo de tres días hábiles para que ofrezca pruebas de descargo\" before an opinion and decision. Art. 216 allows revocation or appeal to the Tribunal Administrativo Migratorio, and \"la impugnación de la orden de expulsión suspenderá la ejecución\". Art. 217 executes the order only once final. Art. 122 and Regulation art. 40 give refugees exculpatory evidence, a confidential oral hearing and an appeal. The limits stand as the citation says: art. 222 rules out any appeal against rechazo and deportation, and art. 65 allows a border rejection to be challenged only at a consulate with no suspensive effect. Even so, the law gives an opportunity to submit reasons and have them assessed by the competent authority before deportation (the art. 209 hearing) and before expulsion, so Yes stands.",
+    "implementation_verdict": "confirmed",
+    "implementation_answer": "Sometimes; Usually",
+    "evidence_is_practice": true,
+    "evidence_covers_same_people": false,
+    "implementation_reason": "Part of the first coder's reasoning rests on the law's design (arts. 207 and 222), which is not practice, and on an FIDH report that predates the window. The in-window practice evidence is Voto 2025-019485, which I read, and the Defensoría statements. They show that the US deportees at CATEM-Sur had no individual hearing or decision for months, until the Sala intervened. That covers only the third-country deportees, not routine deportations of irregular migrants or expulsions of residents, for which I found no recent documented evidence either way. Given the summary procedure, the absence of appeal and this documented failure, 'Sometimes; Usually' is defensible, with low confidence.",
+    "read": [
+     {
+      "title": "Ley 8764 (SINALEVI) arts. 65, 122, 207, 209, 210, 215, 216, 217, 222",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G art. 40",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Sala Constitucional, Voto 2025-019485 (Nexus PJ)",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1316500"
+     },
+     {
+      "title": "GDP and Cristosal submission to CAT on Costa Rica",
+      "url": "https://www.globaldetentionproject.org/costa-rica-joint-submission-to-the-committee-against-torture"
+     }
+    ]
+   }
+  ]
+ }
+}
