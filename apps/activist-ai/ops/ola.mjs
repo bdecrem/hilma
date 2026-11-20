@@ -761,7 +761,11 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   }
   say('workspace image: built if missing (node workspace/ws.mjs image --missing)')
   const img = await runLogged(NODE, ['workspace/ws.mjs', 'image', '--missing'], { cwd: code, out })
-  if (img.code !== 0) return refuse('the workspace image could not be built (the log has the build output)')
+  if (img.code !== 0) {
+    // The build's own last word (ws.mjs buildImage says why), so the refusal says why too.
+    const why = img.tail.trim().split('\n').filter((l) => /^ws: |Error/.test(l)).pop()
+    return refuse(`the workspace image could not be built${why ? `: ${why.replace(/^ws: /, '').slice(0, 300)}` : ''} (the log has the build output)`)
+  }
 
   // The skills it installs (skills/version.mjs): the release's skills folder and the image's label
   // must be the same set, and that version is recorded (deployed.json, and release.json for the
