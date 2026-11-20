@@ -1,0 +1,789 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica civil_liberties claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "civil_liberties",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  81,
+  83,
+  85,
+  87,
+  89,
+  131
+ ],
+ "started_at": "2026-11-20T20:37:12.683Z",
+ "meters_before": {
+  "at": "2026-11-20T20:37:08.188Z",
+  "window": {
+   "pct": 31,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 31,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 31% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 68410,
+  "user": 126
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:40:31.444Z",
+ "minutes": 3.31,
+ "meters_after": {
+  "at": "2026-11-20T20:40:31.444Z",
+  "window": {
+   "pct": 33,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 33,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 33% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 88477,
+   "output": 24459,
+   "cache_read": 864143,
+   "cache_write": 120006,
+   "cost_usd": 1.5266,
+   "total": 1097085
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 88457,
+    "output": 8432,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2832,
+    "cost_usd": 0.0731
+   },
+   "claude-opus-5-5": {
+    "input": 20,
+    "output": 16027,
+    "cache_read": 864143,
+    "cache_write": 120006,
+    "thinking": 3202,
+    "cost_usd": 1.4535
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 33,
+ "duration_ms": 197742,
+ "duration_api_ms": 208343,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-20T20:37:22.391Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 19 | ARTÍCULO 25 | ARTÍCULO 26 | ARTÍCULO 28 | ARTÍCULO 29 | ARTÍCULO 33 | ARTÍCULO 60 | ARTÍCULO 75",
+   "ok": true,
+   "chars": 14697
+  },
+  {
+   "at": "2026-11-20T20:37:33.485Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 75.- | religión Católica",
+   "ok": true,
+   "chars": 2269
+  },
+  {
+   "at": "2026-11-20T20:37:35.286Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 31.- | ARTÍCULO 3.- | ARTÍCULO 7.- | prevengan la discriminación",
+   "ok": true,
+   "chars": 5994
+  },
+  {
+   "at": "2026-11-20T20:37:36.720Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "ARTÍCULO 345 | ARTÍCULO 404 | ascendencia nacional",
+   "ok": true,
+   "chars": 8550
+  },
+  {
+   "at": "2026-11-20T20:37:45.643Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Ficha Artículo 31 | discriminación | 4) El respeto a las costumbres",
+   "ok": true,
+   "chars": 5998
+  },
+  {
+   "at": "2026-11-20T20:37:47.030Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+   "find": "se anuló del inciso anterior la frase | Ley 10437 | 10437",
+   "ok": true,
+   "chars": 5542
+  },
+  {
+   "at": "2026-11-20T20:38:05.420Z",
+   "url": "https://www.pgr.go.cr/wp-content/uploads/2026/07/Ley-10437-proteccion-de-denunciantes-y-testigos-de-actos-de-corrupcion.pdf",
+   "find": "ARTÍCULO 28 | Rige | Artículo 404 | publicación",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:38:08.430Z",
+   "url": "https://delfino.cr/2023/11/sala-iv-declara-inconstitucional-impedimento-a-extranjeros-de-participar-en-junta-de-gobierno-del-colegio-de-medicos",
+   "find": "19 | 33 | inconstitucional",
+   "ok": true,
+   "chars": 4526
+  },
+  {
+   "at": "2026-11-20T20:38:08.844Z",
+   "url": "https://www.ecoi.net/de/dokument/2111845.html",
+   "find": "foreign | migrant | Government Practices | respected",
+   "ok": true,
+   "chars": 5393
+  },
+  {
+   "at": "2026-11-20T20:38:19.176Z",
+   "url": "https://www.ecoi.net/de/dokument/2092194.html",
+   "find": "GOVERNMENT PRACTICES | Constitutional Chamber | discriminat",
+   "ok": true,
+   "chars": 4355
+  },
+  {
+   "at": "2026-11-20T20:38:32.407Z",
+   "url": "https://costarica.un.org/sites/default/files/2025-08/Discursos%20de%20Odio%20Informe%20Final%202025.pdf",
+   "find": "xenofob | nicaragüense | migrante",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:38:34.954Z",
+   "url": "https://cejil.org/wp-content/uploads/2024/10/Resumen-Informe-EPU-Movilidad.pdf",
+   "find": "discriminación | xenofobia | discurso",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:38:41.866Z",
+   "url": "https://www.vozdeamerica.com/a/aumento-de-discursos-de-odio-contra-migrantes-en-costa-rica-preocupa-a-nicaraguenses/7162445.html",
+   "find": "ONU | odio | políticas",
+   "ok": true,
+   "chars": 3507
+  },
+  {
+   "at": "2026-11-20T20:38:59.581Z",
+   "url": "https://www.delfino.cr/2025/08/costa-rica-registro-2-1-millones-de-mensajes-de-odio-en-redes-sociales",
+   "find": "xenofob | nicaragüense | migrante",
+   "ok": true,
+   "chars": 3506
+  },
+  {
+   "at": "2026-11-20T20:39:00.040Z",
+   "url": "https://news.un.org/es/story/2022/06/1510762",
+   "find": "xenofob | nicaragüense | migrante",
+   "ok": true,
+   "chars": 3330
+  }
+ ],
+ "searches": [
+  "Ley 10437 protección denunciantes testigos actos de corrupción represalias laborales publicada La Gaceta vigencia",
+  "Costa Rica 2023 Report on International Religious Freedom State Department",
+  "Sala Constitucional 2023-030411 Colegio de Médicos extranjeros Junta de Gobierno artículos 19 y 33",
+  "Costa Rica extranjeros \"asuntos políticos\" artículo 19 Sala Constitucional manifestación deportación nicaragüenses exiliados 2024",
+  "Costa Rica xenofobia migrantes discriminación informe 2024 Defensoría de los Habitantes nicaragüenses",
+  "ONU Costa Rica discursos de odio 2025 informe migrantes nicaragüenses xenofobia redes sociales aumento"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":81,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually; Effectively Always\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually; Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 75\",\"enacted\":\"1949\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 19\",\"enacted\":\"1949\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 28\",\"enacted\":\"1949\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 33\",\"enacted\":\"1949\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31; art. 7(4)\",\"enacted\":\"2009\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"Both the 2022 and 2023 US State Department religious-freedom reports describe a constitutional order that protects the free exercise of religion, with remedies before the Sala Constitucional. They report no government interference with religious practice. The one point they raise for foreigners is administrative: foreign religious workers must belong to a religious group accredited for migration control. Neither period shows a documented pattern of breach against migrants, so the rating stays at Usually; Effectively Always for both dates. The evidence covers the general population, not migrant groups specifically.\",\"practice_sources\":[{\"title\":\"2022 Report on International Religious Freedom: Costa Rica (US State Department, via ecoi.net)\",\"url\":\"https://www.ecoi.net/de/dok",
+ "output": {
+  "answers": [
+   {
+    "question_id": 81,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 75",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 28",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 33",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31; art. 7(4)",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Both the 2022 and 2023 US State Department religious-freedom reports describe a constitutional order that protects the free exercise of religion, with remedies before the Sala Constitucional. They report no government interference with religious practice. The one point they raise for foreigners is administrative: foreign religious workers must belong to a religious group accredited for migration control. Neither period shows a documented pattern of breach against migrants, so the rating stays at Usually; Effectively Always for both dates. The evidence covers the general population, not migrant groups specifically.",
+    "practice_sources": [
+     {
+      "title": "2022 Report on International Religious Freedom: Costa Rica (US State Department, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2092194.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2023 Report on International Religious Freedom: Costa Rica (US State Department, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2111845.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The consolidated SINALEVI texts carry amendment notes on each article. Arts. 19 and 28 have none. Art. 33 was last reformed by Ley 7880 (1999). Art. 75 was renumbered by Ley 5703 (1975). Ley 8764 art. 31 has no amendment note, and Ley 10493 (2024) amended arts. 33, 241 and 253, not art. 31. So the 1 Jan 2023 text equals today's.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI, current version)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "2022 IRF Report Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2092194.html"
+     },
+     {
+      "title": "2023 IRF Report Costa Rica (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2111845.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Text read. Art. 75: 'La Religión Católica... es la del Estado... sin impedir el libre ejercicio en la República de otros cultos que no se opongan a la moral universal ni a las buenas costumbres.' The IRF reports are about the whole population, not migrants as such, hence medium confidence."
+   },
+   {
+    "question_id": 83,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 28",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "I found no report, in either period, of the state sanctioning migrants merely for holding opinions. UN Costa Rica hate-speech monitoring found Nicaraguans the group most targeted by xenophobic speech in 2022. In 2023, VOA reported a UN finding that hate speech had risen about 50%, with NGOs blaming presidential rhetoric. The 2025 report recorded a 16% fall in xenophobic speech. All of this is third-party speech and the rhetorical climate, not state interference with holding opinions, so the rating is unchanged.",
+    "practice_sources": [
+     {
+      "title": "ONU Noticias: discursos de odio en Costa Rica (2022)",
+      "url": "https://news.un.org/es/story/2022/06/1510762",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Aumento de discursos de odio contra migrantes en Costa Rica preocupa a nicaragüenses (VOA)",
+      "url": "https://www.vozdeamerica.com/a/aumento-de-discursos-de-odio-contra-migrantes-en-costa-rica-preocupa-a-nicaraguenses/7162445.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica registró 2.1 millones de mensajes de odio en redes sociales (Delfino, UN report 2025)",
+      "url": "https://www.delfino.cr/2025/08/costa-rica-registro-2-1-millones-de-mensajes-de-odio-en-redes-sociales",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 19 and 28 carry no amendment notes in SINALEVI (original 1949 text), and Ley 8764 art. 31 has none either. The evidence is indirect: it shows no sanctioning, but there is no positive monitoring of state interference.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "ONU Noticias 2022",
+      "url": "https://news.un.org/es/story/2022/06/1510762"
+     },
+     {
+      "title": "VOA 2023",
+      "url": "https://www.vozdeamerica.com/a/aumento-de-discursos-de-odio-contra-migrantes-en-costa-rica-preocupa-a-nicaraguenses/7162445.html"
+     },
+     {
+      "title": "Delfino 2025",
+      "url": "https://www.delfino.cr/2025/08/costa-rica-registro-2-1-millones-de-mensajes-de-odio-en-redes-sociales"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Art. 28 read: 'Nadie puede ser inquietado ni perseguido por la manifestación de sus opiniones ni por acto alguno que no infrinja la ley.'"
+   },
+   {
+    "question_id": 85,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 29",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is the lowest option at both dates, so implementation does not apply. No change in practice bears on the bar in art. 19 ('No pueden intervenir en los asuntos políticos del país').",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 19 and 29 carry no amendment notes in SINALEVI, and Ley 8764 art. 31 is unamended. I found no Sala ruling in the window that narrows or extends the art. 19 bar.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     }
+    ],
+    "starting_answer_concern": "Borderline. A search result (Bonilla Bravo, Revista de Derecho Electoral, TSE, 2022; not opened) states that Sala Constitucional case law confines the art. 19 bar to voting rather than all political activity. If that holds, the Yes reading becomes stronger. I did not read the ruling, so the starting answer is kept.",
+    "confidence": "medium",
+    "notes": "Art. 29 read: 'Todos pueden comunicar sus pensamientos de palabra o por escrito, y publicarlos sin previa censura.' The No follows the MRD's Mexico coding."
+   },
+   {
+    "question_id": 87,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 60",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 25",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 345(e)",
+      "enacted": "1943",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 404",
+      "enacted": "2016",
+      "history_read": "current_text_only",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02",
+      "instrument": "Ley N.º 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "Added reporting or testifying about corruption to the grounds of prohibited workplace discrimination. 'Ascendencia nacional' and 'afiliación sindical' are retained. It does not touch the bar on foreigners leading unions.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+      "passage": "(Así reformado por el artículo 28 de la Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales, N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option at both dates, so implementation does not apply. Two provisions stayed in force throughout. Const. art. 60 says 'Queda prohibido a los extranjeros ejercer dirección o autoridad en los sindicatos'. Labour Code art. 345(e), last amended by Ley 10235 of May 2022 (before the window), requires board members to be Costa Ricans or long-resident foreign spouses of Costa Ricans; Central Americans by origin count as Costa Ricans.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "SINALEVI notes show that art. 345 was last reformed by Ley 10235 (3 May 2022), before 1 Jan 2023. Arts. 25 and 60 carry no amendment notes. Art. 404 was amended by Ley 10437, in force February 2024 (the gazette date comes from secondary sources; the PGR PDF could not be parsed), but the change does not bear on the indicator.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Código de Trabajo (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Ley 10235's entry into force in 2022 is assumed from its May 2022 date. Its text was not opened."
+   },
+   {
+    "question_id": 89,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 26",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is the lowest option at both dates, so implementation does not apply. Art. 26 ('Todos tienen derecho de reunirse pacíficamente y sin armas... para discutir asuntos políticos') and the art. 19 political-affairs bar are unchanged.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 19 and 26 carry no amendment notes in SINALEVI (original text). I found no ruling in the window on foreigners' political assembly.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     }
+    ],
+    "starting_answer_concern": "Borderline, as the first coder noted. Art. 26 says 'Todos', and secondary doctrine (Bonilla Bravo, TSE 2022, seen only in search results) says the Sala confines the art. 19 bar to voting. If so, a Yes would be defensible. The starting answer is kept.",
+    "confidence": "medium",
+    "notes": null
+   },
+   {
+    "question_id": 131,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 33",
+      "enacted": "1949 (reformed by Ley 7880, 1999)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Arts. 3, 7(2), 31; Consejo Nacional de Migración functions (subsection 3)",
+      "enacted": "2009",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de Trabajo, Ley N.º 2",
+      "article": "Art. 404",
+      "enacted": "2016 (Ley 9343)",
+      "history_read": "current_text_only",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-11",
+      "instrument": "Sala Constitucional, sentencia N.º 2023-030411 (Exp. 21-025070-0007-CO)",
+      "article": "Ley Orgánica del Colegio de Médicos art. 13; Const. arts. 19, 33",
+      "kind": "practice",
+      "what_changed": "In an action of unconstitutionality, the Sala annulled the requirement that members of the Colegio de Médicos board be Costa Rican, as an unjustified distinction between nationals and foreigners contrary to arts. 19 and 33. I read only a press account, not the full ruling, so it counts here as practice evidence and does not change the protection answer, which was already Yes.",
+      "url": "https://delfino.cr/2023/11/sala-iv-declara-inconstitucional-impedimento-a-extranjeros-de-participar-en-junta-de-gobierno-del-colegio-de-medicos",
+      "passage": "Mediante la sentencia 2023-030411, los magistrados determinaron por unanimidad que es inconstitucional la frase contenida en el artículo 13 de la Ley y el artículo 43 del reglamento a dicha ley, por ser contraria a los artículos 19 y 33 de la Constitución Política, en la medida que establece una diferenciación injustificada entre nacionales y extranjeros"
+     },
+     {
+      "date": "2024-02",
+      "instrument": "Ley N.º 10437, Ley de protección de las personas denunciantes y testigos de actos de corrupción contra represalias laborales",
+      "article": "Código de Trabajo art. 404",
+      "kind": "amended",
+      "what_changed": "Rewrote art. 404 to add reporting or testifying about corruption as a prohibited ground. 'Ascendencia nacional' remains, so the migrant-relevant ground is unchanged.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC",
+      "passage": "Se prohíbe toda discriminación en el trabajo por razones de edad, etnia, sexo, religión, raza, orientación sexual, estado civil, opinión política, ascendencia nacional, origen social, filiación, condición de salud, discapacidad, afiliación sindical, presentación de denuncias... (Así reformado por el artículo 28 de la Ley... N° 10437 del 29 de enero de 2024)"
+     }
+    ],
+    "implementation_then_now": "Around 2022, UN Costa Rica hate-speech monitoring found Nicaraguans the group most affected by xenophobic discourse, with messages linking migrants to crime and to the use of health services. In 2023, VOA reported a UN finding that hate speech had risen about 50%; NGOs (Fundación Arias, Colectivo Nicaragua Nunca Más) said presidential rhetoric fuelled it and that no policies were in place to curb it. In 2025 the UN reported xenophobic speech down 16%, though still very high. Meanwhile the Sala Constitucional kept striking down nationality-based distinctions (2023-030411). The mixed picture does not change enough to move the rating from Sometimes at either date.",
+    "practice_sources": [
+     {
+      "title": "ONU Noticias: discursos de odio en Costa Rica (2022)",
+      "url": "https://news.un.org/es/story/2022/06/1510762",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Aumento de discursos de odio contra migrantes en Costa Rica preocupa a nicaragüenses (VOA)",
+      "url": "https://www.vozdeamerica.com/a/aumento-de-discursos-de-odio-contra-migrantes-en-costa-rica-preocupa-a-nicaraguenses/7162445.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Sala IV declara inconstitucional impedimento a extranjeros de participar en Junta de Gobierno del Colegio de Médicos (Delfino)",
+      "url": "https://delfino.cr/2023/11/sala-iv-declara-inconstitucional-impedimento-a-extranjeros-de-participar-en-junta-de-gobierno-del-colegio-de-medicos",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica registró 2.1 millones de mensajes de odio en redes sociales (Delfino, UN report 2025)",
+      "url": "https://www.delfino.cr/2025/08/costa-rica-registro-2-1-millones-de-mensajes-de-odio-en-redes-sociales",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 19 and 33 and Ley 8764 arts. 3, 7 and 31 carry no amendment notes in the window. For Labour Code art. 404, the 1 Jan 2023 text (the Ley 9343 version) was not read directly; I infer from the Ley 10437 note that 'ascendencia nacional' was already there. Ley 10437's February 2024 entry into force rests on secondary sources, because the PGR PDF could not be parsed. The UN 2025 PDF and the CEJIL UPR summary could not be parsed; the press coverage was used instead.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Código de Trabajo (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=8045&strTipM=TC"
+     },
+     {
+      "title": "Delfino 2023 on Sala ruling 2023-030411",
+      "url": "https://delfino.cr/2023/11/sala-iv-declara-inconstitucional-impedimento-a-extranjeros-de-participar-en-junta-de-gobierno-del-colegio-de-medicos"
+     },
+     {
+      "title": "ONU Noticias 2022",
+      "url": "https://news.un.org/es/story/2022/06/1510762"
+     },
+     {
+      "title": "VOA 2023",
+      "url": "https://www.vozdeamerica.com/a/aumento-de-discursos-de-odio-contra-migrantes-en-costa-rica-preocupa-a-nicaraguenses/7162445.html"
+     },
+     {
+      "title": "Delfino 2025 (UN hate speech report)",
+      "url": "https://www.delfino.cr/2025/08/costa-rica-registro-2-1-millones-de-mensajes-de-odio-en-redes-sociales"
+     },
+     {
+      "title": "Ley 10437 (PGR PDF, failed to parse)",
+      "url": "https://www.pgr.go.cr/wp-content/uploads/2026/07/Ley-10437-proteccion-de-denunciantes-y-testigos-de-actos-de-corrupcion.pdf"
+     },
+     {
+      "title": "UN Discursos de Odio Informe 2025 (PDF, failed to parse)",
+      "url": "https://costarica.un.org/sites/default/files/2025-08/Discursos%20de%20Odio%20Informe%20Final%202025.pdf"
+     },
+     {
+      "title": "CEJIL Resumen Informe EPU Movilidad (PDF, failed to parse)",
+      "url": "https://cejil.org/wp-content/uploads/2024/10/Resumen-Informe-EPU-Movilidad.pdf"
+     }
+    ],
+    "starting_answer_concern": "The Yes rests on general equality clauses (arts. 19 and 33) as applied by the Sala, plus the 'ascendencia nacional' ground in Labour Code art. 404. No statute names migrant status. Ruling 2023-030411 is known only from the press, so the Yes depends on Sala doctrine that was not read in full in this pass.",
+    "confidence": "medium",
+    "notes": "Hate-speech evidence concerns migrants generally, especially Nicaraguans. It does not separate regular, irregular or refugee groups."
+   }
+  ]
+ }
+}
