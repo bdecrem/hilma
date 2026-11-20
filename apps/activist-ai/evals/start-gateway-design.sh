@@ -27,7 +27,7 @@ for f in probe usage; do [[ -s $state/dz-$f-token ]] || { (umask 077; openssl ra
 UPSTREAM_BASE_URL=$base UPSTREAM_API_KEY=$key \
 GATEWAY_TOKENS=evals:$(cat $state/dz-probe-token) GATEWAY_TOKENS_FILE=$home/gateway-tokens GATEWAY_DOOR_DIR=$home/gw \
 GATEWAY_USAGE_TOKEN=$(cat $state/dz-usage-token) GATEWAY_HOST=127.0.0.1 GATEWAY_PORT=$port \
-GATEWAY_MODELS=general=$general GATEWAY_DB=$state/dz-gateway.db GATEWAY_WEEKLY_TOKENS=8000000 \
+GATEWAY_MODELS=general=$general GATEWAY_DB=$state/dz-gateway.db GATEWAY_WEEKLY_TOKENS=${DZ_WEEKLY:-8000000} \
 GATEWAY_EVERYDAY_LOCAL=$local GATEWAY_DESIGN_FILE=$state/dz-gateway-design \
 GATEWAY_MAX_INFLIGHT=4 GATEWAY_MAX_INFLIGHT_PER_CALLER=2 GATEWAY_MAX_QUEUED_PER_CALLER=8 \
   nohup /opt/homebrew/bin/node $here/../gateway/server.mjs >> $state/dz-gateway.log 2>&1 &
