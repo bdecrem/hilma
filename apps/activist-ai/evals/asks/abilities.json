@@ -55,10 +55,10 @@
       "id": "transcribe",
       "what": "Write out what is said in a recording",
       "cloud": {
-        "tell": "run `ola-transcribe <recording>`"
+        "notOffered": "Ola can't write out what is said in a recording yet: no model that turns speech into text is set up. The recording is safe in your files."
       },
       "local": {
-        "notOffered": "Writing out recordings works in your cloud projects on Ola, not on this Mac yet: put the recording in a cloud project and ask there."
+        "notOffered": "Ola can't write out what is said in a recording yet: no model that turns speech into text is set up. The recording is safe in your files."
       }
     },
     {
@@ -118,7 +118,7 @@
       "id": "drawing",
       "what": "Draw a picture, diagram or illustration",
       "cloud": {
-        "tell": "draw it in code as an SVG file; for a painted illustration, `ola-draw \"brief\" --out pic.png`"
+        "tell": "draw it in code as an SVG file"
       },
       "local": {
         "tell": "draw it in code as an SVG file"

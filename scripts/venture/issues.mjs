@@ -15,6 +15,7 @@
 //                                                                                passed (below), unless --proof "Bart: <his words>"
 //   Checks: what Bart will do and see, per place, written BEFORE the work; passed only by someone who did not build it.
 //   node scripts/venture/issues.mjs check <id> add --at cloud-web:chat --do "what he types or taps" --see "what he must then see"
+//   node scripts/venture/issues.mjs check <id> edit <n> [--do "…"] [--see "…"] --why "what changed"   (an unchecked check whose facts changed; the old words go on the thread)
 //   node scripts/venture/issues.mjs check <id> skip 'local-*' --why "why this place does not apply"     (a pattern, * allowed)
 //   node scripts/venture/issues.mjs check <id> internal --why "why nothing a person does or sees changes"
 //   node scripts/venture/issues.mjs check <id> pass <n> --by checker --on "<release or build>" --saw "what happened" --shot <file>
@@ -349,6 +350,18 @@ if (cmd === 'add') {
     a.checks.push({ n: (a.checks.at(-1)?.n ?? 0) + 1, at, do: does, see, added_by: str('by') ?? 'kit', added_at: now, result: null })
     a.internal = null
     await saveAccept(id, a)
+    printChecks(r, a)
+  } else if (sub === 'edit') {
+    const c = a.checks.find((x) => String(x.n) === String(pos[2]))
+    const [does, see, why] = [str('do'), str('see'), str('why')]
+    if (!c || (!does && !see) || !why || why.length < 15) die(`usage: issues.mjs check ${id} edit <n> [--do "…"] [--see "…"] --why "what changed, so the old words no longer hold"`)
+    if (c.result === 'pass') die(`check #${c.n} has passed; add a new check instead of changing one that passed`)
+    const old = `do: ${c.do} / see: ${c.see}`
+    if (does) c.do = does
+    if (see) c.see = see
+    c.result = null
+    await saveAccept(id, a)
+    await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} changed by ${str('by') ?? 'kit'}: ${why}. It was: ${old}` }])
     printChecks(r, a)
   } else if (sub === 'skip') {
     const pattern = pos[2]

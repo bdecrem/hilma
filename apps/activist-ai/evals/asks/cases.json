@@ -209,9 +209,13 @@
       "places": [
         "cloud-web:chat",
         "cloud-mac:chat",
-        "cloud-phone:chat"
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
       ],
-      "mustNot": [],
+      "mustNot": [
+        "\\bthursday\\b"
+      ],
       "id": "transcribe",
       "ability": "transcribe",
       "say": "write out what is said in the recording memo.wav",
@@ -224,42 +228,14 @@
         }
       ],
       "must": [
-        "says:thursday"
+        "says:can.?t|cannot|not able|isn.?t set up|not set up"
       ],
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-232",
-        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
-      }
-    },
-    {
-      "places": [
-        "local-mac:chat",
-        "local-phone:chat"
-      ],
-      "mustNot": [
-        "\\bthursday\\b"
-      ],
-      "id": "transcribe-local",
-      "ability": "transcribe",
-      "notOffered": true,
-      "say": "write out what is said in the recording memo.wav",
-      "setup": [
-        {
-          "wrote": {
-            "path": "memo.wav",
-            "from": "memo.wav"
-          }
-        }
-      ],
-      "must": [
-        "says:cloud project"
-      ],
-      "from": {
-        "date": "2026-11-20",
-        "ticket": "OLA-232",
-        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
-      }
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it. Nov 20: no speech-to-text model is set up on the server or the Mac, so in both places Ola says it can't yet and makes up no transcript (the asks on da438040: in the cloud it said so plainly while the list called it offered)."
+      },
+      "notOffered": true
     },
     {
       "places": [
