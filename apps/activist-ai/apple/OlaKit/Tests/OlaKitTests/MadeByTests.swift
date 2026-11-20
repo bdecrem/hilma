@@ -74,6 +74,24 @@ final class MadeByTests: XCTestCase {
     XCTAssertEqual(Conversation.turns(fromMessages: history, directory: nil).first?.request, "who made it?")
   }
 
+  /// Cloud: the app sends the person's words, the front desk puts its note in front (frontdesk/madeby.mjs
+  /// engineNote, copied here byte for byte), and opencode echoes the noted text on the stream and in
+  /// the history. Neither shows the note, and the echo still matches the turn the app started.
+  func testTheCloudNoteIsNotShown() {
+    let note = "<ola-engines>Before this request, other engines worked in this conversation (not you): Claude, asked \"make it beautiful\", changed index.html. Never say you did their work; ola-made-by <file> shows who made a file.</ola-engines>\n\n"
+    var c = Conversation(sessionID: "ses_1", directory: nil)
+    c.startTurn("who made index.html?")
+    c.apply(["type": "session.inbox.enqueued", "data": ["sessionID": "ses_1", "inboxID": "in_1", "item": ["type": "user", "payload": ["text": .string(note + "who made index.html?")]]]])
+    XCTAssertEqual(c.turns.count, 1, "the echo is the turn the app started, not a second one")
+    XCTAssertEqual(c.turns.first?.id, "in_1")
+    XCTAssertEqual(c.turns.first?.request, "who made index.html?")
+    // Sent from another device (the website): shown without the note too.
+    c.apply(["type": "session.inbox.enqueued", "data": ["sessionID": "ses_1", "inboxID": "in_2", "item": ["type": "user", "payload": ["text": .string(note + "and the css?")]]]])
+    XCTAssertEqual(c.turns.last?.request, "and the css?")
+    let history: [JSON] = [["id": "m1", "type": "user", "text": .string(note + "who made index.html?"), "time": ["created": 5]]]
+    XCTAssertEqual(Conversation.turns(fromMessages: history, directory: nil).first?.request, "who made index.html?")
+  }
+
   func testAssignByTurnAndTime() {
     var turns = [Turn(id: "x", request: "a", at: Date(timeIntervalSince1970: 100), status: .done, engine: .ola),
                  Turn(id: "claude-1", request: "b", at: Date(timeIntervalSince1970: 200), status: .done, engine: .claude),
