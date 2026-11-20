@@ -1,0 +1,738 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica vulnerable claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "vulnerable",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  3,
+  5,
+  7
+ ],
+ "started_at": "2026-11-20T19:52:21.778Z",
+ "meters_before": {
+  "at": "2026-11-20T19:52:16.988Z",
+  "window": {
+   "pct": 15,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 15,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 15% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 137 requests · 2 sessions\n  44%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  30%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 30%, statusline 1%\n\nLast 7d · 148 requests · 3 sessions\n  41%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  28%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 28%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 66084,
+  "user": 107
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T19:56:30.895Z",
+ "minutes": 4.15,
+ "meters_after": {
+  "at": "2026-11-20T19:56:30.895Z",
+  "window": {
+   "pct": 17,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 17,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 17% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 74562,
+   "output": 19914,
+   "cache_read": 1760002,
+   "cache_write": 140017,
+   "cost_usd": 1.8138,
+   "total": 1994495
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 74528,
+    "output": 5856,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1860,
+    "cost_usd": 0.0604
+   },
+   "claude-opus-5-5": {
+    "input": 34,
+    "output": 14058,
+    "cache_read": 1760002,
+    "cache_write": 140017,
+    "thinking": 3091,
+    "cost_usd": 1.7534
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 40,
+ "duration_ms": 248460,
+ "duration_api_ms": 171417,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-20T19:52:27.075Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Artículo 33 | discapacidad | 10493 | Artículo 65 | Artículo 6",
+   "ok": true,
+   "chars": 12624
+  },
+  {
+   "at": "2026-11-20T19:52:31.290Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "Se exceptúan | exentas de estos pagos | adultas con discapacidad | Ley N° 10493 | Así reformado el párrafo",
+   "ok": true,
+   "chars": 8623
+  },
+  {
+   "at": "2026-11-20T19:52:42.317Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=71376&strTipM=TC",
+   "find": "Artículo 10 | Artículo 11 | Artículo 47 | Artículo 62 | Artículo 64 | Artículo 87 | Artículo 123 | Así reformado | 44501 | 43810",
+   "ok": true,
+   "chars": 17047
+  },
+  {
+   "at": "2026-11-20T19:52:46.411Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1",
+   "find": "Artículo 13.— | Artículo 62 | Artículo 64 | Artículo 87 | Artículo 123 | mujeres víctimas de violencia basada en género y víctimas de trata",
+   "ok": true,
+   "chars": 14571
+  },
+  {
+   "at": "2026-11-20T19:52:50.823Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=72489&strTipM=TC",
+   "find": "Dependiente: | Artículo 6.- | Artículo 33.- | Artículo 43.- | Artículo 135.- | Artículo 140.- | Artículo 141.-",
+   "ok": true,
+   "chars": 11577
+  },
+  {
+   "at": "2026-11-20T19:53:13.647Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1",
+   "find": "Dos fotografías recientes tamaño pasaporte | NO FIRMA | impida firmar",
+   "ok": true,
+   "chars": 6538
+  },
+  {
+   "at": "2026-11-20T19:53:35.633Z",
+   "url": "https://bufetedecostarica.com/wp-content/uploads/2026/10/facsimil-ley-10493-texto-integro-alcance-147-2024-562af765d3.pdf",
+   "find": "artículo 33 | discapacidad | indígenas | Rige",
+   "ok": true,
+   "chars": 6004
+  },
+  {
+   "at": "2026-11-20T19:53:39.741Z",
+   "url": "https://bufetedecostarica.com/reforma-ley-general-migracion-extranjeria-en-costa-rica-10493/",
+   "find": "discapacidad | indígenas | Rige | ARTÍCULO 1",
+   "ok": true,
+   "chars": 6516
+  },
+  {
+   "at": "2026-11-20T19:53:54.801Z",
+   "url": "https://delfino.cr/asamblea/proyecto/23778",
+   "find": "discapacidad | indígenas | texto actual | Quedarán exentos",
+   "ok": true,
+   "chars": 2018
+  },
+  {
+   "at": "2026-11-20T19:54:03.173Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&nValor3=0&strTipM=TC",
+   "find": "Quedarán exentos | Versión | versión",
+   "ok": true,
+   "chars": 1689
+  },
+  {
+   "at": "2026-11-20T19:54:29.670Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 65 | ARTÍCULO 11.- | ARTÍCULO 3.- | ARTÍCULO 106",
+   "ok": true,
+   "chars": 9529
+  },
+  {
+   "at": "2026-11-20T19:54:30.855Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC",
+   "find": "Artículo 3°- | Artículo 17 | Así reformado",
+   "ok": true,
+   "chars": 6507
+  },
+  {
+   "at": "2026-11-20T19:54:55.350Z",
+   "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum",
+   "find": "children | women | disability | PANI",
+   "ok": true,
+   "chars": 5482
+  },
+  {
+   "at": "2026-11-20T19:55:05.893Z",
+   "url": "https://www.unicef.org/costarica/comunicados-prensa/inauguran-los-dos-primeros-espacios-seguros-temporales-de-la-gam-para-proteger",
+   "find": "PANI | 2023 | niñas | espacios seguros",
+   "ok": true,
+   "chars": 4557
+  },
+  {
+   "at": "2026-11-20T19:55:06.831Z",
+   "url": "https://documents.un.org/doc/undoc/gen/n23/064/29/pdf/n2306429.pdf",
+   "find": "migrantes | refugiadas | solicitantes de asilo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T19:55:23.007Z",
+   "url": "https://www.ungeneva.org/fr/news-media/meeting-summary/2023/02/experts-committee-elimination-discrimination-against-women-4",
+   "find": "migrant | réfugié | asile | nicaragu",
+   "ok": true,
+   "chars": 5590
+  }
+ ],
+ "searches": [
+  "Ley 10493 reforma penúltimo párrafo artículo 33 Ley 8764 indígenas transfronterizas texto",
+  "\"Quedarán exentos de estos pagos, las personas menores de edad, refugiadas, asiladas, apátridas, las personas mayores de edad con discapacidad, los trabajadores transfronterizos, así como turistas\"",
+  "Ley 8764 \"mayores de edad con discapacidad, los trabajadores transfronterizos\" \"así como turistas\" artículo 33",
+  "UNICEF Costa Rica 2023 niños migrantes tránsito Paso Canoas EATM Los Planes PANI atención",
+  "CEDAW/C/CRI/CO/8 observaciones finales Costa Rica 2023 mujeres migrantes refugiadas solicitantes de asilo"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.35,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":3,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 6(7)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 11\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 31(5)(c), 31(7)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 33 (fee exemption for minors, penultimate paragraph)\",\"enacted\":\"2009-08-19\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Ley General de Migración y Extranjería N.º 8764\",\"article\":\"Art. 65\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código de la Niñez y la Adolescencia, Ley 7739\",\"article\":\"Art. 3\",\"enacted\":\"1998-01-06\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código de la Niñez y la Adolescencia, Ley 7739\",\"article\":\"Art. 17 (as reformed by Ley 8237 of 2002)\",\"enacted\":\"1998-01-06\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto 37112-G\",\"article\":\"Art. 33\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto 37112-G\",\"article\":\"Art. 43\",\"enacted\":\"2012\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Extranjería, Decreto 37112-G\",\"article\":\"Arts. 140-141 (art. 140 requirements partly repealed by Decre",
+ "output": {
+  "answers": [
+   {
+    "question_id": 3,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 6(7)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 11",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(c), 31(7)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33 (fee exemption for minors, penultimate paragraph)",
+      "enacted": "2009-08-19",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 65",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley 7739",
+      "article": "Art. 3",
+      "enacted": "1998-01-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley 7739",
+      "article": "Art. 17 (as reformed by Ley 8237 of 2002)",
+      "enacted": "1998-01-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 33",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 43",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Arts. 140-141 (art. 140 requirements partly repealed by Decreto 42389 of 17 Jan 2022, before the window)",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 10",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 47",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10493, Reforma del penúltimo párrafo del artículo 33; del primer párrafo del artículo 241, y del artículo 253, de la Ley 8764",
+      "article": "Ley 8764 art. 33, penultimate paragraph",
+      "kind": "amended",
+      "what_changed": "The fee-exemption paragraph was rewritten to add cross-border Indigenous persons and a 50% reduction for seasonal agricultural workers. Minors remain exempt, so the child-protection content is unaffected. In force on publication (Alcance 147, La Gaceta 158, 28 Aug. 2024).",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "Quedarán exentos de estos pagos, las personas menores de edad, refugiadas, asiladas, apátridas, las personas mayores de edad con discapacidad, los trabajadores transfronterizos, las personas indígenas transfronterizas, así como turistas. [...] (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "2023: unaccompanied and in-transit migrant children were channelled through PANI. In April–May 2023 PANI and DGME, with UNICEF, opened the two first temporary safe spaces in the Greater Metropolitan Area, bringing the total for in-transit migrant children to five (Ciudad Neily, Los Chiles, San José). This is evidence of the child-specific route working, but it covers only part of very large transit flows. 2026: the same PANI route continued, but in Feb. 2025 about 80 children deported from the US were held with their families at the CATEM-Sur in conditions HRW found unsuitable for children and without real access to asylum. The Sala Constitucional (Voto 2025-019485) ordered their release. That is a serious documented breach, but it is a single episode, not evidence of a systemic shift, so I keep the rating at Sometimes; Usually on both dates.",
+    "practice_sources": [
+     {
+      "title": "UNICEF Costa Rica, Inauguran los dos primeros espacios seguros temporales de la GAM para proteger a niñas, niños y adolescentes migrantes en tránsito",
+      "url": "https://www.unicef.org/costarica/comunicados-prensa/inauguran-los-dos-primeros-espacios-seguros-temporales-de-la-gam-para-proteger",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Human Rights Watch, Costa Rica: Allow Deported Migrants to Seek Asylum",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "For every cited article I read the current SINALEVI consolidated text with its per-article amendment notes. None of the child provisions carries an amendment note dated 2023–2025, so the text in force on 1 Jan. 2023 equals the current text. The only amendment in the window (Ley 10493, art. 33) was read in the consolidated text and in a reproduction of the act; it keeps the minors' exemption.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI, versión vigente)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Código de la Niñez y la Adolescencia 7739 (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Bufete de Costa Rica, text of Ley 10493",
+      "url": "https://bufetedecostarica.com/reforma-ley-general-migracion-extranjeria-en-costa-rica-10493/"
+     },
+     {
+      "title": "UNICEF Costa Rica press release, May 2023",
+      "url": "https://www.unicef.org/costarica/comunicados-prensa/inauguran-los-dos-primeros-espacios-seguros-temporales-de-la-gam-para-proteger"
+     },
+     {
+      "title": "HRW, Costa Rica: Allow Deported Migrants to Seek Asylum (2025)",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Two amendments in the window touch the cited instruments without touching the indicator. Ley 7739 art. 16 (permits for minors to leave the country) was reformed by Ley 10558 of 23 Oct. 2024; it is not cited and concerns all minors. Ley 8764 art. 6 gained an inciso 8 (students and researchers) through Ley 10645 of 24 Feb. 2025; inciso 7 is untouched. I did not read Voto 2025-019485 myself and use it only as practice evidence, via HRW and the starting coder. The 2023 rating rests on one UNICEF/PANI source, which is thin."
+   },
+   {
+    "question_id": 5,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 3",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(c), 31(7)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 106(1)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 10",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 11",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 13",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Art. 123(g)",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 135",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the CEDAW Committee's concluding observations of March 2023 (CEDAW/C/CRI/CO/8) flagged barriers to justice for migrant, refugee and asylum-seeking women and limited information about remedies. In the February 2023 dialogue the State itself acknowledged greater inequality for migrant women. The framework operated, with known gaps. 2026: the Defensoría and MNPT reports in Voto 2025-019485, as relied on by the starting coder, found INAMU absent where deported women were held. Gender-based-violence services for displaced women (UNHCR partners, IOM-INAMU mapping) continued. The pattern is the same on both dates, so the rating stays at Sometimes; Usually.",
+    "practice_sources": [
+     {
+      "title": "UN Geneva meeting summary, CEDAW review of Costa Rica (Feb. 2023)",
+      "url": "https://www.ungeneva.org/fr/news-media/meeting-summary/2023/02/experts-committee-elimination-discrimination-against-women-4",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Human Rights Watch, Costa Rica: Allow Deported Migrants to Seek Asylum",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "None of the cited articles of Ley 8764, 36831-G or 37112-G carries an amendment note in the SINALEVI consolidated texts. The 2022 and 2024 reforms of the Refugee Regulation (43810, 44501) changed other articles (14, 15, 16, 18, 54 and others), not arts. 10, 11, 13 or 123. The CEDAW 2023 PDF could not be parsed in this session; its migrant-women content is known from a search snippet and the UN meeting summary.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "UN Geneva CEDAW meeting summary Feb. 2023",
+      "url": "https://www.ungeneva.org/fr/news-media/meeting-summary/2023/02/experts-committee-elimination-discrimination-against-women-4"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "No legal change in the window. The 2026 practice evidence (Voto 2025-019485, Defensoría annual report, MNPT 2026) is carried over from the starting coding and was not re-read here, apart from HRW. The CEDAW PDF read failed for technical reasons."
+   },
+   {
+    "question_id": 7,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 31(5)(c), 31(7)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería N.º 8764",
+      "article": "Art. 33, penultimate paragraph (exemption for adults with disabilities)",
+      "enacted": "2009-08-19",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 2 (DEPENDIENTE)",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 6",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 43",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Extranjería, Decreto 37112-G",
+      "article": "Art. 135",
+      "enacted": "2012",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Personas Refugiadas, Decreto 36831-G",
+      "article": "Arts. 47, 62, 64, 87",
+      "enacted": "2011",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10493, Reforma del penúltimo párrafo del artículo 33; del primer párrafo del artículo 241, y del artículo 253, de la Ley 8764",
+      "article": "Ley 8764 art. 33, penultimate paragraph",
+      "kind": "amended",
+      "what_changed": "The exemption list was rewritten to add cross-border Indigenous persons and a 50% reduction for seasonal agricultural workers. The exemption for adults with disabilities appears in the new text and was already in force before through Reglamento art. 43, which has no amendment note. The disability protection is therefore unchanged in substance.",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+      "passage": "Quedarán exentos de estos pagos, las personas menores de edad, refugiadas, asiladas, apátridas, las personas mayores de edad con discapacidad, los trabajadores transfronterizos, las personas indígenas transfronterizas, así como turistas. [...] (Así reformado el párrafo anterior por el artículo 1° de la ley N° 10493 del 5 de junio del 2024)"
+     }
+    ],
+    "implementation_then_now": "I found no practice evidence specific to migrants with disabilities for either date. The 2026 rating rests on the starting coder's sources: DGME's own account of preferential handling of asylum seekers with disabilities (Expediente Público 2026), and coordination gaps at CATEM noted by the Defensoría and MNPT. I found nothing for 2022–2023 and no documented shift. The rating stays at Usually on both dates, inferred from the absence of documented breach for the fee exemption and dependant rules, with low confidence.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch, Costa Rica: Allow Deported Migrants to Seek Asylum (no disability-specific finding)",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The Refugee and Immigration Regulation provisions show no amendment notes in SINALEVI. For art. 33 of Ley 8764, I read the current text with its note and the text of Ley 10493 (via a law-firm reproduction; the Gaceta facsimile link redirected). I could not open the pre-2024 SINALEVI version, so the presence of the disability exemption on 1 Jan. 2023 is reconstructed from the unamended Reglamento art. 43 and the bill's stated purpose (agricultural workers' fees).",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "SINALEVI version page attempt (no content)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&nValor3=0&strTipM=TC"
+     },
+     {
+      "title": "Bufete de Costa Rica, text of Ley 10493",
+      "url": "https://bufetedecostarica.com/reforma-ley-general-migracion-extranjeria-en-costa-rica-10493/"
+     },
+     {
+      "title": "Delfino.cr, Expediente 23778 (Ley 10493)",
+      "url": "https://delfino.cr/asamblea/proyecto/23778"
+     },
+     {
+      "title": "Reglamento de Extranjería 37112-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=72489&param2=140878&param3=1"
+     },
+     {
+      "title": "Reglamento de Personas Refugiadas 36831-G (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=71376&param2=141143&param3=1"
+     },
+     {
+      "title": "HRW 2025",
+      "url": "https://www.hrw.org/news/2025/03/18/costa-rica-allow-deported-migrants-seek-asylum"
+     }
+    ],
+    "starting_answer_concern": "The starting citation says art. 33 reads 'as amended by Ley 10493 of 2024', which could suggest the disability exemption is new. On the evidence read it predates the window (Reglamento art. 43), so it is not a change.",
+    "confidence": "low",
+    "notes": "The implementation rating is inferred; no independent practice source on migrants with disabilities was found for either period."
+   }
+  ]
+ }
+}
