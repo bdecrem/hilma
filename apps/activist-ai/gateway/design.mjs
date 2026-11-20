@@ -3,9 +3,9 @@
 // the 128 GB Mac Studio, so it stays hosted). Ola's design had been "AI design from 2 years ago".
 //
 // Which requests: the boundary is the skill, not the person's words. opencode loads a skill with its
-// `skill` tool ({"name":"designer"}), and AGENTS.md tells Ola to load `designer` (or `app-designer`)
+// `skill` tool ({"id":"designer"}), and AGENTS.md tells Ola to load `designer` (or `app-designer`)
 // before every page or app screen. So a request for `general` whose messages, after the person's last
-// message, hold a call of the skill tool for one of DESIGN_SKILLS is design work, and the gateway
+// message, hold a call of the skill tool for one of DESIGN_SKILLS ({"id":"designer"} in opencode 2.3.0) is design work, and the gateway
 // serves it with the name `design`. The turn's first request (the one that decides to load the skill)
 // stays on `general`; every later request of that turn goes to `design`; the next turn starts again.
 // A caller may also ask for `design` by name: the same rules apply.
@@ -75,7 +75,8 @@ export function isDesignTurn(messages) {
       } catch {
         continue
       }
-      if (a && typeof a === 'object' && DESIGN_SKILLS.includes(a.name)) return true
+      // opencode 2.3.0 names the skill `id` (seen on the wire, Nov 20); 1.x named it `name`.
+      if (a && typeof a === 'object' && (DESIGN_SKILLS.includes(a.id) || DESIGN_SKILLS.includes(a.name))) return true
     }
   }
   return false

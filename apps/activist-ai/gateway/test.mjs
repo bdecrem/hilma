@@ -2031,7 +2031,7 @@ test('web: a person’s own caller (p-<id>) has a standing grant; a workspace st
 // loaded. The fake reads its command from the last message, a tool result in a design turn.
 const turn = (cmd, { skill = null, after = false } = {}) => {
   const m = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
-  if (skill) m.push({ role: 'assistant', content: '', tool_calls: [{ id: 's1', type: 'function', function: { name: 'skill', arguments: JSON.stringify({ name: skill }) } }] })
+  if (skill) m.push({ role: 'assistant', content: '', tool_calls: [{ id: 's1', type: 'function', function: { name: 'skill', arguments: JSON.stringify(skill === 'app-designer' ? { name: skill } : { id: skill }) } }] })
   if (after) m.push({ role: 'tool', tool_call_id: 's1', content: 'the skill' }, { role: 'assistant', content: 'Here it is.' }, { role: 'user', content: JSON.stringify(cmd) })
   else if (skill) m.push({ role: 'tool', tool_call_id: 's1', content: JSON.stringify(cmd) })
   else m.push({ role: 'user', content: JSON.stringify(cmd) })
