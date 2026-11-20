@@ -1,0 +1,15 @@
+{
+  "name": "inkling-ws-od",
+  "harness": "opencode-ws",
+  "model": "thinkingmachines/Inkling",
+  "serving": "Together.ai serverless, through the evals' own gateway/server.mjs on the Mac mini (127.0.0.1:4411, model name general = thinkingmachines/Inkling, and see = meta-models/Muse-Glimmer-30B for ola-see; started with OLA_EVALS_ROOT=~/ola-open-design/apps/activist-ai/evals evals/start-gateway-ws.sh odink 4411 thinkingmachines/Inkling 6000000 see=meta-models/Muse-Glimmer-30B), reached from a sealed workspace VM through its door. The open-model design comparison of OLA-168: the same image, AGENTS.md, designer skill and limits for every open model; only the gateway's `general` changes.",
+  "machine": "Mac mini (CASBS), Apple container, image ola-workspace:2.3.0-36, 4 CPUs, 6 GB, no network",
+  "ola_home": "~/ola-open-design/apps/activist-ai/evals/home-odink",
+  "gateway_db": "~/ola-open-design/apps/activist-ai/evals/state/odink-gateway.db",
+  "slots": [
+    "od-i1",
+    "od-i2"
+  ],
+  "context": 131072,
+  "max_output": 16000
+}

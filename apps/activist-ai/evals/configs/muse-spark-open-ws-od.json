@@ -1,0 +1,15 @@
+{
+  "name": "muse-spark-open-ws-od",
+  "harness": "opencode-ws",
+  "model": "meta-models/Muse-Spark-Open-816B-A42B",
+  "serving": "Together.ai serverless, through the evals' own gateway/server.mjs on the Mac mini (127.0.0.1:4413, model name general = meta-models/Muse-Spark-Open-816B-A42B, and see = meta-models/Muse-Glimmer-30B for ola-see; started with OLA_EVALS_ROOT=~/ola-open-design/apps/activist-ai/evals evals/start-gateway-ws.sh odmuse 4413 meta-models/Muse-Spark-Open-816B-A42B 6000000 see=meta-models/Muse-Glimmer-30B), reached from a sealed workspace VM through its door. The open-model design comparison of OLA-168: the same image, AGENTS.md, designer skill and limits for every open model; only the gateway's `general` changes.",
+  "machine": "Mac mini (CASBS), Apple container, image ola-workspace:2.3.0-36, 4 CPUs, 6 GB, no network",
+  "ola_home": "~/ola-open-design/apps/activist-ai/evals/home-odmuse",
+  "gateway_db": "~/ola-open-design/apps/activist-ai/evals/state/odmuse-gateway.db",
+  "slots": [
+    "od-m1",
+    "od-m2"
+  ],
+  "context": 131072,
+  "max_output": 16000
+}

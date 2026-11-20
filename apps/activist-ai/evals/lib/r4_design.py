@@ -10,6 +10,7 @@
     u9-block-party        designer, Bold: "a fun, colorful page" for a block party, from party.md
     u10-youth-strike       designer, Bold: "a bold, modern page" for a youth climate strike, from strike.md
     u11-garden-fundraiser designer, Bold: "a gorgeous page" for a garden's harvest dinner, from dinner.md
+    u12-good-morning      designer, Bold: Bart's own request word for word, a rising sun and one line, no file (OLA-168)
 
 The program checks hold every page to what a careful designer would never ship: broken on a phone,
 unreadable, decorated (gradients, glows, emoji, pills, a colored phrase in the headline, placeholder
@@ -612,6 +613,39 @@ def bold_slop(src):
     return solve
 
 
+# ------------------------------------------------------------------ u12: Bart's own "gorgeous hello world" (OLA-168)
+# The request word for word, with no file to work from: a gorgeous page with a rising sun and one line.
+
+MORNING = "Good morning from Palo Alto!"
+
+
+def morning_generate(work, seed, rng):
+    return {"words": MORNING}
+
+
+def morning_check(work, truth, session, C):
+    extra = ["the_words_on_the_first_screen"]
+    if not bold_start(C, work, "index.html", extra):
+        return
+    phone, lap = bold_checks(C, work, "index.html")
+    first = " ".join(x.get("text", "") for x in ((lap.get("audit") or {}).get("taste") or {}).get("first_screen", []))
+    flat = lambda s: re.sub(r"[^a-z]+", " ", s.lower()).strip()
+    C.add("the_words_on_the_first_screen", flat(truth["words"]) in flat(first) or flat(truth["words"]) in flat(phone.get("text") or "")[:400],
+          "missed_items", first[:200])
+
+
+def morning_solve(work, truth, wrong=False):
+    if wrong:
+        html = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hello</title>'
+                '<style>body{font:17px/1.6 system-ui,sans-serif;margin:16px;background:#fff;color:#111}</style></head><body><p>Hello.</p></body></html>')
+    else:
+        sun = ('<svg viewBox="0 0 400 200" role="img" aria-label="The sun rising over the hills" style="width:100%;max-width:640px;height:auto">'
+               '<circle cx="200" cy="200" r="90" fill="#ffc31f"/><rect x="0" y="170" width="400" height="30" fill="#3d3bff"/></svg>')
+        html = bold_shell("Good morning", f'<h1>{truth["words"]}</h1>{sun}', '<div class="band"><p>The sun is up over the hills.</p></div>')
+    (Path(work) / "index.html").write_text(html)
+    return "Made index.html."
+
+
 # ------------------------------------------------------------------ reference solutions and wrong outputs
 
 GOOD = """<style>
@@ -854,6 +888,7 @@ INSTR = {
                        "and most of them will open it on their phones from Instagram.",
     "u11-garden-fundraiser": "Make a gorgeous page for our community garden's harvest dinner fundraiser, from dinner.md, as index.html. "
                              "We want people to buy tickets.",
+    "u12-good-morning": "make me a gorgeous page with a rising sun on it and it says 'Good morning from Palo Alto!'",
 }
 
 TASKS = {
@@ -869,8 +904,10 @@ TASKS = {
 for tid, src, gen in (("u9-block-party", "party.md", party_generate), ("u10-youth-strike", "strike.md", strike_generate), ("u11-garden-fundraiser", "dinner.md", dinner_generate)):
     TASKS[tid] = dict(skill="designer", register="bold", level="medium", outputs=["index.html"], generate=gen, check=bold_check,
                       solve=(lambda s: lambda w, t: bold_solve(s)(w, t))(src), wrong=(lambda s: lambda w, t: bold_solve(s)(w, t, wrong=True))(src))
+TASKS["u12-good-morning"] = dict(skill="designer", register="bold", level="easy", outputs=["index.html"], generate=morning_generate, check=morning_check,
+                                 solve=lambda w, t: morning_solve(w, t), wrong=W(morning_solve))
 for k, v in TASKS.items():
     v["family"] = "skills"
     v["instruction"] = INSTR[k]
-    v["wrong2"] = bold_slop({"u9-block-party": "party.md", "u10-youth-strike": "strike.md", "u11-garden-fundraiser": "dinner.md"}[k]) if v.get("register") == "bold" \
+    v["wrong2"] = bold_slop({"u9-block-party": "party.md", "u10-youth-strike": "strike.md", "u11-garden-fundraiser": "dinner.md"}[k]) if v.get("register") == "bold" and k != "u12-good-morning" \
         else (lambda w, t: "I could not do it.")
