@@ -107,7 +107,8 @@ never holds user data. The install list, and the check that says which of it is 
 - **Deploy:** `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy [commit]` on the
   staging machine. It unpacks the commit into its own release, runs the four suites (gateway,
   workspace, web, front desk), and switches `current` only if all pass. A failed suite touches
-  nothing that runs. It checks commit signatures (`--unsigned` overrides, and the log says so).
+  nothing that runs. It checks commit signatures, or a signed approval tag `ola-deploy/<commit12>`
+  made on Bart's Mac by `ops/signers.mjs approve` (`--unsigned` overrides, and the log says so).
   A rollback is a deploy of the older commit. README, "Deploying staging".
 - **Automatic checks:** `cx.ola.ci` checks every change to main once (OLA-84, `ops/ci.mjs`): a
   deploy's result counts, a younger commit waits 20 minutes for its deploy, anything else gets
