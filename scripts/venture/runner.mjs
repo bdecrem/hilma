@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
-import { CLAIM_PREFIX, CLAIM_TTL, MIN, afterRun, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
+import { CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -111,8 +111,8 @@ async function claims() {
   if (error) throw new Error(`venture_state: ${error.message}`)
   return Object.fromEntries(data.map((r) => [r.key.slice(CLAIM_PREFIX.length), { ...r.value, at: r.at }]))
 }
-const claim = (id) => setState(db, CLAIM_PREFIX + id, { who: 'runner', host: hostname(), since: new Date().toISOString() })
-const renew = async (id, since) => db.from('venture_state').upsert({ key: CLAIM_PREFIX + id, value: { who: 'runner', host: hostname(), since }, at: new Date().toISOString() })
+const claim = (id) => setState(db, CLAIM_PREFIX + id, { who: 'runner', role: 'runner', host: hostname(), since: new Date().toISOString() })
+const renew = async (id, since) => db.from('venture_state').upsert({ key: CLAIM_PREFIX + id, value: { who: 'runner', role: 'runner', host: hostname(), since }, at: new Date().toISOString() })
 const release = (id) => db.from('venture_state').delete().eq('key', CLAIM_PREFIX + id)
 
 async function openIssues() {
@@ -389,7 +389,12 @@ async function decide(seen) {
   const issues = await openIssues()
   const tickets = (await getState(db, 'runner_tickets'))?.value ?? {}
   const p = plate()
-  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, now: Date.now() })
+  // builders waiting for a lane (issues.mjs start --wait): the runner yields to one of a higher priority (OLA-251)
+  const ws = await db.from('venture_state').select('key, value, at').like('key', `${WAIT_PREFIX}%`)
+  const waiters = Object.fromEntries((ws.data ?? []).map((w) => [w.key.slice(WAIT_PREFIX.length), { ...w.value, at: w.at }]))
+  const acc = await db.from('venture_state').select('key, value').like('key', 'accept:%')
+  const lanes = Object.fromEntries((acc.data ?? []).filter((x) => x.value?.lane).map((x) => [x.key.slice('accept:'.length), x.value.lane]))
+  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, waiters, lanes, now: Date.now() })
   return { lim, live, issues, tickets, plate: p, choice }
 }
 

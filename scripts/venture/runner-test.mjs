@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline checks of the runner's choices (OLA-211): node scripts/venture/runner-test.mjs
 import assert from 'node:assert/strict'
-import { afterRun, caseVerdict, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, zonedTime } from './_plate.mjs'
+import { afterRun, caseKey, caseState, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, zonedTime } from './_plate.mjs'
 
 let n = 0
 const ok = (name, f) => { f(); n++; console.log(`ok ${name}`) }
@@ -127,17 +127,22 @@ ok('a run that waits on a time is left alone until then, and is not a failed run
   assert.equal(afterRun({}, { status: 'in_progress', made: false, waitUntil: ago(5), now: NOW }).next.fails, 1)
 })
 
-ok('OLA-251: lanes from the ticket; one builder in the server lane; checkers and other lanes start', () => {
+ok('OLA-251: lanes from the ticket; one builder in the server lane; roles, holds that build, waiting builders', () => {
   assert.equal(laneOf({ area: 'web' }), 'server')
   assert.equal(laneOf({ area: 'apps' }), 'apps')
   assert.equal(laneOf({ area: 'ops', title: 'An update to the test server is refused' }), 'server')
   assert.equal(laneOf({ area: 'ops', title: 'Learning system, second round' }), 'tools')
-  assert.equal(laneOf({ area: 'apps' }, 'server'), 'server', 'a claim made with --lane keeps its lane')
+  assert.equal(laneOf({ area: 'apps' }, 'server'), 'server', 'a lane set on the ticket (issues.mjs edit --lane) is the lane')
+  assert.equal(laneOf({ area: 'web' }, 'foo'), 'server', 'an unknown lane is not a lane')
   const issues = [I(1, 'P0', 'in_progress', { area: 'web' }), I(2, 'P0', 'open', { area: 'model' }), I(3, 'P0', 'open', { area: 'apps' }), I(4, 'P1', 'open', { area: 'ops', title: 'scripts' })]
   const claims = { 'OLA-1': { who: 'builder', at: ago(5) } }
-  assert.deepEqual(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims, now: NOW }), { id: 'OLA-1', who: 'builder', lane: 'server' })
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims, now: NOW }).id, 'OLA-1')
   assert.equal(laneHolder({ id: 'OLA-3', lane: 'apps', issues, claims, now: NOW }), null, 'the apps lane is not limited')
   assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'checker', at: ago(5) } }, now: NOW }), null, 'a checker holds no lane')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'lead', at: ago(5) } }, now: NOW }), null, 'a hold takes no lane')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'builder-checker', at: ago(5) } }, now: NOW }).id, 'OLA-1', 'a name that contains "checker" is a builder')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'x', role: 'checker', at: ago(5) } }, now: NOW }), null, 'the role, not the name')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-4': { who: 'lead', at: ago(5) } }, building: { 'OLA-4': 'its commits change apps/activist-ai/x' }, now: NOW }).id, 'OLA-4', 'a hold whose ticket gets server commits is building')
   assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'builder', at: ago(50) } }, now: NOW }), null, 'an expired claim holds nothing')
   assert.equal(laneHolder({ id: 'OLA-1', lane: 'server', issues, claims, now: NOW }), null, 'its own claim is a renewal')
   // the runner takes the top unclaimed ticket whose lane is free
@@ -146,13 +151,27 @@ ok('OLA-251: lanes from the ticket; one builder in the server lane; checkers and
   assert.match(r.passed.find((p) => p.id === 'OLA-2').why, /server lane is held by builder on OLA-1/)
   // and when the runner itself holds the server lane, that does not stop its own next pick
   assert.equal(pickTicket([I(2, 'P0', 'open', { area: 'model' })], { claims: { 'OLA-1': { who: 'runner', at: ago(5) } }, now: NOW }).pick.id, 'OLA-2')
+  // the runner yields: a builder waiting for the server lane on a P0 goes before the runner's next P1 there
+  const two = [I(5, 'P1', 'open', { area: 'web' }), I(6, 'P2', 'open', { area: 'ops', title: 'scripts' })]
+  const w = { 'OLA-9': { who: 'builder', lane: 'server', priority: 'P0', at: ago(1) } }
+  const y = pickTicket(two, { waiters: w, now: NOW })
+  assert.equal(y.pick.id, 'OLA-6')
+  assert.match(y.passed[0].why, /waiting for the server lane with OLA-9 \(P0\)/)
+  assert.equal(pickTicket(two, { waiters: { 'OLA-9': { ...w['OLA-9'], priority: 'P2' } }, now: NOW }).pick.id, 'OLA-5', 'a waiter of a lower priority does not stop it')
+  assert.equal(pickTicket(two, { waiters: { 'OLA-9': { ...w['OLA-9'], at: ago(10) } }, now: NOW }).pick.id, 'OLA-5', 'a waiter that stopped renewing is gone')
 })
-ok('OLA-251: a check passed by a request-test case says what that case says now', () => {
-  const a = { worksSometimes: [{ case: 'p@cloud-web:chat' }], stoppedWorking: [{ case: 'q@local-mac:chat' }] }
-  assert.equal(caseVerdict('case p@cloud-web:chat', a), 'sometimes')
-  assert.equal(caseVerdict('case q@local-mac:chat', a), 'fails')
-  assert.equal(caseVerdict('case r@cloud-web:chat', a), null)
-  assert.equal(caseVerdict('/x/shot.png (900 bytes)', a), null)
+ok('OLA-251, OLA-259: a check passed by a request-test case says what that case says now in the result file', () => {
+  const cases = { 'p@cloud-web:chat': { status: 'passing', tries: '2 of 2 passed', release: 'aaaaaaaaaaaa' }, 's@cloud-web:chat': { status: 'passing', tries: '2 of 3 passed' }, 'v@cloud-web:chat': { status: 'passing', verdict: 'works sometimes (2 of 3)' }, 'q@local-mac:chat': { status: 'not working yet', tries: '0 of 2 passed' }, 'n@x:chat': { status: 'not run' } }
+  assert.equal(caseState('p@cloud-web:chat', cases).state, 'works')
+  assert.equal(caseState('p@cloud-web:chat', cases).release, 'aaaaaaaaaaaa')
+  assert.equal(caseState('s@cloud-web:chat', cases).state, 'sometimes', '2 of 3 in a file written before the verdict field')
+  assert.equal(caseState('v@cloud-web:chat', cases).state, 'sometimes')
+  assert.equal(caseState('q@local-mac:chat', cases).state, 'fails')
+  assert.equal(caseState('n@x:chat', cases).state, 'not run')
+  assert.equal(caseState('p@cloud-web', cases).state, 'unknown', 'a different spelling is not the case')
+  assert.equal(caseState('made-up@nowhere', cases).state, 'unknown')
+  assert.equal(caseKey('case p@cloud-web:chat'), 'p@cloud-web:chat')
+  assert.deepEqual(releasesIn('on da4380403a13 (and 25734224)'), ['da4380403a13'])
 })
 
 console.log(`${n} checks passed`)

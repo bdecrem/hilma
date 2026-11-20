@@ -36,7 +36,7 @@ export const isRecurring = (i, recurring = []) => /^(daily|weekly) task\b/i.test
  * tickets: the runner's own record per ticket ({ runs, fails, skippedAt, blockedBy });
  * sessionOpen: an interactive session's heartbeat is fresh.
  */
-export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, now = Date.now() } = {}) {
+export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, waiters = {}, lanes = {}, building = {}, now = Date.now() } = {}) {
   const passed = []
   const byId = new Map(issues.map((i) => [i.id, i]))
   const age = (iso) => (iso ? now - Date.parse(iso) : Infinity)
@@ -49,8 +49,12 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
     const t = tickets[i.id] ?? {}
     if (c && age(c.at) < CLAIM_TTL && c.who !== 'runner') { passed.push({ id: i.id, why: `claimed by ${c.who} ${Math.round(age(c.at) / MIN)} min ago` }); continue }
     // one builder at a time in the server lane (OLA-251): a session's builder holds it, so the runner takes the next ticket whose lane is free
-    const holder = laneOf(i) === 'server' ? laneHolder({ id: i.id, lane: 'server', issues, claims: Object.fromEntries(Object.entries(claims).filter(([, x]) => x.who !== 'runner')), now }) : null
+    const lane = laneOf(i, lanes[i.id])
+    const holder = lane === 'server' ? laneHolder({ id: i.id, lane: 'server', issues, lanes, building, claims: Object.fromEntries(Object.entries(claims).filter(([, x]) => x.who !== 'runner')), now }) : null
     if (holder) { passed.push({ id: i.id, why: `the server lane is held by ${holder.who} on ${holder.id}` }); continue }
+    // the runner yields (OLA-251): a builder waiting for this lane on a ticket of a higher priority goes first
+    const before = Object.entries(liveWaiters(waiters, now)).find(([wid, w]) => wid !== i.id && w.lane === lane && (PRI[w.priority] ?? 9) < (PRI[i.priority] ?? 9))
+    if (before && lane === 'server') { passed.push({ id: i.id, why: `${before[1].who} is waiting for the server lane with ${before[0]} (${before[1].priority}), above this ${i.priority}` }); continue }
     if (i.status === 'in_progress' && i.who !== 'runner' && age(i.updated_at) < CLAIM_TTL) { passed.push({ id: i.id, why: `in progress, touched ${Math.round(age(i.updated_at) / MIN)} min ago` }); continue }
     if (sessionOpen && i.status === 'in_progress' && i.who !== 'runner' && age(i.started_at) < SESSION_DOING_HOLD) { passed.push({ id: i.id, why: `started ${Math.round(age(i.started_at) / MIN)} min ago by ${i.who} while a session is open` }); continue }
     if (isRecurring(i, recurring)) { passed.push({ id: i.id, why: 'a recurring job (it runs on its own schedule)' }); continue }
@@ -193,43 +197,70 @@ export function leadLine(issues, { runner = null, claims = {}, limit = null, now
   return { text: parts.join(' · '), idle, working, lastActive }
 }
 
-/** What a check passed with `--case <id>@<place>` says now, from the board's asks summary (ops/watch.mjs):
- *  'sometimes' (two passes with a fail between, OLA-251), 'fails' (failing on its last run) or null. */
-export function caseVerdict(evidence, asks) {
-  const k = /^case (\S+)/.exec(evidence ?? '')?.[1]
-  if (!k || !asks) return null
-  const has = (list) => (list ?? []).some((x) => x.case === k)
-  return has(asks.worksSometimes) ? 'sometimes' : has(asks.stoppedWorking) || has(asks.notWorkingYet) ? 'fails' : null
+// ------------------------------------------------------------------ the request tests' cases (OLA-251, OLA-259)
+/** The case a check names as its evidence ("case <id>@<place>"), or null. */
+export const caseKey = (evidence) => /^case (\S+)/.exec(evidence ?? '')?.[1] ?? null
+/** What one case of the request tests' result file (~/ola-staging/asks-latest.json, `cases` by
+ *  "<id>@<place>") says now: { state: works | sometimes | fails | not run | unknown, release, at, tries }.
+ *  "works" is passing with no fail between its passes; a case the file does not hold, spelled even
+ *  slightly differently, is "unknown", never "works". */
+export function caseState(key, cases) {
+  const c = key && cases ? cases[key] : null
+  if (!c) return { state: 'unknown', release: null, at: null, tries: null }
+  const v = String(c.verdict ?? '')
+  const st = String(c.status ?? '')
+  // "2 of 3 passed": a fail between the passes, also in result files written before the verdict field
+  const t = /^(\d+) of (\d+)/.exec(String(c.tries ?? ''))
+  const gap = t && Number(t[1]) < Number(t[2])
+  const state = /sometimes/i.test(v) || /sometimes/i.test(st) || (st === 'passing' && gap) ? 'sometimes' : st === 'passing' ? 'works' : /not run/i.test(st) ? 'not run' : 'fails'
+  return { state, release: c.release ?? null, at: c.at ?? null, tries: c.tries ?? null }
 }
+/** The test server's releases a text names (12 hex characters, like da4380403a13). */
+export const releasesIn = (text) => [...new Set(String(text ?? '').match(/\b[0-9a-f]{12}\b/g) ?? [])]
 
 // ------------------------------------------------------------------ lanes (OLA-251, Nov 20)
 // One builder at a time on the server's code, counting the runner on the mini. On Nov 20 three
-// builders at once overwrote each other's work and the test server refused updates. A claim gets a
-// lane from its ticket: server (web, model, security, design, and ops tickets about Ola's server:
-// they change apps/activist-ai outside apple/), apps (the Mac and iPhone apps), tools (this project's
-// own scripts and notes: everything else). `issues.mjs start/claim` and the runner refuse a second
-// builder in the server lane; checkers and investigators are never refused and never hold a lane.
+// builders at once overwrote each other's work and the test server refused updates. A ticket's lane
+// comes from the ticket only: server (web, model, security, design, and ops tickets about Ola's server
+// by their title), apps (the Mac and iPhone apps), tools (this project's own scripts and notes:
+// everything else); `issues.mjs edit <id> --lane <lane>` changes it on the ticket, on its thread.
+// A claim has a role (_who.mjs): builder and runner take the lane, checker, investigator and hold do
+// not; any claim whose ticket gets commits that change the server's code while it is held counts as a
+// builder there whatever its role (`building`). `issues.mjs start/claim` and the runner refuse a second
+// builder in the server lane; a builder may wait for it (`start --wait`), and the runner yields to a
+// waiting builder whose ticket is of a higher priority than the runner's next one.
 export const LANES = ['server', 'apps', 'tools']
+export const SERVER_DIRS = ['apps/activist-ai/'] // the server's code
+export const SERVER_EXCEPT = ['apps/activist-ai/apple/'] // the Mac and iPhone apps, in the apps lane
+export const isServerFile = (f) => SERVER_DIRS.some((d) => f.startsWith(d)) && !SERVER_EXCEPT.some((d) => f.startsWith(d))
 const SERVER_WORDS = /\b(ola|ola\.cx|app\.ola|sites\.ola|test server|the mini|project box(es)?|front ?desk|gateway|workspace|opencode|the asks|request tests?|deploy|sealed)\b/i
-export function laneOf(issue, given = null) {
-  if (given && LANES.includes(given)) return given
+export function laneOf(issue, onTicket = null) {
+  if (onTicket && LANES.includes(onTicket)) return onTicket
   if (!issue) return 'tools'
   if (issue.area === 'apps') return 'apps'
   if (['web', 'model', 'security', 'design'].includes(issue.area)) return 'server'
   if (issue.area === 'ops' && SERVER_WORDS.test(issue.title ?? '')) return 'server' // the title only: descriptions mention Ola everywhere
   return 'tools'
 }
-export const neverRefused = (who) => /checker|investigator/i.test(String(who ?? ''))
-const holdsLane = (who) => !neverRefused(who) && !/^(lead|kit|bart)$/i.test(String(who ?? '').trim())
-/** Who holds the lane of ticket `id` now, other than `id` itself: { id, who, lane } or null.
- *  issues: rows by id (at least the claimed tickets); claims: { [id]: { who, at, lane? } }. */
-export function laneHolder({ id, lane, issues = [], claims = {}, now = Date.now() }) {
+const ROLE_WORDS = ['builder', 'checker', 'investigator', 'hold', 'runner']
+/** The role of a claim: its own `role`, else its name when that IS a role word, lead/kit/bart = hold, anyone else a builder. */
+export const claimRole = (c) => (c?.role && ROLE_WORDS.includes(c.role) ? c.role : ROLE_WORDS.includes(String(c?.who ?? '').trim().toLowerCase()) ? String(c.who).trim().toLowerCase() : /^(lead|kit|bart)$/i.test(String(c?.who ?? '').trim()) ? 'hold' : 'builder')
+/** Who holds the lane of ticket `id` now, other than `id` itself: { id, who, lane, why } or null.
+ *  issues: rows (at least the claimed tickets); claims: { [id]: { who, role?, at } }; lanes: { [id]: lane set on the ticket };
+ *  building: { [id]: "why" } for claims whose ticket got commits changing the server's code while held. */
+export function laneHolder({ id, lane, issues = [], claims = {}, lanes = {}, building = {}, now = Date.now() }) {
   if (lane !== 'server') return null
   const byId = new Map(issues.map((i) => [i.id, i]))
   for (const [cid, c] of Object.entries(claims)) {
-    if (cid === id || !(now - Date.parse(c.at) < CLAIM_TTL) || !holdsLane(c.who)) continue
-    if (laneOf(byId.get(cid), c.lane) === 'server') return { id: cid, who: c.who, lane: 'server' }
+    if (cid === id || !(now - Date.parse(c.at) < CLAIM_TTL)) continue
+    const role = claimRole(c)
+    if ((role === 'builder' || role === 'runner') && laneOf(byId.get(cid), lanes[cid]) === 'server') return { id: cid, who: c.who, lane: 'server', why: `${role} on a ticket in the server lane` }
+    if (building[cid]) return { id: cid, who: c.who, lane: 'server', why: `${role}, and ${building[cid]}` }
   }
   return null
 }
-export const laneSentence = (h, lane = 'server') => `Refused: ${h.who} is building ${h.id} in the ${lane} lane (Ola's server code), and only one builder works there at a time. Wait for its claim to end, take another ticket, or start beside it with --beside "<why it cannot collide>".`
+export const laneSentence = (h, lane = 'server') => `Refused: ${h.who} is building ${h.id} in the ${lane} lane (Ola's server code; ${h.why}), and only one builder works there at a time. Wait for it (add --wait, and the tracker starts you when the lane is free), take another ticket, or start beside it with --beside "<the folders you will change>" when its recent commits touch none of them.`
+/** Builders waiting for a lane: { [id]: { who, lane, priority, at } } with a fresh `at`. */
+export const WAIT_PREFIX = 'wait:'
+export const WAIT_TTL = 3 * MIN
+export const liveWaiters = (waiters = {}, now = Date.now()) => Object.fromEntries(Object.entries(waiters).filter(([, w]) => now - Date.parse(w.at) < WAIT_TTL))

@@ -12,11 +12,35 @@ and the command text has no issue id like OLA-142. Open one first:
 A change that is only notes or a typo may say [no-issue] in its message instead.
 """
 import json
+import os
 import re
+import time
 import subprocess
 import sys
 
 OLA_PATHS = ("apps/activist-ai/", "src/app/kochito/kit/", "scripts/venture/", "apps/venture/schema/")
+CALLERS = os.path.expanduser("~/.claude/venture-callers.jsonl")
+
+
+def note_caller(data: dict, cmd: str) -> None:
+    """Who runs the tracker (OLA-251, OLA-263): Claude Code gives a hook the session id and, inside an
+    agent, the agent's own id; a shell command gets neither (CLAUDE_CODE_SESSION_ID is the lead's, the
+    same for every agent it starts). So before every Bash command that runs issues.mjs this records
+    {at, session, agent, agent_type, cmd} in ~/.claude/venture-callers.jsonl, and issues.mjs finds its
+    own call there (scripts/venture/_who.mjs). Never blocks anything."""
+    try:
+        row = {"at": time.time(), "session": data.get("session_id"), "agent": data.get("agent_id"), "agent_type": data.get("agent_type"), "cmd": cmd[:20000]}
+        if os.path.exists(CALLERS) and os.path.getsize(CALLERS) > 4_000_000:
+            with open(CALLERS) as f:
+                keep = f.readlines()[-300:]
+            tmp = CALLERS + ".tmp" + str(os.getpid())
+            with open(tmp, "w") as f:
+                f.writelines(keep)
+            os.replace(tmp, CALLERS)
+        with open(CALLERS, "a") as f:  # one short append: safe beside other agents' hooks
+            f.write(json.dumps(row) + "\n")
+    except Exception:
+        pass
 
 
 def main() -> None:
@@ -27,6 +51,8 @@ def main() -> None:
     if data.get("tool_name") != "Bash":
         sys.exit(0)
     cmd = (data.get("tool_input") or {}).get("command") or ""
+    if "issues.mjs" in cmd or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
+        note_caller(data, cmd)  # a commit naming a ticket is recorded too: its maker does not pass its checks
     if not re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) or "--amend" in cmd:
         sys.exit(0)
     if re.search(r"OLA-\d+|\[no-issue\]", cmd):

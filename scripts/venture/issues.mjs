@@ -5,10 +5,17 @@
 //
 //   node scripts/venture/issues.mjs add "title" --area web --pri P1 [--what "why, one or two sentences"]
 //                                   [--who lead] [--week 1] [--start] [--link "label=https://…"] [--doc slug]
-//   node scripts/venture/issues.mjs start <id> [--who name] [--lane server|apps|tools] [--beside "why"]   also claims it (below);
-//                                                                                refused for a builder while another builder or the runner
-//                                                                                holds the server lane (OLA-251); checkers never are
-//   node scripts/venture/issues.mjs claim <id> [--who name]                      "I am on this": renew at least every 45 min
+//   node scripts/venture/issues.mjs start <id> [--who name] [--role builder|checker|investigator|hold|runner]
+//                                   [--wait [min]] [--beside "<folders you will change>"]   also claims it (below).
+//                                   A builder is refused while another builder or the runner holds the server lane
+//                                   (OLA-251): --wait registers it as waiting (claims shows it, the runner yields to
+//                                   a higher priority) and starts it when the lane is free; --beside is refused when
+//                                   the holder's commits of the last 6 hours touch those folders. The lane is the
+//                                   ticket's (--lane only repeats it; change it with edit --lane). Roles: a --who that
+//                                   is a role word is that role, lead/kit/bart are holds, any other name a builder;
+//                                   checker, investigator and hold take no lane, unless the ticket gets commits that
+//                                   change the server's code while they hold it.
+//   node scripts/venture/issues.mjs claim <id> [--who name] [--role …] [--wait] "I am on this": renew at least every 45 min
 //   node scripts/venture/issues.mjs release <id>                                 let go (done, wait, open and drop release too)
 //   node scripts/venture/issues.mjs claims                                       the live claims
 //   node scripts/venture/issues.mjs done <id> --proof "…" [--commit <hash>]… [--day YYYY-MM-DD]   refused until every check has
@@ -19,15 +26,21 @@
 //   node scripts/venture/issues.mjs check <id> skip 'local-*' --why "why this place does not apply"     (a pattern, * allowed)
 //   node scripts/venture/issues.mjs check <id> internal --why "why nothing a person does or sees changes"
 //   node scripts/venture/issues.mjs check <id> pass <n> --by checker --on "<release or build>" --saw "what happened" --shot <file>
+//                                   [--case <id>@<place>]  refused from the agent or session that built it, claimed it as
+//                                   builder, marked it ready or committed for it (scripts/venture/_who.mjs: who runs the
+//                                   command, read from the hook's record, not the name typed); a --case must be in the
+//                                   request tests' result file by that exact name and working there
 //   node scripts/venture/issues.mjs check <id> fail <n> --by checker --saw "what happened instead"
 //   node scripts/venture/issues.mjs check <id>                                    the checks and where each stands
 //   node scripts/venture/issues.mjs ready <id> --on "<release or build>"          the builder: built and live, needs a checker
-//   node scripts/venture/issues.mjs say <id>                                      what may be told to Bart about it: works / fails / not checked
+//   node scripts/venture/issues.mjs say <id>                                      what may be told to Bart about it: works / fails / not checked;
+//                                   a pass on a release of the test server that is no longer live is "worked on an earlier version"
+//   (VENTURE_TRACKER_FAKE=<file.json> runs any of these on a copy of the tracker: node scripts/venture/_fakedb.mjs copy <file>)
 //   node scripts/venture/issues.mjs unchecked                                     tickets waiting for a checker; closed today without checks
 //   node scripts/venture/issues.mjs wait <id> [--what "what Bart has to do"]      waiting on Bart
 //   node scripts/venture/issues.mjs open <id>                                    back to open (next up)
 //   node scripts/venture/issues.mjs drop <id> [--why "…"]
-//   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--who …] [--week …] [--proof …]
+//   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--who …] [--week …] [--proof …] [--lane <lane> --why …]
 //   node scripts/venture/issues.mjs commit <id> <hash>…                          attach commits by hand
 //   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
 //   node scripts/venture/issues.mjs show <id>                                    the issue and its whole thread
@@ -55,12 +68,15 @@
 // Prints no secrets: the database key is read from .env.local (or, where there is no such file, from
 // the environment) and used, never shown.
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue } from './_state.mjs'
-import { CLAIM_PREFIX, CLAIM_TTL, caseVerdict, laneHolder, laneOf, laneSentence, neverRefused } from './_plate.mjs'
+import { tmpdir } from 'node:os'
+import { CLAIM_PREFIX, CLAIM_TTL, LANES, WAIT_PREFIX, caseKey, caseState, claimRole, isServerFile, laneHolder, laneOf, laneSentence, liveWaiters, releasesIn } from './_plate.mjs'
+import { ROLES, caller, committers, roleOf } from './_who.mjs'
+import { fakeClient } from './_fakedb.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -69,7 +85,9 @@ const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
     .filter((l) => /^[A-Z0-9_]+=/.test(l))
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
-const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+// VENTURE_TRACKER_FAKE=<file.json>: a copy of the tracker in one file (_fakedb.mjs copy), for tests
+const db = process.env.VENTURE_TRACKER_FAKE ? fakeClient(process.env.VENTURE_TRACKER_FAKE) : createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+if (process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the tracker: ${process.env.VENTURE_TRACKER_FAKE})`)
 
 export const AREAS = { web: 'Web app', apps: 'Mac and phone apps', model: 'Model and skills', security: 'Security', ops: 'Operations', voice: 'Voice', design: 'Design', board: 'The board' }
 const STATUSES = ['open', 'in_progress', 'waiting', 'done', 'dropped']
@@ -137,34 +155,123 @@ async function patch(id, fields) {
   console.log(line(row))
   return row
 }
+// ---- Claims, roles and lanes (OLA-211, OLA-251). A claim says who is on a ticket and in what role
+// (_who.mjs: builder, checker, investigator, hold, runner). One builder at a time in the server lane,
+// counting the runner on the mini (Nov 20: three builders at once overwrote each other's work and the
+// test server refused updates). The lane comes from the ticket only; a hold keeps others off a ticket
+// and takes no lane; whatever its role, a claim whose ticket gets commits changing the server's code
+// while it is held counts as a builder there. A renewal of one's own claim is never refused.
+const me = caller()
+function roleFor(who) {
+  try {
+    return roleOf(who, one('role') === undefined ? null : one('role'))
+  } catch (e) {
+    die(e.message)
+  }
+}
+function laneFlag(r, a) {
+  const l = one('lane')
+  if (l === undefined) return
+  const ticket = laneOf(r, a.lane)
+  if (l === true || !LANES.includes(l)) die(`--lane must be one of: ${LANES.join(', ')}. And a ticket's lane comes from the ticket, not from a flag: ${r.id} is in the ${ticket} lane.`)
+  if (l !== ticket) die(`Refused: ${r.id} is in the ${ticket} lane (from its area and title). A ticket's lane comes from the ticket, not from a flag. If the ticket is in the wrong lane, change it on the ticket, where it is recorded: issues.mjs edit ${r.id} --lane ${l} --why "what it changes"`)
+}
+async function liveClaims() {
+  const rows = check(await db.from('venture_state').select('key, value, at').like('key', `${CLAIM_PREFIX}%`), 'claims')
+  return Object.fromEntries(rows.filter((x) => Date.now() - Date.parse(x.at) < CLAIM_TTL).map((x) => [x.key.slice(CLAIM_PREFIX.length), { ...x.value, at: x.at }]))
+}
+let fetched = false
+/** Files changed by commits naming `id` (in the subject or body) since `since`, on main and this checkout. */
+function filesOf(id, since) {
+  if (!fetched) {
+    fetched = true
+    try { execFileSync('git', ['-C', root, 'fetch', '--quiet', 'origin', 'main'], { stdio: 'ignore', timeout: 20000 }) } catch {}
+  }
+  try {
+    const out = execFileSync('git', ['-C', root, 'log', 'origin/main', 'HEAD', `--since=${since}`, '-E', `--grep=${id}([^0-9]|$)`, '--name-only', '--format='], { encoding: 'utf8', timeout: 20000 })
+    return [...new Set(out.split('\n').filter(Boolean))]
+  } catch {
+    return []
+  }
+}
+/** The claims (other than id) whose ticket got commits changing the server's code while held. */
+function buildingNow(claims, id) {
+  const out = {}
+  for (const [cid, c] of Object.entries(claims)) {
+    if (cid === id) continue
+    const f = filesOf(cid, c.since ?? c.at).find(isServerFile)
+    if (f) out[cid] = `its commits since ${when(c.since ?? c.at)} change the server's code (${f})`
+  }
+  return out
+}
+async function laneState(id, lane) {
+  const claims = await liveClaims()
+  const ids = Object.keys(claims).filter((x) => x !== id)
+  const issues = ids.length ? check(await db.from('venture_issues').select('id, area, title, what, priority').in('id', ids), 'read') : []
+  const acc = ids.length ? check(await db.from('venture_state').select('key, value').in('key', ids.map((x) => ACCEPT + x)), 'checks') : []
+  const lanes = Object.fromEntries(acc.filter((x) => x.value?.lane).map((x) => [x.key.slice(ACCEPT.length), x.value.lane]))
+  return laneHolder({ id, lane, issues, claims, lanes, building: lane === 'server' ? buildingNow(claims, id) : {} })
+}
+const BESIDE_HOURS = 6
+async function laneGate(id, who, role, lane, r) {
+  if (role !== 'builder' && role !== 'runner') return
+  const holder = await laneState(id, lane)
+  if (!holder) return
+  if (one('beside') !== undefined) {
+    // --beside: the folders this builder will change; refused when the holder's commits of the last hours touch any of them
+    const dirs = (typeof one('beside') === 'string' ? one('beside') : '').split(/[\s,]+/).map((d) => d.trim().replace(/^\.\//, '').replace(/\/+$/, '')).filter(Boolean)
+    if (!dirs.length) die(`--beside needs the folders you will change, like --beside "apps/activist-ai/frontdesk,apps/activist-ai/gateway"\n${laneSentence(holder, lane)}`)
+    for (const d of dirs) if (d.includes('..') || d.startsWith('/') || !existsSync(root + d)) die(`--beside: ${d} is not a folder or file in this checkout. Name the folders you will change.`)
+    const theirs = filesOf(holder.id, `${BESIDE_HOURS} hours ago`)
+    const hit = theirs.filter((f) => dirs.some((d) => f === d || f.startsWith(d + '/')))
+    if (hit.length) die(`Refused: ${holder.who}'s commits for ${holder.id} in the last ${BESIDE_HOURS} hours change what you named (${hit.slice(0, 5).join(', ')}${hit.length > 5 ? ', …' : ''}). Wait for it (--wait) or take another ticket.`)
+    const said = `started by ${who} beside ${holder.who} on ${holder.id}, both in the server lane; will change ${dirs.join(', ')}; ${holder.id}'s commits of the last ${BESIDE_HOURS} hours touch none of them (${theirs.length ? theirs.length + ' files' : 'it has none yet'})`
+    await record([{ issue_id: id, kind: 'comment', body: said }])
+    console.log(said)
+    return dirs
+  }
+  if (one('wait') === undefined) die(laneSentence(holder, lane))
+  // --wait [minutes]: registered as waiting (issues.mjs claims shows it; the runner yields to it), started when the lane is free
+  const mins = one('wait') === true ? 90 : Number(one('wait'))
+  if (!(mins > 0 && mins <= 240)) die('--wait takes minutes, 1 to 240 (90 when left out)')
+  const key = WAIT_PREFIX + id
+  const since = new Date().toISOString()
+  const mark = () => db.from('venture_state').upsert({ key, value: { who, role, lane, priority: r.priority, since, host: hostname(), caller: me.id }, at: new Date().toISOString() })
+  check(await mark(), 'wait')
+  console.log(`${id}: waiting for the ${lane} lane, held by ${holder.who} on ${holder.id}; registered (issues.mjs claims shows it), checking every 30 s for up to ${mins} min`)
+  const end = Date.now() + mins * 60e3
+  for (;;) {
+    await new Promise((res) => setTimeout(res, 30e3))
+    const h = await laneState(id, lane)
+    if (!h) {
+      check(await db.from('venture_state').delete().eq('key', key), 'wait')
+      console.log(`${id}: the ${lane} lane is free (${when(new Date().toISOString())}); starting`)
+      return
+    }
+    if (Date.now() > end) {
+      check(await db.from('venture_state').delete().eq('key', key), 'wait')
+      die(`${id}: still held by ${h.who} on ${h.id} after ${mins} min; stopped waiting`)
+    }
+    check(await mark(), 'wait')
+  }
+}
 async function claim(id, who, row = null, { gated = false } = {}) {
   const key = CLAIM_PREFIX + id
+  const r = row ?? (await get(id))
+  const a = await accept(id)
+  laneFlag(r, a)
+  const role = roleFor(who)
   const old = check(await db.from('venture_state').select('value').eq('key', key).maybeSingle(), 'claim')
   const keep = old && old.value?.who === who && old.value?.since
-  const lane = laneOf(row ?? (await get(id)), typeof one('lane') === 'string' ? one('lane') : old?.value?.lane ?? null)
-  if (!keep && !gated) await laneGate(id, who, lane)
-  check(await db.from('venture_state').upsert({ key, value: { who, host: hostname(), since: keep ? old.value.since : new Date().toISOString(), lane }, at: new Date().toISOString() }), 'claim')
-  console.log(`${id} claimed by ${who} in the ${lane} lane (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
-}
-// One builder at a time in the server lane, counting the runner on the mini (OLA-251, Nov 20: three
-// builders at once overwrote each other's work and the test server refused updates). A checker or an
-// investigator is never refused; the lead is not a builder. --beside "<why it cannot collide>" starts
-// anyway and is recorded on the ticket. A renewal of one's own claim is never refused.
-async function laneGate(id, who, lane) {
-  if (lane !== 'server' || neverRefused(who) || /^(lead|kit|bart)$/i.test(String(who))) return
-  const rows = check(await db.from('venture_state').select('key, value, at').like('key', `${CLAIM_PREFIX}%`), 'claims')
-  const claims = Object.fromEntries(rows.map((r) => [r.key.slice(CLAIM_PREFIX.length), { ...r.value, at: r.at }]))
-  const ids = Object.keys(claims).filter((x) => x !== id)
-  const issues = ids.length ? check(await db.from('venture_issues').select('id, area, title, what').in('id', ids), 'read') : []
-  const holder = laneHolder({ id, lane, issues, claims })
-  if (!holder) return
-  const beside = typeof one('beside') === 'string' && one('beside').trim().length >= 15 ? one('beside').trim() : null
-  if (!beside) die(laneSentence(holder, lane))
-  await record([{ issue_id: id, kind: 'comment', body: `started by ${who} beside ${holder.who} on ${holder.id}, both in the server lane: ${beside}` }])
-  console.log(`started beside ${holder.who} on ${holder.id} (recorded on ${id}): ${beside}`)
+  const lane = laneOf(r, a.lane)
+  const beside = !keep && !gated ? await laneGate(id, who, role, lane, r) : null
+  check(await db.from('venture_state').upsert({ key, value: { who, role, host: hostname(), since: keep ? old.value.since : new Date().toISOString(), lane, ...(me.id ? { caller: me.id } : {}), ...(beside ? { beside } : keep && old.value.beside ? { beside: old.value.beside } : {}) }, at: new Date().toISOString() }), 'claim')
+  if ((role === 'builder' || role === 'runner') && me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) await saveAccept(id, { ...a, builders: [...(a.builders ?? []), { who, role, caller: me.id, host: me.host, at: new Date().toISOString(), via: 'claim' }] })
+  console.log(`${id} claimed by ${who} (${role}) ${role === 'builder' || role === 'runner' ? `in the ${lane} lane` : `(the ticket is in the ${lane} lane; ${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} takes none)`} (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
 }
 async function release(id) {
   check(await db.from('venture_state').delete().eq('key', CLAIM_PREFIX + id), 'release')
+  check(await db.from('venture_state').delete().eq('key', WAIT_PREFIX + id), 'release')
 }
 const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
 const STATUS_WORD = { open: 'next up', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
@@ -267,6 +374,34 @@ function printChecks(row, a) {
   console.log(v.ok ? (a.internal ? '  can be closed with proof ("walked: …" or "no user path: …")' : '  every check has passed: it can be closed') : v.why.map((w) => `  MISSING: ${w}`).join('\n'))
 }
 
+// ---- The test server, read over ssh (OLA-264, OLA-259): the release that is live, and the request
+// tests' result file. Each read is kept two minutes in the temp folder, so `say` on many tickets asks once.
+const MINI = ['admin@171.66.240.175', 'admin@100.95.51.98']
+function fromMini(what, remote, parse) {
+  const cache = `${tmpdir()}/venture-${what}.json`
+  try {
+    const c = JSON.parse(readFileSync(cache, 'utf8'))
+    if (Date.now() - c.at < 120e3) return c
+  } catch {}
+  let err = ''
+  for (const host of MINI) {
+    try {
+      const out = execFileSync('ssh', ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes', host, remote], { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
+      const c = { at: Date.now(), value: parse(out), from: host }
+      try { writeFileSync(cache, JSON.stringify(c)) } catch {}
+      return c
+    } catch (e) {
+      err = String(e.stderr || e.message).trim().split('\n').pop().slice(0, 160)
+    }
+  }
+  return { at: Date.now(), value: null, error: err || 'the test server did not answer' }
+}
+const liveRelease = () => (process.env.VENTURE_LIVE_RELEASE ? { value: process.env.VENTURE_LIVE_RELEASE } : fromMini('live-release', 'readlink ~/ola-staging/current', (o) => /([0-9a-f]{12})\s*$/.exec(o.trim())?.[1] ?? null))
+const asksCases = () => (process.env.VENTURE_ASKS_FILE ? { value: JSON.parse(readFileSync(process.env.VENTURE_ASKS_FILE, 'utf8')) } : fromMini('asks-latest', 'cat ~/ola-staging/asks-latest.json', (o) => JSON.parse(o)))
+// A check about the test server: any check of a ticket in the server lane, and a product ticket's checks
+// in a cloud project (the Mac and iPhone apps use the server there; Ola on his Mac does not).
+const onServer = (r, a, c = null) => laneOf(r, a.lane) === 'server' || (PRODUCT.has(r.area) && (!c || /^cloud-/.test(String(c.at))))
+
 if (cmd === 'add') {
   const title = pos[0]
   if (!title) die('usage: issues.mjs add "title" --area web --pri P1 [--what …] [--who lead] [--week 1] [--start]')
@@ -291,12 +426,11 @@ if (cmd === 'add') {
     `or, when nothing a person does or sees changes: issues.mjs check ${id} internal --why "…"`)
   // work restarts: earlier passes are about an older version
   if (r.status === 'done' && a.checks.some((c) => c.result)) await saveAccept(id, { ...a, ready: null, checks: a.checks.map((c) => ({ ...c, earlier: [...(c.earlier ?? []), { result: c.result, by: c.by, at: c.checked_at, saw: c.saw }], result: null })) })
-  // the lane is checked before anything changes (OLA-251)
+  // the claim (and its lane, OLA-251) comes before anything else changes: a refusal changes nothing
   const who = typeof one('who') === 'string' ? one('who') : r.who ?? 'lead'
-  const prevClaim = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
-  if (prevClaim?.value?.who !== who) await laneGate(id, who, laneOf(r, typeof one('lane') === 'string' ? one('lane') : null))
-  await patch(id, { status: 'in_progress', started_at: r.started_at ?? new Date().toISOString(), ...(one('who') ? { who: one('who') } : {}) })
-  await claim(id, who, r, { gated: true })
+  const role = roleFor(who)
+  await claim(id, who, r)
+  await patch(id, { status: 'in_progress', started_at: r.started_at ?? new Date().toISOString(), ...(typeof one('who') === 'string' && (role === 'builder' || role === 'runner') ? { who: one('who') } : {}) })
 } else if (cmd === 'claim') {
   const id = normId(pos[0])
   const r = await get(id)
@@ -309,9 +443,14 @@ if (cmd === 'add') {
   const rows = check(await db.from('venture_state').select('key, value, at').like('key', `${CLAIM_PREFIX}%`).order('at'), 'claims')
   for (const c of rows) {
     const mins = Math.round((Date.now() - Date.parse(c.at)) / 60e3)
-    console.log(`${c.key.slice(CLAIM_PREFIX.length).padEnd(8)} ${String(c.value.who).padEnd(12)} ${c.value.host ?? ''}  renewed ${mins} min ago${mins * 60e3 >= CLAIM_TTL ? ' (expired)' : ''}`)
+    console.log(`${c.key.slice(CLAIM_PREFIX.length).padEnd(8)} ${String(c.value.who).padEnd(12)} ${claimRole(c.value).padEnd(12)} ${(c.value.lane ?? '').padEnd(7)} ${c.value.host ?? ''}  renewed ${mins} min ago${mins * 60e3 >= CLAIM_TTL ? ' (expired)' : ''}${c.value.beside ? `  beside, changing ${c.value.beside.join(', ')}` : ''}`)
   }
   console.log(`${rows.length} claim(s)`)
+  // builders waiting for a lane (start --wait): the runner yields to one whose ticket is of a higher priority
+  const ws = check(await db.from('venture_state').select('key, value, at').like('key', `${WAIT_PREFIX}%`).order('at'), 'waits')
+  const live = liveWaiters(Object.fromEntries(ws.map((w) => [w.key, { ...w.value, at: w.at }])))
+  for (const w of ws) console.log(`waiting  ${w.key.slice(WAIT_PREFIX.length).padEnd(8)} ${String(w.value.who).padEnd(12)} ${w.value.priority} for the ${w.value.lane} lane since ${when(w.value.since)}${live[w.key] ? '' : ' (stopped: not renewed)'}`)
+  console.log(`${Object.keys(live).length} waiting for a lane`)
 } else if (cmd === 'done') {
   const id = normId(pos[0])
   const proof = one('proof')
@@ -383,22 +522,42 @@ if (cmd === 'add') {
     if (!c) die(`no check #${pos[2]} on ${id} (issues.mjs check ${id})`)
     const [by, saw, on] = [str('by'), str('saw'), str('on')]
     if (!by || !saw || saw.length < 20) die(`usage: issues.mjs check ${id} ${sub} ${c.n} --by <who checked> --saw "what happened, in a sentence"${sub === 'pass' ? ' --on "<release or build>" --shot <file that shows it>' : ''}`)
-    const claimRow = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
-    const builders = new Set([r.who, claimRow?.value?.who, 'builder', 'runner'].filter(Boolean).map((x) => String(x).toLowerCase()))
     if (sub === 'pass') {
-      // The one who built it does not grade it.
-      if (builders.has(by.toLowerCase())) die(`a check is passed by someone who did not build ${id} ("${by}" is its builder). Run "issues.mjs ready ${id} --on <release>"; the lead starts a checker with a fresh context.`)
+      // The one who built it does not grade it (OLA-263): by the agent or session that ran the command
+      // (_who.mjs), not by the name typed. Refused for the builders recorded on the ticket (start, claim,
+      // ready, commit) and for whoever committed for it on this machine; and by name for the builders'
+      // names. A checker holding the claim as checker passes under its own name.
+      const claimRow = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
+      const recorded = (a.builders ?? []).filter((b) => b.role === 'builder' || b.role === 'runner')
+      const names = new Set(['builder', 'runner', ...recorded.map((b) => b.who), ...(!recorded.length && claimRole({ who: r.who }) === 'builder' ? [r.who] : []), ...(claimRow?.value && ['builder', 'runner'].includes(claimRole(claimRow.value)) ? [claimRow.value.who] : [])].filter(Boolean).map((x) => String(x).toLowerCase()))
+      if (names.has(by.toLowerCase())) die(`a check is passed by someone who did not build ${id} ("${by}" is its builder). Run "issues.mjs ready ${id} --on <release>"; the lead starts a checker with a fresh context.`)
+      const isBart = /^bart$/i.test(by)
+      if (!isBart && !me.known) die(`Refused: the tracker cannot tell who is passing this check (${me.why}). A pass is recorded from the Claude Code agent or session that did the check, so the builder cannot pass its own work under another name; run it there, without anything before the command that changes it. See scripts/venture/_who.mjs.`)
+      const theirs = new Map([...recorded.filter((b) => b.caller).map((b) => [b.caller, `${b.via} as ${b.who}`]), ...(a.ready?.caller ? [[a.ready.caller, 'marked it ready']] : []), ...(claimRow?.value?.caller && ['builder', 'runner'].includes(claimRole(claimRow.value)) ? [[claimRow.value.caller, `holds its claim as ${claimRow.value.who}`]] : []), ...committers(id).map((x) => [x, `committed for ${id}`])])
+      if (!isBart && theirs.has(me.id)) die(`Refused: this ${me.agent ? 'agent' : 'session'} built ${id} (${theirs.get(me.id)}), whatever name it gives (--by ${by}). The one who built it does not grade it: run "issues.mjs ready ${id} --on <release>"; the lead starts a checker.`)
       if (!on) die('--on "<release or build>" is required: which live version was checked')
       const file = str('shot') ?? str('log')
       const kase = str('case')
-      if (!file && !kase) die('a pass needs something that shows it: --shot <screenshot> or --log <file> (or --case <id> for a run of the request test set)')
+      if (!file && !kase) die('a pass needs something that shows it: --shot <screenshot> or --log <file> (or --case <id>@<place> for a run of the request test set)')
       if (file && (!existsSync(file) || statSync(file).size < 200)) die(`${file}: no such file, or it is empty`)
-      c.evidence = file ? `${file} (${statSync(file).size} bytes)` : `case ${kase}`
+      if (kase) {
+        // OLA-259: the case is looked up in the request tests' own result file, by its exact name, and must be working there
+        const f = asksCases()
+        if (!f.value) die(`--case: the request tests' result file could not be read (${f.error}); a pass by --case is checked against it`)
+        const cs = caseState(kase, f.value.cases)
+        if (cs.state === 'unknown') {
+          const near = Object.keys(f.value.cases ?? {}).filter((k) => k.split('@')[0] === kase.split('@')[0] || k.includes(kase)).slice(0, 6)
+          die(`--case: there is no case "${kase}" in the request tests' result file (release ${f.value.release}). Name it exactly as the file does, id@place${near.length ? `: ${near.join(', ')}` : ''}.`)
+        }
+        if (cs.state !== 'works') die(`--case: ${kase} is "${cs.state}" in the request tests' result file (${cs.tries ?? ''}${cs.release ? `, release ${cs.release}` : ''}): it does not show that it works`)
+        c.case = { key: kase, release: cs.release, at: cs.at, tries: cs.tries }
+      }
+      c.evidence = [file ? `${file} (${statSync(file).size} bytes)` : null, kase ? `case ${kase}` : null].filter(Boolean).join('; ')
       c.on = on
     }
-    Object.assign(c, { result: sub, by, saw, checked_at: now })
+    Object.assign(c, { result: sub, by, saw, checked_at: now, ...(me.id ? { caller: me.id } : {}) })
     await saveAccept(id, a)
-    await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} (${c.at}) ${sub === 'pass' ? 'passed' : 'FAILED'}, by ${by}: ${saw}` }])
+    await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} (${c.at}) ${sub === 'pass' ? 'passed' : 'FAILED'}, by ${by}${me.known ? ` (${me.why})` : ''}: ${saw}` }])
     if (sub === 'fail' && r.status === 'done') await patch(id, { status: 'in_progress' })
     printChecks(r, a)
   } else die(`unknown: check ${sub} (add, skip, internal, pass, fail)`)
@@ -409,47 +568,80 @@ if (cmd === 'add') {
   if (a.internal) die(`${id} is internal: close it with proof`)
   if (!a.checks.length) die(`${id} has no checks to do yet (issues.mjs check ${id} add …)`)
   if (typeof one('on') !== 'string') die(`usage: issues.mjs ready ${id} --on "<release or build that is live>"`)
-  a.ready = { on: one('on'), at: new Date().toISOString(), by: typeof one('by') === 'string' ? one('by') : r.who }
+  a.ready = { on: one('on'), at: new Date().toISOString(), by: typeof one('by') === 'string' ? one('by') : r.who, ...(me.id ? { caller: me.id } : {}) }
+  if (me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) a.builders = [...(a.builders ?? []), { who: a.ready.by, role: 'builder', caller: me.id, host: me.host, at: a.ready.at, via: 'ready' }]
   await saveAccept(id, a)
   await record([{ issue_id: id, kind: 'comment', body: `built and live on ${one('on')}: ready for a checker` }])
   console.log(`${id} is ready for a checker on ${one('on')}. It stays open until every check has passed.`)
-} else if (cmd === 'say') {
+} else if (cmd === 'say' || cmd === 'unchecked') {
   // What may be told to Bart about a ticket: read from the checks, never from memory or a builder's report.
-  const id = normId(pos[0])
-  const r = await get(id)
-  const a = await accept(id)
-  const v = verdict(r, a)
-  console.log(`${r.id}  ${r.title}`)
-  if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
-  // A check passed by a case of the request tests (--case id@place) says what that case says now
-  // (OLA-251): "works" is two passes in a row; 2 of 3 is "works sometimes", never printed as WORKS.
-  const asks = (check(await db.from('venture_state').select('value').eq('key', 'ola_status').maybeSingle(), 'status'))?.value?.asks ?? null
-  const caseNow = (c) => caseVerdict(c.evidence, asks)
-  const sometimes = v.works.filter((c) => caseNow(c) === 'sometimes')
-  const failsNow = v.works.filter((c) => caseNow(c) === 'fails')
-  for (const c of v.works.filter((x) => !sometimes.includes(x) && !failsNow.includes(x))) console.log(`  WORKS        ${c.at}: ${c.do} (checked ${when(c.checked_at)} on ${c.on})`)
-  for (const c of sometimes) console.log(`  WORKS SOMETIMES (2 of 3) ${c.at}: ${c.do} (its request test, ${c.evidence.slice(5)}, passed twice with a fail between on its last run; "works" is two passes in a row)`)
-  for (const c of failsNow) console.log(`  DOES NOT WORK NOW ${c.at}: ${c.do} (passed ${when(c.checked_at)}, but its request test, ${c.evidence.slice(5)}, fails on its last run)`)
-  for (const c of v.fails) console.log(`  DOES NOT WORK ${c.at}: ${c.do} -> ${c.saw}`)
-  for (const c of v.open) console.log(`  NOT CHECKED  ${c.at}: ${c.do}`)
-  for (const cell of v.uncovered) console.log(`  NOT CHECKED  ${cell}: no check written`)
-  for (const k of a.skips) console.log(`  not offered  ${k.pattern}: ${k.why}`)
-  if (!a.internal && !a.checks.length) console.log('  NOT CHECKED  anywhere: this ticket has no checks')
-  console.log(v.ok && !a.internal && !sometimes.length && !failsNow.length ? '  -> may be told: it works in the places above.' : a.internal ? '' : '  -> may NOT be told "it works". Say what works, what does not, and what nobody checked, in that order.')
-} else if (cmd === 'unchecked') {
-  const acc = check(await db.from('venture_state').select('key, value').like('key', `${ACCEPT}%`), 'checks')
-  const by = new Map(acc.map((x) => [x.key.slice(ACCEPT.length), { ...emptyAccept(), ...x.value }]))
-  const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'done']).order('num'), 'read')
-  const today = pacificDay()
-  const waiting = rows.filter((r) => r.status === 'in_progress' && by.get(r.id)?.ready && !verdict(r, by.get(r.id)).ok)
-  const bare = rows.filter((r) => r.status === 'in_progress' && !by.get(r.id)?.internal && !(by.get(r.id)?.checks.length))
-  const closedBare = rows.filter((r) => r.status === 'done' && r.day === today && !/^\s*bart:/i.test(r.proof ?? '') && !(by.get(r.id)?.checks.length))
-  console.log(`Ready, waiting for a checker (${waiting.length}):`)
-  for (const r of waiting) console.log(`  ${r.id.padEnd(8)} on ${by.get(r.id).ready.on}: ${verdict(r, by.get(r.id)).why.join('; ')}\n           ${r.title}`)
-  console.log(`In progress with no checks written (${bare.length}):`)
-  for (const r of bare) console.log(`  ${r.id.padEnd(8)} ${r.who.padEnd(8)} ${r.title}`)
-  console.log(`Closed today without checks (${closedBare.length}): read each proof as a stranger would`)
-  for (const r of closedBare) console.log(`  ${r.id.padEnd(8)} ${by.get(r.id)?.internal ? 'internal: ' + by.get(r.id).internal.why : 'closed before checks existed'}\n           proof: ${(r.proof ?? '').slice(0, 220)}`)
+  // A pass is about the version it was made on (OLA-264): on a ticket about the test server, a pass on
+  // a release that is no longer live prints as "worked on an earlier version", never as WORKS. A pass by
+  // a case of the request tests (OLA-251, OLA-259) says what that case says now in their result file:
+  // "works" is passing with no fail between; 2 of 3 is "works sometimes"; a case the file does not hold
+  // is not checked.
+  const nowOf = (r, a, c, live, cases) => {
+    const k = c.case?.key ?? /\bcase (\S+)/.exec(c.evidence ?? '')?.[1] ?? null
+    let rels = releasesIn(c.on)
+    if (k) {
+      if (!cases?.value) return { word: 'NOT KNOWN NOW', ok: false, why: `its request test ${k} could not be read now (${cases?.error ?? 'no result file'})` }
+      const cs = caseState(k, cases.value.cases)
+      if (cs.state === 'unknown') return { word: 'NOT CHECKED', ok: false, why: `it was passed with the request test "${k}", which the request tests' result file does not hold (no such case, or spelled differently)` }
+      if (cs.state === 'sometimes') return { word: 'WORKS SOMETIMES (2 of 3)', ok: false, why: `its request test ${k} passed twice with a fail between on its last run (${cs.release}); "works" is two passes in a row` }
+      if (cs.state === 'fails') return { word: 'DOES NOT WORK NOW', ok: false, why: `passed ${when(c.checked_at)}, but its request test ${k} fails on its last run (${cs.tries ?? ''}, ${cs.release})` }
+      if (cs.state === 'not run') return { word: 'NOT CHECKED', ok: false, why: `its request test ${k} was not run on the last run (${cs.release})` }
+      if (cs.release) rels = [cs.release, ...rels]
+    }
+    if (!onServer(r, a, c)) return { word: 'WORKS', ok: true, why: `checked ${when(c.checked_at)} on ${c.on}` }
+    if (!live?.value) return { word: 'WORKED, LIVE VERSION UNKNOWN', ok: false, why: `checked ${when(c.checked_at)} on ${c.on}; the test server's live release could not be read (${live?.error ?? 'no answer'}), so it is not known to be the one that was checked` }
+    if (rels.includes(live.value)) return { word: 'WORKS', ok: true, why: `checked ${when(c.checked_at)} on ${live.value}, the live release${k ? `; its request test ${k} passes there` : ''}` }
+    return { word: 'WORKED ON AN EARLIER VERSION', ok: false, why: `worked on an earlier version (${rels[0] ?? c.on}, checked ${when(c.checked_at)}); not checked on this one (${live.value})` }
+  }
+  if (cmd === 'say') {
+    const id = normId(pos[0])
+    const r = await get(id)
+    const a = await accept(id)
+    const v = verdict(r, a)
+    console.log(`${r.id}  ${r.title}`)
+    if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
+    const live = onServer(r, a) && v.works.length ? liveRelease() : null
+    const cases = v.works.some((c) => c.case || /\bcase \S/.test(c.evidence ?? '')) ? asksCases() : null
+    if (live) console.log(live.value ? `  (the test server is on release ${live.value} now)` : `  (the test server's live release could not be read: ${live.error})`)
+    let tell = true
+    for (const c of v.works) {
+      const n = nowOf(r, a, c, live, cases)
+      if (!n.ok) tell = false
+      console.log(`  ${n.word.padEnd(12)} ${c.at}: ${c.do} (${n.why})`)
+    }
+    for (const c of v.fails) console.log(`  DOES NOT WORK ${c.at}: ${c.do} -> ${c.saw}`)
+    for (const c of v.open) console.log(`  NOT CHECKED  ${c.at}: ${c.do}`)
+    for (const cell of v.uncovered) console.log(`  NOT CHECKED  ${cell}: no check written`)
+    for (const k of a.skips) console.log(`  not offered  ${k.pattern}: ${k.why}`)
+    if (!a.internal && !a.checks.length) console.log('  NOT CHECKED  anywhere: this ticket has no checks')
+    console.log(v.ok && !a.internal && tell ? '  -> may be told: it works in the places above.' : a.internal ? '' : '  -> may NOT be told "it works". Say what works, what does not, and what nobody checked, in that order.')
+  } else {
+    const acc = check(await db.from('venture_state').select('key, value').like('key', `${ACCEPT}%`), 'checks')
+    const by = new Map(acc.map((x) => [x.key.slice(ACCEPT.length), { ...emptyAccept(), ...x.value }]))
+    const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'done']).order('num'), 'read')
+    const today = pacificDay()
+    const waiting = rows.filter((r) => r.status === 'in_progress' && by.get(r.id)?.ready && !verdict(r, by.get(r.id)).ok)
+    const bare = rows.filter((r) => r.status === 'in_progress' && !by.get(r.id)?.internal && !(by.get(r.id)?.checks.length))
+    const closedBare = rows.filter((r) => r.status === 'done' && r.day === today && !/^\s*bart:/i.test(r.proof ?? '') && !(by.get(r.id)?.checks.length))
+    console.log(`Ready, waiting for a checker (${waiting.length}):`)
+    for (const r of waiting) console.log(`  ${r.id.padEnd(8)} on ${by.get(r.id).ready.on}: ${verdict(r, by.get(r.id)).why.join('; ')}\n           ${r.title}`)
+    console.log(`In progress with no checks written (${bare.length}):`)
+    for (const r of bare) console.log(`  ${r.id.padEnd(8)} ${r.who.padEnd(8)} ${r.title}`)
+    console.log(`Closed today without checks (${closedBare.length}): read each proof as a stranger would`)
+    for (const r of closedBare) console.log(`  ${r.id.padEnd(8)} ${by.get(r.id)?.internal ? 'internal: ' + by.get(r.id).internal.why : 'closed before checks existed'}\n           proof: ${(r.proof ?? '').slice(0, 220)}`)
+    // passes that no longer speak for the live version (OLA-264): in progress, or closed today or yesterday
+    const recent = rows.filter((r) => r.status === 'in_progress' || (r.status === 'done' && r.day >= shiftDay(today, -1)))
+    const withPasses = recent.filter((r) => (by.get(r.id)?.checks ?? []).some((c) => c.result === 'pass'))
+    const live = withPasses.some((r) => onServer(r, by.get(r.id))) ? liveRelease() : null
+    const cases = withPasses.some((r) => by.get(r.id).checks.some((c) => c.result === 'pass' && (c.case || /\bcase \S/.test(c.evidence ?? '')))) ? asksCases() : null
+    const stale = withPasses.flatMap((r) => by.get(r.id).checks.filter((c) => c.result === 'pass').map((c) => ({ r, c, n: nowOf(r, by.get(r.id), c, live, cases) })).filter((x) => !x.n.ok))
+    console.log(`Passed, but not on what is live now (${stale.length})${live ? (live.value ? `: the test server is on ${live.value}` : `: the live release could not be read (${live.error})`) : ''}`)
+    for (const x of stale) console.log(`  ${x.r.id.padEnd(8)} #${x.c.n} ${x.n.word}: ${x.n.why}`)
+  }
 } else if (cmd === 'wait') {
   const id = normId(pos[0])
   await patch(id, { status: 'waiting', ...(one('what') ? { what: one('what') } : {}) })
@@ -473,11 +665,27 @@ if (cmd === 'add') {
   for (const [k, col] of [['title', 'title'], ['what', 'what'], ['area', 'area'], ['pri', 'priority'], ['who', 'who'], ['proof', 'proof'], ['day', 'day']]) if (one(k) !== undefined) f[col] = one(k)
   if (one('week') !== undefined) f.week = one('week') === 'none' ? null : Number(one('week'))
   validate(f)
+  if (one('lane') !== undefined) {
+    // the lane is the ticket's (OLA-251): changed here, with the reason, on its thread
+    const l = one('lane')
+    const why = typeof one('why') === 'string' ? one('why').trim() : ''
+    if (l === true || !LANES.includes(l)) die(`--lane must be one of: ${LANES.join(', ')}`)
+    if (why.length < 15) die('--lane needs --why "what the ticket changes that puts it in that lane"')
+    const r = await get(id)
+    const a = await accept(id)
+    const was = laneOf(r, a.lane)
+    await saveAccept(id, { ...a, lane: l })
+    await record([{ issue_id: id, kind: 'comment', body: `lane changed from ${was} to ${l}: ${why}` }])
+    console.log(`${id}: lane ${was} -> ${l}`)
+    if (!Object.keys(f).length) process.exit(0)
+  }
   await patch(id, f)
 } else if (cmd === 'commit') {
   const id = normId(pos[0])
   await get(id)
   await attach(id, pos.slice(1))
+  const a = await accept(id)
+  if (me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) await saveAccept(id, { ...a, builders: [...(a.builders ?? []), { who: typeof one('who') === 'string' ? one('who') : 'kit', role: 'builder', caller: me.id, host: me.host, at: new Date().toISOString(), via: 'commit' }] })
 } else if (cmd === 'list') {
   let q = db.from('venture_issues').select('*').eq('project', 'ola')
   const d = one('day')
@@ -574,6 +782,6 @@ if (cmd === 'add') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 42).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 57).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }
