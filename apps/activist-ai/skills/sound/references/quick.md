@@ -71,3 +71,5 @@ that fade, nothing above the dashed 5 kHz line, no dark vertical bars.
 
 Then tell the person in three sentences: what plays when, that there is a sound on/off button and
 where, and that the sound check passed (or what it could not check).
+If they asked for a real-world sound (birdsong, rain, a voice), the first of those sentences says it
+is a sound made in code that only comes close, not a recording, and the button says what it really plays.
