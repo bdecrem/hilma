@@ -38,6 +38,8 @@ enum AppearanceChoice: String, CaseIterable, Identifiable {
 /// General, Appearance.
 struct AppearanceSettings: View {
   @AppStorage(AppearanceChoice.key) private var choice = AppearanceChoice.light.rawValue
+  @AppStorage(DarkStyle.key) private var darkStyle = DarkStyle.standard.rawValue
+  @Environment(\.colorScheme) private var scheme
   /// Screenshots draw the setting without changing the app's own appearance.
   var applies = true
 
@@ -48,6 +50,16 @@ struct AppearanceSettings: View {
         ForEach(AppearanceChoice.allCases) { Text($0.title).tag($0.rawValue) }
       }
       .onChange(of: choice) { _, v in if applies { AppearanceChoice.apply(AppearanceChoice(rawValue: v) ?? .light) } }
+      // Two variations on dark (OLA-221), shown while the app is dark (chosen, or the Mac's).
+      if choice == AppearanceChoice.dark.rawValue || scheme == .dark {
+        Picker("Dark style", selection: Binding(get: { darkStyle }, set: { v in
+          darkStyle = v
+          if applies { (DarkStyle(rawValue: v) ?? .standard).apply() }
+        })) {
+          ForEach(DarkStyle.allCases) { Text($0.title).tag($0.rawValue) }
+        }
+        SettingNote((DarkStyle(rawValue: darkStyle) ?? .standard).note)
+      }
     }
   }
 }

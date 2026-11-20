@@ -354,6 +354,8 @@ struct SettingsScreen: View {
   @Bindable private var push = PhonePushState.shared
   @Bindable private var admin = AdminState.shared
   @AppStorage("ola.appearance") private var appearance = "system"
+  @AppStorage(DarkStyle.key) private var darkStyle = DarkStyle.standard.rawValue
+  @Environment(\.colorScheme) private var scheme
   @AppStorage("OlaWorking") private var working = ""
   @State private var pairAgain = false
   @State private var forgetting = false
@@ -403,8 +405,11 @@ struct SettingsScreen: View {
     }
   }
 
+  /// In Graphite and Ink the groups are the style's page on its frame (OLA-221); otherwise the system's.
+  var styled: Bool { scheme == .dark && ThemeBox.shared.style != .standard }
+
   var body: some View {
-    Form {
+    Form { Group {
       // The setup of each runtime. Which one a session works in is chosen in New Session (OLA-143).
       Section {
         if cloudReady {
@@ -457,13 +462,26 @@ struct SettingsScreen: View {
           .pickerStyle(.menu)
         }
       }
-      Section("Appearance") {
+      Section {
         Picker("Appearance", selection: $appearance) {
           Text("System").tag("system")
           Text("Light").tag("light")
           Text("Dark").tag("dark")
         }
         .pickerStyle(.segmented)
+        // Two variations on dark (OLA-221), while the app is dark (chosen, or the phone's).
+        if appearance == "dark" || scheme == .dark {
+          Picker("Dark style", selection: Binding(get: { darkStyle }, set: { v in
+            darkStyle = v
+            (DarkStyle(rawValue: v) ?? .standard).apply()
+          })) {
+            ForEach(DarkStyle.allCases) { Text($0.title).tag($0.rawValue) }
+          }
+        }
+      } header: {
+        Text("Appearance")
+      } footer: {
+        if appearance == "dark" || scheme == .dark { Text((DarkStyle(rawValue: darkStyle) ?? .standard).note) }
       }
       if localReady {
         Section {
@@ -491,6 +509,10 @@ struct SettingsScreen: View {
         }
       }
     }
+    .listRowBackground(styled ? Ola.paper : nil)
+    }
+    .scrollContentBackground(styled ? .hidden : .automatic)
+    .background(styled ? Ola.room : Color.clear)
     .navigationTitle("Settings")
     .task { await local?.loadMacHello(); await push.refreshAllowed() }
     .sheet(isPresented: $pairAgain) { WhereSetupSheet(mode: .mac, store: store) }

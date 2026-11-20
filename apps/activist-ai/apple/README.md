@@ -902,3 +902,14 @@ refused; the page's own JavaScript runs.
 
 The apps talk to Bart's own opencode, not the front desk, so they have no Claude runs today; port
 these when they do.
+
+**Dark styles** (OLA-221, 2026-11-19): Settings, Appearance (on the Mac, General) offers a Dark
+style while the app is dark: Standard (as before), Graphite (a near-black frame, the page lifted two
+steps above it to read on, hairlines only) and Ink (the ola.cx letter page: its blue as the page, its
+navy as the frame, cream text, the vermilion comma as the one accent). Light never changes. The
+values are tokens in `Shared/DarkStyle.swift` (each style replaces the dark half of every palette
+role in `Shared/Theme.swift`, so both apps use the same ones); `ThemeBox` is observed, so a change
+redraws at once. `python3 tools/contrast.py` measures every pair a person reads (body text at least
+7:1). Shots: `Ola -OlaSnapshot <dir> -OlaOnly dark` on the Mac; `tools/sim-dark-shots.sh` on the
+Mac mini for the phone (it boots a simulator: never on Bart's iMac). Sheets beside Claude, ChatGPT,
+Linear and Ivory in dark: ~/Desktop/Ola/dark-themes/.

@@ -240,6 +240,7 @@ struct Sidebar: View {
       }
     }
     .listStyle(.sidebar)
+    .darkFrame()
     .safeAreaInset(edge: .bottom, spacing: 0) { MachineFooter(store: store) }
     .onDeleteCommand { if let s = store.selected, store.runtime != .cloud { deleting = s } }
     .alert("Rename session", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
@@ -474,3 +475,20 @@ struct FolderRows: View {
 // MARK: a page the agent built
 // The page lives on the machine (in Mac-local mode, in the chosen folder): it is served to the web
 // view through PageScheme (Shared/PageScheme.swift), which reads each file from the opencode server.
+
+/// The sidebar in a dark style (OLA-221): the style's frame color instead of the system's material,
+/// so Graphite's near-black and Ink's navy are what is seen. Light mode and Standard are untouched.
+private struct DarkFrame: ViewModifier {
+  @Environment(\.colorScheme) private var scheme
+  func body(content: Content) -> some View {
+    if scheme == .dark, ThemeBox.shared.style != .standard {
+      content.scrollContentBackground(.hidden).background(Ola.room)
+    } else {
+      content
+    }
+  }
+}
+
+extension View {
+  func darkFrame() -> some View { modifier(DarkFrame()) }
+}

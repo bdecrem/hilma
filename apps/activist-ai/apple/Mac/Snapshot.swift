@@ -275,6 +275,37 @@ enum Snapshot {
       let store = OlaStore(fixture: Fixture.named(fixture))
       writeLive(MacRoot(store: store), size: CGSize(width: 1280, height: 820), appearance: appearance, to: dir.appendingPathComponent("\(name)-composited.png"))
     }
+    // The dark styles (OLA-221): the real window (the list, a conversation with its steps and
+    // reply, an approval, the files a run made), composited as the window server draws it, and
+    // Settings, General, with the Dark style row. `-OlaOnly dark` for these alone.
+    let keptStyle = ThemeBox.shared.style
+    for style in DarkStyle.allCases {
+      ThemeBox.shared.use(style)
+      for (name, fixture) in [("conversation", "main"), ("approval", "approval"), ("results", "results")] {
+        let shot = "dark-\(style.rawValue)-mac-\(name)"
+        guard only == nil || shot.contains(only!) || only == "dark" else { continue }
+        // The frame as Ola paints it (the real sidebar's material does not draw off screen; in
+        // Graphite and Ink the app paints this same color there, MacRoot's darkFrame).
+        let store = OlaStore(fixture: Fixture.named(fixture))
+        store.previewAs(.local)
+        let peer = OlaStore(fixture: Fixture.named(fixture == "main" ? "results" : "main"))
+        peer.previewAs(.cloud)
+        write(SnapshotFrame(store: store, treatment: .plain, peer: peer).environment(\.treatment, .plain), size: CGSize(width: 1440, height: 900), appearance: .darkAqua, to: dir.appendingPathComponent("\(shot).png"), titled: false)
+      }
+      let shot = "dark-\(style.rawValue)-mac-settings"
+      guard only == nil || shot.contains(only!) || only == "dark" else { continue }
+      defaults.set(AppearanceChoice.dark.rawValue, forKey: AppearanceChoice.key)
+      defaults.set(style.rawValue, forKey: DarkStyle.key)
+      defaults.set(Runtime.local.rawValue, forKey: LocalSettings.shownKey)
+      defaults.set(false, forKey: "ola.phone.enabled")
+      let s2 = OlaStore(fixture: Fixture.main)
+      var view = SettingsView(store: s2, whereOla: WhereOlaWorks(store: s2), tokenKnown: true)
+      view.only = .general
+      write(view.defaultAppStorage(defaults), size: SettingsView.snapshotSize, appearance: .darkAqua, to: dir.appendingPathComponent("\(shot).png"), titled: false, fit: true)
+    }
+    defaults.removeObject(forKey: AppearanceChoice.key)
+    defaults.removeObject(forKey: DarkStyle.key)
+    ThemeBox.shared.use(keptStyle)
     // The pairing sheet, with a made-up code.
     let sample = PairingCode(host: "imac-m1.tail1234.ts.net", port: 4330, secret: "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ-23", name: "Bart\u{2019}s iMac")
     write(PairingSheet(code: sample) {}, size: CGSize(width: 400, height: 560), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)

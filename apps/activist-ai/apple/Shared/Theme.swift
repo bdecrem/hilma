@@ -26,6 +26,14 @@ extension Color {
   }
 }
 
+/// One role's value: its light and its dark hex. A dark style (DarkStyle.swift) replaces `dark`.
+struct Tone: Equatable {
+  var light: UInt32
+  var dark: UInt32
+  static func ola(_ light: UInt32, _ dark: UInt32) -> Tone { Tone(light: light, dark: dark) }
+  var color: Color { .ola(light, dark) }
+}
+
 /// The palette (design pass two, 2026-11-16). Tone does the work, not hue: a small warm ramp per
 /// mode (the frame around the work, the page you read, hairlines, three levels of text), one accent,
 /// and one color that means "Ola needs you". Each value is named by its role. Three palettes were
@@ -35,36 +43,36 @@ extension Color {
 struct Palette {
   var id: String
   // The frame: sidebar, title bar, the room around the page. One tonal step from the page.
-  var chrome: Color
-  var chromeHover: Color
-  var chromeSelected: Color
-  var chromeRule: Color
-  var chromeText: Color
-  var chromeText2: Color
-  var chromeText3: Color
+  var chrome: Tone
+  var chromeHover: Tone
+  var chromeSelected: Tone
+  var chromeRule: Tone
+  var chromeText: Tone
+  var chromeText2: Tone
+  var chromeText3: Tone
   // The page: what you read, and the files beside it.
-  var page: Color
-  var margin: Color
-  var code: Color
-  var field: Color
-  var separator: Color
-  var separatorStrong: Color
-  var hover: Color
-  var pressed: Color
-  var text: Color
-  var text2: Color
-  var text3: Color
+  var page: Tone
+  var margin: Tone
+  var code: Tone
+  var field: Tone
+  var separator: Tone
+  var separatorStrong: Tone
+  var hover: Tone
+  var pressed: Tone
+  var text: Tone
+  var text2: Tone
+  var text3: Tone
   // The one accent: the primary button, links, step icons.
-  var accent: Color
-  var onAccent: Color
-  var accentText: Color
+  var accent: Tone
+  var onAccent: Tone
+  var accentText: Tone
   // Signals.
-  var attention: Color
-  var attentionText: Color
-  var attentionWash: Color
-  var running: Color
-  var runningWash: Color
-  var ok: Color
+  var attention: Tone
+  var attentionText: Tone
+  var attentionWash: Tone
+  var running: Tone
+  var runningWash: Tone
+  var ok: Tone
 
   /// The warm ramp all three share (light, dark).
   static func base(id: String) -> Palette {
@@ -129,8 +137,12 @@ struct Palette {
   static let all = [ink, blueInk, dusk]
   static let chosen = blueInk
   #endif
-  /// The one in use: the hidden default `OlaPalette`, else the chosen one.
-  nonisolated(unsafe) static var current: Palette = all.first { $0.id == UserDefaults.standard.string(forKey: "OlaPalette") } ?? chosen
+  /// The one in use: the hidden default `OlaPalette`, else the chosen one, in the dark style chosen
+  /// in Settings (OLA-221). Observed, so changing it redraws every view that reads `Ola`.
+  static var current: Palette {
+    get { ThemeBox.shared.palette }
+    set { ThemeBox.shared.palette = newValue }
+  }
 }
 
 /// The roles under the names the views use. The old names (room, paper, ink, vermilion) stay so
@@ -138,36 +150,36 @@ struct Palette {
 enum Ola {
   static var p: Palette { Palette.current }
   // The frame.
-  static var room: Color { p.chrome }
-  static var roomRaised: Color { p.chromeSelected }
-  static var roomHover: Color { p.chromeHover }
-  static var roomRule: Color { p.chromeRule }
-  static var onRoom: Color { p.chromeText }
-  static var mist: Color { p.chromeText2 }
-  static var dim: Color { p.chromeText3 }
+  static var room: Color { p.chrome.color }
+  static var roomRaised: Color { p.chromeSelected.color }
+  static var roomHover: Color { p.chromeHover.color }
+  static var roomRule: Color { p.chromeRule.color }
+  static var onRoom: Color { p.chromeText.color }
+  static var mist: Color { p.chromeText2.color }
+  static var dim: Color { p.chromeText3.color }
   // The page.
-  static var paper: Color { p.page }
-  static var details: Color { p.code }
-  static var margin: Color { p.margin }
-  static var field: Color { p.field }
-  static var rule: Color { p.separator }
-  static var ruleStrong: Color { p.separatorStrong }
-  static var paperHover: Color { p.hover }
-  static var paperPressed: Color { p.pressed }
-  static var ink: Color { p.text }
-  static var ink2: Color { p.text2 }
-  static var ink3: Color { p.text3 }
+  static var paper: Color { p.page.color }
+  static var details: Color { p.code.color }
+  static var margin: Color { p.margin.color }
+  static var field: Color { p.field.color }
+  static var rule: Color { p.separator.color }
+  static var ruleStrong: Color { p.separatorStrong.color }
+  static var paperHover: Color { p.hover.color }
+  static var paperPressed: Color { p.pressed.color }
+  static var ink: Color { p.text.color }
+  static var ink2: Color { p.text2.color }
+  static var ink3: Color { p.text3.color }
   // The accent.
-  static var action: Color { p.accent }
-  static var onAction: Color { p.onAccent }
-  static var blue: Color { p.accentText }
+  static var action: Color { p.accent.color }
+  static var onAction: Color { p.onAccent.color }
+  static var blue: Color { p.accentText.color }
   // Signals.
-  static var lamp: Color { p.running }
-  static var lampWash: Color { p.runningWash }
-  static var vermilion: Color { p.attention }
-  static var vermilionText: Color { p.attentionText }
-  static var vermilionWash: Color { p.attentionWash }
-  static var leaf: Color { p.ok }
+  static var lamp: Color { p.running.color }
+  static var lampWash: Color { p.runningWash.color }
+  static var vermilion: Color { p.attention.color }
+  static var vermilionText: Color { p.attentionText.color }
+  static var vermilionWash: Color { p.attentionWash.color }
+  static var leaf: Color { p.ok.color }
 }
 
 /// Bricolage Grotesque for the interface, Literata for what Ola writes, IBM Plex Mono in details.

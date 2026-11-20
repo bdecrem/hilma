@@ -56,7 +56,13 @@ enum KitShots {
     ]
     func meeting(_ m: KitMeeting, t: Double = 1.3) -> AnyView { AnyView(KitMeetingScreen(meeting: m, close: {}, frozen: t).padding(.top, 47).background(Ola.paper)) }
     func note(_ r: KitNoteRecorder) -> AnyView { AnyView(KitNoteScreen(api: api, close: {}, recorder: r).padding(.top, 10).background(Ola.paper)) }
-    var levels: [Float] = (0..<32).map { i in Float(0.15 + 0.7 * abs(sin(Double(i) * 0.7)) * (0.5 + 0.5 * cos(Double(i) * 0.23))) }
+    // In steps: as one expression it was too slow to type-check for Xcode 26.3 in a Debug build.
+    var levels: [Float] = (0..<32).map { i -> Float in
+      let x = Double(i)
+      let wave: Double = abs(sin(x * 0.7))
+      let swell: Double = 0.5 + 0.5 * cos(x * 0.23)
+      return Float(0.15 + 0.7 * wave * swell)
+    }
     levels[31] = 0.4
     return [
       ("home", AnyView(KitScreen(api: api, fixture: overview).padding(.top, 47).background(Ola.paper))),
