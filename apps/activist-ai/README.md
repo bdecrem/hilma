@@ -1030,11 +1030,19 @@ does not load is not used. 128 connections per client address, 512 in all.
 password, nothing in front of that). Switched on (`OLA_TLS_GATE=1`, with `OLA_TLS_GATE_PASSCODE`, 20
 to 200 printable characters), nothing reaches the front desk without a site-wide passcode: HTTP
 Basic auth, any user name; `ops/tls-test.mjs` keeps proving all of it with the gate switched on. Without credentials: 401 with `WWW-Authenticate: Basic realm="Ola"` and a one-line page (not a
-failure: browsers ask first without). A wrong passcode: the n-th in a row from an address (an IPv6 one
-by its /64, the PROXY address) is answered after min(250 ms × 2^(n−1), 8 s), and the 10th within 15
-minutes blocks the address for 15 minutes (429, the right passcode too). The check compares SHA-256
-digests in constant time. `Authorization` is removed before the front desk. `/api/health` passes
-without the passcode from loopback only.
+failure: browsers ask first without). A wrong passcode counts against the name typed with it (the
+Basic user name, case and spaces aside) from that address (an IPv6 one by its /64, the PROXY
+address): the n-th in a row is answered after min(250 ms × 2^(n−1), 8 s), and the 10th within 15
+minutes blocks that name from that address for 15 minutes (429, the right passcode too, with a page
+that says so and for how long). Other names on the same address get in (OLA-95: before, the block
+was the address's, so one person's typos behind an office NAT locked out the whole office). The
+backstop for a guesser who changes the name each time: 100 wrong tries from one address within 15
+minutes block the address for 15 minutes. A wrong device pass counts per pass the same way. A page
+Ola made (`/v/<grant>/`, GET or HEAD, the raw path and the parsed one) passes without the passcode:
+it runs in a sandboxed frame, so its own `fetch()` of its data sends no Basic credentials, and
+before OLA-95 its data never loaded with the gate on; the 256-bit grant is the front desk's check.
+The check compares SHA-256 digests in constant time. `Authorization` is removed before the front
+desk. `/api/health` passes without the passcode from loopback only.
 
 **Device passes** (2026-11-17, see [Signing in from the Mac app and the command
 line](#signing-in-from-the-mac-app-and-the-command-line-2026-11-17)). With `OLA_GATE_PASS_KEY` set (64
@@ -1055,7 +1063,7 @@ engine, not Safari.app) loaded the page, `fetch` and an `EventSource` carried th
 Playwright has no virtual authenticator, so its passkey ceremony is not proven. A wrong passcode got
 401 and no page in both.
 
-**Tests: `node --test ops/tls-test.mjs`** (11 tests, about 50 s; the real program as a child process,
+**Tests: `node --test ops/tls-test.mjs`** (20 tests, about 50 s; the real program as a child process,
 a stub front desk that reads PROXY lines, a throwaway CA made by `openssl`): the client address
 arrives (IPv4 and IPv6), TLS 1.3 by default and 1.2 works; events arrive as written; a 20 MB upload
 passes; plain HTTP, TLS 1.1, RSA-key-exchange ciphers, a missing or malformed PROXY line and another

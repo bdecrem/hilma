@@ -35,12 +35,24 @@
 //
 // The gate. A request without credentials gets 401 with `WWW-Authenticate: Basic realm="Ola"` and
 // a tiny fixed page, and does not count as a failure (a browser always asks first without them). A
-// wrong passcode is a failure for the client's address (an IPv6 one by its /64): the n-th failure
-// in a row is answered after min(250 ms × 2^(n-1), 8 s), and the 10th within 15 minutes blocks the
-// address for 15 minutes (429 to everything, the right passcode too). The comparison is of SHA-256
-// digests in constant time, so neither the answer nor its timing depends on how close a guess was.
-// `/api/health` passes without the passcode from loopback only (the status command asks there).
-// A request to upgrade the connection (WebSocket) is refused: the front desk uses none.
+// wrong passcode counts against the name typed with it (the Basic user name, as the person typed
+// it, case and spacing aside) from the client's address (an IPv6 one by its /64): the n-th failure
+// in a row for that name is answered after min(250 ms × 2^(n-1), 8 s), and the 10th within 15
+// minutes blocks that name from that address for 15 minutes (429, the right passcode too, with a
+// page that says so and for how long). Other names on the same address are not touched: until
+// OLA-95 the count was the address's alone, so ten wrong tries by one person behind an office or
+// home NAT locked out everyone there. A guesser who changes the name at every try is stopped by the
+// backstop: 100 wrong tries from one address within 15 minutes block the address for 15 minutes.
+// The comparison is of SHA-256 digests in constant time, so neither the answer nor its timing
+// depends on how close a guess was. `/api/health` passes without the passcode from loopback only
+// (the status command asks there). A request to upgrade the connection (WebSocket) is refused.
+//
+// A page Ola made (OLA-95). It runs in a sandboxed frame with an opaque origin (frontdesk/views.mjs),
+// so its own fetch() of a data file beside it is cross-origin and the browser sends no passcode with
+// it: with the gate on, its data never loaded. A GET or HEAD whose path, raw and as the front desk
+// parses it, is under `/v/<grant>/` (43 base64url characters) passes the door without the passcode:
+// the grant is 256 random bits that the front desk checks against the opener's session, team and
+// address, and answers a guess with a 404.
 //
 // Passes (2026-11-17; ops/pass.mjs). A signed-in device (the Mac app, the command line) sends
 // `Authorization: Bearer olap1.…` instead of the passcode. With OLA_GATE_PASS_KEY set (the same
@@ -73,7 +85,7 @@ export const CIPHERS = [
   'ECDHE-RSA-CHACHA20-POLY1305',
 ].join(':')
 const KNOWN = ['LISTEN', 'UPSTREAM', 'CERT_DIR', 'SERVERNAME', 'PROXY_IN', 'PROXY_OUT', 'GATE', 'GATE_PASSCODE', 'CONNECTIONS_PER_ADDRESS', 'MAX_CONNECTIONS'].map((k) => `OLA_TLS_${k}`)
-export const GATE = { firstDelayMs: 250, maxDelayMs: 8_000, blockAfter: 10, windowMs: 15 * 60_000, blockMs: 15 * 60_000, maxTracked: 10_000 }
+export const GATE = { firstDelayMs: 250, maxDelayMs: 8_000, blockAfter: 10, addressBlockAfter: 100, windowMs: 15 * 60_000, blockMs: 15 * 60_000, maxTracked: 20_000 }
 
 function hostPort(v, name) {
   const m = /^(\[[0-9a-fA-F:.]+\]|[0-9.]+):(\d{1,5})$/.exec(v)
@@ -159,7 +171,29 @@ export function addressKey(a) {
 const LOOPBACK = new Set(['127.0.0.1', '::1'])
 
 const PAGE_401 = '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Ola is private. Ask Bart how to reach it.</p>\n'
-const PAGE_429 = '<!doctype html><meta charset="utf-8"><title>Ola</title><p>Too many wrong passcodes from here. Try again in 15 minutes.</p>\n'
+const minutesText = (ms) => {
+  const m = Math.max(1, Math.ceil(ms / 60_000))
+  return m === 1 ? '1 minute' : `${m} minutes`
+}
+/** The page for a blocked name (or device) or a blocked address, with how long is left. */
+const page429 = (scope, ms) =>
+  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ola</title><p>${
+    scope === 'address'
+      ? `Too many wrong passcodes from your internet address. Try again in ${minutesText(ms)}.`
+      : scope === 'device'
+        ? `Too many wrong sign-ins from this device. Try again in ${minutesText(ms)}.`
+        : `Too many wrong passcodes for this name. Try again in ${minutesText(ms)}. Other people here are not affected.`
+  }</p>\n`
+/** The key a wrong try counts under besides the address: the Basic user name, normalized. */
+export function nameKey(authorization) {
+  const m = typeof authorization === 'string' ? /^Basic ([A-Za-z0-9+/=]{1,400})$/.exec(authorization) : null
+  const decoded = m ? Buffer.from(m[1], 'base64').toString('utf8') : ''
+  const user = decoded.includes(':') ? decoded.slice(0, decoded.indexOf(':')) : ''
+  const n = user.normalize('NFKC').trim().toLowerCase()
+  return n.length <= 64 ? `name:${n}` : `name#${createHash('sha256').update(n).digest('hex').slice(0, 32)}`
+}
+// A view of a page Ola made: GET or HEAD under /v/<43 base64url characters>/ (see "A page Ola made").
+const VIEW_PATH = /^\/v\/[A-Za-z0-9_-]{43}\/[^?#]/
 
 export function makeTlsFront(cfg = config()) {
   const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'tls', ...o }))
@@ -168,7 +202,8 @@ export function makeTlsFront(cfg = config()) {
   const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, probes: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
 
   // ------------------------------------------------------------ the gate
-  const fails = new Map() // address key -> { n, last, blockedUntil }
+  // `a:<address key>` (the backstop) and `n:<address key> <name or device>` -> { n, last, blockedUntil }
+  const fails = new Map()
   function passes(req) {
     const h = req.headers.authorization
     if (typeof h !== 'string') return null
@@ -177,19 +212,34 @@ export function makeTlsFront(cfg = config()) {
     const pass = decoded.includes(':') ? decoded.slice(decoded.indexOf(':') + 1) : ''
     return timingSafeEqual(createHash('sha256').update(pass).digest(), cfg.passDigest)
   }
-  function failed(key) {
+  function count(key, after) {
     const now = Date.now()
     let f = fails.get(key)
-    if (!f || now - f.last > GATE.windowMs) f = { n: 0, last: now, blockedUntil: 0 }
+    if (!f || (now - f.last > GATE.windowMs && f.blockedUntil <= now)) f = { n: 0, last: now, blockedUntil: 0 }
     f.n++
     f.last = now
-    if (f.n >= GATE.blockAfter) f.blockedUntil = now + GATE.blockMs
+    if (f.n >= after && f.blockedUntil <= now) f.blockedUntil = now + GATE.blockMs
     fails.delete(key)
     fails.set(key, f) // newest last; the oldest are dropped past maxTracked
-    if (fails.size > GATE.maxTracked) fails.delete(fails.keys().next().value)
-    return Math.min(GATE.firstDelayMs * 2 ** (f.n - 1), GATE.maxDelayMs)
+    while (fails.size > GATE.maxTracked) fails.delete(fails.keys().next().value)
+    return f.n
   }
-  const blocked = (key) => (fails.get(key)?.blockedUntil ?? 0) > Date.now()
+  /** A wrong try by `who` (a name or a device) from address `addr`: the delay before its answer. */
+  function failed(addr, who) {
+    count(`a:${addr}`, GATE.addressBlockAfter)
+    const n = count(`n:${addr} ${who}`, GATE.blockAfter)
+    return Math.min(GATE.firstDelayMs * 2 ** (n - 1), GATE.maxDelayMs)
+  }
+  const left = (key) => Math.max(0, (fails.get(key)?.blockedUntil ?? 0) - Date.now())
+  /** Null, or the 429 for a blocked address or a blocked name or device on it. */
+  function blocked(res, addr, who) {
+    let ms = left(`a:${addr}`)
+    let scope = 'address'
+    if (!ms) (ms = left(`n:${addr} ${who}`)), (scope = who.startsWith('pass') ? 'device' : 'name')
+    if (!ms) return null
+    counts.blocked++
+    return refuse(res, 429, page429(scope, ms), { 'retry-after': String(Math.ceil(ms / 1000)) }) ?? true
+  }
   function refuse(res, status, page, extra = {}) {
     if (res.destroyed || res.headersSent) return
     res.writeHead(status, {
@@ -266,6 +316,15 @@ export function makeTlsFront(cfg = config()) {
       return false
     }
   }
+  const viewPathOk = (url) => {
+    if (typeof url !== 'string' || !VIEW_PATH.test(url)) return false
+    try {
+      const p = new URL(url, 'http://x').pathname
+      return VIEW_PATH.test(p) && p.slice(0, 47) === url.slice(0, 47)
+    } catch {
+      return false
+    }
+  }
   async function handle(req, res) {
     const client = req.socket.olaClient
     if (!client) return req.socket.destroy()
@@ -297,30 +356,41 @@ export function makeTlsFront(cfg = config()) {
       return pipeUp(req, res, client)
     }
     // A bearer is a device's pass, or a wrong credential: never the passcode, never let through.
+    // Wrong ones count per device (the bearer as sent) on the address, so one Mac holding an old
+    // pass does not lock out the rest of its office (OLA-95); the address backstop still applies.
     if (typeof req.headers.authorization === 'string' && /^bearer\s/i.test(req.headers.authorization)) {
-      const key = addressKey(client.address)
-      if (blocked(key)) return counts.blocked++, refuse(res, 429, PAGE_429, { 'retry-after': String(Math.ceil(GATE.blockMs / 1000)) })
+      const addr = addressKey(client.address)
+      const who = `pass:${createHash('sha256').update(req.headers.authorization).digest('hex').slice(0, 32)}`
+      if (blocked(res, addr, who)) return
       const pass = bearerPass(req.headers.authorization)
       if (!pass || !passPathOk(req.url) || !readPass(cfg.passKey, pass)) {
         counts.badPass++
-        const wait = failed(key)
+        const wait = failed(addr, who)
         return setTimeout(() => refuse(res, 401, PAGE_401, { 'www-authenticate': 'Basic realm="Ola", charset="UTF-8"' }), wait)
       }
-      fails.delete(key)
+      fails.delete(`n:${addr} ${who}`)
       counts.passes++
       return pipeUp(req, res, client, pass)
     }
+    // A page Ola made, loading its own files (see "A page Ola made" at the top). Any Basic header
+    // is dropped on the way (pipeUp) and neither checked nor counted.
+    if ((req.method === 'GET' || req.method === 'HEAD') && viewPathOk(req.url)) {
+      counts.views = (counts.views ?? 0) + 1
+      return pipeUp(req, res, client)
+    }
     if (cfg.gate && !(req.url === '/api/health' && LOOPBACK.has(client.address))) {
-      const key = addressKey(client.address)
-      if (blocked(key)) return counts.blocked++, refuse(res, 429, PAGE_429, { 'retry-after': String(Math.ceil(GATE.blockMs / 1000)) })
+      const addr = addressKey(client.address)
+      const who = nameKey(req.headers.authorization)
+      if (blocked(res, addr, who)) return
       const ok = passes(req)
       if (ok === null) return counts.noPasscode++, refuse(res, 401, PAGE_401, { 'www-authenticate': 'Basic realm="Ola", charset="UTF-8"' })
       if (!ok) {
         counts.wrongPasscode++
-        const wait = failed(key)
+        const wait = failed(addr, who)
         return setTimeout(() => refuse(res, 401, PAGE_401, { 'www-authenticate': 'Basic realm="Ola", charset="UTF-8"' }), wait)
       }
-      fails.delete(key)
+      // A right passcode clears its name's count; the address's backstop runs out on its own.
+      fails.delete(`n:${addr} ${who}`)
     }
     pipeUp(req, res, client)
   }

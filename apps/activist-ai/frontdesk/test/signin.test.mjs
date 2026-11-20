@@ -235,6 +235,17 @@ test('guessing: a stranger slows one name down, never the person on a device tha
   assert.ok(bursts >= 1, 'a burst row')
 })
 
+test('guessing (OLA-95): wrong tries for one name never hold up another name from the same address, and the wait is said in plain words', async () => {
+  // Every call here comes from 127.0.0.1, one address, like an office behind one NAT.
+  db.prepare("INSERT INTO people (handle, display_name, status, webauthn_user_id, created_at, password_hash, password_set_at) VALUES ('lena', 'Lena K.', 'active', randomblob(32), 0, ?, 0)").run(await hashPassword(PW))
+  for (let i = 0; i < 8; i++) await call('/api/auth/password', { body: { handle: 'maria', password: `office guess ${i}` }, headers: { cookie: '' } })
+  const held = await call('/api/auth/password', { body: { handle: 'maria', password: PW }, headers: { cookie: '' } })
+  assert.equal(held.status, 429)
+  assert.match(held.json.message, /^Too many wrong tries for this name\. Wait \d+ (seconds|minutes), then try again\.$/)
+  const lena = await call('/api/auth/password', { body: { handle: 'lena', password: PW }, headers: { cookie: '' } })
+  assert.equal(lena.status, 200, 'another name from the same address was held up')
+})
+
 test('the admin link sets a password; for someone who had one it signs them out everywhere', async () => {
   // dana: invited, no password yet; a link sets her first one (nothing to sign out).
   const { raw } = makePasswordLink(db, 2, 3600_000)

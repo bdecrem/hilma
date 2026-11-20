@@ -46,7 +46,7 @@ const swap = (dir) => (rmSync(`${LIVE}.new`, { force: true }), symlinkSync(path.
 let stub, STUB_PORT
 const stubHttp = http.createServer((req, res) => {
   const client = req.socket.olaClient ?? null
-  if (req.url === '/who' || req.url === '/api/health' || req.url.startsWith('/api/device/') || req.url === '/.well-known/apple-app-site-association') return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null, pass: req.headers['x-ola-pass'] ?? null }))
+  if (req.url === '/who' || req.url === '/api/health' || req.url.startsWith('/api/device/') || req.url.startsWith('/v/') || req.url === '/.well-known/apple-app-site-association') return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null, pass: req.headers['x-ola-pass'] ?? null }))
   if (req.url === '/upload') {
     let n = 0
     req.on('data', (d) => (n += d.length))
@@ -333,7 +333,7 @@ test('the gate is off unless switched on: with no OLA_TLS_GATE and no passcode, 
   assert.ok(!r.headers['www-authenticate'], 'a passcode challenge with the gate off')
 })
 
-test('the gate: wrong passcodes get slower, then the address is blocked (the right passcode too); others are not', async () => {
+test('the gate: wrong passcodes get slower, then that name is blocked on that address (the right passcode too); other names there, and other addresses, are not (OLA-95)', async () => {
   const f = await startFront()
   const time = async (auth, from) => {
     const t = Date.now()
@@ -351,22 +351,86 @@ test('the gate: wrong passcodes get slower, then the address is blocked (the rig
   const far = await time('u:zzzzzzzzzzzzzzzzzzzzzzzz', '100.64.30.2')
   assert.equal(near.status, far.status)
   assert.ok(Math.abs(near.ms - far.ms) < 80, `near ${near.ms} ms, far ${far.ms} ms`)
-  // Ten wrong tries (sent at once) block the address: then the right passcode is 429 too.
+  // Ten wrong tries for one name (sent at once) block that name from that address: then its right
+  // passcode is 429 too, with a page that says so and for how long. The same name typed with other
+  // case or spaces is the same name.
   const b = '100.64.40.1'
-  await Promise.all(Array.from({ length: 10 }, () => time('u:nope', b)))
-  const blocked = await get(f.port, '/who', { from: b })
+  await Promise.all(Array.from({ length: 10 }, () => time('maria:nope', b)))
+  const blocked = await get(f.port, '/who', { auth: `maria:${PASS}`, from: b })
   assert.equal(blocked.status, 429)
-  assert.ok(blocked.headers['retry-after'])
-  // Another address in the same IPv6 /64 is the same client; another /64 and another IPv4 are not.
+  assert.ok(+blocked.headers['retry-after'] > 800 && +blocked.headers['retry-after'] <= 900, blocked.headers['retry-after'])
+  assert.match(blocked.body, /Too many wrong passcodes for this name\. Try again in 15 minutes\. Other people here are not affected\./)
+  assert.equal((await get(f.port, '/who', { auth: ` Maria :${PASS}`, from: b })).status, 429)
+  // Everyone else behind the same address (an office NAT) still gets in.
+  assert.equal((await get(f.port, '/who', { auth: `dana:${PASS}`, from: b })).status, 200)
+  assert.equal((await get(f.port, '/who', { auth: `ola:${PASS}`, from: b })).status, 200)
+  // And the same name from another address is not blocked (a stranger cannot lock Maria out).
+  assert.equal((await get(f.port, '/who', { auth: `maria:${PASS}`, from: '100.64.40.2' })).status, 200)
+  // Another address in the same IPv6 /64 is the same client; another /64 is not.
   await Promise.all(Array.from({ length: 10 }, () => time('u:nope', '2001:db8:1:2::10')))
-  assert.equal((await get(f.port, '/who', { from: '2001:db8:1:2::99' })).status, 429)
-  assert.equal((await get(f.port, '/who', { from: '2001:db8:1:3::10' })).status, 200)
-  assert.equal((await get(f.port, '/who', { from: '100.64.40.2' })).status, 200)
+  assert.equal((await get(f.port, '/who', { auth: `u:${PASS}`, from: '2001:db8:1:2::99' })).status, 429)
+  assert.equal((await get(f.port, '/who', { auth: `v:${PASS}`, from: '2001:db8:1:2::99' })).status, 200)
+  assert.equal((await get(f.port, '/who', { auth: `u:${PASS}`, from: '2001:db8:1:3::10' })).status, 200)
   // A right passcode resets the count of an address that is not blocked.
   const d = '100.64.50.1'
   await time('u:wrong', d)
-  await get(f.port, '/who', { from: d })
+  await get(f.port, '/who', { auth: `u:${PASS}`, from: d })
   assert.ok((await time('u:wrong', d)).ms < 450, 'the count was not reset by a right passcode')
+})
+
+// OLA-95: a page Ola made runs in a sandboxed frame (an opaque origin), so its own fetch() of a
+// data file beside it is cross-origin and the browser sends no Basic credentials with it. With the
+// gate on, that fetch got the 401 and the page showed no data. A GET or HEAD under /v/<grant>/ (a
+// 256-bit grant the front desk checks against the session, the team and the address that opened it)
+// now passes the door without the passcode; nothing near it does.
+test('the gate: a page Ola made loads its data: GET under /v/<grant>/ with no passcode reaches the front desk; nothing near it does', async () => {
+  const f = await startFront()
+  const g = 'A'.repeat(21) + '_' + 'b-'.repeat(10) + 'z'
+  assert.equal(g.length, 43)
+  for (const where of [`/v/${g}/data.json`, `/v/${g}/sub/rows.csv?x=1`, `/v/${g}/page.html`]) {
+    const r = await get(f.port, where, { auth: null, from: '100.64.80.1' })
+    assert.equal(r.status, 200, where)
+    assert.equal(JSON.parse(r.body).authorization, null, `${where}: an Authorization went on`)
+  }
+  // A Basic header (a wrong one too) never reaches the front desk and never counts.
+  for (let i = 0; i < 12; i++) assert.equal((await get(f.port, `/v/${g}/data.json`, { auth: 'u:wrong', from: '100.64.80.2' })).status, 200)
+  assert.equal((await get(f.port, '/who', { from: '100.64.80.2' })).status, 200, 'wrong Basic on /v/ counted toward a block')
+  // Near spellings need the passcode as before.
+  const near = [
+    ['POST', `/v/${g}/data.json`],
+    ['GET', `/v/${g.slice(1)}/data.json`],
+    ['GET', `/v/${g}x/data.json`],
+    ['GET', `/v/${g}`],
+    ['GET', `/v/${g}/../../who`],
+    ['GET', `/v/${g}/%2e%2e/%2e%2e/who`],
+    ['GET', `//v/${g}/data.json`],
+    ['GET', `/V/${g}/data.json`],
+    ['GET', `http://${NAME}/v/${g}/data.json`],
+  ]
+  for (const [method, where] of near) {
+    const r = await connect(f.port, { from: '100.64.80.3' }).then(
+      (s) =>
+        new Promise((resolve) => {
+          let got = ''
+          s.on('data', (d) => (got += d))
+          s.on('close', () => resolve(got))
+          s.on('error', () => resolve(got))
+          s.write(`${method} ${where} HTTP/1.1\r\nHost: ${NAME}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`)
+        }),
+    )
+    assert.match(r, /^HTTP\/1\.1 (401|400)/, `${method} ${where}: ${r.slice(0, 40)}`)
+  }
+})
+
+test('the gate: a guesser who changes the name at every try is stopped by the address backstop (100 wrong tries in 15 minutes)', async () => {
+  const f = await startFront()
+  const a = '100.64.45.1'
+  // One wrong try each for 100 names: no name gets slow, but the address is then blocked for all.
+  for (let i = 0; i < 100; i += 20) await Promise.all(Array.from({ length: 20 }, (_, j) => get(f.port, '/who', { auth: `guess${i + j}:nope`, from: a })))
+  const r = await get(f.port, '/who', { auth: `someone:${PASS}`, from: a })
+  assert.equal(r.status, 429)
+  assert.match(r.body, /Too many wrong passcodes from your internet address\. Try again in 15 minutes\./)
+  assert.equal((await get(f.port, '/who', { auth: `someone:${PASS}`, from: '100.64.45.2' })).status, 200)
 })
 
 test('slow clients: headers a byte at a time are cut after about 5 s; a connection that never shakes hands, after 10 s', async () => {
@@ -501,7 +565,7 @@ test('Apple’s site check: exactly GET /.well-known/apple-app-site-association 
   }
 })
 
-test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and count toward the block', async () => {
+test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and block that device, not its address', async () => {
   const f = await startFront({ OLA_GATE_PASS_KEY: KEY })
   const p = makePass(KEYBUF, 'device', soon()).pass
   const forged = makePass(Buffer.from('cd'.repeat(32), 'hex'), 'device', soon()).pass
@@ -530,11 +594,15 @@ test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and
   const nokey = await startFront()
   assert.equal((await get(nokey.port, '/api/device/me', { auth: null, headers: bearer(p) })).status, 401)
   assert.match(nokey.out(), /"devicePasses":false/)
-  // Ten bad passes block the address: then a good pass and the right passcode are 429 too.
+  // Ten bad tries with one pass block that pass on the address (OLA-95: not the address): a good
+  // pass from another device there and the right passcode still get in.
   const b = '100.64.71.1'
   await Promise.all(Array.from({ length: 10 }, () => get(f.port, '/api/device/me', { auth: null, headers: bearer(forged), from: b })))
-  assert.equal((await get(f.port, '/api/device/me', { auth: null, headers: bearer(p), from: b })).status, 429)
-  assert.equal((await get(f.port, '/who', { from: b })).status, 429)
+  const r = await get(f.port, '/api/device/me', { auth: null, headers: bearer(forged), from: b })
+  assert.equal(r.status, 429)
+  assert.match(r.body, /Too many wrong sign-ins from this device\. Try again in 15 minutes\./)
+  assert.equal((await get(f.port, '/api/device/me', { auth: null, headers: bearer(p), from: b })).status, 200)
+  assert.equal((await get(f.port, '/who', { from: b })).status, 200)
   // A bad key setting is refused at start.
   for (const env of [{ OLA_GATE_PASS_KEY: 'abc' }, { OLA_GATE_PASS_KEY: 'zz'.repeat(32) }]) await assert.rejects(startFront(env), /exited 78/, JSON.stringify(env))
 })
