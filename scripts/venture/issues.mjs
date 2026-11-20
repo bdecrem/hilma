@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 8
+export const TRACKER_VERSION = 9
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -310,7 +310,18 @@ async function claim(id, who, row = null, { gated = false } = {}) {
   const keep = old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && old.value?.who === who && old.value?.since && (claimRole(old.value) === role || !LANE_ROLES.has(role))
   const lane = laneOf(r, a.lane)
   const beside = !keep && !gated ? await laneGate(id, who, role, lane, r) : null
-  check(await db.from('venture_state').upsert({ key, value: { who, role, host: hostname(), since: keep ? old.value.since : new Date().toISOString(), lane, ...(me.id ? { caller: me.id } : {}), ...(beside ? { beside } : keep && old.value.beside ? { beside: old.value.beside } : {}) }, at: new Date().toISOString() }), 'claim')
+  const since = keep ? old.value.since : new Date().toISOString()
+  check(await db.from('venture_state').upsert({ key, value: { who, role, host: hostname(), since, lane, ...(me.id ? { caller: me.id } : {}), ...(beside ? { beside } : keep && old.value.beside ? { beside: old.value.beside } : {}) }, at: new Date().toISOString() }), 'claim')
+  // OLA-251, sixth pass: two builders that pass the gate at the same moment both wrote a claim. Each reads
+  // the lane again after writing; the later start (the higher ticket id on a tie) takes its claim back.
+  if (!keep && !beside && LANE_ROLES.has(role) && lane === 'server') {
+    const h = await laneState(id, lane)
+    const theirs = h ? (await liveClaims())[h.id] : null
+    if (h && theirs && !theirs.beside && (Date.parse(theirs.since ?? theirs.at) < Date.parse(since) || (Date.parse(theirs.since ?? theirs.at) === Date.parse(since) && h.id < id))) {
+      check(await db.from('venture_state').delete().eq('key', key), 'claim')
+      die(laneSentence(h, lane))
+    }
+  }
   if ((role === 'builder' || role === 'runner') && me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) await saveAccept(id, { ...a, builders: [...(a.builders ?? []), { who, role, caller: me.id, host: me.host, at: new Date().toISOString(), via: 'claim' }] })
   console.log(`${id} claimed by ${who} (${role}) ${role === 'builder' || role === 'runner' ? `in the ${lane} lane` : `(the ticket is in the ${lane} lane; ${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} takes none)`} (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
 }
