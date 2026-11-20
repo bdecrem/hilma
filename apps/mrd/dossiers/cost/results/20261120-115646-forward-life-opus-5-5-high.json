@@ -1,0 +1,462 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica life claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "life",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  9,
+  11,
+  13
+ ],
+ "started_at": "2026-11-20T19:56:46.308Z",
+ "meters_before": {
+  "at": "2026-11-20T19:56:41.685Z",
+  "window": {
+   "pct": 17,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 17,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 17% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 47672,
+  "user": 109
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T19:58:49.213Z",
+ "minutes": 2.05,
+ "meters_after": {
+  "at": "2026-11-20T19:58:49.213Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 36,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 36,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 36% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 15862,
+   "output": 8124,
+   "cache_read": 615541,
+   "cache_write": 97579,
+   "cost_usd": 1.0558,
+   "total": 737106
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 15844,
+    "output": 1130,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 204,
+    "cost_usd": 0.0121
+   },
+   "claude-opus-5-5": {
+    "input": 18,
+    "output": 6994,
+    "cache_read": 615541,
+    "cache_write": 97579,
+    "thinking": 794,
+    "cost_usd": 1.0437
+   }
+  }
+ },
+ "turns": 14,
+ "calls": 22,
+ "duration_ms": 122212,
+ "duration_api_ms": 80121,
+ "pages_read": 11,
+ "pages": [
+  {
+   "at": "2026-11-20T19:56:50.965Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC",
+   "find": "Artículo 70 | No punibilidad | Reformado | Ley N° 10886 | versión",
+   "ok": true,
+   "chars": 8590
+  },
+  {
+   "at": "2026-11-20T19:57:02.970Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66525&strTipM=TC",
+   "find": "Artículo 10 | estrictamente necesario | Reformado | Artículo 6",
+   "ok": true,
+   "chars": 6528
+  },
+  {
+   "at": "2026-11-20T19:57:20.389Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=74132&param2=150701&param3=1",
+   "find": "no son punibles | ARTÍCULO 70 | ARTÍCULO 69",
+   "ok": true,
+   "chars": 4449
+  },
+  {
+   "at": "2026-11-20T19:57:31.647Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66525&param2=153102&param3=1",
+   "find": "estrictamente necesaria | Artículo 10- | Versión de la Norma",
+   "ok": true,
+   "chars": 1910
+  },
+  {
+   "at": "2026-11-20T19:57:44.696Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66525&param2=153102&param3=1",
+   "find": "la fuerza | armas de fuego | Principios fundamentales de actuación",
+   "ok": true,
+   "chars": 6057
+  },
+  {
+   "at": "2026-11-20T19:57:49.237Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 249 | ARTÍCULO 64 | ARTÍCULO 18 | Versión de la Norma",
+   "ok": true,
+   "chars": 9590
+  },
+  {
+   "at": "2026-11-20T19:57:55.487Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "conduzca o transporte | ley N° 10493",
+   "ok": true,
+   "chars": 6511
+  },
+  {
+   "at": "2026-11-20T19:58:00.866Z",
+   "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+   "find": "penalized | unlawful acts | identified | certified",
+   "ok": true,
+   "chars": 3322
+  },
+  {
+   "at": "2026-11-20T19:58:01.635Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+   "find": "penalized | unlawful acts | certified | deport",
+   "ok": true,
+   "chars": 4718
+  },
+  {
+   "at": "2026-11-20T19:58:05.031Z",
+   "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+   "find": "penalize | compelled | temporary residency | immigration",
+   "ok": true,
+   "chars": 4090
+  },
+  {
+   "at": "2026-11-20T19:58:05.697Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+   "find": "penalize | compelled | temporary residency",
+   "ok": true,
+   "chars": 2236
+  }
+ ],
+ "searches": [
+  "Costa Rica reglamento uso de la fuerza policial decreto Ministerio de Seguridad Pública 2024 2025 armas de fuego"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":9,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley General de Policía, N.º 7410\",\"article\":\"Art. 10(d)\",\"enacted\":\"1994-05-26\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Policía, N.º 7410\",\"article\":\"Art. 6\",\"enacted\":\"1994-05-26\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 18(2), (4)\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 64\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Reglamento de Ética de los Miembros de las Fuerzas de Policía, Decreto 31463-SP\",\"article\":\"Art. 5\",\"enacted\":\"2003\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"Decreto Ejecutivo 38756-MGP\",\"article\":\"Whole text\",\"enacted\":\"2014\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"Constitución Política\",\"article\":\"Arts. 21, 40\",\"enacted\":\"1949-11-07\",\"history_read\":\"not_found\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"The law was the same on both dates. No provision prohibits force as a means of stopping entry, so the answer is the lowest option on both dates and implementation does not apply.\",\"practice_sources\":[],\"past_versions\":\"reconstructed_from_amending_acts\",\"sourcing_note\":\"SINALEVI's current versions of Ley 7410 (version 19 of 19) and Ley 8764 (version 19 of 19) were read. Ley 7410 art. 10(d) and Ley 8764 arts. 18 and 64 carry no amendment notes. Ley 7410 art. 6 was last reformed by Ley 10061 (2021), before the window. The only 2023–2025 change to Ley 8764 found was Ley 10493 (5 June 2024), which touches fees in ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 9,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Policía, N.º 7410",
+      "article": "Art. 10(d)",
+      "enacted": "1994-05-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Policía, N.º 7410",
+      "article": "Art. 6",
+      "enacted": "1994-05-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 18(2), (4)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 64",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de Ética de los Miembros de las Fuerzas de Policía, Decreto 31463-SP",
+      "article": "Art. 5",
+      "enacted": "2003",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Decreto Ejecutivo 38756-MGP",
+      "article": "Whole text",
+      "enacted": "2014",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Arts. 21, 40",
+      "enacted": "1949-11-07",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The law was the same on both dates. No provision prohibits force as a means of stopping entry, so the answer is the lowest option on both dates and implementation does not apply.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "SINALEVI's current versions of Ley 7410 (version 19 of 19) and Ley 8764 (version 19 of 19) were read. Ley 7410 art. 10(d) and Ley 8764 arts. 18 and 64 carry no amendment notes. Ley 7410 art. 6 was last reformed by Ley 10061 (2021), before the window. The only 2023–2025 change to Ley 8764 found was Ley 10493 (5 June 2024), which touches fees in arts. 33 and 241 and has nothing to do with force. The version histories of Decrees 31463-SP and 38756-MGP were not reopened.",
+    "sources_opened": [
+     {
+      "title": "Ley 7410 Ley General de Policía (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66525&strTipM=TC"
+     },
+     {
+      "title": "Ley 7410 (SINALEVI version 19 of 19)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66525&param2=153102&param3=1"
+     },
+     {
+      "title": "Ley 8764 Ley General de Migración y Extranjería (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 19 of 19)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The decree on police automatic weapons announced in October 2024 is known only from press search results (Teletica, 9 Oct 2024). It was not read and is not recorded as an event. It concerns which weapons police may carry, not border entry, and would not create a prohibition."
+   },
+   {
+    "question_id": 11,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Arts. 21, 40",
+      "enacted": "1949-11-07",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Policía, N.º 7410",
+      "article": "Art. 10(d)",
+      "enacted": "1994-05-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Arts. 15, 44, 64",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The law was the same on both dates. No provision specifically prohibits lethal force to prevent entry, so the answer is the lowest option on both dates and implementation does not apply.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 7410 art. 10(d) was read in the current SINALEVI text: 'Emplear la fuerza solo cuando sea estrictamente necesario y en la medida en que se requiera para el desempeño de sus funciones.' It carries no amendment note. Ley 8764 art. 64 has no amendment note either. The version history of the constitutional articles was not reopened, but no amendment to arts. 21 or 40 is known in the window.",
+    "sources_opened": [
+     {
+      "title": "Ley 7410 (SINALEVI version 19 of 19)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66525&param2=153102&param3=1"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 19 of 19)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     }
+    ],
+    "starting_answer_concern": "The starting answer cites Ley 7410 from bufetedecostarica.com. The official SINALEVI text (norm 66525) confirms the same wording of art. 10(d), so the answer holds; the citation should point to the official text.",
+    "confidence": "medium",
+    "notes": "The coding itself is borderline, as the starting coder noted (Colombia Yes vs Mexico No), but nothing changed between 2023 and 2026. The October 2024 automatic-weapons decree was not read. No firearms regulation for police that restricts lethal force was found."
+   },
+   {
+    "question_id": 13,
+    "answer_2023": "Yes, the national law provides exemption",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, the national law provides exemption",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley contra la Trata de Personas y Creación de la CONATT, N.º 9095",
+      "article": "Art. 70",
+      "enacted": "2012-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley contra la Trata de Personas y Creación de la CONATT, N.º 9095",
+      "article": "Art. 24(f)",
+      "enacted": "2012-10-26",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 249",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 33(3)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023 rating: the 2023 TIP Report (covering 2022) records 38 identified victims, 18 of them foreign. It notes written identification procedures used by immigration authorities and 75 temporary residence permits for victims, and reports no penalisation of victims, but rural officials often did not know the referral procedures. 2026 rating: the 2025 TIP Report (covering 2024) records 53 certified victims, at least nine of them foreign, and again no reported penalisation. It notes similar gaps: certification centralised in San José, labour inspectors referring few cases, and NGOs assisting victims the government never certified. The pattern did not change, so the rating is Usually on both dates.",
+    "practice_sources": [
+     {
+      "title": "2023 Trafficking in Persons Report: Costa Rica (US Department of State)",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Costa Rica (US Department of State)",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 9095 art. 70 was read in SINALEVI version 4 of 4 and carries no amendment note, so it has been unchanged since 2012. The amendments to Ley 9095 in that text are Ley 9545 (2018), Ley 9726 (2019) and Ley 10886 (18 March 2026). The last is after 1 January 2026 and touches arts. 10, 16 and others, not art. 70. Ley 8764 art. 249 carries no amendment note. The practice evidence covers trafficking victims, not smuggled migrants.",
+    "sources_opened": [
+     {
+      "title": "Ley 9095 (SINALEVI version 4 of 4)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=74132&strTipM=TC"
+     },
+     {
+      "title": "Ley 9095 (SINALEVI, art. 70)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=74132&param2=150701&param3=1"
+     },
+     {
+      "title": "Ley 8764 (SINALEVI version 19 of 19)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "2023 TIP Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2023-trafficking-in-persons-report/costa-rica/"
+     },
+     {
+      "title": "2025 TIP Report: Costa Rica",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/costa-rica/"
+     }
+    ],
+    "starting_answer_concern": "The exemption is express only for trafficking victims (art. 70: 'Las víctimas del delito de trata de personas no son punibles penal o administrativamente...'). For smuggled migrants it follows from their non-criminalisation under art. 249, and no clause covers, for example, their use of false documents. A reviewer may consider the 'Yes' generous for smuggled migrants.",
+    "confidence": "medium",
+    "notes": "Ley 10886 of 18 March 2026 amended Ley 9095 after the window and did not touch art. 70. Ley 10493 (June 2024) amended fee paragraphs of Ley 8764 arts. 33 and 241, not art. 249 or the administrative treatment of irregular entry. The evidence on smuggled migrants is thin: neither TIP report addresses their prosecution."
+   }
+  ]
+ }
+}
