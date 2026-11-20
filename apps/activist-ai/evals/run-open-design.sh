@@ -13,7 +13,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 cd ${0:A:h}
 models=("$@")
 (( $# )) || models=(nemotron-3.5-super-vl inkling inkling-2-small muse-spark-open)
-tasks=u12-good-morning,u9-block-party,u10-youth-strike,u2-results-page,u5-signup-flow
+tasks=${OD_TASKS:-u12-good-morning,u9-block-party,u10-youth-strike,u2-results-page,u5-signup-flow}   # OD_TASKS=u13-bart-home: one more request
 log=${OD_LOG:-results/open-design-run.log}
 for m in $models; do
   # every 2 s: the other users of the lock retry fast, and at 10 s this lost the race for an hour

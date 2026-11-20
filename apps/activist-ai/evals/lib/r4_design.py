@@ -11,6 +11,7 @@
     u10-youth-strike       designer, Bold: "a bold, modern page" for a youth climate strike, from strike.md
     u11-garden-fundraiser designer, Bold: "a gorgeous page" for a garden's harvest dinner, from dinner.md
     u12-good-morning      designer, Bold: Bart's own request word for word, a rising sun and one line, no file (OLA-168)
+    u13-bart-home         designer, Bold: Bart's own request word for word, a personal homepage, from bart.md (OLA-168)
 
 The program checks hold every page to what a careful designer would never ship: broken on a phone,
 unreadable, decorated (gradients, glows, emoji, pills, a colored phrase in the headline, placeholder
@@ -646,6 +647,76 @@ def morning_solve(work, truth, wrong=False):
     return "Made index.html."
 
 
+# ------------------------------------------------------------------ u13: Bart's own "personal homepage" (OLA-168)
+# His request word for word (Nov 20), plus where the facts are: a workspace has no web, so the facts come
+# in bart.md, written from his Wikipedia article and the present-day line of his own homepage.
+
+BART_NAME = "Bart Decrem"
+BART_MD = """# Bart Decrem
+
+Silicon Valley entrepreneur. Born and raised in Belgium.
+
+## Now
+- This year: a fellow at CASBS (the Center for Advanced Study in the Behavioral Sciences at Stanford),
+  working on AI and human flourishing.
+- In his own words: "I like making tools that learn, toys that jam, and old things new again."
+- Current projects: Dodo (dodo.foo), a learning app; Jambot (jambot.to), an AI
+  groovebox; Macinclaude, new software for an old Macintosh Plus.
+- Homepage: bartin16.xyz. Projects: decremental.com.
+
+## Before
+- At 13, started a weekly magazine for Belgium's leading underground radio station, where he was a DJ.
+- Moved to the US to study law at Stanford University.
+- Founded Plugged In, a non-profit in East Palo Alto that gave the community Internet access and
+  classes: one of the first Digital Divide programs in the United States.
+- 1999: co-founded Eazel, an open source Linux desktop start-up; its file manager Nautilus is still
+  used on Linux. Coordinated the creation of the GNOME Foundation.
+- After Eazel shut down in 2001: 18 months in Seoul, doing business development for local startups.
+- 2003 to 2004: headed marketing and business affairs at the Mozilla Foundation: the Firefox brand,
+  the Firefox 1.0 launch, Spread Firefox.
+- After Mozilla: founded Flock, a social web browser; CEO until the summer of 2006.
+- 2007: Entrepreneur in Residence at DCM.
+- 2008: founder and CEO of Tapulous, one of the first iPhone startups, maker of Tap Tap Revenge.
+  In April 2009 comScore called it the most popular App Store app of all time, installed on 32% of
+  US iPhones.
+- July 2010: Tapulous was acquired by The Walt Disney Company. Until 2013 he was SVP and General
+  Manager of Disney Mobile Games (Where's My Water, Temple Run: Oz, Where's My Mickey).
+
+## Recognition
+- Fast Company, 2009: one of the fifty most creative people in business.
+- Advertising Age, "Creativity 50", 2010.
+"""
+BART_FACTS = ["Belgium", "CASBS", "Plugged In", "Eazel", "Firefox", "Flock", "Tapulous", "Tap Tap Revenge", "Disney"]
+
+
+def bart_generate(work, seed, rng):
+    (Path(work) / "bart.md").write_text(BART_MD)
+    return {"name": BART_NAME, "facts": BART_FACTS}
+
+
+def bart_check(work, truth, session, C):
+    extra = ["facts_kept", "the_name_on_the_first_screen"]
+    if not bold_start(C, work, "index.html", extra):
+        return
+    phone, lap = bold_checks(C, work, "index.html")
+    lost = has_all(phone.get("text") or "", truth["facts"])
+    C.add("facts_kept", not lost, "missed_items", f"lost {lost[:4]}")
+    first = " ".join(x.get("text", "") for x in ((lap.get("audit") or {}).get("taste") or {}).get("first_screen", []))
+    flat = lambda s: re.sub(r"[^a-z]+", " ", s.lower()).strip()
+    C.add("the_name_on_the_first_screen", "bart" in flat(first) or "bart" in flat(phone.get("text") or "")[:300], "weak_hierarchy", first[:200])
+
+
+def bart_solve(work, truth, wrong=False):
+    if wrong:
+        html = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hello</title>'
+                '<style>body{font:17px/1.6 system-ui,sans-serif;margin:16px;background:#fff;color:#111}</style></head><body><p>Hello.</p></body></html>')
+    else:
+        items = "".join(f"<li>{f}</li>" for f in truth["facts"])
+        html = bold_shell(BART_NAME, f'<h1>{BART_NAME}</h1><p>Tools that learn, toys that jam, old things new again.</p>', f'<div class="band"><ul>{items}</ul></div>')
+    (Path(work) / "index.html").write_text(html)
+    return "Made index.html."
+
+
 # ------------------------------------------------------------------ reference solutions and wrong outputs
 
 GOOD = """<style>
@@ -889,6 +960,7 @@ INSTR = {
     "u11-garden-fundraiser": "Make a gorgeous page for our community garden's harvest dinner fundraiser, from dinner.md, as index.html. "
                              "We want people to buy tickets.",
     "u12-good-morning": "make me a gorgeous page with a rising sun on it and it says 'Good morning from Palo Alto!'",
+    "u13-bart-home": "make a gorgeous modern personal bio/homepage for Bart Decrem. Everything about him is in bart.md.",
 }
 
 TASKS = {
@@ -906,8 +978,10 @@ for tid, src, gen in (("u9-block-party", "party.md", party_generate), ("u10-yout
                       solve=(lambda s: lambda w, t: bold_solve(s)(w, t))(src), wrong=(lambda s: lambda w, t: bold_solve(s)(w, t, wrong=True))(src))
 TASKS["u12-good-morning"] = dict(skill="designer", register="bold", level="easy", outputs=["index.html"], generate=morning_generate, check=morning_check,
                                  solve=lambda w, t: morning_solve(w, t), wrong=W(morning_solve))
+TASKS["u13-bart-home"] = dict(skill="designer", register="bold", level="medium", outputs=["index.html"], generate=bart_generate, check=bart_check,
+                              solve=lambda w, t: bart_solve(w, t), wrong=W(bart_solve))
 for k, v in TASKS.items():
     v["family"] = "skills"
     v["instruction"] = INSTR[k]
-    v["wrong2"] = bold_slop({"u9-block-party": "party.md", "u10-youth-strike": "strike.md", "u11-garden-fundraiser": "dinner.md"}[k]) if v.get("register") == "bold" and k != "u12-good-morning" \
+    v["wrong2"] = bold_slop({"u9-block-party": "party.md", "u10-youth-strike": "strike.md", "u11-garden-fundraiser": "dinner.md"}[k]) if v.get("register") == "bold" and k not in ("u12-good-morning", "u13-bart-home") \
         else (lambda w, t: "I could not do it.")
