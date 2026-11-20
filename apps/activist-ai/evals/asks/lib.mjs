@@ -173,6 +173,16 @@ export function cloudTransport({ cookie, csrf }) {
       const res = await fetch(`${ORIGIN}/api/files/${encodeURIComponent(rel)}?w=${PROJECT}`, { headers: { cookie, origin: ORIGIN } })
       return res.status === 200 ? await res.text() : null
     },
+    async listFiles() {
+      const res = await fetch(`${ORIGIN}/api/files?w=${PROJECT}`, { headers: { cookie, origin: ORIGIN, 'x-ola-workspace': PROJECT } })
+      if (res.status !== 200) throw new Error(`listing the project's files: ${res.status}`)
+      return ((await res.json()).files ?? []).map((f) => f.path)
+    },
+    wrote(rel, { text, base64 }) {
+      const b64 = base64 ?? Buffer.from(text).toString('base64')
+      const safe = rel.replace(/[^A-Za-z0-9._/-]/g, '')
+      inProject(`mkdir -p "$(dirname '/work/${safe}')" && echo ${b64} | base64 -d > '/work/${safe}'`)
+    },
     claudeWrote(rel, text) {
       // Recorded the way the server records a Claude run (frontdesk/claude.mjs + madeby.mjs: begin,
       // the file written, end), without running Claude: what the case tests is Ola's answer.
@@ -235,6 +245,15 @@ export async function startLocal(password, { build = true } = {}) {
     async readFile(rel) {
       const f = path.join(folder, rel)
       return f.startsWith(folder + path.sep) && existsSync(f) ? readFileSync(f, 'utf8') : null
+    },
+    async listFiles() {
+      const r = spawnSync('/usr/bin/find', [folder, '-type', 'f', '-not', '-path', '*/.*'], { encoding: 'utf8' })
+      return r.stdout.split('\n').filter(Boolean).map((f) => path.relative(folder, f)).filter((f) => !f.startsWith('project.db'))
+    },
+    wrote(rel, { text, base64 }) {
+      const f = path.join(folder, rel)
+      mkdirSync(path.dirname(f), { recursive: true })
+      writeFileSync(f, base64 ? Buffer.from(base64, 'base64') : text)
     },
     empty() {
       for (const f of spawnSync('/bin/ls', ['-A', folder], { encoding: 'utf8' }).stdout.split('\n').filter(Boolean)) rmSync(path.join(folder, f), { recursive: true, force: true })
@@ -353,7 +372,11 @@ export const NEVER = [
   // only when Ola did not do what was asked.
   { soft: true, label: 'sends the person to a button or another screen', re: /\b(press|tap|click|hit|use)\b[^.\n]{0,30}\b(the )?["“'‘*]*publish\b[^.\n]{0,20}(button|tab|menu|sheet)?/i },
   { label: 'says publishing is not switched on', re: /not (?:switched|turned) on/i },
+  // OLA-232: the reason given on Nov 20 for not publishing, for any request: the sealed computer.
+  { label: 'blames having no network', re: /\b(?:no (?:internet|network|web)(?: access| connection)?\b[^.\n]{0,60}\b(?:so|can(?:no|['’])t|unable)|(?:cloud runtime|sandbox(?:ed)?)\b[^.\n]{0,40}\b(?:no network|offline|no internet))/i },
 ]
+// The labels a not-offered case is allowed to say (it says it cannot, with the sentence it is given).
+const CANNOT = new Set(['says it cannot do it from here'])
 
 /** The https://sites.ola.cx/<name>/ addresses in a text. */
 export const siteAddresses = (text) => [...new Set([...String(text).matchAll(/https:\/\/sites\.ola\.cx\/[a-z0-9][a-z0-9-]{0,62}\/?/gi)].map((m) => m[0].replace(/\/?$/, '/')))]
@@ -374,7 +397,7 @@ async function fetchText(url) {
  *   says:<regex>         Ola's answer matches (case-insensitive)
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
  */
-export async function checkMust(must, T, answer) {
+export async function checkMust(must, T, answer, { steps = [], before = [] } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
   if (kind === 'site') {
@@ -401,12 +424,31 @@ export async function checkMust(must, T, answer) {
     const ok = !words || text.toLowerCase().includes(words.toLowerCase())
     return { ok, why: ok ? `${rel} is there${words ? ` with "${words}"` : ''}` : `${rel} is there without "${words}"` }
   }
+  if (kind === 'ran') {
+    const re = new RegExp(arg, 'i')
+    const hit = steps.find((x) => re.test(x))
+    return { ok: !!hit, why: hit ? `a step ran ${hit.slice(0, 120)}` : `no step matches /${arg}/ (${steps.length} steps)` }
+  }
+  if (kind === 'newfile') {
+    // newfile:<regex of the name>[:<words>]: a file the request made (not there before), matching.
+    const [pat, ...w] = arg.split(':')
+    const words = w.join(':')
+    const re = new RegExp(pat, 'i')
+    const made = (await T.listFiles()).filter((f) => re.test(f) && !before.includes(f))
+    if (!made.length) return { ok: false, why: `no new file matching /${pat}/` }
+    if (!words) return { ok: true, why: `made ${made.join(', ').slice(0, 160)}` }
+    for (const f of made) {
+      const text = await T.readFile(f)
+      if (text && text.toLowerCase().includes(words.toLowerCase())) return { ok: true, why: `made ${f} with "${words}"` }
+    }
+    return { ok: false, why: `made ${made.join(', ').slice(0, 160)}, none with "${words}"` }
+  }
   return { ok: false, why: `unknown outcome kind "${kind}"` }
 }
 
 export function checkNever(c, answer, { done = false } = {}) {
   const hits = []
-  for (const n of NEVER) if (n.re.test(answer) && !(n.soft && done)) hits.push(n.label)
+  for (const n of NEVER) if (n.re.test(answer) && !(n.soft && done) && !(c.notOffered && CANNOT.has(n.label))) hits.push(n.label)
   for (const s of c.mustNot ?? []) if (new RegExp(s, 'i').test(answer)) hits.push(`says /${s}/`)
   return hits
 }

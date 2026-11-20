@@ -58,6 +58,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
+import { summary as abilitySummary } from '../evals/asks/abilities.mjs'
 
 const HOME = homedir()
 const OLA = process.env.OLA_HOME || path.join(HOME, '.ola')
@@ -549,6 +550,16 @@ export function boardStatus(S, state, r, conds, now) {
     const a = JSON.parse(readFileSync(path.join(S.STAGING, 'asks-latest.json'), 'utf8'))
     const pick = (st) => Object.values(a.cases ?? {}).filter((c) => c.status === st).slice(0, 20).map((c) => ({ case: `${String(c.id).slice(0, 40)}@${String(c.place).slice(0, 20)}`, ticket: c.ticket ? String(c.ticket).slice(0, 12) : null, tries: c.tries ? String(c.tries).slice(0, 20) : null }))
     asks = { release: String(a.release ?? ''), at: a.lastRun?.at ?? a.updated ?? null, summary: a.summary ?? null, stoppedWorking: pick('STOPPED WORKING'), notWorkingYet: pick('not working yet') }
+  } catch {}
+  // Everything Ola can be asked to do, by place (OLA-232, evals/asks/abilities.json): how many lines,
+  // and how many pass, fail or nobody has run. Counted from the list and the asks' results, even
+  // before the asks have ever run (then every line is not run).
+  try {
+    let latest = { cases: {} }
+    try {
+      latest = JSON.parse(readFileSync(path.join(S.STAGING, 'asks-latest.json'), 'utf8'))
+    } catch {}
+    asks = { ...(asks ?? {}), abilities: abilitySummary({ latest }) }
   } catch {}
   // The alarm sentences come from this run's own readings: a condition that is in alarm now and
   // has been for long enough to text (state.active), or a disk alarm, which is shown but never

@@ -657,6 +657,16 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
             </span>
             <span className="t">since Nov 19</span>
           </li>
+          {d.status?.asks?.abilities && (
+            <li>
+              {/* OLA-232: one line per thing Ola can be asked to do, at each place (evals/asks/abilities.json). */}
+              <b>{d.status.asks.abilities.notRun}</b>
+              <span>
+                of the {d.status.asks.abilities.lines} things Ola can be asked to do, counted once per place (a cloud project or the Mac; the website, the Mac app or the iPhone; chat or a screen), have not been tried on the live server by anyone: {d.status.asks.abilities.passing} passed when asked, {d.status.asks.abilities.failing} failed, and {d.status.asks.abilities.notOffered} are not offered, with the sentence Ola gives instead.
+              </span>
+              <span className="t">{d.status.asks.at ? at(d.status.asks.at, now) : 'not run yet'}</span>
+            </li>
+          )}
           {d.status?.checks && (
             <li>
               <b>

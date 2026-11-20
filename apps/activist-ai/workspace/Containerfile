@@ -78,6 +78,9 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-50 (OLA-232): AGENTS.md ends with "What you can be asked to do here", written from
+# evals/asks/abilities.json by evals/asks/abilities.mjs: each thing people ask Ola for, how to do it
+# here, and the sentence for what is not offered (send, post, schedule). Builds on 2.3.0-49.
 # 2.3.0-49 (OLA-230): ola-publish, publishing from the conversation: run as a command of its own it
 # is always asked; on the person's yes the front desk publishes (it has the network) and writes the
 # outcome with `ola-publish --result`, which the waiting command prints. The publish skill 3 uses it

@@ -33,10 +33,10 @@
 // A case is cited in a ticket check by its id and place: issues.mjs check OLA-n pass k --case <id>@<place>.
 // Exit 0 only when every case that ran passed.
 import { spawnSync } from 'node:child_process'
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, PLACES_REACHED, STATE, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STATE, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -46,9 +46,38 @@ const STAGING = path.join(homedir(), 'ola-staging')
 const LATEST = process.env.OLA_ASKS_LATEST || path.join(STAGING, 'asks-latest.json')
 mkdirSync(STATE, { recursive: true })
 
+// One run at a time: two would share the made-up account and empty each other's project (OLA-232:
+// a run is long now, and a deploy starts one after every deploy). A later one leaves it to the first.
+const LOCK = path.join(STATE, 'run.pid')
+try {
+  const other = Number(readFileSync(LOCK, 'utf8'))
+  if (other && other !== process.pid) {
+    process.kill(other, 0)
+    say(`asks: another run is going (pid ${other}); this one leaves it to that run`)
+    process.exit(0)
+  }
+} catch {}
+writeFileSync(LOCK, String(process.pid))
+process.on('exit', () => {
+  try {
+    if (Number(readFileSync(LOCK, 'utf8')) === process.pid) rmSync(LOCK)
+  } catch {}
+})
 const cases = readCases(arg('--cases', undefined)).filter((c) => !ONLY || ONLY.includes(c.id))
 if (!cases.length) throw new Error(`no case ${ONLY?.join(', ')} in the cases`)
 
+// OLA-232: with a case per thing Ola can be asked, a run is long. Between cases it gives the turn
+// to a deploy that is waiting, and takes it back after, so a deploy never waits for the whole run.
+const TURN = await import(path.join(AI, 'ops/turn.mjs'))
+let held = null
+async function yieldToDeploy() {
+  if (!held) return
+  if (!TURN.waiting().some((t) => t.deploy)) return
+  say('turn: a deploy is waiting; giving it the turn and taking it back after')
+  held.release()
+  held = await TURN.acquire({ label: turnLabel, on: (m) => say(`turn: ${m}`) })
+  process.on('exit', held.release)
+}
 const t0 = Date.now()
 // One turn on the machine at a time for anything that runs a project's VM, deploys first: the
 // cloud cases take it (below); the local ones run no VM and go first, without it.
@@ -80,7 +109,7 @@ try {
     let T
     try {
       if (runtime === 'cloud') {
-        await (await import(path.join(AI, 'ops/turn.mjs'))).takeTurn(turnLabel)
+        held = await TURN.takeTurn(turnLabel)
         T = cloudTransport(signedIn)
       }
       else {
@@ -115,6 +144,7 @@ try {
           say(`  taking the try's pages down: ${e.message}`)
         }
       }
+      await yieldToDeploy()
       const passed = tries.filter((t) => t.ok).length >= 2
       const last = tries.findLast((t) => t.ok === passed) ?? tries.at(-1)
       results.push(row(c, place, { ...last, ok: passed, tries }))
@@ -157,8 +187,10 @@ async function runCase(T, c) {
   else T.empty()
   for (const step of c.setup ?? []) {
     if (step.claudeWrote) T.claudeWrote(step.claudeWrote.path, step.claudeWrote.text)
+    else if (step.wrote) T.wrote(step.wrote.path, step.wrote.from ? { base64: readFileSync(path.join(HERE, 'fixtures', path.basename(step.wrote.from))).toString('base64') } : step.wrote)
     else throw new Error(`unknown setup step ${JSON.stringify(step)}`)
   }
+  const before = await T.listFiles()
   const sid = await newSession(T, `asks ${c.id}`)
   const limit = (c.limitMin ?? 8) * 60_000
   const end = Date.now() + limit
@@ -180,7 +212,7 @@ async function runCase(T, c) {
   const fails = []
   const notes = []
   for (const m of c.must) {
-    const r = await checkMust(m, T, answer)
+    const r = await checkMust(m, T, answer, { steps, before })
     ;(r.ok ? notes : fails).push(`${m}: ${r.why}`)
   }
   const never = checkNever(c, answer, { done: !fails.length })

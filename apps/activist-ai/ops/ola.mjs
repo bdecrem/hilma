@@ -566,6 +566,7 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     ['signers', ['--test', 'ops/signers-test.mjs']], // who may deploy (OLA-85), seconds, no VM
     ['tls', ['--test', 'ops/tls-test.mjs']], // the TLS front (app.ola.cx's door), about a minute, no VM
     ['restart', ['--test', 'ops/restart-test.mjs']], // a deploy drops no request (OLA-94), seconds, no VM
+    ['asks', ['--test', 'evals/asks/test.mjs']], // the asks' own checks, and Ola's instructions match abilities.json (OLA-232), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)

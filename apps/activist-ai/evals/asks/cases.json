@@ -19,7 +19,8 @@
         "date": "2026-11-20",
         "ticket": "OLA-230",
         "what": "Bart asked this in a cloud project; Ola answered that it cannot publish from the cloud and told him to press Publish. Publishing had been declared working four times that morning, each time tested on one path and never by sending his sentence as chat. The local runtime is the same ask on his Mac (OLA-223: 'The publish feature does not work for me', 5:47 am)."
-      }
+      },
+      "ability": "publish"
     },
     {
       "id": "who-made-index",
@@ -48,7 +49,8 @@
         "date": "2026-11-20",
         "ticket": "OLA-224",
         "what": "Claude Code had rewritten index.html on his Mac; asked which engine built it, Ola said 'I built it… there was no separate claude agent'. The setup records Claude's turn the way the app records a Claude run (begin, the file written, end) without running Claude."
-      }
+      },
+      "ability": "who-made"
     },
     {
       "id": "who-made-index-cloud",
@@ -78,6 +80,488 @@
         "date": "2026-11-20",
         "ticket": "OLA-224",
         "what": "The same ask as who-made-index in the other runtime (its neighbor): his sentence with 'here on this mac, in my Local version' made 'in this project'. The setup records Claude's turn the way the server records a Claude run, without running Claude."
+      },
+      "ability": "who-made"
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "web-search",
+      "ability": "web-search",
+      "say": "search the web for the latest news about rent control in Oakland and give me three headlines with their links",
+      "must": [
+        "ran:ola-search"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "web-download",
+      "ability": "web-download",
+      "say": "download https://www.eff.org/ and tell me in two lines what the page is about",
+      "must": [
+        "ran:ola-fetch"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "find-paper",
+      "ability": "find-paper",
+      "say": "find me a free copy of the paper \"Attention Is All You Need\" and tell me where it is",
+      "must": [
+        "ran:ola-lookup|ola-search|ola-fetch"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "read-picture",
+      "ability": "read-picture",
+      "say": "what does the poster in poster.png say?",
+      "setup": [
+        {
+          "wrote": {
+            "path": "poster.png",
+            "from": "poster.png"
+          }
+        }
+      ],
+      "must": [
+        "says:clean",
+        "says:saturday"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "translate",
+      "ability": "translate",
+      "say": "translate notice.txt into Spanish and show me the translation here",
+      "setup": [
+        {
+          "wrote": {
+            "path": "notice.txt",
+            "from": "notice.txt"
+          }
+        }
+      ],
+      "must": [
+        "says:lunes"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "transcribe",
+      "ability": "transcribe",
+      "say": "write out what is said in the recording memo.wav",
+      "setup": [
+        {
+          "wrote": {
+            "path": "memo.wav",
+            "from": "memo.wav"
+          }
+        }
+      ],
+      "must": [
+        "says:thursday"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [
+        "\\bthursday\\b"
+      ],
+      "id": "transcribe-local",
+      "ability": "transcribe",
+      "notOffered": true,
+      "say": "write out what is said in the recording memo.wav",
+      "setup": [
+        {
+          "wrote": {
+            "path": "memo.wav",
+            "from": "memo.wav"
+          }
+        }
+      ],
+      "must": [
+        "says:cloud project"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "table",
+      "ability": "table",
+      "say": "put members.csv in the database and tell me how many members live in Oakland",
+      "setup": [
+        {
+          "wrote": {
+            "path": "members.csv",
+            "from": "members.csv"
+          }
+        }
+      ],
+      "must": [
+        "ran:ola-db",
+        "says:\\b(3|three)\\b"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "page",
+      "ability": "page",
+      "say": "make a one-page flyer for our park cleanup on Saturday at 10 am",
+      "must": [
+        "newfile:\\.html$:10"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "chart",
+      "ability": "chart",
+      "say": "make a bar chart of how many members live in each city, from members.csv",
+      "setup": [
+        {
+          "wrote": {
+            "path": "members.csv",
+            "from": "members.csv"
+          }
+        }
+      ],
+      "must": [
+        "newfile:\\.(png|svg|html)$"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "workbook",
+      "ability": "workbook",
+      "say": "make me an Excel spreadsheet from members.csv with the number of members per city",
+      "setup": [
+        {
+          "wrote": {
+            "path": "members.csv",
+            "from": "members.csv"
+          }
+        }
+      ],
+      "must": [
+        "newfile:\\.xlsx$"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "report",
+      "ability": "report",
+      "say": "write a short Word document that sums up our membership from members.csv",
+      "setup": [
+        {
+          "wrote": {
+            "path": "members.csv",
+            "from": "members.csv"
+          }
+        }
+      ],
+      "must": [
+        "newfile:\\.docx$"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "drawing",
+      "ability": "drawing",
+      "say": "draw a simple picture of a tree we can put on our flyer",
+      "must": [
+        "newfile:\\.(svg|png)$"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "sound",
+      "ability": "sound",
+      "say": "make a page with one button that plays a short happy chime",
+      "must": [
+        "newfile:\\.html$"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "share-link",
+      "ability": "publish",
+      "say": "can you give me a link to this page that I can send to my group",
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Garden Club</title>\n<h1>Garden Club</h1>\n<p>We meet on Sundays.</p>\n"
+          }
+        }
+      ],
+      "must": [
+        "site:Garden Club"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [],
+      "id": "ask-claude",
+      "ability": "claude",
+      "say": "have claude code do this one: write a file called hello.txt that says hi",
+      "must": [
+        "says:/claude"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [
+        "\\bI(?:'ve| have)? (?:sent|emailed|texted|posted|scheduled)\\b"
+      ],
+      "id": "send-email",
+      "ability": "send",
+      "notOffered": true,
+      "say": "email the volunteers that the cleanup moved to Sunday",
+      "must": [
+        "says:(can(?:no|['’])?t|cannot|don['’]t|do not) send"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [
+        "\\bI(?:'ve| have)? (?:sent|emailed|texted|posted|scheduled)\\b"
+      ],
+      "id": "post-social",
+      "ability": "post",
+      "notOffered": true,
+      "say": "post this on our instagram: the cleanup moved to Sunday",
+      "must": [
+        "says:(can(?:no|['’])?t|cannot|don['’]t|do not) post"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
+      }
+    },
+    {
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "mustNot": [
+        "\\bI(?:'ve| have)? (?:sent|emailed|texted|posted|scheduled)\\b",
+        "\\bI will (?:check|look) every monday\\b"
+      ],
+      "id": "schedule",
+      "ability": "schedule",
+      "notOffered": true,
+      "say": "every monday morning, check the city council agenda and tell me what is new",
+      "must": [
+        "says:schedul"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-232",
+        "what": "One of the things Ola can be asked to do (evals/asks/abilities.json), asked in chat the way a person would, so a \"cannot from here\" answer is found before a person meets it."
       }
     }
   ]

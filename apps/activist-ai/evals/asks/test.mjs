@@ -10,7 +10,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { HERE, PLACES, checkNever, readCases, siteAddresses, turnsOf } from './lib.mjs'
+import { HERE, PLACES, checkMust, checkNever, readCases, siteAddresses, turnsOf } from './lib.mjs'
+import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
   // Nov 20, a cloud project (Bart's screenshot)
@@ -38,7 +39,7 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => /^(site|says|file):./.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => /^(site|says|file|ran|newfile):./.test(m)), c.id)
     for (const m of c.must.filter((m) => m.startsWith('says:'))) new RegExp(m.slice(5), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
     assert.ok(/^\d{4}-\d\d-\d\d$/.test(c.from?.date) && /^OLA-\d+$/.test(c.from?.ticket), `${c.id}: the date and ticket of the failure it came from`)
@@ -93,6 +94,45 @@ test('add-case adds a case the runner reads, in one command', () => {
   assert.notEqual(again.status, 0)
   const bad = spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), 'x y z', '--must', 'live:it', '--ticket', 'OLA-1'], { encoding: 'utf8' })
   assert.notEqual(bad.status, 0)
+})
+
+test('OLA-232: the network excuse is a failure for any request; a not-offered case may say it cannot', () => {
+  assert.ok(checkNever({}, "I can't download that: this computer is in the cloud runtime with no network.").includes('blames having no network'))
+  assert.ok(checkNever({}, 'There is no internet access here, so I cannot search.').includes('blames having no network'))
+  assert.deepEqual(checkNever({}, 'This computer has no internet of its own, but I searched through Ola: three headlines below.'), [])
+  const send = readCases().find((c) => c.id === 'send-email')
+  const said = readAbilities().find((a) => a.id === 'send').cloud.notOffered
+  assert.deepEqual(checkNever(send, said), [])
+  assert.ok(new RegExp(send.must[0].slice(5), 'i').test(said), 'the case passes the sentence Ola is given')
+  assert.ok(checkNever(send, 'I have sent the email to the volunteers.').length)
+  assert.ok(checkNever({}, "I can't publish from here.").length, 'an offered case still may not say it cannot')
+})
+
+test('OLA-232: ran and newfile outcomes', async () => {
+  const T = { listFiles: async () => ['members.csv', 'chart.png', 'flyer.html'], readFile: async (f) => (f === 'flyer.html' ? '<h1>Saturday 10 am</h1>' : null) }
+  assert.ok((await checkMust('ran:ola-search', T, '', { steps: ['bash: ola-search "rent control"'] })).ok)
+  assert.ok(!(await checkMust('ran:ola-search', T, '', { steps: ['bash: curl x'] })).ok)
+  assert.ok((await checkMust('newfile:\\.png$', T, '', { before: ['members.csv'] })).ok)
+  assert.ok(!(await checkMust('newfile:\\.png$', T, '', { before: ['chart.png'] })).ok, 'a file that was there before is not new')
+  assert.ok((await checkMust('newfile:\\.html$:10', T, '', { before: [] })).ok)
+  assert.ok(!(await checkMust('newfile:\\.html$:Sunday', T, '', { before: [] })).ok)
+})
+
+test('OLA-232: the list of abilities, the instructions written from it, and its lines', () => {
+  assert.deepEqual(problems(), [])
+  const A = readAbilities()
+  for (const rt of ['cloud', 'local']) {
+    const text = instructions(A, rt)
+    for (const a of A) assert.ok(text.includes(a.what), `${a.id} is in the ${rt} instructions`)
+  }
+  // every offered ability that a case covers in a runtime covers both of its reachable places
+  const L = lines({ latest: { cases: { 'web-search@cloud-web:chat': { status: 'passing', at: 'x' }, 'send-email@local-mac:chat': { status: 'not working yet', at: 'x' } } } })
+  assert.equal(L.find((l) => l.ability === 'web-search' && l.place === 'cloud-web:chat').status, 'passing')
+  assert.equal(L.find((l) => l.ability === 'send' && l.place === 'local-mac:chat').status, 'failing')
+  assert.equal(L.find((l) => l.ability === 'web-search' && l.place === 'cloud-phone:chat').status, 'not run', 'a place the runner cannot reach is never passed')
+  const s = summary({ latest: { cases: {} } })
+  assert.equal(s.passing + s.failing + s.notRun, s.lines)
+  assert.equal(s.notRun, s.lines)
 })
 
 void fileURLToPath

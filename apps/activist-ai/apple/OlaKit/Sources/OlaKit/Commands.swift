@@ -163,5 +163,6 @@ public enum AgentNotes {
   """
   public static var all: String { Reaction.instruction + "\n\n" + drawing + "\n\n" + madeBy }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
-  public static var opencode: String { web + "\n\n" + skills + "\n\n" + tryIt + "\n\n" + claude + "\n\n" + all }
+  /// `abilities` is written from evals/asks/abilities.json (Abilities.swift, OLA-232).
+  public static var opencode: String { web + "\n\n" + skills + "\n\n" + tryIt + "\n\n" + claude + "\n\n" + all + "\n\n" + abilities }
 }
