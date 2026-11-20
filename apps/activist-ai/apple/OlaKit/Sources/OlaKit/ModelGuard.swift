@@ -29,6 +29,9 @@ public enum ModelGuard {
   public static let provider = "ola"
 
   public static func verdict(models: [ModelInfo], defaultModel: ModelInfo?) -> Verdict {
+    // No model at all is settings that lost Ola's own provider too (OLA-287): the same stop and the
+    // same sentence, not opencode's "No model is available for session ...".
+    if models.isEmpty && defaultModel == nil { return .foreign([]) }
     let bad = (models + (defaultModel.map { [$0] } ?? [])).filter { $0.providerID != provider }.map(\.id)
     if bad.isEmpty { return .olas }
     var seen = Set<String>()

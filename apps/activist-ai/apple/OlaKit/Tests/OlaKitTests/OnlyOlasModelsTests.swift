@@ -24,7 +24,8 @@ final class OnlyOlasModelsTests: XCTestCase {
     // Both of Ola's (the hosted open model is the person's own fallback): not one exact name.
     XCTAssertEqual(ModelGuard.verdict(models: [general, hosted], defaultModel: general), .olas)
     XCTAssertEqual(ModelGuard.verdict(models: [general, hosted], defaultModel: hosted), .olas)
-    XCTAssertEqual(ModelGuard.verdict(models: [], defaultModel: nil), .olas)
+    // No model at all: Ola's own provider is gone too (OLA-287), the same stop.
+    XCTAssertEqual(ModelGuard.verdict(models: [], defaultModel: nil), .foreign([]))
     XCTAssertEqual(ModelGuard.verdict(models: [general, pickle], defaultModel: general), .foreign(["opencode/big-pickle"]))
     XCTAssertEqual(ModelGuard.verdict(models: [general], defaultModel: pickle), .foreign(["opencode/big-pickle"]))
     XCTAssertEqual(ModelGuard.verdict(models: [pickle], defaultModel: pickle), .foreign(["opencode/big-pickle"]))
@@ -50,7 +51,7 @@ final class OnlyOlasModelsTests: XCTestCase {
 
   // MARK: the real engine, no network
 
-  enum Plant { case none, opencodeAllowed, otherProvider }
+  enum Plant { case none, opencodeAllowed, otherProvider, onlyOpencode }
   enum Change { case none, deleteBeforeStart, damageBeforeStart, deleteWhileRunning, damageWhileRunning, plantWhileRunning }
 
   func testSettingsFileDeletedBeforeTheStart() async throws { try await onlyOla(.deleteBeforeStart) }
@@ -115,6 +116,22 @@ final class OnlyOlasModelsTests: XCTestCase {
     try r.plantNow(deletingOlas: true)
     try await waitFor("the engine's watch stops it") { tripped.names != nil }
     XCTAssertTrue(tripped.names!.contains { $0.hasPrefix("other/") }, "\(tripped.names!)")
+    XCTAssertFalse(r.server.isRunning)
+    do { let got = try await r.other.count(); XCTAssertEqual(got, 0) }
+  }
+
+  /// OLA-287: a settings file that leaves Ola no model at all (only opencode's provider enabled, and
+  /// its free models are off): the same stop and the same sentence, not opencode's own error.
+  func testSettingsThatLeaveNoModelStopTheEngineWithTheSentence() async throws {
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    let r = try await Rig.make(self, plant: .onlyOpencode, plantAtStart: false)
+    defer { r.end() }
+    r.server.watchEvery = 1
+    let tripped = Flag()
+    r.server.onForeignModels = { names in tripped.set(names) }
+    _ = try await r.server.start(modelToken: "made-up-token", modelURL: "http://127.0.0.1:\(r.ola.port)/v1")
+    try r.plantNow(deletingOlas: true)
+    try await waitFor("the engine's watch stops it") { tripped.names != nil }
     XCTAssertFalse(r.server.isRunning)
     do { let got = try await r.other.count(); XCTAssertEqual(got, 0) }
   }
@@ -240,6 +257,8 @@ final class OnlyOlasModelsTests: XCTestCase {
       case .none: plantText = nil
       case .opencodeAllowed:
         plantText = #"{ "model": "opencode/big-pickle", "enabled_providers": ["opencode", "ola"], "policies": [ { "action": "provider.use", "resource": "opencode", "effect": "allow" } ] }"#
+      case .onlyOpencode:
+        plantText = #"{ "enabled_providers": ["opencode"] }"#
       case .otherProvider:
         plantText = """
         { "providers": { "other": { "name": "Other", "package": "@opencode/ai/providers/openai-compatible", "settings": { "baseURL": "http://127.0.0.1:\(other.port)/v1", "apiKey": "made-up" },
