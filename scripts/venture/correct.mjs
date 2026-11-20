@@ -140,11 +140,19 @@ async function settleProblem(where, o) {
   }
   const toks = w.split(/\s+/)
   const file = (RUNNERS.has(toks[0]) ? toks.slice(1).find((t) => !t.startsWith('-') && !RUNNERS.has(t)) : toks[0]).replace(/[,;]$/, '').replace(/:\d+(-\d+)?$/, '')
-  let out = ''
-  try { out = execFileSync('git', ['-C', root, 'log', 'HEAD', 'origin/main', `--since=${o.since}`, '--format=%h %cI', '--', file], { encoding: 'utf8', timeout: 20000 }).trim() } catch {}
-  if (!out) return `--where: ${file} has not been changed by any commit since the correction was recorded (${o.since}); a file settles an owed fix only when a commit after the correction changed it.`
+  const log = (extra) => {
+    try { return execFileSync('git', ['-C', root, 'log', 'HEAD', 'origin/main', `--since=${o.since}`, '--format=%h', ...extra, '--', file], { encoding: 'utf8', timeout: 20000 }).trim() } catch { return '' }
+  }
+  if (!log([])) return `--where: ${file} has not been changed by any commit since the correction was recorded (${o.since}); a file settles an owed fix only when a commit after the correction changed it.`
+  // OLA-251, fourth pass: and that commit is the owed fix's own work, naming its ticket; an unrelated commit
+  // that happened to touch the file (runner.mjs by 036ed3fe for correction 103) settles nothing
+  if (!o.issue) return `--where: this owed fix names no ticket, so no commit can be shown to be its work; settle it with a ticket closed with every check passed.`
+  const mine = log(['-E', `--grep=${o.issue}([^0-9]|$)`])
+  if (!mine) return `--where: ${file} was changed since the correction, but by no commit naming ${o.issue}, the ticket that owes this fix. A file settles it only when ${o.issue}'s own commit changed it.`
+  settledBy = mine.split('\n')[0]
   return null
 }
+let settledBy = null
 async function ticketMustExist(id) {
   const st = await ticketStatus(id)
   if (!st) die(`--owed: there is no ticket ${id}. Open it first: node scripts/venture/issues.mjs add "…" --area ops --pri P1`)
@@ -243,7 +251,7 @@ if (cmd === 'add') {
   const need = Math.max(o.need, req.need)
   const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last }) ?? (await settleProblem(str('where') ?? '', o))
   if (problem) die(problem)
-  w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), settles: o.ref })
+  w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), ...(settledBy ? { commit: settledBy } : {}), settles: o.ref })
   w.owed = w.owed.filter((x) => x !== o)
   if (!w.owed.length) delete w.owed
   delete w.stuck
@@ -254,7 +262,7 @@ if (cmd === 'add') {
   const next = text.slice(at + 1).search(/^## /m)
   const endAt = next < 0 ? text.length : at + 1 + next
   const block = text.slice(at, endAt).replace(/\n*$/, '')
-  const line = `Fix settled ${pacific({ month: 'long', day: 'numeric' })} (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}): ${fix}`
+  const line = `Fix settled ${pacific({ month: 'long', day: 'numeric' })} (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}${settledBy ? `, changed by ${settledBy} [${o.issue}]` : ''}): ${fix}`
   writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)

@@ -36,12 +36,41 @@ export async function POST(req: Request) {
   const list = (v: unknown) => (Array.isArray(v) ? v.map((x) => str(x)).filter((x): x is string => !!x).slice(0, 12) : [])
   const parts: Record<string, boolean> = {}
   if (s.parts && typeof s.parts === 'object') for (const [k, v] of Object.entries(s.parts as Record<string, unknown>).slice(0, 12)) if (typeof v === 'boolean') parts[k.slice(0, 40)] = v
+  // The request tests (OLA-231, evals/asks): the summary counts, the cases that do not work (or work
+  // sometimes: two passes with a fail between, OLA-251) by id, place and ticket, and the abilities count
+  // (OLA-232). Dropped here until Nov 20, so the board never showed them (OLA-251, OLA-294).
+  const a = s.asks as Record<string, unknown> | null | undefined
+  const counts = (v: unknown, keys: string[]) => {
+    const o = (v ?? {}) as Record<string, unknown>
+    return Object.fromEntries(keys.map((k) => [k, num(o[k]) ?? 0]))
+  }
+  const cases = (v: unknown) =>
+    Array.isArray(v)
+      ? v
+          .slice(0, 20)
+          .map((x) => (x && typeof x === 'object' ? (x as Record<string, unknown>) : {}))
+          .filter((x) => str(x.case, 64))
+          .map((x) => ({ case: str(x.case, 64) as string, ticket: str(x.ticket, 12), tries: str(x.tries, 20) }))
+      : []
+  const asks =
+    a && typeof a === 'object'
+      ? {
+          release: str(a.release, 40),
+          at: iso(a.at),
+          summary: a.summary && typeof a.summary === 'object' ? counts(a.summary, ['passing', 'worksSometimes', 'stoppedWorking', 'notWorkingYet', 'notRun']) : null,
+          worksSometimes: cases(a.worksSometimes),
+          stoppedWorking: cases(a.stoppedWorking),
+          notWorkingYet: cases(a.notWorkingYet),
+          abilities: a.abilities && typeof a.abilities === 'object' ? counts(a.abilities, ['lines', 'passing', 'sometimes', 'failing', 'notRun', 'notOffered', 'noCase']) : null,
+        }
+      : null
   const value = {
     at: new Date().toISOString(),
     from: str(s.host, 60),
     deployed: dep && str(dep.commit, 64) ? { commit: str(dep.commit, 64), at: iso(dep.at), suites } : null,
     checks: total ? { passed, total } : null,
     ci,
+    asks,
     alarm: { state: ['ok', 'warn', 'alarm'].includes(String(alarm.state)) ? alarm.state : 'ok', says: list(alarm.says), warns: list(alarm.warns), runAt: iso(alarm.runAt) },
     disk: num((s.disk as Record<string, unknown> | undefined)?.freeGB) !== null ? { freeGB: num((s.disk as Record<string, unknown>).freeGB) } : null,
     memory: str(s.memory, 80),

@@ -80,7 +80,7 @@ export function fixture(): BoardData {
       at: T('2026-11-18', 11, 36),
       deployed: { commit: '9c1e2a7b4d5e', at: T('2026-11-18', 9, 2), suites: { gateway: '21 of 21', workspace: '66 of 66', frontdesk: '301 of 301', web: '24 of 24' } },
       checks: { passed: 412, total: 412 },
-      asks: { at: T('2026-11-18', 9), abilities: { lines: 106, passing: 30, failing: 4, notRun: 72, notOffered: 19, noCase: 11 } },
+      asks: { at: T('2026-11-18', 9), release: 'ebdd4110f215', summary: { passing: 38, worksSometimes: 4, stoppedWorking: 0, notWorkingYet: 3, notRun: 73 }, worksSometimes: [{ case: 'share-link@cloud-web:chat', ticket: null, tries: '2 of 3 passed' }], abilities: { lines: 106, passing: 30, sometimes: 4, failing: 4, notRun: 72, notOffered: 19, noCase: 11 } },
       ci: { commit: '4f7d0c2e9a1b', at: T('2026-11-18', 11, 20), ok: true, by: 'check', suites: { gateway: '21 of 21', workspace: '66 of 66', frontdesk: '301 of 301', web: '24 of 24', apps: '103 of 103' }, why: null },
       alarm: { state: 'ok', says: [], warns: [], runAt: T('2026-11-18', 11, 36) },
       disk: { freeGB: 61 },

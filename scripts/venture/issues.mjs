@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 4
+export const TRACKER_VERSION = 5
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -249,11 +249,11 @@ async function laneGate(id, who, role, lane, r) {
     for (const d of dirs) if (d.includes('..') || d.startsWith('/') || !existsSync(root + d)) die(`--beside: ${d} is not a folder or file in this checkout. Name the folders you will change.`)
     // OLA-251, third pass: the repository root, or a folder that holds the server's code, names all of it
     for (const d of dirs) {
-      const rel = relative(root, resolve(root, d))
+      const rel = relative(root, resolve(root, d)).toLowerCase() // the Mac's disk ignores case (OLA-251, fourth pass)
       if (rel === '' || SERVER_HOME.some((s) => s === rel + '/' || s.startsWith(rel + '/'))) die(`Refused: --beside ${d} names ${rel === '' ? 'the whole repository' : `a folder that holds all of the server's code (${SERVER_HOME.join(', ')})`}. Name the folders inside it that you will change.`)
     }
     const theirs = filesOf(holder.id, `${BESIDE_HOURS} hours ago`)
-    const hit = theirs.filter((f) => dirs.some((d) => f === d || f.startsWith(d + '/')))
+    const hit = theirs.filter((f) => dirs.some((d) => f.toLowerCase() === d.toLowerCase() || f.toLowerCase().startsWith(d.toLowerCase() + '/')))
     if (hit.length) die(`Refused: ${holder.who}'s commits for ${holder.id} in the last ${BESIDE_HOURS} hours change what you named (${hit.slice(0, 5).join(', ')}${hit.length > 5 ? ', …' : ''}). Wait for it (--wait) or take another ticket.`)
     const said = `started by ${who} beside ${holder.who} on ${holder.id}, both in the server lane; will change ${dirs.join(', ')}; ${holder.id}'s commits of the last ${BESIDE_HOURS} hours touch none of them (${theirs.length ? theirs.length + ' files' : 'it has none yet'})`
     await record([{ issue_id: id, kind: 'comment', body: said }])
@@ -304,6 +304,19 @@ async function claim(id, who, row = null, { gated = false } = {}) {
 async function release(id) {
   check(await db.from('venture_state').delete().eq('key', CLAIM_PREFIX + id), 'release')
   check(await db.from('venture_state').delete().eq('key', WAIT_PREFIX + id), 'release')
+}
+/** OLA-251, fourth pass: a live builder's or the runner's claim held by someone else, or null. Clearing one
+ *  frees the server lane for a second builder, so it is refused (release) or leaves a line (open, wait, drop). */
+async function foreignClaim(id) {
+  const cl = (await liveClaims())[id]
+  if (!cl || !LANE_ROLES.has(claimRole(cl))) return null
+  const mine = (me.id && cl.caller === me.id) || (claimRole(cl) === 'runner' && process.env.VENTURE_RUNNER === '1' && cl.host === hostname())
+  return mine ? null : cl
+}
+async function releaseNoting(id, how) {
+  const cl = await foreignClaim(id)
+  if (cl) await writeOverride(db, { ticket: id, what: `${how} released ${cl.who}'s live claim (${claimRole(cl)}${cl.lane ? `, ${cl.lane} lane` : ''}, from ${cl.host ?? 'unknown host'}), held by someone else` })
+  await release(id)
 }
 const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
 const STATUS_WORD = { open: 'next up', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
@@ -511,6 +524,12 @@ if (cmd === 'overrides') {
   await claim(id, typeof one('who') === 'string' ? one('who') : r.who ?? 'lead', r)
 } else if (cmd === 'release') {
   const id = normId(pos[0])
+  const cl = await foreignClaim(id)
+  if (cl) {
+    const why = typeof one('why') === 'string' ? one('why').trim() : ''
+    if (why.length < 15) die(`Refused: ${id} is held by ${cl.who} (${claimRole(cl)}${cl.lane ? ` in the ${cl.lane} lane` : ''}), renewed ${Math.round((Date.now() - Date.parse(cl.at)) / 60e3)} min ago. A claim is released by whoever holds it, or ends by itself ${CLAIM_TTL / 60e3} min after its last renewal. To clear it anyway, say why: issues.mjs release ${id} --why "…" (recorded in the overrides).`)
+    await writeOverride(db, { ticket: id, what: `released ${cl.who}'s live claim (${claimRole(cl)}${cl.lane ? `, ${cl.lane} lane` : ''}), held by someone else: ${why}` })
+  }
   await release(id)
   console.log(`${id} released`)
 } else if (cmd === 'claims') {
@@ -742,7 +761,7 @@ if (cmd === 'overrides') {
 } else if (cmd === 'wait') {
   const id = normId(pos[0])
   await patch(id, { status: 'waiting', ...(one('what') ? { what: one('what') } : {}) })
-  await release(id)
+  await releaseNoting(id, 'moved to waiting')
 } else if (cmd === 'open') {
   const id = normId(pos[0])
   const r = await get(id)
@@ -750,12 +769,12 @@ if (cmd === 'overrides') {
   // reopened: earlier passes are about an older version
   if (r.status === 'done' && a.checks.some((c) => c.result)) await saveAccept(id, { ...a, ready: null, checks: a.checks.map((c) => ({ ...c, earlier: [...(c.earlier ?? []), { result: c.result, by: c.by, at: c.checked_at, saw: c.saw }], result: null })) })
   await patch(id, { status: 'open' })
-  await release(id)
+  await releaseNoting(id, 'moved to open')
 } else if (cmd === 'drop') {
   const id = normId(pos[0])
   const r = await get(id)
   await patch(id, { status: 'dropped', finished_at: new Date().toISOString(), day: pacificDay(), ...(one('why') ? { proof: `dropped: ${one('why')}` } : {}), what: r.what })
-  await release(id)
+  await releaseNoting(id, 'dropped')
 } else if (cmd === 'edit') {
   const id = normId(pos[0])
   const f = {}
@@ -780,6 +799,19 @@ if (cmd === 'overrides') {
     await writeOverride(db, { ticket: id, what: `lane changed from ${was} to ${l}${leadHold ? " under the lead's hold" : ' (unclaimed)'}: ${why}` })
     console.log(`${id}: lane ${was} -> ${l}`)
     if (!Object.keys(f).length) process.exit(0)
+  }
+  if (f.area !== undefined || f.title !== undefined) {
+    // OLA-251, fourth pass: an area or title that moves the ticket to another lane is a lane change too
+    const r = await get(id)
+    const a = await accept(id)
+    const was = laneOf(r, a.lane)
+    const now = laneOf({ ...r, ...f }, a.lane)
+    if (now !== was) {
+      const cl = (await liveClaims())[id]
+      const leadHold = cl && claimRole(cl) === 'hold' && /^(lead|kit)$/i.test(String(cl.who).trim()) && (!cl.caller || cl.caller === me.id)
+      if (cl && !leadHold) die(`Refused: this ${f.area !== undefined ? 'area' : 'title'} moves ${id} from the ${was} lane to the ${now} lane, and ${id} is claimed by ${cl.who} (${claimRole(cl)}). A ticket's lane is not changed by whoever holds it; only the lead, holding it (issues.mjs claim ${id} --who lead), changes it.`)
+      await writeOverride(db, { ticket: id, what: `lane changed from ${was} to ${now} by an edit of its ${Object.keys(f).filter((k) => k === 'area' || k === 'title').join(' and ')}${leadHold ? " under the lead's hold" : ' (unclaimed)'}` })
+    }
   }
   await patch(id, f)
 } else if (cmd === 'commit') {
