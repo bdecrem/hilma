@@ -512,6 +512,7 @@ public final class OlaStore {
     let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !request.isEmpty, let client else { return }
     problem = nil
+    if await refusedByModelGuard(client) { return }
     guard let id = await sessionFor(request) else { return }
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
     // What Claude or the hosted model did since Ola last answered, for Ola to read first (in the
@@ -530,6 +531,24 @@ public final class OlaStore {
     } catch {
       running.remove(id)
       conversations[id]?.failLastSend(Problem(text: "Your request did not reach the machine. Nothing was done; send it again when it answers.", detail: (error as? OlaError)?.detail))
+    }
+  }
+
+  /// The engine on this Mac (or the phone's Mac) offers a model that is not Ola's (ModelGuard,
+  /// OLA-249): the request is not sent, the person is told in one sentence, and the app stops the
+  /// engine. Before every request to an opencode Ola runs itself; the cloud's route offers no choice.
+  public var onForeignModels: (() -> Void)?
+  func refusedByModelGuard(_ client: OpenCodeClient) async -> Bool {
+    guard config?.account != true, runtime == .local else { return false }
+    switch await ModelGuard.check(client) {
+    case .olas: return false
+    case .foreign:
+      problem = Problem(text: config?.viaMac == true ? ModelGuard.stoppedPhone : ModelGuard.stopped)
+      onForeignModels?()
+      return true
+    case .unknown(let why):
+      problem = Problem(text: "Your request did not reach Ola. Nothing was done; send it again when it answers.", detail: why)
+      return true
     }
   }
 
@@ -943,6 +962,7 @@ public final class OlaStore {
     if let why = hosted.unavailable { problem = Problem(text: why); return }
     guard let client else { return }
     problem = nil
+    if await refusedByModelGuard(client) { return }
     guard let id = await sessionFor(request) else { return }
     if conversations[id]?.isRunning == true || claudeRuns[id] != nil { problem = Problem(text: "Ola is still working in this session. Wait for it, or stop it."); return }
     let back = model ?? gatewayModels.first ?? ModelInfo(providerID: "ola", modelID: "general", name: "General")

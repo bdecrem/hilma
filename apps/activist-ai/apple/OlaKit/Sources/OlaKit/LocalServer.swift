@@ -197,6 +197,17 @@ public final class LocalServer: @unchecked Sendable {
   public var extraEnvironment: [String: String] = [:]
   /// Commands and edits ask first in the config (the app: it answers them itself under Lots).
   public var askFirst = true
+  /// The engine offered a model that is not Ola's (ModelGuard, OLA-249) while it ran: it has been
+  /// stopped, and this says so (with the foreign names, for a trace). Called off the main thread.
+  public var onForeignModels: (@Sendable ([String]) -> Void)?
+  /// How often the running engine's models are read (ModelGuard).
+  public var watchEvery: TimeInterval = 2
+  /// Checks only: run between writing the config and starting the engine (a check deletes or
+  /// damages the file there), and a program to start opencode through (sandbox-exec, no network).
+  var afterPrepare: (() throws -> Void)?
+  var launchPrefix: [String] = []
+  private var watch: Task<Void, Never>?
+  private let processLock = NSLock()
   private var process: Process?
   private var lifeline: Pipe?
   private var pidFile: URL?
@@ -238,10 +249,11 @@ public final class LocalServer: @unchecked Sendable {
   }
 
   public enum Failure: Error, LocalizedError {
-    case noOpencode, didNotStart(String)
+    case noOpencode, didNotStart(String), notOlasModels([String])
     public var errorDescription: String? {
       switch self {
       case .noOpencode: return "Ola isn\u{2019}t set up to work on this Mac yet."
+      case .notOlasModels: return ModelGuard.stopped
       case .didNotStart(let s): return "The local agent did not start. \(s)"
       }
     }
@@ -381,7 +393,8 @@ public final class LocalServer: @unchecked Sendable {
     // Ola's plugins, the same files as the sealed image's (OLA-228).
     let plugins = Self.installPlugins(into: Self.pluginsHome)
     trace?(plugins.isEmpty ? "Ola's plugins NOT found (no planted-text note)" : "Ola's plugins in \(Self.pluginsHome.path): " + plugins.map(\.lastPathComponent).joined(separator: ", "))
-    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, plugins: plugins.map(\.path), askFirst: askFirst).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
+    let settings = Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, plugins: plugins.map(\.path), askFirst: askFirst)
+    try settings.write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
     var env: [String: String] = [:]
     let mine = ProcessInfo.processInfo.environment
@@ -411,6 +424,15 @@ public final class LocalServer: @unchecked Sendable {
     env["OPENCODE_DISABLE_PROJECT_CONFIG"] = "1"
     env["OPENCODE_DISABLE_AUTOUPDATE"] = "1"
     for (k, v) in extraEnvironment { env[k] = v }
+    // Only Ola's models (OLA-249). The file above alone is not enough: opencode reloads it while it
+    // runs, and with it deleted or damaged (a cleanup tool, the agent's own shell) it turned on its
+    // own free hosted models and answered with one ("big-pickle"). The same settings go in the
+    // environment, which nothing on disk can change, and opencode's free models and its download of
+    // the list of models are off, so even a settings file planted elsewhere that allows opencode's
+    // provider finds no model there. Set after `extraEnvironment`: a check cannot loosen them.
+    env["OPENCODE_CONFIG_CONTENT"] = settings
+    env["OPENCODE_DISABLE_FREE_MODELS"] = "1"
+    env["OPENCODE_DISABLE_MODELS_FETCH"] = "1"
     // What the agent holds for the model and the web: the door's key for this launch when signed
     // in (it works only on this Mac's loopback, only while the app or command runs).
     env["OLA_GATEWAY_TOKEN"] = route.token
@@ -438,12 +460,19 @@ public final class LocalServer: @unchecked Sendable {
     let password = bytes.map { String(format: "%02x", $0) }.joined()
     let env = try prepare(route: route, password: password, trace: trace)
     environment = env
+    try afterPrepare?()
 
     let p = Process()
-    p.executableURL = bin
     // Tied to this process: with --stdio opencode ends when its standard input closes, which
     // happens when this process ends in any way, a kill included.
-    p.arguments = ["serve", "--hostname", "127.0.0.1", "--port", String(port)] + (tiedToThisProcess ? ["--stdio"] : [])
+    let args = ["serve", "--hostname", "127.0.0.1", "--port", String(port)] + (tiedToThisProcess ? ["--stdio"] : [])
+    if let first = launchPrefix.first {
+      p.executableURL = URL(fileURLWithPath: first)
+      p.arguments = Array(launchPrefix.dropFirst()) + [bin.path] + args
+    } else {
+      p.executableURL = bin
+      p.arguments = args
+    }
     p.currentDirectoryURL = folder
     p.environment = env
     if tiedToThisProcess {
@@ -461,7 +490,7 @@ public final class LocalServer: @unchecked Sendable {
     }
     trace?("starting \(bin.path) serve on 127.0.0.1:\(port) in \(folder.path)")
     try p.run()
-    process = p
+    processLock.withLock { process = p }
     if let pidFile { try? String(p.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8) }
     trace?("pid \(p.processIdentifier)")
     let config = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: password)
@@ -475,7 +504,20 @@ public final class LocalServer: @unchecked Sendable {
       do {
         _ = try await client.info()
         trace?("answered after \(String(format: "%.1f", Date().timeIntervalSince(t0))) s")
-        return config
+        // Before anything is sent: only Ola's models on offer (ModelGuard, OLA-249).
+        switch await ModelGuard.check(client) {
+        case .olas:
+          startWatch(client, trace: trace)
+          return config
+        case .foreign(let names):
+          trace?("the engine offers models that are not Ola's (\(names.joined(separator: ", "))): stopped")
+          stop()
+          throw Failure.notOlasModels(names)
+        case .unknown(let why):
+          throw OlaError.unreachable("the models were not listed yet: \(why)")
+        }
+      } catch let f as Failure {
+        throw f
       } catch {
         let e = (error as? OlaError)?.detail ?? error.localizedDescription
         if e != lastError { trace?("not answering yet: \(e)") }
@@ -494,19 +536,42 @@ public final class LocalServer: @unchecked Sendable {
     return lines.isEmpty ? "It printed nothing." : "It printed: \(lines)"
   }
 
-  public var isRunning: Bool { process?.isRunning ?? false }
-  public var pid: Int32? { process?.processIdentifier }
+  public var isRunning: Bool { processLock.withLock { process }?.isRunning ?? false }
+  public var pid: Int32? { processLock.withLock { process }?.processIdentifier }
+
+  /// While the engine runs: its models read every `watchEvery` seconds; one not Ola's stops it at
+  /// once and calls `onForeignModels` (a request the person makes after that has nowhere to go).
+  /// Not answering is not judged here (the engine may be busy, or stopping).
+  private func startWatch(_ client: OpenCodeClient, trace: (@Sendable (String) -> Void)?) {
+    watch?.cancel()
+    let every = watchEvery
+    watch = Task.detached { [weak self] in
+      while !Task.isCancelled {
+        try? await Task.sleep(nanoseconds: UInt64(every * 1_000_000_000))
+        if Task.isCancelled { return }
+        if case .foreign(let names) = await ModelGuard.check(client) {
+          guard let self, !Task.isCancelled else { return }
+          trace?("the engine began offering models that are not Ola's (\(names.joined(separator: ", "))): stopped")
+          self.watch = nil
+          self.stop()
+          self.onForeignModels?(names)
+          return
+        }
+      }
+    }
+  }
 
   private let logLock = NSLock()
   func appendLog(_ s: String) { logLock.withLock { log = String((log + s).suffix(4000)) } }
 
   public func stop() {
-    guard let p = process else { return }
+    watch?.cancel()
+    watch = nil
+    guard let p = processLock.withLock({ () -> Process? in let p = process; process = nil; return p }) else { return }
     if p.isRunning { p.terminate() }
     try? lifeline?.fileHandleForWriting.close()
     lifeline = nil
     p.waitUntilExit()
-    process = nil
     // Only our own pid: another server of this app may have written the file since.
     if let pidFile, (try? String(contentsOf: pidFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == String(p.processIdentifier) {
       try? FileManager.default.removeItem(at: pidFile)

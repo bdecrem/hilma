@@ -10,6 +10,8 @@ LocalPlantedTests). Loopback only, no key checked, made-up data only.
     a tool has answered: the model records every tool result it was given and says "Done."
     anything else (a title, a summary): a short plain reply
   GET /seen    the tool results recorded, as a JSON list of strings
+  GET /count   how many chat requests reached this stand-in, as {"chat": n} (OLA-249: the check that
+               a request goes only to Ola's model connection)
   PLANTED_MODEL_DUMP=<file>   also appends each last tool message, as JSON lines, to <file>
 """
 import json, os, re, sys, threading, time
@@ -17,6 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
 SEEN = []
+COUNT = [0]
 
 
 def text_of(content):
@@ -63,6 +66,9 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/seen":
             with LOCK:
                 return self.send(200, list(SEEN))
+        if self.path == "/count":
+            with LOCK:
+                return self.send(200, {"chat": COUNT[0]})
         if self.path.endswith("/models"):
             return self.send(200, {"object": "list", "data": [{"id": "general", "object": "model"}]})
         return self.send(404, {"error": "not_found"})
@@ -72,6 +78,8 @@ class H(BaseHTTPRequestHandler):
         req = json.loads(self.rfile.read(n) or b"{}")
         if not self.path.endswith("/chat/completions"):
             return self.send(404, {"error": "not_found"})
+        with LOCK:
+            COUNT[0] += 1
         msgs = req.get("messages") or []
         tools = {t.get("function", {}).get("name"): t.get("function", {}) for t in req.get("tools") or []}
         results = [text_of(m.get("content")) for m in msgs if m.get("role") == "tool"]

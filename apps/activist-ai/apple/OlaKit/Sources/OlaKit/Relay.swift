@@ -487,6 +487,12 @@ public final class MacRelay: @unchecked Sendable {
       let status = await sessionYes(parts[2], parts[4])
       return (200..<300).contains(status) ? await res.send(204) : await res.json(status == 404 ? 404 : 502, "Your answer did not reach Ola. Try again.")
     }
+    // A request from the phone to this Mac's own engine goes only to Ola's models (ModelGuard,
+    // OLA-249): checked here too, for a phone app older than the check in its own store.
+    if mode == "mac", req.method == "POST", parts.count == 4, parts[3] == "prompt",
+       case .foreign = await ModelGuard.check(OpenCodeClient(upstream)) {
+      return await res.json(409, ModelGuard.stoppedPhone)
+    }
     var url = upstream.url.absoluteString
     if url.hasSuffix("/") { url.removeLast() }
     url += req.path + (req.query.map { "?\($0)" } ?? "")

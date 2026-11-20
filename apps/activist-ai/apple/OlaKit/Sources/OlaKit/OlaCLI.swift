@@ -173,6 +173,9 @@ public enum OlaCLI {
     var door: ModelDoor?
     var server: LocalServer?
     var configDir: URL?
+    /// The terminal interface while it runs, for the model check to end it (OLA-249).
+    final class Interface: @unchecked Sendable { var pid: pid_t?; var stopped = false }
+    let interface = Interface()
     let folder = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 
     func run(_ c: Command) -> Int32 {
@@ -363,6 +366,13 @@ public enum OlaCLI {
         s.tiedToThisProcess = true
         // Permissions (ola settings permissions, the app's General pane): read at each start.
         s.askFirst = !PermissionSettings.lots
+        // Only Ola's models (ModelGuard, OLA-249): should the engine offer another provider's while
+        // the interface runs, the engine is stopped by then; the interface is ended and told why.
+        s.onForeignModels = { [interface] _ in
+          OlaCLI.say("\n" + ModelGuard.stoppedTerminal)
+          interface.stopped = true
+          if let pid = interface.pid { kill(pid, SIGTERM) }
+        }
         server = s
         let route: ModelRoute
         if let pasted { route = .pasted(token: pasted, modelURL: LocalSettings.modelURLOverride ?? LocalServer.defaultModelURL) } else { route = .door(try await openDoor()) }
@@ -370,12 +380,17 @@ public enum OlaCLI {
         // door only while it hands a request over; in the terminal the typed command is the yes).
         if model == "ola/hosted" || { if case .talk = c { return true }; return false }() { door?.allowHosted = { true } }
         config = try await s.start(route: route, timeout: 45, trace: OlaCLI.trace)
+      } catch LocalServer.Failure.notOlasModels {
+        say(ModelGuard.stoppedTerminal)
+        cleanUp()
+        return 1
       } catch {
         say((error as? LocalizedError)?.errorDescription ?? "Ola didn\u{2019}t start here.")
         cleanUp()
         return 1
       }
       guard let bin = LocalServer.binary else { cleanUp(); return 1 }
+      if interface.stopped { cleanUp(); return 1 }
       var args: [String]
       switch c {
       case .run(let text): args = ["run", "--server", config.url.absoluteString] + (model.map { ["--model", $0] } ?? []) + [text]
@@ -399,6 +414,7 @@ public enum OlaCLI {
         return 1
       }
       OlaCLI.trace?("interface started, pid \(pid): \(args.first ?? "")")
+      interface.pid = pid
       let stops = watchStops(pid)
       // If this process is killed outright (no chance to clean up), a small watcher ends the
       // interface and the agent: the server would end anyway (--stdio), the interface would not.
@@ -409,6 +425,7 @@ public enum OlaCLI {
       stops.forEach { $0.cancel() }
       cleanUp()
       OlaCLI.trace?("interface ended, status \(status)")
+      if interface.stopped { return 1 }
       // Exited: its code. Ended by a signal: 128 + the signal, as shells report it.
       return status & 0x7f == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
     }

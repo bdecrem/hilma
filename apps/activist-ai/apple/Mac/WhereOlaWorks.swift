@@ -36,6 +36,7 @@ final class WhereOlaWorks {
     self.store = store
     self.peer = peer ?? OlaStore(config: nil)
     self.account = account
+    for s in [self.store, self.peer] { s.onForeignModels = { [weak self] in self?.foreignModels() } }
   }
 
   /// The runtime on screen.
@@ -177,6 +178,8 @@ final class WhereOlaWorks {
     defer { if mine == generation { starting = false } }
     stopLocal()
     let server = LocalServer(folder: folder)
+    // Only Ola's models (ModelGuard, OLA-249): the engine has stopped itself; the app says why.
+    server.onForeignModels = { [weak self] _ in Task { @MainActor in self?.foreignModels(server) } }
     do {
       let config = try await server.start(route: route, timeout: 45)
       guard mine == generation else {
@@ -195,6 +198,16 @@ final class WhereOlaWorks {
       problem = error.localizedDescription
       if shown == .local { store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription) }
     }
+  }
+
+  /// The engine on this Mac offered a model that is not Ola's and was stopped (by its own watch, or
+  /// here when a store's check before a request found one): no local runtime until Ola is reopened,
+  /// and the one sentence on screen.
+  func foreignModels(_ server: LocalServer? = nil) {
+    if let server, server !== local { return }
+    stopLocal()
+    problem = ModelGuard.stopped
+    store.problem = Problem(text: ModelGuard.stopped)
   }
 
   /// The runtime on screen to `store`, the other to `peer`; a store already there is left alone.
