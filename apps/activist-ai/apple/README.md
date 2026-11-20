@@ -117,8 +117,9 @@ tools/drive.sh mac --where cloud --card yes --say "make a page that says Hello a
 tools/drive.sh mac --where cloud --card yes --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/1b
 # 2. cloud-phone: the same in the iPhone app in the simulator
 tools/drive.sh phone --where cloud --card yes --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/2
-# 3. local-mac: Ola working on the Mac, in a scratch folder; the page must be in it (transcript.json "filesInFolder", and folder/)
-tools/drive.sh mac --where local --say "make a page that says Hello" --out ~/ola-drive/checks/3
+# 3. local-mac: Ola working on the Mac, in a scratch folder; --file fails the run unless the page is in it
+#    (the folder is copied to <out>/folder, its files listed in transcript.json "filesInFolder")
+tools/drive.sh mac --where local --say "make a page that says Hello" --file index.html --out ~/ola-drive/checks/3
 # 4. local-phone: not built yet (see below)
 # 5. a failure must fail: an answer that takes a minute, with 5 seconds to wait
 tools/drive.sh mac --where cloud --wait 5 --say "make a page that says Hello and publish it on ola" --out ~/ola-drive/checks/5; echo "exit $?"

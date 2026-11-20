@@ -3,7 +3,7 @@
 # anyone's screen (OLA-237). README: "Using the apps as a checker".
 #
 #   tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next>"] [--card yes|any|no]
-#                  [--wait <seconds>] [--project <slug>] [--app <Ola.app>] --out <dir>
+#                  [--wait <seconds>] [--file <name>] [--project <slug>] [--app <Ola.app>] --out <dir>
 #
 #   mac    the Mac app: by default the published download (https://ola.cx/ola-site/mac/latest.json),
 #          installed in ~/ola-drive/apps/ (never /Applications), started as a copy of its own with its own
@@ -16,6 +16,7 @@
 #   --card yes      a card must come, and is answered "Yes, this once"; any (default): any card that comes
 #          is answered yes; no: a card that comes fails the run.
 #   --wait          seconds for each answer (default 600).
+#   --file <name>   (mac, local) the run fails unless the scratch folder has this file afterwards.
 #
 # Signs in as the made-up person `appdriver` (tools/drive-account.mjs), never anyone real: a fresh
 # password each run, in a file with mode 600, read by the app from that file; signed out everywhere
@@ -36,7 +37,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=()
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -46,6 +47,7 @@ while [ $# -gt 0 ]; do
     --project) PROJECT="$2"; shift 2 ;;
     --app) APP="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
+    --file) FILE="$2"; shift 2 ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -87,7 +89,7 @@ cleanup() {
   rm -rf "$LOCK"
 }
 trap cleanup EXIT
-node "$HERE/drive-account.mjs" prepare "$PW" $([ "$WHERE" = local ] && echo --local) | sed 's/^/  /' || fail "the made-up account could not be made ready"
+prepare_account() { node "$HERE/drive-account.mjs" prepare "$PW" $([ "$WHERE" = local ] && echo --local) | sed 's/^/  /' || fail "the made-up account could not be made ready"; }
 SAYS_JSON="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "${SAYS[@]}")"
 
 if [ "$APPKIND" = mac ]; then
@@ -120,6 +122,7 @@ s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "pro
 if folder: s["folder"] = folder
 json.dump(s, open(f, "w"))
 PY
+  prepare_account
   echo "  driving $APP ($(defaults read "$APP/Contents/Info" CFBundleShortVersionString) ($(defaults read "$APP/Contents/Info" CFBundleVersion))), $WHERE"
   # Through LaunchServices into the logged-in desktop, in the background (-g), as a new copy (-n), with
   # its own home: its settings, Application Support and opencode state are the run's, not anyone's.
@@ -149,10 +152,16 @@ PY
   fi
   LINE="$(grep -E '^ *[0-9.]+ +DRIVE (PASS|FAIL)' "$OUT/app.log" | tail -1 | sed -E 's/^ *[0-9.]+ +//')"
   [ -n "$LINE" ] || fail "the app ended without a verdict (it may not have opened): $(tail -3 "$OUT/app.log" | tr '\n' ' ')"
+  if [ -n "$FILE" ] && [[ "$LINE" == "DRIVE PASS"* ]]; then
+    if [ -z "$FOLDER" ]; then LINE="DRIVE FAIL  --file is for --where local (a folder on this Mac)"
+    elif [ ! -f "$FOLDER/$FILE" ]; then LINE="DRIVE FAIL  answered, but $FILE is not in the folder ($(cd "$FOLDER" && ls | tr '\n' ' '))"
+    else LINE="$LINE; $FILE is in the folder"; fi
+  fi
   echo "$LINE"
   echo "  pictures and transcript.json in $OUT"
   case "$LINE" in "DRIVE PASS"*) exit 0 ;; *) exit 1 ;; esac
 fi
 
 # ---------------------------------------------------------------- phone
+prepare_account
 "$HERE/drive-phone.sh" "$OUT" "$RUN" "$PW" "$WHERE" "$CARD" "$WAIT" "$SAYS_JSON"
