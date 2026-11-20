@@ -75,7 +75,9 @@ import { createClient } from '@supabase/supabase-js'
 import { sweepDue } from './_state.mjs'
 import { tmpdir } from 'node:os'
 import { CLAIM_PREFIX, CLAIM_TTL, LANES, WAIT_PREFIX, caseKey, caseState, claimRole, isServerFile, laneHolder, laneOf, laneSentence, liveWaiters, releasesIn } from './_plate.mjs'
-import { ROLES, caller, committers, roleOf } from './_who.mjs'
+import { CALLERS, LANE_ROLES, ROLES, caller, committers, roleOf } from './_who.mjs'
+import { overrideLine, overridesOf, writeOverride } from './_overrides.mjs'
+import { relative, resolve } from 'node:path'
 import { fakeClient } from './_fakedb.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -88,6 +90,15 @@ const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
 // VENTURE_TRACKER_FAKE=<file.json>: a copy of the tracker in one file (_fakedb.mjs copy), for tests
 const db = process.env.VENTURE_TRACKER_FAKE ? fakeClient(process.env.VENTURE_TRACKER_FAKE) : createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 if (process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the tracker: ${process.env.VENTURE_TRACKER_FAKE})`)
+const FAKE = !!process.env.VENTURE_TRACKER_FAKE
+// The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
+// The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
+// worktree that was not rebased) refuses to run.
+export const TRACKER_VERSION = 3
+// Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
+// tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
+const envWays = []
+if (!FAKE) for (const k of ['VENTURE_CALLERS_FILE', 'VENTURE_LIVE_RELEASE', 'VENTURE_ASKS_FILE']) if (process.env[k]) { envWays.push(`${k} was set on the real tracker (ignored there; honored only with VENTURE_TRACKER_FAKE)`); delete process.env[k] }
 
 export const AREAS = { web: 'Web app', apps: 'Mac and phone apps', model: 'Model and skills', security: 'Security', ops: 'Operations', voice: 'Voice', design: 'Design', board: 'The board' }
 const STATUSES = ['open', 'in_progress', 'waiting', 'done', 'dropped']
@@ -126,6 +137,18 @@ const check = (r, what) => {
   if (r.error) die(`${what}: ${r.error.message}`)
   return r.data
 }
+// OLA-273: an older copy of the tracker does not run against the database a newer one has used
+{
+  const v = await db.from('venture_state').select('value').eq('key', 'tracker_version').maybeSingle()
+  const seen = Number(v.data?.value?.v ?? 0)
+  if (seen > TRACKER_VERSION) die(`This copy of the tracker (${fileURLToPath(import.meta.url)}) is older than the newest one that ran (its rules are version ${TRACKER_VERSION}, the newest ${seen}): rebase this checkout on origin/main (git pull --rebase) and run it again.`)
+  if (!v.error && seen < TRACKER_VERSION) await db.from('venture_state').upsert({ key: 'tracker_version', value: { v: TRACKER_VERSION, at: new Date().toISOString(), host: hostname() }, at: new Date().toISOString() })
+}
+const idArg = /^(OLA-)?\d+$/i.test(String(pos[0] ?? '')) ? `OLA-${Number(String(pos[0]).replace(/\D/g, ''))}` : null
+async function flushWays() {
+  while (envWays.length) await writeOverride(db, { ticket: idArg, what: `${envWays.shift()}: issues.mjs ${cmd}` })
+}
+if (cmd !== 'hook') await flushWays()
 const normId = (s) => {
   const m = String(s ?? '').match(/^(?:OLA-)?(\d+)$/i)
   if (!m) die(`not an issue id: ${s} (like OLA-142)`)
@@ -213,6 +236,7 @@ async function laneState(id, lane) {
   return laneHolder({ id, lane, issues, claims, lanes, building: lane === 'server' ? buildingNow(claims, id) : {} })
 }
 const BESIDE_HOURS = 6
+const SERVER_HOME = ['apps/activist-ai/']
 async function laneGate(id, who, role, lane, r) {
   if (role !== 'builder' && role !== 'runner') return
   const holder = await laneState(id, lane)
@@ -222,11 +246,17 @@ async function laneGate(id, who, role, lane, r) {
     const dirs = (typeof one('beside') === 'string' ? one('beside') : '').split(/[\s,]+/).map((d) => d.trim().replace(/^\.\//, '').replace(/\/+$/, '')).filter(Boolean)
     if (!dirs.length) die(`--beside needs the folders you will change, like --beside "apps/activist-ai/frontdesk,apps/activist-ai/gateway"\n${laneSentence(holder, lane)}`)
     for (const d of dirs) if (d.includes('..') || d.startsWith('/') || !existsSync(root + d)) die(`--beside: ${d} is not a folder or file in this checkout. Name the folders you will change.`)
+    // OLA-251, third pass: the repository root, or a folder that holds the server's code, names all of it
+    for (const d of dirs) {
+      const rel = relative(root, resolve(root, d))
+      if (rel === '' || SERVER_HOME.some((s) => s === rel + '/' || s.startsWith(rel + '/'))) die(`Refused: --beside ${d} names ${rel === '' ? 'the whole repository' : `a folder that holds all of the server's code (${SERVER_HOME.join(', ')})`}. Name the folders inside it that you will change.`)
+    }
     const theirs = filesOf(holder.id, `${BESIDE_HOURS} hours ago`)
     const hit = theirs.filter((f) => dirs.some((d) => f === d || f.startsWith(d + '/')))
     if (hit.length) die(`Refused: ${holder.who}'s commits for ${holder.id} in the last ${BESIDE_HOURS} hours change what you named (${hit.slice(0, 5).join(', ')}${hit.length > 5 ? ', …' : ''}). Wait for it (--wait) or take another ticket.`)
     const said = `started by ${who} beside ${holder.who} on ${holder.id}, both in the server lane; will change ${dirs.join(', ')}; ${holder.id}'s commits of the last ${BESIDE_HOURS} hours touch none of them (${theirs.length ? theirs.length + ' files' : 'it has none yet'})`
     await record([{ issue_id: id, kind: 'comment', body: said }])
+    await writeOverride(db, { ticket: id, what: `--beside accepted: ${said}` })
     console.log(said)
     return dirs
   }
@@ -261,8 +291,9 @@ async function claim(id, who, row = null, { gated = false } = {}) {
   const a = await accept(id)
   laneFlag(r, a)
   const role = roleFor(who)
-  const old = check(await db.from('venture_state').select('value').eq('key', key).maybeSingle(), 'claim')
-  const keep = old && old.value?.who === who && old.value?.since
+  const old = check(await db.from('venture_state').select('value, at').eq('key', key).maybeSingle(), 'claim')
+  // a renewal keeps its start; the same name in a role that takes a lane, after one that took none, is a new start (OLA-251)
+  const keep = old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && old.value?.who === who && old.value?.since && (claimRole(old.value) === role || !LANE_ROLES.has(role))
   const lane = laneOf(r, a.lane)
   const beside = !keep && !gated ? await laneGate(id, who, role, lane, r) : null
   check(await db.from('venture_state').upsert({ key, value: { who, role, host: hostname(), since: keep ? old.value.since : new Date().toISOString(), lane, ...(me.id ? { caller: me.id } : {}), ...(beside ? { beside } : keep && old.value.beside ? { beside: old.value.beside } : {}) }, at: new Date().toISOString() }), 'claim')
@@ -381,7 +412,13 @@ function fromMini(what, remote, parse) {
   const cache = `${tmpdir()}/venture-${what}.json`
   try {
     const c = JSON.parse(readFileSync(cache, 'utf8'))
-    if (Date.now() - c.at < 120e3) return c
+    if (Date.now() - c.at < 120e3) {
+      // OLA-251, third pass: a cache the tracker did not write as it is (a time ahead of the clock, a file
+      // time that is not its own, not from the test server) is not used, and is a line in the overrides
+      const m = statSync(cache).mtimeMs
+      if (c.at <= Date.now() + 1e3 && Math.abs(m - c.at) < 5e3 && MINI.includes(c.from)) return c
+      envWays.push(`the cache file ${cache} was not written by the tracker as it is (its time ${new Date(c.at).toISOString()}, the file's ${new Date(m).toISOString()}, from ${c.from ?? 'nowhere'}); not used`)
+    }
   } catch {}
   let err = ''
   for (const host of MINI) {
@@ -402,7 +439,43 @@ const asksCases = () => (process.env.VENTURE_ASKS_FILE ? { value: JSON.parse(rea
 // in a cloud project (the Mac and iPhone apps use the server there; Ola on his Mac does not).
 const onServer = (r, a, c = null) => laneOf(r, a.lane) === 'server' || (PRODUCT.has(r.area) && (!c || /^cloud-/.test(String(c.at))))
 
-if (cmd === 'add') {
+// OLA-251, third pass: a checker, investigator or hold whose own commits for its ticket change the server's
+// code is a builder from then on; the tracker says so at its next call, and the lane rule applies.
+async function lostRoles() {
+  if (!me.id) return
+  const claims = await liveClaims()
+  for (const [cid, c] of Object.entries(claims)) {
+    if (c.caller !== me.id || LANE_ROLES.has(claimRole(c)) || !committers(cid).includes(me.id)) continue
+    const f = filesOf(cid, c.since ?? c.at).find(isServerFile)
+    if (!f) continue
+    const was = claimRole(c)
+    console.error(`${cid}: you hold it as ${was}, but your commits for it since ${when(c.since ?? c.at)} change the server's code (${f}). A ${was} who builds is a builder: the claim is a builder's now, and the lane rule applies.`)
+    const holder = await laneState(cid, 'server')
+    if (holder) {
+      await release(cid)
+      await record([{ issue_id: cid, kind: 'comment', body: `${c.who}'s claim as ${was} was released: its commits change the server's code (${f}) while ${holder.who} holds the server lane on ${holder.id}` }])
+      await writeOverride(db, { ticket: cid, what: `built the server's code as ${was} (${f}) while ${holder.who} held the server lane on ${holder.id}; the claim was released` })
+      die(`${laneSentence(holder, 'server')}\nYour claim on ${cid} was released.`)
+    }
+    const { at, ...v } = c
+    check(await db.from('venture_state').upsert({ key: CLAIM_PREFIX + cid, value: { ...v, role: 'builder', lane: 'server', was, became_builder: new Date().toISOString() }, at }), 'claim')
+    await record([{ issue_id: cid, kind: 'comment', body: `${c.who}'s claim as ${was} is a builder's now: its commits change the server's code (${f})` }])
+  }
+}
+if (!['hook', 'wait-board', 'record-override'].includes(cmd)) await lostRoles()
+
+if (cmd === 'overrides') {
+  // the record of deliberate ways around a guard (OLA-251, third pass; _overrides.mjs)
+  const d = one('day')
+  const day = !d || d === 'today' ? pacificDay() : d === 'yesterday' ? shiftDay(pacificDay(), -1) : d
+  const rows = await overridesOf(db, day)
+  for (const v of rows) console.log(overrideLine(v))
+  console.log(`${rows.length} way(s) around a guard on ${day}`)
+} else if (cmd === 'record-override') {
+  // for the other venture tools (a refusal on a copy of the notes, an update of the test server outside the gate)
+  const what = typeof one('what') === 'string' ? one('what') : die('usage: issues.mjs record-override --what "…" [--ticket OLA-n] [--tool name] [--key k] [--at iso]')
+  await writeOverride(db, { what, ticket: typeof one('ticket') === 'string' ? one('ticket') : null, tool: typeof one('tool') === 'string' ? one('tool') : 'venture', key: typeof one('key') === 'string' ? one('key') : null, at: typeof one('at') === 'string' ? one('at') : null, who: typeof one('caller') === 'string' ? one('caller') : null })
+} else if (cmd === 'add') {
   const title = pos[0]
   if (!title) die('usage: issues.mjs add "title" --area web --pri P1 [--what …] [--who lead] [--week 1] [--start]')
   const area = one('area')
@@ -479,6 +552,8 @@ if (cmd === 'add') {
   const a = await accept(id)
   const sub = pos[1]
   const now = new Date().toISOString()
+  // OLA-251, third pass: a check added, changed or skipped after the work started is a line in the overrides
+  const lateCheck = async (what) => { if (r.started_at) await writeOverride(db, { ticket: id, what: `${what} after the ticket was started (${when(r.started_at)})` }) }
   const str = (k) => (typeof one(k) === 'string' && one(k).trim() ? one(k).trim() : null)
   if (!sub) printChecks(r, a)
   else if (sub === 'add') {
@@ -489,6 +564,7 @@ if (cmd === 'add') {
     a.checks.push({ n: (a.checks.at(-1)?.n ?? 0) + 1, at, do: does, see, added_by: str('by') ?? 'kit', added_at: now, result: null })
     a.internal = null
     await saveAccept(id, a)
+    await lateCheck(`check #${a.checks.at(-1).n} added`)
     printChecks(r, a)
   } else if (sub === 'edit') {
     const c = a.checks.find((x) => String(x.n) === String(pos[2]))
@@ -501,6 +577,7 @@ if (cmd === 'add') {
     c.result = null
     await saveAccept(id, a)
     await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} changed by ${str('by') ?? 'kit'}: ${why}. It was: ${old}` }])
+    await lateCheck(`check #${c.n} reworded`)
     printChecks(r, a)
   } else if (sub === 'skip') {
     const pattern = pos[2]
@@ -509,6 +586,7 @@ if (cmd === 'add') {
     if (!CELLS.some((c) => globs(pattern).test(c))) die(`"${pattern}" matches no place.\n  ${CELL_HELP}`)
     a.skips.push({ pattern, why, by: str('by') ?? 'kit', at: now })
     await saveAccept(id, a)
+    await lateCheck(`place ${pattern} skipped`)
     printChecks(r, a)
   } else if (sub === 'internal') {
     const why = str('why')
@@ -516,6 +594,7 @@ if (cmd === 'add') {
     if (a.checks.length) die(`${id} already has checks; an internal ticket has none`)
     a.internal = { why, by: str('by') ?? 'kit', at: now }
     await saveAccept(id, a)
+    await lateCheck('the ticket marked internal (no checks)')
     printChecks(r, a)
   } else if (sub === 'pass' || sub === 'fail') {
     const c = a.checks.find((x) => x.n === Number(pos[2]))
@@ -530,9 +609,12 @@ if (cmd === 'add') {
       const claimRow = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
       const recorded = (a.builders ?? []).filter((b) => b.role === 'builder' || b.role === 'runner')
       const names = new Set(['builder', 'runner', ...recorded.map((b) => b.who), ...(!recorded.length && claimRole({ who: r.who }) === 'builder' ? [r.who] : []), ...(claimRow?.value && ['builder', 'runner'].includes(claimRole(claimRow.value)) ? [claimRow.value.who] : [])].filter(Boolean).map((x) => String(x).toLowerCase()))
+      // OLA-251, third pass (OLA-278): Bart does not use the command line; his word is "done --proof 'Bart: …'"
+      if (/\b(bart|kit|lead)\b/i.test(by)) die(`Refused: a check is not passed as "${by}" from the command line. Bart does not use it: what he says is recorded with issues.mjs done ${id} --proof "Bart: <his words>". Kit and the lead do not pass checks; a checker that did not build ${id} does.`)
       if (names.has(by.toLowerCase())) die(`a check is passed by someone who did not build ${id} ("${by}" is its builder). Run "issues.mjs ready ${id} --on <release>"; the lead starts a checker with a fresh context.`)
-      const isBart = /^bart$/i.test(by)
-      if (!isBart && !me.known) die(`Refused: the tracker cannot tell who is passing this check (${me.why}). A pass is recorded from the Claude Code agent or session that did the check, so the builder cannot pass its own work under another name; run it there, without anything before the command that changes it. See scripts/venture/_who.mjs.`)
+      const isBart = false
+      if (!me.known) await writeOverride(db, { ticket: id, what: `a pass of check #${c.n} was tried by a caller the tracker could not identify (${me.why}); refused` })
+      if (!me.known) die(`Refused: the tracker cannot tell who is passing this check (${me.why}). A pass is recorded from the Claude Code agent or session that did the check, so the builder cannot pass its own work under another name; run it there, without anything before the command that changes it. See scripts/venture/_who.mjs.`)
       const theirs = new Map([...recorded.filter((b) => b.caller).map((b) => [b.caller, `${b.via} as ${b.who}`]), ...(a.ready?.caller ? [[a.ready.caller, 'marked it ready']] : []), ...(claimRow?.value?.caller && ['builder', 'runner'].includes(claimRole(claimRow.value)) ? [[claimRow.value.caller, `holds its claim as ${claimRow.value.who}`]] : []), ...committers(id).map((x) => [x, `committed for ${id}`])])
       if (!isBart && theirs.has(me.id)) die(`Refused: this ${me.agent ? 'agent' : 'session'} built ${id} (${theirs.get(me.id)}), whatever name it gives (--by ${by}). The one who built it does not grade it: run "issues.mjs ready ${id} --on <release>"; the lead starts a checker.`)
       if (!on) die('--on "<release or build>" is required: which live version was checked')
@@ -543,6 +625,7 @@ if (cmd === 'add') {
       if (kase) {
         // OLA-259: the case is looked up in the request tests' own result file, by its exact name, and must be working there
         const f = asksCases()
+        await flushWays()
         if (!f.value) die(`--case: the request tests' result file could not be read (${f.error}); a pass by --case is checked against it`)
         const cs = caseState(kase, f.value.cases)
         if (cs.state === 'unknown') {
@@ -557,6 +640,7 @@ if (cmd === 'add') {
     }
     Object.assign(c, { result: sub, by, saw, checked_at: now, ...(me.id ? { caller: me.id } : {}) })
     await saveAccept(id, a)
+    if (sub === 'pass' && !(a.builders ?? []).some((b) => b.caller) && !a.ready?.caller && !committers(id).length) await writeOverride(db, { ticket: id, what: `check #${c.n} passed by ${by} on a ticket built before callers were recorded: the builder test was by name only` })
     await record([{ issue_id: id, kind: 'comment', body: `check #${c.n} (${c.at}) ${sub === 'pass' ? 'passed' : 'FAILED'}, by ${by}${me.known ? ` (${me.why})` : ''}: ${saw}` }])
     if (sub === 'fail' && r.status === 'done') await patch(id, { status: 'in_progress' })
     printChecks(r, a)
@@ -606,6 +690,7 @@ if (cmd === 'add') {
     if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
     const live = onServer(r, a) && v.works.length ? liveRelease() : null
     const cases = v.works.some((c) => c.case || /\bcase \S/.test(c.evidence ?? '')) ? asksCases() : null
+    await flushWays()
     if (live) console.log(live.value ? `  (the test server is on release ${live.value} now)` : `  (the test server's live release could not be read: ${live.error})`)
     let tell = true
     for (const c of v.works) {
@@ -638,6 +723,7 @@ if (cmd === 'add') {
     const withPasses = recent.filter((r) => (by.get(r.id)?.checks ?? []).some((c) => c.result === 'pass'))
     const live = withPasses.some((r) => onServer(r, by.get(r.id))) ? liveRelease() : null
     const cases = withPasses.some((r) => by.get(r.id).checks.some((c) => c.result === 'pass' && (c.case || /\bcase \S/.test(c.evidence ?? '')))) ? asksCases() : null
+    await flushWays()
     const stale = withPasses.flatMap((r) => by.get(r.id).checks.filter((c) => c.result === 'pass').map((c) => ({ r, c, n: nowOf(r, by.get(r.id), c, live, cases) })).filter((x) => !x.n.ok))
     console.log(`Passed, but not on what is live now (${stale.length})${live ? (live.value ? `: the test server is on ${live.value}` : `: the live release could not be read (${live.error})`) : ''}`)
     for (const x of stale) console.log(`  ${x.r.id.padEnd(8)} #${x.c.n} ${x.n.word}: ${x.n.why}`)
@@ -674,8 +760,13 @@ if (cmd === 'add') {
     const r = await get(id)
     const a = await accept(id)
     const was = laneOf(r, a.lane)
+    // OLA-251, third pass: whoever holds a ticket does not move it to another lane; only the lead's hold does
+    const cl = (await liveClaims())[id]
+    const leadHold = cl && claimRole(cl) === 'hold' && /^(lead|kit)$/i.test(String(cl.who).trim()) && (!cl.caller || cl.caller === me.id)
+    if (cl && !leadHold) die(`Refused: ${id} is claimed by ${cl.who} (${claimRole(cl)}), and a ticket's lane is not changed by whoever holds it. Only the lead, holding it (issues.mjs claim ${id} --who lead), changes it.`)
     await saveAccept(id, { ...a, lane: l })
     await record([{ issue_id: id, kind: 'comment', body: `lane changed from ${was} to ${l}: ${why}` }])
+    await writeOverride(db, { ticket: id, what: `lane changed from ${was} to ${l}${leadHold ? " under the lead's hold" : ' (unclaimed)'}: ${why}` })
     console.log(`${id}: lane ${was} -> ${l}`)
     if (!Object.keys(f).length) process.exit(0)
   }
