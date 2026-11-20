@@ -39,7 +39,7 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile):./.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile|served):./.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
     for (const m of c.must.filter((m) => m.startsWith('says:'))) new RegExp(m.slice(5), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')

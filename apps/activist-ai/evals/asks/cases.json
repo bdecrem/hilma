@@ -638,6 +638,79 @@
         "what": "The fault itself: a project that had published pages saying Oak and Cedar, each in its own conversation; a new conversation asks for a page saying a new word. Ola changed index.html but published the old site/ copy, and said it was live while the address showed Cedar (3 of 19 tries on Nov 20). The address must show the new word.",
         "words": "description"
       }
+    },
+    {
+      "id": "design-page-cloud",
+      "say": "who made that page?",
+      "before": [
+        "make a page for our block party on Saturday"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "newfile:\\.html$",
+        "served:design",
+        "says:design model|inkling"
+      ],
+      "mustNot": [
+        "Ola.s own (open )?model (made|built)"
+      ],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-168",
+        "what": "Bart's decision, Nov 20: design requests go to the design model, Inkling-2-Small. In a cloud project a page request must make a page on it (the model connection's own record says so) and Ola must say who made it from the record.",
+        "words": "description"
+      }
+    },
+    {
+      "id": "design-page-local",
+      "say": "make a page for our block party on Saturday",
+      "places": [
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "newfile:\\.html$",
+        "served:design"
+      ],
+      "mustNot": [],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-168",
+        "what": "Bart's decision, Nov 20: design requests go to the design model, Inkling-2-Small, with Ola working on the Mac too (its engine sends its model requests to the same model connection). The model connection's own record must say the design model served it. The Mac's record of who made the file names the design model only with a new Mac app build (OLA-168 comment), so who-made is not asked here.",
+        "words": "description"
+      }
+    },
+    {
+      "id": "not-design-cloud",
+      "say": "how many members are in members.csv, by city?",
+      "places": [
+        "cloud-web:chat",
+        "local-mac:chat"
+      ],
+      "must": [
+        "says:Oakland\\D{0,40}3|3\\D{0,40}Oakland",
+        "served:!design",
+        "served:general"
+      ],
+      "mustNot": [],
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-168",
+        "what": "A request that is not design must stay on Ola's everyday model (OLA-168 check 2).",
+        "words": "description"
+      },
+      "setup": [
+        {
+          "wrote": {
+            "path": "members.csv",
+            "text": "name,city\nAna,Oakland\nBen,Oakland\nCy,Fresno\nDee,Oakland\nEd,Fresno\nFay,San Jose\n"
+          }
+        }
+      ]
     }
   ]
 }
