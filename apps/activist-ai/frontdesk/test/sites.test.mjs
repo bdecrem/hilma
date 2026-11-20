@@ -177,3 +177,100 @@ test('not set up: no credential file, nothing published, said plainly', async ()
   assert.equal(r.status, 503)
   assert.match(r.body.message, /not set up/)
 })
+
+// OLA-223: no Vercel token, a git remote instead. The host deploys the repository on push; here the
+// remote is a bare repository on disk and a small server plays sites.ola.cx by serving what its
+// branch holds (trailing slash -> index.html, anything missing -> 404, as Vercel does).
+async function gitSetup({ delayMs = 0 } = {}) {
+  const { execFileSync } = await import('node:child_process')
+  const http = await import('node:http')
+  const d = tmp()
+  const bare = path.join(d, 'remote.git')
+  execFileSync('git', ['init', '-q', '--bare', bare])
+  let pushedAt = 0
+  const server = http.createServer((req, res) => {
+    let p = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\//, '')
+    if (p === '' || p.endsWith('/')) p += 'index.html'
+    let body = null
+    if (Date.now() - pushedAt >= delayMs) {
+      try {
+        body = execFileSync('git', ['-C', bare, 'show', `main:${p}`], { stdio: ['ignore', 'pipe', 'ignore'] })
+      } catch {}
+    }
+    res.writeHead(body ? 200 : 404).end(body ?? 'not found')
+  })
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  const origin = `http://127.0.0.1:${server.address().port}`
+  fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_GIT_REMOTE=${bare}\nOLA_SITES_GIT_EMAIL=owner@example.com\n`, { mode: 0o600 })
+  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: origin, OLA_FD_SITES_API: 'http://127.0.0.1:9', OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_GIT_VERIFY_MS: '3000', OLA_FD_SITES_POLL_MS: '50' })
+  const branch = (args) => execFileSync('git', ['-C', bare, ...args], { encoding: 'utf8' })
+  return { d, bare, origin, branch, server, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()) }
+}
+
+test('git mode: publish = one commit pushed, the page live; publish again; unpublish leaves no trace in the branch', async () => {
+  const g = await gitSetup()
+  assert.equal(g.sites.configured(), true)
+  const root = project({ 'site/index.html': '<!doctype html><title>Git one</title><img src="a.png">', 'site/a.png': 'PNG', 'site/notes.docx': 'word' })
+  const ctx = folderCtx('git-flyer', root)
+  const pre = await g.sites.preview(ctx, { folder: 'site' })
+  assert.equal(pre.status, 200, JSON.stringify(pre.body))
+  assert.ok(pre.body.leftOut.some((l) => /notes\.docx/.test(l.path)))
+  // Always the person's yes for this exact list.
+  assert.equal((await g.sites.publish(ctx, { folder: 'site' }, 'f'.repeat(64))).status, 409)
+  const pub = await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  assert.equal(pub.status, 200, JSON.stringify(pub.body))
+  assert.equal(pub.body.live, true)
+  assert.match(await (await fetch(`${g.origin}/git-flyer/`)).text(), /Git one/)
+  const files = g.branch(['ls-tree', '-r', '--name-only', 'main']).trim().split('\n').sort()
+  assert.deepEqual(files, ['404.html', 'git-flyer/a.png', 'git-flyer/index.html', 'index.html', 'vercel.json'])
+  assert.deepEqual(JSON.parse(g.branch(['show', 'main:vercel.json'])).headers[0].headers.find((h) => h.key === 'Content-Security-Policy').value, SITE_CSP)
+  assert.equal(g.branch(['log', '--format=%ae', 'main']).trim(), 'owner@example.com')
+
+  // A second project, then publish the first again: still one commit, both there.
+  const other = folderCtx('git-other', project({ 'w/index.html': '<title>Other</title>' }))
+  const po = await g.sites.preview(other, { folder: 'w' })
+  assert.equal((await g.sites.publish(other, { folder: 'w' }, po.body.fingerprint)).status, 200)
+  fs.writeFileSync(path.join(root, 'site/index.html'), '<!doctype html><title>Git two</title>')
+  const pre2 = await g.sites.preview(ctx, { folder: 'site' })
+  const pub2 = await g.sites.publish(ctx, { folder: 'site' }, pre2.body.fingerprint)
+  assert.equal(pub2.body.again, true)
+  assert.match(await (await fetch(`${g.origin}/git-flyer/`)).text(), /Git two/)
+  assert.equal(g.branch(['rev-list', '--count', 'main']).trim(), '1')
+
+  const un = await g.sites.unpublish('git-flyer')
+  assert.equal(un.status, 200)
+  assert.equal(un.body.gone, true)
+  assert.equal((await fetch(`${g.origin}/git-flyer/`)).status, 404)
+  assert.equal((await fetch(`${g.origin}/git-other/`)).status, 200)
+  assert.equal(g.branch(['rev-list', '--count', 'main']).trim(), '1')
+  assert.doesNotMatch(g.branch(['ls-tree', '-r', '--name-only', 'main']), /git-flyer/)
+  g.server.close()
+})
+
+test('git mode: a host slower than the wait says so plainly; a push that fails changes nothing', async () => {
+  const g = await gitSetup({ delayMs: 60_000 })
+  const ctx = folderCtx('git-slow', project({ 'site/index.html': '<title>Slow</title>' }))
+  const pre = await g.sites.preview(ctx, { folder: 'site' })
+  g.markPush()
+  const pub = await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  assert.equal(pub.status, 200)
+  assert.equal(pub.body.live, false)
+  assert.match(pub.body.message, /does not show it yet/)
+  // The remote goes away: the publish fails, plainly, and nothing is recorded as published.
+  fs.rmSync(g.bare, { recursive: true, force: true })
+  const ctx2 = folderCtx('git-fail', project({ 'site/index.html': '<title>Fail</title>' }))
+  const pre2 = await g.sites.preview(ctx2, { folder: 'site' })
+  const bad = await g.sites.publish(ctx2, { folder: 'site' }, pre2.body.fingerprint)
+  assert.equal(bad.status, 502)
+  assert.match(bad.body.message, /Nothing changed/)
+  assert.equal(g.sites.status('git-fail'), null)
+  g.server.close()
+})
+
+test('git mode: the secret check still runs before anything is written', async () => {
+  const g = await gitSetup()
+  const ctx = folderCtx('git-secret', project({ 'site/index.html': '<p>hi</p>', 'site/.env': 'TOKEN=abc' }))
+  assert.equal((await g.sites.publish(ctx, { folder: 'site' }, 'x')).status, 422)
+  assert.equal(g.branch(['branch', '--list']).trim(), '')
+  g.server.close()
+})

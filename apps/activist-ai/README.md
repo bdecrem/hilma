@@ -2307,6 +2307,22 @@ only to api.vercel.com. Without the file, Publish does not show and the routes s
 set up on this Ola machine yet". Settings: `OLA_FD_SITES_FILE`, `OLA_FD_SITES_ORIGIN`
 (`https://sites.ola.cx`), `OLA_FD_SITES_API`, `OLA_FD_SITES_MAX_FILES|MAX_FILE_MB|MAX_TOTAL_MB`.
 
+**Or a git repository (how the mini runs, OLA-223, 2026-11-20).** Vercel would not mint a token
+for this account (403 "Cannot create tokens for this app"), so the `ola-sites` project deploys the
+private GitHub repository `bdecrem/ola-sites` on every push to `main`, and the front desk holds a
+write deploy key for that one repository (`~/.ola/sites-git/deploy_key`, made on the machine; its
+private half never left it). With no token in `~/.ola/sites.env` but `OLA_SITES_GIT_REMOTE=git@github.com:bdecrem/ola-sites.git`,
+`OLA_SITES_GIT_KEY=<path of the key>` (and `OLA_SITES_GIT_EMAIL`, the commit author: a Pro team
+builds a private repository's commits only from its members, so the owner's address), a publish
+or unpublish writes the whole site (every project's files from the front desk's copies, the root
+and 404 pages, `vercel.json` with the headers above) into `<data>/sites/repo` as one commit with no
+parent, force-pushes it, and waits up to five minutes (`OLA_FD_SITES_GIT_VERIFY_MS`) for
+https://sites.ola.cx/<name>/ to answer with the new page (or 404). The branch therefore holds only
+what is published now; old deployments' own addresses are behind Vercel's login
+(`all_except_custom_domains`). The checks before (the list and its fingerprint, the secret scan,
+the caps, a name owned by its first publisher) are the same code. Tests: `test/sites.test.mjs`,
+"git mode".
+
 **Takedown.** `node admin.mjs unpublish <project>` takes a project's pages down at once (audited as
 the admin's); `node admin.mjs sites` lists what is published.
 

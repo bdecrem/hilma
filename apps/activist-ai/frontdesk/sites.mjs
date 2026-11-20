@@ -25,6 +25,7 @@
 // pages are under the same address, https://sites.ola.cx, so in the browser's terms they share an
 // origin. Nothing published may hold a secret; a page can link to, frame or fetch another
 // project's public files like any other site can.
+import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -45,6 +46,8 @@ export function sitesConfig(env = process.env) {
     maxTotal: (Number(env.OLA_FD_SITES_MAX_TOTAL_MB) || 50) * 1024 * 1024,
     readyMs: Number(env.OLA_FD_SITES_READY_MS) || 180_000,
     verifyMs: Number(env.OLA_FD_SITES_VERIFY_MS) || 90_000,
+    // A push is built by the host before it is served: a minute or two, longer when it is busy.
+    gitVerifyMs: Number(env.OLA_FD_SITES_GIT_VERIFY_MS) || 300_000,
     pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
   }
 }
@@ -344,6 +347,13 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
   const manifestFile = (slug) => path.join(dir, `${slug}.json`)
   const stateFile = path.join(dir, 'state.json')
 
+  // Two ways to reach the host, whichever the file names (a token wins when both are there):
+  //   - OLA_SITES_VERCEL_TOKEN: Vercel's deploy API, below (deployAll).
+  //   - OLA_SITES_GIT_REMOTE (+ OLA_SITES_GIT_KEY, the path of an ssh deploy key with write access to
+  //     that one repository; OLA_SITES_GIT_BRANCH, default main): the whole site is written into a
+  //     local clone and pushed, and the Vercel project deploys that repository on push (gitDeployAll).
+  //     OLA-223, 2026-11-20: Vercel would not mint a token for this account, so the front desk
+  //     holds a GitHub deploy key for bdecrem/ola-sites instead.
   function cred() {
     let c
     try {
@@ -351,8 +361,21 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     } catch {
       return null
     }
-    if (!c.OLA_SITES_VERCEL_TOKEN) return null
-    return { token: c.OLA_SITES_VERCEL_TOKEN, project: c.OLA_SITES_PROJECT || 'ola-sites', team: c.OLA_SITES_TEAM_ID || null }
+    if (c.OLA_SITES_VERCEL_TOKEN) return { token: c.OLA_SITES_VERCEL_TOKEN, project: c.OLA_SITES_PROJECT || 'ola-sites', team: c.OLA_SITES_TEAM_ID || null }
+    if (c.OLA_SITES_GIT_REMOTE) {
+      return {
+        git: {
+          remote: c.OLA_SITES_GIT_REMOTE,
+          key: c.OLA_SITES_GIT_KEY || null,
+          branch: c.OLA_SITES_GIT_BRANCH || 'main',
+          // The commit's author: a Vercel team deploys a private repository's commits only from
+          // its own members, so this is the account owner's address.
+          author: c.OLA_SITES_GIT_AUTHOR || 'Ola front desk',
+          email: c.OLA_SITES_GIT_EMAIL || 'sites@ola.cx',
+        },
+      }
+    }
+    return null
   }
   const readJson = (f) => {
     try {
@@ -469,9 +492,70 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     if (before && before !== d.id) await api(c, 'DELETE', `/v13/deployments/${encodeURIComponent(before)}`, { ok: [200, 404] }).catch((e) => log(`sites: the earlier deployment was not removed (${e.status ?? e.code})`))
     return d.id
   }
+  // ------------------------------------------------ a git repository the host deploys on push
+  // The repository is a copy made from the manifests, never a source: every deploy writes the whole
+  // site (every project's files from our blobs, the root page, the 404 page, vercel.json) as ONE
+  // commit with no parent and force-pushes it, so an unpublished page is in no commit the
+  // repository keeps (the same rule as deleting the deployment before, above). git runs with a
+  // short, fixed environment: the front desk's own variables reach no git or ssh process.
+  const repoDir = path.join(dir, 'repo')
+  function git(g, args, { cwd = repoDir } = {}) {
+    const ssh = ['ssh', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=20']
+    if (g.key) ssh.push('-o', 'IdentitiesOnly=yes', '-i', `'${g.key.replace(/'/g, '')}'`)
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: os.homedir(), GIT_SSH_COMMAND: ssh.join(' '), GIT_TERMINAL_PROMPT: '0', GIT_CONFIG_NOSYSTEM: '1', LANG: 'C' }
+    return new Promise((resolve, reject) => {
+      execFile('git', ['-c', 'core.autocrlf=false', '-c', 'core.safecrlf=false', '-c', 'commit.gpgsign=false', ...args], { cwd, env, timeout: 120_000, maxBuffer: 4 * 1024 * 1024 }, (err, stdout, stderr) => {
+        // stderr is never logged whole: only its last line, cut short (it holds no secret, but a
+        // remote's message is not ours to repeat at length).
+        if (err) reject(Object.assign(new Error(`git ${args[0]} failed: ${String(stderr).trim().split('\n').pop()?.slice(0, 160) ?? ''}`), { code: 'HOST' }))
+        else resolve(String(stdout))
+      })
+    })
+  }
+  async function gitDeployAll(g, all) {
+    mk()
+    if (!fs.existsSync(path.join(repoDir, '.git'))) {
+      fs.rmSync(repoDir, { recursive: true, force: true })
+      fs.mkdirSync(repoDir, { mode: 0o700 })
+      await git(g, ['init', '-q'])
+    }
+    await git(g, ['remote', 'remove', 'origin']).catch(() => {})
+    await git(g, ['remote', 'add', 'origin', g.remote])
+    // The tree, written from scratch.
+    for (const e of fs.readdirSync(repoDir)) if (e !== '.git') fs.rmSync(path.join(repoDir, e), { recursive: true, force: true })
+    const put = (rel, buf) => {
+      const f = path.join(repoDir, rel)
+      if (!f.startsWith(repoDir + path.sep)) throw Object.assign(new Error('a path outside the site'), { code: 'HOST' })
+      fs.mkdirSync(path.dirname(f), { recursive: true })
+      fs.writeFileSync(f, buf)
+    }
+    for (const [slug, m] of Object.entries(all)) {
+      for (const f of m.files) {
+        const b = path.join(blobs, f.sha)
+        if (!fs.existsSync(b)) throw Object.assign(new Error(`no copy of a file of ${slug}`), { code: 'HOST' })
+        put(`${slug}/${f.as}`, fs.readFileSync(b))
+      }
+    }
+    for (const [name, text] of [['index.html', ROOT_PAGE], ['404.html', NOT_FOUND_PAGE], ['vercel.json', vercelJson()]]) put(name, Buffer.from(text))
+    const tmpBranch = `deploy-${process.pid}-${Date.now()}`
+    await git(g, ['checkout', '-q', '--orphan', tmpBranch])
+    await git(g, ['add', '-A', '.'])
+    const when = new Date().toISOString()
+    await git(g, ['-c', `user.name=${g.author}`, '-c', `user.email=${g.email}`, 'commit', '-q', '--allow-empty', '-m', `sites: ${Object.keys(all).length} site(s), ${when}`])
+    await git(g, ['branch', '-M', g.branch])
+    await git(g, ['push', '-q', '--force', 'origin', `HEAD:refs/heads/${g.branch}`])
+    const head = (await git(g, ['rev-parse', 'HEAD'])).trim()
+    // Old commits are dropped here too.
+    await git(g, ['reflog', 'expire', '--expire=now', '--all']).catch(() => {})
+    await git(g, ['gc', '-q', '--prune=now']).catch(() => {})
+    writeJson(stateFile, { commit: head, at: when })
+    return head
+  }
+  const deploy = (c, all) => (c.git ? gitDeployAll(c.git, all) : deployAll(c, all))
+
   // The public address answers with what was published (or, after an unpublish, with 404).
-  async function verify(url, expect) {
-    const until = Date.now() + cfg.verifyMs
+  async function verify(url, expect, ms = cfg.verifyMs) {
+    const until = Date.now() + ms
     let last = ''
     while (Date.now() < until) {
       try {
@@ -636,12 +720,12 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         await serial(async () => {
           for (const i of plan.items) {
             const buf = buffers.get(i.path)
-            await upload(c, buf, i.sha)
+            if (!c.git) await upload(c, buf, i.sha)
             blobPut(i.sha, buf)
           }
           const all = manifests()
           all[ctx.slug] = { url: plan.url, at: new Date().toISOString(), sel: plan.sel, files: plan.items.map((i) => ({ as: i.as, sha: i.sha, size: i.size })) }
-          await deployAll(c, all)
+          await deploy(c, all)
           writeJson(manifestFile(ctx.slug), all[ctx.slug])
         })
       } catch (e) {
@@ -649,8 +733,9 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         return { status: e.code === 'BUSY' ? 429 : 502, body: { error: 'publish_failed', message: e.code === 'BUSY' ? 'Another page is being published just now. Try again in a minute.' : 'The page could not be published just now: the host did not take it. Nothing changed. Try again in a few minutes.' } }
       }
       const index = plan.items.find((i) => i.as === plan.page)
-      const live = await verify(plan.url, index.sha)
-      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, fingerprint: plan.fingerprint }, plan }
+      const live = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs)
+      const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet. It usually appears within a few minutes; check the address again then.` }
+      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, ...notYet, fingerprint: plan.fingerprint }, plan }
     },
     /** Takes a project's pages down (the owner's Unpublish, or `admin.mjs unpublish`). */
     async unpublish(slug) {
@@ -662,7 +747,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         await serial(async () => {
           const all = manifests()
           delete all[slug]
-          await deployAll(c, all)
+          await deploy(c, all)
           fs.rmSync(manifestFile(slug), { force: true })
           // Our copies of its bytes go too, unless another project published the same file.
           const used = new Set(Object.values(all).flatMap((x) => x.files.map((f) => f.sha)))
@@ -672,8 +757,9 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
         return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
       }
-      const gone = await verify(m.url, null)
-      return { status: 200, body: { unpublished: true, url: m.url, gone, files: m.files.length } }
+      const gone = await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs)
+      const notYet = gone ? {} : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
+      return { status: 200, body: { unpublished: true, url: m.url, gone, ...notYet, files: m.files.length } }
     },
   }
 }
