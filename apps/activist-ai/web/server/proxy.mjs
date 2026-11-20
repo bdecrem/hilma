@@ -9,6 +9,7 @@
 import http from 'node:http'
 import { closeAfter, readUpTo } from './linger.mjs'
 import { webRules } from './webask.mjs'
+import { publishRules } from './publishask.mjs'
 
 /**
  * Routes the page may use, and what each needs: `read` (any member, viewers included) or `run`
@@ -62,6 +63,8 @@ export function permissionsFor(autonomy, web = 'ask') {
   // same rules as the Mac's and the mini's (the model often adds "|| true"; true does nothing).
   if (autonomy === 'ask') rules.push(...MADE_BY_READ)
   rules.push(...webRules(web === 'always' && autonomy !== 'ask' ? 'allow' : 'ask'))
+  // Publishing from the conversation (OLA-230): always the person's yes, in both modes.
+  rules.push(...publishRules())
   for (const action of ALWAYS_DENY) rules.push({ action, resource: '*', effect: 'deny' })
   // Ola's own skills are files in the image, read-only, outside the project folder: a skill tells the
   // agent to read its references (designer: references/brief.md), and the denial above refused

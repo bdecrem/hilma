@@ -4,6 +4,7 @@
 // well said. Verbs come from the design's fixed table: Looked through, Read, Wrote, Changed,
 // Ran, Checked, Searched.
 import { webRequestOf } from '../../server/webask.mjs'
+import { publishAskOf, publishRequestOf } from '../../server/publishask.mjs'
 import type { Problem, StepIcon, StretchReason } from './types.ts'
 
 export interface Words {
@@ -39,6 +40,9 @@ export function describeCommand(command: string): Words {
   if (web?.kind === 'search') return { icon: 'search', verb: 'Searched the web for', object: web.item ? `“${web.item}”` : 'something' }
   if (web?.kind === 'fetch') return { icon: 'read', verb: 'Downloaded', object: web.item ? hostOf(web.item) : 'a document' }
   if (web?.kind === 'lookup') return { icon: 'search', verb: 'Looked up a paper:', object: web.item ? `“${web.item}”` : 'a reference' }
+  const pub = publishRequestOf(c)
+  if (pub?.status) return { icon: 'look', verb: 'Checked', object: 'whether the page is published' }
+  if (pub?.sel) return { icon: 'change', verb: 'Published', object: `${pub.files.length === 1 ? 'one file' : `${pub.files.length} files`} at sites.ola.cx` }
   if (/^ola-db\s+search\b/.test(c)) return { icon: 'search', verb: 'Searched the documents', object: '' }
   if (/^ola-db\s+load\b/.test(c)) return { icon: 'change', verb: 'Loaded a table into', object: 'the project’s data' }
   if (/^ola-db\s+(query|tables|describe)\b/.test(c)) return { icon: 'look', verb: 'Looked in', object: 'the project’s data' }
@@ -234,8 +238,11 @@ const hostOf = (u: string) => {
 }
 
 /** A permission request as a question the person can answer. */
-export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null } {
+export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null; publish?: { sel: { folder: string } | { page: string }; files: string[] } | null } {
   const files = Array.isArray(metadata?.files) ? (metadata.files as { file?: string; patch?: string; status?: string }[]) : []
+  // Publishing from the conversation (OLA-230): the sheet shows the list that would go public.
+  const pub = publishAskOf(action, resources)
+  if (pub && !pub.status) return { title: 'Ola wants to publish this on the web', items: resources.map((cmd) => ({ label: pub.sel ? `Publish ${pub.files.length === 1 ? 'one file' : `${pub.files.length} files`} from ${'folder' in pub.sel ? pub.sel.folder : pub.sel.page}` : 'Publish', detail: cmd })), publish: pub.sel ? { sel: pub.sel, files: pub.files } : null }
   // A web search or download: the question says exactly what would leave the machine.
   const webs = action === 'shell' || action === 'bash' ? resources.map((r) => webRequestOf(r)).filter((x) => !!x) : []
   if (webs.length && webs.length === resources.length) {

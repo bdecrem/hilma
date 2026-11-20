@@ -31,7 +31,7 @@ test('a session is created in the workspace with rules the page cannot widen', (
   assert.ok(body.permissions.some((r) => r.action === 'shell' && r.effect === 'ask'))
   assert.equal(rewriteSessionCreate('{not json', '/work'), null)
   const go = rewriteSessionCreate('{}', '/work')
-  assert.ok(!go.permissions.some((r) => r.effect === 'ask' && !/^(\/opt\/ola\/bin\/)?ola-(search|fetch|lookup) \*$/.test(r.resource)), 'go ahead asks nothing but a web search, download or paper lookup')
+  assert.ok(!go.permissions.some((r) => r.effect === 'ask' && !/^(\/opt\/ola\/bin\/)?ola-(search|fetch|lookup) \*$/.test(r.resource) && !/^(\/opt\/ola\/bin\/)?ola-publish( \*)?$/.test(r.resource)), 'go ahead asks nothing but a web search, download, paper lookup or a publish (OLA-230)')
 })
 
 test('an update carries only a title and an autonomy', () => {

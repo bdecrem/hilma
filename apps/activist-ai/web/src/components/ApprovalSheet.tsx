@@ -8,7 +8,11 @@
 // what leaves the machine. "Always in this project" is kept by the front desk for the project,
 // shown and reversible in Settings; the gateway enforces it.
 import { createEffect, createSignal, For, Show } from 'solid-js'
+import { DeskError, site, type SitePreview } from '../lib/api.ts'
+import { bytes, count } from '../lib/format.ts'
+import type { Approval, Problem } from '../lib/types.ts'
 import type { Ola } from '../lib/ola.ts'
+import { ProblemBox } from './Drawer.tsx'
 
 export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
   let dialog: HTMLDialogElement | undefined
@@ -50,6 +54,7 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
       <Show when={a()}>
         {(ap) => (
           <div class="sheet-inner">
+            <Show when={!ap().publish} fallback={<PublishAsk approval={ap()} />}>
             <Show
               when={ap().web}
               fallback={
@@ -111,6 +116,7 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
                 </>
               )}
             </Show>
+            </Show>
           </div>
         )}
       </Show>
@@ -143,5 +149,94 @@ function ApprovalItem(props: { label: string; detail: string | null; action: str
         </Show>
       </Show>
     </li>
+  )
+}
+
+const short = (u: string) => u.replace(/^https?:\/\//, '')
+
+/**
+ * Ola asks to publish (OLA-230): the Publish sheet's list in the conversation. The files that would
+ * go public and their address, from the front desk's own check; "Publish these N files" sends the
+ * fingerprint of exactly this list, and the front desk publishes it and tells Ola how it went.
+ */
+function PublishAsk(props: { approval: Approval }) {
+  const [plan, setPlan] = createSignal<SitePreview | null>(null)
+  const [problem, setProblem] = createSignal<Problem | null>(null)
+  const [busy, setBusy] = createSignal(false)
+  let first: HTMLButtonElement | undefined
+  createEffect(() => {
+    const p = props.approval.publish
+    if (!p) return
+    setPlan(null)
+    setProblem(null)
+    site
+      .preview(p.sel)
+      .then((x) => (setPlan(x), queueMicrotask(() => first?.focus())))
+      .catch((e) => setProblem(e instanceof DeskError ? e.problem : { text: 'The files could not be checked just now. Nothing was published.', detail: String(e) }))
+  })
+  const send = async (a: { decision: 'once'; fingerprint: string } | { decision: 'reject'; message?: string }) => {
+    setBusy(true)
+    try {
+      await site.answer(props.approval.sessionID, props.approval.id, a)
+    } catch (e) {
+      setProblem(e instanceof DeskError ? e.problem : { text: 'Your answer did not reach Ola. Try again.', detail: String(e) })
+      setBusy(false)
+    }
+  }
+  return (
+    <>
+      <h2 id="approval-title" class="sheet-title">
+        Ola wants to publish this on the web
+      </h2>
+      <p id="approval-why" class="sheet-lede">
+        These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.
+      </p>
+      <Show when={!plan() && !problem()}>
+        <p class="publish-status" role="status">
+          Looking at the files and checking them for passwords and private data…
+        </p>
+      </Show>
+      <Show when={problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
+      <Show when={plan()}>
+        {(p) => (
+          <>
+            <p class="publish-address">
+              The address: <strong>{short(p().url)}</strong>
+            </p>
+            <h3 class="publish-heading">
+              {count(p().items.length, 'file')} will be public, {bytes(p().total)}
+            </h3>
+            <ul class="publish-files">
+              <For each={p().items}>
+                {(i) => (
+                  <li>
+                    <span class="publish-name">{i.as}</span>
+                    <span class="publish-meta">
+                      {bytes(i.size)}
+                      {i.uploaded ? ' · added by your group' : ''}
+                    </span>
+                  </li>
+                )}
+              </For>
+            </ul>
+            <Show when={p().leftOut.length}>
+              <p class="meta">Left out: {count(p().leftOut.length, 'hidden or working file')}.</p>
+            </Show>
+            <For each={p().warnings}>{(w) => <p class="publish-warning">{w}</p>}</For>
+            <p class="meta publish-aup">{p().acceptableUse}</p>
+          </>
+        )}
+      </Show>
+      <div class="sheet-actions">
+        <Show when={plan()}>
+          <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => send({ decision: 'once', fingerprint: plan()!.fingerprint })}>
+            {busy() ? 'Publishing…' : plan()!.published ? `Publish these ${count(plan()!.items.length, 'file')} again` : `Publish these ${count(plan()!.items.length, 'file')}`}
+          </button>
+        </Show>
+        <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => send({ decision: 'reject', ...(problem() ? { message: `Not published: ${problem()!.text}` } : { message: 'The person said not now. Nothing was published.' }) })}>
+          Not now
+        </button>
+      </div>
+    </>
   )
 }

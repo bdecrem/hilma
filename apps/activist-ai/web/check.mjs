@@ -1586,8 +1586,8 @@ async function compareChecks(engine, label) {
 // README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
 // and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium
 // and WebKit. A watcher in the page records any text with a raw marker the moment it appears.
-const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts'], { cwd: HERE, encoding: 'utf8' })
-ok('the command and reaction parsers, the conversation reducer and the switch rule (test/commands.test.ts, test/conversation.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts', 'test/publishask.test.mjs'], { cwd: HERE, encoding: 'utf8' })
+ok('the command and reaction parsers, the conversation reducer, the switch rule and the publish question (test/commands.test.ts, test/conversation.test.ts, test/publishask.test.mjs)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
 async function commandChecks(engine, label) {
   const b = await engine.launch()
   const d = await startDev(['--fake-model'])

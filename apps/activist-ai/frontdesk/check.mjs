@@ -1817,11 +1817,35 @@ spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-rf', '/work/flyer', '/work/leak', '
   // fingerprint, live, publish again, names nobody else can take (another person's, a project's, a
   // reserved word, and a project never taking a Mac site's address), unpublish, an admin's takedown
   // holding the name until site-release, not set up said plainly.
-  for (const [file, what] of [['sites.test.mjs', 'Publish’s rules without a VM'], ['sites-device.test.mjs', 'Publish from a Mac: the list, secrets, the yes, live, names owned, unpublish, a takedown held']]) {
+  for (const [file, what] of [['sites.test.mjs', 'Publish’s rules without a VM'], ['sites-device.test.mjs', 'Publish from a Mac: the list, secrets, the yes, live, names owned, unpublish, a takedown held'], ['chatpublish.test.mjs', 'Publish from the conversation: the yes publishes exactly the list, no and a member’s yes publish nothing, the apps’ list must match']]) {
     const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test', file)], { encoding: 'utf8', timeout: 180_000 })
     ok(`${what} (test/${file})`, u.status === 0, `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} passed${u.status ? `: ${u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}` : ''}`)
   }
 }
+
+// Publish from the conversation (OLA-230): the waiting `ola-publish` in a real VM. Without the
+// front desk's note it publishes nothing and says to run it on its own; with the note for exactly
+// its folder and list it waits and prints the address; the same outcome is not a second yes.
+await check('ola-publish in the VM: no yes, no publish; the front desk’s outcome for exactly its list is printed once, with the address', async () => {
+  const run = (...a) => spawnSync(CTR, ['exec', `ola-${FA}`, '/opt/ola/bin/ola-publish', ...a], { encoding: 'utf8', timeout: 60_000, env: { ...process.env } })
+  const no = run('site', '--files', 'index.html')
+  assert(no.status === 1 && /no yes from the person/.test(no.stdout), `without a yes: ${no.status} ${no.stdout}`)
+  assert(await wsLib.publishResult(FA, { state: 'publishing', target: 'site', files: ['index.html', 'style.css'] }), 'the VM took the publishing note')
+  const later = wsLib.publishResult.bind(null, FA, { state: 'done', target: 'site', files: ['index.html', 'style.css'], url: 'https://sites.example/fd-a/', count: 2, live: true })
+  setTimeout(() => void later(), 1500)
+  const yes = await new Promise((r) => {
+    const c = spawn(CTR, ['exec', `ola-${FA}`, '/opt/ola/bin/ola-publish', 'site', '--files', 'style.css,index.html'])
+    let out = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.on('close', (code) => r({ code, out }))
+  })
+  assert(yes.code === 0 && yes.out.includes('Published: https://sites.example/fd-a/ (2 file(s))'), `with the yes: ${yes.code} ${yes.out}`)
+  const again = run('site', '--files', 'index.html,style.css')
+  assert(again.status === 1, `the same outcome again: ${again.status} ${again.stdout}`)
+  const st = run('status')
+  assert(st.status === 0 && st.stdout.includes('https://sites.example/fd-a/'), `status: ${st.stdout}`)
+  spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-rf', '/work/.ola/publish'])
+})
 
 // ---------------------------------------------------------------- Data and the web (2.3.0-8)
 const PDF = spawnSync('python3', [path.join(AI, 'workspace/testdata/mkpdf.py'), 'Page one is about drought in the Sahel.', 'Page two covers mangrove restoration in Tanzania.', 'Page three is about flood insurance.']).stdout

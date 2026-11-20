@@ -14,6 +14,7 @@ import * as ws from '../workspace/ws.mjs'
 import { makeProxy, opencodeCall } from '../web/server/proxy.mjs'
 import { audit, nameRef } from './db.mjs'
 import { webRequests } from '../web/server/webask.mjs'
+import { publishAskOf } from '../web/server/publishask.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const WS_CLI = path.join(HERE, '../workspace/ws.mjs')
@@ -442,7 +443,8 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
           onGoWeb(slug, workspaceId, d.sessionID, d.id, runBy.get(`${slug}:${d.sessionID}`) ?? null).catch((e) => log(`${slug}: a web search under Lots of permissions was not answered (${e?.message ?? e})`))
           return
         }
-        if (allowed?.has(d.action) && !web) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
+        // A publish is never answered for the person (OLA-230): each one is its own yes.
+        if (allowed?.has(d.action) && !web && !publishAskOf(d.action, d.resources)) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
         return
       }
       if (ev.type === 'session.tool.input.started' && typeof d.name === 'string') {
@@ -500,6 +502,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     /** A prompt the front desk sent itself, recorded as a person's (who, the run's clock, the audit). */
     notePrompt: (slug, workspaceId, personId, sessionID) => (fresh(slug), notePrompt(slug, workspaceId, personId, sessionID), watch(slug, workspaceId)),
     putStream: ws.putStream,
+    publishResult: ws.publishResult,
     getStream: ws.getStream,
     // Reading real documents and Open for every kind (README): all inside the VM.
     viewStream: ws.viewStream,

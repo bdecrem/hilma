@@ -41,6 +41,7 @@ import { makeSwitches } from './switches.mjs'
 import { makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
+import { makeChatPublish } from './chatpublish.mjs'
 import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
@@ -329,6 +330,22 @@ export function makeFrontDesk(cfg = config()) {
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log, switches })
   const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
   const siteNames = makeSiteNames(db, sites)
+  // What a project's publish leaves in the audit log, from the Publish button or the conversation.
+  const auditSitePublish = (ws, sess, sel, r, was) => {
+    const ref = nameRef(keys, ws.id, sel.page ?? sel.folder ?? '')
+    if (r.body?.error === 'secret') audit(db, { actor: sess.personId, action: 'site_refused', workspace: ws.id, nameRef: ref, ok: false })
+    if (r.status === 200) audit(db, { actor: sess.personId, action: was ? 'site_updated' : 'site_published', workspace: ws.id, nameRef: ref, size: r.body.total, sha256: r.body.fingerprint })
+  }
+  // Publish from the conversation (chatpublish.mjs, OLA-230): the person's yes to `ola-publish`.
+  const chatPublish = makeChatPublish({
+    sites,
+    siteCtx: (ws) => siteCtx(ws),
+    heldByPerson: (slug) => siteNames.heldByPerson(slug),
+    publishResult: (slug, outcome) => workspaces.publishResult(slug, outcome),
+    holdBusy: (slug) => workspaces.holdBusy(slug),
+    audited: auditSitePublish,
+    log,
+  })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -434,6 +451,13 @@ export function makeFrontDesk(cfg = config()) {
         const body = await readJson(req, 16 * 1024)
         if (!body || typeof body.decision !== 'string') return json(res, 400, { error: 'bad_json' })
         const ask = (m, pathname, b) => workspaces.ocCall(ws.slug, m, pathname, b)
+        // A publish (ola-publish): the front desk publishes on the yes, and the command prints how it went.
+        const pub = await chatPublish.onReply(ws, sess, reply[1], reply[2], body.decision, body, ask)
+        if (pub) {
+          const r = await ask('POST', `/api/session/${reply[1]}/permission/${reply[2]}/reply`, { decision: pub.decision, ...(pub.decision === 'reject' && typeof body.message === 'string' ? { message: body.message.slice(0, 2000) } : {}) })
+          if (r.status >= 400) return json(res, r.status === 404 ? 404 : 502, { error: 'reply_failed', message: 'Your answer did not reach Ola. Try again.' })
+          return res.writeHead(204, { 'cache-control': 'no-store' }).end()
+        }
         let decision = await web.onReply(ws, sess.personId, reply[1], reply[2], body.decision, ask)
         // Never opencode's own "always": it saves a durable project-wide rule, which is not what
         // "Yes, for the rest of this conversation" says (review 4, H2). The front desk keeps it for
@@ -685,9 +709,8 @@ export function makeFrontDesk(cfg = config()) {
         const ctx = siteCtx(ws)
         const was = sites.status(ws.slug)
         const r = p === '/api/site/preview' ? await sites.preview(ctx, sel) : await sites.publish(ctx, sel, typeof body.fingerprint === 'string' ? body.fingerprint : '')
-        const ref = nameRef(keys, ws.id, sel.page ?? sel.folder ?? '')
-        if (r.body?.error === 'secret') audit(db, { actor: sess.personId, action: 'site_refused', workspace: ws.id, nameRef: ref, ok: false })
-        if (p === '/api/site/publish' && r.status === 200) audit(db, { actor: sess.personId, action: was ? 'site_updated' : 'site_published', workspace: ws.id, nameRef: ref, size: r.body.total, sha256: r.body.fingerprint })
+        if (p === '/api/site/publish') auditSitePublish(ws, sess, sel, r, was)
+        else if (r.body?.error === 'secret') audit(db, { actor: sess.personId, action: 'site_refused', workspace: ws.id, nameRef: nameRef(keys, ws.id, sel.page ?? sel.folder ?? ''), ok: false })
         return json(res, r.status, r.body)
       } finally {
         slot.release()

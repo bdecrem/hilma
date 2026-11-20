@@ -1,0 +1,127 @@
+#!/usr/bin/python3 -I
+# ola-publish: put a page Ola made on the public web, from the conversation (OLA-230).
+#
+#   ola-publish <folder | page.html> --files index.html,style.css,...
+#       Run as a command of its own. Ola's computer has no network, so this command cannot publish
+#       by itself: running it asks the person first (always, even under "Lots of permissions"),
+#       showing exactly these files and the address. On their yes Ola's server checks the files
+#       again (secrets, private data, kinds of files), publishes them at sites.ola.cx/<project>/
+#       and hands the outcome back here; this command waits for it and prints it. A "no" means the
+#       command never runs. --files is the list `publish.py check` printed (paths inside the folder).
+#   ola-publish status
+#       The last publish's outcome (never asked): use it when the publish above was still going.
+#
+# The front desk writes the outcome with `ola-publish --result` (the JSON on stdin), into
+# /work/.ola/publish/result.json. Exit 0 published, 1 not published, 2 used wrongly, 3 still going.
+import json, os, sys, tempfile, time
+
+DIR = os.environ.get("OLA_PUBLISH_DIR", "/work/.ola/publish")
+RESULT = os.path.join(DIR, "result.json")
+WAIT = float(os.environ.get("OLA_PUBLISH_WAIT", "110"))
+FRESH = 15 * 60
+
+
+def say(*lines):
+    for l in lines:
+        print(l)
+    sys.stdout.flush()
+
+
+def usage(why):
+    say("ola-publish: " + why, "Use: ola-publish site --files index.html,style.css (the list publish.py check printed), as a command of its own.")
+    sys.exit(2)
+
+
+def read():
+    try:
+        with open(RESULT, encoding="utf-8") as f:
+            r = json.load(f)
+        return r if isinstance(r, dict) else None
+    except (OSError, ValueError):
+        return None
+
+
+def write(r):
+    os.makedirs(DIR, mode=0o700, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=DIR, prefix=".result.")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(r, f)
+    os.replace(tmp, RESULT)
+
+
+def tell(r):
+    """Prints an outcome for the agent; returns the exit code."""
+    st = r.get("state")
+    if st == "done":
+        lines = [("Published again" if r.get("again") else "Published") + f": {r.get('url')} ({r.get('count')} file(s)).",
+                 "It answers with the new page now." if r.get("live") else (r.get("message") or "The host is still putting it up; it shows within a few minutes."),
+                 f"Tell the person it is published, with the address as a link: {r.get('url')}"]
+        say(*lines)
+        return 0
+    if st == "publishing":
+        say("It is still being published. Run `ola-publish status` in a minute to see whether it is live; do not run ola-publish again for the same files.")
+        return 3
+    say("Not published: " + str(r.get("message") or "Ola's server did not publish it."), "Tell the person this in plain words. Nothing went public.")
+    return 1
+
+
+def main(argv):
+    if argv[:1] == ["--result"]:
+        try:
+            r = json.loads(sys.stdin.read(64 * 1024))
+        except ValueError:
+            usage("--result takes the outcome as JSON on stdin")
+        if not isinstance(r, dict) or r.get("state") not in ("publishing", "done", "failed"):
+            usage("not an outcome")
+        r["written"] = time.time()
+        write(r)
+        print(json.dumps({"ok": True}))
+        return 0
+    if argv == ["status"]:
+        r = read()
+        if not r:
+            say("Nothing has been published from this project's conversation yet.")
+            return 1
+        return tell(r)
+    target, files, i = None, None, 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--files":
+            if files is not None or i + 1 >= len(argv):
+                usage("name the files once, after --files, separated by commas")
+            files = [f.strip() for f in argv[i + 1].split(",") if f.strip()]
+            i += 2
+            continue
+        if a.startswith("-") or target is not None:
+            usage(f"“{a}” is not a folder, a page or --files")
+        target = a
+        i += 1
+    if not target:
+        usage("name the folder to publish")
+    if not files:
+        usage("list every file that will be public after --files")
+    target = target.removeprefix("/work/").removeprefix("./").rstrip("/")
+    # The person's yes came before this ran: the front desk wrote "publishing" for exactly this
+    # folder and list, then let the command go. Without that, nobody said yes to it.
+    end = time.time() + WAIT
+    while True:
+        r = read()
+        mine = r and not r.get("used") and r.get("target") == target and sorted(r.get("files") or []) == sorted(files) and time.time() - float(r.get("written") or 0) < FRESH + WAIT
+        if not mine:
+            say("Not published: Ola's server has no yes from the person for exactly this folder and these files.",
+                "Run `ola-publish <folder> --files <the list>` as a command of its own (no pipes, ; or &&, nothing before it), so the person is asked.")
+            return 1
+        if r.get("state") != "publishing" or time.time() > end:
+            break
+        time.sleep(1)
+    code = tell(r)
+    if code != 3:
+        # Shown once: the same outcome does not count as a yes for the next run.
+        if r.get("state") != "publishing":
+            r["used"] = True
+            write(r)
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

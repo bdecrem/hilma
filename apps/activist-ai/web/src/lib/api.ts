@@ -246,6 +246,10 @@ export const site = {
   preview: (sel: SiteChoice) => call<SitePreview>(`/api/site/preview?${'page' in sel ? `page=${encodeURIComponent(sel.page)}` : `folder=${encodeURIComponent(sel.folder)}`}`),
   publish: (sel: SiteChoice, fingerprint: string) => post<{ url: string; again: boolean; files: number; live: boolean }>('/api/site/publish', { ...sel, fingerprint, confirm: true }),
   unpublish: () => post<{ unpublished: true; url: string; gone: boolean }>('/api/site/unpublish', {}),
+  /** The person's answer to Ola's `ola-publish` (OLA-230): yes with the fingerprint of the list the
+   * sheet showed (the front desk then publishes exactly that), or no with the reason. */
+  answer: (sessionID: string, requestID: string, a: { decision: 'once'; fingerprint: string } | { decision: 'reject'; message?: string }) =>
+    post<null>(`/oc/api/session/${encodeURIComponent(sessionID)}/permission/${encodeURIComponent(requestID)}/reply`, a),
 }
 /** The Quality page (admins only). */
 export const qualityApi = { get: () => call<import('./types.ts').Quality>('/api/quality') }

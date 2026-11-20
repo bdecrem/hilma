@@ -24,10 +24,11 @@ and kind, never shown.
 import argparse, hashlib, json, os, re, shutil, socket, subprocess, sys, time, urllib.parse, urllib.request
 from pathlib import Path
 import posixpath
+import shlex
 
 # ------------------------------------------------------------------ which runtime
 def runtime():
-    """'cloud' inside Ola's sealed workspace (no network: the person presses Publish in the web app), else 'local'."""
+    """'cloud' inside Ola's sealed workspace (no network: ola-publish asks the person and Ola's server publishes), else 'local'."""
     home = os.environ.get("HOME", "")
     skills = Path("/opt") / "ola" / "skills"  # built in parts: the Mac app rewrites that path in its copy of the skills
     return "cloud" if home.startswith("/work/.ola") and skills.is_dir() else "local"
@@ -460,6 +461,11 @@ def main(argv=None):
             for p in r.get("problems", []):
                 print(f"PROBLEM: {p}")
             print("ready to publish" if not r.get("problems") else "not ready to publish")
+            # In the cloud the next step is ola-publish with exactly this list (OLA-230).
+            if a.cmd == "check" and not r.get("problems") and runtime() == "cloud" and r.get("files"):
+                rel = os.path.relpath(r["folder"], os.getcwd())
+                if not rel.startswith(".."):
+                    print("publish with: ola-publish " + shlex.quote(rel) + " --files " + shlex.quote(",".join(f["path"] for f in r["files"])))
         return 0 if not r.get("problems") else 1
     if a.cmd == "repo":
         return repo(a.folder, a.name, a.public, a.dry_run)

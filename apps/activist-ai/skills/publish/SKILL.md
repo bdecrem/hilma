@@ -1,9 +1,9 @@
 ---
 name: publish
-description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud by the person pressing Publish; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
+description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "2"
+  ola/version: "3"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -33,9 +33,11 @@ python3 /opt/ola/skills/publish/scripts/publish.py where
 It prints `cloud` or `local` (and, locally, `ola sites: yes|not signed in|no` and whether `git`,
 `gh` and `vercel` are installed).
 
-- **`cloud`** (Ola's machine): this computer has no network and you cannot publish from it. Do
-  Step 2 and Step 3 only, then tell the person to press **Publish** on the page in the project
-  (see "In the cloud" below). Never try GitHub, Vercel, git pushes or the web from here.
+- **`cloud`** (Ola's machine): this computer has no network, but Ola's server publishes for you.
+  Do Step 2 and Step 3, then run `ola-publish` (see "In the cloud" below): the person says yes to
+  the exact list right in the conversation and the page goes up at `sites.ola.cx/<project>/`.
+  Never send the person to another screen to publish, and never try GitHub, Vercel, git pushes or
+  the web from here.
 - **`local`** (the person's own Mac): Steps 2 and 3, then one of two homes (below).
 
 ### Locally: which home
@@ -91,23 +93,39 @@ databases, lists of people (a table with emails or phone numbers), `.env` files,
 the folder or start with `/`, files that are missing. Fix every PROBLEM line and run it again until
 it says `ready to publish`. Hidden files are left out by itself.
 
-Then show the person the list, in plain words: the files, what each one is, and the address it
-will get. Say what you left out and why. Ask: "Shall I publish these files?" Wait for the yes.
+**Locally**, show the person the list, in plain words: the files, what each one is, and the
+address it will get. Say what you left out and why. Ask: "Shall I publish these files?" Wait for
+the yes. **In the cloud**, do not ask in words: `ola-publish` asks with the exact list (below), and
+a question in words first would make the person say yes twice.
 
-## In the cloud: the person presses Publish
+## In the cloud: `ola-publish`, one yes, the address
 
-Stop after Step 3 and tell the person, in about these words:
+After Step 3 says `ready to publish` (it also prints the exact `ola-publish` line to run):
 
-> The page is ready in `site/`. To put it online, open the project, find "<the page's title>" under
-> Pages, and press **Publish**. Ola shows you every file that will be public and the address,
-> `sites.ola.cx/<project>/`, and publishes only when you say yes. Publish again updates it;
-> Unpublish takes it down.
+```bash
+ola-publish site --files index.html,style.css,picture.png
+```
 
-The front desk checks the files again for secrets before anything leaves; it refuses a key, a
-`.env` file and the project's database with a plain sentence. Do not promise a custom domain in
-the cloud: pages there live at `sites.ola.cx/<project>/`. If the person wants their own domain,
-say that this needs the Mac app (the local runtime) and GitHub and Vercel, and offer to walk them
-through it there.
+- Run it **as a command of its own**: nothing before it, no `cd … &&`, no pipes, no `2>&1`.
+  `--files` is the list `check` printed, every file, separated by commas.
+- Running it asks the person, always (even with "Lots of permissions" on): they see every file
+  that will be public and the address, `sites.ola.cx/<project>/`, and say yes or not now. Their
+  yes is the only one needed: do not ask again in words.
+- On the yes Ola's server checks the files again for secrets and private data, publishes them and
+  the command prints the outcome. **Published** with the address: tell the person it is published,
+  with the address as a link (`https://sites.ola.cx/<project>/`), and that publishing again
+  replaces it. **Not published** with a reason: say the reason in plain words, fix what it names
+  (a key in the page, a file that is not in the folder, a different list of files) and, if the
+  person still wants it, run `ola-publish` again with the list it names. **Still being
+  published**: run `ola-publish status` a minute later (it is never asked) and tell them then.
+- If they say not now, nothing was published: say so in one line and leave the page in the project.
+
+The page in the project also keeps a **Publish** button (under what Ola made): it does the same
+thing, and **Unpublish** there takes the pages down. Mention it only if the person asks how to
+take the page down or publish it again themselves. Pages in the cloud live at
+`sites.ola.cx/<project>/`; do not promise a custom domain there. If the person wants their own
+domain, say that this needs the Mac app (the local runtime) and GitHub and Vercel, and offer to
+walk them through it there.
 
 ## Locally, at Ola's address: sites.ola.cx/<name>/
 
@@ -236,4 +254,5 @@ not before.
   repository public unless asked.
 - Do not run `ola-publish publish` or `ola-publish unpublish` without the person's yes for it.
 - Do not say "it is live" before `live` (or, for a domain, `dns`) says so.
-- In the cloud, do not try to reach GitHub, Vercel or `ola-publish`: the person presses Publish.
+- In the cloud, do not try to reach GitHub or Vercel, and never tell the person to go and press
+  Publish instead of publishing: run `ola-publish`, which asks them in the conversation.

@@ -1069,6 +1069,13 @@ async function toolJson(id, tool, args, { ms = 60_000, max = 16 * 1024 * 1024, i
   return { code: r.code, json: x && typeof x === 'object' && !Array.isArray(x) ? x : null, err: lastLine(r.err).replace(/^ola-[a-z]+: /, '').slice(0, 300) }
 }
 
+/** Publish from the conversation (OLA-230): the outcome handed to the waiting `ola-publish` in the
+ * VM ({state: publishing|done|failed, target, files, url, ...}). True when the VM took it. */
+export async function publishResult(id, result) {
+  const r = await toolJson(id, 'ola-publish', ['--result'], { ms: 20_000, max: 64 * 1024, input: JSON.stringify(result) })
+  return r.code === 0 && r.json?.ok === true
+}
+
 /** `ola-view pdf-info|table ...`: JSON, or null when the file is not there or cannot be shown. */
 export async function viewJson(id, args, opts) {
   if (!['pdf-info', 'table'].includes(args[0]) || !validRel(args[1])) return null

@@ -309,6 +309,8 @@ export interface Approval {
   run?: string
   /** A web search or download: what would be searched or fetched (null when the command is not simple). */
   web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null
+  /** A publish from the conversation (OLA-230): what the command asks to put on the web. */
+  publish?: { sel: { folder: string } | { page: string }; files: string[] } | null
 }
 
 /** The project's settings (GET /api/settings). */
