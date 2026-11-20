@@ -445,7 +445,7 @@ export function makeTlsFront(cfg = config()) {
   return { cfg, listener, reload, cert: () => current.info, log, close: () => (clearInterval(poll), clearInterval(report), listener.close(), server.close()) }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   let front
   try {
     front = makeTlsFront()
