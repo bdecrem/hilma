@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "3"
+  ola/version: "4"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -50,6 +50,9 @@ There are two, and both are fine:
 
 Choose from what the person said: "publish this to Ola", "put it on sites.ola.cx", "on Ola" means
 Ola's address; "GitHub", "Vercel", "our own domain", "our own hosting" means GitHub and Vercel.
+A link to share ("a link I can send to my group", "share it with a link") means Ola's address
+when `where` said `ola sites: yes`: it is the one that needs nothing from the person, so publish
+there and give the link, without asking which home.
 Ask only when the request does not say (a plain "publish this"), once, in about these words:
 "Where should it live: at Ola's own address, sites.ola.cx/<name> (nothing to sign up for), or on
 your own hosting with GitHub and Vercel (accounts needed; your own domain possible)?" A site
