@@ -202,6 +202,7 @@ fake.server.unref()
 const fakeClaude = await startFakeAnthropic()
 fakeClaude.server.unref()
 const FAKE_UP = { UPSTREAM_BASE_URL: `http://127.0.0.1:${fake.port}/v1`, UPSTREAM_API_KEY: 'fake-model-key-not-a-secret', GATEWAY_MODELS: 'general=fake' }
+// OLA_CHECK_GENERAL_MODEL=<model id>: the live run's own model on Together instead (the machine's, for example).
 // Fallback to a hosted open model: a second scripted model (web/server/fake-model.mjs, hosted), or
 // with OLA_CHECK_HOSTED_LIVE=<model id> that model on Together (the one live hosted run; cents).
 const HOSTED_LIVE = process.env.OLA_CHECK_HOSTED_LIVE || null
@@ -212,7 +213,7 @@ const HOSTED_UP = HOSTED_LIVE
   : { HOSTED_BASE_URL: `http://127.0.0.1:${fakeHosted.port}/v1`, HOSTED_API_KEY: 'fake-hosted-key-not-a-secret', HOSTED_MODEL: 'fake-hosted', HOSTED_PROVIDER: 'Made-up Cloud' }
 const gwEnv = {
   HOME: homedir(),
-  ...(LIVE ? { UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash' } : FAKE_UP),
+  ...(LIVE ? { UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: `general=${process.env.OLA_CHECK_GENERAL_MODEL || 'zai-org/GLM-5.3-Flash'}` } : FAKE_UP),
   // The tokens file ws.mjs keeps (reloaded when it changes) and the workspaces' door sockets.
   GATEWAY_TOKENS_FILE: path.join(env.OLA_HOME, 'gateway-tokens'),
   GATEWAY_DOOR_DIR: path.join(env.OLA_HOME, 'gw'),
@@ -2217,6 +2218,62 @@ await check('a request handed to Claude runs Claude Code inside the sealed VM th
   const log = gateway.log.split('\n').filter((l) => l.includes('"route":"claude"'))
   assert(log.length >= 2 && log.every((l) => l.includes(`"caller":"ws-${FA}"`) && !l.includes('claude-go')), `${log.length} gateway lines`)
   return `${r.lines.length} lines; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${log.length} gateway requests`
+})
+// Which engine made a file (OLA-224, frontdesk/madeby.mjs): Bart asked "which agent built
+// index.html: hosted or claude?" and the open model said it built it, though Claude had rewritten it.
+// Here Ola's model makes index.html, Claude (the stand-in) rewrites it in the same conversation, and
+// Ola's model is asked who made it, under "Ask before each step" so that any step it takes besides
+// reading the record would stop for a yes. Live: the open model really answers.
+const mpost = (who, p, body) => api(p, { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })
+/** A prompt to Ola's model as the page sends it, and the run's end (a new `idle` in the conversation). */
+async function olaTurn(who, id, text, ms = LIVE ? 300_000 : 120_000) {
+  const msgs = async () => {
+    const m = (await api(`/oc/api/session/${id}/message?limit=200`, { cookie: who.cookie, ws: FA })).json
+    return m?.data ?? m ?? []
+  }
+  const idles = (await msgs()).filter((m) => m.type === 'idle').length
+  const r = await mpost(who, `/oc/api/session/${id}/prompt`, { text })
+  if (r.status >= 300) throw new Error(`prompt: ${r.status} ${r.text.slice(0, 160)}`)
+  let asked = null
+  await until(async () => {
+    const q = (await api(`/oc/api/session/${id}/permission`, { cookie: who.cookie, ws: FA })).json
+    const pending = Array.isArray(q) ? q : q?.data ?? []
+    if (pending.length) asked = pending
+    return asked || (await msgs()).filter((m) => m.type === 'idle').length > idles
+  }, ms, 'the Ola run ending')
+  if (asked) throw new Error(`Ola stopped to ask: ${JSON.stringify(asked).slice(0, 300)}`)
+  const list = await msgs()
+  const last = [...list].sort((x, y) => (x.time?.created ?? 0) - (y.time?.created ?? 0))
+  // Everything Ola said after the last request (an answer can come in more than one message, around its steps).
+  const mine = last.slice(last.map((m) => m.type).lastIndexOf('user') + 1).filter((m) => m.type === 'assistant')
+  const answer = mine.map((m) => (m.content ?? []).filter((p) => p.type === 'text').map((p) => p.text).join('')).filter((t) => t.trim()).join('\n')
+  const shells = mine.flatMap((m) => (m.content ?? []).filter((p) => p.type === 'tool')).map((p) => String(p.state?.input?.command ?? p.name))
+  return { list: last, answer, shells }
+}
+await check('who made a file: Ola makes index.html, Claude rewrites it, and asked who made it Ola names Claude, from the record, without asking anything', async () => {
+  const s = await mpost(a, '/oc/api/session', { title: 'made-by check', metadata: { autonomy: 'go' } })
+  const id = s.json?.id ?? s.json?.data?.id
+  assert(typeof id === 'string', `no conversation: ${s.status}`)
+  // The scripted model cannot write a named file: without --no-live the real one does; with it, the
+  // file is put there and recorded as Ola's by hand, and the turns only carry the conversation.
+  if (LIVE) await olaTurn(a, id, 'Write index.html: a one-line HTML page that says Hello. Just write the file, nothing else.')
+  else (await olaTurn(a, id, 'say hi on one line'), inVm("echo '<p>hello</p>' > /work/index.html && /opt/ola/bin/ola-db made-by add index.html --engine ola --how created"))
+  assert(inVm('test -e /work/index.html && echo there') === 'there', 'Ola did not write index.html')
+  const c = await claudeRun(a, { request: 'write index.html saying nicer', conversation: id })
+  assert(c.ended?.reason === 'done' && inVm('cat /work/index.html') === 'nicer', `Claude: ${JSON.stringify(c.ended)}`)
+  const rec = JSON.parse(inVm('/opt/ola/bin/ola-db made-by index.html --json'))
+  assert(rec[0]?.engine === 'claude' && rec[0].how === 'changed' && rec.at(-1).engine === 'ola' && rec.at(-1).how === 'created', `record: ${JSON.stringify(rec)}`)
+  const mb = await api('/api/made-by', { cookie: a.cookie, ws: FA })
+  assert(mb.status === 200 && mb.json.files.find((f) => f.path === 'index.html')?.engine === 'claude', `/api/made-by: ${mb.status} ${mb.text.slice(0, 200)}`)
+  assert((await api('/api/made-by', { cookie: b.cookie, ws: FA })).status === 404, 'another team read the record')
+  // Under "Ask before each step": reading the record must not stop for a yes.
+  const p = await api(`/oc/api/session/${id}`, { method: 'PATCH', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ metadata: { autonomy: 'ask' } }), headers: { 'content-type': 'application/json' } })
+  assert(p.status < 300, `autonomy: ${p.status}`)
+  const q = await olaTurn(a, id, LIVE ? 'Who made index.html?' : 'Who made index.html? say hi on one line')
+  const user = q.list.filter((m) => m.type === 'user').pop()
+  assert(String(user?.text ?? '').startsWith('<ola-engines>') && /Claude, asked "write index\.html saying nicer", changed index\.html/.test(user.text) && /\n\nWho made index\.html\?/.test(user.text), `the prompt opencode got: ${String(user?.text).slice(0, 300)}`)
+  if (LIVE) assert(/claude/i.test(q.answer) && !/\bI (built|made|wrote|created)\b/i.test(q.answer), `the answer: ${q.answer.slice(0, 400)}`)
+  return `answer: ${JSON.stringify(q.answer.trim().slice(0, 400))}; shell: ${JSON.stringify(q.shells)}`
 })
 await check('under "Ask before each step" Claude Code stops for a yes: no means no file, yes means the file', async () => {
   const no = await claudeRun(a, { request: 'write claude-no.txt saying no', autonomy: 'ask' }, { decide: 'reject' })

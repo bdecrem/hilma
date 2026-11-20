@@ -58,6 +58,9 @@ const ASK_FIRST = ['shell', 'bash', 'edit', 'write', 'apply_patch', 'patch']
 export function permissionsFor(autonomy, web = 'ask') {
   const rules = [{ action: '*', resource: '*', effect: 'allow' }]
   if (autonomy === 'ask') for (const action of ASK_FIRST) rules.push({ action, resource: '*', effect: 'ask' })
+  // Reading the record of who made a file only reads names and times (OLA-224): never asked, the
+  // same rules as the Mac's and the mini's (the model often adds "|| true"; true does nothing).
+  if (autonomy === 'ask') rules.push(...MADE_BY_READ)
   rules.push(...webRules(web === 'always' && autonomy !== 'ask' ? 'allow' : 'ask'))
   for (const action of ALWAYS_DENY) rules.push({ action, resource: '*', effect: 'deny' })
   // Ola's own skills are files in the image, read-only, outside the project folder: a skill tells the
@@ -67,6 +70,7 @@ export function permissionsFor(autonomy, web = 'ask') {
   rules.push(SKILLS_READ)
   return rules
 }
+export const MADE_BY_READ = ['shell', 'bash'].flatMap((action) => ['ola-made-by', 'ola-made-by *', 'true'].map((resource) => ({ action, resource, effect: 'allow' })))
 export const SKILLS_READ = { action: 'external_directory', resource: '/opt/ola/skills/*', effect: 'allow' }
 
 /** The body opencode gets for PATCH /api/session/:id: a title and the autonomy, nothing else. */
@@ -126,8 +130,11 @@ const MAX_REPLY = 32 * 1024 * 1024
  * `socketPath` a unix socket (a sealed workspace's desk); `agent` is an optional http.Agent.
  * `onForward({ method, pathname })` is told about each request that reached opencode with a 2xx.
  * `webMode()` says the project's web choice ('ask' or 'always') for new or changed sessions.
+ * `onPrompt(sessionID, text)` (the front desk, OLA-224) is awaited before a person's prompt goes on:
+ * the turn is noted in the VM, and what it resolves is the text opencode gets (the person's own
+ * text, with a note of what other engines did in the conversation in front of it).
  */
-export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {}, onAutonomy = () => {}, webMode = () => 'ask' }) {
+export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {}, onAutonomy = () => {}, webMode = () => 'ask', onPrompt = null }) {
   const upstream = target ? new URL(target) : null
   return async function proxy(req, res, pathname, search) {
     if (!allowed(req.method, pathname)) {
@@ -165,6 +172,17 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
         }
         body = Buffer.from(JSON.stringify(rewritten))
         autonomy = rewritten.metadata?.autonomy ?? null
+      }
+      const prompt = req.method === 'POST' && onPrompt ? /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname) : null
+      if (prompt) {
+        let j = null
+        try {
+          j = JSON.parse(body.toString('utf8'))
+        } catch {}
+        if (j && typeof j === 'object' && !Array.isArray(j) && typeof j.text === 'string') {
+          const text = await onPrompt(prompt[1], j.text)
+          if (typeof text === 'string' && text !== j.text) body = Buffer.from(JSON.stringify({ ...j, text }))
+        }
       }
     }
     const headers = { authorization: typeof authorization === 'function' ? authorization() : authorization, accept: req.headers.accept ?? '*/*' }

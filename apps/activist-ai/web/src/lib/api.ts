@@ -5,7 +5,7 @@
 // The workspace is named per tab, in the address (?w=<slug>), and sent on every request as
 // X-Ola-Workspace; the front desk checks membership on each one. Writes also carry the session's
 // CSRF token (X-Ola-CSRF), which the page learns from /api/me.
-import type { DataSummary, DocsPage, FileEntry, Me, Problem, ProjectPayload, Settings, TablePage } from './types.ts'
+import type { DataSummary, DocsPage, FileEntry, MadeByEntry, Me, Problem, ProjectPayload, Settings, TablePage } from './types.ts'
 
 export class DeskError extends Error {
   problem: Problem
@@ -64,6 +64,8 @@ export interface FrontDesk {
   /** Runs the front desk stopped at the run ceiling in the last day, and why (the message to show). */
   runs(): Promise<RunsPayload>
   files(): Promise<FileEntry[]>
+  /** Which engine last changed each file (OLA-224): the project's own record. */
+  madeBy(): Promise<MadeByEntry[]>
   /** Sends one file to the workspace. Rejects with a DeskError (409 when the name is taken). */
   upload(file: File, opts?: { replace?: boolean }): Promise<UploadResult>
   downloadUrl(path: string): string
@@ -257,6 +259,7 @@ export const desk: FrontDesk = {
   newProject: (name) => post<{ slug: string; name: string }>('/api/projects', { name }),
   runs: () => call<RunsPayload>('/api/runs'),
   files: async () => (await call<{ files: FileEntry[] }>('/api/files')).files,
+  madeBy: async () => (await call<{ files: MadeByEntry[] }>('/api/made-by')).files,
   upload: (file, opts) =>
     maxUpload && file.size > maxUpload
       ? Promise.reject(new DeskError({ text: tooLarge(maxUpload), detail: '413 too_large (not sent)' }, 413))

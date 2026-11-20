@@ -77,7 +77,7 @@ const NOT_SET_UP = {
   unknown: 'This cannot be turned on just now: this machine could not check that the hosted open model is set up. Bart can look into it.',
 }
 
-export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
+export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy = null }) {
   let status = { at: 0, value: null }
   const usage = async (fresh = false) => {
     if (!fresh && Date.now() - status.at < 5000) return status.value
@@ -167,7 +167,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
       if (now && !now.has(old.session)) await end(old, true)
     }
     if (runs.has(ws.slug)) return { status: 409, body: { error: 'hosted_busy', message: 'The hosted open model is already working on a request in this project. Wait for it to finish, or stop it.' } }
-    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, once, leaseId: null, before: null, ended: false, timer: null }
+    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, once, leaseId: null, before: null, ended: false, timer: null, turn: null }
     runs.set(ws.slug, run) // before any await below: a second start finds it
     try {
       await workspaces.ensureRunning(ws.slug)
@@ -184,7 +184,12 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
       }
       const sw = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/model`, { model: HOSTED_MODEL })
       if (sw.status < 200 || sw.status > 299) throw Object.assign(new Error('switch'), { status: sw.status === 404 ? 404 : 502 })
-      const p = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/prompt`, { text: request })
+      // Which engine made a file (madeby.mjs, OLA-224): this run is the hosted model's turn in the
+      // VM, and opencode's history shows Ola's replies as its own, so what Ola and Claude did in this
+      // conversation since its last turn goes in front of the request as a marked note.
+      const note = madeBy ? madeBy.noteFor(ws.slug, session, 'hosted') : ''
+      run.turn = madeBy ? await madeBy.begin(ws.slug, { engine: 'hosted', session, request }) : null
+      const p = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/prompt`, { text: note + request })
       if (p.status < 200 || p.status > 299) throw Object.assign(new Error('prompt'), { status: 502 })
       workspaces.notePrompt(ws.slug, ws.id, personId, session)
     } catch (e) {
@@ -233,6 +238,8 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     if (run.ended) return
     run.ended = true
     clearTimeout(run.timer)
+    // What the run created, changed or deleted, recorded as the hosted model's (madeby.mjs).
+    if (run.turn) await madeBy.end(run.slug, run.turn, { interrupted: !started })
     // Back to Ola's own model before anything else: the conversation's next request runs here.
     // opencode may refuse the switch while the session is still settling right after its run, so
     // it is read back and tried again (up to about 10 s); a failure is logged, never silent.

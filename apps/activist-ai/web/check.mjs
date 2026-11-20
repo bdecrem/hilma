@@ -861,7 +861,7 @@ async function claudeChecks(engine, label) {
       const who = await lastWho()
       assert(who.replace(/\s+/g, ' ').trim() === 'Claude, outside this machine', `marked: ${who}`)
       const words = await stepWords(pg)
-      assert(JSON.stringify(words) === JSON.stringify(['Wrote hello-claude.txt']), `steps: ${JSON.stringify(words)}`)
+      assert(JSON.stringify(words) === JSON.stringify(['Claude wrote hello-claude.txt']), `steps: ${JSON.stringify(words)}`)
       const answer = await lastTurn(pg).locator('.answer').last().innerText()
       assert(/in your Files as hello-claude.txt/.test(answer), `answer: ${answer}`)
       const files = await pg.evaluate(() => fetch('/api/files').then((r) => r.json()))

@@ -4,7 +4,7 @@
 import { createEffect, createResource, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
 import type { CompareInfo, CompareResultLine, Fallback, Problem, Question, Step, Turn } from '../lib/types.ts'
-import { runSummary } from '../lib/conversation.ts'
+import { runSummary, stepVerb } from '../lib/conversation.ts'
 import { JOB_PROPOSED } from '../lib/steps.ts'
 import { COMMANDS, commandMatches, parseCommand, reactionOnly, REACTIONS, shown, turnReaction, type CommandName } from '../lib/commands.ts'
 import { clock, when } from '../lib/format.ts'
@@ -505,9 +505,9 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
                 {t().notice}
               </p>
             </Show>
-            <Show when={showSteps()} fallback={<For each={failedSteps()}>{(st) => <StepRow step={st} current={false} />}</For>}>
+            <Show when={showSteps()} fallback={<For each={failedSteps()}>{(st) => <StepRow step={st} current={false} engine={t().engine} />}</For>}>
               <ol class="steps" id={runId()}>
-                <For each={t().steps}>{(st, i) => <StepRow step={st} current={i() === current()} />}</For>
+                <For each={t().steps}>{(st, i) => <StepRow step={st} current={i() === current()} engine={t().engine} />}</For>
               </ol>
             </Show>
           </div>
@@ -585,7 +585,7 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
   )
 }
 
-function StepRow(props: { step: Step; current: boolean }) {
+function StepRow(props: { step: Step; current: boolean; engine?: Turn['engine'] }) {
   const s = () => props.step
   const [details, setDetails] = createSignal(false)
   const id = () => `step-${s().id}`
@@ -598,7 +598,7 @@ function StepRow(props: { step: Step; current: boolean }) {
       </span>
       <div class="step-main">
         <p class="step-words">
-          {s().verb}
+          {stepVerb(s(), props.engine)}
           <Show when={s().object}>
             {' '}
             <strong>{s().object}</strong>

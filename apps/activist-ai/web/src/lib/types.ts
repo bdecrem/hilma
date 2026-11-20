@@ -217,6 +217,15 @@ export interface Turn {
 }
 
 export type Engine = 'ola' | 'claude' | 'hosted'
+
+/** One file's last change in the project's record of who made what (GET /api/made-by, OLA-224). */
+export interface MadeByEntry {
+  path: string
+  engine: Engine
+  how: 'created' | 'changed' | 'deleted'
+  /** ISO time of the change. */
+  at: string
+}
 /** The two ways out of this machine, each its own switch. */
 export type Fallback = 'hosted' | 'claude'
 export type ClaudeAuto = 'ask' | 'stuck' | 'always'

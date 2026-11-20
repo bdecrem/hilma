@@ -2,14 +2,18 @@
 // upload (with the plain line on where it goes), download, delete with a confirmation.
 import { createResource, createSignal, For, Show } from 'solid-js'
 import { canOpen, desk, DeskError, goesInPieces, type UploadResult } from '../lib/api.ts'
-import type { FileEntry, Problem } from '../lib/types.ts'
+import type { Engine, FileEntry, MadeByEntry, Problem } from '../lib/types.ts'
 import { bytes, cap, count, when } from '../lib/format.ts'
 import { Icon } from './Icon.tsx'
 import { ProblemBox } from './Drawer.tsx'
 
 export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string; claudeOn?: boolean; hostedOn?: boolean }) {
   const canWrite = () => props.canWrite !== false
-  const [files, { refetch }] = createResource(() => desk.files())
+  const [files, { refetch: refetchFiles }] = createResource(() => desk.files())
+  // Which engine last changed each file (OLA-224); a project without the record shows nothing more.
+  const [madeBy, { refetch: refetchMadeBy }] = createResource(() => desk.madeBy().catch((): MadeByEntry[] => []))
+  const refetch = () => Promise.all([refetchFiles(), refetchMadeBy()])
+  const lastBy = () => new Map((madeBy() ?? []).filter((m) => m.how !== 'deleted').map((m) => [m.path, m]))
   const [problem, setProblem] = createSignal<Problem | null>(null)
   const [status, setStatus] = createSignal('')
   const [busy, setBusy] = createSignal(false)
@@ -160,7 +164,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
         </dl>
 
         <FileTable title="You uploaded" files={uploaded()} empty="Nothing yet. Upload a file and Ola can work with it." onDelete={canWrite() ? askDelete : undefined} />
-        <FileTable title="Ola made from them" files={made()} empty="Nothing yet. What Ola writes for you appears here." onDelete={canWrite() ? askDelete : undefined} />
+        <FileTable title="Ola made from them" files={made()} empty="Nothing yet. What Ola writes for you appears here." onDelete={canWrite() ? askDelete : undefined} lastBy={lastBy()} />
       </div>
 
       <dialog ref={confirm} class="sheet confirm" aria-labelledby="confirm-title" onClose={() => setToDelete(null)}>
@@ -187,7 +191,13 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
   )
 }
 
-function FileTable(props: { title: string; files: FileEntry[]; empty: string; onDelete?: (f: FileEntry) => void }) {
+const ENGINE_NAME: Record<Engine, string> = { ola: 'Ola', hosted: 'the hosted model', claude: 'Claude' }
+/** "Last changed by Claude, 10:49 pm", "Made by Ola, Nov 18" (the record's newest line for the file). */
+export function madeByWords(m: MadeByEntry): string {
+  return `${m.how === 'created' ? 'Made' : 'Last changed'} by ${ENGINE_NAME[m.engine]}, ${when(m.at)}`
+}
+
+function FileTable(props: { title: string; files: FileEntry[]; empty: string; onDelete?: (f: FileEntry) => void; lastBy?: Map<string, MadeByEntry> }) {
   const headingId = `files-${props.title.replace(/\W+/g, '-').toLowerCase()}`
   return (
     <section class="file-group" aria-labelledby={headingId}>
@@ -216,7 +226,11 @@ function FileTable(props: { title: string; files: FileEntry[]; empty: string; on
                     </span>
                     <span class="file-meta">{bytes(f.size)}</span>
                   </td>
-                  <td class="file-when">{when(f.uploaded ?? f.modified)}</td>
+                  <td class="file-when">
+                    <Show when={props.lastBy?.get(f.path)} fallback={when(f.uploaded ?? f.modified)}>
+                      {(m) => madeByWords(m())}
+                    </Show>
+                  </td>
                   <td class="file-actions">
                     <Show when={canOpen(f.path)}>
                       <a href={desk.openUrl(f.path)} target="_blank" rel="noopener noreferrer">

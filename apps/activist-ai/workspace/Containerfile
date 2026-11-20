@@ -78,6 +78,10 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-40 (OLA-224): ola-made-by, and ola-db's record of which engine (Ola's own open model, the
+# hosted one, Claude) made or changed each file (made-by begin/end/add; tables made_by and
+# made_by_open in /work/project.db; names and times only); ola-init ends turns a stopped VM left
+# open. Builds on 2.3.0-39. (Not 2.3.0-37 or 38: 37 is another builder's number on the mini, 38 this branch's build before 39.)
 # 2.3.0-31: the designer skill 4, concepts mode: N whole pages on different layouts; sheet.py says SAME
 # LAYOUT (exit 3) for one page in two palettes and hides its working files (OLA-130).
 # 2.3.0-29: AGENTS.md says what to do when the person asks for Claude (type /claude; never "I can't").

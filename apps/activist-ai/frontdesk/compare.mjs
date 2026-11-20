@@ -44,6 +44,7 @@ import { permissionsFor } from '../web/server/proxy.mjs'
 import { webRules } from '../web/server/webask.mjs'
 import * as ws from '../workspace/ws.mjs'
 import { TWIN_UID } from '../workspace/ws.mjs'
+import { stripEngines } from './madeby.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 export const AUTO = ['ask', 'daily']
@@ -470,7 +471,7 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     const list = (Array.isArray(r.json?.data) ? r.json.data : Array.isArray(r.json) ? r.json : []).slice().sort((a, b) => (a.time?.created ?? 0) - (b.time?.created ?? 0))
     const i = list.findIndex((m) => m?.type === 'user' && m.id === message)
     if (i < 0) return null
-    const t = { request: String(list[i].text ?? ''), answer: '', read: [], wrote: [], finished: false, context: '', model: 'general' }
+    const t = { request: stripEngines(String(list[i].text ?? '')), answer: '', read: [], wrote: [], finished: false, context: '', model: 'general' }
     const rel = (p) => String(p ?? '').replace(/^\/work\//, '').replace(/^\.\//, '')
     for (const m of list.slice(i + 1)) {
       if (m.type === 'user') break
@@ -490,7 +491,7 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       }
       if (m.type === 'idle') t.finished = m.outcome === 'succeeded'
     }
-    t.context = list.slice(Math.max(0, i - 12), i).map((m) => (m.type === 'user' ? `Person: ${m.text ?? ''}` : m.type === 'assistant' ? `Ola: ${(m.content ?? []).filter((p) => p.type === 'text').map((p) => p.text).join('')}` : '')).filter(Boolean).join('\n').slice(-60_000)
+    t.context = list.slice(Math.max(0, i - 12), i).map((m) => (m.type === 'user' ? `Person: ${stripEngines(m.text ?? '')}` : m.type === 'assistant' ? `Ola: ${(m.content ?? []).filter((p) => p.type === 'text').map((p) => p.text).join('')}` : '')).filter(Boolean).join('\n').slice(-60_000)
     t.read = [...new Set(t.read)].slice(0, 40)
     t.wrote = [...new Set(t.wrote)].slice(0, 40)
     return t

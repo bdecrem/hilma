@@ -38,6 +38,7 @@ import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
+import { makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSites, sitesConfig } from './sites.mjs'
 import { linksOf } from './links.mjs'
@@ -232,7 +233,18 @@ export function makeFrontDesk(cfg = config()) {
     const decision = await web.onReply({ slug, id: workspaceId }, personId, sessionID, requestID, 'once', ask)
     await ask('POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision })
   }
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb })
+  // Which engine made a file (madeby.mjs, OLA-224): each Ola prompt is noted as Ola's turn in the
+  // VM before it goes on, with a note in front of it when Claude or the hosted model worked in that
+  // conversation since Ola's last turn; its run's end records what it changed.
+  let madeBy = null
+  const onPrompt = async (slug, sessionID, text) => {
+    if (!madeBy) return text
+    const note = madeBy.noteFor(slug, sessionID, 'ola')
+    await madeBy.begin(slug, { engine: 'ola', session: sessionID, request: text })
+    return note + text
+  }
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPrompt, onRunEnded: (slug, sessionID, how) => madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' }) })
+  madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), log })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })
@@ -311,8 +323,8 @@ export function makeFrontDesk(cfg = config()) {
   // A grant answers only the addresses it knows (OLA-96): the one that opened it, and one that
   // brings the opener's own session cookie.
   const views = makeViews({ cfg, db, keys, auth, membership, workspaces, clientOf, sessionIdOf: (req) => auth.session(req)?.id ?? null })
-  const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
-  const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
+  const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log, madeBy })
+  const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log, madeBy })
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log, switches })
   const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
@@ -556,6 +568,34 @@ export function makeFrontDesk(cfg = config()) {
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
     // front desk's memory: no exec, does not wake the workspace, is not use.
     if (p === '/api/runs' && req.method === 'GET') return json(res, 200, workspaces.runsOf(ws.slug))
+    // Which engine last changed each file (OLA-224): the project's own record, `ola-db made-by
+    // --json` inside the VM (names, engines and times only), for Files. One exec, one transfer slot.
+    if (p === '/api/made-by' && req.method === 'GET') {
+      const slot = takeSlot(sess.personId, ws.slug)
+      if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
+      const busy = workspaces.holdBusy(ws.slug)
+      try {
+        await workspaces.ensureRunning(ws.slug)
+        const r = await workspaces.madeBy(ws.slug, ['--json'])
+        let rows = null
+        try {
+          rows = r.code === 0 ? JSON.parse(r.out) : null
+        } catch {}
+        if (!Array.isArray(rows)) return json(res, 502, { error: 'made_by_failed', message: 'Who made each file could not be read just now. Try again in a minute.' })
+        const ENG = ['ola', 'hosted', 'claude']
+        const files = rows
+          .filter((x) => x && typeof x.path === 'string' && workspaces.validRel(x.path) && ENG.includes(x.engine) && ['created', 'changed', 'deleted'].includes(x.how) && typeof x.at === 'string' && !Number.isNaN(Date.parse(x.at)))
+          .slice(0, 1000)
+          .map((x) => ({ path: x.path, engine: x.engine, how: x.how, at: new Date(x.at).toISOString() }))
+        return json(res, 200, { files })
+      } catch (e) {
+        if (['CLOSED', 'MACHINE_BUSY', 'START_FAILED'].includes(e?.code)) return startRefused(res, e)
+        throw e
+      } finally {
+        slot.release()
+        busy()
+      }
+    }
     // Batch jobs (jobs.mjs): the list and one job (any member), and trial, start, pause, resume and
     // cancel (owners and members; the whole job, outside models and budgets: owners).
     if (p === '/api/jobs' || p.startsWith('/api/jobs/')) {
@@ -1295,7 +1335,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, close: () => (devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, sites, close: () => (madeBy.close(), devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

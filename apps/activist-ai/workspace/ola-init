@@ -17,6 +17,9 @@ mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # The project database, /work/project.db: made at the first start, brought up to date at every
 # start (a project made before it existed gets it here). Not fatal: opencode starts regardless.
 /opt/ola/bin/ola-db init || echo "ola-init: the project database could not be prepared" >&2
+# A turn the front desk began and never ended (the VM stopped mid-turn): ended as interrupted, so
+# what it changed is recorded with its engine (OLA-224, ola-db made-by).
+/opt/ola/bin/ola-db made-by end --stale >/dev/null 2>&1 || true
 # Pieces of an upload left for two days, and views not used for a week, are cleared.
 find /work/.ola/uploads -maxdepth 1 -name "*.part" -mtime +2 -delete 2>/dev/null || true
 find /work/.ola/cache/views -maxdepth 1 -type f -mtime +7 -delete 2>/dev/null || true

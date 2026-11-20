@@ -223,7 +223,7 @@ function requestOf(line) {
   }
 }
 
-export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log }) {
+export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log, madeBy = null }) {
   let status = { at: 0, value: null }
   const usage = async (fresh = false) => {
     if (!fresh && Date.now() - status.at < 5000) return status.value
@@ -336,8 +336,11 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
       await new Promise((r) => setTimeout(r, 500))
       before = await usage(true)
     }
+    // Which engine made a file (madeby.mjs, OLA-224): this run is Claude's turn in the VM; what it
+    // creates, changes or deletes is recorded as Claude's when it ends, and Ola hears of it.
+    const turn = madeBy ? await madeBy.begin(ws.slug, { engine: 'claude', session: conv, request }) : null
     const child = spawn(container, ['exec', '-i', `ola-${ws.slug}`, '/opt/ola/bin/ola-claude', autonomy, conv, id, why], { stdio: ['pipe', 'pipe', 'pipe'] })
-    const run = { id, once, leaseId, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [] }
+    const run = { id, once, leaseId, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [], turn }
     runs.set(id, run)
     bySlug.set(ws.slug, id)
     child.stdin.on('error', () => {})
@@ -459,6 +462,8 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     const mode = modeFor(db, run.wsId)
     audit(db, { actor: run.personId, action: run.once ? 'claude_once' : 'claude_used', workspace: run.wsId, ok: Boolean(run.result && !run.result.is_error && !run.stopping), tokensIn: total === null ? null : total - out, tokensOut: out, costMicroUsd: mode === 'api_key' ? cost : null })
     const reason = run.stopping === 'ceiling' ? 'ceiling' : run.stopping ? 'stopped' : run.result && !run.result.is_error ? 'done' : 'failed'
+    // What Claude created, changed or deleted, recorded as Claude's (madeby.mjs).
+    if (run.turn) await madeBy.end(run.slug, run.turn, { interrupted: reason !== 'done' })
     const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
     send(run, { ola: 'ended', reason, ...(reason === 'ceiling' ? { message: ceilingMessage(minutes).replace(/^Ola stopped this/, 'Claude was stopped') } : {}), ...(reason === 'failed' && !run.result ? { message: code === 0 ? 'Claude stopped before it answered.' : 'Claude could not run in your project just now. Nothing else was changed.' } : {}) })
     for (const res of run.clients) res.end()

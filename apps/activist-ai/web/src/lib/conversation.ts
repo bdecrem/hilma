@@ -31,6 +31,27 @@ export interface LooseEvent {
 
 const DONE: Turn['status'][] = ['done', 'failed', 'stopped']
 
+/**
+ * The person's request without the note the front desk puts in front of an open model's prompt
+ * (frontdesk/madeby.mjs, OLA-224: `<ola-engines>…</ola-engines>`, what other engines did in the
+ * conversation). The note is for the model; the person sees what they typed.
+ */
+export function stripEngines(text: string): string {
+  if (!text.startsWith('<ola-engines>')) return text
+  const end = text.indexOf('</ola-engines>')
+  return end < 0 ? text : text.slice(end + '</ola-engines>'.length).replace(/^\s+/, '')
+}
+
+const ENGINE_WORDS = { claude: 'Claude', hosted: 'The hosted model' } as const
+/**
+ * A step's verb with the engine that took it, for a step that wrote or changed a file in a turn
+ * another engine ran: "Claude wrote", "The hosted model changed". Ola's own steps keep their verb.
+ */
+export function stepVerb(step: Pick<Step, 'icon' | 'verb'>, engine?: Turn['engine']): string {
+  if ((step.icon !== 'write' && step.icon !== 'change') || (engine !== 'claude' && engine !== 'hosted')) return step.verb
+  return `${ENGINE_WORDS[engine]} ${step.verb.charAt(0).toLowerCase()}${step.verb.slice(1)}`
+}
+
 export function startTurn(state: ConversationState, request: string, at = Date.now()): Turn {
   const turn: Turn = { id: `local-${at}`, request, at, status: 'sending', steps: [], answer: '', notes: [], error: null, notice: null, ended: null }
   state.turns.push(turn)
@@ -271,7 +292,7 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
   let turn: Turn | null = null
   for (const m of ordered) {
     if (m.type === 'user') {
-      turn = { id: m.id, request: m.text ?? '', at: m.time?.created ?? 0, status: 'working', steps: [], answer: '', notes: [], error: null, notice: null, ended: null }
+      turn = { id: m.id, request: stripEngines(m.text ?? ''), at: m.time?.created ?? 0, status: 'working', steps: [], answer: '', notes: [], error: null, notice: null, ended: null }
       turns.push(turn)
       continue
     }

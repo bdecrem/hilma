@@ -33,7 +33,9 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {} }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {} }) {
+  // `onPrompt` and `onRunEnded` (madeby.mjs, OLA-224): a person's prompt is noted as Ola's turn in
+  // the VM before it goes on (and may get a note in front of it), and its run's end ends the turn.
   // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
   // create and update (web/server/proxy.mjs onAutonomy), never from opencode: `${slug}:${sessionID}`
   // -> 'go' | 'ask'. A web search or download asked in a `go` conversation is answered by the
@@ -307,6 +309,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
             const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
             if (method === 'POST' && m) watch(slug, workspaceId)
           },
+          onPrompt: (sessionID, text) => onPrompt(slug, sessionID, text),
           onAutonomy: (sessionID, a) => {
             autonomyOf.set(`${slug}:${sessionID}`, a)
             if (autonomyOf.size > 20_000) autonomyOf.delete(autonomyOf.keys().next().value)
@@ -424,6 +427,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       const d = ev?.data
       if (d && typeof d.sessionID === 'string' && d.sessionID.length <= 80 && /^session\.execution\.(succeeded|failed|interrupted)$/.test(ev.type)) {
         ended.set(`${slug}:${d.sessionID}`, Date.now())
+        if (/^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID)) onRunEnded(slug, d.sessionID, ev.type.slice('session.execution.'.length))
         return
       }
       if (!d || typeof d.id !== 'string' || d.id.length > 120) return
@@ -485,6 +489,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     },
     ocCall: (slug, method, pathname, body) => opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, method, pathname, body),
     dbApi: ws.dbApi,
+    madeBy: ws.madeBy,
     dbStream: ws.dbStream,
     dbAdd: ws.dbAdd,
     dbRemove: ws.dbRemove,
