@@ -109,6 +109,11 @@ never holds user data. The install list, and the check that says which of it is 
   workspace, web, front desk), and switches `current` only if all pass. A failed suite touches
   nothing that runs. It checks commit signatures (`--unsigned` overrides, and the log says so).
   A rollback is a deploy of the older commit. README, "Deploying staging".
+- **Automatic checks:** `cx.ola.ci` checks every change to main once (OLA-84, `ops/ci.mjs`): a
+  deploy's result counts, a younger commit waits 20 minutes for its deploy, anything else gets
+  `ola.mjs check` (the deploy's suites plus OlaKit's swift test, nothing served). The result is the
+  GitHub commit status `ola/checks` and "Checks on main" on the board; a newly failing main opens a
+  P1 issue for the runner. README, "Deploying staging".
 - **One test turn:** everything that starts VMs to test (the workspace and front desk checks, the
   live scripts, the evals) waits for the machine's one turn, `ops/turn.mjs`; a deploy goes before
   every waiting builder and holds the turn through its suites. `node ops/turn.mjs status` shows it.
@@ -163,7 +168,7 @@ made-up data; the Mac app download and the iPhone app on TestFlight; the `ola` c
 both fallbacks; skills; batch jobs; Compare with Claude; the alarm.
 
 **Next:** the Mac Studio as the Ola machine (about December 1), then Frances and Ian in December;
-the backup drives on the Studio; automatic checks on every change; deploys only from signed commits; the
+the backup drives on the Studio; deploys only from signed commits; the
 open-model quality gap (planted instructions, wrong premises); the phone without Tailscale. The
 tracker holds the full list: `node scripts/venture/issues.mjs list --status open`.
 
