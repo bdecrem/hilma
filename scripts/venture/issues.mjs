@@ -5,7 +5,9 @@
 //
 //   node scripts/venture/issues.mjs add "title" --area web --pri P1 [--what "why, one or two sentences"]
 //                                   [--who lead] [--week 1] [--start] [--link "label=https://…"] [--doc slug]
-//   node scripts/venture/issues.mjs start <id> [--who name]                      also claims it (below)
+//   node scripts/venture/issues.mjs start <id> [--who name] [--lane server|apps|tools] [--beside "why"]   also claims it (below);
+//                                                                                refused for a builder while another builder or the runner
+//                                                                                holds the server lane (OLA-251); checkers never are
 //   node scripts/venture/issues.mjs claim <id> [--who name]                      "I am on this": renew at least every 45 min
 //   node scripts/venture/issues.mjs release <id>                                 let go (done, wait, open and drop release too)
 //   node scripts/venture/issues.mjs claims                                       the live claims
@@ -57,7 +59,7 @@ import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue } from './_state.mjs'
-import { CLAIM_PREFIX, CLAIM_TTL, caseVerdict } from './_plate.mjs'
+import { CLAIM_PREFIX, CLAIM_TTL, caseVerdict, laneHolder, laneOf, laneSentence, neverRefused } from './_plate.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -134,12 +136,31 @@ async function patch(id, fields) {
   console.log(line(row))
   return row
 }
-async function claim(id, who) {
+async function claim(id, who, row = null, { gated = false } = {}) {
   const key = CLAIM_PREFIX + id
   const old = check(await db.from('venture_state').select('value').eq('key', key).maybeSingle(), 'claim')
   const keep = old && old.value?.who === who && old.value?.since
-  check(await db.from('venture_state').upsert({ key, value: { who, host: hostname(), since: keep ? old.value.since : new Date().toISOString() }, at: new Date().toISOString() }), 'claim')
-  console.log(`${id} claimed by ${who} (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
+  const lane = laneOf(row ?? (await get(id)), typeof one('lane') === 'string' ? one('lane') : old?.value?.lane ?? null)
+  if (!keep && !gated) await laneGate(id, who, lane)
+  check(await db.from('venture_state').upsert({ key, value: { who, host: hostname(), since: keep ? old.value.since : new Date().toISOString(), lane }, at: new Date().toISOString() }), 'claim')
+  console.log(`${id} claimed by ${who} in the ${lane} lane (expires in ${CLAIM_TTL / 60e3} min unless claimed again)`)
+}
+// One builder at a time in the server lane, counting the runner on the mini (OLA-251, Nov 20: three
+// builders at once overwrote each other's work and the test server refused updates). A checker or an
+// investigator is never refused; the lead is not a builder. --beside "<why it cannot collide>" starts
+// anyway and is recorded on the ticket. A renewal of one's own claim is never refused.
+async function laneGate(id, who, lane) {
+  if (lane !== 'server' || neverRefused(who) || /^(lead|kit|bart)$/i.test(String(who))) return
+  const rows = check(await db.from('venture_state').select('key, value, at').like('key', `${CLAIM_PREFIX}%`), 'claims')
+  const claims = Object.fromEntries(rows.map((r) => [r.key.slice(CLAIM_PREFIX.length), { ...r.value, at: r.at }]))
+  const ids = Object.keys(claims).filter((x) => x !== id)
+  const issues = ids.length ? check(await db.from('venture_issues').select('id, area, title, what').in('id', ids), 'read') : []
+  const holder = laneHolder({ id, lane, issues, claims })
+  if (!holder) return
+  const beside = typeof one('beside') === 'string' && one('beside').trim().length >= 15 ? one('beside').trim() : null
+  if (!beside) die(laneSentence(holder, lane))
+  await record([{ issue_id: id, kind: 'comment', body: `started by ${who} beside ${holder.who} on ${holder.id}, both in the server lane: ${beside}` }])
+  console.log(`started beside ${holder.who} on ${holder.id} (recorded on ${id}): ${beside}`)
 }
 async function release(id) {
   check(await db.from('venture_state').delete().eq('key', CLAIM_PREFIX + id), 'release')
@@ -269,12 +290,16 @@ if (cmd === 'add') {
     `or, when nothing a person does or sees changes: issues.mjs check ${id} internal --why "…"`)
   // work restarts: earlier passes are about an older version
   if (r.status === 'done' && a.checks.some((c) => c.result)) await saveAccept(id, { ...a, ready: null, checks: a.checks.map((c) => ({ ...c, earlier: [...(c.earlier ?? []), { result: c.result, by: c.by, at: c.checked_at, saw: c.saw }], result: null })) })
+  // the lane is checked before anything changes (OLA-251)
+  const who = typeof one('who') === 'string' ? one('who') : r.who ?? 'lead'
+  const prevClaim = check(await db.from('venture_state').select('value').eq('key', CLAIM_PREFIX + id).maybeSingle(), 'claim')
+  if (prevClaim?.value?.who !== who) await laneGate(id, who, laneOf(r, typeof one('lane') === 'string' ? one('lane') : null))
   await patch(id, { status: 'in_progress', started_at: r.started_at ?? new Date().toISOString(), ...(one('who') ? { who: one('who') } : {}) })
-  await claim(id, one('who') ?? r.who ?? 'lead')
+  await claim(id, who, r, { gated: true })
 } else if (cmd === 'claim') {
   const id = normId(pos[0])
   const r = await get(id)
-  await claim(id, typeof one('who') === 'string' ? one('who') : r.who ?? 'lead')
+  await claim(id, typeof one('who') === 'string' ? one('who') : r.who ?? 'lead', r)
 } else if (cmd === 'release') {
   const id = normId(pos[0])
   await release(id)

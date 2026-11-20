@@ -35,6 +35,16 @@ in every builder's brief), `done`/`wait`/`open`/`release` let go. An unclaimed
 ticket is the runner's. Read the LOG lines starting "runner:" to see what it did
 while you were away.
 
+**One builder at a time on Ola's server code, counting the runner** (OLA-251, Nov 20:
+three builders at once overwrote each other's work). The old limit ("never more than
+three") is gone; the tracker enforces this one. A claim gets a lane from its ticket:
+server (web, model, security, design, and ops tickets about Ola's server), apps (the
+Mac and iPhone apps), tools (this project's scripts and notes). `issues.mjs start`
+refuses a builder while another builder or the runner holds a server ticket, and says
+who; the runner then takes the next ticket whose lane is free. Builders on apps and
+tools, checkers and investigators (`--who checker`, `--who investigator`) run beside
+it. `--beside "<why it cannot collide>"` overrides, recorded on the ticket.
+
 ## 1. Load the state
 
 Read, in this order:

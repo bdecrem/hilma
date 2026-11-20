@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline checks of the runner's choices (OLA-211): node scripts/venture/runner-test.mjs
 import assert from 'node:assert/strict'
-import { afterRun, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, zonedTime } from './_plate.mjs'
+import { afterRun, caseVerdict, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, zonedTime } from './_plate.mjs'
 
 let n = 0
 const ok = (name, f) => { f(); n++; console.log(`ok ${name}`) }
@@ -125,6 +125,34 @@ ok('a run that waits on a time is left alone until then, and is not a failed run
   assert.match(p.passed[0].why, /waits until 2026-11-23/)
   assert.equal(pickTicket(issues, { tickets: { 'OLA-174': r.next }, now: Date.parse('2026-11-23T00:01Z') }).pick.id, 'OLA-174')
   assert.equal(afterRun({}, { status: 'in_progress', made: false, waitUntil: ago(5), now: NOW }).next.fails, 1)
+})
+
+ok('OLA-251: lanes from the ticket; one builder in the server lane; checkers and other lanes start', () => {
+  assert.equal(laneOf({ area: 'web' }), 'server')
+  assert.equal(laneOf({ area: 'apps' }), 'apps')
+  assert.equal(laneOf({ area: 'ops', title: 'An update to the test server is refused' }), 'server')
+  assert.equal(laneOf({ area: 'ops', title: 'Learning system, second round' }), 'tools')
+  assert.equal(laneOf({ area: 'apps' }, 'server'), 'server', 'a claim made with --lane keeps its lane')
+  const issues = [I(1, 'P0', 'in_progress', { area: 'web' }), I(2, 'P0', 'open', { area: 'model' }), I(3, 'P0', 'open', { area: 'apps' }), I(4, 'P1', 'open', { area: 'ops', title: 'scripts' })]
+  const claims = { 'OLA-1': { who: 'builder', at: ago(5) } }
+  assert.deepEqual(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims, now: NOW }), { id: 'OLA-1', who: 'builder', lane: 'server' })
+  assert.equal(laneHolder({ id: 'OLA-3', lane: 'apps', issues, claims, now: NOW }), null, 'the apps lane is not limited')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'checker', at: ago(5) } }, now: NOW }), null, 'a checker holds no lane')
+  assert.equal(laneHolder({ id: 'OLA-2', lane: 'server', issues, claims: { 'OLA-1': { who: 'builder', at: ago(50) } }, now: NOW }), null, 'an expired claim holds nothing')
+  assert.equal(laneHolder({ id: 'OLA-1', lane: 'server', issues, claims, now: NOW }), null, 'its own claim is a renewal')
+  // the runner takes the top unclaimed ticket whose lane is free
+  const r = pickTicket(issues, { claims, now: NOW })
+  assert.equal(r.pick.id, 'OLA-3')
+  assert.match(r.passed.find((p) => p.id === 'OLA-2').why, /server lane is held by builder on OLA-1/)
+  // and when the runner itself holds the server lane, that does not stop its own next pick
+  assert.equal(pickTicket([I(2, 'P0', 'open', { area: 'model' })], { claims: { 'OLA-1': { who: 'runner', at: ago(5) } }, now: NOW }).pick.id, 'OLA-2')
+})
+ok('OLA-251: a check passed by a request-test case says what that case says now', () => {
+  const a = { worksSometimes: [{ case: 'p@cloud-web:chat' }], stoppedWorking: [{ case: 'q@local-mac:chat' }] }
+  assert.equal(caseVerdict('case p@cloud-web:chat', a), 'sometimes')
+  assert.equal(caseVerdict('case q@local-mac:chat', a), 'fails')
+  assert.equal(caseVerdict('case r@cloud-web:chat', a), null)
+  assert.equal(caseVerdict('/x/shot.png (900 bytes)', a), null)
 })
 
 console.log(`${n} checks passed`)

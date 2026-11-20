@@ -48,6 +48,9 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
     const c = claims[i.id]
     const t = tickets[i.id] ?? {}
     if (c && age(c.at) < CLAIM_TTL && c.who !== 'runner') { passed.push({ id: i.id, why: `claimed by ${c.who} ${Math.round(age(c.at) / MIN)} min ago` }); continue }
+    // one builder at a time in the server lane (OLA-251): a session's builder holds it, so the runner takes the next ticket whose lane is free
+    const holder = laneOf(i) === 'server' ? laneHolder({ id: i.id, lane: 'server', issues, claims: Object.fromEntries(Object.entries(claims).filter(([, x]) => x.who !== 'runner')), now }) : null
+    if (holder) { passed.push({ id: i.id, why: `the server lane is held by ${holder.who} on ${holder.id}` }); continue }
     if (i.status === 'in_progress' && i.who !== 'runner' && age(i.updated_at) < CLAIM_TTL) { passed.push({ id: i.id, why: `in progress, touched ${Math.round(age(i.updated_at) / MIN)} min ago` }); continue }
     if (sessionOpen && i.status === 'in_progress' && i.who !== 'runner' && age(i.started_at) < SESSION_DOING_HOLD) { passed.push({ id: i.id, why: `started ${Math.round(age(i.started_at) / MIN)} min ago by ${i.who} while a session is open` }); continue }
     if (isRecurring(i, recurring)) { passed.push({ id: i.id, why: 'a recurring job (it runs on its own schedule)' }); continue }
@@ -198,3 +201,35 @@ export function caseVerdict(evidence, asks) {
   const has = (list) => (list ?? []).some((x) => x.case === k)
   return has(asks.worksSometimes) ? 'sometimes' : has(asks.stoppedWorking) || has(asks.notWorkingYet) ? 'fails' : null
 }
+
+// ------------------------------------------------------------------ lanes (OLA-251, Nov 20)
+// One builder at a time on the server's code, counting the runner on the mini. On Nov 20 three
+// builders at once overwrote each other's work and the test server refused updates. A claim gets a
+// lane from its ticket: server (web, model, security, design, and ops tickets about Ola's server:
+// they change apps/activist-ai outside apple/), apps (the Mac and iPhone apps), tools (this project's
+// own scripts and notes: everything else). `issues.mjs start/claim` and the runner refuse a second
+// builder in the server lane; checkers and investigators are never refused and never hold a lane.
+export const LANES = ['server', 'apps', 'tools']
+const SERVER_WORDS = /\b(ola|ola\.cx|app\.ola|sites\.ola|test server|the mini|project box(es)?|front ?desk|gateway|workspace|opencode|the asks|request tests?|deploy|sealed)\b/i
+export function laneOf(issue, given = null) {
+  if (given && LANES.includes(given)) return given
+  if (!issue) return 'tools'
+  if (issue.area === 'apps') return 'apps'
+  if (['web', 'model', 'security', 'design'].includes(issue.area)) return 'server'
+  if (issue.area === 'ops' && SERVER_WORDS.test(`${issue.title ?? ''} ${issue.what ?? ''}`)) return 'server'
+  return 'tools'
+}
+export const neverRefused = (who) => /checker|investigator/i.test(String(who ?? ''))
+const holdsLane = (who) => !neverRefused(who) && !/^(lead|kit|bart)$/i.test(String(who ?? '').trim())
+/** Who holds the lane of ticket `id` now, other than `id` itself: { id, who, lane } or null.
+ *  issues: rows by id (at least the claimed tickets); claims: { [id]: { who, at, lane? } }. */
+export function laneHolder({ id, lane, issues = [], claims = {}, now = Date.now() }) {
+  if (lane !== 'server') return null
+  const byId = new Map(issues.map((i) => [i.id, i]))
+  for (const [cid, c] of Object.entries(claims)) {
+    if (cid === id || !(now - Date.parse(c.at) < CLAIM_TTL) || !holdsLane(c.who)) continue
+    if (laneOf(byId.get(cid), c.lane) === 'server') return { id: cid, who: c.who, lane: 'server' }
+  }
+  return null
+}
+export const laneSentence = (h, lane = 'server') => `Refused: ${h.who} is building ${h.id} in the ${lane} lane (Ola's server code), and only one builder works there at a time. Wait for its claim to end, take another ticket, or start beside it with --beside "<why it cannot collide>".`
