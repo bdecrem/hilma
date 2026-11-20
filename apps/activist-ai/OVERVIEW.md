@@ -99,7 +99,8 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 rented on Together, staging in its own clone `~/ola-staging`. The **Mac Studio** (M5 Max, 128 GB)
 arrives about December 1. It becomes the Ola machine, with the models served on it, disk encryption
 on, and a separate account that owns the workspaces. The mini then stays the test machine and
-never holds user data.
+never holds user data. The install list, and the check that says which of it is done:
+`node ops/studio.mjs check` (README, "The Studio's install list").
 
 ## Deploy and operations
 

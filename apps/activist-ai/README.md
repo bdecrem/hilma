@@ -1169,6 +1169,53 @@ when no one is working there. Its suites run beside staging's without touching i
 2026-11-16: pick ports with `lsof -nP -iTCP:<port> -sTCP:LISTEN` first. `~/ola-rot-scratch` holds its reproduction scripts. Delete both when no
 longer wanted.
 
+## The Studio's install list (OLA-100, 2026-11-19)
+
+What the Mac Studio needs before the first person's real files reach it, in order, and a check
+that says which items are in place: `node ops/studio.mjs check` (`--json`), run as the account
+that runs Ola. It reads and never changes anything, needs no sudo, and reads only the names of the
+settings in `gateway.env`. Exit 0 only when all seven are done. Test: `node --test ops/studio-test.mjs`
+(5 tests, made-up machines).
+
+1. **Disk encryption** (`disk-encryption`). FileVault on, in Setup Assistant or System Settings >
+   Privacy & Security > FileVault; the recovery key on paper, not in iCloud. This is what makes a
+   destroyed project unreadable (workspace review M5: `destroy` unlinks the volume image, and on a
+   disk without FileVault its blocks stay readable until reused) and what protects every copy the
+   machine keeps. What it changes: with FileVault on, macOS does not sign anyone in by itself at boot,
+   so after a power cut Ola stays down until someone types the Ola account's password at the Studio
+   (unlocking with that account's password also signs it in, which starts Ola's jobs). A planned
+   restart that comes back by itself: `sudo fdesetup authrestart`.
+2. **A separate account** (`own-account`). A standard account (not an administrator), named `ola`,
+   that owns the workspaces, the `container` system, the keys in `~/.ola` and every `cx.ola.*` job,
+   made by Bart from his administrator account: `sudo sysadminctl -addUser ola -fullName Ola -password -`
+   and, so it can unlock the disk at boot, `sudo fdesetup add -usertoadd ola`. Everything in `ops/`,
+   `workspace/`, `gateway/` and `frontdesk/` already works from whichever account runs it (paths
+   from `$HOME`, launchd domain `gui/<its uid>`; nothing names `admin` or uid 501). Then, signed in
+   as `ola`: Homebrew's node and `age`, Apple's `container`, `git clone` into `~/ola-staging`, the env
+   files, `node ops/ola.mjs deploy`.
+3. **Nothing else in that account** (`alone`). No job but `cx.ola.*` and Apple's own: the Venture
+   runner, the Mac Plus services, the Discord bot, Tailscale's app and the rest live in Bart's
+   account. This is also the condition for trusting a deploy ("Signed commits only" below).
+4. **Its files its own** (`private-home`): the home folder and `~/.ola` mode 700.
+5. **Cancelling a project's key without a restart** (`key-cancel`). Already how the gateway works
+   (see "The gateway": callers from a file, reloaded; each key bound to its project's door), so the
+   install step is only the two settings, `GATEWAY_TOKENS_FILE` and `GATEWAY_DOOR_DIR`, in
+   `gateway.env`. To cancel one project's key: `node workspace/ws.mjs revoke <id>` (or `admin.mjs
+   rotate`, which does it for a team): the tokens file is rewritten, the running gateway refuses the
+   old key at once (it watches the file, and stats it every 3 seconds) and ws.mjs confirms it through the project's door, and the
+   gateway is not restarted; the project's VM is stopped and made again with a new key at its next
+   start. Proven by `gateway/test.mjs` ("takes effect without a restart", "works only through its
+   own door"); the check passes only when the running gateway has picked up a key change since it
+   last started (on the mini on 2026-11-19: one key removed at 23:00 Pacific, and the gateway had not restarted since before it).
+6. **Backups** (`backups`): the key made, the recovery sheet printed, the drives set up, the nightly
+   job loaded ("Encrypted backups").
+7. **Deploys only from signed commits** (`signed-deploys`): `~/.ola/allowed-signers` holds Bart's
+   signing key, made on a device of his, so a deploy no longer needs `--unsigned`.
+
+On the mini (staging, made-up data only) on 2026-11-19, as `admin`: 2 of 7 (key-cancel, backups).
+Not in this list, still open from the front desk review (L4): the front desk in an account apart
+from the one that owns the `container` system, reaching it through a narrow helper.
+
 ## Deploying staging
 
 Until 2026-11-16 the jobs ran from `~/hilma-venture`, a checkout another system works in and
