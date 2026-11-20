@@ -19,6 +19,11 @@
 //      session (issues.mjs claim, 45 minutes), not a recurring job, gets a work run with WORK.md:
 //      build, check, commit, push, deploy, `issues.mjs done` with proof. Then the next ticket, in
 //      the same tick, until none is left or the limit is reached. Nights too.
+//   Once a night, between 2 and 8 am Pacific (after the plan's 2 am reset), before the tracker: the
+//   replay test (OLA-175, scripts/venture/steer-replay.mjs --nightly): every past correction put to a
+//   fresh session with the rules and without, the result on the Learning page and each failing case
+//   filed under its weakness. Not a Claude Code run of its own: the script asks Claude once per
+//   answer and grade, on the same login.
 //
 //   node scripts/venture/runner.mjs tick            what launchd runs
 //   node scripts/venture/runner.mjs status          one line: open tickets, the last finished, who is working or IDLE
@@ -26,6 +31,7 @@
 //   node scripts/venture/runner.mjs tick --dry      decide and print why, start nothing
 //   node scripts/venture/runner.mjs tick --force "why"   an answer run now, whatever the state (a test, or by hand)
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
+//   node scripts/venture/runner.mjs replay          the nightly replay test now, as the night runs it (by hand, or to prove it)
 //   --dry also takes --fake-session (as if a session's heartbeat were fresh), --fake-claim OLA-n,
 //   --fake-limit (as if the limit were reached until 2 am), to show the choices without changing anything.
 //
@@ -39,7 +45,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { homedir, hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
-import { sweepDue, getState, setState } from './_state.mjs'
+import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { CLAIM_PREFIX, CLAIM_TTL, MIN, afterRun, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
@@ -56,6 +62,8 @@ const MAX_RUNS_PER_TICK = 24 // a safety stop; one tick normally ends long befor
 const WORK_EVERY = 3 * 60 * MIN // with no ticket to work and nothing new, still take the next action in NOW.md this often
 const BOARD_STALE = 3 * 60 * MIN // the journal older than this, in the day, wakes a refresh
 const BOARD_HOURS = [7, 23] // Pacific
+const REPLAY_HOURS = [2, 8] // Pacific: the nightly replay test starts in this window, once a day
+const REPLAY_LIMIT = 150 * MIN // a replay run (about 70 cases, four calls at a time)
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = Object.fromEntries(
@@ -316,6 +324,61 @@ async function workRun(issue, tickets) {
   return paused
 }
 
+// The nightly replay test (OLA-175). Due in the night's window when today (Pacific) has no
+// finished attempt; an attempt that failed (the limit, the login) is tried again an hour later, at
+// most three times a night. "steer_replay_attempt" is written by steer-replay.mjs itself.
+async function replayDue() {
+  const h = pacificHour()
+  if (h < REPLAY_HOURS[0] || h >= REPLAY_HOURS[1]) return false
+  const a = (await getState(db, 'steer_replay_attempt'))?.value
+  const night = (await getState(db, 'runner_replay'))?.value
+  const today = pacificDay()
+  const tonight = night?.day === today ? night.starts ?? 0 : 0
+  if (tonight >= 3 || (night?.day === today && age(night.last) < 60 * MIN)) return false // a start that died before it recorded an attempt is not retried at once
+  if (!a || pacificDay(Date.parse(a.at)) !== today) return true
+  if (a.ok && !a.only) return false
+  return !a.running && age(a.ended ?? a.at) > 60 * MIN
+}
+
+async function replayRun(why) {
+  const started = new Date().toISOString()
+  const night = (await getState(db, 'runner_replay'))?.value
+  const today = pacificDay()
+  await setState(db, 'runner_replay', { day: today, starts: (night?.day === today ? night.starts ?? 0 : 0) + 1, last: started })
+  await setRunner({ running: true, kind: 'replay', ticket: null, host: hostname(), pid: process.pid, started, why: [why] })
+  let outcome = 'failed'
+  let log = ''
+  try {
+    freshCheckout(started.replace(/[:.]/g, '-'))
+    const pulled = run('node', ['scripts/venture/sync.mjs', 'pull'])
+    if (pulled.status !== 0) throw new Error(`could not pull the private state (the cases live there): ${pulled.stderr.trim().split('\n')[0]}`)
+    mkdirSync(logDir, { recursive: true })
+    log = `${logDir}/${started.replace(/[:.]/g, '-')}-replay.log`
+    const env = { ...process.env, PATH: `${homedir()}/.local/bin:/opt/homebrew/bin:/usr/local/bin:${process.env.PATH ?? '/usr/bin:/bin'}` }
+    delete env.ANTHROPIC_API_KEY // the machine's Claude login (the Max plan), never a key
+    const res = await new Promise((done) => {
+      const p = spawn('node', ['scripts/venture/steer-replay.mjs', '--nightly'], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] })
+      let out = ''
+      p.stdout.on('data', (d) => (out += d))
+      p.stderr.on('data', (d) => (out += d))
+      const timer = setTimeout(() => { out += `\n(stopped by the runner after ${REPLAY_LIMIT / MIN} minutes)\n`; p.kill('SIGTERM') }, REPLAY_LIMIT)
+      p.on('close', (code) => { clearTimeout(timer); writeFileSync(log, out); done({ code, out }) })
+      p.on('error', (e) => { clearTimeout(timer); writeFileSync(log, out + e.message); done({ code: -1, out: e.message }) })
+    })
+    const line = res.out.split('\n').find((l) => l.startsWith('with the rules:')) ?? res.out.trim().split('\n').pop()
+    outcome = res.code === 0 ? line.replace(/^with the rules: /, '') : `exit ${res.code}: ${line.slice(0, 200)}`
+    say(`replay test: ${outcome}, log ${log}`)
+    const pushed = run('node', ['scripts/venture/sync.mjs', 'push']) // the weaknesses and STEERS.md; it also refreshes Learning (learning.mjs)
+    if (pushed.status !== 0) say(`push of the private state failed: ${pushed.stderr.trim().split('\n')[0]}`)
+  } catch (e) {
+    outcome = `failed: ${e.message}`
+    say(`replay test ${outcome}`)
+  } finally {
+    const ended = new Date().toISOString()
+    await setRunner({ running: false, kind: 'replay', ticket: null, host: hostname(), started, ended, why: [why], log, last: { ticket: 'replay test', outcome, at: ended } })
+  }
+}
+
 /** The decision for this moment: what to start, or why nothing. */
 async function decide(seen) {
   const lim = await limitState()
@@ -348,6 +411,14 @@ if (cmd === 'status') {
   const res = await claude('Read apps/venture/private/RULES.md and apps/venture/private/NOW.md. Reply with exactly two lines: the number of rules in RULES.md, and the "Updated" line of NOW.md. Change nothing.', { readOnly: true, limit: 5 * MIN })
   console.log(`pull: ${pulled.status === 0 ? 'ok' : pulled.stderr}\nclaude exit ${res.code}\n${res.result.trim()}\nlog: ${res.log}`)
   process.exit(res.code === 0 ? 0 : 1)
+} else if (cmd === 'replay') {
+  if (locked()) { console.error('a run is already going on this machine; try again when it ends'); process.exit(1) }
+  lock()
+  process.on('exit', unlock)
+  await replayRun('the replay test, started by hand')
+  const last = (await getState(db, 'runner'))?.value?.last
+  console.log(`replay test: ${last?.outcome}`)
+  process.exit(/^failed|^exit/.test(last?.outcome ?? 'failed') ? 1 : 0)
 } else if (cmd === 'tick') {
   const runner = (await getState(db, 'runner'))?.value
   if (locked() || (runner?.running && runner.host === hostname() && age(runner.started) < WORK_RUN_LIMIT + 15 * MIN && runner.pid && (() => { try { process.kill(runner.pid, 0); return true } catch { return false } })())) {
@@ -373,6 +444,7 @@ if (cmd === 'status') {
     if (DRY) {
       say(`session: ${seen.sessionOpen ? `open${has('--fake-session') ? ' (faked)' : ''}: texts and the board are its to answer` : 'none open'}`)
       if (answer.length) say(`would first start an answer run: ${answer.join('; ')}`)
+      if (await replayDue()) say('would run the nightly replay test (steer-replay.mjs --nightly) before the tracker')
       else if (seen.why.length) say(`would not answer (the open session does): ${seen.why.join('; ')}`)
       for (const x of d.choice.passed) say(`  passed over ${x.id}: ${x.why}`)
       if (d.choice.pick) { const i = d.choice.pick; say(`would start a work run on ${i.id} (${i.priority}, ${i.status === 'open' ? 'next up' : 'doing'}, opened ${i.opened_at.slice(0, 10)}${d.plate.order.includes(i.id) ? `, #${d.plate.order.indexOf(i.id) + 1} on ${d.plate.file}` : ''}): ${i.title}`) }
@@ -383,6 +455,11 @@ if (cmd === 'status') {
       say(`answer run: ${answer.join('; ')}`)
       if (await answerRun(seen, answer)) break
       if (force) break
+      continue
+    }
+    if (await replayDue()) {
+      say('the nightly replay test')
+      await replayRun('the nightly replay test (OLA-175)')
       continue
     }
     if (d.choice.pick) {
@@ -398,6 +475,6 @@ if (cmd === 'status') {
     break
   }
 } else {
-  console.error('usage: runner.mjs tick [--dry [--fake-session] [--fake-claim OLA-n] [--fake-limit] | --force "why"] | status [--long] | probe')
+  console.error('usage: runner.mjs tick [--dry [--fake-session] [--fake-claim OLA-n] [--fake-limit] | --force "why"] | status [--long] | probe | replay')
   process.exit(1)
 }

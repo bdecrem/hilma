@@ -4,7 +4,7 @@
 // Every correction and every fault a sweep finds is filed under one named weakness, for Kit or for
 // Ola, in apps/venture/private/data/weaknesses.json:
 //   [{ id, side: 'kit' | 'ola', name, what, seen: [{ day, ref }], guards: [{ day, what, enforced }],
-//      bet?: { text, issue } }]
+//      bet?: { text, issue }, replay?: { at, cases, prevented, failing: [{ id, title, since, why }] } }]
 // A guard is "enforced" when the system does it (a hook, a check, a test, code); otherwise it is a
 // rule Kit has to follow. From that, per weakness:
 //   open     no enforced guard yet
@@ -63,6 +63,9 @@ export function weaknessStatus(list, today) {
       held_days: status === 'guarded' ? dayDiff(today, lastGuard) : null,
       quiet_days: last ? dayDiff(today, last) : null,
       bet: w.bet ?? null,
+      // the replay test's cases filed under this weakness (steer-replay.mjs, OLA-175): how many a fresh
+      // session with the rules gets right, and the ones it still gets wrong, with the day each began failing
+      replay: w.replay ?? null,
     }
   })
 }

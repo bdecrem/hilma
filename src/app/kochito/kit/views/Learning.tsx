@@ -1,4 +1,4 @@
-import { openCounts, type BoardData, type Issue, type Learning, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
+import { openCounts, type BoardData, type Issue, type Learning, type Replay, type ReplayAttempt, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
@@ -189,6 +189,12 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
             ) : (
               <span className="rule none">nothing yet</span>
             )}
+            {w.replay && (
+              <span className={`rp${w.replay.failing.length ? ' fail' : ''}`}>
+                Replay test: {w.replay.prevented} of {w.replay.cases} {w.replay.cases === 1 ? 'case' : 'cases'} prevented with the rules
+                {w.replay.failing.length > 0 && <>; failing: {w.replay.failing.map((f) => f.title.replace(/^./, (x) => x.toLowerCase())).join('; ')}</>}
+              </span>
+            )}
             {w.bet && w.status !== 'guarded' && (
               <span className="bet">
                 To build: {w.bet.text} {w.bet.issue && <a href={`${href(base, '/issues')}/${w.bet.issue}`} className="m">{w.bet.issue}</a>}
@@ -199,6 +205,59 @@ function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; ba
         </li>
       ))}
     </ol>
+  )
+}
+
+// The replay test (OLA-175; scripts/venture/steer-replay.mjs): every past correction is a case, put
+// each night to a fresh session with Kit's rules loaded and without them. The score, a bar per run,
+// and the cases that still fail with the rules, each beside the weakness it is filed under (the
+// rule to strengthen). Amber when the last good run is more than 30 hours old or the last attempt
+// failed: a night that did not run shows.
+function ReplaySec({ r, a, weak, now }: { r: Replay | null; a: ReplayAttempt | null; weak: Weakness[]; now: string }) {
+  if (!r) return <p className="bd-empty">Not run yet.</p>
+  const of = r.graded ?? r.cases
+  const stale = Date.parse(now) - Date.parse(r.at) > 30 * 3600e3
+  const failed = a && !a.running && a.ok === false && Date.parse(a.at) > Date.parse(r.at)
+  const since = new Map(weak.flatMap((w) => (w.replay?.failing ?? []).map((f) => [f.id, f.since] as const)))
+  const name = (id: string | null) => weak.find((w) => w.id === id)?.name ?? id ?? 'no weakness'
+  const hist = (r.history ?? []).slice(-14)
+  const pc = (n: number, d: number) => (d ? Math.round((100 * n) / d) : 0)
+  return (
+    <>
+      <div className="bd-ind">
+        <div className="now">
+          <b>
+            {r.prevented} of {of}
+          </b>{' '}
+          <span className="sub">past mistakes prevented</span>
+          <p>
+            A fresh session with Kit&rsquo;s rules loaded avoids {r.prevented} of the {of} past mistakes; without the rules it avoids {r.prevented_without}.
+          </p>
+          <p className={`m${stale || failed ? ' bd-amber' : ' faint'}`}>
+            {failed ? `the last attempt (${at(a!.at, now)}) failed${a!.why ? `: ${a!.why}` : ''}; last good run ${at(r.at, now)}` : stale ? `did not run last night; last run ${at(r.at, now)}` : `last run ${at(r.at, now)}${r.kind ? `, ${r.kind}` : ''}`}
+          </p>
+        </div>
+        {hist.length > 1 && <Bars items={hist.map((h, n) => ({ key: `${h.at}-${n}`, v: pc(h.prevented, h.cases), label: h.at.slice(8, 10).replace(/^0/, ''), title: `${at(h.at, now)}: ${h.prevented} of ${h.cases} prevented (${h.prevented_without} without the rules)`, last: n === hist.length - 1 }))} />}
+      </div>
+      {(r.weak ?? []).length > 0 ? (
+        <>
+          <h3 className="bd-h3" style={{ marginTop: 12 }}>Still failing with the rules loaded</h3>
+          <ol className="bd-kv">
+            {r.weak!.map((c) => (
+              <li key={c.id}>
+                <b>{c.source.replace(/^Corrections? /, 'No. ')}</b>
+                <span>
+                  {c.title}. <span className="faint">Weakness: {name(c.weakness).replace(/^./, (x) => x.toLowerCase())}.{c.why[0] ? ` ${c.why[0]}` : ''}</span>
+                </span>
+                <span className="t">{since.get(c.id) ? `since ${dayShort(since.get(c.id)!).replace(/^[A-Za-z]+, /, '')}` : ''}</span>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <p className="bd-p">Every case is prevented with the rules loaded.</p>
+      )}
+    </>
   )
 }
 
@@ -427,6 +486,16 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
         {l?.weaknesses?.length ? <Weaknesses list={l.weaknesses} today={d.today} base={base} /> : <p className="bd-empty">Not filed yet.</p>}
       </section>
 
+      <section className="bd-sec" aria-labelledby="replay-h">
+        <h2 id="replay-h">
+          Replay test {ind.replay && <span className="m faint">{ind.replay.cases} cases</span>}
+        </h2>
+        <p className="bd-p" style={{ margin: '0 0 8px' }}>
+          Each correction from Bart becomes a test case: the situation just before the mistake, and what a right response must and must not do. Every night the runner on the Mac mini gives each case to a fresh session twice, once with Kit&rsquo;s rules loaded and once without, and a second session grades each answer. A case that fails with the rules loaded is filed under its weakness: the rule for that weakness is too weak. The daily sweep adds the day&rsquo;s corrections as new cases.
+        </p>
+        <ReplaySec r={ind.replay} a={ind.replayAttempt} weak={l?.weaknesses ?? []} now={now} />
+      </section>
+
       <section className="bd-sec" aria-labelledby="sweep-h">
         <h2 id="sweep-h">
           Daily sweep {st.latest && <span className="m faint">last swept {at(st.latest.at, now)}</span>}
@@ -587,15 +656,6 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
               </b>
               <span>checks passed at the last update of the web app{d.status.deployed ? ` (version ${d.status.deployed.commit.slice(0, 8)})` : ''}</span>
               <span className="t">{d.status.deployed?.at ? at(d.status.deployed.at, now) : '–'}</span>
-            </li>
-          )}
-          {ind.replay && (
-            <li>
-              <b>
-                {ind.replay.prevented} of {ind.replay.cases}
-              </b>
-              <span>past mistakes prevented when a fresh session with Kit&rsquo;s rules is replayed through them ({ind.replay.prevented_without} without the rules)</span>
-              <span className="t">{at(ind.replay.at, now)}</span>
             </li>
           )}
           {d.journal.numbers.map((x, n) => {

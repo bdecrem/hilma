@@ -28,6 +28,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
 import { loadWeaknesses, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { openCounts } from './_plate.mjs'
+import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = Object.fromEntries(
@@ -246,6 +247,9 @@ if (cmd === '--wait') {
     const filed = new Set(loadWeaknesses(rootUrl).flatMap((w) => w.seen.map((x) => x.ref)))
     const unfiled = heads.map((h) => Number(/^\d+/.exec(h)[0])).filter((n) => !filed.has(`correction ${n}`))
     if (unfiled.length) bad.push(`corrections not filed under a weakness in ${WEAK_FILE}: ${unfiled.join(', ')}`)
+    // OLA-175: every correction becomes a replay case the same day (or says why it cannot be one)
+    const noCase = uncoveredCorrections(rootUrl, corrText)
+    if (noCase.length) bad.push(`corrections with no replay case: ${noCase.join(', ')}. Write one per correction in ${CASE_DIR} (the situation just before the mistake, must, must_not, weakness; SWEEP.md, "A replay case for every correction"), or give the reason in ${UNTESTABLE}`)
     const dayLong = new Date(`${e.day}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
     const written = heads.filter((h) => h.includes(dayLong)).length
     const graded = (await getState(db, 'steers'))?.value?.days?.[e.day]

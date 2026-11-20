@@ -544,16 +544,27 @@ Supabase, never in this repo):
   grader runs on the machine's Claude login, the Max plan, not the API key
   (`scripts/venture/_claude.mjs`, since 2026-11-19, OLA-186: one headless
   Claude Code call with no tools, no settings and an empty folder).
-- **The replay suite.** `node scripts/venture/steer-replay.mjs [--tries N]
-  [--only ids] [--dry]` turns past steers into tests
-  (`private/steer-cases/*.json`: the situation just before the mistake and a
-  must / must-not rubric), gives each to a fresh Opus 5.5 three times with
-  RULES.md and three times without, and grades each answer (all on the Claude
-  login, the Max plan, through `_claude.mjs`, four calls at a time). Pass rate with the
-  rules says whether the learning is written down well enough; the lift over
-  no rules says whether the rules do the work. Cases that fail with the rules
-  name the rules that are too weak. Stored in `venture_state` "steer_replay"
-  and the "# Replay" section of `private/STEERS.md`. A run costs about $4.
+- **The replay test** (OLA-175, every night since 2026-11-20).
+  `node scripts/venture/steer-replay.mjs [--nightly | --tries N] [--only ids] [--dry]`
+  turns past corrections into tests: one case per correction
+  (`private/data/replay-cases/*.json`, read by `scripts/venture/_replay.mjs`: the
+  situation just before the mistake, a must / must-not rubric, and the weakness
+  it is filed under), given to a fresh Opus 5.5 with RULES.md and without, each
+  answer graded by a second call (all on the Claude login, the Max plan, through
+  `_claude.mjs`, four calls at a time). A case is prevented when 2 of 3 tries
+  with the rules pass. Every correction from 22 on has a case or a reason in
+  `private/data/replay-untestable.json`; the daily sweep writes the day's cases
+  and `sweep.mjs post` refuses an entry while one is missing
+  (`node scripts/venture/replay-coverage.mjs`). **Nightly:** the runner on the mini
+  runs `--nightly` once between 2 and 8 am Pacific before the tracker (one try
+  per condition, two more for a case that fails with the rules), then pushes the
+  private state; `node scripts/venture/runner.mjs replay` does the same by hand.
+  Stored in `venture_state` "steer_replay" (with the history of runs),
+  "steer_replay_attempt" (the last attempt, so a night that failed or did not run
+  shows in amber), each weakness's `replay` field in `private/data/weaknesses.json`
+  (its cases and the failing ones with the day each began failing) and the
+  "# Replay" section of `private/STEERS.md`. The Learning page shows the score,
+  the history and the failing cases beside their weakness.
 
 ## Mail on the company's domains
 

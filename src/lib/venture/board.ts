@@ -62,7 +62,13 @@ export type LiveStatus = {
 }
 export type SteerItem = { time: string; label: 'steer' | 'maybe'; class: string; repeat: boolean; quote: string }
 export type SteerDay = { day: string; messages: number; steers: number; repeats: number; maybes: number; rate: number | null; between: number | null; items: SteerItem[] }
-export type Replay = { at: string; cases: number; with_rules: { passed: number; tries: number }; without_rules: { passed: number; tries: number }; prevented: number; prevented_without: number }
+/** The replay test (scripts/venture/steer-replay.mjs, OLA-175): each past correction put to a fresh
+ *  session with Kit's rules and without, every night on the mini. `weak` are the cases that still
+ *  fail with the rules; `history` one line per run. */
+export type ReplayCase = { id: string; source: string; title: string; weakness: string | null; why: string[] }
+export type Replay = { at: string; kind?: string; cases: number; graded?: number; with_rules: { passed: number; tries: number }; without_rules: { passed: number; tries: number }; prevented: number; prevented_without: number; weak?: ReplayCase[]; history?: { at: string; kind?: string; cases: number; prevented: number; prevented_without: number }[] }
+/** The last attempt at a replay run (venture_state "steer_replay_attempt"): a night that failed shows. */
+export type ReplayAttempt = { at: string; ended?: string; ok?: boolean; running?: boolean; nightly?: boolean; only?: string[]; why?: string }
 export type PlanWeek = { n: number; title: string; from: string; to: string; items: string[]; demo: string }
 export type Tagged = { tag: string; text: string }
 export type BoardData = {
@@ -84,7 +90,7 @@ export type BoardData = {
   unsorted: Commit[]
   commitSync: { at: string; ok: boolean; why?: string } | null
   status: LiveStatus | null
-  independence: { days: SteerDay[]; replay: Replay | null }
+  independence: { days: SteerDay[]; replay: Replay | null; replayAttempt: ReplayAttempt | null }
   plan: { slug: string; title: string; start: string; end: string; weeks: PlanWeek[] } | null
   notes: NoteLink[]
   learning: Learning | null // venture_state "learning", written by scripts/venture/learning.mjs
@@ -136,7 +142,7 @@ export type Switches = {
  *  smarter and better each day by studying what it did wrong, how to prevent that same
  *  mistake/weakness"). Every correction and sweep finding is filed under one. open: no guard the
  *  system enforces; guarded: an enforced guard and not seen since; back: seen again after it. */
-export type Weakness = { id: string; side: 'kit' | 'ola'; name: string; what: string; seen: number; first: string | null; last: string | null; by_day: Record<string, number>; came_back: number; guard: { day: string; what: string; enforced: boolean } | null; guards: number; status: 'open' | 'guarded' | 'back'; held_days: number | null; quiet_days: number | null; bet: { text: string; issue?: string | null } | null }
+export type Weakness = { id: string; side: 'kit' | 'ola'; name: string; what: string; seen: number; first: string | null; last: string | null; by_day: Record<string, number>; came_back: number; guard: { day: string; what: string; enforced: boolean } | null; guards: number; status: 'open' | 'guarded' | 'back'; held_days: number | null; quiet_days: number | null; bet: { text: string; issue?: string | null } | null; replay?: { at: string; cases: number; prevented: number; failing: { id: string; title: string; since: string; why: string }[] } | null }
 
 /** The daily sweep (Bart, Nov 18: "a new daily 'agentic sweep' where the agent (you) take a look at
  *  all the things that happened that day and, from that, improves its memory and other systems for
@@ -303,7 +309,7 @@ export async function loadBoard(): Promise<BoardData> {
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR, claimsR] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG, LEARN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'steer_replay_attempt', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
     db.from('venture_state').select('key, value, at').like('key', 'claim:%'),
@@ -333,6 +339,7 @@ export async function loadBoard(): Promise<BoardData> {
     independence: {
       days: Object.values((st('steers')?.value?.days ?? {}) as Record<string, SteerDay>).sort((a, b) => a.day.localeCompare(b.day)),
       replay: (st('steer_replay')?.value ?? null) as Replay | null,
+      replayAttempt: (st('steer_replay_attempt')?.value ?? null) as ReplayAttempt | null,
     },
     plan: planRow ? parsePlan(PLAN_SLUG, planRow.title, planRow.body, planRow.updated_at) : null,
     notes: await loadNotes(journalRow?.body ?? ''),

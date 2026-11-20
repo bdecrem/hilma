@@ -385,6 +385,8 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-weak .guard .enf { color: var(--green); }
 .bd-weak .guard .rule { color: var(--ink-3); }
 .bd-weak .guard .bet { display: block; margin-top: 2px; color: var(--ink); }
+.bd-weak .guard .rp { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
+.bd-weak .guard .rp.fail { color: var(--red); }
 .bd-weak .st { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
 .bd-weak .st.guarded { color: var(--green); }
 .bd-weak .st.back { color: var(--red); font-weight: 600; }

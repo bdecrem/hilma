@@ -56,6 +56,30 @@ every finding, for Kit and for Ola, goes through the same five questions, in thi
    cause could be (the other channels, the other pages, the other scripts, what already shipped),
    and fix those too. Say in the entry what was looked at.
 
+### A replay case for every correction (OLA-175)
+
+Each correction of the day also becomes a case for the replay test, the same evening: one JSON
+file in `apps/venture/private/data/replay-cases/` (private, like the corrections), named
+`c<N>-<short-slug>.json`:
+
+    { "id": "c92-…", "source": "Correction 92", "day": "2026-11-20", "title": "the fault in plain words",
+      "weakness": "<the weakness id it is filed under>",
+      "situation": "Context: <what Kit knew just before the mistake, with the facts that make the right
+                    answer possible, and none of the hindsight>\n\nWhat do you do, and what, if anything,
+                    do you say to Bart?",
+      "must": ["<what a right response does, concrete enough to grade>"],
+      "must_not": ["<the mistake itself>"] }
+
+The situation is the moment of choice, written so a fresh session that knows only Kit's rules could
+get it right; it never says which rule applies. A correction with no such moment (a structural fault
+already fixed in code, a pure layout request, or one another case already covers) gets one line in
+`apps/venture/private/data/replay-untestable.json` instead, `"92": "why"`. `sweep.mjs post` refuses
+an entry while a correction from 22 on has neither (`node scripts/venture/replay-coverage.mjs`
+lists them). Try a new case once before posting: `node scripts/venture/steer-replay.mjs --tries 1
+--only c92-…` (run it on the Mac mini, not on Bart's iMac). The runner replays every case each night
+between 2 and 8 am; a case that fails with the rules loaded is filed under its weakness on the
+Learning page, and that weakness's rule is the one to strengthen.
+
 Then two questions for the day as a whole:
 
 - **The pattern.** What do today's findings have in common, with each other and with earlier

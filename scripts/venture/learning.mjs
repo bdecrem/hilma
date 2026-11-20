@@ -134,7 +134,7 @@ if (!dry) {
     const d = Object.keys(steers).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().at(-1)
     if (d) value.kit.steers = { day: d, rate: steers[d]?.rate ?? null }
   }
-  if (replay) value.kit.replay = { prevented: replay.with ?? replay.prevented ?? null, of: replay.total ?? replay.of ?? null }
+  if (replay) value.kit.replay = { prevented: replay.prevented ?? null, of: replay.graded ?? replay.cases ?? null, at: replay.at }
   const { error } = await db.from('venture_state').upsert({ key: 'learning', value, at: value.at })
   if (error) throw new Error(`venture_state: ${error.message}`)
   console.log('stored in venture_state "learning"')
