@@ -207,7 +207,78 @@ def check(folder):
                     problems.append(f"{rel} uses {x}, which is not in the folder.")
     if "index.html" not in have_files:
         problems.append("There is no index.html, the page a visitor sees first.")
+    stale = staleness(folder, entries)
+    if stale:
+        problems.append(stale)
     return {"folder": str(folder), "files": files, "total": total, "problems": problems, "notes": sorted(set(notes)), "left_out": left}
+
+
+# ------------------------------------------------------------------ an old copy (OLA-267)
+# The site folder is a COPY of the page. It does not change when the page does: a project that
+# published before has a site/ from then, and publishing it again published the earlier page (Nov 20:
+# the address showed Cedar after Ola made a page saying Bart). `prepare` leaves a record of what it
+# copied; `check` (and Ola's server, the same rule) refuses a folder whose sources changed since, or
+# one older than a page outside it.
+SOURCE_RECORD = ".ola-source.json"
+
+
+def sha256_of(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def staleness(folder, entries=None):
+    """Why `folder` is an old copy of a page (a PROBLEM line), or None."""
+    folder = Path(folder).resolve()
+    entries = entries if entries is not None else walk(folder)
+    rec = None
+    try:
+        rec = json.loads((folder / SOURCE_RECORD).read_text(encoding="utf-8"))
+        if not isinstance(rec, dict) or not isinstance(rec.get("page"), str) or not isinstance(rec.get("sources"), dict):
+            rec = None
+    except (OSError, ValueError):
+        rec = None
+    root = Path(rec["root"]) if rec and isinstance(rec.get("root"), str) and Path(rec["root"]).is_dir() else folder.parent
+    try:
+        out = folder.relative_to(root).as_posix()
+    except ValueError:
+        out = folder.name
+    fix = lambda page: f"run `python3 /opt/ola/skills/publish/scripts/publish.py prepare {page} --out {out}` from {root} (the page the person asked for), then check again"
+    if rec:
+        changed = [p for p, sha in rec["sources"].items() if not (root / p).is_file() or sha256_of(root / p) != sha]
+        if changed:
+            return f"{out}/ is an old copy: it was made from {rec['page']}, and {', '.join(changed[:4])} changed after, so it would publish the earlier page. Make it again: {fix(rec['page'])}."
+    newest = 0
+    for rel, kind, _ in entries:
+        if kind == "file":
+            newest = max(newest, int((folder / rel).stat().st_mtime))
+    mine = set((rec or {}).get("sources", {}))
+    later, n = [], 0
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".") and d not in ("node_modules", "__pycache__") and Path(dirpath, d).resolve() != folder]
+        for name in filenames:
+            n += 1
+            if n > 20000:
+                break
+            if name.startswith(".") or not name.lower().endswith((".html", ".htm")):
+                continue
+            f = Path(dirpath, name)
+            rel = f.relative_to(root).as_posix()
+            if rel in mine:
+                continue
+            try:
+                m = int(f.stat().st_mtime)
+            except OSError:
+                continue
+            if m > newest:
+                later.append((m, rel))
+    if later:
+        page = max(later)[1]
+        return f"{page} changed after {out}/ was made, so {out}/ may be an earlier page, not the one just made. If the person asked for {page}, {fix(page)}; otherwise make {out}/ again from the page they meant."
+    return None
 
 
 # ------------------------------------------------------------------ prepare
@@ -281,6 +352,8 @@ def prepare(page, out="site"):
             dst.write_text(rewrite(src, pub, texts[src], plan, root), encoding="utf-8")
         else:
             shutil.copyfile(root / src, dst)
+    # What it was made from, so a later publish can tell an old copy (OLA-267). Hidden: never published.
+    (outdir / SOURCE_RECORD).write_text(json.dumps({"page": page_rel, "root": str(root), "sources": {src: sha256_of(root / src) for src in plan}}), encoding="utf-8")
     result = check(outdir)
     return {"ok": not result["problems"], "folder": str(outdir), "files": [{"from": s, "as": p} for s, p in plan.items()], "problems": result["problems"], "notes": sorted(set(notes) | set(result["notes"]))}
 

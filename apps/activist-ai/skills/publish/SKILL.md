@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "4"
+  ola/version: "5"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -122,8 +122,20 @@ ola-publish site --files index.html,style.css,picture.png
   person still wants it, run `ola-publish` again with the list it names. **Still being
   published**: run `ola-publish status` a minute later (it is never asked) and tell them then.
 - If they say not now, nothing was published: say so in one line and leave the page in the project.
-- **Publish again** ("publish it again", after a change): Step 3 `check`, then `ola-publish` with
-  the new list; it replaces what is there, after the same one yes. Say the address again.
+- **Every publish starts with `prepare`**, from the page the person asked for, also "publish it
+  again" and any page in a project that published before. `site/` is a copy: it does not change
+  when the page does, and an old one publishes the earlier page. `check` and Ola's server refuse an
+  old copy ("an old copy", "changed after site/ was made") and say the `prepare` line to run: run
+  it, `check` again, then `ola-publish`. That is the whole fix; do not tell the person about it.
+- **What you say comes from the command's lines, never from what you believe.** "Checked: the
+  address answers with exactly the page just published; it shows: …": say it is live, with the
+  address and what it shows. If what it shows is not what the person asked for, say so in one
+  sentence and make the right page. "NOT LIVE YET": never say live; say in one sentence that the
+  address still shows the earlier page, as the command says.
+- Never look the command up (`which`, `--help`): this skill is how it is used.
+- **Publish again** ("publish it again", after a change): Step 2 `prepare`, Step 3 `check`, then
+  `ola-publish` with the new list; it replaces what is there, after the same one yes. Say the
+  address again.
 - **Take it down** ("take it down", "unpublish"): run `ola-publish unpublish` as a command of its
   own. It asks the person; on the yes the pages come down and the command says so. Tell them the
   address now shows nothing.

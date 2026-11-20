@@ -613,6 +613,31 @@
         "words": "description"
       },
       "ability": "sound"
+    },
+    {
+      "id": "publish-third-page",
+      "say": "make a page that says Maple and publish it on ola",
+      "before": [
+        "make a page that says Oak and publish it on ola",
+        "make a page that says Cedar and publish it on ola"
+      ],
+      "separate": true,
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "site:Maple"
+      ],
+      "mustNot": [],
+      "limitMin": 24,
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-267",
+        "what": "The fault itself: a project that had published pages saying Oak and Cedar, each in its own conversation; a new conversation asks for a page saying a new word. Ola changed index.html but published the old site/ copy, and said it was live while the address showed Cedar (3 of 19 tries on Nov 20). The address must show the new word.",
+        "words": "description"
+      }
     }
   ]
 }

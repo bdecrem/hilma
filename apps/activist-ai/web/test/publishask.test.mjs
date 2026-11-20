@@ -38,6 +38,14 @@ test('the session rules: a publish is asked under "Lots of permissions" and "Ask
       assert.equal(win(rules, 'shell', 'ola-publish site --files index.html'), 'ask', `${mode} ${web}`)
       assert.equal(win(rules, 'bash', '/opt/ola/bin/ola-publish site --files index.html'), 'ask')
       assert.equal(win(rules, 'shell', 'ola-publish status'), 'allow')
+      // OLA-267: a yes was asked for `which ola-publish`, `ola-publish --help 2>&1`, `head -50`.
+      for (const c of ['ola-publish --help 2>&1', 'ola-publish --help', 'ola-publish -h', 'ola-publish', 'which ola-publish']) assert.equal(win(rules, 'shell', c), 'allow', `${mode} ${web} ${c}`)
+      assert.equal(win(rules, 'shell', 'ola-publish unpublish'), 'ask')
     }
   assert.ok(publishRules().length >= 6)
+})
+
+test('OLA-267: a trailing 2>&1 still reads as the list (a card showed the raw command); the help forms are never a publish', () => {
+  assert.deepEqual(publishRequestOf('ola-publish site --files index.html,style.css 2>&1'), { sel: { folder: 'site' }, files: ['index.html', 'style.css'] })
+  for (const c of ['ola-publish --help', 'ola-publish --help 2>&1', 'ola-publish -h', 'ola-publish help', 'ola-publish']) assert.deepEqual(publishRequestOf(c), { status: true }, c)
 })

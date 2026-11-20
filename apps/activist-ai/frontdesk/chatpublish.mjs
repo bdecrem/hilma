@@ -39,15 +39,16 @@ export function makeChatPublish(deps) {
       const release = deps.holdBusy?.(ws.slug) ?? (() => {})
       try {
         const ctx = deps.siteCtx(ws)
-        const look = await sites.preview(ctx, ask.sel)
+        // fresh: an old copy of the page (site/ from an earlier publish) is refused (OLA-267).
+        const look = await sites.preview(ctx, ask.sel, { fresh: true })
         if (look.status !== 200) return fail(look.body?.message ?? 'The files could not be checked just now. Nothing was published.')
         const names = look.body.items.map((i) => i.as)
         if (!fingerprint && !sameFiles(ask.files, names)) return fail(`The files named are not the ones that would go public. Those are: ${names.join(', ')}. Nothing was published; ask the person again with exactly that list.`)
         const was = sites.status(ws.slug)
-        const r = await sites.publish(ctx, ask.sel, fingerprint || look.body.fingerprint)
+        const r = await sites.publish(ctx, ask.sel, fingerprint || look.body.fingerprint, { fresh: true })
         deps.audited?.(ws, sess, ask.sel, r, was)
         if (r.status !== 200) return fail(r.body?.message ?? 'The page could not be published just now. Nothing changed.')
-        return hand({ state: 'done', url: r.body.url, count: r.body.files, live: r.body.live, again: r.body.again, ...(r.body.message ? { message: r.body.message } : {}) })
+        return hand({ state: 'done', url: r.body.url, count: r.body.files, live: r.body.live, again: r.body.again, shows: r.body.shows ?? '', expected: r.body.expected ?? '', ...(r.body.message ? { message: r.body.message } : {}) })
       } finally {
         release()
       }

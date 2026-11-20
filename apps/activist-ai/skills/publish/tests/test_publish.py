@@ -59,7 +59,9 @@ finally:
 site = d / "site"
 case("prepare makes a ready folder from a page with outside and absolute links", r["ok"], json.dumps(r)[:300])
 names = sorted(p.relative_to(site).as_posix() for p in site.rglob("*") if p.is_file())
-case("prepare copies the page as index.html with exactly what it uses", names == ["assets/css/site.css", "assets/img/paper.png", "assets/logo.png", "index.html", "pics/room.png"], names)
+case("prepare copies the page as index.html with exactly what it uses", [n for n in names if n != ".ola-source.json"] == ["assets/css/site.css", "assets/img/paper.png", "assets/logo.png", "index.html", "pics/room.png"], names)
+rec = json.loads((site / ".ola-source.json").read_text())
+case("prepare records the page it copied and every source's sha256 (OLA-267)", rec.get("page") == "pages/meeting.html" and "pages/meeting.html" in rec.get("sources", {}), rec)
 html = (site / "index.html").read_text()
 case("prepare makes the links relative and inside the folder", 'href="assets/css/site.css"' in html and 'src="assets/logo.png"' in html and 'src="pics/room.png"' in html, html[:300])
 css = (site / "assets/css/site.css").read_text()
@@ -146,6 +148,37 @@ r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(bad), "--jso
 case("the command line: check --json exits 1 with the problems", r.returncode == 1 and json.loads(r.stdout)["problems"])
 r = subprocess.run([sys.executable, "-I", str(SCRIPT), "check", str(site)], capture_output=True, text=True)
 case("the command line: check says ready to publish", r.returncode == 0 and r.stdout.strip().endswith("ready to publish"), r.stdout[-200:])
+
+# ---- an old copy (OLA-267): a project that published before has a site/ from then
+def stale_project():
+    d = project({"index.html": "<h1>Cedar</h1>"})
+    cwd = os.getcwd()
+    os.chdir(d)
+    try:
+        P.prepare("index.html", "site")
+    finally:
+        os.chdir(cwd)
+    return d
+
+d = stale_project()
+case("a fresh copy is ready (OLA-267)", not P.check(d / "site")["problems"], P.check(d / "site")["problems"])
+(d / "index.html").write_text("<h1>Bart</h1>")
+probs = P.check(d / "site")["problems"]
+case("the page changed after the copy: check refuses the old copy and says to prepare again (OLA-267)", any("old copy" in x and "prepare index.html --out site" in x for x in probs), probs)
+cwd = os.getcwd(); os.chdir(d)
+try:
+    P.prepare("index.html", "site")
+finally:
+    os.chdir(cwd)
+case("made again from the page as it is now: ready, and it says Bart (OLA-267)", not P.check(d / "site")["problems"] and "Bart" in (d / "site/index.html").read_text())
+d = stale_project()
+(d / "site/.ola-source.json").unlink()
+t = (d / "site/index.html").stat().st_mtime
+(d / "maple").mkdir()
+(d / "maple/index.html").write_text("<h1>Maple</h1>")
+os.utime(d / "maple/index.html", (t + 5, t + 5))
+probs = P.check(d / "site")["problems"]
+case("no record, and a newer page outside it (a new page in a subfolder): refused, naming that page (OLA-267)", any("maple/index.html changed after site/" in x for x in probs), probs)
 
 # ---- live against a local server (no outside network)
 import http.server, threading

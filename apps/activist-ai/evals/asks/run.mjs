@@ -199,7 +199,7 @@ async function runCase(T, c) {
     else throw new Error(`unknown setup step ${JSON.stringify(step)}`)
   }
   const before = await T.listFiles()
-  const sid = await newSession(T, `asks ${c.id}`)
+  let sid = await newSession(T, `asks ${c.id}`)
   const limit = (c.limitMin ?? 8) * 60_000
   const end = Date.now() + limit
   const steps = []
@@ -222,11 +222,15 @@ async function runCase(T, c) {
   // OLA-250: what the person said first in the same conversation ("make a page and publish it",
   // then "publish it again" or "take it down"). Not judged, but it has to finish.
   const earlier = []
-  for (const said of c.before ?? []) {
+  // OLA-267 "separate": each sentence in a conversation of its own, the way a person comes back
+  // another day to a project that published before (the fault hid in one long conversation).
+  for (const [i, said] of (c.before ?? []).entries()) {
+    if (c.separate && i) sid = await newSession(T, `asks ${c.id} ${i + 1}`)
     const { turn, text } = await converse(said)
     earlier.push(text)
     if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}; Ola said: ${oneLine(text)}` }
   }
+  if (c.separate && c.before?.length) sid = await newSession(T, `asks ${c.id} last`)
   const { turn, text: answer } = await converse(c.say)
   const base = { answer, steps, answered }
   if (turn.status !== 'done') return { ...base, ok: false, why: `the turn ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(answer)}` }

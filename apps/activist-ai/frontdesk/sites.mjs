@@ -214,7 +214,11 @@ export function folderCtx(slug, root, { uploaded = () => false, secrets = () => 
       const rel = pre ? `${pre}/${e.name}` : e.name
       if (e.isSymbolicLink()) return [{ path: rel, type: 'link', size: 0 }]
       if (e.isDirectory()) return walk(path.join(d, e.name), rel)
-      return [{ path: rel, type: e.isFile() ? 'file' : 'other', size: e.isFile() ? fs.statSync(path.join(d, e.name)).size : 0 }]
+      if (!e.isFile()) return [{ path: rel, type: 'other', size: 0 }]
+      // mtime and sha256 as the VM's ola-files reports them (the old-copy check reads both).
+      const f = path.join(d, e.name)
+      const st = fs.statSync(f)
+      return [{ path: rel, type: 'file', size: st.size, mtime: Math.floor(st.mtimeMs / 1000), sha256: createHash('sha256').update(fs.readFileSync(f)).digest('hex') }]
     })
   return {
     slug,
@@ -340,6 +344,58 @@ export function makeSiteNames(db, sites) {
     /** `admin.mjs site-release`: the hold lifted (`free`: the name given up altogether). */
     unhold: (name, { free = false } = {}) => (free ? db.prepare('DELETE FROM site_names WHERE name = ?').run(name) : db.prepare('UPDATE site_names SET taken_down_at = NULL WHERE name = ?').run(name)).changes === 1,
   }
+}
+
+// ---------------------------------------------------------------- an old copy (OLA-267)
+// A site folder (site/) is a COPY of a page, made by the publish skill's `prepare`. It does not
+// change when the page does. Nov 20: in a project that had published Bart, Oak and Cedar, a new
+// conversation changed /work/index.html to Bart and published site/ as it was (Cedar); the address
+// showed Cedar and Ola said "it's live". So a publish from the conversation checks the copy first:
+//   - `prepare` leaves <folder>/.ola-source.json: the page it was made from and the sha256 of every
+//     file it copied. A source that changed since means the copy is old.
+//   - Whatever the record says, a page outside the folder changed after the folder was last written
+//     means the folder may not be the page just made (the new page in a subfolder, an old site/).
+export const SOURCE_RECORD = '.ola-source.json'
+const visibleHtml = (p) => /\.html?$/i.test(p) && !p.split('/').some((x) => x.startsWith('.') || x === 'node_modules' || x === '__pycache__')
+const prepareLine = (page, f) => `python3 /opt/ola/skills/publish/scripts/publish.py prepare ${page} --out ${f}`
+/** Why folder `f` is an old copy, as the sentence the agent gets, or null. */
+export async function staleness(ctx, entries, byPath, f, inside) {
+  let rec = null
+  if (byPath.get(`${f}/${SOURCE_RECORD}`)?.type === 'file') {
+    try {
+      rec = JSON.parse(String(await ctx.read(`${f}/${SOURCE_RECORD}`, 512 * 1024)))
+    } catch {}
+    if (!rec || typeof rec.page !== 'string' || !rec.sources || typeof rec.sources !== 'object') rec = null
+  }
+  if (rec) {
+    const changed = Object.entries(rec.sources).filter(([p, sha]) => {
+      const e = byPath.get(p)
+      return !e || e.type !== 'file' || (typeof e.sha256 === 'string' && e.sha256 !== sha)
+    })
+    if (changed.length) {
+      const names = changed.map(([p]) => p).slice(0, 4).join(', ')
+      return `${f}/ is an old copy: it was made from ${rec.page}, and ${names} changed after, so it would publish the earlier page. Nothing was published. Make the copy again from the page the person asked for (${prepareLine(rec.page, f)}), then check ${f} and run ola-publish with the list it prints.`
+    }
+  }
+  const newest = Math.max(0, ...inside.map((e) => e.mtime ?? 0))
+  const mine = new Set(Object.keys(rec?.sources ?? {}))
+  const later = entries.filter((e) => e.type === 'file' && !e.path.startsWith(`${f}/`) && visibleHtml(e.path) && !mine.has(e.path) && Number.isFinite(e.mtime) && e.mtime > newest)
+  if (later.length) {
+    const p = later.sort((a, b) => b.mtime - a.mtime)[0].path
+    return `${p} changed after ${f}/ was made, so ${f}/ may be an earlier page and not the one just made. Nothing was published. Make ${f}/ from the page the person asked for (${prepareLine(p, f)}, or the page they meant), then check ${f} and run ola-publish with the list it prints.`
+  }
+  return null
+}
+
+/** What a page says, in a few words (its title and first heading), for Ola's answer to quote. */
+export function wordsOf(buf) {
+  const t = Buffer.isBuffer(buf) ? buf.toString('utf8') : String(buf ?? '')
+  const clean = (s) => s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim()
+  const title = clean(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(t)?.[1] ?? '')
+  const h = clean(/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(t)?.[1] ?? '')
+  const body = clean((/<body[^>]*>([\s\S]*)/i.exec(t)?.[1] ?? '').replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' '))
+  const parts = [...new Set([title, h].filter(Boolean))]
+  return (parts.length ? parts.join(' · ') : body).slice(0, 140)
 }
 
 // ---------------------------------------------------------------- the module
@@ -561,15 +617,17 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
   async function verify(url, expect, ms = cfg.verifyMs, settleMs = 0) {
     const until = Date.now() + ms
     let last = ''
+    let shows = ''
     let since = null
     while (Date.now() < until) {
       try {
         const r = await fetch(url, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15_000) })
         const b = Buffer.from(await r.arrayBuffer())
         last = String(r.status)
+        shows = r.ok ? wordsOf(b) : ''
         if (expect === null ? r.status === 404 : r.ok && sha1(b) === expect) {
           since ??= Date.now()
-          if (Date.now() - since >= settleMs) return true
+          if (Date.now() - since >= settleMs) return { ok: true, shows }
         } else since = null
       } catch (e) {
         last = e.code ?? e.name
@@ -578,7 +636,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       await new Promise((r) => setTimeout(r, since === null ? cfg.pollMs : Math.max(cfg.pollMs, Math.min(2000, settleMs))))
     }
     log(`sites: ${url} did not show the change yet (${last})`)
-    return false
+    return { ok: false, shows }
   }
 
   // ------------------------------------------------ what would leave
@@ -588,7 +646,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
    * and the address. Reads every file (to find what a page uses, and to check it). Returns
    * { plan } or { refused: { status, body } }.
    */
-  async function prepare(ctx, sel) {
+  async function prepare(ctx, sel, opts = {}) {
     const no = (status, message, extra = {}) => ({ refused: { status, body: { error: extra.error ?? 'not_publishable', message, ...extra } } })
     const entries = await ctx.list()
     const byPath = new Map(entries.map((e) => [e.path, e]))
@@ -617,6 +675,10 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         else start.push(e.path)
       }
       if (!start.some((p) => p === `${f}/index.html`)) return no(422, `${f}/ has no index.html, the page a visitor sees first. Publish one page instead, or ask Ola to name the first page index.html.`, { error: 'no_index' })
+      if (opts.fresh) {
+        const stale = await staleness(ctx, entries, byPath, f, inside)
+        if (stale) return no(409, stale, { error: 'stale' })
+      }
     } else return no(400, 'Choose a page or a folder to publish.')
 
     // The files, and (for a page) everything it uses, followed through stylesheets, scripts and
@@ -707,8 +769,8 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     },
     list: () => Object.entries(manifests()).map(([slug, m]) => ({ slug, url: m.url, at: m.at, files: m.files.length })),
     /** The sheet's list (nothing leaves). */
-    async preview(ctx, sel) {
-      const r = await prepare(ctx, sel)
+    async preview(ctx, sel, opts = {}) {
+      const r = await prepare(ctx, sel, opts)
       if (r.refused) return r.refused
       const { plan } = r
       return { status: 200, body: { ...plan, items: plan.items.map(({ sha, ...i }) => i), published: this.status(ctx.slug), acceptableUse: ACCEPTABLE_USE } }
@@ -717,10 +779,10 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
      * Publishes exactly what the person saw: `fingerprint` is the preview's; if the files changed
      * since, nothing leaves and the sheet is shown again.
      */
-    async publish(ctx, sel, fingerprint) {
+    async publish(ctx, sel, fingerprint, opts = {}) {
       const c = cred()
       if (!c) return { status: 503, body: { error: 'not_set_up', message: 'Publishing is not set up on this Ola machine yet. Nothing was published.' } }
-      const r = await prepare(ctx, sel)
+      const r = await prepare(ctx, sel, opts)
       if (r.refused) return r.refused
       const { plan, buffers } = r
       if (fingerprint !== plan.fingerprint) return { status: 409, body: { error: 'changed', message: 'The files changed since you looked. Look at the list again before publishing.' } }
@@ -742,9 +804,12 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         return { status: e.code === 'BUSY' ? 429 : 502, body: { error: 'publish_failed', message: e.code === 'BUSY' ? 'Another page is being published just now. Try again in a minute.' : 'The page could not be published just now: the host did not take it. Nothing changed. Try again in a few minutes.' } }
       }
       const index = plan.items.find((i) => i.as === plan.page)
-      const live = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
-      const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet. It usually appears within a few minutes; check the address again then.` }
-      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, ...notYet, fingerprint: plan.fingerprint }, plan }
+      // The address itself, fetched, against the page just published: `live` and `shows` (what the
+      // address says now) are what Ola's answer is written from (OLA-267), never what it believes.
+      const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
+      const live = seen.ok
+      const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet${seen.shows ? ` (it still shows “${seen.shows}”)` : ''}. It usually appears within a few minutes; check the address again then.` }
+      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, shows: seen.shows, expected: wordsOf(buffers.get(index.path)), ...notYet, fingerprint: plan.fingerprint }, plan }
     },
     /** Takes a project's pages down (the owner's Unpublish, or `admin.mjs unpublish`). */
     async unpublish(slug) {
@@ -766,7 +831,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
         return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
       }
-      const gone = await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
+      const gone = (await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)).ok
       const notYet = gone ? {} : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
       return { status: 200, body: { unpublished: true, url: m.url, gone, ...notYet, files: m.files.length } }
     },

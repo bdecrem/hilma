@@ -2479,6 +2479,29 @@ what is published now; old deployments' own addresses are behind Vercel's login
 the caps, a name owned by its first publisher) are the same code. Tests: `test/sites.test.mjs`,
 "git mode".
 
+**An old copy is never published from the conversation (OLA-267, 2026-11-20).** In a project that
+had published pages saying Bart, Oak and Cedar, a new conversation asked for a page saying Bart:
+Ola changed `/work/index.html`, skipped the skill's `prepare`, and published `site/` as it was, the
+Cedar copy from the last publish. The front desk's live check compared the address with `site/`
+(Cedar), found it equal, and the command printed "It answers with the new page now", so Ola said
+"it's live" over the old page (3 of 19 tries that day; never in a fresh project, which has no
+`site/` yet, so the earlier checks of three tries each could not see it). Now: `publish.py prepare`
+leaves `<folder>/.ola-source.json` (the page and the sha256 of every file it copied; hidden, never
+published); a publish from the conversation (`chatpublish.mjs`, and the ask itself before the
+person sees it, `server.mjs onPublishAsk`) refuses a folder whose sources changed since, or one
+older than a visible page outside it, with the `prepare` line to run (`sites.mjs staleness`; the
+skill's `check` says the same); the publish's own check of the address carries what the address
+shows (`shows`, its title and first heading), and `ola-publish` prints it ("Checked: … it shows:
+…") or "NOT LIVE YET … do not tell the person it is live" (exit 4). A publish ask that would not
+publish (a form we do not act on, a refused check) is answered no for the person with the reason
+for Ola, so the yes card only ever shows a list that would go; `ola-publish --help`, the bare
+command and `which ola-publish` are never asked. The Publish button publishes the page that is open
+(`sel.page`, unless the person ticks "Everything in <folder>/"), not a copy, so it shows the page
+that was open; it is not changed. Tests:
+`test/sites-stale.test.mjs`, the skill's tests, `web/test/publishask.test.mjs`; the asks case
+`publish-third-page` (two pages published, each in its own conversation, then a third with a new
+word; `separate: true` in `cases.json`).
+
 **Takedown.** `node admin.mjs unpublish <project>` takes a project's pages down at once (audited as
 the admin's); `node admin.mjs sites` lists what is published.
 

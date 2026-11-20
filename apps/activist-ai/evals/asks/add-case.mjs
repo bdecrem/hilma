@@ -34,6 +34,8 @@
 //   --from-log 9:28           ... or the one nearest that time today (9:28 am, 2026-11-20T09:28; Pacific, within 30 min)
 //   --pick <n>                when several match, the n-th of the list it printed
 //   --wake                    also read cloud projects whose computer is stopped
+//   --separate                each --before sentence and the case in a conversation of its own (a
+//                             person coming back to a project that published before; OLA-267)
 // Off the Ola machine it asks it over ssh (OLA_ASKS_HOST, default admin@100.95.51.98).
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -132,6 +134,7 @@ const c = {
   id,
   say,
   ...(many('--before').length ? { before: many('--before') } : {}),
+  ...(process.argv.includes('--separate') ? { separate: true } : {}),
   places,
   must,
   mustNot: many('--must-not'),

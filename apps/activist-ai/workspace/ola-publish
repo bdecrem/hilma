@@ -14,7 +14,8 @@
 #       The last publish's outcome (never asked): use it when the publish above was still going.
 #
 # The front desk writes the outcome with `ola-publish --result` (the JSON on stdin), into
-# /work/.ola/publish/result.json. Exit 0 published, 1 not published, 2 used wrongly, 3 still going.
+# /work/.ola/publish/result.json. Exit 0 published (and the address shows it), 1 not published,
+# 2 used wrongly, 3 still going, 4 sent but the address does not show it yet.
 import json, os, sys, tempfile, time
 
 DIR = os.environ.get("OLA_PUBLISH_DIR", "/work/.ola/publish")
@@ -59,11 +60,20 @@ def tell(r):
             "Tell the person the page is no longer on the web.")
         return 0
     if st == "done":
-        lines = [("Published again" if r.get("again") else "Published") + f": {r.get('url')} ({r.get('count')} file(s)).",
-                 "It answers with the new page now." if r.get("live") else (r.get("message") or "The host is still putting it up; it shows within a few minutes."),
-                 f"Tell the person it is published, with the address as a link: {r.get('url')}"]
-        say(*lines)
-        return 0
+        # What Ola says comes from the address itself, fetched by Ola's server after publishing and
+        # compared with the page just published (OLA-267), never from what Ola believes it did.
+        shows = (r.get("shows") or "").strip()
+        head = ("Published again" if r.get("again") else "Published") + f": {r.get('url')} ({r.get('count')} file(s))."
+        if r.get("live"):
+            say(head,
+                "Checked: the address answers with exactly the page just published" + (f"; it shows: “{shows}”." if shows else "."),
+                f"Tell the person it is live, with the address as a link: {r.get('url')}" + (f", and what it shows (“{shows}”)." if shows else "."),
+                "If that is not the page the person asked for, say so plainly instead, make the right page, then publish it.")
+            return 0
+        say(head,
+            "NOT LIVE YET: the address does not show the page just published" + (f"; it still shows: “{shows}”." if shows else "."),
+            "Do not tell the person it is live. Tell them in one plain sentence that it was sent but the address still shows the earlier page, and that it usually appears within a few minutes; offer to publish it again if it does not.")
+        return 4
     if st == "publishing":
         say("It is still being published. Run `ola-publish status` in a minute to see whether it is live; do not run ola-publish again for the same files.")
         return 3
@@ -71,7 +81,20 @@ def tell(r):
     return 1
 
 
+HELP = """ola-publish puts a page from this project on the public web, at https://sites.ola.cx/<project>/.
+  ola-publish site --files index.html,style.css   publish the folder site/ (made by the publish skill's
+                                                  prepare, from the page the person asked for); --files is
+                                                  the list `publish.py check site` printed. Run it as a
+                                                  command of its own: the person is asked, with the list.
+  ola-publish unpublish                           take the project's pages down (also asked)
+  ola-publish status                              the last publish's outcome (never asked)
+Publishing again: run prepare again first. site/ is a copy and does not change when the page does."""
+
+
 def main(argv):
+    if argv in ([], ["--help"], ["-h"], ["help"]):
+        say(HELP)
+        return 0
     if argv[:1] == ["--result"]:
         try:
             r = json.loads(sys.stdin.read(64 * 1024))

@@ -42,6 +42,7 @@ import { makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
+import { publishAskOf } from '../web/server/publishask.mjs'
 import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
@@ -244,7 +245,22 @@ export function makeFrontDesk(cfg = config()) {
     await madeBy.begin(slug, { engine: 'ola', session: sessionID, request: text })
     return note + text
   }
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPrompt, onRunEnded: (slug, sessionID, how) => madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' }) })
+  // A publish ask that would not publish (OLA-267) is answered for the person, with the reason for
+  // Ola: a command in a form the front desk does not act on, or a folder whose check refuses it
+  // (an old copy of the page, a key in it). So the yes card only ever shows a list that would go.
+  const onPublishAsk = async (slug, workspaceId, sessionID, requestID, action, resources) => {
+    const parsed = publishAskOf(action, resources)
+    if (!parsed || parsed.status || parsed.unpublish) return
+    let why = parsed.bad ?? null
+    if (!why) {
+      const look = await sites.preview(siteCtx({ slug, id: workspaceId }), parsed.sel, { fresh: true })
+      if (look.status !== 200 && look.body?.error !== 'unreadable') why = look.body?.message ?? null
+    }
+    if (!why) return
+    log(`${slug}: a publish ask was answered no for the person (${parsed.bad ? 'not a form we act on' : 'its check refused it'})`)
+    await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: `Not published, and the person was not asked: ${why}` })
+  }
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' }) })
   madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), log })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.

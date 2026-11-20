@@ -34,7 +34,7 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {} }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {} }) {
   // `onPrompt` and `onRunEnded` (madeby.mjs, OLA-224): a person's prompt is noted as Ola's turn in
   // the VM before it goes on (and may get a note in front of it), and its run's end ends the turn.
   // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
@@ -443,7 +443,12 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
           onGoWeb(slug, workspaceId, d.sessionID, d.id, runBy.get(`${slug}:${d.sessionID}`) ?? null).catch((e) => log(`${slug}: a web search under Lots of permissions was not answered (${e?.message ?? e})`))
           return
         }
-        // A publish is never answered for the person (OLA-230): each one is its own yes.
+        // A publish is never answered yes for the person (OLA-230): each one is its own yes. One that
+        // would not publish is answered no, with the reason for Ola (server.mjs onPublishAsk, OLA-267).
+        if (publishAskOf(d.action, d.resources)) {
+          onPublishAsk(slug, workspaceId, d.sessionID, d.id, d.action, d.resources).catch((e) => log(`${slug}: a publish ask was not checked (${e?.message ?? e})`))
+          return
+        }
         if (allowed?.has(d.action) && !web && !publishAskOf(d.action, d.resources)) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
         return
       }

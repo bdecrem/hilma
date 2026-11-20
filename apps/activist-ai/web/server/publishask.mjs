@@ -13,6 +13,7 @@
 import { shellWords } from './webask.mjs'
 
 const TOOLS = new Set(['ola-publish', '/opt/ola/bin/ola-publish'])
+const HELP = new Set(['--help', '-h', 'help'])
 
 /** True when a shell command is (or starts as) a call of ola-publish. */
 export const isPublishCommand = (cmd) => TOOLS.has(String(cmd ?? '').trim().split(/\s+/)[0])
@@ -24,9 +25,12 @@ export const isPublishCommand = (cmd) => TOOLS.has(String(cmd ?? '').trim().spli
  */
 export function publishRequestOf(cmd) {
   if (!isPublishCommand(cmd)) return null
-  const w = shellWords(String(cmd).trim())
+  // `2>&1` at the end changes nothing about what is published (OLA-267: a card showed the raw command for it).
+  const w = shellWords(String(cmd).trim().replace(/\s+2>&1$/, ''))
   if (!w || !TOOLS.has(w[0])) return { bad: 'Run ola-publish as a command of its own, with nothing before or after it (no pipes, ; or &&).' }
   if (w[1] === 'status' && w.length === 2) return { status: true }
+  // Its help (OLA-267: a yes was asked for `ola-publish --help`): never asked, prints the usage.
+  if (w.length === 1 || HELP.has(w[1])) return { status: true }
   if (w[1] === 'unpublish') return w.length === 2 ? { unpublish: true } : { bad: 'In a project, take its pages down with just: ola-publish unpublish' }
   let target = null
   let files = null
@@ -68,6 +72,8 @@ export function publishRules() {
     for (const tool of TOOLS) {
       out.push({ action, resource: tool, effect: 'ask' }, { action, resource: `${tool} *`, effect: 'ask' })
       out.push({ action, resource: `${tool} status`, effect: 'allow' })
+      // Looking the command up is never a publish (OLA-267): its help and the bare command print the usage.
+      for (const r of [tool, `${tool} --help`, `${tool} --help *`, `${tool} -h`, `${tool} -h *`, `${tool} help`, `which ${tool}`, `command -v ${tool}`]) out.push({ action, resource: r, effect: 'allow' })
     }
   return out
 }
