@@ -1,0 +1,693 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica nationality_b claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "nationality_b",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  71,
+  133,
+  137
+ ],
+ "started_at": "2026-11-20T20:28:16.495Z",
+ "meters_before": {
+  "at": "2026-11-20T20:28:11.828Z",
+  "window": {
+   "pct": 28,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 28,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 28% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 48234,
+  "user": 112
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:33:51.086Z",
+ "minutes": 5.58,
+ "meters_after": {
+  "at": "2026-11-20T20:33:51.086Z",
+  "window": {
+   "pct": 30,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 30,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 30% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 175954,
+   "output": 33755,
+   "cache_read": 1547488,
+   "cache_write": 144665,
+   "cost_usd": 1.9941,
+   "total": 1901862
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 175922,
+    "output": 14641,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4257,
+    "cost_usd": 0.1449
+   },
+   "claude-opus-5-5": {
+    "input": 32,
+    "output": 19114,
+    "cache_read": 1547488,
+    "cache_write": 144665,
+    "thinking": 5507,
+    "cost_usd": 1.8492
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 49,
+ "duration_ms": 333547,
+ "duration_api_ms": 299090,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-20T20:28:24.851Z",
+   "url": "https://www.tse.go.cr/pdf/normativa/leyopcionesynaturalizaciones.pdf",
+   "find": "Artículo 10 | Artículo 11 | renuncia a su nacionalidad | apátrida | 10508 | Reformado",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:28:27.084Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 6 | ARTÍCULO 7 | ARTÍCULO 93 | ARTÍCULO 94 | regularización",
+   "ok": true,
+   "chars": 12600
+  },
+  {
+   "at": "2026-11-20T20:28:44.185Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "ARTÍCULO 93.- | ARTÍCULO 94.- | ARTÍCULO 73.- | Así reformado | Ley 10493",
+   "ok": true,
+   "chars": 10622
+  },
+  {
+   "at": "2026-11-20T20:28:55.602Z",
+   "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+   "find": "artículo 15 | artículo 18 | apátrida | vigencia | Gaceta",
+   "ok": true,
+   "chars": 7004
+  },
+  {
+   "at": "2026-11-20T20:28:56.290Z",
+   "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/",
+   "find": "Artículo 10 | Artículo 11 | renuncia a su nacionalidad | apátrida | doble nacionalidad",
+   "ok": true,
+   "chars": 10567
+  },
+  {
+   "at": "2026-11-20T20:29:06.081Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 13 | ARTÍCULO 14 | ARTÍCULO 16 | irrenunciable",
+   "ok": true,
+   "chars": 8488
+  },
+  {
+   "at": "2026-11-20T20:29:20.733Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "CATEGORÍAS ESPECIALES ARTÍCULO 93 | ARTÍCULO 94.- | trabajadores temporales",
+   "ok": true,
+   "chars": 6577
+  },
+  {
+   "at": "2026-11-20T20:29:45.877Z",
+   "url": "https://www.larepublica.net/noticia/habilitan-categoria-especial-para-solicitantes-de-refugio-de-venezuela-nicaragua-y-cuba",
+   "find": "categoría | 43809 | Gaceta | vigencia | marzo",
+   "ok": true,
+   "chars": 2812
+  },
+  {
+   "at": "2026-11-20T20:29:59.582Z",
+   "url": "https://www.mtss.go.cr/dml/normativa/descargas/decreto_43809.pdf",
+   "find": "Rige | Artículo 1 | plazo | Artículo 4 | 1 de marzo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:30:02.956Z",
+   "url": "https://www.refworld.org/es/leg/legis/pejec/2022/es/131925",
+   "find": "Rige | plazo | Artículo 1 | marzo",
+   "ok": true,
+   "chars": 617
+  },
+  {
+   "at": "2026-11-20T20:30:39.305Z",
+   "url": "https://www.imprentanacional.go.cr/pub/2023/06/22/COMP_22_06_2023.html",
+   "find": "44133 | 43809 | categoría especial temporal | Rige",
+   "ok": true,
+   "chars": 10496
+  },
+  {
+   "at": "2026-11-20T20:30:55.950Z",
+   "url": "https://ticotimes.net/2026/08/10/costa-rica-special-temporary-immigration-category",
+   "find": "2023 | 2024 | 2025 | expired | closed",
+   "ok": true,
+   "chars": 4259
+  },
+  {
+   "at": "2026-11-20T20:31:02.155Z",
+   "url": "https://vlex.co.cr/vid/reforma-categoria-especial-regularizacion-971506360",
+   "find": "Artículo | Rige | regularización | 42406",
+   "ok": true,
+   "chars": 4102
+  },
+  {
+   "at": "2026-11-20T20:31:29.419Z",
+   "url": "https://www.centroamerica360.com/politica/costa-rica-evalua-reactivar-categoria-migratoria-para-migrantes-cubanos-nicaraguenses-y-venezolanos/",
+   "find": "10.551 | regularizar | 2024 | 2025",
+   "ok": true,
+   "chars": 3850
+  },
+  {
+   "at": "2026-11-20T20:31:31.103Z",
+   "url": "https://confidencial.digital/migrantes/costa-rica-descarta-rehabilitar-categoria-especial-temporal-para-migrantes-de-cualquier-nacionalidad/",
+   "find": "Categoría Especial Temporal | 2025 | descarta | Chaves",
+   "ok": true,
+   "chars": 4436
+  },
+  {
+   "at": "2026-11-20T20:31:32.839Z",
+   "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+   "find": "renuncia | doble nacionalidad | apátrida | 2025 | naturalizaciones",
+   "ok": true,
+   "chars": 6558
+  },
+  {
+   "at": "2026-11-20T20:31:58.472Z",
+   "url": "https://help.unhcr.org/costarica/?p=1099",
+   "find": "apatridia | 495 | 2025",
+   "ok": true,
+   "chars": 4318
+  },
+  {
+   "at": "2026-11-20T20:32:07.753Z",
+   "url": "https://www.acnur.org/node/21455",
+   "find": "apátrida | nacionalidad | Tribunal Supremo",
+   "ok": true,
+   "chars": 2831
+  }
+ ],
+ "searches": [
+  "Ley de Opciones y Naturalizaciones 1155 SCIJ texto completo nrm_texto_completo",
+  "pgrweb.go.cr scij \"Ley de Opciones y Naturalizaciones\" 1155 nValor2",
+  "sinalevi.go.cr \"Opciones y Naturalizaciones\"",
+  "Decreto 43809-MGP categoría especial temporal Cuba Nicaragua Venezuela La Gaceta publicación vigencia",
+  "Decreto 42406-MAG-MGP régimen de excepción trabajadores agrícolas reforma 2023 2024 prórroga",
+  "\"43809\" decreto categoría especial temporal Gaceta diciembre 2022 rige",
+  "\"43809-MGP\" \"Rige a partir del 1 de marzo\" OR \"rige a partir\" categoría especial temporal",
+  "Migración categoría especial temporal Cuba Nicaragua Venezuela cierre febrero 2024 solicitudes aprobadas cifras",
+  "\"categoría especial temporal\" Migración Costa Rica 2024 personas aprobadas refugio pendiente denegado cifras",
+  "Costa Rica apatridia 2024 TSE Registro Civil ACNUR personas declaradas apátridas naturalización Chiriticos",
+  "categoría especial trabajadores agrícolas temporales Costa Rica decreto 44281 Migración 2024 2025 solicitudes binacional Nicaragua",
+  "ACNUR Costa Rica apatridia 2025 riesgo de apatridia inscripción nacimientos Ngäbe Chiriticos TSE"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":71,\"answer_2023\":\"Conditional, depending on the country of origin or some other consideration\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Conditional, depending on the country of origin or some other consideration\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley de Opciones y Naturalizaciones, Ley N.º 1155\",\"article\":\"Art. 11 (last paragraph: renunciation of nationality unless a dual-nationality treaty applies)\",\"enacted\":\"1991-05-09\",\"history_read\":\"amending_acts\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 16 (Costa Rican nationality not lost, cannot be renounced)\",\"enacted\":\"1995-06-06\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 14 (naturalisation residence periods)\",\"enacted\":\"1949\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"No change was found. Art. 11 of Ley 1155 still carries the 1991 annotation and nothing later, and the only reform in the window (Ley 10508, Aug. 2024) touched arts. 15 and 18, not the renunciation clause. In practice the TSE Civil Registry naturalised people at a high, steady rate through the period: 6,277 letters of naturalisation in 2023 and 5,541 in 2024, according to the Registry director as reported by La Nación (July 2025). The same report says Nicaragua's 2025 constitutional reform ends dual nationality for Nicaraguans who naturalise abroad. That is a change in foreign law, not Costa Rican law, though it may lower demand. No reports were found of the renunciation clause being applied unevenly, so the rating stays 'Usually' on both dates. This rests on evidence about naturalisation volume, not on how the renun",
+ "output": {
+  "answers": [
+   {
+    "question_id": 71,
+    "answer_2023": "Conditional, depending on the country of origin or some other consideration",
+    "implementation_2023": "Usually",
+    "answer_2026": "Conditional, depending on the country of origin or some other consideration",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 11 (last paragraph: renunciation of nationality unless a dual-nationality treaty applies)",
+      "enacted": "1991-05-09",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 16 (Costa Rican nationality not lost, cannot be renounced)",
+      "enacted": "1995-06-06",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 14 (naturalisation residence periods)",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No change was found. Art. 11 of Ley 1155 still carries the 1991 annotation and nothing later, and the only reform in the window (Ley 10508, Aug. 2024) touched arts. 15 and 18, not the renunciation clause. In practice the TSE Civil Registry naturalised people at a high, steady rate through the period: 6,277 letters of naturalisation in 2023 and 5,541 in 2024, according to the Registry director as reported by La Nación (July 2025). The same report says Nicaragua's 2025 constitutional reform ends dual nationality for Nicaraguans who naturalise abroad. That is a change in foreign law, not Costa Rican law, though it may lower demand. No reports were found of the renunciation clause being applied unevenly, so the rating stays 'Usually' on both dates. This rests on evidence about naturalisation volume, not on how the renunciation declaration itself is handled.",
+    "practice_sources": [
+     {
+      "title": "¿Cómo se naturalizan los extranjeros en Costa Rica? Estas son las formas más utilizadas (La Nación)",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The official TSE PDF of Ley 1155 could not be opened (the PDF converter is missing). Art. 11 was read in Bufete de Costa Rica's annotated consolidated text, which shows that the last amendment is Ley 7234 of 1991, and the only amendment in the window (Ley 10508) was read in full. Constitution arts. 14 and 16 were read on SCIJ with their amendment notes (latest 1995 and 1999).",
+    "sources_opened": [
+     {
+      "title": "Ley de Opciones y Naturalizaciones 1155 (consolidated, Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "Ley 10508, Reforma de los artículos 15 y 18 de la Ley 1155 (Bufete de Costa Rica transcription)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "La Nación, naturalización 2025",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/"
+     },
+     {
+      "title": "TSE PDF Ley 1155 (failed to open)",
+      "url": "https://www.tse.go.cr/pdf/normativa/leyopcionesynaturalizaciones.pdf"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Art. 11's last paragraph reads: 'A la vez, deberá expresar, en igual forma, que renuncia a su nacionalidad, excepto si se tratara de nacionales de países con los que existan tratados de doble nacionalidad. (Así reformado por el artículo 1º de la ley Nº 7234 de 9 de mayo de 1991)'. The list of dual-nationality treaties (Spain 1964) was still not verified."
+   },
+   {
+    "question_id": 133,
+    "answer_2023": "Yes, there is an opportunity to regularize after certain conditions are met",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes, there is an opportunity to regularize after certain conditions are met",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 6(1) (promote regularisation and integration)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 7(6) (facilitation of regularisation processes)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 93 (special migration categories)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 94 (list of special categories)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, Ley N.º 8764",
+      "article": "Art. 73 (regularisation through marriage to a Costa Rican)",
+      "enacted": "2009-08-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Resolución DGME DG-0064-05-2026 (Categoría Especial Temporal Complementaria)",
+      "article": "Whole resolution",
+      "enacted": "2026-05-29",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-03-01",
+      "instrument": "Decreto Ejecutivo N.º 43809-MGP, Categoría especial temporal para personas nacionales de Cuba, Nicaragua y Venezuela (published Alcance 260, La Gaceta 230, 1 Dec. 2022)",
+      "article": "Whole decree (application window)",
+      "kind": "practice",
+      "what_changed": "DGME opened applications for the temporary special category, which gives two-year renewable stay and work rights to Cubans, Nicaraguans and Venezuelans whose asylum claims (filed 2010 to Sept. 2022) were pending or denied. This is a time-limited regularisation channel under arts. 93-94.",
+      "url": "https://www.larepublica.net/noticia/habilitan-categoria-especial-para-solicitantes-de-refugio-de-venezuela-nicaragua-y-cuba",
+      "passage": "A partir de este 1 de marzo Migración y Extranjería habilitó una “categoría especial temporal” para personas migrantes de Cuba, Nicaragua y Venezuela con solicitudes de refugio pendientes o denegadas."
+     },
+     {
+      "date": "2023-06-22",
+      "instrument": "DGME Acuerdo Delegatorio N.º 07-06-2023 (La Gaceta N.º 112, 22 June 2023)",
+      "article": "Delegation of power to grant or refuse applications under Decreto 43809-MGP",
+      "kind": "practice",
+      "what_changed": "Official gazette notice delegating the processing of applications under 43809-MGP. It shows the category was being administered in 2023.",
+      "url": "https://www.imprentanacional.go.cr/pub/2023/06/22/COMP_22_06_2023.html",
+      "passage": "Se delega la potestad de conocer, autorizar o denegar, las solicitudes de “Categoría especial temporal para personas nacionales de Cuba, Nicaragua y Venezuela, cuyas solicitudes de reconocimiento de la condición de refugiado se encuentren pendientes de resolución o haya sido denegadas”; establecida mediante Decreto Ejecutivo N° 43809 MGP"
+     },
+     {
+      "date": "2024-02-29",
+      "instrument": "Decreto Ejecutivo N.º 43809-MGP (expiry of application window)",
+      "article": "Application window",
+      "kind": "practice",
+      "what_changed": "The application window closed after regularising 10,551 people (6,079 Nicaraguans, 2,815 Venezuelans, 1,657 Cubans), according to DGME data. Existing holders could renew, but no new applications were taken.",
+      "url": "https://www.centroamerica360.com/politica/costa-rica-evalua-reactivar-categoria-migratoria-para-migrantes-cubanos-nicaraguenses-y-venezolanos/",
+      "passage": "tuvo una vigencia limitada hasta el 29 de febrero de 2024, y permitió regularizar la situación de 10.551 personas, según datos oficiales de la Dirección General de Migración y Extranjería (DGME)."
+     },
+     {
+      "date": "2025-02-24",
+      "instrument": "Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N.º 10645",
+      "article": "Ley 8764 art. 6 (new inciso 8) and art. 94(4)",
+      "kind": "amended",
+      "what_changed": "Added an eighth policy aim to art. 6 and rewrote the art. 94(4) special category for students, teachers, researchers and volunteers. It does not touch art. 6(1), art. 7(6), art. 93 or the regularisation of irregular workers.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "4) Personas estudiantes, docentes, pasantes, investigadoras y voluntarios con fines educativos y culturales, incluyendo aquellos invitados, para que realicen actividades de corta estadía. (Así reformado el inciso anterior por el artículo 2° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025)"
+     },
+     {
+      "date": "2025-04-24",
+      "instrument": "DGME position (Director General Omer Badilla) on the Categoría Especial Temporal",
+      "article": "Reopening of the special category",
+      "kind": "practice",
+      "what_changed": "DGME ruled out reopening the special category for new applicants under the Chaves government, so no regularisation window was open for this population in 2025.",
+      "url": "https://confidencial.digital/migrantes/costa-rica-descarta-rehabilitar-categoria-especial-temporal-para-migrantes-de-cualquier-nacionalidad/",
+      "passage": "la vocería de Migración reiteró a CONFIDENCIAL que, durante el Gobierno de Rodrigo Chaves, no se ampliará la Categoría Especial Temporal para nuevas solicitudes. Sin embargo, indicó que, quienes ya la tienen aprobada, podrían renovarla por períodos iguales."
+     }
+    ],
+    "implementation_then_now": "2023: Decree 43809-MGP had been published (Dec. 2022), and its window ran from 1 March 2023 to 29 Feb. 2024. It regularised 10,551 rejected or pending asylum applicants from Nicaragua, Venezuela and Cuba (DGME data), with DGME formally delegating case decisions in June 2023. This is real but time-limited and nationality-limited, so 'Sometimes'. 2026: on 1 January 2026 no extraordinary window was open. The window had closed in Feb. 2024, and in April 2025 DGME said it would not reopen the category under the Chaves government. Only renewals and the ordinary routes (e.g. marriage, art. 73) remained, against an asylum backlog of about 178,000 (UNHCR end-2025). Practice therefore dropped to 'Rarely; Sometimes'. The 2026 Complementary Category (DG-0064-05-2026, May 2026, applications from Sept. 2026) explains why the starting answer of Nov. 2026 is back at 'Sometimes'. No practice data was found on the agricultural special category (Decree 44281 of Nov. 2023).",
+    "practice_sources": [
+     {
+      "title": "Costa Rica habilita categoría especial para solicitantes de refugio de Venezuela, Nicaragua y Cuba (La República)",
+      "url": "https://www.larepublica.net/noticia/habilitan-categoria-especial-para-solicitantes-de-refugio-de-venezuela-nicaragua-y-cuba",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "La Gaceta N.º 112, 22 June 2023, DGME Acuerdo Delegatorio 07-06-2023",
+      "url": "https://www.imprentanacional.go.cr/pub/2023/06/22/COMP_22_06_2023.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica evalúa reactivar categoría migratoria para migrantes cubanos, nicaragüenses y venezolanos (Centroamérica360)",
+      "url": "https://www.centroamerica360.com/politica/costa-rica-evalua-reactivar-categoria-migratoria-para-migrantes-cubanos-nicaraguenses-y-venezolanos/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica descarta rehabilitar Categoría Especial Temporal (Confidencial)",
+      "url": "https://confidencial.digital/migrantes/costa-rica-descarta-rehabilitar-categoria-especial-temporal-para-migrantes-de-cualquier-nacionalidad/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Costa Rica Reopens Immigration Category for 10,000 Rejected Asylum Seekers (Tico Times)",
+      "url": "https://ticotimes.net/2026/08/10/costa-rica-special-temporary-immigration-category",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 6, 7, 73, 93 and 94 of Ley 8764 were read in the current SCIJ text with their per-article amendment notes. The only in-window amendment touching these articles is Ley 10645 (Feb. 2025), which is irrelevant to regularisation. The text of Decree 43809-MGP itself (an MTSS PDF) could not be opened, so its dates come from press reports and a Gaceta notice. Decree 44281 and Sala Constitucional ruling 2023-021440 (which struck art. 4(f) of 43809) were not read.",
+    "sources_opened": [
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "La República, 1 March 2023",
+      "url": "https://www.larepublica.net/noticia/habilitan-categoria-especial-para-solicitantes-de-refugio-de-venezuela-nicaragua-y-cuba"
+     },
+     {
+      "title": "La Gaceta N.º 112, 22 June 2023",
+      "url": "https://www.imprentanacional.go.cr/pub/2023/06/22/COMP_22_06_2023.html"
+     },
+     {
+      "title": "Centroamérica360, June 2025",
+      "url": "https://www.centroamerica360.com/politica/costa-rica-evalua-reactivar-categoria-migratoria-para-migrantes-cubanos-nicaraguenses-y-venezolanos/"
+     },
+     {
+      "title": "Confidencial, April 2025",
+      "url": "https://confidencial.digital/migrantes/costa-rica-descarta-rehabilitar-categoria-especial-temporal-para-migrantes-de-cualquier-nacionalidad/"
+     },
+     {
+      "title": "Tico Times, Aug. 2026",
+      "url": "https://ticotimes.net/2026/08/10/costa-rica-special-temporary-immigration-category"
+     },
+     {
+      "title": "vLex: Decreto 44281 MGP-S-MAG-MRREE-MTSS (paywalled preamble only)",
+      "url": "https://vlex.co.cr/vid/reforma-categoria-especial-regularizacion-971506360"
+     },
+     {
+      "title": "Decreto 43809 PDF, MTSS (failed to open)",
+      "url": "https://www.mtss.go.cr/dml/normativa/descargas/decreto_43809.pdf"
+     },
+     {
+      "title": "Refworld Decreto 43809 (blocked)",
+      "url": "https://www.refworld.org/es/leg/legis/pejec/2022/es/131925"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' rests mainly on general policy clauses (arts. 6(1), 7(6)) and the discretionary power in art. 93, plus time-limited decrees and resolutions. There is no standing statutory right of irregular workers to regularise, and the coder admits as much. DG-0064-05-2026 is cited only through the press.",
+    "confidence": "medium",
+    "notes": "The protection answer is Yes on both dates because the statutory basis (arts. 6(1), 7(6), 93, 94, 73) did not change in substance. The change is in implementation only, a documented shift: the 43809 window closed in Feb. 2024 and DGME refused to reopen it in 2025. The CETC 2026 resolution post-dates 1 Jan 2026, so it does not count for that date."
+   },
+   {
+    "question_id": 137,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 13(3)-(4)",
+      "enacted": "1949",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 10 (registration as Costa Rican by birth under Const. art. 13(3))",
+      "enacted": "1950-04-29",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 15(4) (criminal-conviction bar, with exemption for persons declared stateless)",
+      "enacted": "2024-08-28",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento para la Declaratoria de la Condición de Persona Apátrida, Decreto Ejecutivo N.º 39620-RE-G",
+      "article": "Art. 2 and procedure",
+      "enacted": "2016",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155, Ley de Opciones y Naturalizaciones (Alcance 147, La Gaceta 158)",
+      "article": "Ley 1155 art. 15(4) (added); art. 18 (rewritten)",
+      "kind": "amended",
+      "what_changed": "New art. 15(4) bars naturalisation for anyone convicted of an intentional offence carrying more than three years' imprisonment within the last ten years. It exempts persons declared stateless whose earlier convictions the Foreign Ministry knew of when it made the declaration. This bears only on stateless adults born abroad who naturalise. The core guarantee (Const. art. 13(3)-(4), Ley 1155 art. 10) is untouched.",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+      "passage": "b. Las personas extranjeras apátridas que cuenten con antecedentes penales previos a la declaratoria de dicha condición por parte del Ministerio de Relaciones Exteriores, siempre que al momento de la declaratoria el citado Ministerio tenga conocimiento de la condena y a pesar de ello haya declarado la condición de apátrida a su favor obviando tal condena."
+     }
+    ],
+    "implementation_then_now": "The constitutional option of registering children born in Costa Rica to foreign parents, and nationality for foundlings, operated unchanged on both dates through the TSE Civil Registry. UNHCR documents the TSE's statelessness work, including the 2018 naturalisation of a recognised stateless person and the Chiriticos late-registration project with Panama for cross-border Ngäbe children (UNHCR 2018). For the later period, UNHCR Costa Rica reports 495 persons at risk of statelessness on 31 Dec. 2025, a small residual caseload. That points to gaps in birth registration rather than refusals of nationality. No documented change in practice between 2023 and 2026 was found, so 'Usually' holds on both dates. Evidence on the 2023-2025 period is thin.",
+    "practice_sources": [
+     {
+      "title": "Costa Rica: Primer caso de naturalización de persona reconocida como apátrida en América Latina (ACNUR)",
+      "url": "https://www.acnur.org/node/21455",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Servicios del ACNUR y sus agencias socias – El ACNUR en Costa Rica (statistics at 31 Dec. 2025)",
+      "url": "https://help.unhcr.org/costarica/?p=1099",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Constitution art. 13 was read on SCIJ with no amendment notes, and Ley 1155 art. 10 in an annotated consolidated text with no amendment notes. The only in-window amendment, Ley 10508, was read in a transcription checked against La Gaceta, since the official Gaceta PDF and the TSE PDF could not be opened. Decreto 39620-RE-G was not re-read. Practice evidence for 2023-2025 is thin.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley de Opciones y Naturalizaciones 1155 (consolidated, Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "Ley 10508 (Bufete de Costa Rica transcription)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "ACNUR 2018, primer caso de naturalización de persona apátrida",
+      "url": "https://www.acnur.org/node/21455"
+     },
+     {
+      "title": "UNHCR Costa Rica help page (2025 statistics)",
+      "url": "https://help.unhcr.org/costarica/?p=1099"
+     },
+     {
+      "title": "TSE PDF Ley 1155 (failed to open)",
+      "url": "https://www.tse.go.cr/pdf/normativa/leyopcionesynaturalizaciones.pdf"
+     }
+    ],
+    "starting_answer_concern": "The starting citation says Ley 1155 'waives the criminal-record bar to naturalisation for persons declared stateless'. That waiver exists only since Ley 10508 entered into force on 28 Aug. 2024 (art. 15(4)(b)), and it covers only the new art. 15(4) bar for convictions the Foreign Ministry knew of at the declaration. It was not law on 1 Jan. 2023, and the older art. 11(4) good-conduct requirement still applies. Separately, art. 13(3) is an option that depends on registration, not automatic attribution, and stateless adults born abroad must still naturalise, so the 'Yes' is generous.",
+    "confidence": "medium",
+    "notes": "The Ley 10508 amendment is recorded but does not change the indicator answer, because the 'Yes' rests on Const. art. 13(3)-(4) and Ley 1155 art. 10, both unchanged. Treaty basis: the 1961 Convention, directly applicable under Const. art. 7."
+   }
+  ]
+ }
+}
