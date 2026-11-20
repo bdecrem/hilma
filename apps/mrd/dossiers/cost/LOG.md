@@ -25,3 +25,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 12:46 | forward | labor_b | claude-opus-5-5 | high | 3.07 | 20 | 15,195 | 1,817,961 | 1.62 | 35→37 | 38→38 | 63→63 | 15 | ok | `forward costa_rica labor_b claude-opus-5-5 high` |
 | 2026-11-20 12:50 | forward | labor_c | claude-opus-5-5 | high | 3.72 | 25 | 20,822 | 1,323,879 | 1.53 | 37→39 | 38→38 | 63→63 | 17 | ok | `forward costa_rica labor_c claude-opus-5-5 high` |
 | 2026-11-20 12:54 | forward | health_housing | claude-opus-5-5 | high | 3.11 | 23 | 13,888 | 1,183,951 | 1.34 | 39→40 | 38→38 | 63→63 | 18 | ok | `forward costa_rica health_housing claude-opus-5-5 high` |
+| 2026-11-20 12:57 | forward | education | claude-opus-5-5 | high | 4.41 | 22 | 18,703 | 1,337,631 | 1.54 | 40→42 | 38→38 | 63→63 | 15 | ok | `forward costa_rica education claude-opus-5-5 high` |

@@ -1,0 +1,595 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica education claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "education",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  125,
+  127
+ ],
+ "started_at": "2026-11-20T20:57:33.144Z",
+ "meters_before": {
+  "at": "2026-11-20T20:57:28.442Z",
+  "window": {
+   "pct": 40,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 40,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 40% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 52951,
+  "user": 107
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T21:01:57.685Z",
+ "minutes": 4.41,
+ "meters_after": {
+  "at": "2026-11-20T21:01:57.685Z",
+  "window": {
+   "pct": 42,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 38,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 42,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 38,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 42% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 38% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 141 requests · 2 sessions\n  48%  Start fresh when you switch tasks · run /clear\n  36%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%\n\nLast 7d · 152 requests · 3 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  26%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 26%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 72387,
+   "output": 18703,
+   "cache_read": 1123333,
+   "cache_write": 123208,
+   "cost_usd": 1.5392,
+   "total": 1337631
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 72361,
+    "output": 5258,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1719,
+    "cost_usd": 0.0599
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 13445,
+    "cache_read": 1123333,
+    "cache_write": 123208,
+    "thinking": 3104,
+    "cost_usd": 1.4793
+   }
+  }
+ },
+ "turns": 22,
+ "calls": 35,
+ "duration_ms": 263728,
+ "duration_api_ms": 182598,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-20T20:57:39.005Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 19 | ARTÍCULO 78 | ARTÍCULO 83 | Así reformado",
+   "ok": true,
+   "chars": 10608
+  },
+  {
+   "at": "2026-11-20T20:57:40.069Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC",
+   "find": "Artículo 3 | Artículo 59 | Artículo 60",
+   "ok": true,
+   "chars": 8504
+  },
+  {
+   "at": "2026-11-20T20:57:47.559Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=871&param2=147492&param3=1",
+   "find": "La educación preescolar | educación de adultos | Ley N° 8954",
+   "ok": true,
+   "chars": 4869
+  },
+  {
+   "at": "2026-11-20T20:58:26.596Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=84554&strTipM=TC",
+   "find": "Versión | Artículo 5 | Artículo 12 | Artículo 13 | condición migratoria irregular | carné consular | Modificado",
+   "ok": true,
+   "chars": 9648
+  },
+  {
+   "at": "2026-11-20T20:59:07.530Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+   "find": "Versión de la Norma | ARTÍCULO 31 | ARTÍCULO 102 | ARTÍCULO 103 | 10645",
+   "ok": true,
+   "chars": 10630
+  },
+  {
+   "at": "2026-11-20T20:59:08.604Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=31427&strTipM=TC",
+   "find": "Versión de la Norma | Artículo 1 | Artículo 11",
+   "ok": true,
+   "chars": 5476
+  },
+  {
+   "at": "2026-11-20T20:59:29.341Z",
+   "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1",
+   "find": "ARTÍCULO 102 | ARTÍCULO 103 | ARTÍCULO 104 | ARTÍCULO 105 | N° 10645 del 24 de febrero",
+   "ok": true,
+   "chars": 8559
+  },
+  {
+   "at": "2026-11-20T20:59:44.656Z",
+   "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1347828",
+   "find": "Por tanto | condición migratoria regular | temporal o irregular | omisión relativa",
+   "ok": true,
+   "chars": 7472
+  },
+  {
+   "at": "2026-11-20T20:59:54.514Z",
+   "url": "https://www.ina.ac.cr/AcercaINA/Documentos%20compartidos/Reglamentos/reglamento_personas_estudiantes_scfp_ina.pdf",
+   "find": "DIMEX | condición migratoria | deroga | vigencia | Alcance",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T21:00:04.207Z",
+   "url": "https://www.unicef.org/costarica/comunicados-prensa/2400-personas-estudiantes-extranjeras-obtuvieron-el-dimex",
+   "find": "50 | sin documento | DIMEX",
+   "ok": true,
+   "chars": 3516
+  },
+  {
+   "at": "2026-11-20T21:00:05.197Z",
+   "url": "https://delfino.cr/2025/05/defensoria-solicita-reporte-al-mep-de-medidas-adoptadas-para-ninez-migrante-deportada-por-donald-trump",
+   "find": "MEP | educación | CATEM",
+   "ok": true,
+   "chars": 3510
+  },
+  {
+   "at": "2026-11-20T21:00:22.972Z",
+   "url": "https://help.unhcr.org/costarica/?p=2369",
+   "find": "condición migratoria | INA | prueba de ubicación | requisitos",
+   "ok": true,
+   "chars": 4438
+  },
+  {
+   "at": "2026-11-20T21:00:31.163Z",
+   "url": "https://dhr.go.cr/informacion_relevante/publicaciones/poblacion_migrante_2024/Perfil_Poblacional_poblacion_migrante_refugiada.pdf",
+   "find": "educación | matrícula | escuela",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T21:00:39.314Z",
+   "url": "https://delfino.cr/2024/12/acnur-reconoce-la-labor-del-ina-en-la-atencion-de-personas-refugiadas",
+   "find": "475 | refugiadas | solicitantes",
+   "ok": true,
+   "chars": 3267
+  },
+  {
+   "at": "2026-11-20T21:00:40.109Z",
+   "url": "https://help.unhcr.org/costarica/educacion-para-personas-adultas",
+   "find": "INA | universidad | CINDEA | documento",
+   "ok": true,
+   "chars": 4407
+  }
+ ],
+ "searches": [
+  "Decreto 40529-MEP Reglamento de Matrícula y Traslados reforma 2024 OR 2025 OR 2023",
+  "\"40529\" \"Reglamento de Matrícula y de Traslados de los Estudiantes\" pgrweb scij",
+  "\"Reglamento de Matrícula y de Traslados de los Estudiantes\" Decreto 40529 reforma artículo",
+  "Ley 10645 promoción atracción y estadía de estudiantes docentes investigadores extranjeros La Gaceta publicación vigencia",
+  "estudiantes extranjeros matriculados MEP 2024 sin documento migratorio escuelas Costa Rica"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.38,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.38,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":125,\"answer_2023\":\"Yes (including irregular migrants)\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes (including irregular migrants)\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 19\",\"enacted\":\"1949-11-07\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 78\",\"enacted\":\"1949-11-07\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código de la Niñez y la Adolescencia, Ley N.º 7739\",\"article\":\"Arts. 3, 59, 60(a)\",\"enacted\":\"1998\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto Ejecutivo N.º 40529-MEP, Reglamento de Matrícula y de Traslados de los Estudiantes\",\"article\":\"Arts. 5, 12(f), 13\",\"enacted\":\"2017-07-31\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley General de Migración y Extranjería, N.º 8764\",\"article\":\"Art. 31\",\"enacted\":\"2009-08-19\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"On 1 Jan. 2023, practice from the period shows undocumented children being admitted to public schools. UNICEF (Dec. 2021) reports a DGME–MEP drive in which MEP referred at least 6,000 files of enrolled foreign students for regularisation; more than 8,000 applications came from minors already enrolled, many of them irregular. UNHCR's help page says refugee and asylum-seeking children enrol on the same requirements as Costa Ricans. On 1 Jan. 2026 the picture is the same: no rule change and no documented systematic exclusion. The remaining gaps are documents and certification. In May 2025 the Defensoría de los Habitantes asked the MEP to report on schooling for the deported children held at",
+ "output": {
+  "answers": [
+   {
+    "question_id": 125,
+    "answer_2023": "Yes (including irregular migrants)",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes (including irregular migrants)",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 19",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 78",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código de la Niñez y la Adolescencia, Ley N.º 7739",
+      "article": "Arts. 3, 59, 60(a)",
+      "enacted": "1998",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto Ejecutivo N.º 40529-MEP, Reglamento de Matrícula y de Traslados de los Estudiantes",
+      "article": "Arts. 5, 12(f), 13",
+      "enacted": "2017-07-31",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "On 1 Jan. 2023, practice from the period shows undocumented children being admitted to public schools. UNICEF (Dec. 2021) reports a DGME–MEP drive in which MEP referred at least 6,000 files of enrolled foreign students for regularisation; more than 8,000 applications came from minors already enrolled, many of them irregular. UNHCR's help page says refugee and asylum-seeking children enrol on the same requirements as Costa Ricans. On 1 Jan. 2026 the picture is the same: no rule change and no documented systematic exclusion. The remaining gaps are documents and certification. In May 2025 the Defensoría de los Habitantes asked the MEP to report on schooling for the deported children held at CATEM Sur (26 minors still there), which points to a gap for detained children, not to general exclusion. Usually on both dates; no shift found.",
+    "practice_sources": [
+     {
+      "title": "Más de 2400 personas estudiantes extranjeras obtuvieron el DIMEX con una Categoría Especial Estudiante Simplificada (UNICEF Costa Rica)",
+      "url": "https://www.unicef.org/costarica/comunicados-prensa/2400-personas-estudiantes-extranjeras-obtuvieron-el-dimex",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Educación para niñas, niños y adolescentes (ACNUR Ayuda Costa Rica)",
+      "url": "https://help.unhcr.org/costarica/?p=2369",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Defensoría solicita reporte al MEP de medidas adoptadas para niñez migrante deportada por Donald Trump (Delfino.cr)",
+      "url": "https://delfino.cr/2025/05/defensoria-solicita-reporte-al-mep-de-medidas-adoptadas-para-ninez-migrante-deportada-por-donald-trump",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Every cited provision was read on SCIJ/SINALEVI with its per-article amendment notes. Decree 40529-MEP is at 'Versión 3 de 3', last amended 9 Jan. 2019 (Decreto 41630), so the text in force in 2023 and 2026 is the one read. Const. art. 78 was last amended by Ley 8954 (2011). Ley 7739 arts. 3, 59 and 60 and Ley 8764 art. 31 carry no amendment notes. Practice evidence for 2023–2025 on irregular children is thin; MEP enrolment statistics do not break down migration status.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política, versión vigente (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=871&param2=147492&param3=1"
+     },
+     {
+      "title": "Código de la Niñez y la Adolescencia, Ley 7739 (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=43077&strTipM=TC"
+     },
+     {
+      "title": "Decreto Ejecutivo 40529-MEP, Reglamento de matrícula y de traslados (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=84554&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "UNICEF Costa Rica, DIMEX estudiantes (2021)",
+      "url": "https://www.unicef.org/costarica/comunicados-prensa/2400-personas-estudiantes-extranjeras-obtuvieron-el-dimex"
+     },
+     {
+      "title": "Delfino.cr, Defensoría solicita reporte al MEP (May 2025)",
+      "url": "https://delfino.cr/2025/05/defensoria-solicita-reporte-al-mep-de-medidas-adoptadas-para-ninez-migrante-deportada-por-donald-trump"
+     },
+     {
+      "title": "ACNUR Ayuda Costa Rica, Educación para niñas, niños y adolescentes",
+      "url": "https://help.unhcr.org/costarica/?p=2369"
+     }
+    ],
+    "starting_answer_concern": "Minor: in the SCIJ text the consular-card rule is art. 12(f) of Decree 40529-MEP. The quoted wording of art. 5 is confirmed ('estatus migratorio irregular'). The answer holds.",
+    "confidence": "medium",
+    "notes": "The answer rests on statutes and regulations; no court decision is relied on. Decree 40529-MEP passages read on SCIJ: art. 5, 'Toda persona menor de edad tiene derecho a recibir educación pública gratuita. En ningún caso, el ejercicio de ese derecho estará sujeto a discriminación por su situación socioeconómica, estatus migratorio irregular...'; art. 12(f), 'el carné consular es un documento de identidad válido... Además el procedimiento de matrícula es el mismo que rige para estudiantes costarricenses.' No amendment, repeal or ruling bearing on this indicator was found between 1 Jan. 2023 and 1 Jan. 2026. Confidence is medium only because the in-window practice evidence on irregular children is thin."
+   },
+   {
+    "question_id": 127,
+    "answer_2023": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Arts. 19, 78, 83",
+      "enacted": "1949-11-07",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley Fundamental de Educación, Ley N.º 2160",
+      "article": "Arts. 1, 11",
+      "enacted": "1957-09-25",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 31",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Art. 94(4)",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley General de Migración y Extranjería, N.º 8764",
+      "article": "Arts. 102-105",
+      "enacted": "2009-08-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto Ejecutivo N.º 40529-MEP, Reglamento de Matrícula y de Traslados de los Estudiantes",
+      "article": "Arts. 9-12",
+      "enacted": "2017-07-31",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Sala Constitucional, Sentencia N.º 2024-029734",
+      "article": "Por tanto (as corrected)",
+      "enacted": "2024-10-09",
+      "history_read": "amending_acts",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Reglamento para Personas Estudiantes en los Servicios de Capacitación y Formación Profesional del INA (Alcance 217, La Gaceta 206, 7 Nov. 2023)",
+      "article": "Art. 4(21); Art. 7(20)",
+      "enacted": "2023-11-07",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley de la Jurisdicción Constitucional, N.º 7135",
+      "article": "Art. 13",
+      "enacted": "1989",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-10-09",
+      "instrument": "Sala Constitucional, Sentencia N.º 2024-029734 (exp. 23-011056-0007-CO), acción de inconstitucionalidad",
+      "article": "Art. 5, Reglamento de Adjudicación de becas a la población estudiantil de la UCR",
+      "kind": "ruling",
+      "what_changed": "Before the ruling, UCR's scholarship rule did not cover foreigners with regular status outside the listed categories (e.g. student-category DIMEX holders). The ruling, binding erga omnes, declared that relative omission unconstitutional, so foreigners with regular migration status must be read as included. This widens equal access for regular migrants within the same middle option; irregular migrants stay outside.",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1347828",
+      "passage": "Se declara CON LUGAR la acción. En consecuencia, se declara inconstitucional la omisión relativa contenida en el artículo 5 del Reglamento de Adjudicación de becas a la población estudiantil de la Universidad de Costa Rica, en el sentido de que debe entenderse incluida la población extranjera con estatus migratorio regular en el país"
+     },
+     {
+      "date": "2025-02-24",
+      "instrument": "Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N.º 10645",
+      "article": "Ley 8764 arts. 6(8) (added) and 94(4) (amended)",
+      "kind": "amended",
+      "what_changed": "Added a migration-policy aim of streamlining procedures for foreign students, teachers and researchers. Recast special category 94(4) as 'Personas estudiantes, docentes, pasantes, investigadoras y voluntarios con fines educativos y culturales', including short stays. This eases student permits for incoming foreigners but does not change who is guaranteed access to public adult or higher education. Date is the law's date in the SCIJ note; publication and entry-into-force date not read.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC",
+      "passage": "4) Personas estudiantes, docentes, pasantes, investigadoras y voluntarios con fines educativos y culturales, incluyendo aquellos invitados, para que realicen actividades de corta estadía. (Así reformado el inciso anterior por el artículo 2° de la Ley para la promoción, atracción y estadía de estudiantes, docentes e investigadores extranjeros, N° 10645 del 24 de febrero del 2025)"
+     }
+    ],
+    "implementation_then_now": "Around 1 Jan. 2023, the Sala Constitucional file in 2024-029734 records UCR refusing a socio-economic scholarship in 2023 to a student-category DIMEX holder because of his migration category: a status barrier for regular migrants. UNHCR's guidance shows INA requiring an asylum-seeker card, refugee DIMEX or other proof of regular status, which bars irregular migrants. By 1 Jan. 2026, UCR's rule had to be read as covering regular-status foreigners after the October 2024 ruling, and INA reported training 475 refugees in 2023–2024 (Delfino, Dec. 2024). These improvements are modest and concern regular migrants and refugees. Document and diploma-recognition barriers persist, and nothing measures labour or temporary migrants at INA. I keep 'Sometimes; Usually' on both dates: the evidence shows no shift large enough to move the rating.",
+    "practice_sources": [
+     {
+      "title": "Sala Constitucional, Sentencia N.º 2024-029734 (record of UCR's 2023 scholarship refusal to a DIMEX holder)",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1347828",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "ACNUR reconoce la labor del INA en la atención de personas refugiadas (Delfino.cr)",
+      "url": "https://delfino.cr/2024/12/acnur-reconoce-la-labor-del-ina-en-la-atencion-de-personas-refugiadas",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Educación para niñas, niños y adolescentes (ACNUR Ayuda Costa Rica): INA documentary requirements",
+      "url": "https://help.unhcr.org/costarica/?p=2369",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers",
+       "irregular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Educación para personas adultas (ACNUR Ayuda Costa Rica)",
+      "url": "https://help.unhcr.org/costarica/educacion-para-personas-adultas",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The constitution, Ley 2160 (version 8 of 8; arts. 1 and 11 without notes in the window), Ley 8764 (version 19 of 19, per-article notes) and Decree 40529-MEP (version 3 of 3, 2019) were read on SCIJ. The 2023 text of Ley 8764 arts. 6 and 94 was rebuilt from the Ley 10645 notes. Judgment 2024-029734 and its correction were read in full on Nexus PJ. The INA 2023 student regulation PDF could not be opened in this session (PDF extraction failed), so its date and content are not recorded as an event. The 2022 Fundación Arias report and the 2026 sources were not reopened.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SCIJ/SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Constitución Política, versión vigente (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=871&param2=147492&param3=1"
+     },
+     {
+      "title": "Ley Fundamental de Educación 2160 (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=31427&strTipM=TC"
+     },
+     {
+      "title": "Ley General de Migración y Extranjería 8764 (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=66139&strTipM=TC"
+     },
+     {
+      "title": "Ley 8764, versión vigente (SINALEVI)",
+      "url": "https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=66139&param2=145230&param3=1"
+     },
+     {
+      "title": "Decreto Ejecutivo 40529-MEP (SCIJ)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=84554&strTipM=TC"
+     },
+     {
+      "title": "Sala Constitucional, Sentencia 2024-029734 (Nexus PJ)",
+      "url": "https://nexuspj.poder-judicial.go.cr/document/sen-1-0007-1347828"
+     },
+     {
+      "title": "INA, Reglamento para Personas Estudiantes SCFP (PDF; extraction failed)",
+      "url": "https://www.ina.ac.cr/AcercaINA/Documentos%20compartidos/Reglamentos/reglamento_personas_estudiantes_scfp_ina.pdf"
+     },
+     {
+      "title": "Delfino.cr, ACNUR reconoce la labor del INA (Dec. 2024)",
+      "url": "https://delfino.cr/2024/12/acnur-reconoce-la-labor-del-ina-en-la-atencion-de-personas-refugiadas"
+     },
+     {
+      "title": "ACNUR Ayuda Costa Rica, Educación para personas adultas",
+      "url": "https://help.unhcr.org/costarica/educacion-para-personas-adultas"
+     },
+     {
+      "title": "ACNUR Ayuda Costa Rica, Educación para niñas, niños y adolescentes",
+      "url": "https://help.unhcr.org/costarica/?p=2369"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Court decision relied on: I read judgment 2024-029734 itself, with the corrected operative part, on Nexus PJ. It is an acción de inconstitucionalidad with general effect, but confined to UCR's scholarship rule. It refines the protection for regular migrants within the same middle option. I therefore code the change as 'not the same' rather than 'no change'; the option and score are identical on both dates. The INA regulation of 7 Nov. 2023 (DIMEX/ID requirement) also falls in the window, but its text could not be opened, so it is not counted as an event. Ley 10645 touches student permits for incoming foreigners, not equal access, and its exact entry-into-force date was not read. MEP adult schooling (Decree 40529 art. 12(f)) is open regardless of status on both dates."
+   }
+  ]
+ }
+}
