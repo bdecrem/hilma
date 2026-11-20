@@ -170,7 +170,9 @@ const REAL_NOTES = /\/apps\/venture\/private(\/|$)/i
 const onCopy = !!process.env.VENTURE_PRIVATE && (() => {
   try {
     const dir = process.env.VENTURE_PRIVATE
-    return ![dir, `${dir}/CORRECTIONS.md`, `${dir}/data`, `${dir}/data/weaknesses.json`].some((x) => existsSync(x) && REAL_NOTES.test(realpathSync(x)))
+    if ([dir, `${dir}/CORRECTIONS.md`, `${dir}/data`, `${dir}/data/weaknesses.json`].some((x) => existsSync(x) && REAL_NOTES.test(realpathSync(x)))) return false
+    // a hard link is a second name for the same file: a ledger file with more than one name is not a copy (ninth checker)
+    return ![`${dir}/CORRECTIONS.md`, `${dir}/data/weaknesses.json`].some((x) => existsSync(x) && statSync(x).nlink > 1)
   } catch {
     return true
   }
