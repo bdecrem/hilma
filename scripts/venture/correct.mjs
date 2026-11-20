@@ -162,6 +162,11 @@ async function ticketMustExist(id) {
   if (!st) die(`--owed: there is no ticket ${id}. Open it first: node scripts/venture/issues.mjs add "…" --area ops --pri P1`)
   if (['done', 'dropped'].includes(st)) die(`--owed: ${id} is ${st}; a fix that is still owed needs an open ticket`)
 }
+// A copy of the notes is a folder that is not any checkout's apps/venture/private (OLA-251, sixth pass: a
+// worktree has no such folder, so comparing with this checkout's let the real notes pass as a copy)
+const onCopy = !!process.env.VENTURE_PRIVATE && (() => { try { return !/\/apps\/venture\/private\/?$/.test(realpathSync(process.env.VENTURE_PRIVATE)) } catch { return true } })()
+// the real notes with a copy of the tracker would settle the real ledger and put its line in the copy
+if (process.env.VENTURE_TRACKER_FAKE && !onCopy) die(`Refused: VENTURE_TRACKER_FAKE is set (a copy of the tracker) while the notes are the real ones${process.env.VENTURE_PRIVATE ? ` (${process.env.VENTURE_PRIVATE})` : ''}. Test on a copy of both, or on neither.`)
 // On a copy of the notes (VENTURE_PRIVATE) nothing goes to the live page: say so instead of "sync.mjs push" (OLA-262).
 const NEXT = process.env.VENTURE_PRIVATE ? `(a copy of the notes, ${process.env.VENTURE_PRIVATE}: nothing to push; sync.mjs push refuses while VENTURE_PRIVATE is set)` : 'next: node scripts/venture/sync.mjs push'
 const TIME = /^(about |around |~)?\d{1,2}(:\d{2})?\s*(am|pm)$/i
@@ -277,8 +282,6 @@ if (cmd === 'add') {
     const what = settledBy
       ? `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, changed by ${settledBy}: read whether that change carries the fix`
       : `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, not by ${o.issue}'s own commit: read whether it carries the fix`
-    const real = (() => { try { return realpathSync(root + 'apps/venture/private') } catch { return null } })()
-    const onCopy = !!process.env.VENTURE_PRIVATE && (() => { try { return realpathSync(process.env.VENTURE_PRIVATE) !== real } catch { return true } })()
     if (onCopy && !process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the notes: not written to the real overrides; the line would be: ${what})`)
     else {
       const { writeOverride } = await import('./_overrides.mjs')
