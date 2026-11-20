@@ -1,0 +1,5 @@
+#!/bin/sh
+# ola-made-by [<file> ...]: which engine made or last changed a file in this project (Ola's own open
+# model, the hosted open model, or Claude), from the project's record (ola-db made-by, OLA-224).
+# Run it before saying who made something. No file: every file's last change.
+exec ola-db made-by "$@"

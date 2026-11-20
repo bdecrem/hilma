@@ -136,7 +136,7 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch ola-unzip ola-view olaspec.py ola-see ola-ocr ola-embed ola-rerank ola-translate ola-transcribe ola-draw ola-lookup ola-twin /opt/ola/bin/
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-made-by ola-search ola-fetch ola-page ola-batch ola-unzip ola-view olaspec.py ola-see ola-ocr ola-embed ola-rerank ola-translate ola-transcribe ola-draw ola-lookup ola-twin /opt/ola/bin/
 COPY lib/olatext.py lib/olatwin.py lib/common-words.txt /opt/ola/lib/
 # Ola's skills, and the system config that makes them the only ones (see the header).
 COPY opencode-system.jsonc /etc/opencode/opencode.jsonc

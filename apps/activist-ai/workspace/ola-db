@@ -29,6 +29,17 @@ For the front desk, through `container exec` (always read-only, JSON out, bounde
              | docs [--q words --offset N --limit N] | backup | xlsx --table T | disk
   ola-db init                        create what is missing (run at every start by ola-init)
 
+Which engine made a file (OLA-224), for the agent as `ola-made-by`, for the apps and the front desk:
+  ola-db made-by [<file> ...] [--json] [--limit N]
+                                     who changed each file, newest first (no file: every file's last change)
+  ola-db made-by begin --turn T --engine ola|hosted|claude [--model M] [--session S]
+                                     a turn starts: the folder's files (names, times, sizes) are noted
+  ola-db made-by end --turn T [--interrupted]   the turn ended: each file it created, changed or
+                                     deleted is recorded with its engine; prints them as JSON
+  ola-db made-by end --stale         every turn still open (the app quit mid-turn) ended as interrupted
+  ola-db made-by add <file> --engine E [--model M] [--session S] [--turn T] [--how created|changed|deleted]
+The record holds file names, engines, models, turns and times, never what is in a file.
+
 The fixed core: `documents` (one row per document), `doc_text` (FTS5, one row per page or part,
 so a hit can cite a page), `doc_pages` (how each page's text was got: from the file's own text, or
 by OCR from a scan with the OCR's confidence, so a quote from an OCR page is known to be less
@@ -64,7 +75,8 @@ def capped(timeout):
     return f if sys.platform.startswith("linux") else None
 
 # batch_jobs and batch_items are ola-batch's own bookkeeping (its answers go to named tables).
-CORE = {"documents", "doc_text", "tables_catalog", "ola_meta", "batch_jobs", "batch_items", "doc_pages", "attached"}
+# made_by and made_by_open are the record of which engine changed which file (`ola-db made-by`).
+CORE = {"documents", "doc_text", "tables_catalog", "ola_meta", "batch_jobs", "batch_items", "doc_pages", "attached", "made_by", "made_by_open"}
 SCHEMA_VERSION = "2"
 DOC_TYPES = {".pdf": "application/pdf", ".txt": "text/plain", ".md": "text/markdown", ".html": "text/html", ".htm": "text/html",
              ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1196,6 +1208,193 @@ def api(argv):
         fail("interrupted" if "interrupted" in str(e) else "SQL: " + str(e), 3)
 
 
+# ------------------------------------------------------------------ which engine made a file (OLA-224)
+# Three engines can change a project's files: Ola's own open model, the hosted open model and
+# Claude. Each turn is bracketed by the app or the front desk (begin, end): the files' names, times
+# and sizes before and after say what that turn created, changed or deleted, whatever tool did it (a
+# write, an edit, a shell command). A turn the app never ended (it quit mid-turn) is ended as
+# interrupted by `end --stale` at the next start, so its changes are still recorded. Names and times
+# only: nothing here reads a file's contents.
+
+ENGINES = {"ola": "Ola's own open model", "hosted": "the hosted open model", "claude": "Claude"}
+MADE_SKIP_DIRS = {"node_modules", "__pycache__", "lost+found"}
+MADE_SKIP_FILES = {"project.db", "project.db-wal", "project.db-shm", ".DS_Store"}
+MADE_MAX_FILES = 20000
+
+
+def made_schema(con):
+    con.executescript("""
+      CREATE TABLE IF NOT EXISTS made_by (
+        id INTEGER PRIMARY KEY,
+        path TEXT NOT NULL,              -- the file, relative to the project folder
+        how TEXT NOT NULL CHECK (how IN ('created', 'changed', 'deleted')),
+        engine TEXT NOT NULL CHECK (engine IN ('ola', 'hosted', 'claude')),
+        model TEXT,                      -- the model's name, as the engine reported it
+        session TEXT,                    -- the conversation
+        turn TEXT,                       -- the turn (request) in it
+        at TEXT NOT NULL,                -- when the file changed (its modification time; UTC, ISO 8601)
+        mtime REAL,
+        interrupted INTEGER NOT NULL DEFAULT 0  -- the turn did not end normally (stopped, the app quit)
+      );
+      CREATE INDEX IF NOT EXISTS made_by_path ON made_by (path, at);
+      CREATE TABLE IF NOT EXISTS made_by_open (
+        turn TEXT PRIMARY KEY,
+        engine TEXT NOT NULL, model TEXT, session TEXT,
+        started TEXT NOT NULL,
+        files TEXT NOT NULL              -- JSON {path: [mtime, size]}: names, times and sizes only
+      );
+    """)
+
+
+def made_files():
+    """The project's files as {path: [mtime, size]}. Hidden folders, node_modules and the database stay out."""
+    out = {}
+    root = os.path.realpath(WORK)
+    for d, dirs, files in os.walk(root):
+        dirs[:] = sorted(x for x in dirs if not x.startswith(".") and x not in MADE_SKIP_DIRS)
+        for f in files:
+            if f in MADE_SKIP_FILES or f.startswith(".~"):
+                continue
+            full = os.path.join(d, f)
+            try:
+                st = os.lstat(full)
+            except OSError:
+                continue
+            out[os.path.relpath(full, root)] = [round(st.st_mtime, 3), st.st_size]
+            if len(out) >= MADE_MAX_FILES:
+                return out
+    return out
+
+
+def iso(t):
+    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def made_rel(p):
+    """A file's name relative to the project folder (it may be gone: a deleted file has a record too)."""
+    root = os.path.realpath(WORK)
+    full = p if p.startswith("/") else os.path.join(root, p)
+    full = os.path.join(os.path.realpath(os.path.dirname(full)), os.path.basename(full))
+    if not full.startswith(root + "/"):
+        fail("the file must be inside the project folder")
+    return os.path.relpath(full, root)
+
+
+def made_add(con, path, how, engine, model, session, turn, mtime=None, interrupted=False):
+    t = mtime if mtime is not None else time.time()
+    # The same change recorded twice (a step and the turn's end) is one row.
+    last = con.execute("SELECT engine, mtime, how FROM made_by WHERE path = ? ORDER BY id DESC LIMIT 1", (path,)).fetchone()
+    if last and last[1] is not None and abs(last[1] - t) < 0.002 and last[2] == how:
+        return False
+    con.execute("INSERT INTO made_by (path, how, engine, model, session, turn, at, mtime, interrupted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (path, how, engine, model, session, turn, iso(t), t, 1 if interrupted else 0))
+    return True
+
+
+def made_begin(turn, engine, model, session):
+    con = connect(True, attach=False)
+    made_schema(con)
+    con.execute("INSERT OR REPLACE INTO made_by_open (turn, engine, model, session, started, files) VALUES (?, ?, ?, ?, ?, ?)",
+                (turn, engine, model, session, now(), json.dumps(made_files())))
+    con.commit()
+
+
+def made_end(con, row, interrupted):
+    before = json.loads(row["files"])
+    after = made_files()
+    changed = []
+    for p, (m, s) in after.items():
+        b = before.get(p)
+        if b is None or b[0] != m or b[1] != s:
+            how = "created" if b is None else "changed"
+            if made_add(con, p, how, row["engine"], row["model"], row["session"], row["turn"], m, interrupted):
+                changed.append({"path": p, "how": how, "at": iso(m)})
+    for p in before:
+        if p not in after and len(after) < MADE_MAX_FILES:
+            if made_add(con, p, "deleted", row["engine"], row["model"], row["session"], row["turn"], None, interrupted):
+                changed.append({"path": p, "how": "deleted", "at": now()})
+    con.execute("DELETE FROM made_by_open WHERE turn = ?", (row["turn"],))
+    return {"turn": row["turn"], "engine": row["engine"], "session": row["session"], "interrupted": bool(interrupted), "files": changed}
+
+
+def made_by_cmd(args, flags):
+    sub = args[0] if args else ""
+    if sub == "begin":
+        if not flags.get("turn") or flags.get("engine") not in ENGINES:
+            fail("usage: ola-db made-by begin --turn T --engine ola|hosted|claude [--model M] [--session S]")
+        made_begin(flags["turn"], flags["engine"], flags.get("model"), flags.get("session"))
+        return
+    if sub == "end":
+        con = connect(True, attach=False)
+        made_schema(con)
+        if flags.get("stale"):
+            rows = con.execute("SELECT * FROM made_by_open ORDER BY started").fetchall()
+        else:
+            if not flags.get("turn"):
+                fail("usage: ola-db made-by end --turn T [--interrupted] | end --stale")
+            rows = con.execute("SELECT * FROM made_by_open WHERE turn = ?", (flags["turn"],)).fetchall()
+        out = [made_end(con, r, bool(flags.get("interrupted") or flags.get("stale"))) for r in rows]
+        con.commit()
+        print(json.dumps(out if flags.get("stale") else (out[0] if out else {"turn": flags["turn"], "files": []})))
+        return
+    if sub == "add":
+        if len(args) != 2 or flags.get("engine") not in ENGINES or flags.get("how", "changed") not in ("created", "changed", "deleted"):
+            fail("usage: ola-db made-by add <file> --engine ola|hosted|claude [--model M] [--session S] [--turn T] [--how created|changed|deleted]")
+        p = made_rel(args[1])
+        full = os.path.join(WORK, p)
+        mtime = os.lstat(full).st_mtime if os.path.lexists(full) else None
+        con = connect(True, attach=False)
+        made_schema(con)
+        made_add(con, p, flags.get("how", "changed"), flags["engine"], flags.get("model"), flags.get("session"), flags.get("turn"), round(mtime, 3) if mtime else None)
+        con.commit()
+        return
+    # The query: who made these files (or every file's last change).
+    if not os.path.exists(DB):
+        rows = []
+    else:
+        con = connect(True, attach=False)
+        made_schema(con)
+        con.commit()
+        limit = int(flags.get("limit", 20))
+        if args:
+            rows = []
+            for a in args:
+                p = made_rel(a)
+                rows += [dict(r) for r in con.execute("SELECT path, how, engine, model, session, turn, at, interrupted FROM made_by WHERE path = ? ORDER BY mtime DESC, id DESC LIMIT ?", (p, limit))]
+        else:
+            rows = [dict(r) for r in con.execute(
+                "SELECT path, how, engine, model, session, turn, at, interrupted FROM made_by m WHERE id = (SELECT id FROM made_by WHERE path = m.path ORDER BY mtime DESC, id DESC LIMIT 1) ORDER BY at DESC LIMIT ?", (max(limit, 200),))]
+    if flags.get("json"):
+        print(json.dumps(rows))
+        return
+    asked = [made_rel(a) for a in args]
+    if not rows:
+        what = ", ".join(asked) if asked else "any file in this project"
+        print("There is no record of who made %s. It was there before Ola kept a record, or it was made outside Ola (by the person or another program). Say you do not know; never say you made it." % what)
+        return
+    def when(r):
+        try:
+            t = datetime.datetime.fromisoformat(r["at"].replace("Z", "+00:00")).astimezone()
+            return t.strftime("%b %d, %I:%M %p").replace(" 0", " ")
+        except ValueError:
+            return r["at"]
+    def line(r):
+        who = ENGINES.get(r["engine"], r["engine"]) + (" (model %s)" % r["model"] if r["model"] else "")
+        return "%s %s by %s%s%s" % (when(r), r["how"], who, ", in conversation %s" % r["session"] if r["session"] else "", "; that turn did not finish normally" if r["interrupted"] else "")
+    if asked:
+        for p in asked:
+            mine = [r for r in rows if r["path"] == p]
+            print(p + ":")
+            if not mine:
+                print("  no record (made before Ola kept a record, or outside Ola). Say you do not know.")
+            for r in mine:
+                print("  " + line(r))
+        print("Newest first. The first line is who changed it last; the last line is who made it, if it was made while Ola kept a record.")
+    else:
+        for r in rows:
+            print("%s: last %s" % (r["path"], line(r)))
+
+
 # ------------------------------------------------------------------ the command line
 
 def main(argv):
@@ -1205,7 +1404,7 @@ def main(argv):
     cmd, rest = argv[0], argv[1:]
     flags, args = {}, []
     i = 0
-    bools = {"--write", "--json", "--replace", "--append"}
+    bools = {"--write", "--json", "--replace", "--append", "--interrupted", "--stale"}
     while i < len(rest):
         a = rest[i]
         if a in bools:
@@ -1218,6 +1417,8 @@ def main(argv):
         i += 1
     if cmd == "init":
         init()
+    elif cmd == "made-by":
+        made_by_cmd(args, flags)
     elif cmd == "api":
         api(rest)
     elif cmd == "query":
