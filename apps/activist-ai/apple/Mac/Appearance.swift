@@ -42,7 +42,8 @@ struct AppearanceSettings: View {
   var applies = true
 
   var body: some View {
-    SettingsGroup(title: "Appearance") {
+    // A group of its own with no header: "Appearance" over "Appearance" said it twice.
+    Section {
       Picker("Appearance", selection: $choice) {
         ForEach(AppearanceChoice.allCases) { Text($0.title).tag($0.rawValue) }
       }
