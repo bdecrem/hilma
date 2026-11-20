@@ -673,27 +673,32 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     say(`suite apps: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites.apps}, ${Math.round((Date.now() - t0) / 1000)} s`)
     if (s.code !== 0) return refuse(`suite apps failed (${suites.apps})`)
   }
+  // A check whose commit a deploy already passed (often the deploy it would wait behind) ran every
+  // suite but the apps', which this check just ran: it ends with both, before or after the turn.
+  const covered = async (release) => {
+    const { coveredByDeploy } = await import('./ci.mjs')
+    const dl = path.join(STAGING, 'deploys.log')
+    const cov = existsSync(dl) && coveredByDeploy(readFileSync(dl, 'utf8'), short, suites)
+    if (!cov) return null
+    const { at, ...all } = cov
+    history(`passed ${short} (${ref}); ${Object.entries(all).map(([k, v]) => `${k} ${v}`).join(', ')} (suites but apps from the deploy at ${at})`)
+    say(`check passed ${short}: the deploy at ${at} ran the suites; apps ${suites.apps ?? 'not in this commit'} from this check`)
+    release()
+    out.end()
+    rmSync(rel, { recursive: true, force: true })
+    return recordCheck({ commit, ok: true, suites: all, why: null, by: 'check+deploy', log: logFile })
+  }
   // A check builds the image holding the turn, so it never builds beside a deploy.
   let turn = null
   if (check) {
+    const early = await covered(() => turnAbort.abort())
+    if (early) return early
     turn = await turnP
     if (!turn) return refuse('the turn for the suites was given up')
     process.on('exit', turn.release)
     say('turn: the check holds it')
-    // The turn was often held by a deploy of this same commit: a passed one already ran every
-    // suite but the apps', which this check just ran, so the check ends here with both.
-    const { coveredByDeploy } = await import('./ci.mjs')
-    const dl = path.join(STAGING, 'deploys.log')
-    const cov = existsSync(dl) && coveredByDeploy(readFileSync(dl, 'utf8'), short, suites)
-    if (cov) {
-      const { at, ...all } = cov
-      history(`passed ${short} (${ref}); ${Object.entries(all).map(([k, v]) => `${k} ${v}`).join(', ')} (suites but apps from the deploy at ${at})`)
-      say(`check passed ${short}: the deploy at ${at} ran the suites; apps ${suites.apps ?? 'not in this commit'} from this check`)
-      turn.release()
-      out.end()
-      rmSync(rel, { recursive: true, force: true })
-      return recordCheck({ commit, ok: true, suites: all, why: null, by: 'check+deploy', log: logFile })
-    }
+    const late = await covered(turn.release)
+    if (late) return late
   }
   say('workspace image: built if missing (node workspace/ws.mjs image --missing)')
   const img = await runLogged(NODE, ['workspace/ws.mjs', 'image', '--missing'], { cwd: code, out })
