@@ -1,8 +1,10 @@
 #!/bin/zsh
 # The Opus arm of the open-model design comparison (OLA-168), on an iMac with the Claude login
 # (~/.config/ops/claude-login.env): the same five requests, seed 1, the designer skill on, the same
-# limits as the open models (1800 s, 1,000,000 tokens). Run from a copy of apps/activist-ai (evals with
-# npm ci, skills, workspace), not from a checkout other work commits from.
+# limits as the open models (1800 s, 1,000,000 tokens). Run from a copy of apps/activist-ai (no
+# node_modules copied: link evals/node_modules to the checkout's, and link node_modules beside the copy's
+# evals/ to hilma's root node_modules, where lib/page.mjs finds Playwright; without it every page check
+# fails as page_reader_failed), not from a checkout other work commits from.
 export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 cd "$(dirname "$0")"
 log=results/open-design-opus-run.log
