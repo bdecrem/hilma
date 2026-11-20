@@ -99,6 +99,9 @@ def head_index(words):
 def script_boots(path: str, cwd: str) -> bool:
     if os.path.basename(path) in KNOWN:
         return True
+    # The guards' own tests quote the blocked commands as test data; running them boots nothing.
+    if os.path.basename(path).endswith("-guard-test.py"):
+        return False
     full = path if os.path.isabs(path) else os.path.join(cwd, path)
     full = os.path.expanduser(full)
     if not os.path.isfile(full):
