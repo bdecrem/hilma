@@ -1334,8 +1334,12 @@ const skillFolders = (dir = SKILLS_SRC) => listSkills(dir)
 export function skillsHash(dir = SKILLS_SRC) {
   return hashSkills(dir)
 }
+// Staged under /tmp, not the per-user temp folder: on the mini since Nov 20 (OLA-265) every build
+// whose context sat under /var/folders/… ended at once with 'Stream unexpectedly closed', while the
+// same context in /tmp built (tested side by side, same change, same arguments).
+const BUILD_TMP = process.env.OLA_BUILD_TMP || (process.platform === 'darwin' ? '/tmp' : tmpdir())
 function stageContext() {
-  const ctx = mkdtempSync(path.join(tmpdir(), 'ola-image-'))
+  const ctx = mkdtempSync(path.join(BUILD_TMP, 'ola-image-'))
   cpSync(here, ctx, { recursive: true, filter: (src) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(src) })
   for (const s of skillFolders()) cpSync(path.join(SKILLS_SRC, s), path.join(ctx, 'skills', s), { recursive: true, filter: (src) => !/[\\/](__pycache__|\.DS_Store)([\\/]|$)/.test(src) })
   return ctx
