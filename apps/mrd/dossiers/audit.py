@@ -23,6 +23,12 @@ from compile import COUNTRIES, CODEBOOK, Q, YEAR   # noqa: E402
 WORK = os.path.join(HERE, "work")
 MODELS = {"sources": ("claude-sonnet-5-5", "low"), "sources2": ("claude-sonnet-5-5", "low"),
           "verify": ("claude-opus-5-5", "high"), "redo": ("claude-fable-5-2", "high")}
+# Override per run, e.g. REDO_MODEL=claude-opus-5-5 REDO_EFFORT=high (Bart, 2026-11-20: Costa Rica's last 17
+# inside one 5-hour window, where Fable 5.2 high at about $8 an answer does not fit).
+for _ph in list(MODELS):
+    _m, _e = os.environ.get(f"{_ph.upper()}_MODEL"), os.environ.get(f"{_ph.upper()}_EFFORT")
+    if _m or _e:
+        MODELS[_ph] = (_m or MODELS[_ph][0], _e or MODELS[_ph][1])
 GROUPS = ["all_migrants", "regular_migrants", "irregular_migrants", "refugees_asylum_seekers"]
 IMPL = {o["answer"]: o["score"] for o in CODEBOOK["implementation_options"]}
 CHUNK_OF = {q: ch["key"] for ch in CODEBOOK["chunks"] for q in ch["questions"]}
