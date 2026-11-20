@@ -272,7 +272,10 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
     return false
   }
   const REFUSED_PW = { error: 'sign_in_refused', message: 'That name and password did not match. Check both and try again.' }
-  const minutes = (ms) => (ms < 90_000 ? `${Math.max(1, Math.ceil(ms / 1000))} seconds` : `${Math.ceil(ms / 60_000)} minutes`)
+  const minutes = (ms) => {
+    const n = ms < 90_000 ? Math.max(1, Math.ceil(ms / 1000)) : Math.ceil(ms / 60_000)
+    return `${n} ${ms < 90_000 ? 'second' : 'minute'}${n === 1 ? '' : 's'}`
+  }
 
   async function passwordAttempt({ handle, password, addr, known }) {
     const h = handleKey(handle)

@@ -241,7 +241,7 @@ test('guessing (OLA-95): wrong tries for one name never hold up another name fro
   for (let i = 0; i < 8; i++) await call('/api/auth/password', { body: { handle: 'maria', password: `office guess ${i}` }, headers: { cookie: '' } })
   const held = await call('/api/auth/password', { body: { handle: 'maria', password: PW }, headers: { cookie: '' } })
   assert.equal(held.status, 429)
-  assert.match(held.json.message, /^Too many wrong tries for this name\. Wait \d+ (seconds|minutes), then try again\.$/)
+  assert.match(held.json.message, /^Too many wrong tries for this name\. Wait (1 second|\d+ seconds|1 minute|\d+ minutes), then try again\.$/)
   const lena = await call('/api/auth/password', { body: { handle: 'lena', password: PW }, headers: { cookie: '' } })
   assert.equal(lena.status, 200, 'another name from the same address was held up')
 })
