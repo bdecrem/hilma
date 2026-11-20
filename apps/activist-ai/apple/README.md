@@ -777,6 +777,24 @@ failed and the run neither replied nor changed a file (the README's reaction rul
 search key (loopback on the mini, removed after), since the staging gateway reads the `bart`
 grant only once this commit is deployed.
 
+## Who made this file (OLA-224, 2026-11-19)
+
+Three engines can work in one project (Ola's open model, the hosted model, Claude), so each project's
+`project.db` keeps a record of which engine created, changed or deleted each file, with the model and
+the time (names and times only, never contents): `ola-db made-by begin|end` around every turn, read
+with `ola-made-by [file]`. The apps record every Ola, hosted and Claude turn (`MadeBy.swift`,
+`LocalMadeBy` on the Mac), show it ("Claude wrote index.html" in the steps, "Last changed by Claude,
+10:49 pm" in Files), and start the next request to the open model with a short `<ola-engines>` note of
+what the others did, hidden when the request is shown. Claude turns are saved as they go; one cut off
+by a quit is ended at the next launch and shown as stopped, its file changes kept.
+
+The lookup is never asked about: `ola-made-by` and `true` are allowed in both configs (the model
+liked to add `|| true`), and the instruction says to run it alone, with nothing piped (a `| head`
+made it ask). **Check**, the real open model: `OLA_MADEBY_CHECK=1 OLA_MODEL_TOKEN_FILE=<bart token>
+swift run olakit-selftest` records Claude writing index.html in a scratch project, asks "Who made
+index.html?" with no note, and passes when the model ran `ola-made-by`, nothing was asked, the answer
+names Claude and claims nothing. 5 of 5 on 2026-11-19 after the two fixes (3 of 5 before).
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

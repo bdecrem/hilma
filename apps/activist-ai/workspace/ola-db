@@ -30,11 +30,11 @@ For the front desk, through `container exec` (always read-only, JSON out, bounde
   ola-db init                        create what is missing (run at every start by ola-init)
 
 Which engine made a file (OLA-224), for the agent as `ola-made-by`, for the apps and the front desk:
-  ola-db made-by [<file> ...] [--json] [--limit N]
+  ola-db made-by [<file> ...] [--json] [--limit N]   (--turn T or --session S: what one turn or conversation changed)
                                      who changed each file, newest first (no file: every file's last change)
   ola-db made-by begin --turn T --engine ola|hosted|claude [--model M] [--session S]
                                      a turn starts: the folder's files (names, times, sizes) are noted
-  ola-db made-by end --turn T [--interrupted]   the turn ended: each file it created, changed or
+  ola-db made-by end --turn T [--model M] [--interrupted]   the turn ended: each file it created, changed or
                                      deleted is recorded with its engine; prints them as JSON
   ola-db made-by end --stale         every turn still open (the app quit mid-turn) ended as interrupted
   ola-db made-by add <file> --engine E [--model M] [--session S] [--turn T] [--how created|changed|deleted]
@@ -1333,6 +1333,9 @@ def made_by_cmd(args, flags):
             if not flags.get("turn"):
                 fail("usage: ola-db made-by end --turn T [--interrupted] | end --stale")
             rows = con.execute("SELECT * FROM made_by_open WHERE turn = ?", (flags["turn"],)).fetchall()
+        if flags.get("model") and not flags.get("stale"):
+            # The engine said which model it was only once it started (Claude Code's first event).
+            rows = [dict(r, model=flags["model"]) for r in rows]
         out = [made_end(con, r, bool(flags.get("interrupted") or flags.get("stale"))) for r in rows]
         con.commit()
         print(json.dumps(out if flags.get("stale") else (out[0] if out else {"turn": flags["turn"], "files": []})))
@@ -1356,7 +1359,10 @@ def made_by_cmd(args, flags):
         made_schema(con)
         con.commit()
         limit = int(flags.get("limit", 20))
-        if args:
+        if flags.get("turn") or flags.get("session"):
+            col = "turn" if flags.get("turn") else "session"
+            rows = [dict(r) for r in con.execute("SELECT path, how, engine, model, session, turn, at, interrupted FROM made_by WHERE %s = ? ORDER BY mtime, id" % col, (flags[col],))]
+        elif args:
             rows = []
             for a in args:
                 p = made_rel(a)

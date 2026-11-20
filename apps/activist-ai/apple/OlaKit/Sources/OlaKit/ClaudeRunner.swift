@@ -101,7 +101,11 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
     var env = ProcessInfo.processInfo.environment
     for k in ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX"] { env[k] = nil }
     let home = FileManager.default.homeDirectoryForCurrentUser.path
-    env["PATH"] = "\(home)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    // Ola's commands first (ola-made-by: who made a file, AgentNotes.madeBy), on the folder.
+    let tools = LocalServer.support.appendingPathComponent("web-tools")
+    env["PATH"] = "\(tools.path):\(home)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    env["OLA_WORK"] = folder.path
+    env["OLA_LIB"] = tools.path
     p.environment = env
     let inPipe = Pipe(), outPipe = Pipe(), errPipe = Pipe()
     p.standardInput = inPipe

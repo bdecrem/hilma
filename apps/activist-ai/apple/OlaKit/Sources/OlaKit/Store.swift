@@ -333,9 +333,11 @@ public final class OlaStore {
     case "session.execution.started", "session.inbox.enqueued":
       running.insert(sid)
       bump(sid, at)
+      beginRecord(sid)
     case "session.execution.succeeded", "session.execution.failed", "session.execution.interrupted":
       running.remove(sid)
       bump(sid, at)
+      endRecord(sid, interrupted: type != "session.execution.succeeded")
       if sid != selectedID || !isActive { unseen.insert(sid) }
     default: break
     }
@@ -398,9 +400,27 @@ public final class OlaStore {
         last.status = .working
         c.turns[c.turns.count - 1] = last
       }
-      c.turns = ClaudeTurns.merge(c.turns, await storedClaudeTurns(id))
+      var stored = await storedClaudeTurns(id)
+      // A Claude turn still "working" on disk with no run here: the app quit or relaunched while
+      // Claude worked. It stays in the conversation, said plainly, with what it changed (OLA-224).
+      var stale = false
+      if claudeTurnsBase != nil, claudeRuns[id] == nil {
+        for i in stored.indices where stored[i].isRunning {
+          stored[i].status = .stopped
+          stored[i].ended = stored[i].steps.compactMap(\.ended).max() ?? stored[i].at
+          stored[i].error = Problem(text: "Ola closed while Claude was working, so Claude stopped. What it changed is kept.")
+          for k in stored[i].steps.indices where stored[i].steps[k].status == .running || stored[i].steps[k].status == .waiting {
+            stored[i].steps[k].status = .failed
+            stored[i].steps[k].error = "This step did not finish."
+          }
+          stale = true
+        }
+      }
+      c.turns = ClaudeTurns.merge(c.turns, stored)
       if let live = conversations[id]?.turns.filter({ $0.engine == .claude && $0.isRunning }) { c.turns = ClaudeTurns.merge(c.turns, live) }
+      if let madeBy { MadeByTurns.assign(await madeBy.entries(session: id), to: &c.turns) }
       conversations[id] = c
+      if stale { saveClaude(id) }
       if hostedRuns[id] != nil, !c.isRunning, !running.contains(id) { await finishHosted(id) }
     } catch {
       note(error, "That session could not be opened.")
@@ -494,6 +514,9 @@ public final class OlaStore {
     problem = nil
     guard let id = await sessionFor(request) else { return }
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
+    // What Claude or the hosted model did since Ola last answered, for Ola to read first (in the
+    // cloud the front desk adds its own).
+    let told = config?.account == true ? nil : EngineNote.note(for: conversations[id]!.turns, target: .ola)
     conversations[id]!.startTurn(request)
     running.insert(id)
     do {
@@ -503,7 +526,7 @@ public final class OlaStore {
         let want = CloudAutonomy.word(cloudLots())
         if (try? await client.setAutonomy(id, want)) != nil { autonomySent[id] = want }
       }
-      try await client.prompt(id, text: request)
+      try await client.prompt(id, text: (told ?? "") + request)
     } catch {
       running.remove(id)
       conversations[id]?.failLastSend(Problem(text: "Your request did not reach the machine. Nothing was done; send it again when it answers.", detail: (error as? OlaError)?.detail))
@@ -603,10 +626,54 @@ public final class OlaStore {
 
   public func loadFiles(_ path: String = "") async {
     guard let client else { return }
+    if path.isEmpty { await loadMadeBy() }
     do { files[path] = try await client.files(in: path.isEmpty ? nil : path) } catch { note(error, "The project's files could not be listed.") }
   }
 
   private var fixtureFiles: [String: Data] = [:]
+
+  public func loadMadeBy() async {
+    guard let madeBy else { return }
+    var out: [String: MadeByEntry] = [:]
+    for e in await madeBy.lastChanges() { out[e.path] = e }
+    madeByFiles = out
+  }
+
+  // MARK: the record of who made each file (OLA-224)
+
+  /// An opencode run starts (Ola's own model, or the hosted one): its files are noted.
+  func beginRecord(_ sid: String) {
+    guard let madeBy, recording[sid] == nil else { return }
+    let turn = "oc-\(sid)-\(Int(Date().timeIntervalSince1970 * 1000))"
+    recording[sid] = turn
+    let hosted = hostedRuns[sid] != nil
+    let m = hosted ? Self.hostedModel.modelID : (model?.modelID ?? "general")
+    Task { await madeBy.begin(turn: turn, engine: hosted ? .hosted : .ola, model: m, session: sid) }
+  }
+
+  /// It ended: what it changed is recorded, and shown with the turn.
+  func endRecord(_ sid: String, interrupted: Bool) {
+    guard let madeBy, let turn = recording.removeValue(forKey: sid) else { return }
+    Task {
+      _ = await madeBy.end(turn: turn, model: nil, interrupted: interrupted)
+      await self.applyRecord(sid)
+    }
+  }
+
+  /// Each turn of a loaded conversation gets the files the record says it changed.
+  public func applyRecord(_ sid: String) async {
+    guard let madeBy else { return }
+    let entries = await madeBy.entries(session: sid)
+    if conversations[sid] != nil { MadeByTurns.assign(entries, to: &conversations[sid]!.turns) }
+    await loadMadeBy()
+  }
+
+  /// Claude's turns so far, on disk at once (not only when Claude ends): a turn the app quits
+  /// during is still in the record when it starts again (OLA-224).
+  func saveClaude(_ id: String) {
+    guard let base = claudeTurnsBase, let turns = conversations[id]?.turns.filter({ $0.engine == .claude }) else { return }
+    ClaudeTurns.save(turns, session: id, base: base)
+  }
 
   public func read(_ path: String) async throws -> Data {
     if let d = fixtureFiles[path] { return d }
@@ -627,6 +694,13 @@ public final class OlaStore {
   public var claudeUnavailable: String? = "Claude runs from Ola on your Mac."
   /// Where Claude turns are kept (Application Support on the Mac); nil on the phone.
   public var claudeTurnsBase: URL?
+  /// The record of which engine made each file (OLA-224): the folder's own on this Mac; nil elsewhere.
+  public var madeBy: MadeByRecord?
+  /// Each file's last change, for Files ("Last changed by Claude, 10:49 pm").
+  public private(set) var madeByFiles: [String: MadeByEntry] = [:]
+  /// The opencode run in each session the record is bracketing (its record turn id).
+  private var recording: [String: String] = [:]
+  private var claudeModels: [String: String] = [:]
   public var onFiles: (() -> Void)?
   /// The first line of each session's last reply, for the sessions list (loaded as rows appear).
   public private(set) var previews: [String: String] = [:]
@@ -691,10 +765,16 @@ public final class OlaStore {
     let turnID = "claude-\(UUID().uuidString)"
     conversations[id]!.turns.append(Turn(id: turnID, request: request, at: .now, status: .working, engine: .claude))
     running.insert(id)
+    saveClaude(id)
+    await madeBy?.begin(turn: turnID, engine: .claude, model: nil, session: id)
     var fold = ClaudeFold(directory: session.directory)
     let update: @MainActor (JSON) -> Void = { [weak self] e in
       guard let self, let i = self.conversations[id]?.turns.firstIndex(where: { $0.id == turnID }) else { return }
       fold.apply(e, to: &self.conversations[id]!.turns[i])
+      if let m = fold.model { self.claudeModels[turnID] = m }
+      // Kept as it goes, after each step and at the end, so a quit loses nothing.
+      let type = e["type"].str
+      if type == "user" || type == "result" || (type == "assistant" && e["message"]["content"].array.contains { $0["type"].str == "tool_use" }) { self.saveClaude(id) }
     }
     do {
       let run = try launcher(session, request, context)
@@ -730,8 +810,15 @@ public final class OlaStore {
             }
             for k in t.steps.indices where t.steps[k].status == .running || t.steps[k].status == .waiting { t.steps[k].status = .failed; t.steps[k].error = "This step did not finish." }
             self.conversations[id]!.turns[i] = t
-            if let base = self.claudeTurnsBase {
-              ClaudeTurns.save(self.conversations[id]!.turns.filter { $0.engine == .claude }, session: id, base: base)
+            self.saveClaude(id)
+            if let madeBy = self.madeBy {
+              let model = self.claudeModels.removeValue(forKey: turnID)
+              let interrupted = t.status != .done
+              Task {
+                _ = await madeBy.end(turn: turnID, model: model, interrupted: interrupted)
+                await self.applyRecord(id)
+                self.saveClaude(id)
+              }
             }
             if let s = self.sessions.first(where: { $0.id == id }) {
               self.onRunEnded?(s, t)
@@ -749,6 +836,8 @@ public final class OlaStore {
         conversations[id]!.turns[i].status = .failed
         conversations[id]!.turns[i].error = Problem(text: "Claude could not start here.", detail: error.localizedDescription)
       }
+      saveClaude(id)
+      if let madeBy { Task { _ = await madeBy.end(turn: turnID, model: nil, interrupted: true) } }
     }
   }
 
@@ -867,11 +956,12 @@ public final class OlaStore {
     }
     hostedRuns[id] = back
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
+    let told = config?.account == true ? nil : EngineNote.note(for: conversations[id]!.turns, target: .hosted)
     conversations[id]!.startTurn(request)
     if let i = conversations[id]!.turns.indices.last { conversations[id]!.turns[i].engine = .hosted }
     running.insert(id)
     do {
-      try await client.prompt(id, text: request)
+      try await client.prompt(id, text: (told ?? "") + request)
     } catch {
       running.remove(id)
       await finishHosted(id)

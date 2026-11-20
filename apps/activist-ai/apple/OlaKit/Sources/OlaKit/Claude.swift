@@ -46,6 +46,8 @@ extension Plain {
 /// Folds Claude Code's stream-json events into a Turn, the way Conversation folds opencode's.
 public struct ClaudeFold: Sendable {
   public var directory: String?
+  /// The model Claude Code said it runs (its first event), for the record of who made a file.
+  public var model: String?
   var message: String?
   public init(directory: String?) { self.directory = directory }
 
@@ -54,6 +56,7 @@ public struct ClaudeFold: Sendable {
     switch e["type"].str {
     case "system":
       if turn.status == .sending { turn.status = .working }
+      if let m = e["model"].string, !m.isEmpty { model = m }
       if e["subtype"].str == "api_retry" { turn.notice = "Claude did not answer. Trying again (attempt \(e["attempt"].int ?? 2))." }
     case "stream_event":
       let ev = e["event"]
@@ -152,7 +155,8 @@ public enum ClaudeTurns {
     turns.suffix(12).map { t in
       let who = t.engine == .claude ? "Claude" : t.engine == .hosted ? "The hosted open model" : "Ola"
       let answer = t.answer.count > 4000 ? String(t.answer.prefix(4000)) + "\u{2026}" : t.answer
-      return "Bart: \(t.request)\n\(who): \(answer.isEmpty ? "(no answer)" : answer)"
+      let files = (t.changed ?? []).isEmpty ? "" : "\n(\(who) changed: \((t.changed ?? []).joined(separator: ", ")))"
+      return "Bart: \(t.request)\n\(who): \(answer.isEmpty ? "(no answer)" : answer)\(files)"
     }.joined(separator: "\n\n")
   }
 }

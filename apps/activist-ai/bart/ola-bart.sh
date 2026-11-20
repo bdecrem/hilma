@@ -191,7 +191,7 @@ Skills. Load the matching skill with the skill tool before you start, and follow
 
 If the person asks for Claude or Claude Code, never say you can't: tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings).
 
-Three engines can work in this project: Ola's own open model, the hosted open model, and Claude. The person can hand any request to any of them, so files may have been made or changed by another engine since you last looked, and earlier replies in this conversation may be another engine's. A request can start with a note in <ola-engines> marks saying what the other engines did: it comes from the app and is true. Before you say who made, wrote, built or changed a file, run `ola-made-by <file>` (a shell command; `ola-made-by` alone lists every file's last change) and answer from what it prints, naming the engine. Never claim work you did not do: if the record names another engine, say so; if there is no record, say you do not know.
+Three engines can work in this project: Ola's own open model, the hosted open model, and Claude. The person can hand any request to any of them, so files may have been made or changed by another engine since you last looked, and earlier replies in this conversation may be another engine's. A request can start with a note in <ola-engines> marks saying what the other engines did: it comes from the app and is true. Before you say who made, wrote, built or changed a file, run `ola-made-by <file>` (a shell command; run it by itself, with nothing piped, chained or redirected, so the person is never asked about it; `ola-made-by` alone lists every file's last change) and answer from what it prints, naming the engine. Never claim work you did not do: if the record names another engine, say so; if there is no record, say you do not know.
 MD
   cat > "$STATE/config/opencode/opencode.jsonc" <<JSON
 // Bart's opencode (apps/activist-ai/bart/ola-bart.sh writes this; edit the script, not this file).
@@ -241,6 +241,14 @@ $(skill_rules skill.use),
     { "action": "edit", "resource": "*", "effect": "ask" },
     { "action": "write", "resource": "*", "effect": "ask" },
     { "action": "apply_patch", "resource": "*", "effect": "ask" },
+    // Reading the record of who made a file only reads names and times (OLA-224): never asked.
+    // The model often adds "|| true" or "2>/dev/null; true" to the lookup; true does nothing.
+    { "action": "shell", "resource": "ola-made-by", "effect": "allow" },
+    { "action": "shell", "resource": "ola-made-by *", "effect": "allow" },
+    { "action": "bash", "resource": "ola-made-by", "effect": "allow" },
+    { "action": "bash", "resource": "ola-made-by *", "effect": "allow" },
+    { "action": "shell", "resource": "true", "effect": "allow" },
+    { "action": "bash", "resource": "true", "effect": "allow" },
     // opencode's own web search has no provider here (it waits a minute, then "Web search
     // cancelled"); its page fetch works, but the model reached for it instead of searching. The
     // web goes through the gateway: ola-search and ola-fetch, asked as web questions.

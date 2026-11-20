@@ -432,7 +432,13 @@ struct FolderRows: View {
           Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(expanded.contains(f.path) ? 90 : 0)).frame(width: 10)
         } else { Color.clear.frame(width: 10) }
         Image(systemName: f.isDirectory ? "folder" : icon(f.name)).font(.system(size: Metrics.ui - 2)).foregroundStyle(Ola.ink3).frame(width: 16)
-        Text(f.name).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
+        VStack(alignment: .leading, spacing: 0) {
+          Text(f.name).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
+          // Who changed it last, from the project's record (OLA-224).
+          if !f.isDirectory, let made = store.madeByFiles[f.path] {
+            Text(MadeByWords.file(made)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).lineLimit(1).truncationMode(.tail)
+          }
+        }
         Spacer(minLength: Space.xs)
         if loading == f.path { ProgressView().controlSize(.mini) }
         if f.name.hasSuffix(".html") || f.name.hasSuffix(".htm") {
@@ -440,7 +446,7 @@ struct FolderRows: View {
         }
       }
       .padding(.leading, CGFloat(depth) * 14 + 4).padding(.trailing, Space.s)
-      .frame(height: 24)
+      .frame(minHeight: 24).padding(.vertical, store.madeByFiles[f.path] == nil || f.isDirectory ? 0 : 2)
       .contentShape(Rectangle())
       .hoverFill(Ola.paperHover, radius: 4)
       .onTapGesture {

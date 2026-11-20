@@ -21,6 +21,8 @@ final class WhereOlaWorks {
   /// Signed in, "On this Mac" reaches the model through the account's door.
   let account: AccountController?
   private(set) var local: LocalServer?
+  /// Folders whose turns left open by an earlier launch were ended (once per launch).
+  nonisolated(unsafe) static var cleaned: Set<String> = []
   /// The local runtime's server, while it runs.
   private(set) var localConfig: ServerConfig?
   var problem: String?
@@ -575,6 +577,17 @@ extension WhereOlaWorks {
     let gate = account?.hostedGate
     s.hostedArm = { on in gate?.set(on) }
     if r == .local, let folder = LocalSettings.folder { s.localFiles = { Stretch.localFiles(folder) } } else { s.localFiles = nil }
+    // The record of which engine made each file, in the folder's project.db (OLA-224). Turns the
+    // app quit during are ended once per launch, so what they changed is still recorded.
+    if r == .local, let folder = LocalSettings.folder {
+      if (s.madeBy as? LocalMadeBy)?.folder != folder {
+        let record = LocalMadeBy(folder: folder)
+        s.madeBy = record
+        if Self.cleaned.insert(folder.standardizedFileURL.path).inserted { Task { _ = await record.endStale() } }
+      }
+    } else {
+      s.madeBy = nil
+    }
     guard reason == nil, let bin = ClaudeRunner.find() else { s.claudeLauncher = nil; return }
     let fallback = LocalSettings.folder
     s.claudeLauncher = { session, request, context in

@@ -97,6 +97,9 @@ public struct Turn: Identifiable, Equatable, Sendable, Codable {
   public var notice: String?
   public var ended: Date?
   public var engine: Engine = .ola
+  /// The files this turn created, changed or deleted, from the project's record (MadeBy), so a
+  /// change made by a shell command, or by a turn the app quit during, is shown and told too.
+  public var changed: [String]?
 
   public init(id: String, request: String, at: Date, status: Status, steps: [Step] = [], answer: String = "", notes: [String] = [], error: Problem? = nil, notice: String? = nil, ended: Date? = nil, engine: Engine = .ola) {
     self.engine = engine
@@ -201,7 +204,7 @@ public struct Conversation: Equatable, Sendable {
       return true
     }
     if type == "session.inbox.enqueued", d["item"]["type"].str == "user" {
-      let text = d["item"]["payload"]["text"].str
+      let text = EngineNote.strip(d["item"]["payload"]["text"].str)
       if let i = turns.lastIndex(where: { $0.status == .sending && $0.request == text }) {
         turns[i].id = d["inboxID"].str
       } else if !turns.contains(where: { $0.id == d["inboxID"].str }) {
@@ -337,7 +340,7 @@ public struct Conversation: Equatable, Sendable {
     for m in ordered {
       let type = m["type"].str
       if type == "user" {
-        turns.append(Turn(id: m["id"].str, request: m["text"].str, at: m["time"]["created"].date ?? .distantPast, status: .working))
+        turns.append(Turn(id: m["id"].str, request: EngineNote.strip(m["text"].str), at: m["time"]["created"].date ?? .distantPast, status: .working))
         continue
       }
       guard !turns.isEmpty else { continue }

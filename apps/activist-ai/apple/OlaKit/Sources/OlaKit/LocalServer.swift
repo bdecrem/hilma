@@ -248,6 +248,14 @@ public final class LocalServer: @unchecked Sendable {
         { "action": "edit", "resource": "*", "effect": "\(first)" },
         { "action": "write", "resource": "*", "effect": "\(first)" },
         { "action": "apply_patch", "resource": "*", "effect": "\(first)" },
+        // Reading the record of who made a file only reads names and times (OLA-224): never asked.
+        { "action": "shell", "resource": "ola-made-by", "effect": "allow" },
+        { "action": "shell", "resource": "ola-made-by *", "effect": "allow" },
+        { "action": "bash", "resource": "ola-made-by", "effect": "allow" },
+        { "action": "bash", "resource": "ola-made-by *", "effect": "allow" },
+        // The model often adds "|| true" or "2>/dev/null; true" to the lookup; true does nothing.
+        { "action": "shell", "resource": "true", "effect": "allow" },
+        { "action": "bash", "resource": "true", "effect": "allow" },
         // opencode's own web search has no provider here (it waits a minute, then says "Web search
         // cancelled"); its page fetch works, but the model reached for it instead of searching (a
         // search engine's results page, a guessed address). The web goes through Ola's gateway:

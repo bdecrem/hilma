@@ -36,6 +36,11 @@ struct TurnView: View {
           let rest = items.filter { i in !pictures.contains(where: { $0.id == i.id }) }
           if !rest.isEmpty { ResultList(items: rest, view: view) }
         }
+        // Which engine changed which files, from the project's record (OLA-224): a shell command's
+        // changes too, and a turn the app closed during.
+        if !turn.isRunning, let made = MadeByWords.turn(turn.changed ?? [], by: turn.engine) {
+          Text(made).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).fixedSize(horizontal: false, vertical: true)
+        }
         if let e = turn.error { ProblemView(problem: e) }
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
         if turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
@@ -145,7 +150,7 @@ struct RunView: View {
       .buttonStyle(.plain)
       .help(isOpen ? "Hide the steps" : "Show every step")
       let shown = isOpen ? turn.steps : turn.steps.filter { $0.status == .failed || $0.status == .waiting }
-      ForEach(shown) { StepRow(step: $0).transition(.opacity.combined(with: .move(edge: .top))) }
+      ForEach(shown) { StepRow(step: $0, engine: turn.engine).transition(.opacity.combined(with: .move(edge: .top))) }
       if isOpen, !turn.notes.isEmpty {
         ForEach(Array(turn.notes.enumerated()), id: \.offset) { _, n in
           Text(n).font(OlaFont.serif(Metrics.ui, .italic)).foregroundStyle(Ola.ink2).lineSpacing(2)
@@ -170,6 +175,8 @@ struct LampDot: View {
 
 struct StepRow: View {
   var step: Step
+  /// Who did it: a step that wrote or changed a file says so ("Claude changed index.html").
+  var engine: Turn.Engine = .ola
   @State private var details = false
 
   var tint: Color {
@@ -185,7 +192,7 @@ struct StepRow: View {
       HStack(alignment: .firstTextBaseline, spacing: Space.s) {
         Image(systemName: step.status == .failed ? "xmark" : StepIconName.symbol(step.icon.rawValue))
           .font(.system(size: Metrics.ui - 2, weight: .medium)).foregroundStyle(tint).frame(width: Metrics.youColumn - Space.s, alignment: .leading)
-        (Text(step.verb + (step.object.isEmpty ? "" : " ")).font(OlaFont.sans(Metrics.ui)) + Text(step.object).font(OlaFont.sans(Metrics.ui, .semibold)))
+        (Text((MadeByWords.step(step, by: engine) ?? step.verb) + (step.object.isEmpty ? "" : " ")).font(OlaFont.sans(Metrics.ui)) + Text(step.object).font(OlaFont.sans(Metrics.ui, .semibold)))
           .foregroundStyle(Ola.ink).lineLimit(2)
         Spacer(minLength: Space.s)
         Group {
