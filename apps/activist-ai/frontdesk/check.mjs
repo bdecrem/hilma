@@ -1382,6 +1382,24 @@ await check('the project view reads at most 12 documents, in one exec, and cache
     spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', 'import glob, os\nfor f in glob.glob("/work/note-*.md"):\n    os.remove(f)'])
   }
 })
+await check('a project home shows the links the admin set (OLA-103), https only, and loses one when it is removed', async () => {
+  const bad = node('frontdesk/admin.mjs', ['link', FA, '--label', 'Plain', '--url', 'http://example.org/'])
+  assert(bad.status !== 0 && /https/.test(bad.stderr), `http accepted: ${bad.status} ${bad.stderr}`)
+  admin('link', FA, '--label', 'Made-up almanac', '--url', 'https://example.org/almanac/', '--note', 'Runs on Claude, outside Ola')
+  admin('link', FA, '--label', 'Made-up library', '--url', 'https://example.org/mrd')
+  try {
+    const r = await api('/api/project', { cookie: a.cookie, ws: FA })
+    const got = JSON.stringify(r.json?.links)
+    assert(r.status === 200 && got === JSON.stringify([{ label: 'Made-up almanac', url: 'https://example.org/almanac/', note: 'Runs on Claude, outside Ola' }, { label: 'Made-up library', url: 'https://example.org/mrd' }]), `${r.status} ${got}`)
+    const first = /^#(\d+) Made-up almanac/m.exec(admin('links', FA))
+    admin('unlink', FA, first[1])
+    const after = await api('/api/project', { cookie: a.cookie, ws: FA })
+    assert(after.json?.links?.length === 1 && after.json.links[0].label === 'Made-up library', JSON.stringify(after.json?.links))
+    return 'two links in the payload, in order, with the note; http refused; one removed'
+  } finally {
+    for (const m of admin('links', FA).matchAll(/^#(\d+) /gm)) admin('unlink', FA, m[1])
+  }
+})
 await check("one person's concurrent uploads are capped at 3; the rest are refused at once, and uploads work again after", async () => {
   const one = (i) =>
     new Promise((resolve) => {
