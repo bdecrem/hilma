@@ -106,6 +106,9 @@ never holds user data.
   workspace, web, front desk), and switches `current` only if all pass. A failed suite touches
   nothing that runs. It checks commit signatures (`--unsigned` overrides, and the log says so).
   A rollback is a deploy of the older commit. README, "Deploying staging".
+- **One test turn:** everything that starts VMs to test (the workspace and front desk checks, the
+  live scripts, the evals) waits for the machine's one turn, `ops/turn.mjs`; a deploy goes before
+  every waiting builder and holds the turn through its suites. `node ops/turn.mjs status` shows it.
 - **Status:** `node ops/ola.mjs status` shows every job, the deployed commit and each workspace.
 - **The alarm:** `ops/watch.mjs` every 2 minutes (`cx.ola.watch`) texts Bart when the disk, memory,
   a service, the public address or the certificate fails, and pushes a status to the board every 10
