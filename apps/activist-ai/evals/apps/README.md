@@ -87,6 +87,18 @@ harness by its absolute path (`…/apps/activist-ai/evals/apps/lib/harness.mjs`)
   average over the tile hid small emoji showing face up at the start; looks are now 16x16 cells
   compared cell by cell, and pairs are matched by closest look.
 
+## Check each thing asked (OLA-174): before and after
+
+Before (2026-11-18, image 2.3.0-36, the Mac app of that day): the open-weights column passed 2 of 7.
+The change (commit 33747472): the agent lists every thing the request asked for and tries each one
+on its page with `ola-page <page> --do "fill 1=..." --do "click ..." --text` before it answers
+(`workspace/AGENTS.md`, "Check what was asked"; `AgentNotes.tryIt` in the Mac app; designer 8). Its
+examples are deliberately not these seven problems, so the after-measure is not taught to the test.
+After: needs a Mac app built from that commit or later, frozen into `~/Library/Caches/ola-eval/Ola.app`
+on the iMac, then `./run-all.sh` and `node run.mjs report`, once the model allowance for test runs
+resets (Monday Nov 23, 00:00 UTC). Compare the open-weights column with the table above, and look at
+every screenshot.
+
 ## Limits
 
 - The check serves the folder with its own static server and never runs a server the model wrote
