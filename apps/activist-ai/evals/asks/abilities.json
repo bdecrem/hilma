@@ -4,125 +4,214 @@
     {
       "id": "web-search",
       "what": "Search the web",
-      "cloud": { "tell": "run `ola-search \"words\"` (the person is asked first)" },
-      "local": { "tell": "run `ola-search \"words\"` (the person is asked first)" }
+      "cloud": {
+        "tell": "run `ola-search \"words\"` (the person is asked first)"
+      },
+      "local": {
+        "tell": "run `ola-search \"words\"` (the person is asked first)"
+      }
     },
     {
       "id": "web-download",
       "what": "Download a web page or document someone names",
-      "cloud": { "tell": "run `ola-fetch https://address`; it lands in sources/" },
-      "local": { "tell": "run `ola-fetch https://address`; it lands in sources/" }
+      "cloud": {
+        "tell": "run `ola-fetch https://address`; it lands in sources/"
+      },
+      "local": {
+        "tell": "run `ola-fetch https://address`; it lands in sources/"
+      }
     },
     {
       "id": "find-paper",
       "what": "Find a paper or law and a free copy of it",
-      "cloud": { "tell": "run `ola-lookup \"citation or DOI\"`, then `ola-fetch` the copy" },
-      "local": { "tell": "run `ola-lookup \"citation or DOI\"`, then `ola-fetch` the copy" }
+      "cloud": {
+        "tell": "run `ola-lookup \"citation or DOI\"`, then `ola-fetch` the copy"
+      },
+      "local": {
+        "tell": "run `ola-lookup \"citation or DOI\"`, then `ola-fetch` the copy"
+      }
     },
     {
       "id": "read-picture",
       "what": "Say what a picture, scan or PDF page shows, and read its words",
-      "cloud": { "tell": "run `ola-see <file> \"question\"`; for the full text of a scan, `ola-ocr <file>`" },
-      "local": { "tell": "run `ola-see <file> \"question\"` (it also reads the words on a picture or scan)" }
+      "cloud": {
+        "tell": "run `ola-see <file> \"question\"`; for the full text of a scan, `ola-ocr <file>`"
+      },
+      "local": {
+        "tell": "run `ola-see <file> \"question\"` (it also reads the words on a picture or scan)"
+      }
     },
     {
       "id": "translate",
       "what": "Translate a document",
-      "cloud": { "tell": "run `ola-translate <file> --to <language>`; it keeps every number" },
-      "local": { "tell": "translate it yourself, keeping every number, and save the translation as a file beside it" }
+      "cloud": {
+        "tell": "run `ola-translate <file> --to <language>`; it keeps every number"
+      },
+      "local": {
+        "tell": "translate it yourself, keeping every number, and save the translation as a file beside it"
+      }
     },
     {
       "id": "transcribe",
       "what": "Write out what is said in a recording",
-      "cloud": { "tell": "run `ola-transcribe <recording>`" },
-      "local": { "notOffered": "Writing out recordings works in your cloud projects on Ola, not on this Mac yet: put the recording in a cloud project and ask there." }
+      "cloud": {
+        "tell": "run `ola-transcribe <recording>`"
+      },
+      "local": {
+        "notOffered": "Writing out recordings works in your cloud projects on Ola, not on this Mac yet: put the recording in a cloud project and ask there."
+      }
     },
     {
       "id": "table",
       "what": "Put a spreadsheet or table in the project's database and answer questions from it",
-      "cloud": { "tell": "run `ola-db load <file> --table <name>`, then `ola-db query \"SELECT ...\"`" },
-      "local": { "tell": "run `ola-db load <file> --table <name>`, then `ola-db query \"SELECT ...\"`" },
-      "screens": ["cloud-web:screen"]
+      "cloud": {
+        "tell": "run `ola-db load <file> --table <name>`, then `ola-db query \"SELECT ...\"`"
+      },
+      "local": {
+        "tell": "run `ola-db load <file> --table <name>`, then `ola-db query \"SELECT ...\"`"
+      },
+      "screens": [
+        "cloud-web:screen"
+      ]
     },
     {
       "id": "page",
       "what": "Make a web page, site, form or app screen",
-      "cloud": { "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`" },
-      "local": { "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`" }
+      "cloud": {
+        "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`"
+      },
+      "local": {
+        "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`"
+      }
     },
     {
       "id": "chart",
       "what": "Make a chart",
-      "cloud": { "tell": "load the `chart` skill" },
-      "local": { "tell": "load the `chart` skill" }
+      "cloud": {
+        "tell": "load the `chart` skill"
+      },
+      "local": {
+        "tell": "load the `chart` skill"
+      }
     },
     {
       "id": "workbook",
       "what": "Make an Excel spreadsheet",
-      "cloud": { "tell": "load the `workbook` skill" },
-      "local": { "tell": "load the `workbook` skill" }
+      "cloud": {
+        "tell": "load the `workbook` skill"
+      },
+      "local": {
+        "tell": "load the `workbook` skill"
+      }
     },
     {
       "id": "report",
       "what": "Write a Word or PDF report",
-      "cloud": { "tell": "load the `report` skill" },
-      "local": { "tell": "load the `report` skill" }
+      "cloud": {
+        "tell": "load the `report` skill"
+      },
+      "local": {
+        "tell": "load the `report` skill"
+      }
     },
     {
       "id": "drawing",
       "what": "Draw a picture, diagram or illustration",
-      "cloud": { "tell": "draw it in code as an SVG file; for a painted illustration, `ola-draw \"brief\" --out pic.png`" },
-      "local": { "tell": "draw it in code as an SVG file" }
+      "cloud": {
+        "tell": "draw it in code as an SVG file; for a painted illustration, `ola-draw \"brief\" --out pic.png`"
+      },
+      "local": {
+        "tell": "draw it in code as an SVG file"
+      }
     },
     {
       "id": "sound",
       "what": "Add sound or music to a page or app",
-      "cloud": { "tell": "load the `sound` skill first" },
-      "local": { "tell": "load the `sound` skill first" }
+      "cloud": {
+        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), say in one sentence that it is a made-up sound in code and how close it is, never that it is exactly what they asked"
+      },
+      "local": {
+        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), say in one sentence that it is a made-up sound in code and how close it is, never that it is exactly what they asked"
+      }
     },
     {
       "id": "publish",
       "what": "Publish a page on the web, or give a link anyone can open",
-      "cloud": { "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app" },
-      "local": { "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app" },
-      "screens": ["cloud-web:screen", "cloud-mac:screen", "cloud-phone:screen", "local-mac:screen"]
+      "cloud": {
+        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app"
+      },
+      "local": {
+        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app"
+      },
+      "screens": [
+        "cloud-web:screen",
+        "cloud-mac:screen",
+        "cloud-phone:screen",
+        "local-mac:screen"
+      ]
     },
     {
       "id": "who-made",
       "what": "Say which engine made or changed a file",
-      "cloud": { "tell": "run `ola-made-by <file>` and answer from what it prints" },
-      "local": { "tell": "run `ola-made-by <file>` and answer from what it prints" }
+      "cloud": {
+        "tell": "run `ola-made-by <file>` and answer from what it prints"
+      },
+      "local": {
+        "tell": "run `ola-made-by <file>` and answer from what it prints"
+      }
     },
     {
       "id": "jobs",
       "what": "Ask the same question of many documents (a job)",
-      "cloud": { "tell": "write a spec and run `ola-batch propose spec.json`; the person starts it under Jobs" },
-      "local": { "notOffered": "Jobs over many documents run in a cloud project on Ola, not on this Mac: on this Mac I can read a few documents one at a time." },
-      "screens": ["cloud-web:screen"]
+      "cloud": {
+        "tell": "write a spec and run `ola-batch propose spec.json`; the person starts it under Jobs"
+      },
+      "local": {
+        "notOffered": "Jobs over many documents run in a cloud project on Ola, not on this Mac: on this Mac I can read a few documents one at a time."
+      },
+      "screens": [
+        "cloud-web:screen"
+      ]
     },
     {
       "id": "claude",
       "what": "Hand a request to Claude",
-      "cloud": { "tell": "tell them to type /claude followed by the request (the project's owner turns on Fallback to Claude in Settings)" },
-      "local": { "tell": "tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings)" }
+      "cloud": {
+        "tell": "do not do the request yourself and never say you cannot hand it over: tell them to type /claude followed by the request (the project's owner turns on Fallback to Claude in Settings)"
+      },
+      "local": {
+        "tell": "do not do the request yourself and never say you cannot hand it over: tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings)"
+      }
     },
     {
       "id": "send",
       "what": "Send an email or a text message",
-      "cloud": { "notOffered": "Ola can't send email or text messages. Here is the message, ready for you to send." },
-      "local": { "notOffered": "Ola can't send email or text messages. Here is the message, ready for you to send." }
+      "cloud": {
+        "notOffered": "Ola can't send email or text messages. Here is the message, ready for you to send."
+      },
+      "local": {
+        "notOffered": "Ola can't send email or text messages. Here is the message, ready for you to send."
+      }
     },
     {
       "id": "post",
       "what": "Post on social media",
-      "cloud": { "notOffered": "Ola can't post on social media. Here is the post, ready for you to copy." },
-      "local": { "notOffered": "Ola can't post on social media. Here is the post, ready for you to copy." }
+      "cloud": {
+        "notOffered": "Ola can't post on social media. Here is the post, ready for you to copy."
+      },
+      "local": {
+        "notOffered": "Ola can't post on social media. Here is the post, ready for you to copy."
+      }
     },
     {
       "id": "schedule",
       "what": "Do something later or on a schedule",
-      "cloud": { "notOffered": "Ola can't do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it." },
-      "local": { "notOffered": "Ola can't do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it." }
+      "cloud": {
+        "notOffered": "Ola can't do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it."
+      },
+      "local": {
+        "notOffered": "Ola can't do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it."
+      }
     }
   ]
 }
