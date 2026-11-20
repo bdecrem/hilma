@@ -31,12 +31,14 @@ appearance, notifications) follow the person. In the Mac and iPhone apps the run
 |---|---|---|---|
 | **Web app**, `https://app.ola.cx` | The main client, cloud runtime only. A project opens on its things (documents, tables, charts, pages); **Ask Ola** is a drawer with the conversation; Files, Data, Jobs, Settings. On a phone the project opens on its conversation, under three tabs (Conversation, Made by Ola, Sources) with one Menu; Ola's questions show as a card. Look A, "paper under the lamp" | `web/` (Vite + Solid on `@opencode/client`), served by `frontdesk/` | live on the staging machine, made-up data |
 | **Mac app** | SwiftUI. Both runtimes live at once: **New Session** (Cmd-N) asks Cloud (on the Ola machine) or Local (on this Mac: opencode runs in a chosen folder; only model and web requests go to the Ola machine), and the sidebar lists sessions under each. Bundles Ola's opencode build and skills | `apple/Mac`, `apple/OlaKit`, `apple/Shared` | 0.1, a Developer ID signed, notarized download that updates itself (GitHub releases of hilma) |
-| **iPhone app** | Cloud: signs in to the Ola machine with a name and password (Mac off). Local: pairs with the Mac app by QR code over Tailscale. The pencil opens New Session with the same choice; sessions are listed under each runtime. Also the Kit tab (voice, admins only) | `apple/iOS` | TestFlight, internal group, bundle ID `cx.ola.mac` (shared with the Mac app's App Store record since 2026-11-17) |
+| **iPhone app** | Cloud: signs in with a name and password and works in the person's project on app.ola.cx, the same sessions as the website and the Mac (Mac off, no Tailscale; OLA-150). Local: pairs with the Mac app by QR code over Tailscale. The pencil opens New Session with the same choice; sessions are listed under each runtime. Also the Kit tab (voice, admins only) | `apple/iOS` | TestFlight, internal group, bundle ID `cx.ola.mac` (shared with the Mac app's App Store record since 2026-11-17) |
 | **`ola` command** | opencode's terminal interface with Ola's wordmark, "On this Mac" in a terminal; the Mac app's own executable in CLI mode | `apple/OlaKit/OlaCLI.swift`, `opencode-fork/` | ships inside the Mac app |
 | **Landing page**, `https://ola.cx` | Bart's letter beside a drawing of the "datacenter". Static, no JavaScript, no third-party requests | `site/` → `public/ola-site/` (Vercel) | live |
 
-Bart also has his own server, **Bart's opencode** (`bart/`): full privileges on the machine, no
-sealed box, Tailscale only. His Mac and phone can use it.
+**One cloud** (OLA-150, 2026-11-19): the apps' Cloud is the signed-in person's project on app.ola.cx
+through the front desk's device routes (`/api/device/projects`, `/api/device/w/<project>/`), the same
+sessions the website shows; signing in is all it takes. Bart's own server, **Bart's opencode**
+(`bart/`, Tailscale only), is no longer used by the apps; its sessions were moved into his project.
 
 ## How a request travels
 
