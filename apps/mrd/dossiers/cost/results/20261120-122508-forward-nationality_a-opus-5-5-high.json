@@ -1,0 +1,616 @@
+{
+ "status": "ok",
+ "job_id": "forward costa_rica nationality_a claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "costa_rica",
+ "chunk": "nationality_a",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database",
+ "fixture": null,
+ "country": {
+  "id": 1004,
+  "iso": "CRI",
+  "name": "Costa Rica",
+  "lang": "Spanish"
+ },
+ "qids": [
+  63,
+  65,
+  67,
+  69
+ ],
+ "started_at": "2026-11-20T20:25:08.395Z",
+ "meters_before": {
+  "at": "2026-11-20T20:25:03.653Z",
+  "window": {
+   "pct": 27,
+   "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 27,
+    "resets": "Nov 20 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 27% used · resets Nov 20 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "prompt_chars": {
+  "system": 58136,
+  "user": 115
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-20T20:28:01.007Z",
+ "minutes": 2.88,
+ "meters_after": {
+  "at": "2026-11-20T20:28:01.008Z",
+  "window": {
+   "pct": 28,
+   "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 37,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 63,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 28,
+    "resets": "Nov 20 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 37,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 63,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 28% used · resets Nov 20 at 4pm (America/Los_Angeles)\nCurrent week (all models): 37% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 63% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 140 requests · 2 sessions\n  45%  Start fresh when you switch tasks · run /clear\n  35%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  29%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 29%, statusline 1%\n\nLast 7d · 151 requests · 3 sessions\n  43%  Start fresh when you switch tasks · run /clear\n  37%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  27%  Check which model \"general-purpose\" subagents use\n  Top subagents: general-purpose 27%, statusline 1%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 74484,
+   "output": 17944,
+   "cache_read": 736996,
+   "cache_write": 107615,
+   "cost_usd": 1.3276,
+   "total": 937039
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 74464,
+    "output": 4979,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1721,
+    "cost_usd": 0.0599
+   },
+   "claude-opus-5-5": {
+    "input": 20,
+    "output": 12965,
+    "cache_read": 736996,
+    "cache_write": 107615,
+    "thinking": 2747,
+    "cost_usd": 1.2677
+   }
+  }
+ },
+ "turns": 16,
+ "calls": 26,
+ "duration_ms": 171538,
+ "duration_api_ms": 164151,
+ "pages_read": 9,
+ "pages": [
+  {
+   "at": "2026-11-20T20:25:12.644Z",
+   "url": "https://www.tse.go.cr/pdf/normativa/leyopcionesynaturalizaciones.pdf",
+   "find": "10508 | Artículo 15 | Artículo 18 | Artículo 3 | Artículo 11 | tácitamente",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-20T20:25:30.449Z",
+   "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+   "find": "Artículo 15 | Artículo 18 | Rige | vigencia | Alcance",
+   "ok": true,
+   "chars": 7039
+  },
+  {
+   "at": "2026-11-20T20:25:31.482Z",
+   "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/",
+   "find": "Artículo 3 | Artículo 11 | Artículo 15 | Artículo 18 | tácitamente",
+   "ok": true,
+   "chars": 14516
+  },
+  {
+   "at": "2026-11-20T20:25:43.837Z",
+   "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/",
+   "find": "ARTÍCULO 15 | ARTÍCULO 18 | 10508 | vigente al",
+   "ok": true,
+   "chars": 8525
+  },
+  {
+   "at": "2026-11-20T20:25:48.821Z",
+   "url": "https://costa-rica.justia.com/nacionales/leyes/ley-1155/gdoc",
+   "find": "ARTÍCULO 18 | Artículo 18 | incisos 2) y 3)",
+   "ok": true,
+   "chars": 2577
+  },
+  {
+   "at": "2026-11-20T20:25:53.958Z",
+   "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC",
+   "find": "ARTÍCULO 14 | ARTÍCULO 16 | ARTÍCULO 17 | no se pierde",
+   "ok": true,
+   "chars": 7517
+  },
+  {
+   "at": "2026-11-20T20:26:08.848Z",
+   "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+   "find": "2022 | 2023 | 2024 | matrimonio | refugi | pendientes | meses",
+   "ok": true,
+   "chars": 6903
+  },
+  {
+   "at": "2026-11-20T20:26:28.412Z",
+   "url": "https://observador.cr/proyecto-que-busca-quitar-nacionalidad-costarricense-a-naturalizados-es-inconstitucional-en-su-estado-actual/",
+   "find": "inconstitucional | artículo 16 | naturalizados | Sala",
+   "ok": true,
+   "chars": 3633
+  },
+  {
+   "at": "2026-11-20T20:26:29.684Z",
+   "url": "https://www.laprensani.com/2025/07/11/nacionales/3500103-mas-de-190-mil-nicaraguenses-han-pedido-refugio-en-costa-rica-solo-16-mil-lo-han-obtenido",
+   "find": "refugiad | 2023 | 2024 | aprob | naturaliz",
+   "ok": true,
+   "chars": 3587
+  }
+ ],
+ "searches": [
+  "Ley 10508 reforma artículos 15 y 18 Ley de Opciones y Naturalizaciones 1155 La Gaceta vigencia",
+  "pgrweb.go.cr scij \"Ley de Opciones y Naturalizaciones\" texto completo",
+  "\"nValor2\" \"1155\" Opciones y Naturalizaciones pgrweb",
+  "Tribunal Supremo de Elecciones reforma \"Reglamento relativo a los trámites, requisitos y criterios de resolución en materia de naturalizaciones\" decreto 2023 OR 2024 OR 2025",
+  "sinalevi \"naturalizaciones\" reglamento Tribunal Supremo de Elecciones 12-2012 texto vigente"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.36,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795219200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795219200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.37,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":63,\"answer_2023\":\"Convictions do not affect citizenship status\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Convictions do not affect citizenship status\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Costa Rica\",\"article\":\"Art. 16\",\"enacted\":\"1995-06-06\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Opciones y Naturalizaciones, Ley N.º 1155\",\"article\":\"Art. 18\",\"enacted\":\"1950\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Ley de Opciones y Naturalizaciones, Ley N.º 1155\",\"article\":\"Art. 3 (tacitly repealed) and Art. 15(4)\",\"enacted\":\"1950 (art. 3); 2024-08-28 (art. 15(4))\",\"history_read\":\"amending_acts\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2024-08-28\",\"instrument\":\"Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155, Ley de Opciones y Naturalizaciones, de 29 de abril de 1950 (Alcance N.º 147 a La Gaceta N.º 158)\",\"article\":\"Ley 1155 art. 18\",\"kind\":\"amended\",\"what_changed\":\"Art. 18 (wording of Ley 7234 of 1991) annulled a fraudulently obtained naturalisation where the person gave false data or had been convicted before of an offence in art. 15(2)-(3). Ley 10508 extends this to the new art. 15(4) offences (intentional crimes with more than 3 years' prison in the last 10 years). This is a nullity tied to the grant, which the indicator excludes. Post-grant convictions still do not affect nationality (Const. art. 16).\",\"url\":\"https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/\",\"passage\":\"Artículo 18- Es nula, de pleno derecho, la naturalización que fraudulentamente haya obtenido un extranjero con violación de los requisitos que dispone esta ley. En consecuencia, en cualquier momento en qu",
+ "output": {
+  "answers": [
+   {
+    "question_id": 63,
+    "answer_2023": "Convictions do not affect citizenship status",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Convictions do not affect citizenship status",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Costa Rica",
+      "article": "Art. 16",
+      "enacted": "1995-06-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 18",
+      "enacted": "1950",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 3 (tacitly repealed) and Art. 15(4)",
+      "enacted": "1950 (art. 3); 2024-08-28 (art. 15(4))",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155, Ley de Opciones y Naturalizaciones, de 29 de abril de 1950 (Alcance N.º 147 a La Gaceta N.º 158)",
+      "article": "Ley 1155 art. 18",
+      "kind": "amended",
+      "what_changed": "Art. 18 (wording of Ley 7234 of 1991) annulled a fraudulently obtained naturalisation where the person gave false data or had been convicted before of an offence in art. 15(2)-(3). Ley 10508 extends this to the new art. 15(4) offences (intentional crimes with more than 3 years' prison in the last 10 years). This is a nullity tied to the grant, which the indicator excludes. Post-grant convictions still do not affect nationality (Const. art. 16).",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+      "passage": "Artículo 18- Es nula, de pleno derecho, la naturalización que fraudulentamente haya obtenido un extranjero con violación de los requisitos que dispone esta ley. En consecuencia, en cualquier momento en que se compruebe que al solicitar u obtener la carta, el individuo naturalizado suministró algún dato falso o fue condenado antes por un delito de los que señalan los incisos 2), 3) y 4) del artículo 15"
+     }
+    ],
+    "implementation_then_now": "I found no documented case, before or after 2023, of a naturalised Costa Rican losing nationality over a conviction handed down after naturalisation. In 2024 the Assembly sent bill 23.800 back to first debate because it would have stripped nationality from naturalised persons who commit crimes. Deputies called it unconstitutional under art. 16 (El Observador, March 2024). It was enacted only as the pre-grant eligibility and nullity reform (Ley 10508). The rating is therefore 'Effectively Always' on both dates.",
+    "practice_sources": [
+     {
+      "title": "Proyecto que busca quitar nacionalidad costarricense a naturalizados 'es inconstitucional en su estado actual' (El Observador)",
+      "url": "https://observador.cr/proyecto-que-busca-quitar-nacionalidad-costarricense-a-naturalizados-es-inconstitucional-en-su-estado-actual/",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Const. art. 16 was read on SINALEVI; its last amendment was Ley 7514 of 1995. The pre-2024 wording of Ley 1155 art. 18 (from Ley 7234, 1991) was read on Justia, and the 10508 wording and the consolidated text on Bufete de Costa Rica, which transcribes the official Gaceta facsimile. The TSE PDF could not be parsed by the reader.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI, versión vigente)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 10508 texto (Bufete de Costa Rica, cotejado con La Gaceta)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "Ley 1155 consolidated (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "Ley 1155 earlier text (Justia)",
+      "url": "https://costa-rica.justia.com/nacionales/leyes/ley-1155/gdoc"
+     },
+     {
+      "title": "El Observador on bill 23.800",
+      "url": "https://observador.cr/proyecto-que-busca-quitar-nacionalidad-costarricense-a-naturalizados-es-inconstitucional-en-su-estado-actual/"
+     },
+     {
+      "title": "TSE PDF Ley 1155 (read failed: PDF parser unavailable)",
+      "url": "https://www.tse.go.cr/pdf/normativa/leyopcionesynaturalizaciones.pdf"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Ley 10508 changed the provision cited in L2 inside the window, but only on the fraud and pre-grant-conviction nullity, which the indicator excludes. The answer does not change. The practice evidence is the absence of documented cases plus the legislative record; no court ruling relied on."
+   },
+   {
+    "question_id": 65,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 14(2)-(3), Art. 15",
+      "enacted": "1949 (art. 14 as reformed by Ley 7065 of 1987)",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 11",
+      "enacted": "1991-05-09 (wording of Ley 7234)",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 15 (inciso 4 added)",
+      "enacted": "2024-08-28",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento relativo a los trámites, requisitos y criterios de resolución en materia de naturalizaciones, Decreto TSE 12-2012",
+      "article": "Arts. 8(d), 9(b), 11",
+      "enacted": "2012-10",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155 (Alcance N.º 147 a La Gaceta N.º 158)",
+      "article": "Ley 1155 art. 15(4)",
+      "kind": "amended",
+      "what_changed": "Adds a new bar to naturalisation for anyone convicted by final judgment, in Costa Rica or abroad, of an intentional crime with more than 3 years' prison in the last ten years. It also suspends the application while criminal proceedings are pending. The residence pathway remains but has a tighter eligibility condition.",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+      "passage": "4- A la persona que haya sido condenada con sentencia firme por delito doloso, en los últimos diez años, con pena privativa de libertad superior a tres años, en Costa Rica o en el extranjero... En caso de que la persona gestionante tenga procesos judiciales penales pendientes... se tomarán las medidas legales pertinentes vía administrativa, a efectos de ordenar la suspensión del trámite"
+     }
+    ],
+    "implementation_then_now": "La Nación (2025) reports official TSE data. Naturalisation letters averaged about 5,300 a year from 2016, peaked at 6,277 in 2023 and reached 5,541 in 2024. The pathway therefore worked on both dates. The same report documents a shift: resolution once took about six months, now averages over a year, sometimes 18 months, with almost 8,000 applications pending for lack of staff. The rating is 'Usually' on both dates, with growing delays by 2025–26.",
+    "practice_sources": [
+     {
+      "title": "¿Cómo se naturalizan los extranjeros en Costa Rica? (La Nación)",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Const. art. 14 was read on SINALEVI, unchanged since 1987/1999. Ley 1155 art. 11 and the Ley 10508 amendment were read in Bufete transcriptions of the official text; the 2023 version was rebuilt by removing inciso 4. The TSE Reglamento PDF could not be read, and no 2023–2025 amendment to it was found in searches.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 10508 texto (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "Ley 1155 consolidated (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "La Nación 2025 naturalisation data",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer stays 'Yes'. I chose 'not the same' because a dated statute (Ley 10508, in force 28 Aug 2024) added a criminal-record bar and a suspension rule to the pathway. If the MRD treats only the yes/no existence of the pathway as the protection, the 'no change' option would apply instead. Even before 10508, art. 11(4) already excluded people tried for intentional crimes during their stay. The La Nación figures do not break down applicants by permit type, so 'economic migrants' is inferred."
+   },
+   {
+    "question_id": 67,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 14(2)-(3)",
+      "enacted": "1949 (as reformed 1987)",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 11; Art. 15(4) with refugee/stateless/asylee exemptions",
+      "enacted": "1991 (art. 11); 2024-08-28 (art. 15(4))",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Reglamento de naturalizaciones, Decreto TSE 12-2012",
+      "article": "Arts. 8(d), 73–76",
+      "enacted": "2012; arts. 73–76 by Decreto TSE 2-2017",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155 (Alcance N.º 147 a La Gaceta N.º 158)",
+      "article": "Ley 1155 art. 15(4) and exemptions a–c",
+      "kind": "amended",
+      "what_changed": "Adds the new criminal-record bar. It exempts recognised refugees, stateless persons and asylees whose earlier conviction was known when protection was granted, unless they commit intentional crimes during or after the procedure. The pathway itself was unchanged (Yes on both dates); its conditions for humanitarian migrants changed.",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+      "passage": "Quedan exentas de dicho impedimento las siguientes personas: a. Las personas extranjeras reconocidas como refugiadas, que cuenten con antecedentes penales previos al otorgamiento de la categoría de refugio, a quienes a pesar de ello la Comisión de Visas Restringidas y Refugio o el Tribunal Administrativo Migratorio, teniendo conocimiento de la existencia de tal condena, les otorgó la citada protección internacional"
+     }
+    ],
+    "implementation_then_now": "Recognised refugees and declared stateless persons can naturalise, and La Nación (2025) lists the stateless/stateless-refugee route as one in use. Access stays narrow because few claims are decided. La Prensa (July 2025) reports about 190,000 pending Nicaraguan claims against roughly 16,000 recognitions, with the DGME director putting decisions at two to three years. The backlog was already severe around 2022–23. I found no TSE figures on refugee naturalisations for either period, so I rate 'Sometimes' on both dates.",
+    "practice_sources": [
+     {
+      "title": "Más de 190 mil nicaragüenses han pedido refugio en Costa Rica; sólo 16 mil lo han obtenido (La Prensa)",
+      "url": "https://www.laprensani.com/2025/07/11/nacionales/3500103-mas-de-190-mil-nicaraguenses-han-pedido-refugio-en-costa-rica-solo-16-mil-lo-han-obtenido",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "¿Cómo se naturalizan los extranjeros en Costa Rica? (La Nación)",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 10508 was read as transcribed from the Gaceta facsimile; Const. art. 14 was read on SINALEVI. The TSE Reglamento (arts. 73–76) could not be read because the PDF parser was unavailable, and no amendment in the window was found. Practice data on refugee naturalisations specifically is missing.",
+    "sources_opened": [
+     {
+      "title": "Ley 10508 texto (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "Ley 1155 consolidated (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "La Prensa 2025 on Nicaraguan refugee claims",
+      "url": "https://www.laprensani.com/2025/07/11/nacionales/3500103-mas-de-190-mil-nicaraguenses-han-pedido-refugio-en-costa-rica-solo-16-mil-lo-han-obtenido"
+     },
+     {
+      "title": "La Nación 2025 naturalisation data",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/"
+     }
+    ],
+    "starting_answer_concern": "The citation's statement that refugee status counts as 'official residence' is still inferred; I could not read the Reglamento or the refugee article of Ley 8764.",
+    "confidence": "low",
+    "notes": "The 2022–2024 changes to the refugee regulations (Decrees 43809/43810, 44133, 44501) concern asylum seekers' work and exit rules, not the naturalisation pathway of recognised refugees, so they are not recorded as events here. 'Not the same' reflects the 10508 bar and exemptions; if the MRD treats only the binary pathway as the protection, the 'no change' option applies."
+   },
+   {
+    "question_id": 69,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 14(5) (Ley 7879 of 1999) and Art. 17 (Ley 7514 of 1995)",
+      "enacted": "1999-05-27 / 1995-06-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Reglamento de naturalizaciones, Decreto TSE 12-2012",
+      "article": "Arts. 4(j), 23–24, 36 ff.",
+      "enacted": "2012",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 11-B",
+      "enacted": "1991",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Opciones y Naturalizaciones, Ley N.º 1155",
+      "article": "Art. 15(4) (applies to all naturalisation, incl. by marriage)",
+      "enacted": "2024-08-28",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-28",
+      "instrument": "Ley N.º 10508, Reforma de los artículos 15 y 18 de la Ley 1155 (Alcance N.º 147 a La Gaceta N.º 158)",
+      "article": "Ley 1155 art. 15(4)",
+      "kind": "amended",
+      "what_changed": "Adds a new criminal-record bar to all naturalisations: intentional crime, more than 3 years' prison, last 10 years, in Costa Rica or abroad. Marriage-based applicants must have no art. 15 conviction, so the bar reaches them. The family routes in Const. arts. 14(5) and 17 are unchanged.",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/",
+      "passage": "Artículo 15- No se le otorgará la naturalización: (...) 4- A la persona que haya sido condenada con sentencia firme por delito doloso, en los últimos diez años, con pena privativa de libertad superior a tres años, en Costa Rica o en el extranjero"
+     }
+    ],
+    "implementation_then_now": "La Nación (2025) quotes the Registro Civil director: residence and marriage to a Costa Rican are the two main routes. Marriage needs only two years and the legal bond, with no exam. Total grants were 6,277 in 2023 and 5,541 in 2024, so the routes worked on both dates. Waiting times rose from about six months to over a year, up to 18 months, by 2025. The rating is 'Usually' on both dates.",
+    "practice_sources": [
+     {
+      "title": "¿Cómo se naturalizan los extranjeros en Costa Rica? (La Nación)",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Const. arts. 14(5) and 17 were read on SINALEVI, with no amendments after 1999. Ley 10508 was read via the Bufete transcription of the Gaceta. The TSE Reglamento PDF (arts. 23–24, 36 ff.) could not be read, and no 2023–2025 amendment was found. The 2022 Sala IV ruling on delay cited in the starting answer was not opened.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (SINALEVI)",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=871&strTipM=TC"
+     },
+     {
+      "title": "Ley 10508 texto (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/reforma-ley-de-opciones-y-naturalizaciones-en-costa-rica-10508/"
+     },
+     {
+      "title": "Ley 1155 consolidated (Bufete de Costa Rica)",
+      "url": "https://bufetedecostarica.com/ley-de-opciones-y-naturalizaciones-de-costa-rica-1155/"
+     },
+     {
+      "title": "La Nación 2025 naturalisation data",
+      "url": "https://www.nacion.com/el-pais/naturalizarse-para-huir-del-papeleo-el-costo/V6EDWLKJDBEZ5M43LKAH2HCNKI/story/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The family routes are untouched. 'Not the same' reflects only the general 10508 criminal-record bar entering into force on 28 Aug 2024. If the MRD reads the protection as the binary pathway, the 'no change' option applies."
+   }
+  ]
+ }
+}

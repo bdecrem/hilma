@@ -16,3 +16,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 12:09 | forward | personhood | claude-opus-5-5 | high | 4.92 | 31 | 25,984 | 2,106,875 | 1.97 | 21→23 | 36→37 | 63→63 | 22 | ok | `forward costa_rica personhood claude-opus-5-5 high` |
 | 2026-11-20 12:14 | forward | due_process | claude-opus-5-5 | high | 3.18 | 16 | 15,796 | 1,015,076 | 1.52 | 23→25 | 37→37 | 63→63 | 13 | ok | `forward costa_rica due_process claude-opus-5-5 high` |
 | 2026-11-20 12:17 | forward | expulsion_a | claude-opus-5-5 | high | 7.16 | 31 | 29,077 | 2,744,529 | 2.14 | 25→27 | 37→37 | 63→63 | 20 | ok | `forward costa_rica expulsion_a claude-opus-5-5 high` |
+| 2026-11-20 12:25 | forward | nationality_a | claude-opus-5-5 | high | 2.88 | 16 | 17,944 | 937,039 | 1.33 | 27→28 | 37→37 | 63→63 | 9 | ok | `forward costa_rica nationality_a claude-opus-5-5 high` |
