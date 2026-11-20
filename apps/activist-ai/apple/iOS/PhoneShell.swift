@@ -376,13 +376,31 @@ struct SettingsScreen: View {
     }
   }
 
-  var machineState: String {
+  /// The Cloud section's one line: "Connected as Bart", "Connecting…", or "Not connected" (with
+  /// the one reason a person can act on: Tailscale off on this phone).
+  var machineLine: String {
     switch cloud?.connection ?? .notSetUp {
-    case .open: return "Connected"
-    case .connecting: return "Connecting"
-    case .lost: return !PhoneWhere.tailscaleOn && !place.fixture ? "Tailscale is off on this phone" : "Not answering"
-    case .refused: return "Signed out"
-    case .notSetUp: return "Not signed in"
+    case .open:
+      let first = place.shownName.split(separator: " ").first.map(String.init) ?? place.shownName
+      return first.isEmpty ? "Connected" : "Connected as \(first)"
+    case .connecting: return "Connecting\u{2026}"
+    case .lost where !PhoneWhere.tailscaleOn && !place.fixture: return "Not connected. Turn on Tailscale on this phone."
+    case .lost, .refused, .notSetUp: return "Not connected"
+    }
+  }
+
+  var machineNeedsConnecting: Bool {
+    switch cloud?.connection ?? .notSetUp {
+    case .open, .connecting: return false
+    case .lost, .refused, .notSetUp: return true
+    }
+  }
+
+  var machineDot: Color {
+    switch cloud?.connection ?? .notSetUp {
+    case .open: return Ola.leaf
+    case .connecting: return Ola.lamp
+    case .lost, .refused, .notSetUp: return Ola.vermilion
     }
   }
 
@@ -391,8 +409,9 @@ struct SettingsScreen: View {
       // The setup of each runtime. Which one a session works in is chosen in New Session (OLA-143).
       Section {
         if cloudReady {
-          LabeledContent("Signed in as", value: place.shownName)
-          LabeledContent("Status", value: machineState)
+          // One status line, Connect Again only when not connected (OLA-210, as on the Mac).
+          Label { Text(machineLine) } icon: { Circle().fill(machineDot).frame(width: 8, height: 8) }
+          if machineNeedsConnecting { Button("Connect Again\u{2026}") { place.setup = .machine } }
           Button("Sign Out", role: .destructive) { signingOut = true }
         } else {
           Button("Sign In to the Ola Machine\u{2026}") { place.setup = .machine }

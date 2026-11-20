@@ -38,8 +38,13 @@ through its Mac). `OlaKit/Runtime.swift` has the words every screen uses.
 - **Both runtimes are live at once.** Each app holds two stores: the runtime on screen and the other
   one (`WhereOlaWorks.store/peer`, `PhoneWhereState.peer`). The session list has a section per
   runtime; opening a session of the other runtime brings it on screen (a swap, no restart).
-- **Settings keeps only the setup**: the machine's address and the folder on the Mac; the sign-in
-  and the pairing on the phone. No "Where Ola works" choice there any more.
+- **Settings keeps only the setup**: the folder on the Mac; the sign-in and the pairing on the
+  phone. No "Where Ola works" choice there any more.
+- **Cloud in Settings is one status line** (OLA-210, Bart: "it should just show status and
+  'connect again' if the status is Not Connected"): "Connected as Bart" or "Not connected", and
+  Connect Again… only when not connected. No address field and no Forget This Machine on the Mac
+  (the address is typed once in the connect sheet); the phone's Cloud section is the same line,
+  with its own Sign Out. Screens: `OLA_ONLY=settings-cloud tools/build.sh mac <dir>`.
 - **Lots of permissions is one switch per runtime.** Cloud: kept and applied on the machine
   (`../bart/approver.mjs`, through its phone door). Local: this Mac's (`ola.permissions`), used by
   the app, `ola` and the phone through this Mac. Every product shows the switch of each runtime.

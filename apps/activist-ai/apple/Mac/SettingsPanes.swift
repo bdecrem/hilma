@@ -131,23 +131,28 @@ struct SettingsView: View {
   /// The store holding the cloud runtime's sessions (on screen, or the other one).
   var cloudStore: OlaStore { whereOla?.store(.cloud) ?? store }
 
-  /// The cloud runtime's setup: the Ola machine's address and password.
+  /// The cloud runtime: one status line, and "Connect Again…" only when it is not connected
+  /// (OLA-210, Bart: "it should just show status and 'connect again' if the status is Not
+  /// Connected"). No address and no "Forget This Machine": the address is set up once in the
+  /// connect sheet, and signing out is Account's own control.
   var machine: some View {
     SettingsGroup(title: "Cloud: on the Ola machine") {
-      LabeledContent("Address") {
-        Text(cloudStore.config?.url.host() ?? "Not connected").foregroundStyle(.secondary)
-          .lineLimit(1).truncationMode(.middle).textSelection(.enabled).help(cloudStore.config?.url.absoluteString ?? "")
-      }
-      LabeledContent("Status") { StatusLine(kind: statusKind, text: statusText) }
-      HStack {
-        if cloudStore.config != nil { Button("Forget This Machine", role: .destructive) { cloudStore.forget(); Task { await whereOla?.apply() } } }
-        Spacer()
-        Button(cloudStore.config == nil ? "Set Up\u{2026}" : "Connect Again\u{2026}") { connecting = true }
+      HStack(alignment: .firstTextBaseline) {
+        StatusLine(kind: statusKind, text: statusText)
+        Spacer(minLength: Space.s)
+        if needsConnecting { Button("Connect Again\u{2026}") { connecting = true } }
       }
     }
   }
 
   static let snapshotSize = CGSize(width: width, height: 300)
+
+  var needsConnecting: Bool {
+    switch cloudStore.connection {
+    case .open, .connecting: false
+    case .lost, .refused, .notSetUp: true
+    }
+  }
 
   var statusKind: StatusLine.Kind {
     switch cloudStore.connection {
@@ -158,13 +163,14 @@ struct SettingsView: View {
     }
   }
 
+  /// The signed-in person's name, when this Mac knows it (never read from the Keychain to draw).
+  var personName: String? { (account?.name ?? AccountKeeper.name).flatMap { $0.isEmpty ? nil : $0 } }
+
   var statusText: String {
     switch cloudStore.connection {
-    case .open: "Connected"
-    case .connecting: "Connecting"
-    case .lost: "Not answering"
-    case .refused: "Password refused"
-    case .notSetUp: "Not set up"
+    case .open: personName.map { "Connected as \($0.split(separator: " ").first.map(String.init) ?? $0)" } ?? "Connected"
+    case .connecting: "Connecting\u{2026}"
+    case .lost, .refused, .notSetUp: "Not connected"
     }
   }
 }

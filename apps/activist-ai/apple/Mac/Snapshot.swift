@@ -45,6 +45,12 @@ enum Snapshot {
       let local = OlaStore(fixture: Fixture.named("results"))
       local.previewAs(.local)
       write(SnapshotFrame(store: cloud, treatment: chosen, peer: local).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: .aqua, to: dir.appendingPathComponent("mac-runtimes-sessions.png"), titled: false)
+      // The empty session in each runtime (OLA-207: where it works, and who else sees it).
+      for r in [Runtime.cloud, .local] {
+        let empty = OlaStore(fixture: Fixture.named("empty"))
+        empty.previewAs(r)
+        write(SnapshotFrame(store: empty, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1200, height: 760), appearance: .aqua, to: dir.appendingPathComponent("mac-runtimes-empty-\(r.rawValue).png"), titled: false)
+      }
       let states: [(String, [Runtime: String?])] = [
         ("mac-runtimes-chooser", [.cloud: nil, .local: nil]),
         ("mac-runtimes-chooser-local-not-set-up", [.cloud: nil, .local: "Choose the folder Ola works in first."]),
@@ -87,6 +93,22 @@ enum Snapshot {
       write(view.defaultAppStorage(defaults), size: SettingsView.snapshotSize, appearance: .aqua, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
     }
     defaults.removeObject(forKey: PermissionSettings.key)
+    // The Cloud group (OLA-210): one status line, Connect Again only when not connected.
+    for (state, fixture) in [("connected", "main"), ("not-connected", "unreachable")] {
+      for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+        let name = "mac-settings-cloud-\(state)-\(mode)"
+        guard only == nil || name.contains(only!) else { continue }
+        // The cloud on screen, so the cloud store is the fixture's.
+        defaults.set("machine", forKey: LocalSettings.modeKey)
+        defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+        let store = OlaStore(fixture: Fixture.named(fixture))
+        let account = AccountController(preview: .idle, name: "Bart Decrem")
+        // The fixture's store on both sides, so the Cloud group shows it whichever runtime is on screen.
+        var view = SettingsView(store: store, whereOla: WhereOlaWorks(store: store, peer: store, account: account), account: account, tokenKnown: true)
+        view.only = .general
+        write(view.defaultAppStorage(defaults), size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
+      }
+    }
     // Ola's skills in Settings (apple-shots/skills), light and dark, from the bundled skills' own
     // files when the app carries them, the states made up so every kind shows.
     let other = OlaSkills.Version(hash: "0123456789abcdef", commit: "fedcba9876543210")
