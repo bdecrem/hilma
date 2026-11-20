@@ -105,3 +105,7 @@
 .mrd .ck-item details ul { margin: 6px 0 0 18px; }
 .mrd .ck-item details p { margin-top: 8px; max-width: 80ch; }
 .mrd .ck-item > .note { margin-top: 12px; }
+
+/* what changed this week: /mrd/dossiers/changes — columns keep a readable width, the table scrolls inside its wrapper */
+.mrd .chg .md th, .mrd .chg .md td { min-width: 96px; }
+.mrd .chg .md td:nth-child(2), .mrd .chg .md td:nth-child(3) { min-width: 150px; }
