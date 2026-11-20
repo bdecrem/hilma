@@ -140,14 +140,18 @@ async function settleProblem(where, o) {
   }
   const toks = w.split(/\s+/)
   const file = (RUNNERS.has(toks[0]) ? toks.slice(1).find((t) => !t.startsWith('-') && !RUNNERS.has(t)) : toks[0]).replace(/[,;]$/, '').replace(/:\d+(-\d+)?$/, '')
+  // only pushed work counts (origin/main, fetched now), never a local commit (OLA-251, fifth pass)
+  try { execFileSync('git', ['-C', root, 'fetch', '--quiet', 'origin', 'main'], { stdio: 'ignore', timeout: 20000 }) } catch {}
   const log = (extra) => {
-    try { return execFileSync('git', ['-C', root, 'log', 'HEAD', 'origin/main', `--since=${o.since}`, '--format=%h', ...extra, '--', file], { encoding: 'utf8', timeout: 20000 }).trim() } catch { return '' }
+    try { return execFileSync('git', ['-C', root, 'log', 'origin/main', `--since=${o.since}`, '--format=%h %s', ...extra, '--', file], { encoding: 'utf8', timeout: 20000 }).trim() } catch { return '' }
   }
   if (!log([])) return `--where: ${file} has not been changed by any commit since the correction was recorded (${o.since}); a file settles an owed fix only when a commit after the correction changed it.`
   // OLA-251, fourth pass: and that commit is the owed fix's own work, naming its ticket; an unrelated commit
   // that happened to touch the file (runner.mjs by 036ed3fe for correction 103) settles nothing
   if (!o.issue) return `--where: this owed fix names no ticket, so no commit can be shown to be its work; settle it with a ticket closed with every check passed.`
-  const mine = log(['-E', `--grep=${o.issue}([^0-9]|$)`])
+  // the ticket is named in the subject's [OLA-n] tag, not anywhere in the body (4fcb6747 mentions "OLA-245 check #2")
+  const tag = new RegExp(`\\[(?:[^\\]]*[ ,])?${o.issue}(?:[ ,][^\\]]*)?\\]`)
+  const mine = log([]).split('\n').filter((l) => tag.test(l)).map((l) => l.split(' ')[0]).join('\n')
   if (!mine) return `--where: ${file} was changed since the correction, but by no commit naming ${o.issue}, the ticket that owes this fix. A file settles it only when ${o.issue}'s own commit changed it.`
   settledBy = mine.split('\n')[0]
   return null
@@ -266,6 +270,16 @@ if (cmd === 'add') {
   writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)
+  // OLA-251, fifth pass: a fix settled by another ticket is not the owed ticket's own work; whether that
+  // ticket really carries the fix is a judgment no script makes, so a person reads it in the overrides
+  if (!settledBy) {
+    const what = `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, not by ${o.issue}'s own commit: read whether it carries the fix`
+    if (process.env.VENTURE_PRIVATE && !process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the notes: not written to the real overrides; the line would be: ${what})`)
+    else {
+      const { writeOverride } = await import('./_overrides.mjs')
+      await writeOverride(await trackerDb(), { ticket: o.issue, what, tool: 'correct.mjs' })
+    }
+  }
   console.log(NEXT)
 } else if (cmd === 'at') {
   // OLA-258: an entry recorded later than Bart said it gets his time in its heading; the time it was recorded stays in the entry

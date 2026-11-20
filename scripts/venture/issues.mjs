@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 5
+export const TRACKER_VERSION = 6
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -293,6 +293,11 @@ async function claim(id, who, row = null, { gated = false } = {}) {
   laneFlag(r, a)
   const role = roleFor(who)
   const old = check(await db.from('venture_state').select('value, at').eq('key', key).maybeSingle(), 'claim')
+  // OLA-251, fifth pass: a live builder's or the runner's claim is not taken over by another caller, under any name or role
+  // (a session with no caller record renews only a claim made the same way, under its name, on its machine)
+  if (old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && LANE_ROLES.has(claimRole(old.value)) && !(me.id ? old.value?.caller === me.id : !old.value?.caller && old.value?.who === who && old.value?.host === hostname())) {
+    die(`Refused: ${id} is held by ${old.value?.who} (${claimRole(old.value)}${old.value?.lane ? ` in the ${old.value.lane} lane` : ''}), renewed ${Math.round((Date.now() - Date.parse(old.at)) / 60e3)} min ago, by another caller. A claim is taken over only after it ends (${CLAIM_TTL / 60e3} min after its last renewal) or is released by its holder.`)
+  }
   // a renewal keeps its start; the same name in a role that takes a lane, after one that took none, is a new start (OLA-251)
   const keep = old && Date.now() - Date.parse(old.at ?? 0) < CLAIM_TTL && old.value?.who === who && old.value?.since && (claimRole(old.value) === role || !LANE_ROLES.has(role))
   const lane = laneOf(r, a.lane)
@@ -310,8 +315,8 @@ async function release(id) {
 async function foreignClaim(id) {
   const cl = (await liveClaims())[id]
   if (!cl || !LANE_ROLES.has(claimRole(cl))) return null
-  const mine = (me.id && cl.caller === me.id) || (claimRole(cl) === 'runner' && process.env.VENTURE_RUNNER === '1' && cl.host === hostname())
-  return mine ? null : cl
+  // only the caller that made the claim; a name or an inherited setting (VENTURE_RUNNER) proves nothing
+  return me.id && cl.caller === me.id ? null : cl
 }
 async function releaseNoting(id, how) {
   const cl = await foreignClaim(id)
@@ -809,7 +814,7 @@ if (cmd === 'overrides') {
     if (now !== was) {
       const cl = (await liveClaims())[id]
       const leadHold = cl && claimRole(cl) === 'hold' && /^(lead|kit)$/i.test(String(cl.who).trim()) && (!cl.caller || cl.caller === me.id)
-      if (cl && !leadHold) die(`Refused: this ${f.area !== undefined ? 'area' : 'title'} moves ${id} from the ${was} lane to the ${now} lane, and ${id} is claimed by ${cl.who} (${claimRole(cl)}). A ticket's lane is not changed by whoever holds it; only the lead, holding it (issues.mjs claim ${id} --who lead), changes it.`)
+      if (cl && !leadHold) die(`Refused: this ${f.area !== undefined ? 'area' : 'title'} moves ${id} from the ${was} lane to the ${now} lane, and ${id} is claimed by ${cl.who} (${claimRole(cl)}). A ticket's lane is not changed while someone holds it; change it after the claim ends.`)
       await writeOverride(db, { ticket: id, what: `lane changed from ${was} to ${now} by an edit of its ${Object.keys(f).filter((k) => k === 'area' || k === 'title').join(' and ')}${leadHold ? " under the lead's hold" : ' (unclaimed)'}` })
     }
   }
