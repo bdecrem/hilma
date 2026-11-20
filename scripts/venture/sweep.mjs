@@ -22,11 +22,11 @@
 // the shape is Sweep in src/lib/venture/board.ts. Keep the posted file in
 // apps/venture/private/data/sweeps/<day>.json (private, backed up by sync.mjs).
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
-import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
+import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { openCounts } from './_plate.mjs'
 import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
@@ -171,6 +171,36 @@ const IDEA_MAX = 220 // characters of an idea's one sentence
 // one improvement made that day to the learning system itself (`learning`); the entry of `review`
 // carries the review (`learningReview`) and its ticket goes to Bart to keep or stop.
 const TRIAL = { from: '2026-11-19', to: '2026-11-25', review: '2026-11-26', issue: 'OLA-182' }
+const dayStart = (d) => {
+  const off = new Date(`${d}T12:00:00Z`).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' }).match(/GMT([+-]\d+)/)?.[1] ?? '-8'
+  return new Date(Date.parse(`${d}T00:00:00Z`) - Number(off) * 3600e3).toISOString()
+}
+/** The file or folder a cleaned item names: in the notes (VENTURE_PRIVATE or apps/venture/private), this checkout, or absolute. */
+function noteFile(where) {
+  const w = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;:]$/, '').replace(/^apps\/venture\/private\//, '')
+  if (!w) return null
+  for (const f of [priv(w), root + w, root + 'apps/venture/private/' + w, w]) if (f && existsSync(f) && (f.startsWith('/') || f.startsWith(root))) return f
+  return null
+}
+/** Was `where` a code file that a commit changed on that day? { ok, why }. */
+function codeChangedOn(where, d) {
+  const f = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;]$/, '').replace(/:\d+$/, '')
+  if (!f || /\.(md|txt)$/i.test(f)) return { ok: false, why: `where (${where ?? 'none'}) is not a code file` }
+  if (!existsSync(root + f)) return { ok: false, why: `where (${f}) is not a file in this checkout` }
+  const to = new Date(Date.parse(dayStart(d)) + 86400e3).toISOString()
+  const log = spawnSync('git', ['-C', root, 'log', 'origin/main', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%h', '--', f], { encoding: 'utf8' }).stdout.trim()
+  return log ? { ok: true, why: '' } : { ok: false, why: `no commit on main changed ${f} on ${d}` }
+}
+const quietCache = {}
+/** A day is quiet when its record holds no correction and no commit (OLA-260). */
+function quietDay(d) {
+  if (quietCache[d]) return quietCache[d]
+  const long = new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  const corr = readFileSync(priv('CORRECTIONS.md'), 'utf8').split(/^## (?=\d+\. )/m).slice(1).filter((p) => p.split('\n')[0].includes(long)).length
+  const to = new Date(Date.parse(dayStart(d)) + 86400e3).toISOString()
+  const commits = spawnSync('git', ['-C', root, 'log', '--all', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%h'], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean).length
+  return (quietCache[d] = { quiet: corr === 0 && commits === 0, why: `${corr} correction(s) and ${commits} commit(s) that day` })
+}
 function checkEntry(e) {
   const bad = []
   const known = new Set(loadWeaknesses(rootUrl).map((w) => w.id))
@@ -191,16 +221,29 @@ function checkEntry(e) {
   // removed, merged or corrected in the notes that day, checked against what really happened.
   const CLEAN = ['removed', 'merged', 'corrected']
   if (!Array.isArray(e.cleaned) || e.cleaned.some((c) => !CLEAN.includes(c.did) || !str(c.what) || !str(c.where))) bad.push(`cleaned: [{ did: ${CLEAN.map((x) => `"${x}"`).join(' | ')}, what: "what changed in the notes, and what in the day's record showed it was wrong, stale or a duplicate", where: "the file" }]`)
-  else if (!e.quiet && !e.cleaned.length) bad.push("cleaned is empty: the review removes, merges or corrects something in the notes every day (SWEEP.md, \"Clean the notes\"), or the day is quiet")
+  else {
+    if (!e.cleaned.length && !(e.quiet && quietDay(e.day).quiet)) bad.push(`cleaned is empty: the review removes, merges or corrects something in the notes every day (SWEEP.md, "Clean the notes")${e.quiet ? `; the day is not quiet by its record (${quietDay(e.day).why})` : ''}`)
+    // OLA-260: each cleaned item names a file (or, for a file removed whole, its folder) that exists and changed on or after that day
+    e.cleaned.forEach((c, n) => {
+      const f = noteFile(c.where)
+      if (!f) bad.push(`cleaned[${n}].where: "${c.where}" is no file or folder in the notes or this checkout (a file removed whole: name its folder)`)
+      else if (statSync(f).mtimeMs < Date.parse(dayStart(e.day))) bad.push(`cleaned[${n}].where: ${c.where} has not changed since before ${e.day}: nothing was cleaned there that day`)
+    })
+  }
+  // quiet is the day's record, not the author's word (OLA-260)
+  if (e.quiet && !quietDay(e.day).quiet) bad.push(`quiet: true, but ${e.day} was not quiet: ${quietDay(e.day).why}`)
   // OLA-245: the day's model shares and the stretches the lead could have handed to an Opus agent
   // (delegable.mjs --json, which the template fills in); an empty list of stretches is a finding too.
-  const mo = e.models
-  if (!mo || !Array.isArray(mo.shares) || !mo.shares.length || mo.shares.some((x) => !str(x.model) || typeof x.share !== 'number') || !str(mo.rule) || !Array.isArray(mo.stretches) || mo.stretches.some((x) => !str(x.at) || typeof x.calls !== 'number' || !str(x.what)))
-    bad.push(`models: { shares: [{ model, share }], rule, stretches: [{ at, calls, what }], note? }: the day's shares of the models and each stretch the lead did on Fable that an Opus agent could have done. Fill it from: node scripts/venture/delegable.mjs --day ${e.day} --json (on the machine the lead ran on)`)
+  // the entry's own models part is not used: sweep.mjs post counts it from the transcripts itself (OLA-245 check #2)
   // A written rule for a weakness that already has a fix is the fix that failed (correct.mjs): refused.
   const weakById = new Map(loadWeaknesses(rootUrl).map((w) => [w.id, w]))
   for (const side of ['kit', 'ola']) for (const [n, c] of (Array.isArray(e[side]) ? e[side] : []).entries()) {
-    const written = !c.enforced && (Number(c.level) === 1 || /\brules? \d+|RULES\.md|LESSONS\.md|a (new )?rule\b/i.test(`${c.where ?? ''} ${c.changed ?? ''}`))
+    // OLA-260: enforced: true is the code's, not the author's: a code file (not a note, not a .md) that a commit changed that day
+    const code = codeChangedOn(c.where, e.day)
+    if (c.enforced && !code.ok) bad.push(`${side}[${n}] says enforced: true, but ${code.why}. A change is enforced when code refuses or does it: name that file in where`)
+    const enforced = c.enforced && code.ok
+    // a written rule: level 1, a rule named, or any change whose where is a text file sessions read (RULES.md, SWEEP.md, CLAUDE.md, a skill, any .md)
+    const written = !enforced && (Number(c.level) === 1 || /\.md\b/i.test(c.where ?? '') || /\brules? \d+|RULES\.md|LESSONS\.md|CLAUDE\.md|SWEEP\.md|SKILL\.md|a (new )?rule\b/i.test(`${c.where ?? ''} ${c.changed ?? ''}`))
     const w = weakById.get(c.weakness)
     const before = (w?.guards ?? []).filter((g) => g.day < e.day)
     if (written && before.length) bad.push(`${side}[${n}] adds a written rule for "${w.name}", which already has a fix (strongest: kind ${Math.max(...before.map((g) => g.level ?? (g.enforced ? 3 : 1)))}): a rule of the same kind is what failed. Make the change stronger (correct.mjs: refused by code, checked by another, taken away) or, when none can be built yet, owe it with correct.mjs add --owed OLA-n`)
@@ -264,6 +307,19 @@ if (cmd === '--wait') {
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   const bad = checkEntry(e)
+  // OLA-245 check #2, OLA-261: the models part is counted here from the transcripts of every machine the
+  // lead ran on (delegable.mjs), never taken from the entry; what the author wrote there is ignored.
+  {
+    const del = spawnSync('node', [root + 'scripts/venture/delegable.mjs', '--day', e.day, '--json'], { encoding: 'utf8', maxBuffer: 16e6 })
+    const counted = del.status === 0 ? JSON.parse(del.stdout.trim().split('\n').pop()) : null
+    if (!counted) bad.push(`models: the count of the day's model use failed (${(del.stderr || del.stdout || '').trim().split('\n').pop()}); the entry is posted with the count, not without it`)
+    else {
+      const said = e.models
+      if (said && (JSON.stringify(said.shares) !== JSON.stringify(counted.shares) || (said.stretches ?? []).length !== counted.stretches.length)) console.log(`note: the entry's models part differs from the count (${(said.stretches ?? []).length} stretch(es) written, ${counted.stretches.length} counted); the count is stored`)
+      if (counted.missing?.length) console.log(`note: the count is missing ${counted.missing.join(', ')}; the entry says so on the page`)
+      e.models = counted
+    }
+  }
   // Rule 50 (Bart, Nov 18: "the learning agents need to treat every correction I make as an error the
   // agent made"): every correction written down is filed under a weakness, and the grader's count
   // of corrections in his messages (when it has graded the day) is not larger than what was written.
@@ -295,9 +351,10 @@ if (cmd === '--wait') {
   }
   if (bad.length) die(`the entry was not stored:\n- ${bad.join('\n- ')}`)
   if (args.includes('--dry')) (console.log(`--dry: the entry for ${e.day} passes every check; nothing was stored`), process.exit(0))
+  refuseOnCopy('posting the entry')
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}) } }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.
