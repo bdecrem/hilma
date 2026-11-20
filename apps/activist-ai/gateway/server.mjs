@@ -75,7 +75,7 @@ const SETTINGS = {
   // devices together. 0: the same as GATEWAY_WEEKLY_TOKENS.
   GATEWAY_PEOPLE_WEEKLY_TOKENS: [0, 0, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -160,6 +160,19 @@ function loadConfig(env) {
     })
   }
 
+  // GATEWAY_BACKUP_MODELS: "general=upstream id": when the model server keeps refusing a name
+  // (5xx after every try), the same request goes once to this model on the same server. Added
+  // 2026-11-19 (OLA-206): Together began refusing large prompts to Nemotron 3.5 Super with 503.
+  const backups = new Map()
+  for (const [i, pair] of (env.GATEWAY_BACKUP_MODELS || '').split(',').filter((x) => x.trim()).entries()) {
+    const at = pair.indexOf('=')
+    const name = pair.slice(0, at).trim()
+    const id = pair.slice(at + 1).trim()
+    if (!models.has(name)) { bad(`GATEWAY_BACKUP_MODELS entry ${i + 1}: ${name} is not in GATEWAY_MODELS`); continue }
+    if (!/^[\x21-\x7e]{1,200}$/.test(id)) { bad(`GATEWAY_BACKUP_MODELS entry ${i + 1} (${name}): the upstream id must be 1 to 200 printable characters`); continue }
+    backups.set(name, id)
+  }
+
   // The specialist names (specialists.mjs): each one's own server, key, limits and lane.
   const sp = specialistConfig(env, bad, { models, defaultBase: env.UPSTREAM_BASE_URL, defaultKey: key })
   for (const s of Object.values(sp.spec)) {
@@ -213,6 +226,7 @@ function loadConfig(env) {
   }
   return {
     upstream,
+    backups,
     key,
     tokens,
     tokensFile,
@@ -1088,6 +1102,12 @@ async function handle(req, res, rec, signal) {
     const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
     upstreamBody.messages = withInstructions(body.model, body.messages)
     out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(body.model) ?? null))
+    const backup = isHosted ? null : C.backups?.get(body.model)
+    if (out.status !== 200 && backup && /answered 5\d\d/.test(out.why || '')) {
+      upstreamBody.model = backup
+      rec.backup = backup
+      out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, targets.get(body.model) ?? null)
+    }
     rec.status = out.status
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
