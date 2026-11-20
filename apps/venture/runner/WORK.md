@@ -28,11 +28,16 @@ close it with proof. Nobody will answer a question in this run.
   `/mrd` for missing env, which is known and acceptable). A visual change gets screenshots you
   looked at (Playwright against a `next dev` on a free port), kept under `~/Desktop/Ola/` only on
   Bart's Macs, here under `~/Library/Logs/venture-runner/shots/`.
-- **Deploy Ola server code** after it is pushed: on this machine,
-  `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy --unsigned` (as every deploy so
-  far; no signing key is set up yet, and deploys.log records it). It runs the four suites and
-  switches only if all pass (OVERVIEW.md, "Deploy and operations"); a refused deploy is a failed
-  check: fix it or say on the ticket why not. The web app on Vercel deploys by
+- **Update the test server only through the gate** (OLA-272, Nov 20: five updates in two and a half
+  hours each held the mini's one test slot for twenty minutes, checkers and builders waited, and one
+  update changed the version under a checker mid-check). After Ola server code is pushed, mark the
+  ticket ready on its commit (`issues.mjs ready <id> --on <commit>`), then run
+  `node scripts/venture/runner.mjs deploy`. It starts `ola.mjs deploy --unsigned` only when a ready
+  ticket's commits are not live, the last update attempt is 45 minutes old (or a P0 waits), and no
+  checker has worked on the live server for 15 minutes; otherwise it prints one line why and exits 3.
+  On exit 3, go on to the next ticket: the next run (or a later one) updates the server. Never run
+  `ola.mjs deploy` yourself. A refused deploy (it runs the suites and switches only if all pass) is a
+  failed check: fix it or say on the ticket why not. The web app on Vercel deploys by
   itself from main. Mac and iPhone apps are built and installed by a terminal session on Bart's Mac:
   do the code and its checks here, and say on the ticket what is left to install.
 - **Before you start:** a ticket needs its checks written first: what Bart will do and what he
@@ -40,7 +45,7 @@ close it with proof. Nobody will answer a question in this run.
   refuses without them and prints the places). A ticket where nothing a person does or sees
   changes is marked `issues.mjs check <id> internal --why "…"` instead.
 - **Finish:** you do not close your own ticket (since 2026-11-20; `apps/venture/CHECKER.md` says
-  why). When it is built and live: `issues.mjs ready <id> --on "<release>"` and a comment in plain
+  why). When it is built (and, for server code, live once the gate let the update through; `issues.mjs say` shows a pass on an older release as such): `issues.mjs ready <id> --on "<commit or release>"` and a comment in plain
   words: what changed, how you tested it. Then start a checker: a subagent with a fresh context
   and the brief in `apps/venture/CHECKER.md`, which does each check on the live thing and records
   pass or fail. When every check has passed:

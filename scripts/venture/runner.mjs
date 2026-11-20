@@ -32,6 +32,9 @@
 //   node scripts/venture/runner.mjs tick --force "why"   an answer run now, whatever the state (a test, or by hand)
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
 //   node scripts/venture/runner.mjs replay          the nightly replay test now, as the night runs it (by hand, or to prove it)
+//   node scripts/venture/runner.mjs deploy [--dry]  update the test server, only when allowed (OLA-272): a ticket is ready
+//                                                   with server commits not live, 45 min since the last attempt (or a
+//                                                   P0 waits), no checker in the last 15 min; else one line why, exit 3
 //   --dry also takes --fake-session (as if a session's heartbeat were fresh), --fake-claim OLA-n,
 //   --fake-limit (as if the limit were reached until 2 am), to show the choices without changing anything.
 //
@@ -47,7 +50,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
-import { CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
+import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -398,12 +401,56 @@ async function decide(seen) {
   return { lim, live, issues, tickets, plate: p, choice }
 }
 
+// ------------------------------------------------------------------ updates of the test server (OLA-272)
+// `runner.mjs deploy [--dry]` is the only way a run updates the test server (WORK.md): it starts
+// ola.mjs deploy only when deployGate (_plate.mjs) allows it, and otherwise logs one line saying why.
+const STAGING = `${homedir()}/ola-staging`
+const onMini = existsSync(`${STAGING}/deploys.log`)
+function mini(command) {
+  if (onMini) return spawnSync('/bin/sh', ['-c', command], { encoding: 'utf8', timeout: 20000 }).stdout ?? ''
+  for (const h of ['admin@171.66.240.175', 'admin@100.95.51.98']) {
+    const r = spawnSync('ssh', ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes', h, command], { encoding: 'utf8', timeout: 25000 })
+    if (r.status === 0) return r.stdout
+  }
+  return null
+}
+async function deployFacts() {
+  const live = /([0-9a-f]{12})\s*$/.exec((mini('readlink ~/ola-staging/current') ?? '').trim())?.[1] ?? null
+  const lastLine = (mini('tail -1 ~/ola-staging/deploys.log') ?? '').trim()
+  const own = (await getState(db, 'runner_deploy'))?.value ?? null
+  const fromLog = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/.exec(lastLine)?.[1] ?? null
+  const lastAttempt = [fromLog, own?.at].filter(Boolean).sort().at(-1) ?? null
+  run('git', ['fetch', '--quiet', 'origin', 'main'])
+  const acc = (await db.from('venture_state').select('key, value').like('key', 'accept:%')).data ?? []
+  const ids = acc.filter((x) => x.value?.ready).map((x) => x.key.slice('accept:'.length))
+  const rows = ids.length ? (await db.from('venture_issues').select('id, priority, status').in('id', ids)).data ?? [] : []
+  const pending = []
+  for (const r of rows.filter((x) => x.status === 'in_progress')) {
+    const c = run('git', ['log', '-1', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--format=%H']).stdout.trim()
+    if (!c) continue
+    const files = run('git', ['log', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--name-only', '--format=']).stdout.split('\n').filter(Boolean)
+    if (!files.some(isServerFile)) continue // nothing of the server's code: no update needed for it
+    const inLive = live ? run('git', ['merge-base', '--is-ancestor', c, live]).status === 0 : false
+    if (!inLive) pending.push({ id: r.id, priority: r.priority, commit: c.slice(0, 8) })
+  }
+  const now = Date.now()
+  const checkerAt = []
+  for (const x of acc) for (const c of x.value?.checks ?? []) if (c.checked_at && now - Date.parse(c.checked_at) < CHECKER_QUIET) checkerAt.push({ id: x.key.slice(7), at: c.checked_at, what: `check #${c.n} ${c.result} on ${x.key.slice(7)} by ${c.by}` })
+  for (const [id, c] of Object.entries(await claims())) if (claimRole(c) === 'checker' && now - Date.parse(c.at) < CHECKER_QUIET) checkerAt.push({ id, at: c.at, what: `${c.who}'s claim on ${id} renewed` })
+  return { live, lastAttempt, lastLine, pending, checkerAt }
+}
+
 if (cmd === 'status') {
   const runner = (await getState(db, 'runner'))?.value ?? null
   const live = await claims()
   const limit = await limitState()
   const issues = await openIssues()
   console.log(leadLine(issues, { runner, claims: live, limit }).text)
+  {
+    const f = await deployFacts()
+    const g = deployGate(f)
+    console.log(`test server: ${f.live ?? 'release not read'}; last update attempt ${f.lastAttempt ? at(f.lastAttempt) : 'none on record'}; ${g.ok ? 'an update may start now' : `next allowed ${at(g.nextAllowed)} (${g.why})`}`)
+  }
   if (has('--long')) {
     const { session, why } = await look()
     console.log(`interactive session: ${session ? `${session.value.host}, heartbeat ${mins(age(session.at))}${age(session.at) < SESSION_FRESH ? ' (open: it answers texts and the board; the runner still works tickets)' : ''}` : 'none seen'}`)
@@ -412,6 +459,19 @@ if (cmd === 'status') {
     if (limit) console.log(`paused: ${limit.kind === 'error' ? 'a run failed to start' : 'the usage limit'} until ${at(limit.until)} (${limit.text})`)
     console.log(`to answer: ${why.length ? why.join('; ') : 'nothing'}`)
   }
+} else if (cmd === 'deploy') {
+  const f = await deployFacts()
+  const g = deployGate(f)
+  if (!g.ok) {
+    say(`skipped the update of the test server: ${g.why}; next allowed ${at(g.nextAllowed)}`)
+    process.exit(3)
+  }
+  say(`update of the test server${DRY ? ' would start' : ''}: ${g.why}`)
+  if (DRY) process.exit(0)
+  await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() })
+  const r = spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit' })
+  await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
+  process.exit(r.status ?? 1)
 } else if (cmd === 'probe') {
   const pulled = run('node', ['scripts/venture/sync.mjs', 'pull'])
   const res = await claude('Read apps/venture/private/RULES.md and apps/venture/private/NOW.md. Reply with exactly two lines: the number of rules in RULES.md, and the "Updated" line of NOW.md. Change nothing.', { readOnly: true, limit: 5 * MIN })
@@ -481,6 +541,6 @@ if (cmd === 'status') {
     break
   }
 } else {
-  console.error('usage: runner.mjs tick [--dry [--fake-session] [--fake-claim OLA-n] [--fake-limit] | --force "why"] | status [--long] | probe | replay')
+  console.error('usage: runner.mjs tick [--dry [--fake-session] [--fake-claim OLA-n] [--fake-limit] | --force "why"] | status [--long] | deploy [--dry] | probe | replay')
   process.exit(1)
 }
