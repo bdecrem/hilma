@@ -1,7 +1,7 @@
 // The automatic checks' decisions (OLA-84, ops/ci.mjs): node --test ops/ci-test.mjs. No git, no VM.
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { decide, ghStatus, opensIssue, parseDeploys, parseSuites } from './ci.mjs'
+import { coveredByDeploy, decide, ghStatus, opensIssue, parseDeploys, parseSuites } from './ci.mjs'
 
 const A = 'a'.repeat(40)
 const B = 'b'.repeat(40)
@@ -64,4 +64,13 @@ test('an issue opens when main goes from passing to failing, not on every failin
   assert.equal(opensIssue(fail, [fail, { commit: A, ok: false }]), false)
   assert.equal(opensIssue(fail, [fail, { commit: A, ok: null }, { commit: 'c', ok: true }]), true)
   assert.equal(opensIssue({ commit: B, ok: true }, []), false)
+})
+
+test('a check behind a passed deploy of its own commit takes the deploy suites plus its own apps run', () => {
+  const c = coveredByDeploy(LOG, A.slice(0, 12), { apps: '103 of 103' })
+  assert.deepEqual(c, { apps: '103 of 103', turn: '10 of 10', gateway: '47 of 47', workspace: '141 of 141', at: '2026-11-20T09:31:50.593Z' })
+  // A refused deploy, or none, is not taken: the check runs its suites.
+  assert.equal(coveredByDeploy(LOG, B.slice(0, 12), {}), null)
+  assert.equal(coveredByDeploy(LOG, 'c'.repeat(12), {}), null)
+  assert.match(ghStatus({ ok: true, by: 'check+deploy', suites: { apps: '1 of 1', web: '2 of 2' } }).description, /^3 of 3 checks passed \(apps here/)
 })

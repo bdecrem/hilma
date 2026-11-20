@@ -52,6 +52,21 @@ export function parseSuites(text) {
 }
 
 /**
+ * A check that waited for the turn behind a deploy of its own commit takes that deploy's result
+ * instead of running the same suites again (about 20 minutes): its own suites so far (the apps'
+ * swift test, which a deploy does not run) plus the deploy's. Only a passed deploy counts; a
+ * refused one is run again, since a refusal can be the machine (a restart that did not answer).
+ * Returns the merged suites, or null.
+ */
+export function coveredByDeploy(deploysText, commit12, ownSuites = {}) {
+  const d = parseDeploys(deploysText)[commit12]
+  if (!d?.ok) return null
+  const suites = parseSuites(d.suitesText)
+  if (!Object.keys(suites).length) return null
+  return { ...ownSuites, ...suites, at: d.at }
+}
+
+/**
  * What to do about the tip. Pure: every fact is passed in.
  *   runs      checks.json's runs (newest first)
  *   deploys   parseDeploys(deploys.log)
@@ -80,7 +95,7 @@ export function ghStatus(r) {
     const m = /^(\d+) of (\d+)$/.exec(v)
     return m ? [a[0] + Number(m[1]), a[1] + Number(m[2])] : a
   }, [0, 0])
-  const how = r.by === 'same' ? ` (no Ola change since ${r.same.slice(0, 8)})` : r.by === 'deploy' ? ' (at its deploy)' : ''
+  const how = r.by === 'same' ? ` (no Ola change since ${r.same.slice(0, 8)})` : r.by === 'deploy' ? ' (at its deploy)' : r.by === 'check+deploy' ? ' (apps here, the rest at its deploy)' : ''
   if (r.ok) return { state: 'success', description: `${n[1] ? `${n[0]} of ${n[1]} checks passed` : 'passed'}${how}`.slice(0, 140) }
   return { state: 'failure', description: `${r.why || 'failed'}${how}`.slice(0, 140) }
 }

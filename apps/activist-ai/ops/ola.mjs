@@ -680,6 +680,20 @@ async function deploy(ref, { unsigned = false, check = false } = {}) {
     if (!turn) return refuse('the turn for the suites was given up')
     process.on('exit', turn.release)
     say('turn: the check holds it')
+    // The turn was often held by a deploy of this same commit: a passed one already ran every
+    // suite but the apps', which this check just ran, so the check ends here with both.
+    const { coveredByDeploy } = await import('./ci.mjs')
+    const dl = path.join(STAGING, 'deploys.log')
+    const cov = existsSync(dl) && coveredByDeploy(readFileSync(dl, 'utf8'), short, suites)
+    if (cov) {
+      const { at, ...all } = cov
+      history(`passed ${short} (${ref}); ${Object.entries(all).map(([k, v]) => `${k} ${v}`).join(', ')} (suites but apps from the deploy at ${at})`)
+      say(`check passed ${short}: the deploy at ${at} ran the suites; apps ${suites.apps ?? 'not in this commit'} from this check`)
+      turn.release()
+      out.end()
+      rmSync(rel, { recursive: true, force: true })
+      return recordCheck({ commit, ok: true, suites: all, why: null, by: 'check+deploy', log: logFile })
+    }
   }
   say('workspace image: built if missing (node workspace/ws.mjs image --missing)')
   const img = await runLogged(NODE, ['workspace/ws.mjs', 'image', '--missing'], { cwd: code, out })
