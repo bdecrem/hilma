@@ -45,6 +45,7 @@
 //   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
 //   node scripts/venture/issues.mjs show <id>                                    the issue and its whole thread
 //   node scripts/venture/issues.mjs comment <id> "text" [--who kit]               Kit's reply on the issue's page
+//                                                     (a time in it, or in a --proof, more than 3 min later than the clock is refused: _clock.mjs, OLA-324)
 //   node scripts/venture/issues.mjs inbox [--mark]                               what Bart wrote on the board that Kit has not read
 //                                                                                (comments, edits, status changes, new issues);
 //                                                                                --mark marks the listed ones read ("seen by Kit")
@@ -79,6 +80,7 @@ import { CALLERS, LANE_ROLES, ROLES, caller, committers, roleOf } from './_who.m
 import { checkDeploys, overrideLine, overridesOf, writeOverride } from './_overrides.mjs'
 import { relative, resolve } from 'node:path'
 import { fakeClient } from './_fakedb.mjs'
+import { aheadLine, textAhead } from './_clock.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -594,6 +596,7 @@ if (cmd === 'overrides') {
   const id = normId(pos[0])
   const proof = one('proof')
   if (!proof || proof === true) die('done needs --proof "what proved it" (e.g. "402 checks", "his phone, by hand")')
+  if (textAhead(proof).length) die(aheadLine(textAhead(proof), 'the proof')) // OLA-324
   const r = await get(id)
   const byBart = /^\s*bart:/i.test(proof)
   if (!byBart) {
@@ -933,6 +936,8 @@ if (cmd === 'overrides') {
   const id = normId(pos[0])
   const text = pos.slice(1).join(' ').trim()
   if (!text) die('usage: issues.mjs comment <id> "text" [--who kit]')
+  // OLA-324: a time the comment states as past is not later than the clock (a plan, "until 7:00 am", is fine)
+  if (textAhead(text).length) die(aheadLine(textAhead(text), 'the comment'))
   await get(id)
   const now = new Date().toISOString()
   const r = await db.from('venture_issue_activity').insert({ issue_id: id, at: now, who: KIT(), via: 'cli', kind: 'comment', body: text, seen_by_kit_at: now })

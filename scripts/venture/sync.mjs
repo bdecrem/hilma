@@ -21,6 +21,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
+import { aheadLine, noteAhead } from './_clock.mjs'
 
 const root = new URL('../../', import.meta.url)
 const dir = new URL('apps/venture/private/', root)
@@ -155,6 +156,18 @@ if (cmd === 'push') {
     if (late.length) {
       console.error(`JOURNAL.md has a time later than the clock (${late.join(', ')}; it is ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })} Pacific). Read the time with \`date\` and correct it; nothing was pushed.`)
       process.exit(1)
+    }
+    // OLA-324 (Nov 20: log lines said 6:25 pm for work recorded at 6:09 pm): the typed write times of
+    // the log's headings, NOW.md's "updated" line and each handoff's first line are not ahead of the clock
+    const now = Date.now()
+    for (const f of ['LOG.md', 'NOW.md', ...readdirSync(dir).filter((x) => /^HANDOFF-.*\.md$/.test(x))]) {
+      const u = new URL(f, dir)
+      if (!existsSync(u)) continue
+      const found = noteAhead(f, readFileSync(u, 'utf8'), now)
+      if (found.length) {
+        console.error(`${aheadLine(found, f, now)} Nothing was pushed.`)
+        process.exit(1)
+      }
     }
   }
   // What the dashboard's Home shows Bart to act on comes from the journal: the check-in agenda
