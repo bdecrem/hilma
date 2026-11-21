@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile expulsion_a claude-opus-5-5 high",
- "pid": 50405,
  "step": "forward",
  "slug": "chile",
  "chunk": "expulsion_a",
@@ -59,5 +58,959 @@
   "user": 110
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:03:45.612Z",
+ "minutes": 37.76,
+ "meters_after": {
+  "at": "2026-11-21T03:03:45.612Z",
+  "window": {
+   "pct": 44,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 44,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 44% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 116817,
+   "output": 57296,
+   "cache_read": 2566584,
+   "cache_write": 155650,
+   "cost_usd": 2.8126,
+   "total": 2896347
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 116765,
+    "output": 9420,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2674,
+    "cost_usd": 0.0964
+   },
+   "claude-opus-5-5": {
+    "input": 52,
+    "output": 47876,
+    "cache_read": 2566584,
+    "cache_write": 155650,
+    "thinking": 10375,
+    "cost_usd": 2.7162
+   }
+  }
+ },
+ "turns": 41,
+ "calls": 69,
+ "duration_ms": 742932,
+ "duration_api_ms": 583060,
+ "pages_read": 28,
+ "pages": [
+  {
+   "at": "2026-11-21T02:26:05.882Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 88 | Artículo 89 | Artículo 90 | Artículo 10.- | non-refoulement | no devolución | Ley 21.655 | Versión",
+   "ok": true,
+   "chars": 6374
+  },
+  {
+   "at": "2026-11-21T02:26:21.397Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2023-08-18",
+   "find": "Artículo 88.- | Artículo 89.- | Artículo 90.- | Artículo 10.- | Artículo 131 | Artículo 32.-",
+   "ok": true,
+   "chars": 2234
+  },
+  {
+   "at": "2026-11-21T02:26:43.102Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 88.- | Artículo 89.- | Artículo 90.- | Artículo 10.- | Artículo 32.- | Artículo 131.- | Artículo 128",
+   "ok": true,
+   "chars": 12985
+  },
+  {
+   "at": "2026-11-21T02:26:55.601Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "5. Hayan sido condenados | Artículo 33.- | 4. No paguen las multas | no podrá invocar los beneficios | Pasajeros Infractores | contraviniendo la prohibición de ingreso del número 3",
+   "ok": true,
+   "chars": 9757
+  },
+  {
+   "at": "2026-11-21T02:27:02.393Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2023-01-01",
+   "find": "Artículo 88.- | 6. Se encuentren en el Registro | Las medidas de reconducción o reembarco serán | Artículo 132 | fechaVersion | Versión",
+   "ok": true,
+   "chars": 530
+  },
+  {
+   "at": "2026-11-21T02:27:40.115Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12&idParte=",
+   "find": "Artículo 88.- | Infractores | Las medidas de reconducción o reembarco serán",
+   "ok": true,
+   "chars": 3422
+  },
+  {
+   "at": "2026-11-21T02:27:50.568Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2024/02/20/43781/01/2456402.pdf",
+   "find": "artículo 131 | Artículo 2 | reconducción | no devolución | refugio",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:48:30.775Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "Artículo 2 | artículo 131 | 132 bis | reconducción | refugio | Artículo 1",
+   "ok": true,
+   "chars": 13759
+  },
+  {
+   "at": "2026-11-21T02:49:11.398Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435",
+   "find": "Artículo 2º.- | Artículo 3º | Artículo 4º.- | No Devolución | llegan directamente | Tipo Versión",
+   "ok": true,
+   "chars": 4844
+  },
+  {
+   "at": "2026-11-21T02:49:25.922Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435",
+   "find": "Aquellos solicitantes de la condición de refugiado que no hubieran | Artículo 2°.- | 1. Quienes",
+   "ok": true,
+   "chars": 4244
+  },
+  {
+   "at": "2026-11-21T02:49:26.940Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Las medidas de reconducción o reembarco serán | Artículo 132 bis | Artículo 132.- | Ley 21655 | Ley 21610",
+   "ok": true,
+   "chars": 5822
+  },
+  {
+   "at": "2026-11-21T02:49:31.546Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325 | artículo 88 | Registro de Pasajeros Infractores | vigencia | Publicación",
+   "ok": true,
+   "chars": 4674
+  },
+  {
+   "at": "2026-11-21T02:49:32.646Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "21.325 | artículo 32 | artículo 88 | artículo 89 | artículo 90 | Publicación",
+   "ok": true,
+   "chars": 4975
+  },
+  {
+   "at": "2026-11-21T02:49:33.519Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "21.325 | artículo 32 | artículo 88 | artículo 89 | artículo 90 | Publicación",
+   "ok": true,
+   "chars": 2481
+  },
+  {
+   "at": "2026-11-21T02:50:05.203Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21816",
+   "find": "21.325 | artículo 88 | Pasajeros Infractores | Publicación",
+   "ok": true,
+   "chars": 8348
+  },
+  {
+   "at": "2026-11-21T02:50:26.964Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21816",
+   "find": "Migración y Extranjería | numeral 6 | Artículo 3.- | Artículo 4.-",
+   "ok": true,
+   "chars": 2417
+  },
+  {
+   "at": "2026-11-21T02:50:43.075Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325 | Publicación | entrará en vigencia",
+   "ok": true,
+   "chars": 3966
+  },
+  {
+   "at": "2026-11-21T02:51:26.900Z",
+   "url": "https://derechoshumanos.udp.cl/cms/wp-content/uploads/2025/11/INFORME-ANUAL-DDHH-UDP-2025-CAP-11.pdf",
+   "find": "reconducci | no devolución | refugio | expulsi | revocaci",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:51:28.397Z",
+   "url": "https://upr-info.org/sites/default/files/country-document/2025-12/UNCT_Chile_UPR46_CHL_S_Main_Rev.pdf",
+   "find": "no devolución | non-refoulement | reconducci | refugio | refugee | expuls",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:51:34.350Z",
+   "url": "https://www.hrw.org/world-report/2023/country-chapters/chile",
+   "find": "Migrants | refugee | expel | expulsion | Venezuel",
+   "ok": true,
+   "chars": 6404
+  },
+  {
+   "at": "2026-11-21T02:51:35.509Z",
+   "url": "https://www.amnesty.org/en/location/americas/south-america/chile/report-chile/",
+   "find": "migra | refugee | expul | asylum | Migrants",
+   "ok": true,
+   "chars": 4472
+  },
+  {
+   "at": "2026-11-21T02:51:36.283Z",
+   "url": "https://www.hrw.org/world-report/2026/country-chapters/chile",
+   "find": "Migrants | refugee | expel | expulsion | asylum",
+   "ok": true,
+   "chars": 1782
+  },
+  {
+   "at": "2026-11-21T02:52:28.407Z",
+   "url": "https://www.hrw.org/world-report/2025/country-chapters/chile",
+   "find": "Migrants | refugee | expel | expulsion | asylum | Venezuel",
+   "ok": true,
+   "chars": 1794
+  },
+  {
+   "at": "2026-11-21T02:52:28.554Z",
+   "url": "https://www.ecoi.net/de/dokument/2124708.html",
+   "find": "migra | refugee | expul | asylum | border",
+   "ok": true,
+   "chars": 5595
+  },
+  {
+   "at": "2026-11-21T02:52:53.992Z",
+   "url": "https://www.ciperchile.cl/2026/09/23/entre-enero-y-agosto-se-detectaron-286-extranjeros-cruzando-ilegalmente-la-frontera-norte-93-menos-que-en-igual-periodo-de-2025/",
+   "find": "reconducciones | refugio | 2025 | Bolivia",
+   "ok": true,
+   "chars": 5616
+  },
+  {
+   "at": "2026-11-21T02:53:09.348Z",
+   "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/89538",
+   "find": "refugio | protocolo | Servicio Nacional de Migraciones | no devolución",
+   "ok": true,
+   "chars": 5445
+  },
+  {
+   "at": "2026-11-21T02:53:11.659Z",
+   "url": "https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html",
+   "find": "expulsion | asylum | refugee | 21 655 | reconduction",
+   "ok": true,
+   "chars": 5538
+  },
+  {
+   "at": "2026-11-21T02:53:27.695Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1229250",
+   "find": "21.325 | Publicación | artículo 88 | artículo 90 | faltas",
+   "ok": true,
+   "chars": 2155
+  }
+ ],
+ "searches": [
+  "Ley 21.655 modifica ley 21.325 reconducción ley 20.430 publicada Diario Oficial 2024",
+  "\"21.325\" modificación vigencia \"1 de abril de 2025\" ley migración extranjería artículo",
+  "Chile reconducciones frontera solicitantes de refugio no devolución informe 2024 INDH OR ACNUR OR Amnistía",
+  "Human Rights Watch World Report 2025 Chile migrants expulsions refugee",
+  "Corte Suprema Chile 2023 amparo reconducción extranjeros Colchane principio de no devolución sentencia",
+  "Committee on Migrant Workers concluding observations Chile 2023 reconducción non-refoulement CMW/C/CHL/CO/2",
+  "reconducciones 2024 2025 cifras frontera norte Chile migrantes devueltos Bolivia Perú solicitantes refugio Corte Suprema amparo acoge",
+  "Corte Suprema acoge amparo reconducción \"intención de solicitar refugio\" 2024 OR 2025 Colchane PDI"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":47,\"answer_2023\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migracion y Extranjeria\",\"article\":\"Arts. 88, 89, 90\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migracion y Extranjeria\",\"article\":\"Arts. 32, 33 (incorporated by Arts. 88-90)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"The protection answer is the lowest option, so implementation is Does Not Apply on both dates. For context: HRW (World Report 2023) reports the Migration Service continued deporting people with criminal records. The OECD International Migration Outlook 2025 reports 1,100 expulsions in 2024 (690 administrative, 410 judicial for crimes), the most administrative expulsions in seven years.\",\"practice_sources\":[{\"title\":\"Human Rights Watch, World Report 2023 - Chile\",\"url\":\"https://www.hrw.org/world-report/2023/country-chapters/chile\",\"year\":2023,\"shows\":\"practice\",\"groups\":[\"all_migrants\"],\"period\":\"before_2023\"},{\"title\":\"OECD International Migration Outlook 2025 - Chile\",\"url\":\"https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html\",\"year\":2025,\"shows\":\"practice\",\"groups\":[\"all_migrants\"],\"period\":\"2023_2026\"}],\"past_versions\":\"reconstructed_from_amending_acts\",\"sourcing_note\":\"I read the LeyChile version table for Ley 21.325 (amendments by Leyes 21.590, 21.589, 21.610, 21.655, 21.730, 21.816) and each amending act. None touched Arts. 32, 33 or 88-90 before 1 Jan 2026. The 2023 text is rebuilt from the current conso",
+ "output": {
+  "answers": [
+   {
+    "question_id": 47,
+    "answer_2023": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Arts. 88, 89, 90",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Arts. 32, 33 (incorporated by Arts. 88-90)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is the lowest option, so implementation is Does Not Apply on both dates. For context: HRW (World Report 2023) reports the Migration Service continued deporting people with criminal records. The OECD International Migration Outlook 2025 reports 1,100 expulsions in 2024 (690 administrative, 410 judicial for crimes), the most administrative expulsions in seven years.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch, World Report 2023 - Chile",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/chile",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "OECD International Migration Outlook 2025 - Chile",
+      "url": "https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the LeyChile version table for Ley 21.325 (amendments by Leyes 21.590, 21.589, 21.610, 21.655, 21.730, 21.816) and each amending act. None touched Arts. 32, 33 or 88-90 before 1 Jan 2026. The 2023 text is rebuilt from the current consolidated text plus those acts, because the versioned text would not load.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Ley 21.325 (version table)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile XML - Ley 21.325 consolidated text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Ley 21.816",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21816"
+     },
+     {
+      "title": "HRW World Report 2023 Chile",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/chile"
+     },
+     {
+      "title": "OECD IMO 2025 Chile",
+      "url": "https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html"
+     }
+    ],
+    "starting_answer_concern": "Partly debatable. Art. 89 (through Art. 32 Nos. 5-6) and Art. 90 (through Art. 33) tie revocation to crimes and misdemeanours (crimen o simple delito). Administrative sanctions count only indirectly: Art. 90 No. 4 (unpaid fines for serious migration infractions) and Art. 88 No. 5 (repeated tax or social-security sanctions). A coder could also defend 'only major convictions'. Since 2 June 2026, Ley 21.816 Art. 3 added Art. 88 No. 6: rejection for being on the fare-evasion register, a minor administrative sanction. That supports the starting answer for November 2026.",
+    "confidence": "medium",
+    "notes": "Ley 21.816 (published and in force 2026-06-02) added Art. 88 No. 6 to Ley 21.325: 'Se encuentren en el Registro de Pasajeros Infractores de la ley N 18.287'. It is outside the window and is not recorded as an event. Ley 21.730 (in force 2025-04-01, creates the Ministerio de Seguridad Publica) is institutional only."
+   },
+   {
+    "question_id": 49,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430 sobre proteccion de refugiados",
+      "article": "Art. 4",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 10 (proteccion complementaria)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N 21.655",
+      "article": "Ley 20.430 new Art. 28 bis; Ley 21.325 Art. 131 inciso 2",
+      "kind": "amended",
+      "what_changed": "Added an initial admissibility stage for refugee claims. Non-refoulement under Art. 4 applies during that stage. Border return (reconduccion) was widened to people found up to 10 km inside the border. The torture/CIDT clause of Art. 4 is untouched and still covers only asylum seekers and refugees, so the answer stays No.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Durante esta etapa inicial se dara cumplimiento al principio de no devolucion, de conformidad con lo dispuesto en el articulo 4."
+     }
+    ],
+    "implementation_then_now": "Does Not Apply on both dates, because the answer is No. Border returns (reconducciones) without a protection assessment continued: CIPER reports 5,053 in 2025, mainly at Colchane.",
+    "practice_sources": [
+     {
+      "title": "CIPER: frontera norte y reconducciones",
+      "url": "https://www.ciperchile.cl/2026/09/23/entre-enero-y-agosto-se-detectaron-286-extranjeros-cruzando-ilegalmente-la-frontera-norte-93-menos-que-en-igual-periodo-de-2025/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The Ley 20.430 version table shows only the 2022 and 2024 (Ley 21.655) versions. The current Art. 4 carries no amendment note. I read Ley 21.655 in full.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Ley 20.430",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile XML - Ley 21.325",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "CIPER 2026",
+      "url": "https://www.ciperchile.cl/2026/09/23/entre-enero-y-agosto-se-detectaron-286-extranjeros-cruzando-ilegalmente-la-frontera-norte-93-menos-que-en-igual-periodo-de-2025/"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.430 Art. 4 inciso 2 expressly extends non-refoulement to cases where there are substantial grounds to believe the person would face torture or cruel, inhuman or degrading treatment. It covers asylum seekers as well as recognized refugees. q51 is coded Yes on the same article, and the Peru and Colombia examples were coded Yes on refugee-law provisions, so this No looks inconsistent.",
+    "confidence": "medium",
+    "notes": "No ruling in the window states a general rule extending the protection to all migrants."
+   },
+   {
+    "question_id": 51,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 2 (No. 1)",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 4",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N 21.655",
+      "article": "Ley 20.430 Art. 2 (new final inciso)",
+      "kind": "amended",
+      "what_changed": "Recognition under Art. 2 Nos. 1 and 2 now requires direct arrival (no more than 60 days in a third country). Ley 21.655 also added a 7-day filing deadline, an inadmissibility stage for manifestly unfounded claims (non-refoulement applies during it), and wider border returns under Art. 131 of Ley 21.325. The Art. 4 ban is unchanged.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Solo tendran derecho a que se les reconozca la calidad de refugiado de conformidad con los numerales 1 y 2 quienes lleguen directamente desde el territorio en que su vida o libertad este amenazada."
+     }
+    ],
+    "implementation_then_now": "2023: in Rol 115.005-2022 (March 2023) the Supreme Court found the Migration Service systematically refused to receive refugee claims from people who entered irregularly, and ordered a protocol. HRW reports 701 of about 22,000 claims granted between 2010 and 2021. 2026: the OECD reports 6% positive decisions in 2024, and CIPER reports 5,053 border returns in 2025. Neither source shows expulsions of people already in the procedure. Access barriers persist and stricter admissibility rules apply from 2024. No clear shift in practice.",
+    "practice_sources": [
+     {
+      "title": "Poder Judicial: Corte Suprema ordena protocolo solicitudes de refugio (Rol 115.005-2022)",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/89538",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "HRW World Report 2023 Chile",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/chile",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "OECD IMO 2025 Chile",
+      "url": "https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "CIPER reconducciones",
+      "url": "https://www.ciperchile.cl/2026/09/23/entre-enero-y-agosto-se-detectaron-286-extranjeros-cruzando-ilegalmente-la-frontera-norte-93-menos-que-en-igual-periodo-de-2025/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Amnesty International, Chile 2024",
+      "url": "https://www.ecoi.net/de/dokument/2124708.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The amendment is dated from the LeyChile annotation 'Ley 21655 Art. 1 N 1 D.O. 20.02.2024' and from the act itself. The practice evidence is indirect: I found no 2024-2025 report directly documenting returns of asylum seekers to persecution. PDFs (UPR, CMW, UDP) could not be read.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Ley 20.430",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "PJUD Rol 115.005-2022",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/89538"
+     },
+     {
+      "title": "HRW 2023",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/chile"
+     },
+     {
+      "title": "OECD 2025",
+      "url": "https://www.oecd.org/en/publications/international-migration-outlook-2025_ae26c893-en/full-report/chile_9137fa94.html"
+     },
+     {
+      "title": "Amnesty 2024",
+      "url": "https://www.ecoi.net/de/dokument/2124708.html"
+     },
+     {
+      "title": "Amnesty 2025",
+      "url": "https://www.amnesty.org/en/location/americas/south-america/chile/report-chile/"
+     }
+    ],
+    "starting_answer_concern": "The starting rating 'Usually; Rarely' pairs non-neighbouring levels: likely Usually for people inside the procedure and Rarely at the border. The schema cannot express it, so Sometimes is entered as the closest single value.",
+    "confidence": "medium",
+    "notes": "The Supreme Court ruling was read only through a Poder Judicial press note, so it is used as practice evidence only."
+   },
+   {
+    "question_id": 53,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 2 (No. 2)",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 4",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N 21.655",
+      "article": "Ley 20.430 Art. 2 (new final inciso)",
+      "kind": "amended",
+      "what_changed": "Recognition on the broadened ground (Art. 2 No. 2: generalized violence, massive human-rights violations) now requires direct arrival. The protection remains limited to asylum seekers and refugees, so the answer stays No.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Solo tendran derecho a que se les reconozca la calidad de refugiado de conformidad con los numerales 1 y 2 quienes lleguen directamente desde el territorio en que su vida o libertad este amenazada."
+     }
+    ],
+    "implementation_then_now": "Does Not Apply on both dates, because the answer is No. Border returns without protection screening continued (CIPER: 5,053 in 2025).",
+    "practice_sources": [
+     {
+      "title": "CIPER reconducciones",
+      "url": "https://www.ciperchile.cl/2026/09/23/entre-enero-y-agosto-se-detectaron-286-extranjeros-cruzando-ilegalmente-la-frontera-norte-93-menos-que-en-igual-periodo-de-2025/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The version table of Ley 20.430 and Ley 21.655 were both read. Art. 4 is unchanged.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Ley 20.430",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile XML - Ley 21.325",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.430 Art. 4 bars return where 'estuviere en peligro la seguridad de la persona' and has authorities weigh mass human-rights violations. Ley 21.325 Art. 10 bars returning holders of complementary protection to a risk to life or integrity. Both cover only protection-seekers, but the MRD coded Peru Yes on comparable refugee-law provisions, so this No looks inconsistent.",
+    "confidence": "medium",
+    "notes": null
+   }
+  ]
+ }
 }
