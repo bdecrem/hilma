@@ -32,3 +32,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 13:12 | back | expulsion_b | claude-opus-5-5 | medium | 2 |  | 0 | 0 | 0.00 | 60→66 | 40→40 | 65→66 | 5 | stopped | `back costa_rica expulsion_b claude-opus-5-5 medium` |
 | 2026-11-20 16:13 | forward | vulnerable · argentina | claude-opus-5-5 | high | 47.8 | 27 | 22,500 | 1,814,022 | 1.67 | 6→11 | 44→44 | 67→67 | 18 | ok | `forward argentina vulnerable claude-opus-5-5 high` |
 | 2026-11-20 16:13 | forward | vulnerable · chile | claude-opus-5-5 | high | 47.79 | 30 | 26,917 | 1,881,120 | 1.72 | 6→11 | 44→44 | 67→67 | 18 | ok | `forward chile vulnerable claude-opus-5-5 high` |
+| 2026-11-20 17:03 | forward | life · argentina | claude-opus-5-5 | high | 13.76 | 18 | 12,525 | 1,004,526 | 1.12 | 11→13 | 44→44 | 67→67 | 12 | ok | `forward argentina life claude-opus-5-5 high` |

@@ -1,0 +1,504 @@
+{
+ "status": "ok",
+ "job_id": "forward argentina life claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "argentina",
+ "chunk": "life",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2023 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  9,
+  11,
+  13
+ ],
+ "started_at": "2026-11-21T01:03:13.986Z",
+ "meters_before": {
+  "at": "2026-11-21T01:03:07.701Z",
+  "window": {
+   "pct": 11,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 44,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 11,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 44,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 11% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 44% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "prompt_chars": {
+  "system": 22877,
+  "user": 108
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:16:59.387Z",
+ "minutes": 13.76,
+ "meters_after": {
+  "at": "2026-11-21T01:16:59.387Z",
+  "window": {
+   "pct": 13,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 44,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 13,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 44,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 13% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 44% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 25011,
+   "output": 12525,
+   "cache_read": 875913,
+   "cache_write": 91077,
+   "cost_usd": 1.1234,
+   "total": 1004526
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 24985,
+    "output": 2232,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1295,
+    "cost_usd": 0.0136
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 10293,
+    "cache_read": 875913,
+    "cache_write": 91077,
+    "thinking": 2769,
+    "cost_usd": 1.1098
+   }
+  }
+ },
+ "turns": 18,
+ "calls": 29,
+ "duration_ms": 234791,
+ "duration_api_ms": 197920,
+ "pages_read": 12,
+ "pages": [
+  {
+   "at": "2026-11-21T01:03:25.920Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/325899/20250529",
+   "find": "ARTÍCULO 35 | rechazo en frontera | trata | tráfico | fuerza | ARTÍCULO 116",
+   "ok": true,
+   "chars": 1376
+  },
+  {
+   "at": "2026-11-21T01:03:28.547Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/texact.htm",
+   "find": "ARTICULO 5 | No punibilidad",
+   "ok": true,
+   "chars": 2251
+  },
+  {
+   "at": "2026-11-21T01:03:39.404Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=140100",
+   "find": null,
+   "ok": true,
+   "chars": 4359
+  },
+  {
+   "at": "2026-11-21T01:03:41.234Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 35 | ARTICULO 107 | ARTICULO 116 | ARTICULO 117 | Decreto 366",
+   "ok": true,
+   "chars": 8245
+  },
+  {
+   "at": "2026-11-21T01:03:46.595Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "fuerza pública | e) que se encuentre comprendido | uso de la fuerza | ARTICULO 113",
+   "ok": true,
+   "chars": 7848
+  },
+  {
+   "at": "2026-11-21T01:10:24.063Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/304736/1",
+   "find": "Resolución 125 | fuga | ARTÍCULO 1 | peligro inminente | Gendarmería",
+   "ok": true,
+   "chars": 6610
+  },
+  {
+   "at": "2026-11-21T01:10:25.812Z",
+   "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 10 | ARTÍCULO 11 | Vigencia | ARTÍCULO 32",
+   "ok": true,
+   "chars": 6468
+  },
+  {
+   "at": "2026-11-21T01:10:32.083Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+   "find": "penaliz | unlawful acts | non-punishment | inappropriately",
+   "ok": true,
+   "chars": 2238
+  },
+  {
+   "at": "2026-11-21T01:10:35.063Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+   "find": "punish | legal alternatives | removal | foreign victims | prosecuted",
+   "ok": true,
+   "chars": 5468
+  },
+  {
+   "at": "2026-11-21T01:14:16.981Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 35 | reconducción",
+   "ok": true,
+   "chars": 616
+  },
+  {
+   "at": "2026-11-21T01:15:05.423Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 35 | reconducción",
+   "ok": true,
+   "chars": 3450
+  },
+  {
+   "at": "2026-11-21T01:16:15.647Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": "2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 2085
+  }
+ ],
+ "searches": [
+  "DNU 366/2025 migraciones Congreso rechazo comisión bicameral judicial inconstitucionalidad",
+  "Resolución Ministerio de Seguridad 2024 reglamento empleo armas de fuego fuerzas federales 956/2018 restablece",
+  "\"Resolución 125/2024\" Ministerio de Seguridad boletinoficial.gob.ar empleo de las armas",
+  "Decreto 366/2025 migraciones rechazado Diputados Senado o vigente amparo CELS"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":9,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Arts. 18, 25\",\"enacted\":\"1853\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Arts. 107 ff. (Policía Migratoria Auxiliar, arts. 113-114); arts. 34, 35, 37 (entry and border rejection)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Decreto 616/2010\",\"article\":\"Art. 35\",\"enacted\":\"2010-05-06\",\"history_read\":\"amending_acts\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia 366/2025\",\"article\":\"Ley 25.871 arts. 34, 35, 37 (substituted by DNU arts. 9, 10, 11) and art. 114 (substituted by DNU art. 32)\",\"kind\":\"amended\",\"what_changed\":\"The DNU makes border rejection mandatory and immediate ('procederá al inmediato rechazo en frontera') on wider grounds. It adds summary rejection of irregular entrants caught in flagrante, defined to include a person 'perseguida por la fuerza pública', and it updates the list of forces in the Policía Migratoria Auxiliar. Nothing in it prohibits, or expressly regulates, the use of force to prevent entry, so the answer stays No.\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm\",\"passage\":\"ARTICULO 35. — La DIRECCIÓN NACIONAL DE MIGRACIONES procederá al inmediato rechazo en frontera e impedirá el ingreso al territorio nacional a todo extranjero: ... d) cuyo ingreso irregular sea advertido al momento de realizarse o inmediatamente después; ... (Artículo sustituido por art. 10 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)\"},{\"date\":\"2024-03-14\",\"instrument\":\"Resolución 125/2024 del Ministerio",
+ "output": {
+  "answers": [
+   {
+    "question_id": 9,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 18, 25",
+      "enacted": "1853",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 107 ff. (Policía Migratoria Auxiliar, arts. 113-114); arts. 34, 35, 37 (entry and border rejection)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 35",
+      "enacted": "2010-05-06",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Ley 25.871 arts. 34, 35, 37 (substituted by DNU arts. 9, 10, 11) and art. 114 (substituted by DNU art. 32)",
+      "kind": "amended",
+      "what_changed": "The DNU makes border rejection mandatory and immediate ('procederá al inmediato rechazo en frontera') on wider grounds. It adds summary rejection of irregular entrants caught in flagrante, defined to include a person 'perseguida por la fuerza pública', and it updates the list of forces in the Policía Migratoria Auxiliar. Nothing in it prohibits, or expressly regulates, the use of force to prevent entry, so the answer stays No.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 35. — La DIRECCIÓN NACIONAL DE MIGRACIONES procederá al inmediato rechazo en frontera e impedirá el ingreso al territorio nacional a todo extranjero: ... d) cuyo ingreso irregular sea advertido al momento de realizarse o inmediatamente después; ... (Artículo sustituido por art. 10 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2024-03-14",
+      "instrument": "Resolución 125/2024 del Ministerio de Seguridad (RESOL-2024-125-APN-MSG)",
+      "article": "Arts. 1-3 (Reglamento General para el Empleo de las Armas por parte de los Miembros de las Fuerzas Federales de Seguridad)",
+      "kind": "new_instrument",
+      "what_changed": "This is a new general rule on the use of weapons by the federal forces, including Gendarmería and Prefectura, which do border work. It says weapons are to be used only when 'estrictamente necesario' and lists when firearms may be used. It has no rule on preventing migrants from entering, so it does not create the protection.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/304736/1",
+      "passage": "Sólo deberán usar las armas en cumplimiento de sus deberes cuando ello sea estrictamente necesario y en la medida que lo requiera el desempeño de sus tareas."
+     }
+    ],
+    "implementation_then_now": "The protection answer is No on both dates, so implementation is Does Not Apply on both. I found no documented reports of force used against migrants at Argentina's borders in either period. The 2025 decree moved the law towards immediate, summary border rejection, but that is a change in the law, not evidence of how force is used in practice.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read InfoLEG's consolidated Ley 25.871, which carries notes for each amendment, and the DNU 366/2025 text on argentina.gob.ar. The list of acts amending Decreto 616/2010 shows nothing in the window touching art. 35. I did not open the Constitution, which has not been amended since 1994.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto (argentina.gob.ar)",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Resolución MS 125/2024 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/304736/1"
+     },
+     {
+      "title": "Boletín Oficial aviso 325899 (not found)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/325899/20250529"
+     }
+    ],
+    "starting_answer_concern": "The No holds. However, the citation lists the Policía Migratoria Auxiliar as including the 'National Aeronautical Police'. Since DNU 366/2025, art. 114 lists the Policía de Seguridad Aeroportuaria instead. The citation also describes arts. 18 and 25 of the Constitution as limits on force, but neither provision regulates force at the border.",
+    "confidence": "medium",
+    "notes": "No court ruling was found that lays down a general rule against force at the border. DNU 366/2025 is still in force: I found no evidence that Congress rejected it or that a court annulled it with general effect. The Resolución 125/2024 entry rests on the official Boletín Oficial text."
+   },
+   {
+    "question_id": 11,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 35, 37, 114",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Resolución MS 125/2024 (federal forces firearms regulation)",
+      "article": "Arts. 1-3",
+      "enacted": "2024-03-14",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-03-14",
+      "instrument": "Resolución 125/2024 del Ministerio de Seguridad (RESOL-2024-125-APN-MSG)",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "This regulation replaced the 2019 regime, which Resolución MS 53/2024 repealed in February 2024. It allows federal forces to use firearms 'cuando resulten ineficaces otros medios no violentos', for example in self-defence, to prevent a grave crime, or to stop the flight of a person who poses an imminent danger. It does not mention border entry and does not prohibit lethal force against migrants as a means of preventing entry, so the answer stays No.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/304736/1",
+      "passage": "Artículo 2°.- Se hará uso de las armas de fuego cuando resulten ineficaces otros medios no violentos, en los siguientes casos: a.- En defensa propia o de otras personas, cuando hubiere peligro inminente de muerte o de lesiones graves. ... d.- Para impedir la fuga de quien represente peligro inminente para la vida o la integridad física de las personas"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Ley 25.871 art. 37 (substituted by DNU art. 11)",
+      "kind": "amended",
+      "what_changed": "The new art. 37 orders summary rejection of irregular entrants caught in flagrante, defined to include a person 'perseguida por la fuerza pública'. It neither authorises nor prohibits lethal force.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Se considera que existe situación de flagrancia, a los efectos de la presente ley, cuando el ingreso ilegal es detectado al momento de su realización o inmediatamente después, o cuando la persona es perseguida por la fuerza pública"
+     }
+    ],
+    "implementation_then_now": "The protection answer is No on both dates, so implementation is Does Not Apply. I found no documented case of lethal force used to stop migrants entering Argentina in 2020-2025. The 2024 firearms regulation widened when federal forces may shoot; the CELS has reportedly filed an amparo against it, which I did not read. None of this is evidence about border entry.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 25.871 was read in its InfoLEG consolidated version with amendment notes. Resolución 125/2024 was read in the Boletín Oficial. I did not read the 2019 Resolución 1231 (the regime in force on 1 January 2023), but it was also general and not specific to the border.",
+    "sources_opened": [
+     {
+      "title": "Resolución MS 125/2024 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/304736/1"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto (argentina.gob.ar)",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Under the MRD's Colombia example, a general use-of-force rule might count as a Yes. Argentina's federal firearms regulations (1231/2019 on 1 January 2023; 125/2024 on 1 January 2026) are ministerial resolutions with no provision on preventing entry. I keep the starting No; the 2024 change, if anything, loosened the limits."
+   },
+   {
+    "question_id": 13,
+    "answer_2023": "No, government may punish trafficked or smuggled migrants",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No, government may punish trafficked or smuggled migrants",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 26.364 de Prevención y Sanción de la Trata de Personas y Asistencia a sus Víctimas",
+      "article": "Art. 5",
+      "enacted": "2008-04-30",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 116-121 (delitos al orden migratorio)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is No on both dates, so implementation is Does Not Apply. The US 2025 Trafficking in Persons report (covering 2024) keeps Argentina on Tier 1. It records fewer victims identified and cuts to victim assistance and to hotline staff, but in the parts I read it does not record trafficking victims being penalised. This evidence covers only trafficking victims, not smuggled migrants.",
+    "practice_sources": [
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's list of norms amending Ley 26.364 shows no amendment after Ley 26.842 (2012) and Decreto 111/2015. The text of art. 5 carries no amendment note. Arts. 116-121 of Ley 25.871 carry no DNU 366/2025 amendment notes in the consolidated text.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.364 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/texact.htm"
+     },
+     {
+      "title": "Ley 26.364 normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=140100"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/"
+     }
+    ],
+    "starting_answer_concern": "The starting No looks questionable. Argentine law does not make irregular entry a crime. Art. 116 of Ley 25.871 punishes only whoever 'realizare, promoviere o facilitare el tráfico ilegal de personas', not the person smuggled, and art. 37 handles irregular entry by administrative expulsion or rejection. On the MRD's own Brazil example, that is enough for 'Yes'. Separately, art. 5 of Ley 26.364 gives trafficking victims non-punishment ('no son punibles'). The citation is also wrong that the Palermo Protocols have constitutional hierarchy under art. 75 inc. 22: they rank above statutes but are not on the constitutional-rank list.",
+    "confidence": "medium",
+    "notes": "No dated event touches the indicator in the window. DNU 366/2025 widened administrative grounds for refusing entry and for expulsion but did not amend Ley 26.364 art. 5 or Ley 25.871 arts. 116-121. Art. 5 still exempts trafficking victims from 'las sanciones o impedimentos establecidos en la legislación migratoria'."
+   }
+  ]
+ }
+}
