@@ -19,7 +19,7 @@ extension OlaCLI.Runner {
         for k in [SlashCommand.hosted, .claude, .ola] { print("/\(k.rawValue): \(k.summary)") }
         print("/new, /stop, /files: in the Ola app. ola --help lists the rest.")
         return 0
-      case .new, .stop, .files:
+      case .new, .stop, .files, .deepseek:
         OlaCLI.say("/\(c.rawValue) works in the Ola app. Here, start again with ola, or press Ctrl-C to stop.")
         return 2
       case .claude, .hosted, .ola:

@@ -11,7 +11,9 @@ final class CommandsTests: XCTestCase {
     XCTAssertEqual(SlashCommand.parse("/frobnicate x"), .unknown("frobnicate"))
     XCTAssertEqual(SlashCommand.parse("please /claude this"), .none)
     XCTAssertEqual(SlashCommand.parse("/claudex do it"), .unknown("claudex"))
-    XCTAssertEqual(SlashCommand.matches("/"), SlashCommand.allCases)
+    // /deepseek is the Mac app's only (OLA-337): the phone and the web list the rest.
+    XCTAssertEqual(SlashCommand.matches("/"), SlashCommand.allCases.filter { $0 != .deepseek })
+    XCTAssertEqual(SlashCommand.matches("/", picks: true), SlashCommand.allCases)
     XCTAssertEqual(SlashCommand.matches("/cl"), [.claude])
     XCTAssertEqual(SlashCommand.matches("/claude x"), [])
   }

@@ -4,13 +4,14 @@ import Foundation
 // reactions (all surfaces)". The web app follows the same text; keep the two in step.
 
 public enum SlashCommand: String, CaseIterable, Sendable {
-  case claude, ola, hosted, new, stop, files, help
+  case claude, ola, hosted, deepseek, new, stop, files, help
 
   public var summary: String {
     switch self {
     case .claude: "Hand this request to Claude Code"
     case .ola: "Use Ola\u{2019}s own model for this request"
     case .hosted: "Hand this request to the hosted open model"
+    case .deepseek: "Hand this request to DeepSeek V4 Pro, an outside open model"
     case .new: "Start a new session"
     case .stop: "Stop the run"
     case .files: "Show the project's files"
@@ -36,12 +37,16 @@ public enum SlashCommand: String, CaseIterable, Sendable {
     return .command(c, rest)
   }
 
-  /// The commands the menu shows for what is typed so far ("/" alone shows them all).
-  public static func matches(_ text: String) -> [SlashCommand] {
+  /// The commands the menu shows for what is typed so far ("/" alone shows them all). `/deepseek`
+  /// only where the picked choices are offered (the Mac app, OLA-337).
+  public static func matches(_ text: String, picks: Bool = false) -> [SlashCommand] {
     guard text.hasPrefix("/"), !text.contains(" "), !text.contains("\n") else { return [] }
     let typed = text.dropFirst().lowercased()
-    return allCases.filter { $0.rawValue.hasPrefix(typed) }
+    return listed(picks: picks).filter { $0.rawValue.hasPrefix(typed) }
   }
+
+  /// The commands a place has.
+  public static func listed(picks: Bool) -> [SlashCommand] { allCases.filter { picks || $0 != .deepseek } }
 }
 
 public enum Reaction: String, CaseIterable, Codable, Sendable {

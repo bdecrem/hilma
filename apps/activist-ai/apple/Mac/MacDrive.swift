@@ -29,7 +29,12 @@ import Vision
 ///
 /// Script (JSON): {"out": dir, "handle": name, "passwordFile": file, "where": "cloud"|"local",
 ///   "project": slug?, "folder": dir? (local), "says": [sentence, ...], "card": "yes"|"any"|"no",
-///   "waitSeconds": n}
+///   "waitSeconds": n, "pick": model?, "tryAgain": model?, "small": bool?}
+/// "pick" (OLA-339/340): the model picked at the box before the first sentence, by its shortcut
+/// (Option-Command-<n>, the Model menu), e.g. "DeepSeek V4 Pro". "tryAgain": after the last answer,
+/// that request again with this model, by Shift-Option-Command-<n> (Model, Try Again With).
+/// "small": the window at 760 by 560. After every answer the run fails unless "Try again with"
+/// under the latest request is all in view, above the box (OLA-337).
 /// Result: <out>/transcript.json and one PNG per step; exit 0 only when every sentence got a finished
 /// answer on the screen (and a card came when "card" is "yes"). The last line printed is the verdict.
 @MainActor
@@ -46,6 +51,9 @@ enum MacDrive {
     var says: [String]
     var card: String?
     var waitSeconds: Double?
+    var pick: String?
+    var tryAgain: String?
+    var small: Bool?
   }
 
   static var script: Script?
@@ -103,6 +111,10 @@ enum MacDrive {
     var answerInApp: String = ""
     var wordsOnScreen: String = ""
     var steps: [String] = []
+    /// Who made the answer, as the app marks it ("Ola", "DeepSeek V4 Pro", ...) (OLA-337).
+    var by: String = ""
+    /// "Try again with" under it: all in view above the box, or not.
+    var tryAgainInView: Bool?
   }
   struct Record: Encodable {
     var app = "mac"
@@ -119,6 +131,7 @@ enum MacDrive {
     var steps: [Entry] = []
     var said: [Said] = []
     var screenText: [String] = []
+    var picked: String?
   }
 
   static var record: Record!
@@ -176,6 +189,7 @@ enum MacDrive {
     try await settle(window, 2)
     step("the app opened", shot: "open")
     let store = try await until(20, "the app opened without its stores") { delegate.store }
+    Self.store = store
     let whereOla = try await until(20, "the app opened without its runtimes") { delegate.whereOla }
 
     // Signed out: the sign-in screen, typed like a person (a click in the name field, the name,
@@ -216,8 +230,20 @@ enum MacDrive {
     step("New Session", shot: "new-session")
     key(.return, in: sheet)
     _ = try await until(10, "Return did not start the session (Start disabled?); the sheet stayed") { window.attachedSheet == nil ? true : nil }
+    if s.small == true { window.setContentSize(NSSize(width: 760, height: 560)) }
     try await settle(window, 1)
     step("a new session", shot: "new-session-started")
+
+    // The model for this session, picked at the box before the first request (OLA-339).
+    if let name = s.pick {
+      guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name); the choices are \(EngineChoice.all.map(\.name).joined(separator: ", "))") }
+      _ = try await until(30, "\(c.name) is not offered here (the box lists \(store.choices.map(\.name).joined(separator: ", ")))") { store.choices.contains(c) ? true : nil }
+      shortcut("\(c.digit)", code: digitCode(c.digit), in: window, modifiers: [.command, .option])
+      _ = try await until(5, "Option-Command-\(c.digit) did not pick \(c.name) (the box says \(store.nextChoice.name))") { store.nextChoice == c ? true : nil }
+      record.picked = c.name
+      try await settle(window, 0.8)
+      step("picked \(c.name) at the box (Option-Command-\(c.digit))", shot: "picked")
+    }
 
     for (i, sentence) in s.says.enumerated() {
       var said = Said(sentence: sentence, status: "not sent")
@@ -313,8 +339,50 @@ enum MacDrive {
       say("answer \(n): \(seen) of the last \(of) words of the answer are on the screen")
       guard of > 0, Double(seen) / Double(of) >= 0.6 else { said.status = "answer not on screen"; throw Failed(why: "the answer to sentence \(n) is not on the screen (\(seen) of its last \(of) words read there)") }
       said.status = "answered"
+      try await checkTryAgain(&said, n)
+    }
+
+    // "Try again with" on the latest answer, by its shortcut (OLA-340).
+    if let name = s.tryAgain, let last = s.says.last {
+      guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name)") }
+      var said = Said(sentence: "Try again with \(c.name): \(last)", status: "not sent")
+      defer { record.said.append(said) }
+      guard store.choices.contains(c) else { throw Failed(why: "\(c.name) is not offered under Try again with here") }
+      let before = store.conversation?.turns.count ?? 0
+      shortcut("\(c.digit)", code: digitCode(c.digit), in: window, modifiers: [.command, .option, .shift])
+      said.sentAt = now
+      _ = try await until(30, "Shift-Option-Command-\(c.digit) sent nothing") { (store.conversation?.turns.count ?? 0) > before ? true : nil }
+      said.status = "sent"
+      step("Try again with \(c.name) (Shift-Option-Command-\(c.digit))", shot: "try-again-sent")
+      let t = try await until(wait, "no finished answer from \(c.name) after \(Int(wait)) s") { () -> Turn? in
+        guard let t = store.conversation?.turns.last, !t.isRunning else { return nil }
+        return t
+      }
+      said.endedAt = now
+      said.answerInApp = t.answer
+      said.by = MadeByWords.name(t.engine, model: t.model)
+      guard t.status == .done else { said.status = t.status.rawValue; throw Failed(why: "Try again with \(c.name) ended \(t.status.rawValue)\(t.error.map { ": \($0.text)" } ?? "")") }
+      guard EngineChoice.of(t) == c else { said.status = "wrong model"; throw Failed(why: "Try again with \(c.name) was answered by \(said.by)") }
+      try await settle(window, 2.5)
+      _ = shot("try-again-answer")
+      said.status = "answered"
+      try await checkTryAgain(&said, s.says.count + 1)
     }
   }
+
+  /// "Try again with" under the latest request: there, and all of it in view above the box.
+  static func checkTryAgain(_ said: inout Said, _ n: Int) async throws {
+    let inView = LastTryAgainFrame.allInView
+    said.tryAgainInView = inView
+    if said.by.isEmpty, let t = store?.conversation?.turns.last { said.by = MadeByWords.name(t.engine, model: t.model) }
+    say("answer \(n) by \(said.by); Try again with under it: \(inView.map { $0 ? "in view" : "NOT in view" } ?? "missing")")
+    guard inView == true else { said.status = "try again hidden"; throw Failed(why: "Try again with under answer \(n) is \(inView == nil ? "not there" : "not all in view (behind the box)")") }
+  }
+
+  static var store: OlaStore?
+
+  /// The key codes of 1 to 9 on a US keyboard.
+  static func digitCode(_ d: Int) -> UInt16 { [18, 19, 20, 21, 23, 22, 26, 28, 25][max(0, min(8, d - 1))] }
 
   /// Fails a wait at once with this reason (set inside a wait's check).
   static var failNow: String?
@@ -473,8 +541,8 @@ enum MacDrive {
   }
 
   /// A Command shortcut, as the application takes it: the window's own, then the menu bar's.
-  static func shortcut(_ c: String, code: UInt16, in w: NSWindow) {
-    guard let ev = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [.command], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, characters: c, charactersIgnoringModifiers: c, isARepeat: false, keyCode: code) else { return }
+  static func shortcut(_ c: String, code: UInt16, in w: NSWindow, modifiers: NSEvent.ModifierFlags = [.command]) {
+    guard let ev = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers, timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, characters: c, charactersIgnoringModifiers: c, isARepeat: false, keyCode: code) else { return }
     if !w.performKeyEquivalent(with: ev) { _ = NSApp.mainMenu?.performKeyEquivalent(with: ev) }
     RunLoop.main.run(until: Date().addingTimeInterval(0.1))
   }

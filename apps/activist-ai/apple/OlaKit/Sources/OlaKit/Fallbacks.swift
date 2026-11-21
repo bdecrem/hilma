@@ -322,6 +322,31 @@ public enum EngineChoice: Hashable, Sendable, Identifiable {
     }
   }
 
+  /// Every choice the Mac app can offer, in menu order; each has a typed command and a shortcut.
+  public static let all: [EngineChoice] = [.ola, .hosted(HostedPick.plain), .hosted("deepseek-v4-pro"), .claude]
+
+  /// The command typed in the box for it: "/ola", "/hosted", "/deepseek", "/claude".
+  public var command: String {
+    switch self {
+    case .ola: "/ola"
+    case .hosted(let m): m == HostedPick.plain ? "/hosted" : m == "deepseek-v4-pro" ? "/deepseek" : "/\(m)"
+    case .claude: "/claude"
+    }
+  }
+
+  /// Its number for the shortcuts: Option-Command-<n> picks it for the box, Shift-Option-Command-<n>
+  /// sends the last request again with it.
+  public var digit: Int { (Self.all.firstIndex(of: self) ?? 0) + 1 }
+
+  /// The menu's hint beside the name: "/deepseek  \u{2325}\u{2318}3".
+  public var hint: String { "\(command)  \u{2325}\u{2318}\(digit)" }
+
+  /// A name as a checker types it ("DeepSeek V4 Pro", "deepseek", "/deepseek"), or nil.
+  public static func named(_ s: String) -> EngineChoice? {
+    let t = s.trimmingCharacters(in: .whitespaces).lowercased()
+    return all.first { $0.name.lowercased() == t || $0.command == t || $0.command.dropFirst() == t }
+  }
+
   /// The box's words for the pick: "Ola" by default; a pick says that it sticks for this session.
   public func boxLabel(nextOnly: Bool) -> String {
     self == .ola ? "Ola" : nextOnly ? "\(name), next message only" : "\(name), this session"

@@ -3,7 +3,8 @@
 # anyone's screen (OLA-237). README: "Using the apps as a checker".
 #
 #   tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next>"] [--card yes|any|no]
-#                  [--wait <seconds>] [--file <name>] [--project <slug>] [--app <Ola.app>] --out <dir>
+#                  [--wait <seconds>] [--file <name>] [--project <slug>] [--app <Ola.app>]
+#                  [--pick <model>] [--try-again <model>] [--small] --out <dir>
 #
 #   mac    the Mac app: by default the published download (https://ola.cx/ola-site/mac/latest.json),
 #          installed in ~/ola-drive/apps/ (never /Applications), started as a copy of its own with its own
@@ -17,6 +18,12 @@
 #          is answered yes; no: a card that comes fails the run.
 #   --wait          seconds for each answer (default 600).
 #   --file <name>   (mac, local) the run fails unless the scratch folder has this file afterwards.
+#   --pick <model>  (mac) the model for the session, picked at the box before the first sentence by its
+#          shortcut (Option-Command-<n>): Ola, Hosted, "DeepSeek V4 Pro" (or deepseek), Claude (OLA-339).
+#   --try-again <model>  (mac) after the last answer, that request again with this model, by its
+#          shortcut (Shift-Option-Command-<n>, Model, Try Again With) (OLA-340).
+#   --small         (mac) the window at 760 by 560.
+#   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
 # Signs in as the made-up person `appdriver` (tools/drive-account.mjs), never anyone real: a fresh
 # password each run, in a file with mode 600, read by the app from that file; signed out everywhere
@@ -37,7 +44,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -48,6 +55,9 @@ while [ $# -gt 0 ]; do
     --app) APP="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
     --file) FILE="$2"; shift 2 ;;
+    --pick) PICK="$2"; shift 2 ;;
+    --try-again) TRYAGAIN="$2"; shift 2 ;;
+    --small) SMALL=1; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -115,11 +125,14 @@ if [ "$APPKIND" = mac ]; then
   FOLDER=""
   if [ "$WHERE" = local ]; then FOLDER="$RUN/folder"; mkdir -p "$FOLDER"; fi
   mkdir -p "$RUN/home"
-  python3 - "$RUN/script.json" "$OUT" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" <<'PY'
+  python3 - "$RUN/script.json" "$OUT" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$PICK" "$TRYAGAIN" "$SMALL" <<'PY'
 import json, sys
-f, out, pw, where, project, folder, card, wait, says = sys.argv[1:]
+f, out, pw, where, project, folder, card, wait, says, pick, again, small = sys.argv[1:]
 s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "project": project, "says": json.loads(says), "card": card, "waitSeconds": float(wait)}
 if folder: s["folder"] = folder
+if pick: s["pick"] = pick
+if again: s["tryAgain"] = again
+if small: s["small"] = True
 json.dump(s, open(f, "w"))
 PY
   prepare_account
@@ -128,7 +141,7 @@ PY
   # its own home: its settings, Application Support and opencode state are the run's, not anyone's.
   open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$OUT/app.log" --stderr "$OUT/app.log" "$APP" --args -OlaDrive "$RUN/script.json" &
   OPENPID=$!
-  LIMIT=$(( ${#SAYS[@]} * ${WAIT%.*} + 300 ))
+  LIMIT=$(( (${#SAYS[@]} + $([ -n "$TRYAGAIN" ] && echo 1 || echo 0)) * ${WAIT%.*} + 300 ))
   for ((i = 0; i < LIMIT; i++)); do kill -0 $OPENPID 2>/dev/null || break; sleep 1; done
   if kill -0 $OPENPID 2>/dev/null; then
     # Ours only: the copy started with this run's script.

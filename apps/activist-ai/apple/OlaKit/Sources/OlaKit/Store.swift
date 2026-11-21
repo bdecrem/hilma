@@ -491,6 +491,14 @@ public final class OlaStore {
     }
   }
 
+  /// "Try again with" for the latest finished request (the menu bar's Try Again With, and a
+  /// checker's drive): nil when there is none or the choice is not offered here.
+  public func tryLastAgain(with c: EngineChoice) async {
+    guard choices.contains(c) else { problem = Problem(text: "\(c.name) is not offered here."); return }
+    guard let t = conversation?.turns.last(where: { TryAgain.offered($0, choices: choices) }), conversation?.isRunning != true else { return }
+    await ask(c, t.request)
+  }
+
   /// A cloud project's fallbacks, from the front desk (nil elsewhere, or when it does not answer).
   public func cloudFallback() async -> JSON? {
     guard config?.account == true, let client else { return nil }
@@ -519,10 +527,22 @@ public final class OlaStore {
       case .ola: if rest.isEmpty { nextEngine = .ola; nextOnly = false } else { await sendToOla(rest) }
       case .hosted:
         if rest.isEmpty, conversation?.turns.last == nil { nextOnce(.hosted) } else { await askHosted(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest) }
+      // The Mac app's picked choice (OLA-337), the same way: alone in a new conversation the box is
+      // set to it for this session; alone after a request, that request again with it.
+      case .deepseek:
+        guard offersEveryChoice else { problem = Problem(text: "No such command. Type / to see the commands."); return }
+        let c = EngineChoice.hosted("deepseek-v4-pro")
+        if rest.isEmpty, conversation?.turns.last == nil {
+          guard choices.contains(c) else { problem = Problem(text: hosted.unavailable ?? "DeepSeek V4 Pro is not offered here."); return }
+          nextChoice = c
+          nextOnly = false
+        } else {
+          await askHosted(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest, model: "deepseek-v4-pro")
+        }
       case .new: newSession()
       case .stop: await stop()
       case .files: onFiles?()
-      case .help: problem = Problem(text: SlashCommand.allCases.map { "/\($0.rawValue): \($0.summary)" }.joined(separator: "\n"))
+      case .help: problem = Problem(text: SlashCommand.listed(picks: offersEveryChoice).map { "/\($0.rawValue): \($0.summary)" }.joined(separator: "\n"))
       }
     case .none:
       let engine = nextEngine

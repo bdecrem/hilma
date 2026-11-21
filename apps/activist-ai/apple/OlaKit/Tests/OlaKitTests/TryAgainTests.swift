@@ -107,6 +107,47 @@ final class TryAgainTests: XCTestCase {
     XCTAssertTrue(HostedPick.isHosted("deepseek-v4-pro") && HostedPick.isHosted("hosted") && !HostedPick.isHosted("general"))
   }
 
+  /// OLA-339/340: every choice has a typed command and a shortcut, a checker can name it, and the
+  /// phone never lists /deepseek.
+  func testCommandsShortcutsAndNames() async {
+    XCTAssertEqual(EngineChoice.all.map(\.command), ["/ola", "/hosted", "/deepseek", "/claude"])
+    XCTAssertEqual(EngineChoice.all.map(\.digit), [1, 2, 3, 4])
+    XCTAssertEqual(deepseek.hint, "/deepseek  \u{2325}\u{2318}3")
+    for n in ["DeepSeek V4 Pro", "deepseek", "/deepseek", " deepseek v4 pro "] { XCTAssertEqual(EngineChoice.named(n), deepseek, n) }
+    XCTAssertEqual(EngineChoice.named("Ola"), .ola)
+    XCTAssertNil(EngineChoice.named("gpt"))
+    XCTAssertEqual(SlashCommand.parse("/deepseek make a page"), .command(.deepseek, "make a page"))
+    XCTAssertFalse(SlashCommand.matches("/").contains(.deepseek), "the phone and the web list no /deepseek")
+    XCTAssertEqual(SlashCommand.matches("/de", picks: true), [.deepseek])
+    // /deepseek alone in a new session sets the box; on the phone it is no command at all.
+    let phone = OlaStore(fixture: Fixture.main)
+    phone.selectedID = nil
+    await phone.send("/deepseek")
+    XCTAssertEqual(phone.problem?.text, "No such command. Type / to see the commands.")
+    let mac = OlaStore(fixture: Fixture.main)
+    mac.offersEveryChoice = true
+    mac.hosted = HostedStatus.from(usage: usage)
+    mac.newSession()
+    await mac.send("/deepseek")
+    XCTAssertEqual(mac.nextChoice, deepseek)
+    XCTAssertEqual(mac.nextChoice.boxLabel(nextOnly: mac.nextOnly), "DeepSeek V4 Pro, this session")
+  }
+
+  /// OLA-337: the conversation scrolls to its end whenever the last turn changes height; its run
+  /// ending (when "Try again with" appears) and the files it made arriving both count.
+  func testTheLastTurnsHeightKeyFollowsItsEnd() {
+    var t = Turn(id: "t", request: "make a page", at: .now, status: .working, answer: "Wrote it.")
+    let running = t.heightKey
+    t.status = .done
+    let done = t.heightKey
+    XCTAssertNotEqual(running, done, "the run ending moves the end of the conversation")
+    t.changed = ["index.html"]
+    XCTAssertNotEqual(done, t.heightKey, "the files it made too")
+    let withFiles = t.heightKey
+    t.error = Problem(text: "x")
+    XCTAssertNotEqual(withFiles, t.heightKey)
+  }
+
   // MARK: the store, against a made-up opencode (On this Mac) and a made-up front desk (a cloud project)
 
   final class Fake: @unchecked Sendable {

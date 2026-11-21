@@ -215,6 +215,14 @@ public struct Turn: Identifiable, Equatable, Sendable, Codable {
 
   public var isRunning: Bool { status == .sending || status == .working }
 
+  /// Everything that changes how tall a turn is drawn once it is on screen: its run ending (then
+  /// "Try again with", the files it made, the line saying who made them appear), its answer, steps,
+  /// notes, error. The conversation scrolls to its end whenever the last turn's changes (OLA-337:
+  /// "Try again with" under the latest answer stayed hidden behind the box).
+  public var heightKey: String {
+    "\(id)|\(status.rawValue)|\(answer.count)|\(steps.count)|\(steps.filter { $0.status == .running }.count)|\(notes.count)|\(changed?.count ?? -1)|\(error == nil ? 0 : 1)|\(notice == nil ? 0 : 1)|\(engine.rawValue)|\(model ?? "")"
+  }
+
   /// How many files the run wrote or changed.
   public var changedFiles: Int { Set(steps.filter { ($0.icon == .write || $0.icon == .change) && $0.status == .done }.map(\.object)).count }
 

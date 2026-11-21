@@ -68,6 +68,8 @@ struct TurnView: View {
             ForEach(tryAgain) { c in Button(c.name) { retry(c) } }
           }
         }
+        // Where the latest one is drawn, so the conversation can say whether all of it is in view.
+        .background(GeometryReader { g in Color.clear.preference(key: LastTryAgainFrame.self, value: isLast ? g.frame(in: .named(LastTryAgainFrame.space)) : nil) })
       }
     }
   }
@@ -574,7 +576,8 @@ struct EngineMenu: View {
       // pick sticks for this session, and a new session starts on Ola.
       QuietMenu(label: store.nextChoice.boxLabel(nextOnly: store.nextOnly), help: "Who does your requests in this session. A new session starts on Ola.") {
         Picker("Who does this", selection: $store.nextChoice) {
-          ForEach(store.choices.contains(store.nextChoice) ? store.choices : store.choices + [store.nextChoice]) { c in Text(c.name).tag(c) }
+          // Each with its typed command and its shortcut (OLA-337, OLA-339): "DeepSeek V4 Pro   /deepseek  ⌥⌘3".
+          ForEach(store.choices.contains(store.nextChoice) ? store.choices : store.choices + [store.nextChoice]) { c in Text("\(c.name)    \(c.hint)").tag(c) }
         }
         .pickerStyle(.inline).labelsHidden()
       }
@@ -616,14 +619,27 @@ struct ConversationPane: View {
               ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 60)
             }
             // Room under the last turn for the approval, so it never hides what it is about.
-            Color.clear.frame(height: convo?.approval == nil && convo?.question == nil ? 1 : 300).id("end")
+            Color.clear.frame(height: convo?.approval == nil && convo?.question == nil ? Space.l : 300).id("end")
           }
           .frame(maxWidth: columnWidth, alignment: .leading)
           .padding(.horizontal, sidePadding).padding(.top, Space.xl).padding(.bottom, Space.l)
           .frame(maxWidth: .infinity)
         }
         .modifier(ChatAnchor())
+        // Whether "Try again with" under the latest request is all in view, above the box (OLA-337).
+        .coordinateSpace(name: LastTryAgainFrame.space)
+        .onPreferenceChange(LastTryAgainFrame.self) { f in Task { @MainActor in LastTryAgainFrame.frame = f } }
+        .background(GeometryReader { vp in Color.clear.onAppear { LastTryAgainFrame.viewport = vp.size.height }.onChange(of: vp.size.height) { _, h in LastTryAgainFrame.viewport = h } })
         .onChange(of: convo?.turns.last?.answer.count) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
+        // The run ending adds "Try again with", the files and who made them under the last answer:
+        // scrolled to, so none of it stays hidden behind the box (OLA-337).
+        .onChange(of: convo?.turns.last?.heightKey) { _, _ in
+          proxy.scrollTo("end", anchor: .bottom)
+          Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            proxy.scrollTo("end", anchor: .bottom)
+          }
+        }
         .onChange(of: convo?.turns.last?.steps.count) { _, _ in withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo("end", anchor: .bottom) } }
         .onChange(of: store.selectedID) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
       }
@@ -659,7 +675,7 @@ struct ConversationPane: View {
           .frame(maxWidth: columnWidth)
           .padding(.horizontal, sidePadding).padding(.top, Space.s)
       }
-      SlashMenu(draft: $draft)
+      SlashMenu(draft: $draft, picks: store.offersEveryChoice)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding)
       // While Ola waits on a one-field question, what is typed in the box is the answer (OLA-301).
@@ -810,12 +826,29 @@ struct ConnectionBar: View {
 }
 
 
+/// Where "Try again with" under the latest request is, in the conversation's visible area (OLA-337:
+/// in build 28 it stayed behind the box). The Mac app's drive mode checks it after every answer.
+struct LastTryAgainFrame: PreferenceKey {
+  static let space = "olaChatViewport"
+  static var defaultValue: CGRect? { nil }
+  static func reduce(value: inout CGRect?, nextValue: () -> CGRect?) { if let n = nextValue() { value = n } }
+  @MainActor static var frame: CGRect?
+  @MainActor static var viewport: CGFloat = 0
+  /// nil when there is none on screen; else whether all of it is inside the visible area.
+  @MainActor static var allInView: Bool? {
+    guard let f = frame, viewport > 0 else { return nil }
+    return f.minY >= 0 && f.maxY <= viewport
+  }
+}
+
 /// Typing "/" shows the commands; an unknown one is named and not sent.
 struct SlashMenu: View {
   @Binding var draft: String
+  /// The Mac app's picked choices (/deepseek, OLA-337).
+  var picks = false
   var body: some View {
     let typed = draft.trimmingCharacters(in: .whitespaces)
-    let matches = SlashCommand.matches(typed)
+    let matches = SlashCommand.matches(typed, picks: picks)
     let unknown: Bool = { if case .unknown = SlashCommand.parse(typed), !typed.isEmpty, matches.isEmpty { return true }; return false }()
     if typed.hasPrefix("/") && (!matches.isEmpty || unknown) {
       VStack(alignment: .leading, spacing: 0) {

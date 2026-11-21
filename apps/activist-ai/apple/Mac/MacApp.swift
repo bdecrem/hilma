@@ -297,6 +297,23 @@ struct OlaCommands: Commands {
       Divider()
       Button("Reconnect") { store.reconnect() }.keyboardShortcut("r", modifiers: [.command, .shift])
     }
+    // Who does the requests (OLA-337, OLA-339): the pick at the box, and "Try again with" for the
+    // latest request, from the keyboard. The same choices as the box; one not offered here is dimmed.
+    CommandMenu("Model") {
+      ForEach(EngineChoice.all) { c in
+        Toggle(c.name, isOn: Binding(get: { store.nextChoice == c }, set: { _ in store.nextChoice = c }))
+          .keyboardShortcut(KeyEquivalent(Character("\(c.digit)")), modifiers: [.command, .option])
+          .disabled(!store.choices.contains(c))
+      }
+      Divider()
+      Menu("Try Again With") {
+        ForEach(EngineChoice.all) { c in
+          Button(c.name) { Task { await store.tryLastAgain(with: c) } }
+            .keyboardShortcut(KeyEquivalent(Character("\(c.digit)")), modifiers: [.command, .option, .shift])
+            .disabled(!store.choices.contains(c) || store.conversation?.turns.isEmpty != false || store.conversation?.isRunning == true)
+        }
+      }
+    }
   }
 }
 
