@@ -22,6 +22,15 @@ public struct ServerConfig: Equatable, Sendable {
   /// The mini's Tailscale name. Its address, http://100.95.51.98:4310, answers too, but App
   /// Transport Security cannot be told to allow plain HTTP to an IP address: in the simulator the
   /// IP was refused and the name worked. On the Studio, change it in the connect sheet.
+  /// The cloud project this config reaches (`<base>/api/device/w/<project>/oc`), nil elsewhere. Its
+  /// pages are published at sites.ola.cx/<project>/ (frontdesk/chatpublish.mjs uses the slug).
+  public var cloudProject: String? {
+    guard account else { return nil }
+    let p = url.pathComponents
+    guard let i = p.firstIndex(of: "w"), i > 0, p[i - 1] == "device", i + 1 < p.count else { return nil }
+    let s = p[i + 1].removingPercentEncoding ?? p[i + 1]
+    return s.isEmpty ? nil : s
+  }
   public static let defaultAddress = "http://admins-mac-mini.tailde799a.ts.net:4310"
 }
 

@@ -72,8 +72,8 @@ public struct Approval: Identifiable, Equatable, Sendable {
     self.stepID = stepID
   }
 
-  init(_ d: JSON, dir: String?) {
-    let words = Plain.describeApproval(action: d["action"].str, resources: d["resources"].array.map(\.str), metadata: d["metadata"], dir: dir)
+  init(_ d: JSON, dir: String?, cloudProject: String? = nil) {
+    let words = Plain.describeApproval(action: d["action"].str, resources: d["resources"].array.map(\.str), metadata: d["metadata"], dir: dir, cloudProject: cloudProject)
     self.init(id: d["id"].str, sessionID: d["sessionID"].str, action: d["action"].str, title: words.title, items: words.items, stepID: d["source"]["id"].string)
     note = Plain.webNote(action: d["action"].str, resources: d["resources"].array.map(\.str))
   }
@@ -243,6 +243,8 @@ public struct Conversation: Equatable, Sendable {
   public var sessionID: String
   /// The project folder, used to shorten paths.
   public var directory: String?
+  /// The cloud project the conversation is in (nil on the Mac's own runtime): names the address on a publish card.
+  public var cloudProject: String?
   public var turns: [Turn] = []
   public var approval: Approval?
   /// A question Ola asked and waits on (OLA-301).
@@ -363,7 +365,7 @@ public struct Conversation: Equatable, Sendable {
       finish(&turn.steps[i], ok: false, at: at, output: [outputText(d["content"]), d["error"]["message"].str].filter { !$0.isEmpty }.joined(separator: "\n"), metadata: d["metadata"], problem: problem)
       return true
     case "permission.asked":
-      let a = Approval(d, dir: directory)
+      let a = Approval(d, dir: directory, cloudProject: cloudProject)
       approval = a
       if let sid = a.stepID, let i = step(sid) { turn.steps[i].status = .waiting }
       return true

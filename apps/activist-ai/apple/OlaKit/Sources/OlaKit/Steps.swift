@@ -291,7 +291,7 @@ public enum Plain {
   }
 
   /// A permission request as a question Bart can answer.
-  public static func describeApproval(action: String, resources: [String], metadata: JSON, dir: String?) -> (title: String, items: [ApprovalItem]) {
+  public static func describeApproval(action: String, resources: [String], metadata: JSON, dir: String?, cloudProject: String? = nil) -> (title: String, items: [ApprovalItem]) {
     let files = metadata["files"].array
     // A web search, download or lookup: the question says exactly what would leave the machine,
     // as in the web app (web/src/lib/steps.ts).
@@ -309,7 +309,9 @@ public enum Plain {
     }
     // The card shows what goes public and where, never the command (OLA-267: the web's sheet shows none).
     if action == "shell" || action == "bash", resources.count == 1, let p = cloudPublish(resources[0]) {
-      return ("Ola wants to publish \(p.files.count == 1 ? "this file" : "these \(p.files.count) files") on the web, at sites.ola.cx",
+      // The address as the website's sheet says it (OLA-267 check #8): sites.ola.cx/<project>/.
+      let at = cloudProject.map { "sites.ola.cx/\($0)/" } ?? "sites.ola.cx"
+      return ("Ola wants to publish \(p.files.count == 1 ? "this file" : "these \(p.files.count) files") on the web, at \(at)",
               p.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
     }
     // The Mac's own `ola-publish publish <folder> --name <n> --fingerprint <f>` (local runtime, OLA-267):

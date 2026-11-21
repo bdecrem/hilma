@@ -92,6 +92,10 @@ final class CommandsTests: XCTestCase {
     XCTAssertEqual(a.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx")
     XCTAssertEqual(a.items.map(\.label), ["index.html", "style.css"])
     XCTAssertTrue(a.items.allSatisfy { !$0.isCommand && $0.detail == nil })  // never the command (OLA-267)
+    // In the apps the cloud project is known: the card names its address, as the website does (OLA-267 #8).
+    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish site --files index.html"], metadata: .null, dir: nil, cloudProject: "appdriver").title, "Ola wants to publish this file on the web, at sites.ola.cx/appdriver/")
+    XCTAssertEqual(ServerConfig(url: URL(string: "https://app.ola.cx/api/device/w/appdriver/oc")!, password: "", account: true).cloudProject, "appdriver")
+    XCTAssertNil(ServerConfig(url: URL(string: "http://mini:4310")!, password: "").cloudProject)
     // The Mac's own ola-publish (local runtime): the files from the folder and the address (OLA-267).
     let d = NSTemporaryDirectory() + "olapub-\(UUID().uuidString)"
     try? FileManager.default.createDirectory(atPath: d + "/site/img", withIntermediateDirectories: true)

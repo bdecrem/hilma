@@ -344,6 +344,7 @@ public final class OlaStore {
     default: break
     }
     if conversations[sid] != nil {
+      conversations[sid]!.cloudProject = config?.cloudProject
       conversations[sid]!.apply(ev)
       if let s = sessions.first(where: { $0.id == sid }) {
         if type.hasPrefix("session.execution."), type != "session.execution.started" { turnEnded(s) }
@@ -396,7 +397,7 @@ public final class OlaStore {
         if !serverAnswers(), (goesAhead?(p["action"].str, res) ?? false) || covered(id, p["action"].str, res), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
           wentAhead += 1
         } else {
-          let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)
+          let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory, cloudProject: config?.cloudProject)
           c.approval = Approval(id: p["id"].str, sessionID: id, action: p["action"].str, title: words.title, items: words.items, stepID: p["source"]["id"].string)
         }
       }
