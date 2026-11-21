@@ -228,6 +228,18 @@ public struct Fixture: Sendable {
     case "results": return results
     case "reactions": return reactions
     case "approval": return approval
+    case "question":
+      // Ola asks which words the page should carry (OLA-301), with three choices.
+      var f = approval
+      var c = f.conversations["s1"]!
+      c.approval = nil
+      c.question = Question(id: "frm_1", sessionID: "s1", fields: [Question.Field(key: "q0", title: "Page", text: "What should the page say?", options: [
+        Question.Option(value: "Bart", label: "Bart", description: "Just the name, large"),
+        Question.Option(value: "Hello, Bart", label: "Hello, Bart"),
+        Question.Option(value: "Bart's page", label: "Bart\u{2019}s page", description: "A title with a short line under it"),
+      ])])
+      f.conversations["s1"] = c
+      return f
     case "empty": return empty
     case "unreachable": return unreachable
     case "empty-list":

@@ -114,6 +114,10 @@ public enum Plain {
       return Words(icon: .search, verb: "Searched the web for", object: "\u{201C}\(input["query"].str)\u{201D}")
     case "skill":
       return Words(icon: .think, verb: "Looked up how to do this", object: "")
+    case "question":
+      // Ola's question to the person (OLA-301), said as the web app says it.
+      let first = input["questions"].array.first
+      return Words(icon: .think, verb: "Asked you", object: first?["question"].string ?? first?["header"].str ?? "")
     default:
       return Words(icon: .other, verb: "Used", object: tool)
     }

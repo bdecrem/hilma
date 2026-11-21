@@ -187,7 +187,7 @@ struct StepRow: View {
         Group {
           switch step.status {
           case .running, .preparing: ProgressView().controlSize(.mini)
-          case .waiting: Text("Needs your yes").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
+          case .waiting: Text(step.tool == "question" ? "Waits for your answer" : "Needs your yes").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
           default: Text(step.result ?? "").foregroundStyle(Ola.ink3)
           }
         }
@@ -330,6 +330,95 @@ struct ApprovalPanel: View {
   func reply(_ d: OpenCodeClient.Decision) {
     busy = true
     answer(d)
+  }
+}
+
+/// Ola's question (OLA-301): opencode's `question` tool waits on the person. Its choices as
+/// buttons (Command-1 to Command-9 pick them, for the keyboard and for a driven copy, MacDrive), and
+/// the person's own words typed in the conversation's box. One field with one choice: a click on a
+/// choice is the answer. Several fields, or a field that takes several: pick, then Send my answers.
+/// It sits where the approval sits, over the bottom of the conversation, until it is answered.
+struct QuestionPanel: View {
+  var question: Question
+  var answer: ([String: JSON]) async -> Bool
+  @State private var picked: [String: [String]] = [:]
+  @State private var typed: [String: String] = [:]
+  @State private var busy = false
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: Space.m) {
+      HStack(spacing: 6) {
+        Circle().fill(Ola.vermilion).frame(width: 6, height: 6)
+        Text("Ola asks, and waits for your answer").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
+      }
+      ForEach(Array(question.fields.enumerated()), id: \.element.key) { fi, f in
+        VStack(alignment: .leading, spacing: Space.s) {
+          Text(f.text.isEmpty ? f.title : f.text).font(OlaFont.sans(Metrics.heading, .semibold)).foregroundStyle(Ola.ink)
+            .fixedSize(horizontal: false, vertical: true)
+          ForEach(Array(f.options.enumerated()), id: \.element.value) { oi, o in
+            option(f, o, number: fi == 0 ? oi + 1 : nil)
+          }
+          if f.custom, !question.single {
+            TextField(f.options.isEmpty ? "Your answer" : "Or say it in your own words", text: Binding(get: { typed[f.key] ?? "" }, set: { typed[f.key] = $0 }))
+              .textFieldStyle(.roundedBorder).font(OlaFont.sans(Metrics.ui))
+          }
+        }
+      }
+      if question.single, question.fields.first?.custom == true {
+        Text(question.fields.first?.options.isEmpty == true ? "Type your answer in the box below and press Return." : "Or type your own answer in the box below and press Return.")
+          .font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2)
+      }
+      if !question.single {
+        Button { Task { await send(question.answer(picked: picked, typed: typed)) } } label: { Text("Send my answers") }
+          .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
+          .disabled(!Question.complete(question.answer(picked: picked, typed: typed)))
+      }
+      if busy { Text("Sent. Ola carries on.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2) }
+    }
+    .disabled(busy)
+    .padding(Space.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Ola.field)
+    .overlay(alignment: .top) { Rectangle().fill(Ola.vermilion).frame(height: 2) }
+    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Ola.ruleStrong, lineWidth: 1))
+    .shadow(color: .black.opacity(0.14), radius: 18, y: 6)
+    .onChange(of: question.id) { _, _ in busy = false; picked = [:]; typed = [:] }
+  }
+
+  @ViewBuilder func option(_ f: Question.Field, _ o: Question.Option, number: Int?) -> some View {
+    let on = (picked[f.key] ?? []).contains(o.value)
+    let b = Button {
+      if question.single { Task { await send([f.key: .string(o.value)]) }; return }
+      var l = picked[f.key] ?? []
+      if f.multiple { if on { l.removeAll { $0 == o.value } } else { l.append(o.value) } } else { l = [o.value] }
+      picked[f.key] = l
+    } label: {
+      HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+        if !question.single { Image(systemName: on ? (f.multiple ? "checkmark.square.fill" : "largecircle.fill.circle") : (f.multiple ? "square" : "circle")).foregroundStyle(on ? Ola.action : Ola.ink3) }
+        VStack(alignment: .leading, spacing: 2) {
+          Text(o.label).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink)
+          if let d = o.description { Text(d).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2) }
+        }
+        Spacer(minLength: Space.s)
+        #if os(macOS)
+        if let number, number <= 9 { Text("\u{2318}\(number)").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3) }
+        #endif
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.horizontal, Space.m).padding(.vertical, Space.s)
+      .background(RoundedRectangle(cornerRadius: 6).fill(on ? Ola.paperPressed : Ola.paper))
+      .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(on ? Ola.action : Ola.ruleStrong, lineWidth: 1))
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(o.description.map { "\(o.label). \($0)" } ?? o.label)
+    if let number, number <= 9 { b.keyboardShortcut(KeyEquivalent(Character(String(number))), modifiers: .command) } else { b }
+  }
+
+  func send(_ a: [String: JSON]) async {
+    busy = true
+    if !(await answer(a)) { busy = false }
   }
 }
 
@@ -501,7 +590,7 @@ struct ConversationPane: View {
               ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 60)
             }
             // Room under the last turn for the approval, so it never hides what it is about.
-            Color.clear.frame(height: convo?.approval == nil ? 1 : 300).id("end")
+            Color.clear.frame(height: convo?.approval == nil && convo?.question == nil ? 1 : 300).id("end")
           }
           .frame(maxWidth: columnWidth, alignment: .leading)
           .padding(.horizontal, sidePadding).padding(.top, Space.xl).padding(.bottom, Space.l)
@@ -520,9 +609,17 @@ struct ConversationPane: View {
               .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)
               .transition(.move(edge: .bottom).combined(with: .opacity))
           }
+        } else if let q = convo?.question {
+          ZStack(alignment: .bottom) {
+            QuestionPanel(question: q) { a in await store.answerQuestion(a) }
+              .frame(maxWidth: columnWidth + 2 * Space.l)
+              .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)
+              .transition(.move(edge: .bottom).combined(with: .opacity))
+          }
         }
       }
       .animation(.easeOut(duration: 0.18), value: convo?.approval?.id)
+      .animation(.easeOut(duration: 0.18), value: convo?.question?.id)
       if let p = store.problem {
         HStack(alignment: .firstTextBaseline) {
           ProblemView(problem: p)
@@ -539,7 +636,8 @@ struct ConversationPane: View {
       SlashMenu(draft: $draft)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding)
-      Composer(text: $draft, running: (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } },
+      // While Ola waits on a one-field question, what is typed in the box is the answer (OLA-301).
+      Composer(text: $draft, running: answering ? false : (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } },
                accessory: store.claudeOn || store.hostedOn || store.nextEngine != .ola ? AnyView(EngineMenu(store: store)) : nil)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding).padding(.top, Space.s).padding(.bottom, Space.l)
@@ -547,8 +645,18 @@ struct ConversationPane: View {
     .background(Ola.paper)
   }
 
+  /// A one-field question waits and an approval does not: the box answers it.
+  var answering: Bool {
+    guard let c = store.conversation, c.approval == nil, let q = c.question else { return false }
+    return q.fields.count == 1 && q.fields[0].custom
+  }
+
   func send() {
     let t = draft
+    if answering, let q = store.conversation?.question, let a = q.answer(words: t) {
+      Task { if await store.answerQuestion(a) { draft = "" } }
+      return
+    }
     // An unknown command is not sent: the text stays, and the menu says so.
     if case .unknown = SlashCommand.parse(t.trimmingCharacters(in: .whitespacesAndNewlines)) { return }
     draft = ""

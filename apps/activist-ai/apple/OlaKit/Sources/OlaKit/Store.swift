@@ -133,7 +133,7 @@ public final class OlaStore {
 
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
   public var conversation: Conversation? { selectedID.flatMap { conversations[$0] } }
-  public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil }
+  public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil || conversations[id]?.question != nil }
   public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" && $0.modelID != "hosted" } }
 
   // MARK: connecting
@@ -295,7 +295,8 @@ public final class OlaStore {
   func handle(_ ev: JSON, ahead: Bool = true) {
     let type = ev["type"].str
     let d = ev["data"]
-    let sid = d["sessionID"].str
+    // A form (Ola's question, OLA-301) carries its session inside it.
+    let sid = d["sessionID"].string ?? d["form"]["sessionID"].str
     let at = ev["created"].date ?? .now
     // Lots of permissions: no card, no notification. Answered "once" here at once, or by the
     // server itself (serverAnswers). Should the step still wait, the card is shown after all.
@@ -347,6 +348,7 @@ public final class OlaStore {
         if type.hasPrefix("session.execution."), type != "session.execution.started" { turnEnded(s) }
         if type.hasPrefix("session.execution."), type != "session.execution.started", let t = conversations[sid]!.turns.last, let e = NotifyEvent.finished(t, session: s) { onNotify?(e) }
         if type == "permission.asked", let a = conversations[sid]!.approval { onNotify?(NotifyEvent.needsYou(a, session: s)) }
+        if type == "form.created", let q = conversations[sid]!.question, sid != selectedID || !isActive { onNotify?(NotifyEvent.asks(q, session: s)) }
       }
       if type.hasPrefix("session.execution."), type != "session.execution.started", let s = sessions.first(where: { $0.id == sid }), let t = conversations[sid]!.turns.last {
         if !isActive || sid != selectedID { onRunEnded?(s, t) }
@@ -356,7 +358,7 @@ public final class OlaStore {
       if type == "permission.asked", let s = sessions.first(where: { $0.id == sid }), let a = conversations[sid]!.approval {
         if !isActive || sid != selectedID { onApproval?(s, a) }
       }
-    } else if type == "permission.asked" || type.hasPrefix("session.execution.") || type == "session.inbox.enqueued" {
+    } else if type == "permission.asked" || type == "form.created" || type.hasPrefix("session.execution.") || type == "session.inbox.enqueued" {
       // A session not loaded yet: load it, so its approval and state are there when Bart looks.
       if sessions.contains(where: { $0.id == sid }) {
         Task {
@@ -365,6 +367,7 @@ public final class OlaStore {
             onApproval?(s, a)
             onNotify?(NotifyEvent.needsYou(a, session: s))
           }
+          if type == "form.created", let s = sessions.first(where: { $0.id == sid }), let q = conversations[sid]?.question { onNotify?(NotifyEvent.asks(q, session: s)) }
           if type.hasPrefix("session.execution."), type != "session.execution.started", let s = sessions.first(where: { $0.id == sid }), let t = conversations[sid]?.turns.last, let e = NotifyEvent.finished(t, session: s) { onNotify?(e) }
         }
       }
@@ -395,6 +398,12 @@ public final class OlaStore {
           let words = Plain.describeApproval(action: p["action"].str, resources: p["resources"].array.map(\.str), metadata: p["metadata"], dir: directory)
           c.approval = Approval(id: p["id"].str, sessionID: id, action: p["action"].str, title: words.title, items: words.items, stepID: p["source"]["id"].string)
         }
+      }
+      // A question Ola is waiting on (asked before this app opened the session, or while the
+      // connection was lost): shown, so the run that waits on it can go on (OLA-301).
+      if let q = ((try? await client.pendingForms(id)) ?? []).lazy.compactMap({ Question(form: $0) }).first {
+        c.question = q
+        if let sid = q.stepID, let ti = c.turns.indices.last, let si = c.turns[ti].steps.firstIndex(where: { $0.id == sid }) { c.turns[ti].steps[si].status = .waiting }
       }
       if running.contains(id), var last = c.turns.last, !last.isRunning, last.status == .failed, last.error?.detail?.hasPrefix("outcome") == true {
         last.status = .working
@@ -556,6 +565,21 @@ public final class OlaStore {
     if let id = selectedID, let run = claudeRuns[id] { run.stop(); return }
     guard let id = selectedID, let client else { return }
     do { try await client.interrupt(id) } catch { note(error, "The machine did not answer the Stop. It may still be working.") }
+  }
+
+  /// The person's answer to Ola's question (OLA-301): the card's choice, or their own words.
+  /// Returns whether it reached the machine; the card goes when the server says it was replied.
+  @discardableResult
+  public func answerQuestion(_ answer: [String: JSON], in sessionID: String? = nil) async -> Bool {
+    guard let id = sessionID ?? selectedID, let q = conversations[id]?.question, let client else { return false }
+    do {
+      try await client.answerForm(session: q.sessionID.isEmpty ? id : q.sessionID, form: q.id, answer: answer)
+      if conversations[id]?.question?.id == q.id { conversations[id]?.question = nil }
+      return true
+    } catch {
+      note(error, "Your answer did not reach Ola. Try again.")
+      return false
+    }
   }
 
   public func answer(_ decision: OpenCodeClient.Decision, in sessionID: String? = nil) async {

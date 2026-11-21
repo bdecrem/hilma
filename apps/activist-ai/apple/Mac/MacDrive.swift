@@ -96,6 +96,8 @@ enum MacDrive {
     var endedAt: Double?
     var status: String
     var cards: [String] = []
+    /// Ola's questions (OLA-301), each answered with its first choice (Command-1).
+    var questions: [String] = []
     var answered: [String] = []
     var answerOnScreen: String = ""
     var answerInApp: String = ""
@@ -257,6 +259,27 @@ enum MacDrive {
           said.answered.append("Yes, this once (Return)")
           _ = try await until(20, "the card stayed after Return (its Yes, this once)") { store.conversation?.approval?.id == a.id ? nil : true }
           step("answered the card: Yes, this once", shot: "say\(n)-card\(said.cards.count)-answered")
+        }
+        // Ola's question (OLA-301): its first choice by its shortcut, Command-1, as a person could
+        // press it; a question with no choices gets "Yes, go ahead." typed in the box and Return.
+        if store.conversation?.approval == nil, let q = store.conversation?.question, q.id != lastCard {
+          lastCard = q.id
+          let f = q.fields.first
+          said.questions.append((f?.text ?? "") + " [" + (f?.options.map(\.label).joined(separator: " | ") ?? "") + "]")
+          try await settle(window, 0.8)
+          step("question: \(f?.text ?? "")", shot: "say\(n)-question\(said.questions.count)")
+          if let first = f?.options.first, q.single {
+            shortcut("1", code: 18, in: window)
+            said.answered.append("\(first.label) (Command-1)")
+          } else {
+            let box = try await until(15, "no box to type the answer in") { textFields(in: window).last }
+            try click(box, in: window)
+            type("Yes, go ahead.", in: window)
+            key(.return, in: window)
+            said.answered.append("Yes, go ahead. (typed, Return)")
+          }
+          _ = try await until(20, "the question stayed after it was answered") { store.conversation?.question?.id == q.id ? nil : true }
+          step("answered the question: \(said.answered.last ?? "")", shot: "say\(n)-question\(said.questions.count)-answered")
         }
         if whereOla.account?.phase == .expired { said.status = "signed out"; throw Failed(why: "the app signed out while answering (“You’ve been signed out on this Mac”)") }
         if let p = store.problem {

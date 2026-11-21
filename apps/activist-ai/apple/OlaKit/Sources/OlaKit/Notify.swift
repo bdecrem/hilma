@@ -41,6 +41,12 @@ public struct NotifyEvent: Equatable, Sendable {
     return NotifyEvent(kind: .needsYou, session: session.id, title: session.title, body: "Needs your OK: " + clip(what), key: "ask:\(a.id)")
   }
 
+  /// Ola asks a question and waits (OLA-301).
+  public static func asks(_ q: Question, session: SessionInfo) -> NotifyEvent {
+    let f = q.fields.first
+    return NotifyEvent(kind: .needsYou, session: session.id, title: session.title, body: "Ola asks: " + clip(f.map { $0.text.isEmpty ? $0.title : $0.text } ?? ""), key: "ask:\(q.id)")
+  }
+
   static func clip(_ s: String, _ n: Int = 110) -> String { s.count > n ? String(s.prefix(n - 1)) + "\u{2026}" : s }
 }
 

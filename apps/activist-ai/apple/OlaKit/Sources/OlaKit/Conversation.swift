@@ -79,6 +79,101 @@ public struct Approval: Identifiable, Equatable, Sendable {
   }
 }
 
+/// A question Ola asks and waits on (OLA-301): opencode's `question` tool raises a form, with
+/// choices and room for the person's own words. A port of web/src/lib/conversation.ts questionOf.
+public struct Question: Identifiable, Equatable, Sendable {
+  public struct Option: Equatable, Sendable, Hashable {
+    public var value: String
+    public var label: String
+    public var description: String?
+    public init(value: String, label: String, description: String? = nil) {
+      self.value = value
+      self.label = label
+      self.description = description
+    }
+  }
+
+  public struct Field: Equatable, Sendable, Identifiable {
+    public var key: String
+    public var title: String
+    public var text: String
+    public var options: [Option]
+    /// Whether the person may answer in their own words (opencode's default).
+    public var custom: Bool
+    public var multiple: Bool
+    public var id: String { key }
+    public init(key: String, title: String, text: String, options: [Option], custom: Bool = true, multiple: Bool = false) {
+      self.key = key
+      self.title = title
+      self.text = text
+      self.options = options
+      self.custom = custom
+      self.multiple = multiple
+    }
+  }
+
+  public var id: String
+  public var sessionID: String
+  public var fields: [Field]
+  /// The step it belongs to (the `question` tool call), if known.
+  public var stepID: String?
+
+  public init(id: String, sessionID: String, fields: [Field], stepID: String? = nil) {
+    self.id = id
+    self.sessionID = sessionID
+    self.fields = fields
+    self.stepID = stepID
+  }
+
+  /// One field, one choice: a tap on an option is the whole answer.
+  public var single: Bool { fields.count == 1 && !fields[0].multiple }
+
+  /// A form from opencode as the question the app shows, or nil when it is not one we can show.
+  public init?(form f: JSON) {
+    guard let id = f["id"].string, case .array(let raw) = f["fields"] else { return nil }
+    let fields: [Field] = raw.compactMap { x in
+      guard let key = x["key"].string, x["type"].str == "string" || x["type"].str == "multiselect" else { return nil }
+      let title = x["title"].string ?? ""
+      let options = x["options"].array.compactMap { o -> Option? in
+        guard let v = o["value"].string else { return nil }
+        return Option(value: v, label: o["label"].string ?? v, description: o["description"].string.flatMap { $0.isEmpty ? nil : $0 })
+      }
+      return Field(key: key, title: title, text: x["description"].string ?? title, options: options, custom: x["custom"].bool != false, multiple: x["type"].str == "multiselect")
+    }
+    guard !fields.isEmpty else { return nil }
+    self.init(id: id, sessionID: f["sessionID"].str, fields: fields, stepID: f["metadata"]["tool"]["id"].string)
+  }
+
+  /// The answer opencode takes (`{ answer: { key: value } }`): for each field the typed words
+  /// when there are some, else the choices picked (a list for a multiselect, the first otherwise).
+  public func answer(picked: [String: [String]], typed: [String: String]) -> [String: JSON] {
+    var a: [String: JSON] = [:]
+    for f in fields {
+      let t = (typed[f.key] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+      let chosen = picked[f.key] ?? []
+      if f.multiple { a[f.key] = .array((chosen + (t.isEmpty ? [] : [t])).map { .string($0) }) }
+      else { a[f.key] = .string(t.isEmpty ? (chosen.first ?? "") : t) }
+    }
+    return a
+  }
+
+  /// Every field has something.
+  public static func complete(_ a: [String: JSON]) -> Bool {
+    a.values.allSatisfy { v in
+      if case .array(let l) = v { return !l.isEmpty }
+      return !v.str.isEmpty
+    }
+  }
+
+  /// Words typed in the conversation's box as the answer: for the first field (the others, if any,
+  /// cannot be answered that way, so the box answers only a one-field question).
+  public func answer(words: String) -> [String: JSON]? {
+    let t = words.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard fields.count == 1, let f = fields.first, !t.isEmpty else { return nil }
+    return [f.key: f.multiple ? .array([.string(t)]) : .string(t)]
+  }
+}
+
 public struct Turn: Identifiable, Equatable, Sendable, Codable {
   public enum Status: String, Sendable, Codable { case sending, working, done, failed, stopped }
   /// Who did the work: Ola (opencode on open models), Claude (Claude Code, Fallback to Claude) or
@@ -139,6 +234,8 @@ public struct Conversation: Equatable, Sendable {
   public var directory: String?
   public var turns: [Turn] = []
   public var approval: Approval?
+  /// A question Ola asked and waits on (OLA-301).
+  public var question: Question?
   /// The assistant message whose text is the current answer.
   var answerMessage: String?
 
@@ -198,7 +295,8 @@ public struct Conversation: Equatable, Sendable {
     let type = ev["type"].str
     let d = ev["data"]
     let at = ev["created"].date ?? .now
-    guard d["sessionID"].str == sessionID else { return false }
+    // A form (Ola's question to the person) carries its session inside it.
+    guard (d["sessionID"].string ?? d["form"]["sessionID"].str) == sessionID else { return false }
     if type == "session.created" {
       directory = d["location"]["directory"].string ?? directory
       return true
@@ -270,6 +368,17 @@ public struct Conversation: Equatable, Sendable {
         }
       }
       return true
+    case "form.created":
+      guard let q = Question(form: d["form"]) else { return false }
+      question = q
+      if let sid = q.stepID, let i = step(sid) { turn.steps[i].status = .waiting }
+      return true
+    case "form.replied", "form.cancelled":
+      guard let q = question, q.id == d["id"].str else { return false }
+      question = nil
+      let i = q.stepID.flatMap { step($0) } ?? turn.steps.firstIndex { $0.status == .waiting }
+      if let i, turn.steps[i].status == .waiting { turn.steps[i].status = .running }
+      return true
     case "session.text.delta":
       if answerMessage != d["assistantMessageID"].string {
         let prior = turn.answer.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -313,6 +422,7 @@ public struct Conversation: Equatable, Sendable {
       turn.ended = at
       turn.notice = nil
       approval = nil
+      question = nil
       Self.settle(&turn, at: at)
       return true
     case "session.execution.interrupted":
@@ -320,6 +430,7 @@ public struct Conversation: Equatable, Sendable {
       turn.ended = at
       turn.notice = nil
       approval = nil
+      question = nil
       if let reason = d["reason"].string, reason != "user" {
         turn.error = Problem(text: reason == "shutdown" ? "The server restarted, so this stopped." : "This stopped before it finished.", detail: "interrupted: \(reason)")
       }

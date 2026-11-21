@@ -385,6 +385,9 @@ public final class MacRelay: @unchecked Sendable {
     ("GET", #"^/api/session/[A-Za-z0-9_-]{1,80}/message$"#),
     ("GET", #"^/api/session/[A-Za-z0-9_-]{1,80}/permission$"#),
     ("POST", #"^/api/session/[A-Za-z0-9_-]{1,80}/permission/[A-Za-z0-9_-]{1,80}/reply$"#),
+    // Ola's questions (opencode's `question` tool raises a form): list and answer (OLA-301).
+    ("GET", #"^/api/session/[A-Za-z0-9_-]{1,80}/form$"#),
+    ("POST", #"^/api/session/[A-Za-z0-9_-]{1,80}/form/frm_[A-Za-z0-9_-]{1,80}/reply$"#),
     ("GET", #"^/api/model$"#),
     ("GET", #"^/api/model/default$"#),
     ("GET", #"^/api/fs/list$"#),

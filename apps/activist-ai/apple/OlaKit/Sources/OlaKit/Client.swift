@@ -266,6 +266,17 @@ public final class OpenCodeClient: @unchecked Sendable {
     return j["data"].isNull ? j.array : j["data"].array
   }
 
+  /// Ola's questions waiting in a session (opencode's `question` tool raises a form; OLA-301).
+  public func pendingForms(_ id: String) async throws -> [JSON] {
+    let j = try await json("GET", "/api/session/\(id)/form")
+    return j["data"].isNull ? j.array : j["data"].array
+  }
+
+  /// The person's answer to one of Ola's questions: one value per field.
+  public func answerForm(session: String, form: String, answer: [String: JSON]) async throws {
+    try await send("POST", "/api/session/\(session)/form/\(form)/reply", body: ["answer": .object(answer)])
+  }
+
   public enum Decision: String, Sendable { case once, always, reject }
 
   public func reply(session: String, request: String, decision: Decision) async throws {
