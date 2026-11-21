@@ -282,6 +282,7 @@ if ((cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') && (!onCopy || pr
   if (why) die(`Refused: ${why}.`)
   process.on('exit', () => { try { execFileSync('node', [fileURLToPath(new URL('./_ledgerlock.mjs', import.meta.url)), 'release', owner], { stdio: 'ignore', env: process.env, timeout: 30e3 }) } catch {} })
 }
+let newWeakLine = null
 if (cmd === 'add') {
   await fpGate()
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
@@ -292,6 +293,16 @@ if (cmd === 'add') {
     const [name, what] = str('new').split('|')
     if (!str('weakness') || !name || !what) die('--new "Name|what it is" needs --weakness <new-id> too')
     if (w) die(`weakness ${w.id} exists already`)
+    // twenty-first checker: a new weakness needs only a kind-1 fix, so filing a correction under a fresh copy of
+    // an existing one skipped the fix it was due. The same id in another case, or the same name, is refused;
+    // every new weakness is a line naming the closest existing one, for a person to read the same day
+    const norm = (x) => String(x ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+    const same = list.find((x) => norm(x.id) === norm(str('weakness')) || norm(x.name) === norm(name))
+    if (same) die(`Refused: weakness ${same.id} ("${same.name}") is the same one; file the correction under --weakness ${same.id}`)
+    const words = (x) => new Set(String(x).toLowerCase().match(/[a-z]{4,}/g) ?? [])
+    const mineW = words(`${name} ${what}`)
+    const closest = list.map((x) => ({ x, k: [...words(`${x.name} ${x.what ?? ''}`)].filter((t) => mineW.has(t)).length })).sort((a, b) => b.k - a.k)[0]?.x
+    newWeakLine = `a new weakness ${str('weakness')} ("${name.trim()}") was started, which needs only a kind-1 fix; the closest existing one is ${closest ? `${closest.id} ("${closest.name}")` : 'none'}: read whether the correction belongs there`
     w = { id: str('weakness'), side: str('side') ?? 'kit', name: name.trim(), what: what.trim(), seen: [], guards: [], now: '' }
     list.push(w)
   }
@@ -366,6 +377,9 @@ if (cmd === 'add') {
   // a fix given with the correction is the agent's own word that it is built: whether the file or ticket
   // carries it is the same judgment as settling an owed fix, so a fix of kind 3 or stronger, and a "no stronger
   // fix" claim, are a line a person reads the same day, as every settle is (twentieth checker)
+  if (newWeakLine && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+    try { const { writeOverride } = await import('./_overrides.mjs'); await writeOverride(await trackerDb(), { what: `correction ${n}: ${newWeakLine}${onCopy ? ` (on a copy of the notes, ${process.env.VENTURE_PRIVATE})` : ''}`, tool: 'correct.mjs' }) } catch (e) { console.error(`(the line for the new weakness was not written: ${e.message})`) }
+  }
   if ((cannot || (!owed && level >= 3)) && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
     try {
       const { writeOverride } = await import('./_overrides.mjs')
