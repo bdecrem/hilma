@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile due_process claude-opus-5-5 high",
- "pid": 66589,
  "step": "back2000",
  "slug": "chile",
  "chunk": "due_process",
@@ -61,5 +60,1402 @@
   "user": 190
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T08:56:20.762Z",
+ "minutes": 160.01,
+ "meters_after": {
+  "at": "2026-11-21T08:56:20.762Z",
+  "window": {
+   "pct": 52,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 2,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 52,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 2,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 52% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 2% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 130948,
+   "output": 57655,
+   "cache_read": 4510248,
+   "cache_write": 162249,
+   "cost_usd": 3.2401,
+   "total": 4861100
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 130856,
+    "output": 11104,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3380,
+    "cost_usd": 0.1086
+   },
+   "claude-opus-5-5": {
+    "input": 92,
+    "output": 46551,
+    "cache_read": 4510248,
+    "cache_write": 162249,
+    "thinking": 13601,
+    "cost_usd": 3.1314
+   }
+  }
+ },
+ "turns": 46,
+ "calls": 81,
+ "duration_ms": 1227750,
+ "duration_api_ms": 1035670,
+ "pages_read": 32,
+ "pages": [
+  {
+   "at": "2026-11-21T06:31:33.207Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 33 bis | Artículo 69 | Artículo 78 | Artículo 89 | clandestinamente",
+   "ok": true,
+   "chars": 3403
+  },
+  {
+   "at": "2026-11-21T06:31:38.618Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 33 bis | Artículo 69 | Artículo 78 | clandestinamente | trata de personas",
+   "ok": true,
+   "chars": 12570
+  },
+  {
+   "at": "2026-11-21T06:31:43.884Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 35.- | Artículo 34.- | Artículo 89.- | Artículo 84.- | Artículo 1°.- ",
+   "ok": true,
+   "chars": 7259
+  },
+  {
+   "at": "2026-11-21T06:31:50.551Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-01",
+   "find": "Artículo 78.- | Artículo 35.- | Artículo 69.- | Versión",
+   "ok": true,
+   "chars": 7918
+  },
+  {
+   "at": "2026-11-21T06:31:57.887Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-22",
+   "find": "Artículo 69.- | Artículo 78.- | Artículo 34 bis | \"inicio_vigencia\"",
+   "ok": true,
+   "chars": 7537
+  },
+  {
+   "at": "2026-11-21T06:31:59.016Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2010-04-15",
+   "find": "20430 | 20.430 | Artículo 69.- | \"inicio_vigencia\"",
+   "ok": true,
+   "chars": 5598
+  },
+  {
+   "at": "2026-11-21T06:32:04.501Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+   "find": "Artículo 8 | Artículo 49 | ingreso clandestino | asistencia jurídica | intérprete",
+   "ok": true,
+   "chars": 7499
+  },
+  {
+   "at": "2026-11-21T06:33:13.191Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+   "find": "Artículo 6° | \"vigencias\"",
+   "ok": true,
+   "chars": 4060
+  },
+  {
+   "at": "2026-11-21T06:33:17.736Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Artículo 291 | Artículo 108 | Artículo 109 | Artículo 111 | Artículo 484 | \"vigencias\"",
+   "ok": true,
+   "chars": 12551
+  },
+  {
+   "at": "2026-11-21T06:33:20.423Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Artículo 291.- | Artículo 484.- | Artículo 93.- Derechos y garantías del imputado",
+   "ok": true,
+   "chars": 5960
+  },
+  {
+   "at": "2026-11-21T06:33:24.607Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "será asistido de un intérprete que le comunicará",
+   "ok": true,
+   "chars": 2237
+  },
+  {
+   "at": "2026-11-21T06:34:59.276Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=22960",
+   "find": "intérprete | Art. 93 | Art. 94 | querella | extranjero",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:59:33.020Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=22960",
+   "find": "intérprete | querella | extranjero",
+   "ok": true,
+   "chars": 6136
+  },
+  {
+   "at": "2026-11-21T06:59:48.388Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/93.htm",
+   "find": "querella | Art",
+   "ok": true,
+   "chars": 2046
+  },
+  {
+   "at": "2026-11-21T06:59:48.938Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/214.htm",
+   "find": "intérprete",
+   "ok": true,
+   "chars": 2179
+  },
+  {
+   "at": "2026-11-21T06:59:52.570Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/326.htm",
+   "find": "Artículo 326",
+   "ok": true,
+   "chars": 1706
+  },
+  {
+   "at": "2026-11-21T07:18:48.408Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/327.htm",
+   "find": "Artículo 327",
+   "ok": true,
+   "chars": 1706
+  },
+  {
+   "at": "2026-11-21T07:18:49.094Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/325.htm",
+   "find": "Artículo 325",
+   "ok": true,
+   "chars": 1706
+  },
+  {
+   "at": "2026-11-21T07:18:52.134Z",
+   "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/328.htm",
+   "find": "Artículo 328",
+   "ok": true,
+   "chars": 1706
+  },
+  {
+   "at": "2026-11-21T07:19:13.648Z",
+   "url": "https://chile.justia.com/nacionales/codigos/codigo-de-procedimiento-penal/gdoc",
+   "find": "intérprete | interprete",
+   "ok": true,
+   "chars": 3630
+  },
+  {
+   "at": "2026-11-21T07:19:17.634Z",
+   "url": "https://chile.justia.com/nacionales/codigos/codigo-de-procedimiento-penal/gdoc",
+   "find": "artículos 214 | artículo 214 | lengua | traductor",
+   "ok": true,
+   "chars": 4082
+  },
+  {
+   "at": "2026-11-21T07:19:26.105Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "La igualdad ante la ley | La igual protección de la ley en el ejercicio de sus derechos",
+   "ok": true,
+   "chars": 4119
+  },
+  {
+   "at": "2026-11-21T07:19:28.713Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "por las normas pertinentes de sus respectivos estatutos.",
+   "ok": true,
+   "chars": 2252
+  },
+  {
+   "at": "2026-11-21T07:19:37.410Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092",
+   "find": "Artículo 2º | Artículo 3º | \"fecha_publicacion\"",
+   "ok": true,
+   "chars": 5446
+  },
+  {
+   "at": "2026-11-21T07:22:50.223Z",
+   "url": "https://dpp.cl/resources/templates/memoria/2014/pdf/05_Defensa_especializada.pdf",
+   "find": "intérprete | extranjeros | migrantes",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:26:50.261Z",
+   "url": "https://www.ecoi.net/en/document/1020280.html",
+   "find": "temporary residency | visa | deport",
+   "ok": true,
+   "chars": 4137
+  },
+  {
+   "at": "2026-11-21T07:26:52.744Z",
+   "url": "https://webarchive.archive.unhcr.org/20170107160117mp_/http://www.refworld.org/country,,,,CHL,,4a4214c637,0.html",
+   "find": "residency | visa | deport | legal alternatives",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:43:36.622Z",
+   "url": "https://www.ecoi.net/en/document/1234346.html",
+   "find": "visa | temporary residency",
+   "ok": true,
+   "chars": 2355
+  },
+  {
+   "at": "2026-11-21T07:43:56.387Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+   "find": "quedarán sujetos a las sanciones que establece este decreto ley | Artículo 36.- | Artículo 78.-",
+   "ok": true,
+   "chars": 4651
+  },
+  {
+   "at": "2026-11-21T07:55:06.443Z",
+   "url": "https://www.diarioconstitucional.cl/wp-content/uploads/2020/03/corte-de-apelaciones-rol-323-2020.pdf",
+   "find": "desist | artículo 69 | denuncia | ingreso clandestino",
+   "ok": true,
+   "chars": 774
+  },
+  {
+   "at": "2026-11-21T07:58:24.182Z",
+   "url": "https://rej.uchile.cl/index.php/RECEJ/article/download/60531/64413",
+   "find": "artículo 69 | desist | querella | denuncias",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:18:10.526Z",
+   "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/",
+   "find": "intérprete | idioma | denunciar | justicia | Defensoría",
+   "ok": true,
+   "chars": 4669
+  }
+ ],
+ "searches": [
+  "Código de Procedimiento Penal Chile 1906 intérprete \"no supiere el idioma castellano\" inculpado artículo leychile",
+  "\"Código de Procedimiento Penal\" \"inculpado\" \"idioma castellano\" \"intérprete\" artículo declaración indagatoria Chile",
+  "Chile denuncias artículo 69 decreto ley 1094 ingreso clandestino Ministerio del Interior querellas número expulsión práctica",
+  "Trafficking in Persons Report Chile temporary residency visa trafficking victims Article 33 bis 2013 OR 2014 OR 2015",
+  "Defensoría Penal Pública intérpretes imputados extranjeros creole haitianos defensa migrantes",
+  "\"Trafficking in Persons Report 2010\" Chile \"legal alternatives\" foreign victims removal",
+  "\"ingreso clandestino\" \"artículo 69\" denuncia Intendencia desistimiento expulsión migrantes 2013 OR 2015 OR 2018 INDH informe",
+  "delito ingreso clandestino Chile \"decreto ley 1.094\" artículo 69 aplicación jurisprudencia juzgados de garantía condenas migrantes artículo académico",
+  "INDH informe anual migrantes acceso a la justicia denuncias víctimas extranjeros situación irregular temor expulsión Chile"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":35,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"In force: Constitución Política, Art. 19 Nos. 2 and 3. These secure equality before the law and 'la igual protección de la ley en el ejercicio de sus derechos' to 'todas las personas'; the 1980 text was already amended by Ley 19.611 (1999). Criminal cases ran under the old Código de Procedimiento Penal, whose Art. 1 gives jurisdiction over Chileans and foreigners alike. I found no practice evidence from around 2000, so the rating is carried over from the starting answer.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same constitutional guarantees. The new Código Procesal Penal (Ley 19.696) had come into force in every region except the Metropolitana, where it started on 16-06-2005. Ley 20.050 (26-08-2005) did not change the guarantee. No practice evidence for this period.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same constitutional guarantees, and the CPP now applied nationwide. Ley 20.516 (2011) and Ley 20.609 (2012, which lists 'la nacionalidad' as a ground of arbitrary discrimination) came later and only strengthen the protection. No specific practice evidence for this period.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Art. 19 Nos. 2–3 (as amended by Ley 20.516) and Ley 20.609 were in force; nothing changed between 2015 and 2020. Practice around 2017: a migrant organisation (MAM) said irregular migrants have almost no access to justice, and the UAH migrant legal clinic reported language barriers and fear of expulsion. This points to gaps, not to a systematic denial.\"}],\"change_2000_2020\":\"There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República\",\"article\":\"Art. 19 No. 2\",\"role\":\"cited\",\"in_force",
+ "output": {
+  "answers": [
+   {
+    "question_id": 35,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "In force: Constitución Política, Art. 19 Nos. 2 and 3. These secure equality before the law and 'la igual protección de la ley en el ejercicio de sus derechos' to 'todas las personas'; the 1980 text was already amended by Ley 19.611 (1999). Criminal cases ran under the old Código de Procedimiento Penal, whose Art. 1 gives jurisdiction over Chileans and foreigners alike. I found no practice evidence from around 2000, so the rating is carried over from the starting answer."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same constitutional guarantees. The new Código Procesal Penal (Ley 19.696) had come into force in every region except the Metropolitana, where it started on 16-06-2005. Ley 20.050 (26-08-2005) did not change the guarantee. No practice evidence for this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same constitutional guarantees, and the CPP now applied nationwide. Ley 20.516 (2011) and Ley 20.609 (2012, which lists 'la nacionalidad' as a ground of arbitrary discrimination) came later and only strengthen the protection. No specific practice evidence for this period."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Art. 19 Nos. 2–3 (as amended by Ley 20.516) and Ley 20.609 were in force; nothing changed between 2015 and 2020. Practice around 2017: a migrant organisation (MAM) said irregular migrants have almost no access to justice, and the UAH migrant legal clinic reported language barriers and fear of expulsion. This points to gaps, not to a systematic denial."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 2",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (amended by Ley 19.611, 1999-06-16)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 3",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (amended by Ley 20.050, 2005-08-26; Ley 20.516, 2011-07-11)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 3, 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 20.609 que establece medidas contra la discriminación",
+      "article": "Arts. 2, 3",
+      "role": "other_in_force",
+      "in_force": "2012-07-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Código de Procedimiento Penal (Ley 1.853)",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "1906 to the CPP's regional entry into force (2000-12-16 to 2005-06-16)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley N° 20.050",
+      "article": "CPR Art. 19 No. 3",
+      "kind": "amended",
+      "what_changed": "Amended the clause on special commissions and on the pre-established tribunal. The equal-protection guarantee was untouched.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+      "passage": "Nadie podrá ser juzgado por comisiones espLEY N° 20.050 Art. 1° N° 10 letra a) D.O. 26.08.2005eciales, sino por el tribunal que señalare la ley"
+     },
+     {
+      "date": "2011-07-11",
+      "instrument": "Ley N° 20.516",
+      "article": "CPR Art. 19 No. 3",
+      "kind": "amended",
+      "what_changed": "Added free legal advice for victims and a state-provided defender for anyone accused of a crime. This strengthens equal protection for everyone, migrants included.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+      "passage": "Toda persona imputada de delito tiene derLey 20516 Art. ÚNICO Nº 1 b) D.O. 11.07.2011echo irrenunciable a ser asistida por un abogado defensor proporcionado por el Estado"
+     },
+     {
+      "date": "2012-07-24",
+      "instrument": "Ley N° 20.609",
+      "article": "Arts. 2–3",
+      "kind": "new_instrument",
+      "what_changed": "Created a judicial action against arbitrary discrimination, including discrimination based on nationality. It adds a remedy; the answer stays Yes.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092",
+      "passage": "en particular cuando se funden en motivos tales como la raza o etnia, la nacionalidad, la situación socioeconómica, el idioma"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Acceso a la justicia: una deuda con los inmigrantes (Radio Universidad de Chile)",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Constitution's amendment annotations on LeyChile were read and the guarantee's text is unchanged since 1980 apart from Ley 19.611 (1999). There is no practice evidence for 2000–2010.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Ley 20.609 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092"
+     },
+     {
+      "title": "Código de Procedimiento Penal (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=22960"
+     },
+     {
+      "title": "Radio U. de Chile 2017",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2020 answer rests on CPR Art. 19 Nos. 2–3. Ley 21.325 Arts. 3 and 13 did not exist before 2022, and DL 1.094 has no equivalent equality clause. No ruling relied on."
+   },
+   {
+    "question_id": 37,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Under DL 1.094 Art. 89 (text of 1983, Ley 18.252), an expelled foreigner could appeal to the Supreme Court within 24 hours 'por sí o por medio de algún miembro de su familia'. No provision gave free counsel. CPR Art. 19 No. 3 contains only a general mandate to arrange legal aid."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change: DL 1.094 Arts. 84 and 89 were unchanged. Free public criminal defence existed, but it does not cover proceedings on migration status."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.430 (April 2010) gives asylum seekers a free procedure and an interpreter (Arts. 29, 48), but no government-paid counsel."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change before 2020. Free counsel in migration matters arrived only with Ley 21.325 Art. 21, in force 12-02-2022."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 21",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "Art. 89",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "Art. 84",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19 No. 3 inc. 3",
+      "role": "other_in_force",
+      "in_force": "1980-10-24 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley N° 20.430",
+      "article": "Art. 49",
+      "kind": "new_instrument",
+      "what_changed": "Repealed DL 1.094's refugee provisions and set up the refugee procedure, which is free but provides no state-paid counsel.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "Artículo 49.- Deróganse las normas establecidas en el decreto ley Nº1.094, de 1975, en lo que digan relación con los refugiados."
+     }
+    ],
+    "repealed_search": "I read every DL 1.094 version in force on 1 January 2000, 2005, 2010 and 2015 (versions of 1996-10-22, 2002-05-31, 2010-04-15 and 2011-04-08 to 2022). I checked Arts. 84, 89 and 90 and the refugee chapter, Arts. 34–40, and found no free-counsel provision. Ley 20.430 has none either: its Art. 48 makes only the procedure free. I found no protection that was repealed or narrowed.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Acceso a la justicia: una deuda con los inmigrantes (Radio Universidad de Chile)",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read DL 1.094's LeyChile versions for every date. The Corporaciones de Asistencia Judicial law (general legal aid) was not read.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 latest version (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 version 1996-10-22",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-22"
+     },
+     {
+      "title": "DL 1.094 version 2002-05-31",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "Ley 20.430 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "In practice, university clinics (e.g. UAH) and NGOs gave free advice on migration status, but that is not a legal right."
+   },
+   {
+    "question_id": 39,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "The old Código de Procedimiento Penal applied everywhere. Its Art. 332 says that if the accused 'no supiere la lengua castellana' the statement is taken as for witnesses under Art. 214, through a sworn interpreter. The code is silent on cost. No practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "The CPP was in force in every region except the Metropolitana. CPP Art. 291 says the accused who 'no pudiere entender el idioma castellano será asistido de un intérprete', and Art. 98 applies it to the accused's statements. In Santiago, old CdPP Art. 332 still applied until 16-06-2005. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "CPP Art. 291 applied nationwide; it was not amended in substance before 2024. No practice evidence for this period."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. Around 2017 the head of the Defensoría Penal Pública's specialised defence unit said documents had not been translated and proceedings ignored cultural differences. That points to gaps in practice."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 291 incs. 3–4",
+      "role": "other_in_force",
+      "in_force": "2000-12-16 (by region; nationwide from 2005-06-16) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 484",
+      "role": "other_in_force",
+      "in_force": "2000-10-12 to today (amended by Ley 19.762, 2001; Ley 19.919, 2003)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Código de Procedimiento Penal (Ley 1.853)",
+      "article": "Arts. 332, 214",
+      "role": "predecessor",
+      "in_force": "1906 to 2005-06-15 (replaced region by region)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-12-16",
+      "instrument": "Ley N° 19.696 (Código Procesal Penal)",
+      "article": "Arts. 291, 484",
+      "kind": "new_instrument",
+      "what_changed": "The new CPP, with an express interpreter right for the accused (Art. 291), replaced CdPP Art. 332 in stages. It started in Coquimbo and Araucanía on 2000-12-16.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+      "passage": "El acusado sordo o que no pudiere entender el idioma castellano será asistido de un intérprete que le comunicará el contenido de los actos del juicio."
+     },
+     {
+      "date": "2005-06-16",
+      "instrument": "Ley N° 19.696 Art. 484 (as amended by Ley 19.919)",
+      "article": "Art. 484",
+      "kind": "practice",
+      "what_changed": "The CPP reached the Región Metropolitana, completing the replacement of the old code.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+      "passage": "regirá para las regiones de Coquimbo y de la Araucanía, desde el 16 de diciembre de 2000; ... y para la Región Metropolitana de Santiago, desde el 16 de junio de 2"
+     },
+     {
+      "date": "1906",
+      "instrument": "Código de Procedimiento Penal (Ley 1.853)",
+      "article": "Art. 332",
+      "kind": "enacted",
+      "what_changed": "The old code's interpreter rule for the accused; this is the text in force on 1-1-2000.",
+      "url": "https://chile.justia.com/nacionales/codigos/codigo-de-procedimiento-penal/gdoc",
+      "passage": "Art. 332. (354) Si el inculpado no supiere la lengua castellana o si es sordo, o mudo, o sordo-mudo, se procederá a tomarle declaración en la forma preceptuada por los artículos 214 y 215."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Acceso a la justicia: una deuda con los inmigrantes (Radio Universidad de Chile; statement of DPP specialised defence head)",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "CPP Arts. 291 and 484 were read on LeyChile, and old CdPP Art. 332 in the BCN-sourced text on Justia. No practice evidence exists before about 2015, so the implementation ratings are low-confidence.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "Código de Procedimiento Penal (Justia, BCN text)",
+      "url": "https://chile.justia.com/nacionales/codigos/codigo-de-procedimiento-penal/gdoc"
+     },
+     {
+      "title": "CdPP Art. 214 (leyes-cl)",
+      "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/214.htm"
+     },
+     {
+      "title": "CdPP Art. 327 (leyes-cl)",
+      "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/327.htm"
+     },
+     {
+      "title": "Radio U. de Chile 2017",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/"
+     }
+    ],
+    "starting_answer_concern": "The MRD's 2020 citation says there is 'no explicit protection', yet CPP Art. 291 expressly gives a court interpreter to an accused who cannot understand Spanish. So the Yes holds on statutory grounds, not only on DPP practice. The MRD's rating 'Sometimes; Effectively Always' pairs two levels that are not neighbours and is not one of the allowed options.",
+    "confidence": "medium",
+    "notes": "Neither code says 'at government expense'; the interpreter is appointed by the court. Past implementation ratings use the neighbouring pair closest to the MRD's split rating."
+   },
+   {
+    "question_id": 41,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "DL 1.094 Art. 69 made clandestine entry a crime ('presidio menor en su grado máximo'), and Art. 68 did the same for entry with false documents. Prosecution required a complaint from the Ministry of the Interior or the Intendente, who could withdraw it (Art. 78). The only statutory exemption was Art. 68 inc. 3 together with Art. 35: asylum seekers who declared their documents were exempt from the false-document offence. No practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Same, except that Art. 78 had been adapted to the new CPP by Ley 19.806 (31-05-2002); the ministerial control over prosecution was kept. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Unchanged since 2002. Ley 20.430's non-penalisation clause (Art. 6) took effect only on 15-04-2010. No practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Ley 20.430 Art. 6 bars penal and administrative sanctions on refugees for irregular entry or stay if they report within 10 days; it replaced DL 1.094's refugee rules (Art. 49). DL 1.094 Art. 69 still criminalised clandestine entry for everyone else. No practice evidence found."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 112, 155",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 69",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 68 (inc. 3)",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-11 (inc. 2 amended by Ley 19.806, 2002-05-31)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 78",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11 (replaced by Ley 19.806, 2002-05-31)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 35",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2010-04-14 (refugee provisions repealed by Ley 20.430 Art. 49)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 6",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today (amended by Ley 21.655, 2024-02-20)",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2002-05-31",
+      "instrument": "Ley N° 19.806",
+      "article": "DL 1.094 Arts. 68, 78",
+      "kind": "amended",
+      "what_changed": "Art. 78 was rewritten for the new CPP: investigations still start only on a Ministry or Intendente complaint, and withdrawal extinguishes the action. Art. 68 inc. 2 dropped the bar on provisional release. The offences stayed.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+      "passage": "Las investigaciones de hechos constitutivos de los delitos comprendidos en este Título sólo podrán iniciarse por denuncia o querella del Ministerio del Interior o del Intendente Regional respectivo."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley N° 20.430",
+      "article": "Art. 6; Art. 49",
+      "kind": "new_instrument",
+      "what_changed": "Created an express exemption for refugees from penal and administrative sanctions for irregular entry, and repealed DL 1.094's refugee rules (Arts. 35, 68 inc. 3 as they applied to refugees).",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+      "passage": "No se impondrán a los refugiados sanciones penales ni administrativas con motivo de su ingreso o residencia irregular, siempre que se presenten, dentro de los diez días siguientes a la infracción"
+     },
+     {
+      "date": "1983-10-26",
+      "instrument": "Ley N° 18.252",
+      "article": "DL 1.094 Art. 69",
+      "kind": "amended",
+      "what_changed": "This is the clandestine-entry offence as in force from 1996 to 2022, unchanged between 2000 and 2020.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-22",
+      "passage": "Artículo 69.- Los extranjeros que ingresen al país o intenten egresar de él clandestinamente, serán sancionados con la pena de presidio menor en su grado máximo."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the DL 1.094 versions for 1996-2002, 2002-2010, 2010-2011 and 2011-2022, and Ley 20.430 in its original text. I found no readable practice source on Art. 69 prosecutions for any period; a Diario Constitucional ruling was blocked and a Universidad de Chile journal article could not be fetched.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 latest version",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 version 1993-1996",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-01"
+     },
+     {
+      "title": "DL 1.094 version 1996-10-22",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1996-10-22"
+     },
+     {
+      "title": "DL 1.094 version 2002-05-31",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "DL 1.094 version 2010-04-15",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2010-04-15"
+     },
+     {
+      "title": "Ley 20.430 original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "Corte de Apelaciones rol 323-2020 (blocked)",
+      "url": "https://www.diarioconstitucional.cl/wp-content/uploads/2020/03/corte-de-apelaciones-rol-323-2020.pdf"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'Yes' looks wrong for migrants generally. On 1-1-2020, DL 1.094 Art. 69 made clandestine entry a crime punishable by presidio menor en su grado máximo, and Art. 68 did the same for entry with false documents. Only refugees (Ley 20.430 Art. 6) were exempt, and prosecution depended on ministerial discretion (Art. 78). The MRD's citation relies on Ley 21.325, which entered into force in 2022.",
+    "confidence": "low",
+    "notes": "The Yes is kept at every date because a narrow statutory exemption for refugees existed at each one: DL 1.094 Art. 68 inc. 3 with Art. 35 before 2010, Ley 20.430 Art. 6 after. Its scope widened on 2010-04-15, hence 'not the same'. Answering 'No' for 2000–2010 would also be defensible. The implementation ratings carry over the MRD's 2020 'Rarely' without evidence for any period."
+   },
+   {
+    "question_id": 43,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Old CdPP Art. 93: 'Toda persona capaz de parecer en juicio por sí misma, puede querellarse', with no distinction by nationality or status. Art. 1 covers Chileans and foreigners. No practice evidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "CPP Arts. 108–109 and 111 ('La querella podrá ser interpuesta por la víctima') applied outside Santiago; CdPP Art. 93 applied in the Metropolitana until 16-06-2005. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "CPP Arts. 109 and 111 applied nationwide. Ley 20.516 (2011) later added constitutional free legal aid for victims. No practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same CPP provisions plus CPR Art. 19 No. 3 as amended in 2011. Around 2017 the UAH migrant legal clinic said fear of expulsion deters irregular migrants from claiming rights, while the Defensoría noted that migrants are more often victims than offenders."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Código Procesal Penal",
+      "article": "Arts. 108, 109, 111",
+      "role": "cited",
+      "in_force": "2000-12-16 (by region; nationwide 2005-06-16) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Código de Procedimiento Penal",
+      "article": "Art. 93",
+      "role": "predecessor",
+      "in_force": "1906 to 2005-06-15 (by region)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 13, 21",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 19 No. 3 inc. 3",
+      "role": "other_in_force",
+      "in_force": "2011-07-11 (victims' clause) to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-12-16",
+      "instrument": "Ley N° 19.696 (Código Procesal Penal)",
+      "article": "Arts. 109, 111, 484",
+      "kind": "new_instrument",
+      "what_changed": "The victim's right to file a querella, with no nationality distinction, replaced CdPP Art. 93 region by region; nationwide from 2005-06-16.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+      "passage": "Artículo 111.- Querellante. La querella podrá ser interpuesta por la víctima, su representante legal o su heredero testamentario."
+     },
+     {
+      "date": "2011-07-11",
+      "instrument": "Ley N° 20.516",
+      "article": "CPR Art. 19 No. 3",
+      "kind": "amended",
+      "what_changed": "Constitutional mandate for free legal advice and defence for natural-person victims so they can bring the criminal action.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+      "passage": "La ley señalará los casos y establecerá la forma en que las personas naturales víctimas de delitos dispondrán de asesoría y defensa jurídica gratuitas, a efecto de ejercer la acción penal"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Acceso a la justicia: una deuda con los inmigrantes (Radio Universidad de Chile)",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "CPP and old CdPP texts were read, the latter on leyes-cl and Justia rather than in LeyChile's version view. Practice evidence is thin, about 2017 only, with nothing for 2000–2010.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "CdPP Art. 93 (leyes-cl)",
+      "url": "https://leyes-cl.com/codigo_de_procedimiento_penal/93.htm"
+     },
+     {
+      "title": "Código de Procedimiento Penal (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=22960"
+     },
+     {
+      "title": "Constitución (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Radio U. de Chile 2017",
+      "url": "https://radio.uchile.cl/2017/08/12/acceso-a-la-justicia-otra-deuda-para-los-migrantes/"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds. The MRD's rating 'Rarely; Effectively Always' is not an allowed option; it probably separates irregular migrants from regular ones.",
+    "confidence": "low",
+    "notes": "'Not the same' reflects the switch from the old CdPP to the CPP and the 2011 constitutional guarantee of free legal aid for victims. Past implementation ratings use 'Sometimes; Usually' to bridge the MRD's split rating, without period evidence."
+   },
+   {
+    "question_id": 45,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 (1996-2002 version) has no provision giving crime victims a residence permit or protection from expulsion. Only the general discretionary temporary-residence visas existed."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change in the DL 1.094 version in force from 2002 to 2010."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change; Art. 33 bis was not added until 2011. According to search snippets of the US TIP reports, humanitarian visas for trafficking victims were then given only under an administrative arrangement between prosecutors and the Interior Ministry, not by statute (not read)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Kept equal to the 2020 starting answer because nothing changed between 2015 and 2020. However, DL 1.094 Art. 33 bis (Ley 20.507, 08-04-2011) gave non-resident victims of trafficking (CP Art. 411 quáter) the right to apply for at least six months' temporary residence, and barred their repatriation where they face grave danger: see the concern. In practice, 5 victims received this residence in 2012 and 35 trafficking visas were issued in 2015."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 13, 70, 71, 77",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 177",
+      "article": "Art. 10",
+      "role": "cited",
+      "in_force": "not established",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 33 bis",
+      "role": "predecessor",
+      "in_force": "2011-04-08 to 2022-02-11",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley N° 20.507, Art. tercero Nº 2",
+      "article": "DL 1.094 Art. 33 bis",
+      "kind": "amended",
+      "what_changed": "Added a right for foreign trafficking victims to apply for temporary residence of at least six months, and a bar on repatriating them where they face grave danger. This is an avenue to status for one class of crime victims.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal por un período mínimo de seis meses"
+     }
+    ],
+    "repealed_search": "I read the DL 1.094 versions in force on 1 January 2000, 2005 and 2010 (1996-10-22, 2002-05-31 and 2010-04-15) and found no provision for crime victims. Art. 33 bis was added in 2011 and was in force on 1-1-2020; it was not repealed before 2020 and was replaced only in 2022 by Ley 21.325. The pre-2011 humanitarian visas for trafficking victims were administrative practice, seen only in TIP report search snippets.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Trafficking in Persons Report 2013 - Chile",
+      "url": "https://www.ecoi.net/en/document/1020280.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Trafficking in Persons Report 2016 - Chile",
+      "url": "https://www.ecoi.net/en/document/1234346.html",
+      "year": 2016,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the full DL 1.094 version history; Art. 33 bis is dated by LeyChile's own annotation (D.O. 08.04.2011). The 2009–2011 TIP reports were seen only in search snippets.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 latest version",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 (LeyChile navigation)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 version 2010-04-15",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2010-04-15"
+     },
+     {
+      "title": "TIP 2013 Chile",
+      "url": "https://www.ecoi.net/en/document/1020280.html"
+     },
+     {
+      "title": "TIP 2016 Chile",
+      "url": "https://www.ecoi.net/en/document/1234346.html"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'No' looks wrong. DL 1.094 Art. 33 bis, in force from 2011-04-08 to 2022-02-11, gave trafficking victims an avenue to temporary residence and protection from repatriation, and it was used (35 visas in 2015). On that reading the answers for 2015 and 2020 should be 'Yes' (trafficking victims only), and the change would be 'no protection in 2000, protection in 2020'.",
+    "confidence": "medium",
+    "notes": "The answers follow the starting answer as instructed. If the 2020 answer were corrected, only 2000, 2005 and 2010 would remain 'No'."
+   }
+  ]
+ }
 }
