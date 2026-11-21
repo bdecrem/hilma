@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina liberty_a claude-opus-5-5 high",
- "pid": 47785,
  "step": "forward",
  "slug": "argentina",
  "chunk": "liberty_a",
@@ -58,5 +57,524 @@
   "user": 109
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:30:36.518Z",
+ "minutes": 13.38,
+ "meters_after": {
+  "at": "2026-11-21T01:30:36.518Z",
+  "window": {
+   "pct": 16,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 45,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 16,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 45,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 16% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 45% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 73608,
+   "output": 19516,
+   "cache_read": 974323,
+   "cache_write": 101503,
+   "cost_usd": 1.3301,
+   "total": 1168950
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 73580,
+    "output": 6390,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1757,
+    "cost_usd": 0.0606
+   },
+   "claude-opus-5-5": {
+    "input": 28,
+    "output": 13126,
+    "cache_read": 974323,
+    "cache_write": 101503,
+    "thinking": 4328,
+    "cost_usd": 1.2695
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 31,
+ "duration_ms": 245846,
+ "duration_api_ms": 247141,
+ "pages_read": 12,
+ "pages": [
+  {
+   "at": "2026-11-21T01:17:20.012Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 70 | ARTICULO 71 | ARTICULO 72 | menores | consular | Decreto 366",
+   "ok": true,
+   "chars": 15690
+  },
+  {
+   "at": "2026-11-21T01:17:33.387Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "dicho vínculo fuera compatible | ARTICULO 72 | ARTICULO 71 | asistencia jurídica | retención preventiva",
+   "ok": true,
+   "chars": 9099
+  },
+  {
+   "at": "2026-11-21T01:17:42.064Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 70 | ARTICULO 71 | ARTICULO 72",
+   "ok": true,
+   "chars": 3993
+  },
+  {
+   "at": "2026-11-21T01:17:43.087Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 61 | ARTICULO 70 | ARTICULO 71 | ARTICULO 72 | consular | menores",
+   "ok": true,
+   "chars": 12622
+  },
+  {
+   "at": "2026-11-21T01:20:50.717Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "Viena | 17.081 | asistencia consular",
+   "ok": true,
+   "chars": 2437
+  },
+  {
+   "at": "2026-11-21T01:20:51.621Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": null,
+   "ok": true,
+   "chars": 6360
+  },
+  {
+   "at": "2026-11-21T01:20:55.586Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": "2023 | 2024 | 2025 | Decreto ",
+   "ok": true,
+   "chars": 4626
+  },
+  {
+   "at": "2026-11-21T01:21:12.077Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "retención | consular | niñas | niños | detención",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:21:14.759Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 61 | ARTICULO 2° | ARTICULO 69 bis | ARTICULO 35",
+   "ok": true,
+   "chars": 8565
+  },
+  {
+   "at": "2026-11-21T01:24:00.071Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2025/11/Informe-sombra-Modificacion-a-la-Ley-de-Refugiados-ONU-Tortura.pdf",
+   "find": "retención | detención | consular | niñ",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:24:03.129Z",
+   "url": "https://www.primicias.ec/internacional/cidh-argentina-centros-acogida-migrantes-asilo-seguridad-108289/",
+   "find": "detención | retención | niñ | expulsión",
+   "ok": true,
+   "chars": 1727
+  },
+  {
+   "at": "2026-11-21T01:24:14.263Z",
+   "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+   "find": "retention | detention | children | consular | 2023 | 30 days",
+   "ok": true,
+   "chars": 5809
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 Ley 25.871 artículo 70 retención boletín oficial",
+  "DNU 366/2025 migraciones retención amparo inconstitucionalidad fallo juez CELS CAREF",
+  "Argentina migrantes retenidos expulsión 2025 CELS informe retenciones Migraciones aumento expulsiones",
+  "Argentina extranjeros detenidos notificación consular Convención de Viena artículo 36 incumplimiento Defensoría General de la Nación",
+  "CIDH comunicado Argentina decretos migración \"detención con fines de expulsión\" 2025"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":15,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Sometimes\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 17.081 (approves the Vienna Convention on Consular Relations)\",\"article\":\"whole act\",\"enacted\":\"1967\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"Decreto 616/2010 (Reglamento de la Ley de Migraciones 25.871)\",\"article\":\"Art. 61\",\"enacted\":\"2010-05-06\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Convención de Viena sobre Relaciones Consulares (1963)\",\"article\":\"Art. 36\",\"enacted\":\"1963-04-24\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"}],\"events\":[],\"implementation_then_now\":\"No practice evidence on consular notification or communication for migrants in either period was opened in this session. Searches turned up only older material: a 2012 resolution of the Defensoría General de la Nación, catalogued court rulings that annulled statements taken without consular information, and Diario Judicial items with unclear dates about the Consejo de la Magistratura urging criminal courts to comply with the Convention. None of it documents a shift between 2023 and 2026. The MRD's 2023 rating 'Usually; Rarely' is not one of the allowed options, so it is carried as its midpoint, 'Sometimes', for both dates. This is a placeholder, not a rating built from evidence.\",\"practice_sources\":[],\"past_versions\":\"read_the_version_in_force\",\"sourcing_note\":\"Art. 61 of Decreto 616/2010 was read on InfoLEG. Its 'normas que modifican' list shows no decree amending the regulation between 2023 and 2026, only DNM dispositions on unrelated matters. Ley 17.081 and the Convention text were not opened. Neither is known to have changed, but this was not verified on InfoLEG.\",\"sources_opened\":[{\"ti",
+ "output": {
+  "answers": [
+   {
+    "question_id": 15,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 17.081 (approves the Vienna Convention on Consular Relations)",
+      "article": "whole act",
+      "enacted": "1967",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamento de la Ley de Migraciones 25.871)",
+      "article": "Art. 61",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Convención de Viena sobre Relaciones Consulares (1963)",
+      "article": "Art. 36",
+      "enacted": "1963-04-24",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No practice evidence on consular notification or communication for migrants in either period was opened in this session. Searches turned up only older material: a 2012 resolution of the Defensoría General de la Nación, catalogued court rulings that annulled statements taken without consular information, and Diario Judicial items with unclear dates about the Consejo de la Magistratura urging criminal courts to comply with the Convention. None of it documents a shift between 2023 and 2026. The MRD's 2023 rating 'Usually; Rarely' is not one of the allowed options, so it is carried as its midpoint, 'Sometimes', for both dates. This is a placeholder, not a rating built from evidence.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 61 of Decreto 616/2010 was read on InfoLEG. Its 'normas que modifican' list shows no decree amending the regulation between 2023 and 2026, only DNM dispositions on unrelated matters. Ley 17.081 and the Convention text were not opened. Neither is known to have changed, but this was not verified on InfoLEG.",
+    "sources_opened": [
+     {
+      "title": "InfoLEG – Decreto 616/2010, texto",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "InfoLEG – Normas que modifican y/o complementan al Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "InfoLEG – Ley 25.871, texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     }
+    ],
+    "starting_answer_concern": "The quote is verified in Art. 61 of Decreto 616/2010: 'Se deberá resguardar el derecho de la persona a la información sobre la asistencia consular conforme lo dispuesto por la Convención de Viena sobre Relaciones Consulares ... aprobada por Ley Nº 17.081'. But it sits in the expulsion procedure for people whose stay has been declared irregular. The general obligation rests on the Vienna Convention as approved by Ley 17.081. The MRD rating 'Usually; Rarely' is not a valid pair of neighbouring levels.",
+    "confidence": "low",
+    "notes": "DNU 366/2025 rewrote many articles of Ley 25.871 but did not touch consular communication, and Decreto 616/2010 Art. 61 still stands. Decreto 793/2025 (B.O. 11/11/2025) moved references to the Interior Ministry over to the Ministerio de Seguridad Nacional. That is irrelevant to this indicator. The protection answer relies on the treaty as approved by statute plus the regulation, not on any court ruling."
+   },
+   {
+    "question_id": 17,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Convención sobre los Derechos del Niño",
+      "article": "Arts. 9, 37, 40",
+      "enacted": "1989",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios y de sus Familiares",
+      "article": "Arts. 17, 18",
+      "enacted": "1990",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley 26.202",
+      "article": "whole act",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75(22)",
+      "enacted": "1994-08-22",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70 (retention regime, no exemption for children)",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025",
+      "article": "Ley 25.871, Art. 70 (substituted by Art. 19 of the DNU)",
+      "kind": "amended",
+      "what_changed": "The retention regime was rewritten. Retention before an expulsion order becomes final is now allowed on public-security, national-defence or public-health grounds, with a maximum of 30 days extendable once. Neither the old nor the new text exempts children, so the indicator stays 'No'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Excepcionalmente, cuando mediaren razones de seguridad pública, defensa nacional o salud pública, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá solicitar a la autoridad judicial competente la retención, aun cuando el acto de expulsión no se encuentre firme ni consentido. ... (Artículo sustituido por art. 19 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is 'No' on both dates, so implementation is 'Does Not Apply'. For context: the Global Detention Project (2025) describes Argentina as historically not using immigration detention, with retention powers widened by DNU 366/2025. Press coverage of an October 2025 IACHR statement reports concern over the wider grounds for detention pending expulsion. Neither source documents the detention of children specifically.",
+    "practice_sources": [
+     {
+      "title": "Argentina's Migration Shift: From Rights to Security (Global Detention Project)",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "CIDH alerta sobre Argentina (Primicias)",
+      "url": "https://www.primicias.ec/internacional/cidh-argentina-centros-acogida-migrantes-asilo-seguridad-108289/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Both the texto original and the texto actualizado of Ley 25.871 were read on InfoLEG. The original Art. 70, restored after Decreto 138/2021 repealed DNU 70/2017, was the 2023 text. The DNU 366/2025 text has applied since 29/5/2025. The treaties, Ley 26.202 and the Constitution were not opened.",
+    "sources_opened": [
+     {
+      "title": "InfoLEG – Ley 25.871, texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "InfoLEG – Ley 25.871, texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Global Detention Project – Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     },
+     {
+      "title": "Primicias – CIDH Argentina",
+      "url": "https://www.primicias.ec/internacional/cidh-argentina-centros-acogida-migrantes-asilo-seguridad-108289/"
+     }
+    ],
+    "starting_answer_concern": "The starting citation leans on treaties (the CRC has constitutional rank under Art. 75(22)) that do not expressly ban immigration detention of children. The 'No' holds. A reviewer might still check Ley 26.061 (comprehensive protection of children), which was not read here.",
+    "confidence": "medium",
+    "notes": "Court rulings on DNU 366/2025 found in search are outside the window or not on point: an amparo by CAREF/CELS rejected, an Esquel ruling on other articles, and 2026 rulings on citizenship. None was read in full or bears on child detention."
+   },
+   {
+    "question_id": 19,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 70-71",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 71",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 72",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "whole decree",
+      "enacted": "2017-01-30",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 138/2021",
+      "article": "whole decree",
+      "enacted": "2021-03-05",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025",
+      "article": "Ley 25.871, Art. 70 (substituted by Art. 19)",
+      "kind": "amended",
+      "what_changed": "Before: retention was for the sole purpose of carrying out a final expulsion, allowed exceptionally before finality 'cuando las características del caso lo justificare', with no fixed limit in the law (Decreto 616 set 15 days). After: retention may be sought before finality on security, defence or health grounds, retention is mandatory for sentenced foreigners, and the limit is 30 days extendable once. Migration-based detention is widened, so the answer stays 'No'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "En todos los casos, el tiempo de retención no podrá exceder el estrictamente indispensable y razonable para hacer efectiva la expulsión del extranjero. El plazo máximo será de TREINTA (30) días corridos, prorrogable una única vez por idéntico término. ... (Artículo sustituido por art. 19 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025",
+      "article": "Ley 25.871, Art. 71 (substituted by Art. 20)",
+      "kind": "amended",
+      "what_changed": "Release when expulsion cannot be carried out in a reasonable time stays possible on real or sworn bail, now with periodic reporting. The release regime is restated, not a prohibition of detention.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Cuando la expulsión del extranjero no pueda concretarse en un plazo prudencial, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá disponer la soltura del mismo. Para ello deberá fijar una caución real o juratoria ... (Artículo sustituido por art. 20 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025",
+      "article": "Ley 25.871, Art. 78 (substituted by Art. 25) and the inspection-powers article incorporated by Art. 13 (inc. g)",
+      "kind": "amended",
+      "what_changed": "The DNM may now ask for Art. 70 retention at any stage of a judicial appeal against expulsion. It also gained the power to 'solicitar la retención preventiva' during inspections. Detention on migration grounds is widened.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "En caso de que la medida de expulsión sea recurrida ... y no se hubiera dictado una retención preventiva, la DIRECCIÓN NACIONAL DE MIGRACIONES, en cualquier instancia del proceso, podrá solicitar al tribunal interviniente la retención prevista por el artículo 70 de la presente."
+     }
+    ],
+    "implementation_then_now": "The answer is 'No' on both dates, so implementation is 'Does Not Apply'. Context: the Global Detention Project (2025) reports that Argentina historically did not use detention as an enforcement tool and that retention was mainly a short pre-removal measure, consistent with the 2023 citation. It says DNU 366/2025 expanded detention powers: pre-final retention, retention during appeals, and up to 60 days. Press coverage of the October 2025 IACHR statement reports concern at the wider grounds and longer periods. No data on actual retention numbers for 2025 were found.",
+    "practice_sources": [
+     {
+      "title": "Argentina's Migration Shift: From Rights to Security (Global Detention Project)",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "CIDH alerta sobre Argentina (Primicias)",
+      "url": "https://www.primicias.ec/internacional/cidh-argentina-centros-acogida-migrantes-asilo-seguridad-108289/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The 2023 text is the InfoLEG texto original of Arts. 70-72, restored after Decreto 138/2021 repealed DNU 70/2017. The 2026 text is the InfoLEG texto actualizado, with InfoLEG notes giving the DNU 366/2025 article numbers and entry into force on publication (29/5/2025). Decreto 616/2010 Arts. 70-72 were read, and its modifying-norms list shows no change in the window.",
+    "sources_opened": [
+     {
+      "title": "InfoLEG – Ley 25.871, texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "InfoLEG – Ley 25.871, texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "InfoLEG – Decreto 616/2010, texto",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "InfoLEG – Normas que modifican al Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Global Detention Project – Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     },
+     {
+      "title": "Primicias – CIDH Argentina",
+      "url": "https://www.primicias.ec/internacional/cidh-argentina-centros-acogida-migrantes-asilo-seguridad-108289/"
+     }
+    ],
+    "starting_answer_concern": "The 'No' holds. The starting citation says the law makes detention a last-resort measure only after remedies are exhausted. The original Art. 70 already allowed exceptional retention before the expulsion order was 'firme y consentida'. The words 'last resort' do not appear in the text.",
+    "confidence": "high",
+    "notes": "Decreto 616/2010 Art. 70 still sets a 15-day retention period, but the law now sets 30+30 days (statute prevails). Decreto 793/2025 (11/11/2025) moved references to the Interior Ministry in Ley 25.871 over to the Ministerio de Seguridad Nacional. The DNU was not rejected by Congress as far as found. Court challenges on other articles were not read in full."
+   }
+  ]
+ }
 }
