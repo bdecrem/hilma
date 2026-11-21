@@ -88,3 +88,20 @@ most its own chunk, and its row is written as cut off.
 The tests are scripts; the session that starts them does not sit and wait on a strong model.
 Code and pages are built by subagents on Sonnet 5.5 or Opus 5.5; a Fable session is used to design
 the prompts and to read results, not to watch runs.
+
+## Argentina and Chile (Bart, 2026-11-20)
+
+Two of the MRD's 46 countries, so the starting point is the MRD's own human coding, not ours: what A and a longer B cost when the
+first coder is the MRD. Both countries, all 18 chunks, Opus 5.5 high, the two countries running side by side.
+
+| Project | Step | Starts from | Asks for |
+|---|---|---|---|
+| Forward 2023 → 2026 | `forward` | the MRD's year-2023 answer and its citation | the answers on 1 January 2023 and 2026, the change, the events in between |
+| Back 2020 → 2000 | `back2000` | the MRD's year-2020 answer (the 2023 instrument's second pass, "as of 1 January 2020"), with the 2023 citation | the history from 2000 of the cited provisions and their predecessors (Ley 22.439 before Ley 25.871 in 2004; DL 1.094 before Ley 21.325 in 2022), the answer and implementation on 1 January 2000, 2005, 2010 and 2015, a search for repealed protections behind a No |
+
+Lists: `cost/argentina-forward.txt`, `cost/chile-forward.txt`, `cost/argentina-back2000.txt`, `cost/chile-back2000.txt`
+(`./cost-run.sh <list>`). Prompts are about 6,000 tokens (forward) and 6,500 (back2000) before the session reads anything.
+What the data holds: the MRD has one citation per indicator, written for 2023 (Chile's cite Ley 21.325, not in force in 2020);
+Argentina has no answer for q127 (its education chunk has one indicator) and two citations under q117 (the second, about child
+detention, is mis-filed and ignored); many answers are worded off the codebook's options and are matched to them.
+

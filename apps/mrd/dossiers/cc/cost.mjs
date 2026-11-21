@@ -5,17 +5,21 @@
 //
 // steps: sources | verify | redo   audit.py's prompts (audit.py --emit <phase> --only <chunk> --readonly), model and effort overridden
 //        forward | back | timeline history.py's prompts (PLAN.md Parts 3 and 4)
+//        back2000                  history.py, the MRD's countries only (argentina, chile): from the MRD's 2020 answer back to 2000
 //
 // Before and after: the plan's three meters from `claude -p /usage` (no tokens). The session runs the way cc/check.mjs runs it
-// (Agent SDK, WebSearch + the `read` MCP tool, structured output). Writes cost/results/<time>-<step>-<chunk>-<model>-<effort>.json
+// (Agent SDK, WebSearch + the `read` MCP tool, structured output). Writes cost/results/<time>-[<slug>-]<step>-<chunk>-<model>-<effort>.json
+// (the slug for every country but costa_rica, whose files came first)
 // (a "started" record first, finalized after), appends a row to cost/LOG.md, commits cost/ and pushes through the mini.
 // It never writes to a database: no ingest, no dossier_log, no dossier_check_runs; the pages read are logged in the result file.
+// Safe to run several at once (Argentina and Chile side by side): the result file's final write, the LOG row, the commit and the
+// push happen under a lock (the directory cost/.lock, made with mkdir; a lock older than 15 minutes is stale and taken over).
 //
 // exit: 0 ok (or skipped), 1 error, 3 cut off by the plan limit, 4 refused (meters above the max, or no subscription)
 import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk'
 import { z } from 'zod'
 import { execFile } from 'node:child_process'
-import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync, readdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync, readdirSync, mkdtempSync, rmSync, rmdirSync, statSync } from 'node:fs'
 import { dirname, join, basename, resolve } from 'node:path'
 import { tmpdir, homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -47,8 +51,9 @@ const CHUNK = opt('--chunk') || (FIXTURE0 && existsSync(FIXTURE0) ? JSON.parse(r
 const FIXTURE = FIXTURE0
 const MAX_WINDOW = Number(opt('--max-window', 85)), MAX_WEEK = Number(opt('--max-week', 90))
 const TO_LIMIT = flag('--to-the-limit'), DRY = flag('--dry'), PRINT = flag('--print-prompt'), SKIP_DONE = flag('--skip-done')
-const STEPS = ['sources', 'verify', 'redo', 'forward', 'back', 'timeline']
-const usage = 'usage: node cc/cost.mjs <sources|verify|redo|forward|back|timeline> <slug> --chunk <key> --model <id> --effort <low|medium|high|xhigh> [--label t] [--fixture f] [--max-window 85] [--max-week 90] [--to-the-limit] [--dry] [--print-prompt] [--skip-done]'
+const STEPS = ['sources', 'verify', 'redo', 'forward', 'back', 'timeline', 'back2000']
+const HISTORY_STEPS = ['forward', 'back', 'timeline', 'back2000']
+const usage = 'usage: node cc/cost.mjs <sources|verify|redo|forward|back|timeline|back2000> <slug> --chunk <key> --model <id> --effort <low|medium|high|xhigh> [--label t] [--fixture f] [--max-window 85] [--max-week 90] [--to-the-limit] [--dry] [--print-prompt] [--skip-done]'
 if (!STEPS.includes(step) || !slug || !CHUNK || !MODEL || !['low', 'medium', 'high', 'xhigh', 'max'].includes(EFFORT)) { console.error(usage); process.exit(2) }
 const JOB_ID = [step, slug, CHUNK, MODEL, EFFORT, LABEL && `label=${LABEL}`, FIXTURE && 'fixture'].filter(Boolean).join(' ')
 
@@ -88,7 +93,7 @@ const showMeters = (m, tag) => say(`meters ${tag}: window ${pct(m.window)} (rese
 async function getJob() {
   const path = join(mkdtempSync(join(tmpdir(), 'mrd-cost-')), 'jobs.json')
   let r
-  if (FIXTURE || ['forward', 'back', 'timeline'].includes(step)) {
+  if (FIXTURE || HISTORY_STEPS.includes(step)) {
     r = await run('python3', [join(DOSSIERS, 'history.py'), slug, '--emit', step, path, '--chunk', CHUNK, ...(FIXTURE ? ['--fixture', FIXTURE] : [])])
   } else {
     r = await run('python3', [join(DOSSIERS, 'audit.py'), slug, '--emit', step, path, '--only', CHUNK, '--readonly'])
@@ -110,7 +115,7 @@ function schemaKeys(s) {
 }
 
 // ---- the session (as cc/check.mjs runs it, minus every database write) ----
-function readerServer(meta) {
+function readerServer(meta, script) {
   const readEnv = { ...process.env }
   // compile.py --read never touches the database, but ../laws/lib.py reads these at import
   if (!readEnv.MRD_SUPABASE_URL) { readEnv.MRD_SUPABASE_URL = 'http://unused.invalid'; readEnv.MRD_SUPABASE_SERVICE_KEY = 'unused' }
@@ -122,7 +127,8 @@ function readerServer(meta) {
         const rec = { at: new Date().toISOString(), url, find: find || null, ok: false, chars: 0 }
         meta.pages.push(rec)
         say(`read   ${url.slice(0, 120)}${find ? ` · find ${find.slice(0, 60)}` : ''}`)
-        const argv = [join(DOSSIERS, 'compile.py'), slug, '--read', url, '--max-chars', String(max_chars || 8000)]
+        // compile.py knows only its six dossiers; history.py also the MRD's countries (the job says which: P.reader)
+        const argv = [join(DOSSIERS, script || 'compile.py'), slug, '--read', url, '--max-chars', String(max_chars || 8000)]
         if (find) argv.push('--find', find)
         const { stdout, stderr, code } = await run('python3', argv, { timeout: 240_000, env: readEnv })
         if (code !== 0 && !stdout.trim()) return { content: [{ type: 'text', text: `read failed: ${stderr.slice(-400)}` }], isError: true }
@@ -132,11 +138,11 @@ function readerServer(meta) {
   })
 }
 
-async function runSession(job, meta) {
+async function runSession(job, meta, reader) {
   let output = null
   const q = query({ prompt: job.user, options: {
     model: job.model, effort: job.effort, systemPrompt: job.system,
-    tools: job.web ? ['WebSearch'] : [], mcpServers: { reader: readerServer(meta) },
+    tools: job.web ? ['WebSearch'] : [], mcpServers: { reader: readerServer(meta, reader) },
     allowedTools: job.web ? ['WebSearch', 'mcp__reader__read'] : ['mcp__reader__read'],
     permissionMode: 'dontAsk', settingSources: [], persistSession: false,
     outputFormat: { type: 'json_schema', schema: job.schema }, maxTurns: job.max_turns, cwd: tmpdir(), env: childEnv(),
@@ -179,6 +185,24 @@ function tokens(res) {
   return { totals: t, by_model: by }
 }
 
+// ---- the lock: two cost.mjs processes (one per country) share cost/LOG.md and the git index ----
+const LOCK = join(COST, '.lock'), LOCK_STALE_MS = 15 * 60_000, LOCK_WAIT_MS = 20 * 60_000
+let lockHeld = false
+async function withLock(fn) {
+  const t0 = Date.now()
+  for (;;) {
+    try { mkdirSync(LOCK); lockHeld = true; break } catch (e) {
+      if (e.code !== 'EEXIST') { say(`lock: ${e.message}; going on without it`); break }
+      let age = 0; try { age = Date.now() - statSync(LOCK).mtimeMs } catch { continue }   // released in between: try again
+      if (age > LOCK_STALE_MS) { say(`lock: ${Math.round(age / 60_000)} min old, taking it over`); try { rmdirSync(LOCK) } catch { /* someone else did */ } continue }
+      if (Date.now() - t0 > LOCK_WAIT_MS) { say('lock: waited 20 min, going on without it'); break }
+      await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500))
+    }
+  }
+  try { return await fn() } finally { if (lockHeld) { lockHeld = false; try { rmdirSync(LOCK) } catch { /* gone already */ } } }
+}
+process.on('exit', () => { if (lockHeld) try { rmdirSync(LOCK) } catch { /* gone already */ } })   // an empty directory: git never sees it
+
 // ---- the log ----
 const HEADER = `# Cost tests: the log
 
@@ -192,7 +216,9 @@ const arrow = (a, b) => `${a?.pct ?? '?'}→${b?.pct ?? '?'}`
 function logRow(rec) {
   if (!existsSync(LOG)) writeFileSync(LOG, HEADER)
   const t = rec.tokens?.totals || {}
-  const cells = [local(new Date(rec.started_at)).slice(0, 16), rec.step, rec.chunk, rec.model, rec.effort, rec.minutes ?? '', rec.turns ?? '',
+  // the chunk cell names the country for everyone but costa_rica (the log's first country); the job cell always does
+  const chunkCell = rec.slug && rec.slug !== 'costa_rica' ? `${rec.chunk} · ${rec.slug}` : rec.chunk
+  const cells = [local(new Date(rec.started_at)).slice(0, 16), rec.step, chunkCell, rec.model, rec.effort, rec.minutes ?? '', rec.turns ?? '',
     (t.output ?? 0).toLocaleString('en-US'), (t.total ?? 0).toLocaleString('en-US'), (t.cost_usd ?? 0).toFixed(2),
     arrow(rec.meters_before?.window, rec.meters_after?.window), arrow(rec.meters_before?.week, rec.meters_after?.week), arrow(rec.meters_before?.fable, rec.meters_after?.fable),
     rec.pages_read ?? '', rec.status, '`' + rec.job_id + '`']
@@ -206,6 +232,9 @@ function doneInLog(id) {
 // ---- git: commit cost/ only, push through the mini; a failure here never fails the run ----
 async function git(argv) { return run('git', argv, { cwd: REPO, timeout: 120_000 }) }
 async function commitAndPush(msg) {
+  try { await commitAndPush0(msg) } catch (e) { say(`commit/push failed (the run stands): ${String(e.message || e).slice(0, 300)}`) }
+}
+async function commitAndPush0(msg) {
   const rel = 'apps/mrd/dossiers/cost'
   for (let i = 0; i < 20; i++) {
     const a = await git(['add', rel])
@@ -251,7 +280,7 @@ async function main() {
   const m0 = await meters()
   const sk = schemaKeys(job.schema)
   say(`job ${JOB_ID}`)
-  say(`${P.country.name} · ${job.label} · q${job.qids.join(', q')} · source ${P.source || 'database'}`)
+  say(`${P.country.name} · ${job.label} · q${job.qids.join(', q')} · source ${P.source || 'database'} · reader ${P.reader || 'compile.py'}`)
   say(`model ${job.model} (default ${job.default_model}) · effort ${job.effort} (default ${job.default_effort}) · max turns ${job.max_turns} · tools ${(job.web ? ['WebSearch', 'mcp__reader__read'] : ['mcp__reader__read']).join(', ')}`)
   say(`prompt: system ${job.system.length.toLocaleString('en-US')} chars (~${Math.round(job.system.length / 4).toLocaleString('en-US')} tokens), user ${job.user.length} chars; schema ${JSON.stringify(job.schema).length.toLocaleString('en-US')} chars`)
   say(`schema keys: ${sk.top.join(', ')} → per indicator: ${sk.per_indicator.join(', ')}`)
@@ -267,17 +296,17 @@ async function main() {
     if (/fable/i.test(job.model) && m0.fable?.pct > MAX_WEEK) over.push(`Fable week ${m0.fable.pct}% > ${MAX_WEEK}%`)
     if (over.length) { say(`refused: ${over.join(', ')} (pass --to-the-limit to run anyway)`); process.exit(4) }
   }
-  const stale = await finalizeStale()
+  const stale = await withLock(finalizeStale)
   if (stale) say(`${stale} earlier run(s) that never finished written as cut off`)
 
   const t0 = new Date()
   const ts = local(t0).replace(/[-:]/g, '').replace(' ', '-')
   const short = MODEL.replace(/^claude-/, '')
-  const file = join(RESULTS, `${ts}-${step}-${CHUNK}-${short}-${EFFORT}${LABEL ? '-' + LABEL.replace(/[^\w.-]+/g, '_') : ''}.json`)
+  const file = join(RESULTS, `${ts}-${slug === 'costa_rica' ? '' : slug + '-'}${step}-${CHUNK}-${short}-${EFFORT}${LABEL ? '-' + LABEL.replace(/[^\w.-]+/g, '_') : ''}.json`)
   const rec = { status: 'started', job_id: JOB_ID, pid: process.pid, step, slug, chunk: CHUNK, model: MODEL, effort: EFFORT, label: LABEL || null,
     source: P.source || 'database', fixture: FIXTURE ? basename(FIXTURE) : null, country: P.country, qids: job.qids,
     started_at: t0.toISOString(), meters_before: m0, prompt_chars: { system: job.system.length, user: job.user.length }, default_model: job.default_model, default_effort: job.default_effort }
-  writeFileSync(file, JSON.stringify(rec, null, 1))
+  await withLock(async () => writeFileSync(file, JSON.stringify(rec, null, 1)))   // never while the other process is mid-rebase
 
   const meta = { calls: 0, searches: [], pages: [], rate_limit_events: [], limit_lines: [], limit: false, error: null, result: null }
   let finalized = false
@@ -294,17 +323,19 @@ async function main() {
     rec.output = output
     rec.status = why || (output ? 'ok' : meta.limit ? 'cut off' : 'error')
     delete rec.pid
-    writeFileSync(file, JSON.stringify(rec, null, 1)); logRow(rec)
+    await withLock(async () => {
+      writeFileSync(file, JSON.stringify(rec, null, 1)); logRow(rec)
+      await commitAndPush(`mrd cost test: ${step} ${slug === 'costa_rica' ? '' : slug + ' '}${CHUNK} ${MODEL} ${EFFORT}${LABEL ? ' (' + LABEL + ')' : ''}`)
+    })
     showMeters(rec.meters_after, 'after')
     say(`${rec.status} · ${rec.minutes} min · ${rec.turns ?? '?'} turns · ${rec.pages_read} pages · ${meta.searches.length} searches · out ${rec.tokens.totals.output.toLocaleString('en-US')} · total ${rec.tokens.totals.total.toLocaleString('en-US')} tokens · $${rec.tokens.totals.cost_usd.toFixed(2)} API-equivalent${meta.error ? ' · ' + meta.error.slice(0, 200) : ''}`)
     say(`wrote ${file.replace(REPO + '/', '')}`)
-    await commitAndPush(`mrd cost test: ${step} ${CHUNK} ${MODEL} ${EFFORT}${LABEL ? ' (' + LABEL + ')' : ''}`)
     return rec.status
   }
   for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, async () => { say(`${sig}: writing the record`); await finalize(null, 'stopped'); process.exit(1) })
 
   say(`running ${step} on ${CHUNK} with ${MODEL} at ${EFFORT}...`)
-  const output = await runSession(job, meta)
+  const output = await runSession(job, meta, P.reader)
   const status = await finalize(output)
   process.exit(status === 'ok' ? 0 : status === 'cut off' ? 3 : 1)
 }

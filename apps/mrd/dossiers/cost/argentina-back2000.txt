@@ -1,0 +1,19 @@
+# 2026-11-20 (Bart): back2000 for Argentina over all 18 chunks, Opus 5.5 high, from the MRD's own 2020 answers (back to 1 January 2000). Runs beside the other country: ./cost-run.sh cost/argentina-back2000.txt
+back2000 argentina --chunk vulnerable --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk life --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk liberty_a --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk liberty_b --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk personhood --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk due_process --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk expulsion_a --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk expulsion_b --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk nationality_a --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk nationality_b --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk family --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk civil_liberties --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk political --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk labor_a --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk labor_b --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk labor_c --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk health_housing --model claude-opus-5-5 --effort high --to-the-limit
+back2000 argentina --chunk education --model claude-opus-5-5 --effort high --to-the-limit

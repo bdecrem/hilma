@@ -115,6 +115,17 @@ node cc/cost.mjs back costa_rica --fixture cost/fixture-chunk.json --model claud
 ```
 Above 85% of the window or 90% of the week a run refuses to start unless `--to-the-limit`.
 
+**Argentina and Chile** (2026-11-20): two of the MRD's own countries, from its human coding. They live in `MRD_COUNTRIES` in
+`history.py`, not in `compile.COUNTRIES` (the pipeline scripts iterate that), and only the history steps know them. `forward` starts
+from the MRD's year-2023 answers; `back2000` (MRD countries only) from its year-2020 answers, back to 1 January 2000 through 2005,
+2010 and 2015, predecessor laws included. The MRD's answer text is matched to the codebook's options (text first, then subscore), its
+citation (one per indicator, written for 2023) is shown with the laws our extraction read out of it, and there is no law map; the `read`
+tool goes through `history.py --read`. Two runs can go side by side: the LOG row, commit and push are under a lock (`cost/.lock`).
+
+```bash
+./cost-run.sh cost/argentina-forward.txt & ./cost-run.sh cost/chile-forward.txt &     # then the *-back2000.txt lists
+```
+
 ## What the data taught us
 
 - **The MRD's answers and citations point at the wrong question ids from id 73 on.** Its `questions`
