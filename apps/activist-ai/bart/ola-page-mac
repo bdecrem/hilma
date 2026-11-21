@@ -11,11 +11,16 @@ How it asks: a request file in $OLA_RENDER_DIR/in (written beside and renamed in
 folder, with every other load blocked, runs the measurements, saves the picture, and answers in
 $OLA_RENDER_DIR/out. The app must be running (it is: it started the agent that runs this).
 """
-import importlib.machinery, json, os, shutil, sys, time, uuid
+import importlib.util, json, os, shutil, sys, time, uuid
 from pathlib import Path
 
 HERE = Path(os.path.realpath(__file__)).parent
-olapage = importlib.machinery.SourceFileLoader("olapage", str(HERE / "olapage.py")).load_module()
+# Loaded by spec, not SourceFileLoader.load_module(), which Python 3.15 removed (OLA-253: on a Mac
+# with Homebrew's newest Python, look.py stopped here and Ola could not look at its pages).
+_spec = importlib.util.spec_from_file_location("olapage", str(HERE / "olapage.py"))
+olapage = importlib.util.module_from_spec(_spec)
+sys.modules["olapage"] = olapage
+_spec.loader.exec_module(olapage)
 
 
 def main():
