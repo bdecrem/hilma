@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile health_housing claude-opus-5-5 high",
- "pid": 80232,
  "step": "back2000",
  "slug": "chile",
  "chunk": "health_housing",
@@ -57,5 +56,936 @@
   "user": 172
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:49:31.622Z",
+ "minutes": 8.81,
+ "meters_after": {
+  "at": "2026-11-21T10:49:31.622Z",
+  "window": {
+   "pct": 42,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 42,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 42% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 270051,
+   "output": 52195,
+   "cache_read": 3291178,
+   "cache_write": 156378,
+   "cost_usd": 2.8309,
+   "total": 3769802
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 269989,
+    "output": 16899,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 5132,
+    "cost_usd": 0.2154
+   },
+   "claude-opus-5-5": {
+    "input": 62,
+    "output": 35296,
+    "cache_read": 3291178,
+    "cache_write": 156378,
+    "thinking": 8459,
+    "cost_usd": 2.6154
+   }
+  }
+ },
+ "turns": 55,
+ "calls": 85,
+ "duration_ms": 528019,
+ "duration_api_ms": 420248,
+ "pages_read": 34,
+ "pages": [
+  {
+   "at": "2026-11-21T10:41:16.695Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1088253",
+   "find": "carentes de recursos | extranjero | documentos | Artículo único | publicación",
+   "ok": true,
+   "chars": 3321
+  },
+  {
+   "at": "2026-11-21T10:41:22.979Z",
+   "url": "https://www.minsal.cl/migrante-carente-de-recursos-sin-documentos-yo-permisos-de-residencia/",
+   "find": "Decreto | 2016 | 2015 | circular | Ordinario",
+   "ok": true,
+   "chars": 2196
+  },
+  {
+   "at": "2026-11-21T10:41:32.238Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=249177",
+   "find": "Artículo 135 | Artículo 136 | carentes de recursos | Artículo 141",
+   "ok": true,
+   "chars": 2452
+  },
+  {
+   "at": "2026-11-21T10:41:38.561Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039348",
+   "find": "Artículo 2º | Toda persona tiene derecho | Publicación",
+   "ok": true,
+   "chars": 4354
+  },
+  {
+   "at": "2026-11-21T10:41:48.331Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039348",
+   "find": "entrará en vigencia | seis meses",
+   "ok": true,
+   "chars": 3318
+  },
+  {
+   "at": "2026-11-21T10:41:49.205Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=249177",
+   "find": "Artículo 136.- | Artículo 135.- | indigentes | Artículo 131.-",
+   "ok": true,
+   "chars": 3347
+  },
+  {
+   "at": "2026-11-21T10:42:01.804Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=18469",
+   "find": "Artículo 1 | Artículo 5 | Artículo 6 | carentes de recursos | Derogado",
+   "ok": true,
+   "chars": 5909
+  },
+  {
+   "at": "2026-11-21T10:42:08.200Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6999",
+   "find": "Artículo 2 | Circunstancia | Publicación | Versión",
+   "ok": true,
+   "chars": 6009
+  },
+  {
+   "at": "2026-11-21T10:42:27.372Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "derecho a la protección de la salud | libre e igualitario acceso",
+   "ok": true,
+   "chars": 2379
+  },
+  {
+   "at": "2026-11-21T10:42:30.151Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "acceso a las acciones de promoción | Asegura a todas las personas",
+   "ok": true,
+   "chars": 3350
+  },
+  {
+   "at": "2026-11-21T10:42:39.874Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "El Estado protege el libre | igualitario acceso",
+   "ok": true,
+   "chars": 3332
+  },
+  {
+   "at": "2026-11-21T10:42:51.774Z",
+   "url": "https://www.redalyc.org/journal/731/73157095011/73157095011.pdf",
+   "find": "2003 | 2008 | 2015 | irregular | Resolución exenta | 3229",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:42:57.399Z",
+   "url": "https://dialnet.unirioja.es/descarga/articulo/6556182.pdf",
+   "find": "2003 | 2008 | 2015 | 2016 | indocumentados | barreras",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:43:03.067Z",
+   "url": "https://www.minsal.cl/salud-del-inmigrante/",
+   "find": "2003 | 2007 | 2008 | 2014 | 2015 | 2016 | Circular | Resolución",
+   "ok": true,
+   "chars": 6368
+  },
+  {
+   "at": "2026-11-21T10:43:14.478Z",
+   "url": "https://revistas.unla.edu.ar/saludcolectiva/article/view/1110",
+   "find": "indocumentados | 3229 | 512 | 1914 | ilegítimos | urgencia",
+   "ok": true,
+   "chars": 4858
+  },
+  {
+   "at": "2026-11-21T10:43:27.746Z",
+   "url": "https://www.emol.com/noticias/Nacional/2016/09/27/823763/Subsidios-habitacionales-para-extranjeros-se-han-cuadruplicado-en-la-ultima-decada.html",
+   "find": "permanencia definitiva | cinco años | requisito | 2015",
+   "ok": true,
+   "chars": 3127
+  },
+  {
+   "at": "2026-11-21T10:43:40.088Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1075618",
+   "find": "extranjer | permanencia definitiva | Publicación",
+   "ok": true,
+   "chars": 4169
+  },
+  {
+   "at": "2026-11-21T10:43:46.252Z",
+   "url": "https://www.minvu.gob.cl/elementos-tecnicos/decretos/d-s-174-v-y-u-de-2005-do-09-02-2006-act-20-03-2015/",
+   "find": "extranjer | permanencia definitiva | cinco años",
+   "ok": true,
+   "chars": 2010
+  },
+  {
+   "at": "2026-11-21T10:44:02.434Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1050915",
+   "find": "extranjer | cinco años | Publicación",
+   "ok": true,
+   "chars": 1774
+  },
+  {
+   "at": "2026-11-21T10:44:22.535Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=252376",
+   "find": "extranjer | cinco años | Publicación | permanencia",
+   "ok": true,
+   "chars": 3724
+  },
+  {
+   "at": "2026-11-21T10:44:42.780Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299",
+   "find": "extranjer | permanencia definitiva | cinco años | Publicación",
+   "ok": true,
+   "chars": 6223
+  },
+  {
+   "at": "2026-11-21T10:44:52.700Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299&idVersion=2006-02-09",
+   "find": "extranjer | Artículo 4° | Permanencia",
+   "ok": true,
+   "chars": 2173
+  },
+  {
+   "at": "2026-11-21T10:45:08.514Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299&idVersion=2008-06-01",
+   "find": "extranjer | Artículo 4° | mayores de 18",
+   "ok": true,
+   "chars": 2176
+  },
+  {
+   "at": "2026-11-21T10:45:28.397Z",
+   "url": "https://bcn.cl/2f1z4",
+   "find": "extranjer | cinco años | Permanencia Definitiva",
+   "ok": true,
+   "chars": 2583
+  },
+  {
+   "at": "2026-11-21T10:45:36.273Z",
+   "url": "https://vlex.cl/vid/programa-fondo-solidario-eleccion-vivienda-366783206",
+   "find": "extranjer | cinco años | Permanencia Definitiva",
+   "ok": true,
+   "chars": 2688
+  },
+  {
+   "at": "2026-11-21T10:45:39.291Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039424&idVersion=2012-04-26",
+   "find": "extranjer | cinco años | Permanencia Definitiva",
+   "ok": true,
+   "chars": 3376
+  },
+  {
+   "at": "2026-11-21T10:45:52.479Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039424&idVersion=2012-04-26",
+   "find": "nacionalidad | Cédula | residencia | Artículo 14",
+   "ok": true,
+   "chars": 3746
+  },
+  {
+   "at": "2026-11-21T10:46:06.746Z",
+   "url": "https://www.minvu.gob.cl/elementos-tecnicos/decretos/d-s-n-62-de-1984/",
+   "find": "extranjer | Reglamenta | deroga",
+   "ok": true,
+   "chars": 1825
+  },
+  {
+   "at": "2026-11-21T10:46:10.963Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=222664",
+   "find": "extranjer | residencia | permanencia definitiva | Publicación",
+   "ok": true,
+   "chars": 2156
+  },
+  {
+   "at": "2026-11-21T10:46:17.179Z",
+   "url": "https://www.bcn.cl/leychile/navegar?i=8130",
+   "find": "extranjer | residencia | permanencia definitiva | Publicación",
+   "ok": true,
+   "chars": 4386
+  },
+  {
+   "at": "2026-11-21T10:46:27.838Z",
+   "url": "https://www.bcn.cl/leychile/navegar?i=8130",
+   "find": "cédula | Cédula | postulante deberá | requisitos",
+   "ok": true,
+   "chars": 3966
+  },
+  {
+   "at": "2026-11-21T10:46:28.682Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=222664",
+   "find": "cédula | Cédula | requisitos | postulantes deberán",
+   "ok": true,
+   "chars": 4392
+  },
+  {
+   "at": "2026-11-21T10:46:39.083Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1026260",
+   "find": "extranjer | Permanencia Definitiva | cinco años | Publicación",
+   "ok": true,
+   "chars": 2158
+  },
+  {
+   "at": "2026-11-21T10:46:50.540Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 15.- | Artículo 18.- | vivienda",
+   "ok": true,
+   "chars": 3327
+  }
+ ],
+ "searches": [
+  "Decreto 67 2015 Ministerio de Salud modifica decreto 110 carentes de recursos extranjeros sin documentos leychile",
+  "decreto 49 2011 vivienda extranjeros \"permanencia definitiva\" requisito postulación subsidio leychile",
+  "Ley 18.469 artículo 6 beneficiarios \"carentes de recursos o indigentes\" leychile idNorma",
+  "Decreto 110 2004 Ministerio de Salud fija circunstancias y mecanismos para acreditar carentes de recursos leychile",
+  "\"decreto 110\" 2004 salud \"circunstancia\" \"carentes de recursos o indigentes\" bcn.cl navegar",
+  "\"Decreto 110\" Ministerio de Salud 2004 acreditar personas carentes de recursos indigentes FONASA reglamento circunstancias",
+  "Chile salud migrantes irregulares 2003 convenio embarazadas 2008 niños oficio circular acceso salud historia política migrantes",
+  "scielo Chile acceso salud inmigrantes irregulares barreras FONASA embarazadas niños 2003 2008 Resolución exenta 1914",
+  "subsidio habitacional extranjeros Chile requisito permanencia definitiva historia decreto 174 2005 decreto 62 1984 extranjeros residentes",
+  "\"Fondo Solidario de Vivienda\" decreto 174 2005 extranjeros \"cinco años\" permanencia definitiva leychile",
+  "bcn.cl leychile \"Decreto 49\" 2011 \"REGLAMENTA EL PROGRAMA FONDO SOLIDARIO DE ELECCIÓN DE VIVIENDA\" idNorma",
+  "decreto vivienda octubre 2014 elimina antigüedad cinco años permanencia definitiva extranjeros subsidio habitacional decreto 2014 modifica",
+  "bcn.cl leychile \"REGLAMENTA PROGRAMA FONDO SOLIDARIO DE VIVIENDA\" decreto 174",
+  "bcn.cl leychile decreto 62 1984 vivienda \"marginalidad habitacional\" OR decreto 44 1988 \"subsidio general unificado\" extranjeros cédula",
+  "\"Decreto 184\" vivienda 2009 modifica decreto 174 extranjeros \"Permanencia Definitiva\" cinco años",
+  "\"FONDO SOLIDARIO DE ELECCIÓN DE VIVIENDA\" decreto 49 2011 publicación 26-ABR-2012 leychile navegar idNorma",
+  "bcn.cl leychile decreto 40 2004 vivienda \"Reglamento del Sistema de Subsidio Habitacional\" extranjeros"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":119,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 18.469 (1985) was in force. Art. 2 barred public establishments from denying care or demanding prior payment. Arts. 5-6 gave full FONASA coverage only to affiliates (contributing workers, pensioners), their dependants and accredited indigents, and art. 6(d) covered pregnant women and children under six whatever their affiliation. Undocumented migrants could not be accredited as beneficiaries, so equal coverage reached only regular, documented migrants. I found no practice evidence for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"Same statute; Ley 19.966 (GES) added art. 6(g) with effect from 1 July 2005. DS 110/2004 set the criteria for accrediting indigents but had no migrant-specific route (text not read). MINSAL dates its first special measures, for pregnant migrant women, to 2003; these were administrative only. I found no practice evidence contemporary with 2005.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 18.469 was consolidated into DFL 1/2005, Libro II (published 24 Apr 2006) with the same content. Administrative instruments (Resolución Exenta 1914/2008; Ord. A14 N°3229/2008) extended care to irregular migrant children under 18 and to pregnant women; they are not law and leave irregular adults uncovered. Liberona & Mansilla (2017) cite press-documented refusals of care around 2006-2008.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes, but only for certain visa types and migrant statuses (e.g., econom",
+ "output": {
+  "answers": [
+   {
+    "question_id": 119,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Ley 18.469 (1985) was in force. Art. 2 barred public establishments from denying care or demanding prior payment. Arts. 5-6 gave full FONASA coverage only to affiliates (contributing workers, pensioners), their dependants and accredited indigents, and art. 6(d) covered pregnant women and children under six whatever their affiliation. Undocumented migrants could not be accredited as beneficiaries, so equal coverage reached only regular, documented migrants. I found no practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Same statute; Ley 19.966 (GES) added art. 6(g) with effect from 1 July 2005. DS 110/2004 set the criteria for accrediting indigents but had no migrant-specific route (text not read). MINSAL dates its first special measures, for pregnant migrant women, to 2003; these were administrative only. I found no practice evidence contemporary with 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Ley 18.469 was consolidated into DFL 1/2005, Libro II (published 24 Apr 2006) with the same content. Administrative instruments (Resolución Exenta 1914/2008; Ord. A14 N°3229/2008) extended care to irregular migrant children under 18 and to pregnant women; they are not law and leave irregular adults uncovered. Liberona & Mansilla (2017) cite press-documented refusals of care around 2006-2008."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Ley 20.584 art. 2 (published 24 Apr 2012) added a general right to timely care without arbitrary discrimination for every person, but no FONASA entitlement for undocumented adults. DS 67 was signed 29 May 2015 but published only on 10 Mar 2016, so it does not count on this date. Practice: INDH 2013 and the Arica/Iquique cases of 2013-2014 cited by Liberona & Mansilla show barriers for undocumented migrants."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 18.469 (1985), Régimen de Prestaciones de Salud",
+      "article": "Arts. 2, 5, 6",
+      "role": "predecessor",
+      "in_force": "1985-11-23 to 2006-04-24",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "DFL 1/2005 Ministerio de Salud (texto refundido), Libro II",
+      "article": "Arts. 131-137 (beneficiaries)",
+      "role": "other_in_force",
+      "in_force": "2006-04-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 110/2004 Ministerio de Salud (acreditación de carentes de recursos)",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2004 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 67/2015 Ministerio de Salud",
+      "article": "Artículo único (Circunstancia Nº 4 in DS 110 art. 2)",
+      "role": "other_in_force",
+      "in_force": "2016-03-10 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.584",
+      "article": "Art. 2",
+      "role": "cited",
+      "in_force": "2012 (published 2012-04-24) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 Nº 9",
+      "role": "cited",
+      "in_force": "1981 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 15",
+      "role": "cited",
+      "in_force": "2022-02 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-07-01",
+      "instrument": "Ley 19.966",
+      "article": "Ley 18.469 art. 6(g)",
+      "kind": "amended",
+      "what_changed": "Added recipients of unemployment benefits as FONASA beneficiaries; it does not touch migrants specifically.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=18469",
+      "passage": "g) Las personas que gocen de una prestación de cesantía de acuerdo a la ley Nº19.728 y sus causantes de asignación familiar."
+     },
+     {
+      "date": "2006-04-24",
+      "instrument": "DFL 1/2005 Ministerio de Salud",
+      "article": "Ley 18.469 (whole)",
+      "kind": "replaced",
+      "what_changed": "Ley 18.469 was consolidated into DFL 1/2005, Libro II, with the same content.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=18469",
+      "passage": "Esta norma ha sido refundida por DFL-1 ... Última modificación: 24-ABR-2006 - DFL 1"
+     },
+     {
+      "date": "2012-04-24",
+      "instrument": "Ley 20.584",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "Created a general right of every person to timely, non-discriminatory health care. It is general and creates no coverage for undocumented migrants.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039348",
+      "passage": "Artículo 2º.- Toda persona tiene derecho, cualquiera que sea el prestador que ejecute las acciones de promoción, protección y recuperación de su salud y de su rehabilitación, a que ellas sean dadas oportunamente y sin discriminación arbitraria"
+     },
+     {
+      "date": "2016-03-10",
+      "instrument": "Decreto 67 (2015), Ministerio de Salud",
+      "article": "DS 110/2004 art. 2, Circunstancia Nº 4",
+      "kind": "amended",
+      "what_changed": "Undocumented migrants who declare they lack resources can now be accredited as indigent FONASA beneficiaries (tramo A), on the same footing as nationals. This is the change between 2015 and 2020.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1088253",
+      "passage": "Circunstancia Nº 4: Tratarse de una persona inmigrante que carece de documentos o permisos de residencia, que suscribe un documento declarando su carencia de recursos."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "MINSAL, Salud del Inmigrante",
+      "url": "https://www.minsal.cl/salud-del-inmigrante/",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Liberona & Mansilla, Pacientes ilegítimos: acceso a la salud de los inmigrantes indocumentados en Chile, Salud Colectiva 13(3)",
+      "url": "https://revistas.unla.edu.ar/saludcolectiva/article/view/1110",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "MINSAL, Migrante carente de recursos sin documentos",
+      "url": "https://www.minsal.cl/migrante-carente-de-recursos-sin-documentos-yo-permisos-de-residencia/",
+      "year": 2017,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 18.469 text and its 2004-2006 amendments, and DS 67 with its publication date, were read on LeyChile. I did not read the texts of DS 110/2004 and Constitution art. 19 Nº 9 (pages truncated), nor the 2003/2008 administrative instruments (known only from MINSAL and academic descriptions). Practice evidence for 2000 and 2005 is essentially absent.",
+    "sources_opened": [
+     {
+      "title": "Decreto 67 Salud (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1088253"
+     },
+     {
+      "title": "MINSAL Migrante carente de recursos",
+      "url": "https://www.minsal.cl/migrante-carente-de-recursos-sin-documentos-yo-permisos-de-residencia/"
+     },
+     {
+      "title": "DFL 1/2005 Salud (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=249177"
+     },
+     {
+      "title": "Ley 20.584 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039348"
+     },
+     {
+      "title": "Ley 18.469 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=18469"
+     },
+     {
+      "title": "DL 2763 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6999"
+     },
+     {
+      "title": "Constitución (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "MINSAL Salud del Inmigrante",
+      "url": "https://www.minsal.cl/salud-del-inmigrante/"
+     },
+     {
+      "title": "Salud Colectiva, Pacientes ilegítimos",
+      "url": "https://revistas.unla.edu.ar/saludcolectiva/article/view/1110"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds for 2020, but it rests on DS 67 (in force 10 Mar 2016) read with Ley 18.469/DFL 1 and Ley 20.584, not on Ley 21.325 art. 15, which was not yet in force. The implementation rating 'Usually; Effectively Always' looks high: MINSAL itself acknowledges persisting barriers and discrimination against undocumented migrants, and Liberona & Mansilla (2017) document breaches of the rules.",
+    "confidence": "medium",
+    "notes": "Relied on statutes and decrees only; no court ruling was used. The 2003 pregnant-women measures, Res. Exenta 1914/2008 (children under 18) and Ord. A14 3229/2008 are administrative instruments, not law, so they do not by themselves change the protection answer before 2016; they are treated as practice."
+   },
+   {
+    "question_id": 123,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "DS 44/1988 (Sistema General Unificado de Subsidio Habitacional) and DS 62/1984 governed housing subsidies. DS 44 art. 4 opened the subsidy to adult natural persons enrolled in the DS 62 Registro, with no nationality clause; I read the 2002 wording, not the 2000 wording. Enrolment required an identity document and a socio-economic file (inferred), so only documented, regular migrants could apply. Emol (2016) says subsidies to foreigners were 'almost anecdotal' as late as 2006; I found nothing closer to 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes",
+      "basis": "DS 40/2004 (in force 19 Mar 2004) replaced DS 44; DS 62/1984 stayed in force. I found no explicit rule on foreigners. DS 174 (Fondo Solidario de Vivienda) was published only on 9 Feb 2006. Practice: Emol reports 482 subsidies to foreigners in 2006."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Sometimes; Usually",
+      "basis": "Decreto 184 (Diario Oficial 31 Mar 2009) amended DS 174 art. 4: foreign applicants must hold a Certificado de Permanencia Definitiva, so only permanent residents qualify. The 2006 and 2008 versions of art. 4 had no such clause. Practice: Emol reports subsidies to foreigners rising from 482 in 2006."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "DS 49/2011 (published 26 Apr 2012), DS 1/2011 (published 6 Jun 2011) and DS 174 all required permanent residence; DS 105/2014, which rewrote DS 49 art. 3(b), was published only on 20 Mar 2015. Emol reports that MINVU dropped a five-year seniority requirement on the permanent-residence document in October 2014, and that 1,673 foreign families received subsidies in 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Decreto 44/1988 Vivienda y Urbanismo",
+      "article": "Art. 4",
+      "role": "predecessor",
+      "in_force": "1988-04-09 to 2004-03-19",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 62/1984 Vivienda y Urbanismo (Registro)",
+      "article": "Registro de postulantes",
+      "role": "other_in_force",
+      "in_force": "1984 to unknown (Title VIII repealed 2004-03-19)",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 40/2004 Vivienda y Urbanismo",
+      "article": "Postulant requirements",
+      "role": "predecessor",
+      "in_force": "2004-03-19 to 2011-06-06",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 174/2005 Vivienda y Urbanismo",
+      "article": "Art. 4",
+      "role": "predecessor",
+      "in_force": "2006-02-09 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 1/2011 Vivienda y Urbanismo",
+      "article": "Postulant requirements",
+      "role": "other_in_force",
+      "in_force": "2011-06-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 49/2011 Vivienda y Urbanismo",
+      "article": "Art. 3(b) (as replaced by DS 105/2014)",
+      "role": "predecessor",
+      "in_force": "2012-04-26 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 18",
+      "role": "cited",
+      "in_force": "2022-02 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2002-03-28",
+      "instrument": "Decreto 39 Vivienda",
+      "article": "DS 44/1988 art. 4",
+      "kind": "amended",
+      "what_changed": "Art. 4 as amended opens the subsidy to adult natural persons enrolled in the DS 62/1984 Registro, with no nationality clause.",
+      "url": "https://www.bcn.cl/leychile/navegar?i=8130",
+      "passage": "Artículo 4°.- Tendrán derecho a solicitar el subsidio habitacional las personas naturales, mayores de edad, inscritas en el Registro regulado por el D.S. Nº 62 (V. y U.), de 1984, que no sean propietarias de una vivienda"
+     },
+     {
+      "date": "2004-03-19",
+      "instrument": "Decreto 40/2004 Vivienda y Urbanismo",
+      "article": "DS 44/1988",
+      "kind": "replaced",
+      "what_changed": "DS 40 repealed DS 44 and became the new Sistema de Subsidio Habitacional. I found no explicit rule on foreigners.",
+      "url": "https://www.bcn.cl/leychile/navegar?i=8130",
+      "passage": "El Art. 47 letra a) del DTO 40, Vivienda y Urbanismo, publicado el 19.03.2004, derogó la presente n"
+     },
+     {
+      "date": "2006-02-09",
+      "instrument": "Decreto 174/2005 Vivienda y Urbanismo",
+      "article": "Art. 4",
+      "kind": "new_instrument",
+      "what_changed": "Created the Fondo Solidario de Vivienda; the original art. 4 required enrolment in the Registro and said nothing on nationality.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299&idVersion=2006-02-09",
+      "passage": "Artículo 4°.- Los postulantes deberán estar inscritos en el Registro."
+     },
+     {
+      "date": "2009-03-31",
+      "instrument": "Decreto 184 Vivienda",
+      "article": "DS 174 art. 4",
+      "kind": "amended",
+      "what_changed": "Admits foreigners only if they hold a Certificado de Permanencia Definitiva, limiting the program to permanent residents.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299",
+      "passage": "postulantes deberán ser mayores de 18 años, nacionales o extranjeros, debiendo en este último caso contar con Certificado de Permanencia Definitiva, conforme a las normas que regulan la residencia legal de los extranjeros en el país"
+     },
+     {
+      "date": "2011-06-06",
+      "instrument": "Decreto 1/2011 Vivienda y Urbanismo",
+      "article": "Whole",
+      "kind": "replaced",
+      "what_changed": "Repealed DS 40/2004 and chapter II of DS 174; I could not read its foreigner requirement (page truncated).",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1026260",
+      "passage": "APRUEBA REGLAMENTO DEL SISTEMA INTEGRADO DE SUBSIDIO HABITACIONAL Y DEROGA EL D.S. Nº40, DE 2004, Y EL CAPÍTULO SEGUNDO DEL D.S. Nº 174, DE 2005"
+     },
+     {
+      "date": "2014-10",
+      "instrument": "MINVU administrative change (reported in press)",
+      "article": "Permanent-residence seniority requirement",
+      "kind": "practice",
+      "what_changed": "MINVU dropped the requirement that foreigners hold permanent residence for five years; permanent residence itself is still required.",
+      "url": "https://www.emol.com/noticias/Nacional/2016/09/27/823763/Subsidios-habitacionales-para-extranjeros-se-han-cuadruplicado-en-la-ultima-decada.html",
+      "passage": "en octubre de ese año, el Ministerio de Vivienda eliminó la exigencia fijada por el gobierno anterior de una antigüedad de cinco años en el país, después de la obtención del documento de residencia permanente."
+     },
+     {
+      "date": "2015-03-20",
+      "instrument": "Decreto 105/2014 Vivienda y Urbanismo",
+      "article": "DS 49 art. 3(b)",
+      "kind": "replaced",
+      "what_changed": "Rewrote DS 49; foreign applicants must present a foreigner ID card and the Certificado de Permanencia Definitiva.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1075618",
+      "passage": "Si el postulante es de nacionalidad extranjera, deberá presentar Cédula de Identidad para Extranjeros y entregar fotocopia de ella y del Certificado de Permanencia Definitiva"
+     },
+     {
+      "date": "2017-06-21",
+      "instrument": "Decreto 22 Vivienda",
+      "article": "DS 49 art. 3(b)",
+      "kind": "amended",
+      "what_changed": "Requires the ID card to show permanent residence and allows online verification; the requirement stays limited to permanent residents.",
+      "url": "https://bcn.cl/2f1z4",
+      "passage": "Si el postulante es de nacionalidad extranjera, deberá presentar Cédula de Identidad para Extranjeros, en la que conste su permanencia definitiva"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Emol, Subsidios habitacionales para extranjeros se han cuadruplicado en la última década",
+      "url": "https://www.emol.com/noticias/Nacional/2016/09/27/823763/Subsidios-habitacionales-para-extranjeros-se-han-cuadruplicado-en-la-ultima-decada.html",
+      "year": 2016,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the DS 174 versions of 2006, 2008 and the current text with its amendment notes, the current DS 44 text with its amendment notes, the DS 105 text and the 2020 DS 49 text on LeyChile. The DS 62/1984 registry rules, the 2000 wording of DS 44 art. 4, and the foreigner clauses of DS 40/2004, DS 1/2011 and the original DS 49 could not be read (pages truncated). The 2014 seniority change is known only from press. Practice evidence is one press data piece and says nothing on irregular migrants.",
+    "sources_opened": [
+     {
+      "title": "DS 105 modifica DS 49 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1075618"
+     },
+     {
+      "title": "MINVU DS 174 page",
+      "url": "https://www.minvu.gob.cl/elementos-tecnicos/decretos/d-s-174-v-y-u-de-2005-do-09-02-2006-act-20-03-2015/"
+     },
+     {
+      "title": "Emol 2016 subsidies to foreigners",
+      "url": "https://www.emol.com/noticias/Nacional/2016/09/27/823763/Subsidios-habitacionales-para-extranjeros-se-han-cuadruplicado-en-la-ultima-decada.html"
+     },
+     {
+      "title": "DS 46/2012 modifica DS 49 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1050915"
+     },
+     {
+      "title": "DS 151/2006 modifica DS 174 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=252376"
+     },
+     {
+      "title": "DS 174/2005 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299"
+     },
+     {
+      "title": "DS 174 version 2006",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299&idVersion=2006-02-09"
+     },
+     {
+      "title": "DS 174 version 2008",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=247299&idVersion=2008-06-01"
+     },
+     {
+      "title": "DS 49 (LeyChile, 2020 version)",
+      "url": "https://bcn.cl/2f1z4"
+     },
+     {
+      "title": "DS 49 (vLex)",
+      "url": "https://vlex.cl/vid/programa-fondo-solidario-eleccion-vivienda-366783206"
+     },
+     {
+      "title": "DS 49 original version",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1039424&idVersion=2012-04-26"
+     },
+     {
+      "title": "MINVU DS 62/1984 page",
+      "url": "https://www.minvu.gob.cl/elementos-tecnicos/decretos/d-s-n-62-de-1984/"
+     },
+     {
+      "title": "DS 40/2004 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=222664"
+     },
+     {
+      "title": "DS 44/1988 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?i=8130"
+     },
+     {
+      "title": "DS 1/2011 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1026260"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds, but its 2020 basis is the MINVU subsidy decrees (DS 49 art. 3(b), DS 174 art. 4, DS 1/2011), which require permanent residence; Ley 21.325 art. 18 was not in force in 2020. 'Effectively Always' for implementation is not backed by any cited evidence.",
+    "confidence": "low",
+    "notes": "No court ruling was used. The 2000-2005 answers rest on DS 44's silence on nationality together with an inferred documentation requirement. The dated narrowing is Decreto 184 (31 Mar 2009), which limited DS 174 to permanent residents. The band stays 'certain statuses' throughout, but the covered group changed: possibly any documented resident before 2009, permanent residents after."
+   }
+  ]
+ }
 }
