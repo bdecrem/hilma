@@ -91,12 +91,14 @@ async function checkFp(db, writeOverride, ownLine) {
   const fpRow = (await db.from('venture_state').select('value').eq('key', 'weaknesses-fp').maybeSingle()).data?.value
   const cur = weak()
   if (!fpRow) return recordFp(cur)
-  if ((fpRow.known ?? []).includes(fpList(cur))) return
+  // only the version correct.mjs wrote last: an older one copied back is a rollback (sixteenth checker); a
+  // machine that has not pulled the notes yet shows the same way, and should pull
+  if ((fpRow.known ?? []).at(-1) === fpList(cur)) return
   const ids = cur.filter((w) => fpRow.last?.[w.id] !== fpOf(w)).map((w) => w.id)
   const gone = Object.keys(fpRow.last ?? {}).filter((id) => !cur.some((w) => w.id === id))
   const dayNow = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
   const key = `weak-changed-${fpList(cur)}-${dayNow}`
-  if (!(await ownLine(db, key))) await writeOverride(db, { key, what: `data/weaknesses.json matches no version correct.mjs wrote (changed past it: ${[...ids, ...gone.map((g) => g + ' removed')].join(', ') || 'order'}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
+  if (!(await ownLine(db, key))) await writeOverride(db, { key, what: `data/weaknesses.json is not the version correct.mjs wrote last (a hand edit, a rollback, or notes not pulled on this machine; changed: ${[...ids, ...gone.map((g) => g + ' removed')].join(', ') || 'order'}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
 }
 async function fpGate() {
   if (onCopy && !process.env.VENTURE_TRACKER_FAKE) return
@@ -403,7 +405,7 @@ if (cmd === 'add') {
       const { writeOverride } = await import('./_overrides.mjs')
       const db = await trackerDb()
       // written once: only a line this audit wrote itself counts (a line someone else put under the key does not)
-      const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' && /^(correction \d+'s owed fix |data\/weaknesses\.json matches no version)/.test(String(x.data?.value?.what ?? '')) }
+      const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' && /^(correction \d+'s owed fix |data\/weaknesses\.json is not the version)/.test(String(x.data?.value?.what ?? '')) }
       const r = await db.from('venture_state').select('value').like('key', 'override:%')
       const lines = (r.data ?? []).map((x) => String(x.value?.what ?? '')).filter((w) => !w.startsWith('(on a copy')) // a settle on a copy does not account for one in the real ledger
       const text = readFileSync(COR, 'utf8')
