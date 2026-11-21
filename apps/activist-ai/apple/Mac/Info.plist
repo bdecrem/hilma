@@ -41,5 +41,9 @@
 	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>Made for Bart, 2026.</string>
+	<key>OlaCommit</key>
+	<string>$(OLA_COMMIT)</string>
+	<key>OlaConfiguration</key>
+	<string>$(CONFIGURATION)</string>
 </dict>
 </plist>

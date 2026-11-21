@@ -134,6 +134,10 @@ enum MacDrive {
     var bundle: String
     var version: String
     var build: String
+    /// Debug or Release, and the commit it was built from (OLA-277: a drivable Debug build carried
+    /// the shipped build's number, so a transcript could not say which build it drove).
+    var configuration: String
+    var commit: String?
     var `where`: String
     var project: String?
     var handle: String
@@ -151,6 +155,12 @@ enum MacDrive {
   static var shotN = 0
   static var out: URL!
 
+  /// "31" for the shipped build; "31 Debug of 0f297294a1b2" for a drivable one, never the bare number.
+  static func buildName(_ number: String, configuration: String, commit: String?) -> String {
+    if configuration == "Release" { return number }
+    return "\(number) \(configuration)" + (commit.map { " of \($0)" } ?? "")
+  }
+
   static func say(_ s: String) { print(String(format: "%6.1f  ", Date().timeIntervalSince(t0)) + s); fflush(stdout) }
   static var now: Double { (Date().timeIntervalSince(t0) * 10).rounded() / 10 }
 
@@ -161,8 +171,11 @@ enum MacDrive {
     out = URL(fileURLWithPath: (s.out as NSString).expandingTildeInPath)
     try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
     let info = Bundle.main.infoDictionary ?? [:]
-    record = Record(bundle: Bundle.main.bundlePath, version: info["CFBundleShortVersionString"] as? String ?? "?", build: info["CFBundleVersion"] as? String ?? "?",
-                    where: s.where, project: s.project, handle: s.handle, started: ISO8601DateFormatter().string(from: Date()))
+    let config = (info["OlaConfiguration"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "unknown"
+    let commit = (info["OlaCommit"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+    let number = info["CFBundleVersion"] as? String ?? "?"
+    record = Record(bundle: Bundle.main.bundlePath, version: info["CFBundleShortVersionString"] as? String ?? "?", build: Self.buildName(number, configuration: config, commit: commit),
+                    configuration: config, commit: commit, where: s.where, project: s.project, handle: s.handle, started: ISO8601DateFormatter().string(from: Date()))
     say("Ola \(record.version) (\(record.build)) at \(record.bundle), \(s.where)")
     AccountController.trace = { line in Task { @MainActor in say("account: " + line) } }
     Task { @MainActor in

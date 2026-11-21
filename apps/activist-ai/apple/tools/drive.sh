@@ -147,7 +147,7 @@ if rounds: s["pickRounds"] = int(rounds)
 json.dump(s, open(f, "w"))
 PY
   prepare_account
-  echo "  driving $APP ($(defaults read "$APP/Contents/Info" CFBundleShortVersionString) ($(defaults read "$APP/Contents/Info" CFBundleVersion))), $WHERE"
+  echo "  driving $APP ($(defaults read "$APP/Contents/Info" CFBundleShortVersionString) ($(defaults read "$APP/Contents/Info" CFBundleVersion) $(defaults read "$APP/Contents/Info" OlaConfiguration 2>/dev/null || echo 'of unknown configuration') $(defaults read "$APP/Contents/Info" OlaCommit 2>/dev/null))), $WHERE"
   # Through LaunchServices into the logged-in desktop, in the background (-g), as a new copy (-n), with
   # its own home: its settings, Application Support and opencode state are the run's, not anyone's.
   open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$OUT/app.log" --stderr "$OUT/app.log" "$APP" --args -OlaDrive "$RUN/script.json" &

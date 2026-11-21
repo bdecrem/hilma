@@ -47,7 +47,9 @@ case "${1:-}" in
       echo "no signing identity on this Mac: signing ad hoc, so macOS will ask again (Keychain, folders) after every build until one exists"
       SIGN=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" AD_HOC_CODE_SIGNING_ALLOWED=YES PROVISIONING_PROFILE_SPECIFIER="" DEVELOPMENT_TEAM="")
     fi
-    xcodebuild -project Ola.xcodeproj -scheme OlaMac -configuration Debug -derivedDataPath "$DD" "${SIGN[@]}" \
+    # The commit it is built from, in its Info.plist (OlaCommit; "+changes" when the tree differs).
+    COMMIT="$(git rev-parse --short=12 HEAD)$(git diff --quiet HEAD -- . 2>/dev/null || echo +changes)"
+    xcodebuild -project Ola.xcodeproj -scheme OlaMac -configuration Debug -derivedDataPath "$DD" "${SIGN[@]}" OLA_COMMIT="$COMMIT" \
       build 2>&1 | grep -E "error:|BUILD" | sort -u
     # The designated requirement is what the Keychain and the folder permissions remember.
     REQ="$(codesign -d -r- "$APP" 2>&1 | sed -n 's/^.*designated => //p')"

@@ -89,6 +89,10 @@ targets:
         # The numbers bump-build.sh moves (xcodegen otherwise writes a fixed 1.0 (1)).
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Which build this is beyond its number (OLA-277): Debug or Release, and the commit
+        # tools/build.sh built it from (empty from Xcode). A drive's transcript names both.
+        OlaConfiguration: $(CONFIGURATION)
+        OlaCommit: $(OLA_COMMIT)
         # The machine is reached over Tailscale by plain HTTP (the tailnet encrypts it).
         # Plain HTTP is allowed only to local addresses and to Tailscale names (*.ts.net).
         NSAppTransportSecurity:
