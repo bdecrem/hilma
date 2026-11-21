@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina political claude-opus-5-5 high",
- "pid": 77611,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "political",
@@ -57,5 +56,569 @@
   "user": 174
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:33:29.629Z",
+ "minutes": 3.05,
+ "meters_after": {
+  "at": "2026-11-21T10:33:29.629Z",
+  "window": {
+   "pct": 28,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 28,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 28% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 79060,
+   "output": 18471,
+   "cache_read": 639960,
+   "cache_write": 85426,
+   "cost_usd": 1.1289,
+   "total": 822917
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 79040,
+    "output": 5634,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2024,
+    "cost_usd": 0.0607
+   },
+   "claude-opus-5-5": {
+    "input": 20,
+    "output": 12837,
+    "cache_read": 639960,
+    "cache_write": 85426,
+    "thinking": 2894,
+    "cost_usd": 1.0682
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 28,
+ "duration_ms": 182249,
+ "duration_api_ms": 148753,
+ "pages_read": 13,
+ "pages": [
+  {
+   "at": "2026-11-21T10:30:32.418Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 37 | Artículo 48 | Artículo 55 | Artículo 89 | Artículo 20",
+   "ok": true,
+   "chars": 8553
+  },
+  {
+   "at": "2026-11-21T10:30:33.492Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/19442/texact.htm",
+   "find": "ARTICULO 1 | electores | extranjeros",
+   "ok": true,
+   "chars": 5493
+  },
+  {
+   "at": "2026-11-21T10:30:34.356Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 11 | vida pública",
+   "ok": true,
+   "chars": 4444
+  },
+  {
+   "at": "2026-11-21T10:30:43.869Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/200000-204999/204185/norma.htm",
+   "find": "Artículo 1 | electores | Artículo 3",
+   "ok": true,
+   "chars": 624
+  },
+  {
+   "at": "2026-11-21T10:31:18.565Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/19442/norma.htm",
+   "find": "Electores | Son electores",
+   "ok": true,
+   "chars": 3435
+  },
+  {
+   "at": "2026-11-21T10:31:27.972Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "polític | sufragio | electoral | derogada",
+   "ok": true,
+   "chars": 3671
+  },
+  {
+   "at": "2026-11-21T10:31:40.299Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-204176/texto",
+   "find": "ARTICULO 1 | ARTICULO 3 | electores",
+   "ok": true,
+   "chars": 4361
+  },
+  {
+   "at": "2026-11-21T10:31:42.959Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 11 | ARTICULO 124 | ARTICULO 125",
+   "ok": true,
+   "chars": 3456
+  },
+  {
+   "at": "2026-11-21T10:31:43.039Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": "ARTICULO 7 | derechos políticos | ARTICULO 8",
+   "ok": true,
+   "chars": 2550
+  },
+  {
+   "at": "2026-11-21T10:31:58.953Z",
+   "url": "https://pdba.georgetown.edu/Decen/Argentina/constprov_buenosaires.html",
+   "find": "Artículo 191 | extranjeros",
+   "ok": true,
+   "chars": 3114
+  },
+  {
+   "at": "2026-11-21T10:31:59.733Z",
+   "url": "https://www.eleccionesciudad.gob.ar/leyesynormas/ley334.pdf",
+   "find": "Artículo 1 | Artículo 2 | extranjeros",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:32:03.811Z",
+   "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/6180",
+   "find": "extranjeros | Artículo 1 | deroga",
+   "ok": true,
+   "chars": 3385
+  },
+  {
+   "at": "2026-11-21T10:32:18.326Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "vote | political | elections | article 41 | article 42",
+   "ok": true,
+   "chars": 2159
+  }
+ ],
+ "searches": [
+  "Ley 22.439 texto infoleg actividades políticas extranjeros",
+  "Ley 26.774 ciudadanía argentina voto 16 años texto infoleg",
+  "Constitución Provincia de Buenos Aires artículo 191 extranjeros concejales \"tercera parte\" electores extranjeros",
+  "Ley 334 Ciudad de Buenos Aires registro electores extranjeros 2000 texto",
+  "CMW/C/ARG/CO/1 2011 Argentina derechos políticos migrantes voto elecciones locales observaciones finales"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":91,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"National law (Constitution of 1994, arts. 37 and 48; Electoral Code, Ley 19.945, art. 1 in its pre-2012 wording) gave the vote only to citizens ('ciudadanos ... nativos, por opción y naturalizados'). No national provision gave lawfully present foreigners the vote. Local voting by foreigners existed only in provincial law, e.g. Buenos Aires Province Constitution art. 191. The City of Buenos Aires' Ley 334 was not yet in force: it was published 21/02/2000. There is no national-level practice to rate.\"},{\"date\":\"2005-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same constitutional and Electoral Code rules. Ley 25.871 (B.O. 21/1/2004) art. 11 only commits the State to 'facilitate', 'in accordance with national and provincial legislation', foreigners' consultation or participation in local public life. It creates no right to vote. Provincial and City of Buenos Aires (Ley 334, 2000) local voting for permanent residents is subnational, so the national answer stays 'No'.\"},{\"date\":\"2010-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"No change. Decreto 616/2010 (May 2010) postdates this date and does not touch voting. The Electoral Code art. 1 still limited electors to native, by-option and naturalized citizens.\"},{\"date\":\"2015-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 26.774 (B.O. 02/11/2012) replaced Electoral Code art. 1 to lower the voting age: 'Son electores los argentinos nativos y por opción, desde los dieciséis (16) años..., y los argentinos naturalizados, desde los dieciocho (18)'. It kept citizenship as the condition, so foreigners still had no national vote. Local voting stayed a provincial and City matter.\"}],\"change_2000_2020\":\"There have been no right protec",
+ "output": {
+  "answers": [
+   {
+    "question_id": 91,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "National law (Constitution of 1994, arts. 37 and 48; Electoral Code, Ley 19.945, art. 1 in its pre-2012 wording) gave the vote only to citizens ('ciudadanos ... nativos, por opción y naturalizados'). No national provision gave lawfully present foreigners the vote. Local voting by foreigners existed only in provincial law, e.g. Buenos Aires Province Constitution art. 191. The City of Buenos Aires' Ley 334 was not yet in force: it was published 21/02/2000. There is no national-level practice to rate."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Same constitutional and Electoral Code rules. Ley 25.871 (B.O. 21/1/2004) art. 11 only commits the State to 'facilitate', 'in accordance with national and provincial legislation', foreigners' consultation or participation in local public life. It creates no right to vote. Provincial and City of Buenos Aires (Ley 334, 2000) local voting for permanent residents is subnational, so the national answer stays 'No'."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Decreto 616/2010 (May 2010) postdates this date and does not touch voting. The Electoral Code art. 1 still limited electors to native, by-option and naturalized citizens."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 26.774 (B.O. 02/11/2012) replaced Electoral Code art. 1 to lower the voting age: 'Son electores los argentinos nativos y por opción, desde los dieciséis (16) años..., y los argentinos naturalizados, desde los dieciocho (18)'. It kept citizenship as the condition, so foreigners still had no national vote. Local voting stayed a provincial and City matter."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina (reforma 1994)",
+      "article": "Art. 37",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina (reforma 1994)",
+      "article": "Art. 20 (foreigners enjoy civil rights of the citizen)",
+      "role": "other_in_force",
+      "in_force": "1853 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Código Electoral Nacional, Ley 19.945 (t.o. Decreto 2135/83)",
+      "article": "Art. 1 (electores) – wording 'ciudadanos de ambos sexos nativos, por opción y naturalizados, desde los dieciocho años'",
+      "role": "other_in_force",
+      "in_force": "1972-11 to 2012-11",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Código Electoral Nacional, Ley 19.945, as replaced by Ley 26.774",
+      "article": "Art. 1 (electores) – 'argentinos nativos y por opción ... y los argentinos naturalizados'",
+      "role": "other_in_force",
+      "in_force": "2012-11 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 7 (political rights of Argentines; replaced by Ley 26.774)",
+      "role": "other_in_force",
+      "in_force": "1869 to today (current wording since 2012-11)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 11 (State to facilitate foreigners' consultation/participation in local public life)",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Whole law (no political-rights provision found)",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Provincia de Buenos Aires (1994)",
+      "article": "Art. 191 inc. 2 (foreign electors in municipal elections)",
+      "role": "other_in_force",
+      "in_force": "1994 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 334 (Ciudad Autónoma de Buenos Aires), Registro de Electoras y Electores Extranjeros",
+      "article": "Arts. 1-2",
+      "role": "other_in_force",
+      "in_force": "2000-02 to 2019-12-31 (repealed by Ley 6031 from 2020-01-01)",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-02",
+      "instrument": "Ley 334 (Legislatura de la Ciudad Autónoma de Buenos Aires)",
+      "article": "Arts. 1-2",
+      "kind": "new_instrument",
+      "what_changed": "Subnational: created the foreign voters' register of the City of Buenos Aires. Permanent residents aged 18+ who hold a DNI and have 3 years' residence may vote in City elections after registering voluntarily. This is not national law, so it does not change the national answer.",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/6180",
+      "passage": "Art. 2° Los extranjeros y las extranjeras desde los dieciocho (18) años de edad cumplidos están habilitados para votar en los actos electorales convocados en el marco de la Constitución de la Ciudad Autónoma de Buenos Aires, previa inscripción voluntaria en el Registro ... a) Tener la calidad de residente permanente en el país"
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 11; art. 124 (repeal of Ley 22.439)",
+      "kind": "new_instrument",
+      "what_changed": "The new migration law replaced Ley 22.439, which had no political-participation clause. Art. 11 commits the State to facilitate foreigners' consultation or participation in local public life, in accordance with national and provincial legislation. It is a facilitation clause and grants no voting right.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 11. — La República Argentina facilitará, de conformidad con la legislación nacional y provincial en la materia, la consulta o participación de los extranjeros en las decisiones relativas a la vida pública y a la administración de las comunidades locales donde residan."
+     },
+     {
+      "date": "2012-11",
+      "instrument": "Ley 26.774 de Ciudadanía Argentina",
+      "article": "Código Electoral Nacional (Ley 19.945) art. 1; Ley 346 art. 7",
+      "kind": "amended",
+      "what_changed": "Before: electors were 'ciudadanos de ambos sexos nativos, por opción y naturalizados' aged 18+. After: native and by-option Argentines from 16, naturalized Argentines from 18. Citizenship remained the condition, so foreigners stayed excluded.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-204176/texto",
+      "passage": "Artículo 1º: Son electores los argentinos nativos y por opción, desde los dieciséis (16) años de edad, y los argentinos naturalizados, desde los dieciocho (18) años de edad, que no tengan ninguna de las inhabilitaciones previstas en esta ley."
+     },
+     {
+      "date": "2020-01-01",
+      "instrument": "Ley 6031 (Ciudad Autónoma de Buenos Aires), Código Electoral de la Ciudad",
+      "article": "Art. 43 (repeal of Ley 334)",
+      "kind": "replaced",
+      "what_changed": "Subnational: Ley 334 was repealed from 1 January 2020 and replaced by the City's new Electoral Code. The repeal takes effect on the 2020 date itself and does not touch the national answer.",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/6180",
+      "passage": "SE DEJA CONSTANCIA QUE EL ART. 43 DE LA LEY N° 6031 DEROGA A LA PRESENTE LEY A PARTIR DEL 1° DE ENERO DE 2020 SEGÚN LO DISPUESTO EN SU ART. 44"
+     }
+    ],
+    "repealed_search": "I checked the original 1972 text of the Electoral Code art. 1 and its 2012 replacement (Ley 26.774), Ley 346 art. 7, Ley 25.871 (original text art. 11) and the text of Ley 22.439 on argentina.gob.ar, looking for any national provision granting foreigners the vote. None existed between 2000 and 2020. Every version of the Electoral Code limits electors to citizens. The only foreign-voter rules are subnational: Buenos Aires Province Constitution art. 191 and CABA Ley 334 (2000), the latter repealed and replaced by Ley 6031 from 1/1/2020, which is a replacement, not a narrowing of national law.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Concluding observations on the initial report of Argentina (CMW/C/ARG/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original and current texts of the Electoral Code art. 1, the amending Ley 26.774, and the original and current texts of Ley 25.871. The constitution was read in its current text; it has not been amended since 1994. Practice evidence is not needed because the answer is the lowest option, and the 2011 CMW observations say nothing on voting.",
+    "sources_opened": [
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Código Electoral Nacional – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/19442/texact.htm"
+     },
+     {
+      "title": "Código Electoral Nacional Ley 19.945 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/19442/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 26.774 – texto original (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-204176/texto"
+     },
+     {
+      "title": "Ley 346 – texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 22.439 – texto original (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Constitución de la Provincia de Buenos Aires – régimen municipal (PDBA Georgetown)",
+      "url": "https://pdba.georgetown.edu/Decen/Argentina/constprov_buenosaires.html"
+     },
+     {
+      "title": "Ley 334 (CABA) – Boletín Oficial de la Ciudad",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/6180"
+     },
+     {
+      "title": "CMW Concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": "Under the MRD's national-law approach the 'No' holds, since no federal norm lets foreigners vote. A reviewer should note, though, that subnational law gave permanent residents local votes throughout 2000-2020: Buenos Aires Province Constitution art. 191 and CABA Ley 334 from February 2000, among others. On the indicator's wording ('local or regional elections') this could support 'Right to vote in local or regional elections' if provincial law were counted. Also, the MRD's citation to Constitution art. 37 is inaccurate: art. 37 guarantees political rights and universal suffrage; it does not confer electoral autonomy on the provinces (that rests on arts. 5, 121-123).",
+    "confidence": "high",
+    "notes": "No court ruling relied on. I did not count ICRMW (ratified by Ley 26.202, 2007), because its art. 42(3) leaves political rights to the State's discretion. Implementation is 'Does Not Apply' on all dates. The provincial and City norms are recorded as context only, and I read the Buenos Aires Province constitution from an unofficial copy (PDBA Georgetown)."
+   },
+   {
+    "question_id": 93,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "The Constitution requires citizenship for national elective office: art. 48 for deputies ('cuatro años de ciudadanía en ejercicio'), art. 55 for senators ('seis años ciudadano de la Nación') and art. 87 for the President ('un ciudadano'). No national norm let foreigners stand for election. Foreigners could be elected municipal councillors only under provincial law, e.g. Buenos Aires Province Constitution art. 191 (five years' residence, special register, at most one third of the council). There is no national-level practice to rate."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 25.871 (2004) art. 11 is only a commitment to facilitate participation in local public life. It gives no right to stand for office. The constitutional citizenship requirements are unchanged."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "No change in the Constitution or national electoral law affecting candidacy of foreigners."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 26.774 (2012) changed voting ages only and kept citizenship as the condition for electors. Constitution arts. 48, 55 and 87 are unchanged, and local eligibility of foreigners remained a matter of provincial law."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina (reforma 1994)",
+      "article": "Art. 48 (requirements for deputy)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina (reforma 1994)",
+      "article": "Art. 55 (requirements for senator)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina (reforma 1994)",
+      "article": "Art. 87 (President is 'un ciudadano')",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Provincia de Buenos Aires (1994)",
+      "article": "Art. 191 (foreign councillors, max one third)",
+      "role": "cited",
+      "in_force": "1994 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 11",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Whole law (no political-rights provision found)",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 11",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. Art. 11 commits the State to facilitate foreigners' consultation or participation in local public life, subject to national and provincial legislation. It creates no right to stand for election.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 11. — La República Argentina facilitará, de conformidad con la legislación nacional y provincial en la materia, la consulta o participación de los extranjeros en las decisiones relativas a la vida pública y a la administración de las comunidades locales donde residan."
+     },
+     {
+      "date": "2012-11",
+      "instrument": "Ley 26.774 de Ciudadanía Argentina",
+      "article": "Código Electoral Nacional art. 1; Ley 346 art. 7",
+      "kind": "amended",
+      "what_changed": "Lowered the voting age for citizens and reworded who counts as an elector. Political rights stay tied to Argentine nationality ('Los argentinos que hubiesen cumplido la edad de dieciséis (16) años, gozan de todos los derechos políticos'). No effect on foreigners' eligibility.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-204176/texto",
+      "passage": "Artículo 7°: Los argentinos que hubiesen cumplido la edad de dieciséis (16) años, gozan de todos los derechos políticos conforme a la Constitución y a las leyes de la República."
+     }
+    ],
+    "repealed_search": "I searched the national Constitution (current text, unamended since 1994), Ley 346 art. 7 (current and 2012 amending act), the Electoral Code art. 1 (original and current), Ley 25.871 (original and current) and Ley 22.439 for any national provision letting foreigners stand for office. None was found at any point between 2000 and 2020. Eligibility of foreign residents for municipal councils exists only in provincial law, e.g. Buenos Aires Province Constitution art. 191, unchanged in the period as far as the current text shows.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The relevant constitutional articles have not been amended since 1994, and I read them in the current InfoLEG text. I read the Buenos Aires provincial constitution from an unofficial copy (PDBA Georgetown) and found no version history for it. No practice evidence was sought, since implementation is 'Does Not Apply'.",
+    "sources_opened": [
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 26.774 – texto original (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-204176/texto"
+     },
+     {
+      "title": "Ley 346 – texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 22.439 – texto original (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Constitución de la Provincia de Buenos Aires – régimen municipal (PDBA Georgetown)",
+      "url": "https://pdba.georgetown.edu/Decen/Argentina/constprov_buenosaires.html"
+     }
+    ],
+    "starting_answer_concern": "The 'No' holds at national level. Note that the MRD cites Buenos Aires Province Constitution 'Art. 191.3'. In the text read, the foreign-councillor eligibility rule sits in the third base of art. 191 ('si son extranjeros, tengan además cinco años de residencia y estén inscriptos en el registro especial'), and the one-third cap in the sixth. If subnational law were counted, it would support 'Right to run for public office in local or regional elections' throughout 2000-2020.",
+    "confidence": "high",
+    "notes": "No court ruling relied on, and no treaty relied on: ICRMW art. 42(3) leaves political rights to the State. Implementation is 'Does Not Apply' on all dates. The answer does not change over 2000-2020."
+   }
+  ]
+ }
 }
