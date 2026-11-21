@@ -311,6 +311,8 @@ if (cmd === '--wait') {
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   const bad = checkEntry(e)
+  // OLA-251, tenth pass: a fix settled in the ledger past correct.mjs becomes a line before the day's lines are counted
+  spawnSync('node', [root + 'scripts/venture/correct.mjs', 'audit'], { encoding: 'utf8', stdio: ['ignore', 'ignore', 'inherit'] })
   // OLA-245 check #2, OLA-261: the models part is counted here from the transcripts of every machine the
   // lead ran on (delegable.mjs), never taken from the entry; what the author wrote there is ignored.
   {

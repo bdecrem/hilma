@@ -23,6 +23,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 
 export const CALLERS = join(homedir(), '.claude/venture-callers.jsonl')
 export const shortHost = () => hostname().replace(/\..*$/, '')
@@ -49,6 +50,33 @@ export function caller({ file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now
   seen.set(memo, out)
   return out
 }
+/** The command Claude Code is running for this process: the eval'd text of the nearest ancestor shell
+ *  whose parent is a claude process, or null. On a copy of the tracker a test names it (VENTURE_TEST_SHELL). */
+export function toolShell() {
+  if (process.env.VENTURE_TRACKER_FAKE && process.env.VENTURE_TEST_SHELL !== undefined) return process.env.VENTURE_TEST_SHELL
+  const ps = (pid) => {
+    try {
+      const out = execFileSync('ps', ['-ww', '-o', 'ppid=,args=', '-p', String(pid)], { encoding: 'utf8', maxBuffer: 8e6 }).replace(/^\s+/, '')
+      const sp = out.indexOf(' ')
+      return { ppid: Number(out.slice(0, sp)), args: out.slice(sp + 1).replace(/\n$/, '') }
+    } catch { return null }
+  }
+  let pid = process.ppid
+  for (let hop = 0; hop < 16 && pid > 1; hop++) {
+    const p = ps(pid)
+    if (!p) return null
+    if (p.args.includes('/.claude/shell-snapshots/') && p.args.includes(" eval '")) {
+      const parent = ps(p.ppid)
+      if (parent && /(^|\/)claude(\s|$)|claude-code/.test(parent.args.slice(0, 300))) {
+        const i = p.args.indexOf(" eval '") + 7
+        const j = p.args.lastIndexOf("' < /dev/null")
+        return p.args.slice(i, j > i ? j : undefined).replace(/'\\''/g, "'")
+      }
+    }
+    pid = p.ppid
+  }
+  return null
+}
 export const tokenHash = (t) => createHash('sha256').update(String(t)).digest('hex')
 function callerOnce({ file, now, token }) {
   const host = shortHost()
@@ -60,8 +88,24 @@ function callerOnce({ file, now, token }) {
     if (!l.includes(h)) continue
     try { const x = JSON.parse(l); if (x.tok === h) r = x } catch {}
   }
-  if (!r) return { id: null, host, known: false, why: 'a caller token the hook never gave out on this machine' }
+  if (!r) return { id: null, host, known: false, forged: true, why: 'a caller token the hook never gave out on this machine' }
   if (now - r.at * 1000 > TOKEN_LIFE || r.at * 1000 > now + 5e3) return { id: null, host, known: false, why: 'a caller token older than a day' }
+  // OLA-251, tenth pass: the token must be the one the hook put in front of THIS command. The tenth checker
+  // read another session's token from its transcript (Claude Code logs the rewritten command) and ran the
+  // hook by hand to mint one for any agent id. Neither passes here: Claude Code runs each command as
+  // `zsh -c "source …/shell-snapshots/… && eval '<command>' …"` under its claude process, and the hook's
+  // prefix is the first thing in <command>, so a command that sets another token has its own in front.
+  const sh = toolShell()
+  if (!sh) return { id: null, host, known: false, forged: true, why: `a caller token (of ${r.agent ? `agent ${r.agent.slice(0, 8)}` : `session ${String(r.session).slice(0, 8)}`}) in a process that no Claude Code command started` }
+  const lead = `export VENTURE_CALLER=${token}; `
+  // ps shows a newline as \012 and a byte past ASCII the way vis(3) does (an em dash is M-bM^@M^T): the
+  // record's text is put in the same form, then both are compared on their letters and digits
+  const vis = (x) => [...Buffer.from(String(x), 'utf8')].map((b) => (b < 0x80 ? String.fromCharCode(b) : (b & 0x7f) < 0x20 || (b & 0x7f) === 0x7f ? 'M^' + String.fromCharCode((b & 0x7f) ^ 0x40) : 'M-' + String.fromCharCode(b & 0x7f))).join('')
+  const flat = (x) => String(x).replace(/\\[0-7]{3}/g, '').replace(/[^A-Za-z0-9]/g, '')
+  const rest = sh.slice(lead.length)
+  const want = flat(vis(r.cmd))
+  const n = Math.min(want.length, 4000)
+  if (!sh.startsWith(lead) || flat(rest).slice(0, n) !== want.slice(0, n)) return { id: null, host, known: false, forged: true, why: `the caller token of ${r.agent ? `agent ${r.agent.slice(0, 8)}` : `session ${String(r.session).slice(0, 8)}`}'s command, used in another command` }
   const id = r.agent ? `agent ${r.agent}` : `session ${r.session}`
   return { id, session: r.session, agent: r.agent ?? null, agent_type: r.agent_type ?? null, host, known: true, why: `${r.agent ? `agent ${r.agent.slice(0, 8)} (${r.agent_type ?? 'agent'})` : `session ${String(r.session).slice(0, 8)}`} on ${host}` }
 }

@@ -23,11 +23,19 @@ writeFileSync(db, JSON.stringify(d))
 
 const now = () => Date.now() / 1000
 const rows = []
-const record = (agent, tok, cmd) => { rows.push(JSON.stringify({ at: now(), session: 'lead-session', agent, agent_type: 'general-purpose', tok: tokenHash(tok), cmd })); writeFileSync(callers, rows.join('\n') + '\n') }
+// each row as the hook writes it; cmds[tok] is the command it was given, which the tracker finds in its own shell
+const cmds = {}
+const record = (agent, tok, cmd) => { cmds[tok] = cmd; rows.push(JSON.stringify({ at: now(), session: 'lead-session', agent, agent_type: 'general-purpose', tok: tokenHash(tok), cmd })); writeFileSync(callers, rows.join('\n') + '\n') }
+// run(tok, …): a command whose hook prefix carries tok (shell = that command); run(tok, …) with { shellTok } set:
+// the env carries tok but the shell's own prefix is shellTok's (a token taken from elsewhere)
+let shellOverride = null
 const run = (tok, ...args) => {
   const env = { ...process.env, VENTURE_TRACKER_FAKE: db, VENTURE_CALLERS_FILE: callers }
   delete env.VENTURE_CALLER
+  delete env.VENTURE_TEST_SHELL
   if (tok) env.VENTURE_CALLER = tok
+  const st = shellOverride ?? tok
+  env.VENTURE_TEST_SHELL = st ? `export VENTURE_CALLER=${st}; ${cmds[st] ?? ''}` : 'node scripts/venture/iss*s.mjs ' + args.join(' ')
   const r = spawnSync('node', [join(here, 'issues.mjs'), ...args], { env, encoding: 'utf8' })
   return { code: r.status, out: (r.stdout + r.stderr).trim() }
 }
@@ -58,6 +66,26 @@ expect('A under B\'s name is still another caller', r.code !== 0 && holdsB(), r.
 // A with a forged token (not in the record): unknown
 r = run('f'.repeat(32), 'claim', 'OLA-240', '--who', 'builder', '--role', 'checker')
 expect('a forged token is unknown and changes nothing', r.code !== 0 && holdsB(), r.out)
+// the tenth checker: B's token read from B's transcript, used in A's own command (A's hook prefix comes first)
+const overrides = () => run(null, 'overrides').out
+const before = (overrides().match(/not this command's own/g) ?? []).length
+shellOverride = ta
+r = run(tb, 'release', 'OLA-240')
+shellOverride = null
+expect('B\'s token used in A\'s command is refused', r.code !== 0 && holdsB(), r.out)
+expect('  and leaves a line in the overrides', (overrides().match(/not this command's own/g) ?? []).length > before, overrides())
+// the hook run by hand to mint a token for B: a record row exists, but no command was started with it
+const tm = 'd'.repeat(32)
+record('bbbbbbbb', tm, 'node scripts/venture/issues.mjs release OLA-240')
+shellOverride = ta
+r = run(tm, 'release', 'OLA-240')
+shellOverride = null
+expect('a token minted by running the hook by hand is refused', r.code !== 0 && holdsB(), r.out)
+// a token in a process no Claude Code command started (detached, launchd): no shell at all
+shellOverride = ''
+r = run(tb, 'release', 'OLA-240')
+shellOverride = null
+expect('a token outside any Claude Code command is refused', r.code !== 0 && holdsB(), r.out)
 // a second builder is kept out of the server lane
 const tc = 'c'.repeat(32)
 record('cccccccc', tc, 'node scripts/venture/issues.mjs claim OLA-267 --who builder2')

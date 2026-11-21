@@ -294,11 +294,11 @@ if (cmd === 'add') {
     const what = settledBy
       ? `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, changed by ${settledBy}: read whether that change carries the fix`
       : `owed fix of correction ${num} (${o.issue}) settled by ${str('where')}, not by ${o.issue}'s own commit: read whether it carries the fix`
-    if (onCopy && !process.env.VENTURE_TRACKER_FAKE) console.error(`(a copy of the notes: not written to the real overrides; the line would be: ${what})`)
-    else {
-      const { writeOverride } = await import('./_overrides.mjs')
-      await writeOverride(await trackerDb(), { ticket: o.issue, what, tool: 'correct.mjs' })
-    }
+    // OLA-251, tenth pass: written whatever the notes are. Telling a copy from the real notes by the folder
+    // could always be walked around (a symlink, a case, a hard link, swapping the files while the tool
+    // waits on git), so a settle on a copy is a line too, marked so the reader can pass over a test.
+    const { writeOverride } = await import('./_overrides.mjs')
+    await writeOverride(await trackerDb(), { ticket: o.issue, what: onCopy ? `(on a copy of the notes, ${process.env.VENTURE_PRIVATE}) ${what}` : what, tool: 'correct.mjs' })
   }
   console.log(NEXT)
 } else if (cmd === 'at') {
@@ -322,7 +322,28 @@ if (cmd === 'add') {
   writeFileSync(COR, text.slice(0, m.index) + newBlock + text.slice(m.index + block.length))
   console.log(`correction ${num}: heading now says ${said.toLowerCase()}; recorded at ${was} kept in the entry`)
   console.log(NEXT)
-} else if (cmd === 'owed') {
+} else if (cmd === 'owed' || cmd === 'audit') {
+  // OLA-251, tenth pass: a fix settled in the ledger with no line in the overrides was settled past this
+  // tool (settled on a copy and copied over, or edited by hand). Each such settle gets a line, once.
+  if (!onCopy || process.env.VENTURE_TRACKER_FAKE) {
+    try {
+      const { writeOverride, hasOverride } = await import('./_overrides.mjs')
+      const db = await trackerDb()
+      const r = await db.from('venture_state').select('value').like('key', 'override:%')
+      const lines = (r.data ?? []).map((x) => String(x.value?.what ?? '')).filter((w) => !w.startsWith('(on a copy')) // a settle on a copy does not account for one in the real ledger
+      const text = readFileSync(COR, 'utf8')
+      for (const m of text.matchAll(/^## (\d+)\. [^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)) {
+        const num = m[1]
+        if (!/^Fix settled /m.test(m[2])) continue
+        if (lines.some((w) => new RegExp(`\\bcorrection ${num}\\b[^\\n]*settled`).test(w))) continue
+        if (await hasOverride(db, `settle-unrecorded-${num}`)) continue
+        await writeOverride(db, { key: `settle-unrecorded-${num}`, what: `correction ${num}'s owed fix is settled in the ledger with no record of correct.mjs settling it (edited by hand, or settled on a copy and copied over): read whether the fix exists`, tool: 'correct.mjs' })
+      }
+    } catch (e) {
+      console.error(`(the audit of settled fixes did not run: ${e.message})`)
+    }
+  }
+  if (cmd === 'audit') process.exit(0)
   const rows = owedFixes(weak())
   for (const o of rows) console.log(`${o.ref.padEnd(15)} owed ${String(o.days).padStart(2)} day(s)${o.days >= OWED_DAYS ? ' OVERDUE' : '        '}  ${o.issue.padEnd(8)} kind ${o.need}+ (${KINDS[o.need]})  ${o.name}`)
   console.log(`${rows.length} fix(es) owed${rows.some((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3) ? `; sweep.mjs post refuses while one is older than ${OWED_DAYS} days` : ''}`)

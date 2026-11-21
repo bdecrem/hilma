@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 12
+export const TRACKER_VERSION = 13
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -186,6 +186,8 @@ async function patch(id, fields) {
 // and takes no lane; whatever its role, a claim whose ticket gets commits changing the server's code
 // while it is held counts as a builder there. A renewal of one's own claim is never refused.
 const me = caller()
+// a token presented that is not this command's own (borrowed from a transcript, minted by running the hook by hand): a line (OLA-251, tenth pass)
+if (me.forged && cmd !== 'hook') { envWays.push(`a caller token that is not this command's own was presented (${me.why}); the call is treated as unknown`); await flushWays() }
 function roleFor(who) {
   try {
     return roleOf(who, one('role') === undefined ? null : one('role'))
