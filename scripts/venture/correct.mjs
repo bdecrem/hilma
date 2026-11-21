@@ -255,6 +255,10 @@ if (cmd === 'add') {
     delete w.stuck
   }
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
+  if (owed && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+    const o = w.owed.at(-1)
+    try { await (await trackerDb()).from('venture_state').upsert({ key: `owed-fix:${n}`, value: { ref: o.ref, issue: o.issue, since: o.since, settled: null }, at: new Date().toISOString() }) } catch (e) { console.error(`(the tracker's list of owed fixes was not updated: ${e.message}; correct.mjs audit adds it)`) }
+  }
   console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
   console.log(NEXT)
 } else if (cmd === 'fix') {
@@ -298,7 +302,9 @@ if (cmd === 'add') {
     // could always be walked around (a symlink, a case, a hard link, swapping the files while the tool
     // waits on git), so a settle on a copy is a line too, marked so the reader can pass over a test.
     const { writeOverride } = await import('./_overrides.mjs')
-    await writeOverride(await trackerDb(), { ticket: o.issue, what: onCopy ? `(on a copy of the notes, ${process.env.VENTURE_PRIVATE}) ${what}` : what, tool: 'correct.mjs' })
+    // the tracker's own list of owed fixes (correct.mjs audit): settled there only from the real notes
+    if (!onCopy || process.env.VENTURE_TRACKER_FAKE) await (await trackerDb()).from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, settled: new Date().toISOString() }, at: new Date().toISOString() })
+    await writeOverride(await trackerDb(), { ticket: o.issue, what: onCopy && !process.env.VENTURE_TRACKER_FAKE ? `(on a copy of the notes, ${process.env.VENTURE_PRIVATE}) ${what}` : what, tool: 'correct.mjs' })
   }
   console.log(NEXT)
 } else if (cmd === 'at') {
@@ -332,6 +338,21 @@ if (cmd === 'add') {
       const r = await db.from('venture_state').select('value').like('key', 'override:%')
       const lines = (r.data ?? []).map((x) => String(x.value?.what ?? '')).filter((w) => !w.startsWith('(on a copy')) // a settle on a copy does not account for one in the real ledger
       const text = readFileSync(COR, 'utf8')
+      // OLA-251, eleventh checker: the ledger's two files can be edited apart, so the tracker keeps its own
+      // list of owed fixes (venture_state owed-fix:<n>): each owed fix the notes list is copied there, and one
+      // that leaves the notes' list without correct.mjs settling it in the tracker is a line, once
+      const owedNow = owedFixes(weak())
+      const held = ((await db.from('venture_state').select('key, value').like('key', 'owed-fix:%')).data ?? [])
+      for (const o of owedNow) {
+        const num = o.ref.replace(/\D/g, '')
+        if (!held.some((h) => h.key === `owed-fix:${num}`)) await db.from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, settled: null }, at: new Date().toISOString() })
+      }
+      for (const h of held) {
+        if (h.value?.settled || owedNow.some((o) => o.ref === h.value?.ref)) continue
+        const num = h.key.slice('owed-fix:'.length)
+        if (await hasOverride(db, `owed-gone-${num}`)) continue
+        await writeOverride(db, { key: `owed-gone-${num}`, ticket: h.value?.issue ?? null, what: `correction ${num}'s owed fix (${h.value?.issue}) is gone from the notes' list of owed fixes, but correct.mjs never settled it (data/weaknesses.json edited by hand, or copied over from a copy): read whether the fix exists`, tool: 'correct.mjs' })
+      }
       for (const m of text.matchAll(/^## (\d+)\. [^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)) {
         const num = m[1]
         if (!/^Fix settled /m.test(m[2])) continue

@@ -104,9 +104,10 @@ def check() -> int:
     INPUT = dict(data.get("tool_input") or {})
     cmd = INPUT.get("command") or ""
     # any command that may run a venture tool (a .mjs file, or anything naming venture: cd scripts/venture && node iss*.mjs)
+    # (any case: a command that sets VENTURE_CALLER itself gets the hook's prefix in front of it, eleventh checker)
     # gets a token; one the hook does not see has none, and the tracker treats its caller as unknown (OLA-251, ninth pass).
     # A commit naming a ticket is recorded too: its maker does not pass its checks.
-    if re.search(r"venture|\.mjs\b|ola\.mjs", cmd) or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
+    if re.search(r"venture|\.mjs\b|ola\.mjs", cmd, re.I) or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
         TOKEN = note_caller(data, cmd)
     old = old_tracker(data, cmd)
     if old:

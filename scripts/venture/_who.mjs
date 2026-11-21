@@ -61,17 +61,28 @@ export function toolShell() {
       return { ppid: Number(out.slice(0, sp)), args: out.slice(sp + 1).replace(/\n$/, '') }
     } catch { return null }
   }
+  // the claude process is known by its executable, not its arguments or name: `exec -a claude-code …` sets
+  // both (the eleventh checker), so the file the process runs must be an installed Claude Code
+  const home = process.env.HOME ?? ''
+  const CLAUDE_EXE = [/^\/opt\/homebrew\/lib\/node_modules\/@anthropic-ai\/claude-code\/bin\/claude(\.exe)?$/, /^\/usr\/local\/lib\/node_modules\/@anthropic-ai\/claude-code\/bin\/claude(\.exe)?$/, new RegExp(`^${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/\\.local/share/claude/versions/[^/]+$`), new RegExp(`^${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/\\.claude/local/`)]
+  const exe = (pid) => {
+    try {
+      const n = execFileSync('lsof', ['-a', '-p', String(pid), '-d', 'txt', '-Fn'], { encoding: 'utf8' }).split('\n').find((l) => l.startsWith('n'))
+      return n ? n.slice(1) : null
+    } catch { return null }
+  }
+  const isClaude = (pid) => { const e = exe(pid); return !!e && CLAUDE_EXE.some((re) => re.test(e)) }
   let pid = process.ppid
   for (let hop = 0; hop < 16 && pid > 1; hop++) {
     const p = ps(pid)
     if (!p) return null
-    if (p.args.includes('/.claude/shell-snapshots/') && p.args.includes(" eval '")) {
-      const parent = ps(p.ppid)
-      if (parent && /(^|\/)claude(\s|$)|claude-code/.test(parent.args.slice(0, 300))) {
-        const i = p.args.indexOf(" eval '") + 7
-        const j = p.args.lastIndexOf("' < /dev/null")
-        return p.args.slice(i, j > i ? j : undefined).replace(/'\\''/g, "'")
-      }
+    if (p.ppid > 1 && isClaude(p.ppid)) {
+      // the nearest process whose parent is Claude Code is the shell it started for this command
+      if (!p.args.includes('/.claude/shell-snapshots/') || !p.args.includes(" eval '")) return null
+      const i = p.args.indexOf(" eval '") + 7
+      let j = p.args.lastIndexOf("' < /dev/null && pwd -P >| ")
+      if (j < i) j = p.args.lastIndexOf("' < /dev/null")
+      return p.args.slice(i, j > i ? j : undefined).replace(/'\\''/g, "'")
     }
     pid = p.ppid
   }
