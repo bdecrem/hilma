@@ -39,7 +39,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STATE, lostConnection, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STATE, lostConnection, modelUsedUp, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -117,7 +117,12 @@ try {
       say(`FAIL  ${place}: did not start: ${e.message}`)
       continue
     }
+    let usedUp = null // the made-up account's model allowance ran out at this place: the rest did not run
     for (const c of mine) {
+      if (usedUp) {
+        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}`, ticket: c.from?.ticket ?? null })
+        continue
+      }
       // Until it has the passes it needs (two, or five for a request that failed for a person) or fails twice.
       const need = passesNeeded(c)
       const tries = []
@@ -131,6 +136,11 @@ try {
           r = lostConnection(e) ? { ok: null, why: `did not run: the connection to Ola was lost (${e.message})` } : { ok: false, why: `the run broke: ${e.message}` }
         }
         r.secs = Math.round((Date.now() - s0) / 1000)
+        // Refused for the account's model allowance, not by Ola: not counted, and nothing more runs here.
+        if (r.ok === false && (usedUp = modelUsedUp(r))) {
+          say(`  did not run  ${c.id}@${place} (${r.secs} s): ${usedUp}; the rest of ${place} is not run, not counted`)
+          break
+        }
         if (r.ok === null) {
           lost.push(r)
           say(`  did not run  ${c.id}@${place} (${r.secs} s): ${r.why}; trying again in 20 s, not counted`)
@@ -151,6 +161,10 @@ try {
         await T.call('GET', '/api/session').catch(() => {})
       }
       await yieldToDeploy()
+      if (usedUp) {
+        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}; ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
+        continue
+      }
       if (!triesDone(tries, need)) {
         // The connection kept failing: the case did not run here; its earlier result stands.
         results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: the connection to Ola was lost ${lost.length} times (${lost.at(-1)?.why ?? ''}); ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
@@ -283,10 +297,10 @@ const ran = results.filter((r) => r.ok !== null)
 const lostOnes = results.filter((r) => r.didNotRun)
 console.log('')
 for (const r of [...results].sort((a, b) => order[a.status] - order[b.status])) {
-  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status === 'works sometimes' || r.status === 'passing' ? r.verdict : r.status === 'did not run' ? 'did not run (connection lost)' : r.status
+  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status === 'works sometimes' || r.status === 'passing' ? r.verdict : r.status === 'did not run' ? `did not run (${/allowance/.test(r.why) ? 'model allowance used up' : 'connection lost'})` : r.status
   console.log(`${head.padEnd(34)} case ${`${r.id}@${r.place}`.padEnd(38)} ${r.tries ? `${r.tries}, ${r.secs} s, on ${r.release}` : ''}  ${r.ticket ?? ''}`)
   console.log(`${''.padEnd(34)}   "${r.say.slice(0, 110)}"${r.ok === false || r.ok === null ? `\n${''.padEnd(34)}   ${String(r.why).slice(0, 400)}` : ''}`)
 }
-console.log(`\n${ran.filter((r) => r.ok && !r.sometimes).length} of ${ran.length} work (every try passed, 2 or 5 needed)${ran.some((r) => r.sometimes) ? `, ${ran.filter((r) => r.sometimes).length} work sometimes` : ''} on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${lostOnes.length ? `${lostOnes.length} did not run (the connection to Ola was lost, not counted); ` : ''}${results.length - ran.length - lostOnes.length} place(s) not run. Results: ${LATEST}`)
+console.log(`\n${ran.filter((r) => r.ok && !r.sometimes).length} of ${ran.length} work (every try passed, 2 or 5 needed)${ran.some((r) => r.sometimes) ? `, ${ran.filter((r) => r.sometimes).length} work sometimes` : ''} on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${lostOnes.length ? `${lostOnes.length} did not run (the connection to Ola was lost or the model allowance was used up, not counted); ` : ''}${results.length - ran.length - lostOnes.length} place(s) not run. Results: ${LATEST}`)
 console.log(`Cite a case in a ticket check: issues.mjs check OLA-n pass <k> --case <id>@<place> --on ${release}`)
 process.exit(ran.every((r) => r.ok) ? 0 : 1)

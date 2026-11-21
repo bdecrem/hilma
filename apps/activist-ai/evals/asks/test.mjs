@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -345,4 +345,15 @@ test('OLA-231 check 5: the run an update starts waits for a run that is going, t
   // the runner calls it, and no longer steps aside after an update
   const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
   assert.ok(src.includes("takeRunLock({ after: args.includes('--after-deploy') })"))
+})
+
+test('a try refused for the model allowance did not run (Nov 20, 44ec5d68e931: 34 Mac tries counted as fails)', () => {
+  const why = 'the turn ended failed ({"type":"provider.quota","message":"Your weekly allowance of Ola\'s model is used up. It starts again on Sunday, November 22, at 4 pm Pacific time.","status":429}); Ola said: (nothing)'
+  assert.equal(modelUsedUp({ ok: false, why }), "the made-up account's model allowance is used up (it starts again on Sunday, November 22, at 4 pm Pacific time)")
+  assert.equal(modelUsedUp({ ok: false, why: 'site:Bart: https://sites.ola.cx/askcases/ 404' }), null)
+  assert.equal(modelUsedUp({ ok: false, why: 'the turn ended failed ({"type":"provider.quota"})' }), "the made-up account's model allowance is used up")
+  // the run loop stops the place on it and writes "did not run", never a fail
+  const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(run, /r\.ok === false && \(usedUp = modelUsedUp\(r\)\)/)
+  assert.match(run, /did not run: \$\{usedUp\}/)
 })

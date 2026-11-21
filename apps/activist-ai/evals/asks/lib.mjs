@@ -638,6 +638,18 @@ export function lostConnection(e) {
   return LOST.test(String(code)) || LOST.test(String(e?.message ?? ''))
 }
 
+/** A try refused because the account's model allowance is used up says nothing about Ola either: on
+ *  Nov 20 (release 44ec5d68e931) all 34 Mac tries failed in 2 s each with provider.quota, and each was
+ *  counted as Ola failing. Returns the reason ("the model allowance is used up; It starts again on …")
+ *  or null. The place's remaining cases are then "did not run", and their earlier results stand. */
+const QUOTA = /provider\.quota|allowance of Ola's model is used up/i
+export function modelUsedUp(r) {
+  const why = String(r?.why ?? r?.message ?? '')
+  if (!QUOTA.test(why)) return null
+  const when = why.match(/It starts again on ([^."\\]+)/)
+  return `the made-up account's model allowance is used up${when ? ` (it starts again on ${when[1].trim()})` : ''}`
+}
+
 /** One asks run at a time (they share the made-up account). The run an update starts (after: true)
  *  WAITS for a run that is going and then runs, so every update is tested (OLA-231 check 5); only a
  *  newer update's run replaces a waiting one. A builder's run (after: false) leaves it to a run that is
