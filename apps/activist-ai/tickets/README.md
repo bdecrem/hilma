@@ -21,7 +21,7 @@ node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 --concurr
 node apps/activist-ai/tickets/trial.mjs --report                 # pass count, cost and minutes per model
 ```
 
-A run: `git archive <commit>^` into `~/ola-trials/runs/<case>-<model>-<time>/work` (its own git,
+A run: `git archive <commit>^ -- <the case's paths>` (only the folders the ticket needs, about 8 MB; a whole copy is gigabytes, and on Nov 21 twelve of them filled the mini's disk for a few minutes; a run refuses to start with less than 10 GB free) into `~/ola-trials/runs/<case>-<model>-<time>/work` (its own git,
 no link to this checkout), the ticket's test files put in from `<commit>`, then opencode 2.3.0
 (`run --auto`) with the request. It runs under `sandbox-exec`: the home folder is out of reach
 except its run folder and the two `node_modules` (read only), the network is loopback only, so the

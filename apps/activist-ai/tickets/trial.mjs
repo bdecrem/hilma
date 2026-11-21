@@ -74,15 +74,23 @@ function isolatedEnv(home, extra) {
     LANG: 'en_US.UTF-8', BROWSER: '/usr/bin/true', GIT_AUTHOR_NAME: 'ola', GIT_AUTHOR_EMAIL: 'ola@localhost', GIT_COMMITTER_NAME: 'ola', GIT_COMMITTER_EMAIL: 'ola@localhost', ...extra }
 }
 
+const MIN_FREE_GB = 10
+function freeGb() { return Number(sh(`df -k ${JSON.stringify(homedir())} | tail -1 | awk '{print $4}'`).trim()) / 1048576 }
+
 function prepare(c, model) {
+  const free = freeGb()
+  if (free < MIN_FREE_GB) throw new Error(`only ${free.toFixed(1)} GB free on this disk; a run needs ${MIN_FREE_GB} (nothing started)`)
+  if (!c.paths?.length) throw new Error(`case ${c.id} has no paths: a run copies only the folders its ticket needs`)
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
   const dir = path.join(root, 'runs', `${c.id}-${model}-${stamp}`)
   const work = path.join(dir, 'work'), home = path.join(dir, 'home')
   for (const d of [work, path.join(home, 'tmp'), path.join(home, 'bin')]) mkdirSync(d, { recursive: true })
-  sh(`git -C ${JSON.stringify(repo)} archive ${c.commit}^ | tar -x -C ${JSON.stringify(work)}`)
+  // Only the folders the ticket needs (cases.json `paths`): a whole copy of the repo is gigabytes,
+  // and twelve of them filled the mini's disk on Nov 21.
+  sh(`git -C ${JSON.stringify(repo)} archive ${c.commit}^ -- ${c.paths.map((x) => `'${x}'`).join(' ')} | tar -x -C ${JSON.stringify(work)}`)
   for (const f of c.give) sh(`git -C ${JSON.stringify(repo)} show ${c.commit}:${f} > ${JSON.stringify(path.join(work, f))}`)
   symlinkSync(nmRoot, path.join(work, 'node_modules'))
-  symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
+  if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
   writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
   // Do-nothing stand-ins so nothing the model runs opens a window (rule 46).
   for (const b of ['open', 'osascript']) writeFileSync(path.join(home, 'bin', b), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
