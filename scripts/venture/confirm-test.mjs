@@ -37,6 +37,10 @@ const run = (tok, script, ...args) => {
   return { code: r.status, out: (r.stdout + r.stderr).trim() }
 }
 let pass = 0, fail = 0
+// the copy of the notes is this machine's, which may be behind the tracker (notes not pulled here): make the
+// copy's weaknesses.json the version written last in the tracker copy, so the test checks confirm, not the pull
+{ const r = run('tokB', 'correct.mjs', 'accept-notes', '--why', 'confirm-test: the copy of this machine\'s notes is the start')
+  if (r.code !== 0) { console.log(`FAIL setup: accept-notes on the copy\n     ${r.out.slice(0, 600)}`); process.exit(1) } }
 const t = (name, ok, out = '') => { ok ? pass++ : fail++; console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${ok ? '' : `\n     ${out.slice(0, 600)}`}`) }
 const state = () => JSON.parse(readFileSync(db, 'utf8')).venture_state ?? []
 const row = (k) => state().find((r) => r.key === k)?.value
