@@ -449,6 +449,9 @@ function printChecks(row, a) {
 // ---- The test server, read over ssh (OLA-264, OLA-259): the release that is live, and the request
 // tests' result file. Each read is kept two minutes in the temp folder, so `say` on many tickets asks once.
 const MINI = ['admin@171.66.240.175', 'admin@100.95.51.98']
+// OLA-264, Nov 20: on the test server itself (the runner's own runs) ssh to its own addresses is refused
+// (no key to itself), so every pass printed "live version unknown". Here the same command runs locally.
+const HERE = existsSync(`${process.env.HOME}/ola-staging/current`)
 function fromMini(what, remote, parse) {
   const cache = `${tmpdir()}/venture-${what}.json`
   try {
@@ -457,11 +460,21 @@ function fromMini(what, remote, parse) {
       // OLA-251, third pass: a cache the tracker did not write as it is (a time ahead of the clock, a file
       // time that is not its own, not from the test server) is not used, and is a line in the overrides
       const m = statSync(cache).mtimeMs
-      if (c.at <= Date.now() + 1e3 && Math.abs(m - c.at) < 5e3 && MINI.includes(c.from)) return c
+      if (c.at <= Date.now() + 1e3 && Math.abs(m - c.at) < 5e3 && (MINI.includes(c.from) || (HERE && c.from === 'local'))) return c
       envWays.push(`the cache file ${cache} was not written by the tracker as it is (its time ${new Date(c.at).toISOString()}, the file's ${new Date(m).toISOString()}, from ${c.from ?? 'nowhere'}); not used`)
     }
   } catch {}
   let err = ''
+  if (HERE) {
+    try {
+      const out = execFileSync('/bin/sh', ['-c', remote], { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
+      const c = { at: Date.now(), value: parse(out), from: 'local' }
+      try { writeFileSync(cache, JSON.stringify(c)) } catch {}
+      return c
+    } catch (e) {
+      return { at: Date.now(), value: null, error: String(e.stderr || e.message).trim().split('\n').pop().slice(0, 160) }
+    }
+  }
   for (const host of MINI) {
     try {
       const out = execFileSync('ssh', ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes', host, remote], { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -725,9 +738,24 @@ if (cmd === 'overrides') {
       if (cs.release) rels = [cs.release, ...rels]
     }
     if (!onServer(r, a, c)) return { word: 'WORKS', ok: true, why: `checked ${when(c.checked_at)} on ${c.on}` }
-    if (!live?.value) return { word: 'WORKED, LIVE VERSION UNKNOWN', ok: false, why: `checked ${when(c.checked_at)} on ${c.on}; the test server's live release could not be read (${live?.error ?? 'no answer'}), so it is not known to be the one that was checked` }
+    if (!live?.value) return { word: 'WORKED, LIVE VERSION UNKNOWN', ok: false, why: `checked ${when(c.checked_at)} on ${c.on}; the test server's live release could not be read (${live?.error ?? 'no answer'}), so it is not known to be the one that was checked${autoAt(r, c, cases)}` }
     if (rels.includes(live.value)) return { word: 'WORKS', ok: true, why: `checked ${when(c.checked_at)} on ${live.value}, the live release${k ? `; its request test ${k} passes there` : ''}` }
-    return { word: 'WORKED ON AN EARLIER VERSION', ok: false, why: `worked on an earlier version (${rels[0] ?? c.on}, checked ${when(c.checked_at)}); not checked on this one (${live.value})` }
+    return { word: 'WORKED ON AN EARLIER VERSION', ok: false, why: `worked on an earlier version (${rels[0] ?? c.on}, checked ${when(c.checked_at)}); not checked on this one (${live.value})${autoAt(r, c, cases)}` }
+  }
+  // OLA-264: beside a pass that does not speak for the live release, what the automatic run (the request
+  // tests) last said for this ticket at the same place, with its release and time; or that none covers it.
+  const autoAt = (r, c, cases) => {
+    if (!cases) return ''
+    if (!cases.value) return `; the automatic run's results could not be read (${cases.error ?? 'no result file'})`
+    const mine = Object.values(cases.value.cases ?? {}).filter((x) => x.ticket === r.id && x.place === c.at)
+    if (!mine.length) return `; no automatic run covers ${c.at} for ${r.id}`
+    if (mine.length > 3) {
+      const n = {}
+      for (const x of mine) n[x.status] = (n[x.status] ?? 0) + 1
+      const rel = [...new Set(mine.map((x) => x.release).filter(Boolean))]
+      return `; the automatic run at ${c.at}, ${mine.length} cases: ${Object.entries(n).map(([s, k]) => `${k} ${s}`).join(', ')}${rel.length ? ` (on ${rel.join(', ')})` : ''}`
+    }
+    return `; the automatic run at ${c.at}: ` + mine.map((x) => `${x.id} ${x.status}${x.tries ? ` (${x.tries})` : ''}${x.release ? ` on ${x.release}` : ''}${x.at ? `, ${when(x.at)}` : ''}${x.didNotRun ? `, did not run ${when(x.didNotRun.at)} on ${x.didNotRun.release ?? '?'}` : ''}`).join('; ')
   }
   if (cmd === 'say') {
     const id = normId(pos[0])
@@ -737,7 +765,7 @@ if (cmd === 'overrides') {
     console.log(`${r.id}  ${r.title}`)
     if (a.internal) console.log(`  nothing a person does or sees changes (${a.internal.why}); ${r.status === 'done' ? `closed: ${r.proof}` : 'not closed'}`)
     const live = onServer(r, a) && v.works.length ? liveRelease() : null
-    const cases = v.works.some((c) => c.case || /\bcase \S/.test(c.evidence ?? '')) ? asksCases() : null
+    const cases = live || v.works.some((c) => c.case || /\bcase \S/.test(c.evidence ?? '')) ? asksCases() : null
     await flushWays()
     if (live) console.log(live.value ? `  (the test server is on release ${live.value} now)` : `  (the test server's live release could not be read: ${live.error})`)
     let tell = true
@@ -770,7 +798,7 @@ if (cmd === 'overrides') {
     const recent = rows.filter((r) => r.status === 'in_progress' || (r.status === 'done' && r.day >= shiftDay(today, -1)))
     const withPasses = recent.filter((r) => (by.get(r.id)?.checks ?? []).some((c) => c.result === 'pass'))
     const live = withPasses.some((r) => onServer(r, by.get(r.id))) ? liveRelease() : null
-    const cases = withPasses.some((r) => by.get(r.id).checks.some((c) => c.result === 'pass' && (c.case || /\bcase \S/.test(c.evidence ?? '')))) ? asksCases() : null
+    const cases = live || withPasses.some((r) => by.get(r.id).checks.some((c) => c.result === 'pass' && (c.case || /\bcase \S/.test(c.evidence ?? '')))) ? asksCases() : null
     await flushWays()
     const stale = withPasses.flatMap((r) => by.get(r.id).checks.filter((c) => c.result === 'pass').map((c) => ({ r, c, n: nowOf(r, by.get(r.id), c, live, cases) })).filter((x) => !x.n.ok))
     // OLA-279: the test server's own list of updates against the updates runner.mjs deploy allowed
