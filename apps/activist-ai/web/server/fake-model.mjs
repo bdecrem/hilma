@@ -157,6 +157,27 @@ export function startFakeModel({ hosted = false } = {}) {
     if (priorText.includes(WORDED) && messages[messages.length - 1]?.role === 'user') return send(200, reply({ content: `You answered in words: ${lastUserText(messages).replace(/\s+/g, ' ').slice(0, 200)}` }))
     // "ask me which one": opencode's own `question` tool (a question to the person, with choices),
     // then an answer that names what came back. The page must show the question and send the answer.
+    // "ask me two things": one card with two questions (the checker's case on OLA-311: the
+    // Santa Cruz page, the block party). "ask me to pick several": one pick-several
+    // question (opencode 2.3.0 ignores the tool's custom: false, so own words are always allowed).
+    // Answers come back named in the reply.
+    const shape = /ask me two things/i.test(lastUserText(messages)) ? 'two' : /ask me to pick several/i.test(lastUserText(messages)) ? 'several' : null
+    if (shape) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const results = messages.slice(since + 1).filter((m) => m.role === 'tool')
+      const q = pick(body.tools, 'question')
+      const questions =
+        shape === 'two'
+          ? [
+              { question: 'What day is the made-up block party?', header: 'Day', options: [{ label: 'Saturday', description: 'This weekend' }, { label: 'Sunday', description: 'The day after' }] },
+              { question: 'What should the page show first?', header: 'First', options: [{ label: 'The time and place', description: 'Where and when' }, { label: 'The food', description: 'What to bring' }] },
+            ]
+          : [{ question: 'Which made-up things should the page list?', header: 'Things', multiple: true, options: [{ label: 'Games', description: 'For kids' }, { label: 'Music', description: 'A band' }] }]
+      if (q && !results.length) return send(200, reply({ tool: { id: `call_${calls}_q`, name: q, args: { questions } } }))
+      const got = results.map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? ''))).join(' ')
+      return send(200, reply({ content: `You answered: ${got.replace(/\s+/g, ' ').slice(0, 400)}` }))
+    }
     if (/ask me which one/i.test(lastUserText(messages))) {
       let since = -1
       messages.forEach((m, i) => m.role === 'user' && (since = i))

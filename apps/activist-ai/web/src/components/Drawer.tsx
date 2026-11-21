@@ -379,7 +379,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             aria-controls={menuOpen() && matches().length ? 'command-list' : undefined}
             aria-activedescendant={menuOpen() && matches().length ? `command-${matches()[Math.min(active(), matches().length - 1)]}` : undefined}
             value={props.draft}
-            placeholder={composer().placeholder === 'answer' ? 'Or write your answer here…' : composer().placeholder === 'card' ? 'Answer on the card above.' : composer().placeholder === 'working' ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
+            placeholder={composer().placeholder === 'answer' ? 'Or write your answer here…' : composer().placeholder === 'working' ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
             onInput={(e) => props.setDraft(e.currentTarget.value)}
             onKeyDown={onKey}
           />
@@ -747,6 +747,14 @@ function QuestionCard(props: { question: Question; onAnswer: (a: Record<string, 
           </div>
         )}
       </For>
+      {/* The box under the card answers it too, whatever its shape (OLA-311): said here, plainly. */}
+      <Show when={props.question.fields.length > 1 || !props.question.fields[0]?.custom || props.question.fields[0]?.multiple}>
+        <p class="meta question-box-note">
+          {props.question.fields.length > 1
+            ? `Or write one answer in the box below. Ola gets your words as your answer to ${props.question.fields.length === 2 ? 'both questions' : `all ${['', '', '', 'three', 'four', 'five', 'six'][props.question.fields.length] || props.question.fields.length} questions`}.`
+            : 'Or write your own answer in the box below.'}
+        </p>
+      </Show>
       <Show when={!single()}>
         <div class="question-actions">
           <button type="button" class="primary-button" disabled={busy() || !complete()} onClick={() => void send(fromPicks())}>

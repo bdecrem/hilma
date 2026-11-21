@@ -9,7 +9,7 @@ import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, 
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
-import { composerState, type ComposerState } from './composer.ts'
+import { answerFromWords, composerState, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
@@ -622,9 +622,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return
     }
     if (c.button === 'answer') {
-      const f = state.question!.fields[0]
-      const words = text.trim()
-      void answerQuestion({ [f.key]: f.multiple ? [words] : words }).then((ok) => done({ keep: !ok }))
+      void answerQuestion(answerFromWords(state.question!, text)).then((ok) => done({ keep: !ok }))
       return
     }
     done(typed(text))

@@ -5,8 +5,10 @@
 //
 // Bart, Nov 20, on his phone: Ola asked him a question (a card, the run waiting inside it), the
 // composer under it said "Or write your answer here…", he wrote "Yes", and beside it was Stop, not
-// send, because the run counted as working. Now a question that takes words turns the button into
-// "Send your answer", active as soon as there is text, whatever else is going on.
+// send, because the run counted as working. Now any question card (one question or several, choices
+// or not) turns the button into "Send your answer", active as soon as there is text, whatever else
+// is going on. Words typed in the box answer the whole card: every question on it gets them
+// (answerFromWords), and the card says so. The first fix left a two-question card on Stop.
 import type { Connection, Question } from './types.ts'
 
 export interface ComposerInput {
@@ -32,25 +34,28 @@ export interface ComposerState {
   submits: boolean
   /** When text is there but cannot go now: one plain sentence to say instead of doing nothing. */
   blocked: string | null
-  placeholder: 'answer' | 'card' | 'working' | 'request'
+  placeholder: 'answer' | 'working' | 'request'
 }
 
-/** The question can be answered with the words typed in the composer: one field that takes the person's own words. */
-export const answersInWords = (q: Question | null): boolean => !!q && q.fields.length === 1 && q.fields[0].custom
+/** Words typed in the box as the answer to the whole card: each question gets them (a list for a pick-several one). */
+export function answerFromWords(q: Question, words: string): Record<string, string | string[]> {
+  const w = words.trim()
+  return Object.fromEntries(q.fields.map((f) => [f.key, f.multiple ? [w] : w]))
+}
 
 export function composerState(i: ComposerInput): ComposerState {
   const text = i.draft.trim()
   const command = text.startsWith('/')
-  // A question Ola waits on, that the typed words can answer: the button sends the answer. Never
+  // A question Ola waits on, whatever its shape: the typed words are the answer. Never
   // blocked by the run (it waits for exactly this) or by a lost event stream (the answer is its own
   // request; if it does not get through, the page says so and the text stays).
-  if (answersInWords(i.question) && !command) {
+  if (i.question && !command) {
     return { button: 'answer', enabled: !!text && !i.answering, submits: !!text && !i.answering, blocked: null, placeholder: 'answer' }
   }
   if (i.working) {
     // A command (/stop, /help) still goes with Return; other words wait for the run to end.
-    const blocked = text && !command ? (i.question ? 'Ola is waiting for your answer on the card above.' : 'Ola is still working on your last request. Wait for it to finish, or type /stop.') : null
-    return { button: 'stop', enabled: true, submits: command, blocked, placeholder: i.question ? 'card' : 'working' }
+    const blocked = text && !command ? 'Ola is still working on your last request. Wait for it to finish, or type /stop.' : null
+    return { button: 'stop', enabled: true, submits: command, blocked, placeholder: i.question ? 'answer' : 'working' }
   }
   // Nothing running: a new request (or a command). Not while the connection is lost, which the
   // banner says, and which comes back by itself (lib/ola.ts listen).

@@ -5,7 +5,7 @@
 // Run: node --test test/composer.test.ts (web/check.mjs runs it too).
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { answersInWords, composerState, type ComposerInput } from '../src/lib/composer.ts'
+import { answerFromWords, composerState, type ComposerInput } from '../src/lib/composer.ts'
 import type { Question } from '../src/lib/types.ts'
 
 const field = (o: Partial<Question['fields'][number]> = {}): Question['fields'][number] => ({ key: 'q0', title: 'Live data?', text: 'Should I fetch live data?', options: [{ value: 'Yes, fetch live data', label: 'Yes, fetch live data', description: null }], custom: true, multiple: false, ...o })
@@ -50,16 +50,25 @@ test('a slash command while a question waits is a command (/stop, /help), never 
   assert.equal(s.submits, true)
 })
 
-test('a question that takes only a choice (no own words): Stop stays, and words typed say where to answer', () => {
-  const s = st({ working: true, question: card([field({ custom: false })]), draft: 'Yes' })
-  assert.deepEqual([s.button, s.submits, s.placeholder], ['stop', false, 'card'])
-  assert.match(s.blocked ?? '', /card above/)
-})
+// The checker's case on c571d55d: a card with TWO questions left the box on Stop with an answer typed.
+for (const [shape, q] of [
+  ['two questions', card([field({ key: 'a' }), field({ key: 'b' })])],
+  ['three questions', card([field({ key: 'a' }), field({ key: 'b' }), field({ key: 'c' })])],
+  ['one pick-several question', card([field({ multiple: true })])],
+  ['one question with choices only (no own words)', card([field({ custom: false })])],
+  ['one question with no choices', card([field({ options: [] })])],
+  ['two questions, one of them pick-several and choices only', card([field({ key: 'a' }), field({ key: 'b', multiple: true, custom: false })])],
+] as const) {
+  test(`a card with ${shape}: words typed in the box go as the answer, never only Stop`, () => {
+    const s = st({ working: true, question: q, draft: 'Saturday at noon, in the park' })
+    assert.deepEqual([s.button, s.enabled, s.submits, s.placeholder], ['answer', true, true, 'answer'])
+    assert.equal(st({ working: true, question: q, draft: '' }).button, 'answer')
+  })
+}
 
-test('a question with several parts is answered on the card, not from the composer', () => {
-  const q = card([field({ key: 'a' }), field({ key: 'b' })])
-  assert.equal(answersInWords(q), false)
-  assert.equal(st({ working: true, question: q, draft: 'Yes' }).button, 'stop')
+test('words typed in the box answer every question on the card (a list for a pick-several one)', () => {
+  const q = card([field({ key: 'when' }), field({ key: 'what', multiple: true })])
+  assert.deepEqual(answerFromWords(q, '  Saturday, games and food  '), { when: 'Saturday, games and food', what: ['Saturday, games and food'] })
 })
 
 test('Ola working, no question: Stop, and words typed are kept with a sentence, not dropped', () => {

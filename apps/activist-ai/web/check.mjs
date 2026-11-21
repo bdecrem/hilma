@@ -279,6 +279,25 @@ await check('a question from Ola shows as a card with its choices; a tap answers
     }
     return '3 of 3'
   })
+  // The checker's case on c571d55d: a card with two questions left only Stop beside the box.
+  await check('WebKit 390 px: a card with two questions, and a pick-several card: the box answers the whole card on the first tap, and the card says so (OLA-311)', async () => {
+    for (const [req, words, note] of [
+      ['Make a page for the block party, but ask me two things first', 'Saturday at noon, show the time first', /answer to both questions/],
+      ['Ask me two things, please', 'Sunday, and the food', /answer to both questions/],
+      ['Make a list, but ask me to pick several', 'Games and music', /own answer in the box below/],
+    ]) {
+      await fresh()
+      await ask(req)
+      await card.waitFor({ timeout: 30_000 })
+      assert(note.test(await card.innerText()), `the card does not say the box answers it (${req}): ${(await card.innerText()).slice(-80)}`)
+      await answerInComposer(words)
+      await card.waitFor({ state: 'detached', timeout: 10_000 })
+      const r = await reply()
+      assert(r.status === 'done', `the run ended ${r.status}: ${r.said.slice(-200)}`)
+      assert(r.said.includes(words), `Ola did not get "${words}": ${r.said.slice(-200)}`)
+    }
+    return '3 of 3'
+  })
   await check('WebKit 390 px: the card itself, its own words and Answer, then a choice tapped (OLA-311)', async () => {
     await fresh()
     await ask('Ask me which one, please')
