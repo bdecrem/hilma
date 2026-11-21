@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile nationality_b claude-opus-5-5 high",
- "pid": 72738,
  "step": "back2000",
  "slug": "chile",
  "chunk": "nationality_b",
@@ -58,5 +57,962 @@
   "user": 177
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:20:43.066Z",
+ "minutes": 53.29,
+ "meters_after": {
+  "at": "2026-11-21T10:20:43.066Z",
+  "window": {
+   "pct": 10,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 4,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 10,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 4,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 10% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 4% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 211087,
+   "output": 43620,
+   "cache_read": 3554495,
+   "cache_write": 146054,
+   "cost_usd": 2.6418,
+   "total": 3955256
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 211011,
+    "output": 13916,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 5216,
+    "cost_usd": 0.1681
+   },
+   "claude-opus-5-5": {
+    "input": 76,
+    "output": 29704,
+    "cache_read": 3554495,
+    "cache_write": 146054,
+    "thinking": 12359,
+    "cost_usd": 2.4737
+   }
+  }
+ },
+ "turns": 46,
+ "calls": 82,
+ "duration_ms": 750598,
+ "duration_api_ms": 540329,
+ "pages_read": 30,
+ "pages": [
+  {
+   "at": "2026-11-21T10:10:34.113Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+   "find": "Artículo 10 | renunciando | nacionalización en país extranjero | transeúntes",
+   "ok": true,
+   "chars": 5237
+  },
+  {
+   "at": "2026-11-21T10:10:40.465Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 81 | Artículo 91 | Artículo 89 | Artículo 90 | regularizar",
+   "ok": true,
+   "chars": 2403
+  },
+  {
+   "at": "2026-11-21T10:11:04.696Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2021-04-20",
+   "find": "Artículo 81.- | Artículo 91.- | Artículo 69.- | Artículo 89.- | multa",
+   "ok": true,
+   "chars": 3394
+  },
+  {
+   "at": "2026-11-21T10:11:14.220Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-08-25",
+   "find": "Artículo 10 | renunciando | transeúntes | Artículo 11",
+   "ok": true,
+   "chars": 6470
+  },
+  {
+   "at": "2026-11-21T10:11:50.814Z",
+   "url": "https://foroconstituyente.udec.cl/storage/2021/01/132632.pdf",
+   "find": "Son chilenos | renunciando | transeúntes | Artículo 11",
+   "ok": true,
+   "chars": 442
+  },
+  {
+   "at": "2026-11-21T10:12:25.913Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129",
+   "find": "Son chilenos | renunciando | transeúntes | nacionalización en país extranjero",
+   "ok": true,
+   "chars": 2170
+  },
+  {
+   "at": "2026-11-21T10:12:39.582Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129&idVersion=1999-11-04",
+   "find": "Son chilenos: | renunciando expresamente | extranjeros transeúntes | carta de nacionalización",
+   "ok": true,
+   "chars": 3417
+  },
+  {
+   "at": "2026-11-21T10:12:52.921Z",
+   "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile1980.html",
+   "find": "Son chilenos | renunciando | transeúntes | nacionalización en país extranjero",
+   "ok": true,
+   "chars": 471
+  },
+  {
+   "at": "2026-11-21T10:13:35.596Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444",
+   "find": "renuncie | renuncia | tratado | Artículo 2 | Versión | Última modificación",
+   "ok": true,
+   "chars": 5181
+  },
+  {
+   "at": "2026-11-21T10:13:52.375Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29",
+   "find": "renuncie | Artículo 2.o | Artículo 3.o",
+   "ok": true,
+   "chars": 2166
+  },
+  {
+   "at": "2026-11-21T10:13:53.210Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08",
+   "find": "renuncie | Ley 20888 | apátrida",
+   "ok": true,
+   "chars": 4544
+  },
+  {
+   "at": "2026-11-21T10:14:10.874Z",
+   "url": "https://interior.gob.cl/transparencia/doc/MarcoNormativoAplicable/200/7965042.pdf",
+   "find": "renunciando | tratado internacional | renuncie",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:14:26.240Z",
+   "url": "https://archivochile.com/Poder_Dominante/pod_publi_parl/PDparlamento0015.pdf",
+   "find": "renunciando | transeúntes | Artículo 11",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:14:27.294Z",
+   "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile01.html",
+   "find": "renunciando | transeúntes | Artículo 11",
+   "ok": true,
+   "chars": 5387
+  },
+  {
+   "at": "2026-11-21T10:14:33.043Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Son chilenos | carta de nacionalización en conformidad a la ley | renuncia voluntaria",
+   "ok": true,
+   "chars": 5430
+  },
+  {
+   "at": "2026-11-21T10:14:37.273Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+   "find": "Publicación: | Promulgación:",
+   "ok": true,
+   "chars": 1750
+  },
+  {
+   "at": "2026-11-21T10:14:42.213Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=6483&idVersion=2019-12-31",
+   "find": "Artículo 81 | Artículo 91 | Artículo 69 | regulariza | multa",
+   "ok": true,
+   "chars": 2734
+  },
+  {
+   "at": "2026-11-21T10:15:13.023Z",
+   "url": "https://iura.cl/dl-1094-ministerio-del-interior/",
+   "find": "Artículo 81 | Artículo 91 | Artículo 69 | Artículo 71",
+   "ok": true,
+   "chars": 8424
+  },
+  {
+   "at": "2026-11-21T10:15:17.822Z",
+   "url": "https://iura.cl/dl-1094-ministerio-del-interior/",
+   "find": "href | art-81 | articulo-81",
+   "ok": true,
+   "chars": 3323
+  },
+  {
+   "at": "2026-11-21T10:15:22.812Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=6483",
+   "find": "Artículo 81 | Artículo 91 | Artículo 71 | regularizar",
+   "ok": true,
+   "chars": 398
+  },
+  {
+   "at": "2026-11-21T10:15:38.069Z",
+   "url": "https://iura.cl/dl-1094-ministerio-del-interior/art-81/",
+   "find": "Artículo 81",
+   "ok": true,
+   "chars": 332
+  },
+  {
+   "at": "2026-11-21T10:16:19.679Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&r=1",
+   "find": "Artículo 81.- | Artículo 91.- | Artículo 71.- | Artículo 69.-",
+   "ok": true,
+   "chars": 3350
+  },
+  {
+   "at": "2026-11-21T10:16:32.779Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=14516",
+   "find": "Artículo 145 | Artículo 146 | regularizar | situación irregular | Versión:",
+   "ok": true,
+   "chars": 3384
+  },
+  {
+   "at": "2026-11-21T10:16:54.901Z",
+   "url": "https://www.refworld.org/docid/3db949e16.html",
+   "find": "Artículo 81 | Artículo 91 | Artículo 71",
+   "ok": true,
+   "chars": 583
+  },
+  {
+   "at": "2026-11-21T10:17:45.675Z",
+   "url": "http://web.archive.org/web/2015id_/http://www.leychile.cl/Navegar?idNorma=6483",
+   "find": "Artículo 81 | Artículo 91 | Artículo 71 | Artículo 69",
+   "ok": true,
+   "chars": 3447
+  },
+  {
+   "at": "2026-11-21T10:17:51.872Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 155 | 8. | Deróga | decreto ley N° 1.094 | Artículo 69",
+   "ok": true,
+   "chars": 8436
+  },
+  {
+   "at": "2026-11-21T10:18:12.717Z",
+   "url": "https://eldesconcierto.cl/2018/04/23/1998-y-2007-asi-fueron-las-otras-regulaciones-migratorias-masivas-en-chile",
+   "find": "1998 | 2007 | regularizados | personas",
+   "ok": true,
+   "chars": 5490
+  },
+  {
+   "at": "2026-11-21T10:18:13.888Z",
+   "url": "https://www.acnur.org/noticias/briefing/2018/4/5af2e93b17/acnur-felicita-a-chile-por-su-adhesion-a-las-convenciones-de-naciones-unidas-sobre-apatridia.html",
+   "find": "transeúnte | 1961 | Corte Suprema | nacionalidad",
+   "ok": true,
+   "chars": 4567
+  },
+  {
+   "at": "2026-11-21T10:18:58.176Z",
+   "url": "https://www.biobiochile.cl/noticias/nacional/chile/2019/01/11/110-mil-inscritos-en-regularizacion-extraordinaria-ya-obtuvieron-su-visa.shtml",
+   "find": "110 mil | estamp | rechaz | 155",
+   "ok": true,
+   "chars": 3555
+  },
+  {
+   "at": "2026-11-21T10:19:01.895Z",
+   "url": "https://cooperativa.cl/noticias/pais/poblacion/inmigrantes/gobierno-inicio-proceso-para-regularizar-situacion-de-inmigrantes/2007-10-22/122928.html",
+   "find": "regulariz | requisitos | 2007",
+   "ok": true,
+   "chars": 3566
+  }
+ ],
+ "searches": [
+  "\"renunciando expresamente a su nacionalidad anterior\" constitución 1980 artículo 10 \"tratado internacional\"",
+  "leychile Decreto 1150 1980 texto oficial Constitución Política idNorma",
+  "\"Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley, renunciando expresamente\"",
+  "\"No se exigirá esta renuncia a los nacidos en país extranjero que, en virtud de un tratado internacional, conceda este mismo beneficio a los chilenos\"",
+  "Constitución 1980 Chile texto original artículo 10 Nº 4 \"renunciando expresamente a su nacionalidad\"",
+  "Decreto Ley 1094 \"Artículo 81\" \"Artículo 91\" texto extranjeros Chile Departamento de Extranjería",
+  "\"Los extranjeros que ingresaren al territorio nacional sin dar cumplimiento\" decreto ley 1094 artículo 81",
+  "iura.cl DL 1094 artículo 71 \"continuaren residiendo en el país después de haberse vencido\"",
+  "\"Decreto Ley 1094\" extranjeros texto completo \"Artículo 91.- Corresponderá al Ministerio del Interior\"",
+  "\"Artículo 81.- Los extranjeros que ingresaren al territorio nacional\"",
+  "proceso de regularización extraordinaria 2007 2008 Chile extranjeros resolución exenta 36.339 número de regularizados",
+  "Chile decreto promulga Convención para reducir los casos de apatridia 1961 Diario Oficial 2018",
+  "proceso de regularización extraordinaria 2018 Chile 155 mil solicitudes resultados visas otorgadas Departamento de Extranjería",
+  "Chile extranjeros situación irregular pagar multa solicitar visa desde Chile Departamento de Extranjería 2013 INDH informe regularización"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.01,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":71,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Does Not Apply\",\"basis\":\"In force: Constitution 1980 Art. 10 No. 4 (foreigners naturalise 'renunciando expresamente a su nacionalidad anterior', except nationals of a country that grants Chileans the same benefit by treaty) and DS 5142/1960 Art. 2 (as amended by DL 1432/1976: renunciation of the nationality of origin is a requirement for the carta). This is the same rule the starting answer describes (renunciation plus the Spain treaty exception), so it is coded 'No' the same way. No practice evidence found for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same as 2000: constitutional and statutory renunciation requirements in force, with the treaty (Spain) exception. Ley 20.050 was published on 26 Aug 2005, after this date. No practice evidence found.\"},{\"date\":\"2010-01-01\",\"answer\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Does Not Apply\",\"basis\":\"From 26 Aug 2005 Ley 20.050 replaced Art. 10 No. 4 with 'Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley', dropping the constitutional renunciation clause. But DS 5142 Art. 2 kept 'Será requisito ... que el extranjero renuncie a su nacionalidad de origen', unchanged until 2022. So the starting answer's 'No' still has a statutory basis. No practice evidence found.\"},{\"date\":\"2015-01-01\",\"answer\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Does Not Apply\",\"basis\":\"Unchanged since 2005: DS 5142 Art. 2 still required renunciation. Ley 20.888 (D.O. 08.01.2016, after this date and before 2020) amended Art. 2 on permanent residence, children aged 14 and over and child",
+ "output": {
+  "answers": [
+   {
+    "question_id": 71,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Does Not Apply",
+      "basis": "In force: Constitution 1980 Art. 10 No. 4 (foreigners naturalise 'renunciando expresamente a su nacionalidad anterior', except nationals of a country that grants Chileans the same benefit by treaty) and DS 5142/1960 Art. 2 (as amended by DL 1432/1976: renunciation of the nationality of origin is a requirement for the carta). This is the same rule the starting answer describes (renunciation plus the Spain treaty exception), so it is coded 'No' the same way. No practice evidence found for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Does Not Apply",
+      "basis": "Same as 2000: constitutional and statutory renunciation requirements in force, with the treaty (Spain) exception. Ley 20.050 was published on 26 Aug 2005, after this date. No practice evidence found."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Does Not Apply",
+      "basis": "From 26 Aug 2005 Ley 20.050 replaced Art. 10 No. 4 with 'Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley', dropping the constitutional renunciation clause. But DS 5142 Art. 2 kept 'Será requisito ... que el extranjero renuncie a su nacionalidad de origen', unchanged until 2022. So the starting answer's 'No' still has a statutory basis. No practice evidence found."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged since 2005: DS 5142 Art. 2 still required renunciation. Ley 20.888 (D.O. 08.01.2016, after this date and before 2020) amended Art. 2 on permanent residence, children aged 14 and over and children of refugees, but left the renunciation sentence in place. No practice evidence found."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050, Reforma constitucional que introduce diversas modificaciones a la Constitución Política de la República",
+      "article": "Constitución Art. 10 No. 4; Art. 11 No. 1",
+      "kind": "amended",
+      "what_changed": "Before: naturalisation required express renunciation of the prior nationality, except for nationals of a country that grants Chileans the same benefit by treaty. After: the constitutional renunciation requirement is gone, and Chileans lose their nationality only by voluntary renunciation. This liberalises the constitutional basis but leaves the statutory requirement in DS 5142 untouched.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "c) Reemplázase el número 4.º, por el siguiente: \"4.º Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley.\". 5. Introdúcense las siguientes enmiendas al artículo 11: a) Sustitúyese el número 1º, por el siguiente: \"1º Por renuncia voluntaria manifestada ante autoridad chilena competente."
+     },
+     {
+      "date": "2016-01-08",
+      "instrument": "Ley 20.888",
+      "article": "Decreto 5142 (1960) Art. 2",
+      "kind": "amended",
+      "what_changed": "Added the permanent-residence requirement, a route for children aged 14 and over, and naturalisation of refugees' minor children. The sentence requiring renunciation of the nationality of origin was kept. No change on dual nationality.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08",
+      "passage": "Será requisito para la concesión de la carta de nacionalización que el extranjero renuncie a su nacionalidad DL 1432 1976ART 2°de origen, o a cualquier otra adquirida o que pudiere corresponderle."
+     }
+    ],
+    "notes": "Pre-2005 Art. 10 was read in the Georgetown PDBA consolidated copy (amended to about 2001), because LeyChile would not display the body of DS 1150/DL 3464. The Chile–Spain Convenio de Doble Nacionalidad (1958) was not opened; its existence rests on the starting answer's citation and the old Art. 10 No. 4 treaty exception. The DS 5142 renunciation requirement in force 2000–2020 comes from DL 1432 (1976). LeyChile's 'texto original' layer (1960) shows the older notarial-renunciation wording, and its annotations attribute the later wording to DL 1432 Art. 2.",
+    "past_versions": "read_the_version_in_force",
+    "practice_sources": [],
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República (DS 1150/1980), Art. 10 No. 4 (pre-2005 text)",
+      "article": "Art. 10 No. 4",
+      "role": "predecessor",
+      "in_force": "1981-03-11 to 2005-08-25",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República (DS 100/2005), Art. 10 No. 4 as replaced by Ley 20.050",
+      "article": "Art. 10 No. 4",
+      "role": "cited",
+      "in_force": "2005-08-26 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 5142 (1960), texto refundido de las disposiciones sobre nacionalización de extranjeros",
+      "article": "Art. 2",
+      "role": "cited",
+      "in_force": "1976 (DL 1432 wording) to 2022-02-11; version 2016-01-08 to 2022-02-11 after Ley 20.888",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Convenio de Doble Nacionalidad Chile–España (1958)",
+      "article": "whole",
+      "role": "other_in_force",
+      "in_force": "1958 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "repealed_search": "Searched the pre-2005 constitutional text and the DS 5142 version history (1960 original, 2016 intermediate version, 2022 current) for any dual-nationality protection that was later repealed. None was found. The only change between 2000 and 2020 (Ley 20.050) widened the constitutional room for dual nationality and did not narrow it.",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Ley 20.050 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "Constitución Política (DS 100) LeyChile, version 2005-08-25",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-08-25"
+     },
+     {
+      "title": "Constitución Política current (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "Constitución 1980 (DL 3464/DS 1150) LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129"
+     },
+     {
+      "title": "Constitución 1980 LeyChile version 1999-11-04",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129&idVersion=1999-11-04"
+     },
+     {
+      "title": "Constitución de Chile (PDBA Georgetown, amended text)",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile01.html"
+     },
+     {
+      "title": "Decreto 5142 current (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444"
+     },
+     {
+      "title": "Decreto 5142 texto original 1960",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29"
+     },
+     {
+      "title": "Decreto 5142 version 2016-01-08",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     }
+    ],
+    "sourcing_note": "Dating is strong. Ley 20.050 and the DS 5142 versions were read on LeyChile, and the pre-2005 Art. 10 in a secondary consolidated copy, because the official DS 1150 body would not render. The Spain treaty was not read, and no practice evidence on naturalisation and renunciation was found for any period.",
+    "starting_answer_concern": "The 'No' has a statutory basis: DS 5142 Art. 2 required renunciation throughout 2000–2020. Two points cut against it, though. (1) The Spain treaty exception that the coder notes makes 'Conditional, depending on the country of origin' arguably the more accurate option on every date. (2) From 26 Aug 2005 the Constitution no longer requires renunciation, and a renunciation filed before Chilean authorities generally does not end the foreign nationality, so in effect many naturalised migrants keep dual nationality."
+   },
+   {
+    "question_id": 133,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Sometimes; Usually",
+      "basis": "DL 1.094 and DS 597/1984 were in force (the same regime the starting answer rests on). Executive regularisation processes were used: the October 1998 'amnistía provisoria' gave two-year temporary visas to about 22,000 people, mostly Peruvians, without a work contract (El Desconcierto 2018, retrospective). The practice evidence is thin and second-hand."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same DL 1.094/DS 597 regime, with no amendment touching regularisation found between 2000 and 2005. No practice evidence found specific to around 2005; rated from the neighbouring periods."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same regime. The extraordinary 'Proceso de Regularización' ran from 5 Nov 2007 to 5 Feb 2008 for those who entered by October 2007 and had no criminal record, and benefited about 47,000–50,000 people (Cooperativa 2007; El Desconcierto 2018)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same regime. LeyChile shows DL 1.094's last amendment before repeal was Ley 20.507 (in force 8 Apr 2011, trafficking/smuggling), with no change to the regularisation framework found. No specific practice source read for around 2015. The next documented practice is the 2018 process (about 155,000 enrolled, over 110,000 visas granted by December 2018, but only 20.8% stamped)."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "confidence": "low",
+    "events": [
+     {
+      "date": "1998-10",
+      "instrument": "Executive regularisation ('amnistía provisoria'), Ministerio del Interior",
+      "article": "Executive measure under DL 1.094",
+      "kind": "practice",
+      "what_changed": "One-off regularisation granting two-year temporary visas to about 22,000 irregular migrants, mostly Peruvians, without a work contract. This is the practice context for 2000.",
+      "url": "https://eldesconcierto.cl/2018/04/23/1998-y-2007-asi-fueron-las-otras-regulaciones-migratorias-masivas-en-chile",
+      "passage": "La decisión de Frei Ruiz-Tagle permitió otorgar visas de trabajo temporales -por dos años- beneficiando a cerca de 22 mil extranjeros residentes en el país, mayoría de ellos peruanos, a quienes se les entregó una visa de residencia temporaria."
+     },
+     {
+      "date": "2007-11-05",
+      "instrument": "Proceso de Regularización Migratoria 2007-2008 (Ministerio del Interior)",
+      "article": "Executive measure under DL 1.094",
+      "kind": "practice",
+      "what_changed": "Extraordinary regularisation for those who entered by October 2007 and had no criminal record, 5 Nov 2007 to 5 Feb 2008. It changed practice, not the statute.",
+      "url": "https://cooperativa.cl/noticias/pais/poblacion/inmigrantes/gobierno-inicio-proceso-para-regularizar-situacion-de-inmigrantes/2007-10-22/122928.html",
+      "passage": "A partir del próximo 5 de noviembre, y hasta el 5 de febrero de 2008, el Gobierno realizará un proceso de regularización migratoria, que beneficiará a los 20 mil extranjeros que viven en el país de manera ilegal"
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "Decreto Ley 1.094 (various)",
+      "kind": "amended",
+      "what_changed": "The last amendment of DL 1.094 before its repeal (trafficking and smuggling). The amendment's content was not read; no change to the regularisation framework is known from it.",
+      "url": "https://www.leychile.cl/Navegar?idNorma=6483&idVersion=2019-12-31",
+      "passage": "Versión: Intermedio - de 08-ABR-2011 a 11-FEB-2022 Última modificación: 08-ABR-2011 - Ley 20507"
+     },
+     {
+      "date": "2018-04",
+      "instrument": "Proceso de Regularización Extraordinaria 2018 (Ministerio del Interior)",
+      "article": "Executive measure under DL 1.094",
+      "kind": "practice",
+      "what_changed": "Extraordinary regularisation for those who entered before 8 April 2018. Over 110,000 visas were granted by December 2018 and 12,250 refused, but only 20.8% had completed the process by stamping.",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2019/01/11/110-mil-inscritos-en-regularizacion-extraordinaria-ya-obtuvieron-su-visa.shtml",
+      "passage": "Más de 110 mil visas fueron otorgadas hasta diciembre a quienes se inscribieron en el proceso de regularización extraordinaria del Gobierno, cifra que representa un 70% del total de extranjeros que se sumó al programa."
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Decreto Ley 1.094 (whole)",
+      "kind": "repealed",
+      "what_changed": "DL 1.094 was repealed when Ley 21.325 came into force. This is after 2020 and is recorded only for context on the 2023 answer.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+      "passage": "Esta norma ha sido derogada el 12-FEB-2022 Decreto Ley 1094 ESTABLECE NORMAS SOBRE EXTRANJEROS EN CHILE"
+     }
+    ],
+    "notes": "The bodies of DL 1.094 Arts. 71, 81 and 91 could not be read: LeyChile renders only the index for this repealed norm, and the PDF copies could not be parsed. The iura.cl index shows only their opening words (Art. 81 'Los extranjeros que ingresaren al territorio nacional sin dar cump...'; Art. 91 'Corresponderá al Ministerio del Interior la ap...'; Art. 71 'Los extranjeros que continuaren residiendo en el país después de h...'). So the statutory basis is taken from the starting citation, and the citation should be checked against the text. The regularisation processes of 1998, 2007–08 and 2018 were executive measures, not statutory amendments. The practice sources are press reports about irregular migrants generally, not specifically about workers.",
+    "past_versions": "not_available",
+    "practice_sources": [
+     {
+      "title": "1998 y 2007: Así fueron las otras regulaciones migratorias masivas en Chile (El Desconcierto)",
+      "url": "https://eldesconcierto.cl/2018/04/23/1998-y-2007-asi-fueron-las-otras-regulaciones-migratorias-masivas-en-chile",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Gobierno inició proceso para regularizar situación de inmigrantes ilegales (Cooperativa)",
+      "url": "https://cooperativa.cl/noticias/pais/poblacion/inmigrantes/gobierno-inicio-proceso-para-regularizar-situacion-de-inmigrantes/2007-10-22/122928.html",
+      "year": 2007,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "110 mil inscritos en regularización extraordinaria ya obtuvieron su visa (BioBioChile)",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2019/01/11/110-mil-inscritos-en-regularizacion-extraordinaria-ya-obtuvieron-su-visa.shtml",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 (1975), Establece normas sobre extranjeros en Chile",
+      "article": "Arts. 81, 91 (and Art. 71 on overstay)",
+      "role": "cited",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 (1984), Reglamento de Extranjería",
+      "article": "whole (procedure, sanctions)",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 69, 155 No. 8",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Decreto Ley 1094 (LeyChile, current/derogated)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "Decreto Ley 1094 version 2021-04-20",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2021-04-20"
+     },
+     {
+      "title": "Decreto Ley 1094 version 2019-12-31",
+      "url": "https://www.leychile.cl/Navegar?idNorma=6483&idVersion=2019-12-31"
+     },
+     {
+      "title": "Decreto Ley 1094 r=1",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&r=1"
+     },
+     {
+      "title": "Wayback leychile DL 1094",
+      "url": "http://web.archive.org/web/2015id_/http://www.leychile.cl/Navegar?idNorma=6483"
+     },
+     {
+      "title": "iura.cl DL 1094 index",
+      "url": "https://iura.cl/dl-1094-ministerio-del-interior/"
+     },
+     {
+      "title": "iura.cl art 81 (not found)",
+      "url": "https://iura.cl/dl-1094-ministerio-del-interior/art-81/"
+     },
+     {
+      "title": "LeyChile XML (service limit)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=6483"
+     },
+     {
+      "title": "Refworld DL 1094 (blocked)",
+      "url": "https://www.refworld.org/docid/3db949e16.html"
+     },
+     {
+      "title": "Decreto 597 Reglamento de Extranjería (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=14516"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "El Desconcierto 2018",
+      "url": "https://eldesconcierto.cl/2018/04/23/1998-y-2007-asi-fueron-las-otras-regulaciones-migratorias-masivas-en-chile"
+     },
+     {
+      "title": "Cooperativa 2007",
+      "url": "https://cooperativa.cl/noticias/pais/poblacion/inmigrantes/gobierno-inicio-proceso-para-regularizar-situacion-de-inmigrantes/2007-10-22/122928.html"
+     },
+     {
+      "title": "BioBioChile 2019",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2019/01/11/110-mil-inscritos-en-regularizacion-extraordinaria-ya-obtuvieron-su-visa.shtml"
+     }
+    ],
+    "sourcing_note": "Weak. The DL 1.094 article texts and their versions could not be read: only the LeyChile version metadata showing Ley 20.507 as the last amendment (2011) was visible. Practice evidence is second-hand press. Nothing was found for around 2005 or 2015, and nothing specifically on migrant workers.",
+    "starting_answer_concern": "The articles cited (DL 1.094 Arts. 81 and 91) appear to be the control/expulsion rule and the Ministry-powers rule, not a regularisation right. Under DL 1.094, regularisation rested on applying for a visa after paying overstay fines and on discretionary executive amnesties, while clandestine entrants faced criminal sanctions. 'Yes' is defensible but rests on discretion, and the citation should be checked."
+   },
+   {
+    "question_id": 137,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Constitution Art. 10 No. 1 (pre-2005 text) excluded children of foreigners in service of their government and children of 'extranjeros transeúntes', who could only opt for Chilean nationality. There was no guarantee for children who would otherwise be stateless, and no statelessness provision in DS 5142. The administrative practice then treated children of irregular migrants as 'transeúntes' (UNHCR 2018, retrospective)."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same text as 2000. Ley 20.050 (26 Aug 2005) later amended Art. 10 Nos. 2–4 but left the No. 1 transeúnte exception intact."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Art. 10 No. 1 unchanged, with no statelessness guarantee. Ley 20.430 (2010) on refugees provides no nationality guarantee (not read for this indicator). The restrictive 'transeúnte' interpretation was still applied to children of irregular migrants."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change to the constitutional or statutory text. In 2014 the authorities changed the administrative interpretation of 'transeúnte' (UNHCR 2018), which is a practice shift and not a statutory guarantee. Chile acceded to the 1954 and 1961 statelessness conventions only in April 2018, after this date."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050",
+      "article": "Constitución Art. 10",
+      "kind": "amended",
+      "what_changed": "Amended Art. 10 Nos. 2, 3 and 4 (children of Chileans born abroad; naturalisation) and left No. 1, birthplace nationality with the transeúnte exception, untouched. No statelessness guarantee was added.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "4. Modifícase el artículo 10, de la siguiente forma: a) Elimínase el número 2.º. b) Sustitúyese el número 3.º, por el siguiente: \"3º Los hijos de padre o madre chilenos, nacidos en territorio extranjero."
+     },
+     {
+      "date": "2014",
+      "instrument": "Administrative reinterpretation of 'hijo de extranjero transeúnte' (Registro Civil / Ministerio del Interior)",
+      "article": "Constitución Art. 10 No. 1 (application)",
+      "kind": "practice",
+      "what_changed": "Authorities stopped treating children of irregular migrants as children of transeúntes. This is a practice change, not a legal guarantee for stateless persons.",
+      "url": "https://www.acnur.org/noticias/briefing/2018/4/5af2e93b17/acnur-felicita-a-chile-por-su-adhesion-a-las-convenciones-de-naciones-unidas-sobre-apatridia.html",
+      "passage": "Debido a una interpretación administrativa de una disposición constitucional, a estos niños y niñas se les negó el derecho de acceder a la nacionalidad chilena, debido a la situación migratoria irregular en la que se encontraban sus padres al momento de su nacimiento. En 2014, las autoridades modificaron la interpretación"
+     },
+     {
+      "date": "2016-01-08",
+      "instrument": "Ley 20.888",
+      "article": "Decreto 5142 Art. 2",
+      "kind": "amended",
+      "what_changed": "Allowed refugees' minor children to naturalise once a parent naturalises, and children aged 14 and over with permanent residence to apply. These are facilitation routes, not a guarantee against statelessness.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08",
+      "passage": "menores de 18 años, cuyo padre o madre tenga la calidad de refugiados reconocidos por Chile, podrán nacionalizarse chilenos desde el momento en que, al menos, uno de sus padres haya obtenido la carta de nacionalización, sin necesidad de cumplir cualquier otro requisito legal."
+     },
+     {
+      "date": "2018-04",
+      "instrument": "Adhesión a la Convención sobre el Estatuto de los Apátridas (1954) y la Convención para Reducir los Casos de Apatridia (1961)",
+      "article": "1961 Convention Art. 1 (grant of nationality at birth to those otherwise stateless)",
+      "kind": "new_instrument",
+      "what_changed": "Chile deposited its accession instruments in April 2018. The promulgating decree and whether the treaty is directly applicable were not verified. It bears on the 2020 answer.",
+      "url": "https://www.acnur.org/noticias/briefing/2018/4/5af2e93b17/acnur-felicita-a-chile-por-su-adhesion-a-las-convenciones-de-naciones-unidas-sobre-apatridia.html",
+      "passage": "La semana pasada, el país depositó formalmente en la Oficina de Tratados de las Naciones Unidas en Nueva York los instrumentos para la adhesión a la Convención sobre el Estatuto de los Apátridas de 1954 y la Convención para Reducir los Casos de Apatridia de 1961."
+     }
+    ],
+    "notes": "Ley 21.325 Art. 173 (cited for 2023) could not be read, because the LeyChile page rendered only about 25,000 characters. It entered into force in February 2022 and does not bear on 2000–2020. No Corte Suprema transeúnte ruling was read in full. Those rulings (2014 onward, granting nationality to individual children of irregular parents) are practice evidence and state no general statelessness guarantee. Pre-2005 Art. 10 was read in the PDBA consolidated copy.",
+    "past_versions": "read_the_version_in_force",
+    "practice_sources": [
+     {
+      "title": "ACNUR felicita a Chile por su adhesión a las Convenciones de Naciones Unidas sobre apatridia",
+      "url": "https://www.acnur.org/noticias/briefing/2018/4/5af2e93b17/acnur-felicita-a-chile-por-su-adhesion-a-las-convenciones-de-naciones-unidas-sobre-apatridia.html",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Constitución Política (DS 1150/1980), Art. 10 No. 1",
+      "article": "Art. 10 No. 1",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to today (text of No. 1 unchanged by Ley 20.050)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 5142 (1960)",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "1960 to today (amended 2016-01-08 by Ley 20.888)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325, Art. 173",
+      "article": "Art. 173",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "repealed_search": "Searched the pre-2005 Constitution (Art. 10), the Ley 20.050 amendments and the DS 5142 versions (1960, 2016) for any guarantee of nationality to stateless persons or to children who would otherwise be stateless that existed and was repealed between 2000 and 2020. None was found: the only routes were the transeúnte option, naturalisation and 'especial gracia' by law.",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Constitución de Chile (PDBA Georgetown)",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile01.html"
+     },
+     {
+      "title": "Ley 20.050 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "Decreto 5142 version 2016-01-08",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     },
+     {
+      "title": "ACNUR 2018 note on Chile accession",
+      "url": "https://www.acnur.org/noticias/briefing/2018/4/5af2e93b17/acnur-felicita-a-chile-por-su-adhesion-a-las-convenciones-de-naciones-unidas-sobre-apatridia.html"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     }
+    ],
+    "sourcing_note": "The constitutional text and amendments were read, the pre-2005 text from a secondary consolidated copy. The 2018 treaty accession is documented only through a UNHCR note; its promulgating decree and status in domestic law were not read.",
+    "starting_answer_concern": "After Chile's April 2018 accession to the 1961 Convention (Art. 1: grant nationality to persons born in the territory who would otherwise be stateless), the 2020 'No' depends on whether that treaty was promulgated and is directly applicable in Chilean law. This was not verified. If it is, the 2020 answer could be 'Yes'."
+   }
+  ]
+ }
 }
