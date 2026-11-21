@@ -7,77 +7,63 @@
 //     builder from its checker. CLAUDE_CODE_BRIDGE_SESSION_ID and CLAUDE_PID are shared the same way.
 //   - A hook is told more: Claude Code gives a PreToolUse hook the session id and, inside an agent, the
 //     agent's own id (agent_id, agent_type). So .claude/hooks/issue-guard.py, which runs before every
-//     Bash command, writes {at, session, agent, agent_type, cmd} to ~/.claude/venture-callers.jsonl
-//     when the command runs issues.mjs (or commits naming a ticket). issues.mjs then finds its own call
-//     there: a line of the last two minutes whose command holds every argument it was given.
+//     Bash command, writes {at, session, agent, agent_type, tok, cmd} to ~/.claude/venture-callers.jsonl
+//     when the command may run a venture tool (or commits naming a ticket), and gives the command a
+//     token (VENTURE_CALLER) whose hash is tok. issues.mjs finds its caller by that token (below).
 //   - A plain shell (Bart in a terminal, launchd, the runner's own node process) leaves no line: the
 //     caller is unknown.
 // The tracker records the caller with every claim, `ready`, `commit` and check, and refuses a pass from
 // the agent or session that built the ticket, marked it ready or committed for it.
 // The limit, stated plainly: the file is in the home folder and can be written by hand. A builder that
 // appends a made-up line naming another agent, just before passing its own check, is not stopped; that
-// takes a deliberate lie, not a slip. A caller is "unknown" when its call is not found (no hook, as in a
-// plain shell, or two agents ran the very same command in the same two minutes); a pass from an unknown
+// takes a deliberate lie, not a slip. A caller is "unknown" when its command carries no token the record
+// holds (no hook, as in a plain shell, or a command the hook did not see); a pass from an unknown
 // caller is refused, except Bart's (--by bart), whose word closes a ticket anyway.
-import { appendFileSync, existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
+import { createHash } from 'node:crypto'
 
 export const CALLERS = join(homedir(), '.claude/venture-callers.jsonl')
-const WINDOW = 120e3
 export const shortHost = () => hostname().replace(/\..*$/, '')
-const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 /** { id, session, agent, agent_type, host, known, why } for the process that runs this.
  *  id: "agent <agent id>" inside an agent, "session <session id>" for a top-level session, null when unknown. */
-// OLA-251, sixth pass: each record of the hook identifies one call. A call typed so the hook does not see
-// the tool's name (iss*s.mjs) matched the holder's own recent record and passed as the holder; a record
-// already used (<file>.used) is skipped. Within one process the answer is kept, so the tracker and its
-// override lines see the same caller.
+// OLA-251, ninth pass: the caller is known only by a token the hook gives the command itself. Before every
+// Bash command that may run a venture tool, .claude/hooks/issue-guard.py makes a fresh random token, records
+// its sha256 with the session and agent ids, and puts `export VENTURE_CALLER=<token>;` in front of the
+// command. A call carrying a token whose hash is in the record is that record's agent; a call with no token,
+// or one the record does not hold, is unknown. Passes one to nine matched the command's text against the
+// record instead, and every pass a checker found text in the holder's command (a commit message, a
+// `node --check`, an `|| … --wait` fallback, an echoed hint) that a call typed past the hook (iss*s.mjs)
+// could borrow to pass as the holder. A token cannot be borrowed that way: the record holds only its hash,
+// and another agent's command never carries it.
+// The limit, stated plainly: an agent that reads another live process's environment (ps eww) while it runs
+// can copy its token; that takes a deliberate lie, like writing a made-up line into the record.
+const TOKEN_LIFE = 24 * 3600e3 // a command may run for hours (--wait); a token older than a day is not honored
 const seen = new Map()
-export function caller({ argv = process.argv.slice(2), file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now = Date.now(), tool = 'issues.mjs' } = {}) {
-  const memo = `${file}\n${tool}\n${argv.join('\u0000')}`
+export function caller({ file = process.env.VENTURE_CALLERS_FILE ?? CALLERS, now = Date.now(), token = process.env.VENTURE_CALLER } = {}) {
+  const memo = `${file}\n${token ?? ''}`
   if (seen.has(memo)) return seen.get(memo)
-  const out = callerOnce({ argv, file, now, tool })
+  const out = callerOnce({ file, now, token })
   seen.set(memo, out)
   return out
 }
-function callerOnce({ argv, file, now, tool }) {
+export const tokenHash = (t) => createHash('sha256').update(String(t)).digest('hex')
+function callerOnce({ file, now, token }) {
   const host = shortHost()
-  const usedFile = file + '.used'
-  // a command that runs the tool n times (comment … && ready …) identifies n calls
-  const used = new Set(existsSync(usedFile) ? readFileSync(usedFile, 'utf8').split('\n').slice(-2000) : [])
-  // a run is "node <path>tool …" up to the next ; & | or line, holding every word of this call; a command
-  // that only names the tool (node --check …/issues.mjs, a message) runs it zero times (OLA-251, eighth pass)
-  const esc = tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const runs = (cmd) => String(cmd).split(new RegExp(`(?=\\bnode\\s+\\S*${esc}\\b)`)).filter((x) => new RegExp(`^node\\s+\\S*${esc}\\b`).test(x)).map((x) => x.split(/[;&|\n]/)[0])
-  // the first run in the record that holds this call's words and has not identified a call yet: its key
-  const free = (r) => {
-    const k = runs(r.cmd).map((x, i) => (want.every((t) => norm(x).includes(t)) ? `${keyOf(r)}#${i}` : null)).find((x) => x && !used.has(x))
-    return k ?? null
+  if (!token) return { id: null, host, known: false, why: 'no caller token: not run through the hook of a Claude Code session (a plain shell, launchd, a script, or a command the hook did not see)' }
+  if (!existsSync(file)) return { id: null, host, known: false, why: `a caller token, but no record of the hook (${file} does not exist)` }
+  const h = tokenHash(token)
+  let r = null
+  for (const l of readFileSync(file, 'utf8').split('\n')) {
+    if (!l.includes(h)) continue
+    try { const x = JSON.parse(l); if (x.tok === h) r = x } catch {}
   }
-  const keyOf = (r) => `${r.session ?? ''}|${r.agent ?? ''}|${r.at}|${norm(r.cmd).slice(0, 200)}`
-  if (!existsSync(file)) return { id: null, host, known: false, why: `no record of the call (${file} does not exist: not run from a Claude Code session with the hook)` }
-  // paths are left out of the match: the shell expands ~ and $VARS in them, the command keeps them as typed
-  const want = argv.filter((t) => !t.includes('/')).map(norm).filter((t) => t.length > 0)
-  const rows = []
-  for (const l of readFileSync(file, 'utf8').split('\n').slice(-400)) {
-    if (!l) continue
-    try {
-      const r = JSON.parse(l)
-      if (now - r.at * 1000 > WINDOW || r.at * 1000 > now + 5e3) continue
-      const c = norm(r.cmd)
-      // a commit's record (the hook notes commits naming a ticket) is no run of the tool, whatever its message says
-      if (/\bgit\b[^\n;&|]*\bcommit\b/.test(r.cmd)) continue
-      if (c.includes(norm(tool)) && free(r)) rows.push(r)
-    } catch {}
-  }
-  const ids = [...new Set(rows.map((r) => (r.agent ? `agent ${r.agent}` : `session ${r.session}`)))]
-  if (!ids.length) return { id: null, host, known: false, why: 'no record of this call by the hook: not run from a Claude Code session (a plain shell, launchd, a script)' }
-  if (ids.length > 1) return { id: null, host, known: false, why: `the same command was run by ${ids.length} sessions or agents in the last two minutes, so the caller is not known` }
-  const r = rows.at(-1)
-  try { appendFileSync(usedFile, free(r) + '\n') } catch {}
-  return { id: ids[0], session: r.session, agent: r.agent ?? null, agent_type: r.agent_type ?? null, host, known: true, why: `${r.agent ? `agent ${r.agent.slice(0, 8)} (${r.agent_type ?? 'agent'})` : `session ${String(r.session).slice(0, 8)}`} on ${host}` }
+  if (!r) return { id: null, host, known: false, why: 'a caller token the hook never gave out on this machine' }
+  if (now - r.at * 1000 > TOKEN_LIFE || r.at * 1000 > now + 5e3) return { id: null, host, known: false, why: 'a caller token older than a day' }
+  const id = r.agent ? `agent ${r.agent}` : `session ${r.session}`
+  return { id, session: r.session, agent: r.agent ?? null, agent_type: r.agent_type ?? null, host, known: true, why: `${r.agent ? `agent ${r.agent.slice(0, 8)} (${r.agent_type ?? 'agent'})` : `session ${String(r.session).slice(0, 8)}`} on ${host}` }
 }
 
 /** Every caller that committed for a ticket on this machine, from the hook's record (git commit naming OLA-n). */

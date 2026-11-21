@@ -11,8 +11,10 @@ and the command text has no issue id like OLA-142. Open one first:
   node scripts/venture/issues.mjs add "what, in plain words" --area apps --pri P1 --start
 A change that is only notes or a typo may say [no-issue] in its message instead.
 """
+import hashlib
 import json
 import os
+import secrets
 import re
 import time
 import subprocess
@@ -22,14 +24,19 @@ OLA_PATHS = ("apps/activist-ai/", "src/app/kochito/kit/", "scripts/venture/", "a
 CALLERS = os.path.expanduser("~/.claude/venture-callers.jsonl")
 
 
-def note_caller(data: dict, cmd: str) -> None:
+def note_caller(data: dict, cmd: str) -> str:
     """Who runs the tracker (OLA-251, OLA-263): Claude Code gives a hook the session id and, inside an
     agent, the agent's own id; a shell command gets neither (CLAUDE_CODE_SESSION_ID is the lead's, the
-    same for every agent it starts). So before every Bash command that runs issues.mjs this records
-    {at, session, agent, agent_type, cmd} in ~/.claude/venture-callers.jsonl, and issues.mjs finds its
-    own call there (scripts/venture/_who.mjs). Never blocks anything."""
+    same for every agent it starts). So before a Bash command that may run the venture tools this makes a
+    fresh token, records {at, session, agent, agent_type, tok: sha256(token), cmd} in
+    ~/.claude/venture-callers.jsonl and returns the token, which main() puts in front of the command as
+    `export VENTURE_CALLER=<token>;`. issues.mjs knows its caller only by that token (scripts/venture/_who.mjs):
+    the record holds its hash, so reading the file gives nobody another agent's token. Until the ninth pass
+    the tracker matched the command's text instead, and any text in the holder's command that looked like
+    a run could be borrowed by a call typed past the hook. Never blocks anything."""
     try:
-        row = {"at": time.time(), "session": data.get("session_id"), "agent": data.get("agent_id"), "agent_type": data.get("agent_type"), "cmd": cmd[:20000]}
+        tok = secrets.token_hex(16)
+        row = {"at": time.time(), "session": data.get("session_id"), "agent": data.get("agent_id"), "agent_type": data.get("agent_type"), "tok": hashlib.sha256(tok.encode()).hexdigest(), "cmd": cmd[:20000]}
         if os.path.exists(CALLERS) and os.path.getsize(CALLERS) > 4_000_000:
             with open(CALLERS) as f:
                 keep = f.readlines()[-300:]
@@ -39,8 +46,9 @@ def note_caller(data: dict, cmd: str) -> None:
             os.replace(tmp, CALLERS)
         with open(CALLERS, "a") as f:  # one short append: safe beside other agents' hooks
             f.write(json.dumps(row) + "\n")
+        return tok
     except Exception:
-        pass
+        return ""
 
 
 def tracker_version(path: str) -> int:
@@ -74,24 +82,40 @@ def old_tracker(data: dict, cmd: str) -> str:
 
 
 def main() -> None:
+    code = check()
+    if code == 0 and TOKEN:
+        # the token goes in front of the command; nothing else about it changes (no permission decision)
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "updatedInput": {**INPUT, "command": f"export VENTURE_CALLER={TOKEN}; " + INPUT["command"]}}}))
+    sys.exit(code)
+
+
+TOKEN = ""
+INPUT: dict = {}
+
+
+def check() -> int:
+    global TOKEN, INPUT
     try:
         data = json.load(sys.stdin)
     except Exception:
-        sys.exit(0)
+        return 0
     if data.get("tool_name") != "Bash":
-        sys.exit(0)
-    cmd = (data.get("tool_input") or {}).get("command") or ""
-    # the other venture tools and the server's deploy too (OLA-251, third pass: their overrides name the caller)
-    if "issues.mjs" in cmd or "scripts/venture/" in cmd or "ola.mjs" in cmd or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
-        note_caller(data, cmd)  # a commit naming a ticket is recorded too: its maker does not pass its checks
+        return 0
+    INPUT = dict(data.get("tool_input") or {})
+    cmd = INPUT.get("command") or ""
+    # any command that may run a venture tool (a .mjs file, or anything naming venture: cd scripts/venture && node iss*.mjs)
+    # gets a token; one the hook does not see has none, and the tracker treats its caller as unknown (OLA-251, ninth pass).
+    # A commit naming a ticket is recorded too: its maker does not pass its checks.
+    if re.search(r"venture|\.mjs\b|ola\.mjs", cmd) or (re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) and re.search(r"OLA-\d+", cmd)):
+        TOKEN = note_caller(data, cmd)
     old = old_tracker(data, cmd)
     if old:
         sys.stderr.write(old)
-        sys.exit(2)
+        return 2
     if not re.search(r"\bgit\b[^\n;&|]*\bcommit\b", cmd) or "--amend" in cmd:
-        sys.exit(0)
+        return 0
     if re.search(r"OLA-\d+|\[no-issue\]", cmd):
-        sys.exit(0)
+        return 0
     cwd = data.get("cwd") or None
     files = []
     try:
@@ -104,7 +128,7 @@ def main() -> None:
     for m in re.finditer(r"\bgit\s+add\s+([^;&|\n]+)", cmd):
         files += [f for f in m.group(1).split() if not f.startswith("-")]
     if not top.endswith("hilma") and "hilma" not in (cwd or ""):
-        sys.exit(0)
+        return 0
 
     def ola(f: str) -> bool:
         f = f.strip("'\"")
@@ -119,8 +143,8 @@ def main() -> None:
             "  node scripts/venture/issues.mjs list | grep doing\n"
             "Only a notes-only or typo change may say [no-issue] instead.\n"
         )
-        sys.exit(2)
-    sys.exit(0)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
