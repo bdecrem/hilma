@@ -684,7 +684,17 @@ if (cmd === 'overrides') {
   } else if (sub === 'internal') {
     const why = str('why')
     if (!why || why.length < 15) die(`usage: issues.mjs check ${id} internal --why "why nothing a person does or sees changes"`)
-    if (a.checks.length) die(`${id} already has checks; an internal ticket has none`)
+    // A tools ticket written before OLA-338 (no checker for the project's own tools) carries checks that
+    // nobody will do: they move to the thread, word for word, when none has a result yet and the ticket
+    // is not a product one. A check with a pass or a fail, or a product ticket, keeps its checks.
+    if (a.checks.length) {
+      if (PRODUCT.has(r.area)) die(`${id} is a product ticket (${r.area}) with checks; a checker does them`)
+      const done = a.checks.filter((c) => c.result)
+      if (done.length) die(`${id} already has a checked check (#${done.map((c) => c.n).join(', #')}); an internal ticket has none`)
+      const old = a.checks.map((c) => `#${c.n} at ${c.at}: do: ${c.do} / see: ${c.see}`).join('; ')
+      await record([{ issue_id: id, kind: 'comment', body: `marked internal by ${str('by') ?? 'kit'} (OLA-338: no checker for the project's own tools): ${why}. Its checks, none done, were: ${old}` }])
+      a.checks = []
+    }
     a.internal = { why, by: str('by') ?? 'kit', at: now }
     await saveAccept(id, a)
     await lateCheck('the ticket marked internal (no checks)')

@@ -16,7 +16,7 @@ const dir = mkdtempSync(join(tmpdir(), 'internal-close-test-'))
 try {
   const fake = join(dir, 'tracker.json')
   const T = (num, area) => ({ id: `OLA-${num}`, num, project: 'ola', title: `a made-up ticket ${num}`, what: '', area, priority: 'P2', status: 'open', who: 'lead', opened_at: '2026-11-19T05:00:00Z', updated_at: '2026-11-19T05:00:00Z', links: [], proof: '' })
-  writeFileSync(fake, JSON.stringify({ venture_issues: [T(1, 'ops'), T(2, 'ops')], venture_state: [], venture_issue_activity: [], venture_commits: [] }))
+  writeFileSync(fake, JSON.stringify({ venture_issues: [T(1, 'ops'), T(2, 'ops'), T(3, 'ops'), T(4, 'web')], venture_state: [], venture_issue_activity: [], venture_commits: [] }))
   const env = { ...process.env, VENTURE_TRACKER_FAKE: fake }
   delete env.VENTURE_PRIVATE
   const issues = fileURLToPath(new URL('./issues.mjs', import.meta.url))
@@ -57,6 +57,22 @@ try {
     const r = run('done', 'OLA-2', '--proof', 'no user path: x; lead ran a: 1 of 1')
     assert.equal(r.status, 1)
     assert.match(r.stderr, /cannot be closed yet/)
+  })
+  ok('a tools ticket with checks none has done becomes internal, and its checks go on the thread', () => {
+    const add = run('check', 'OLA-3', 'add', '--at', 'the mini: an update', '--do', 'push a document change only', '--see', 'the update runs in seconds')
+    assert.equal(add.status, 0, add.stderr)
+    const r = run('check', 'OLA-3', 'internal', '--why', 'the update tool only; nothing a person does or sees changes')
+    assert.equal(r.status, 0, r.stderr)
+    assert.match(run('check', 'OLA-3').stdout, /no checker is asked for/)
+    const thread = JSON.parse(readFileSync(fake, 'utf8')).venture_issue_activity.filter((x) => x.issue_id === 'OLA-3').map((x) => x.body).join('\n')
+    assert.match(thread, /none done, were: #1 at the mini: an update: do: push a document change only/)
+  })
+  ok('a product ticket with checks, or one with a check done, stays as it is', () => {
+    const p = run('check', 'OLA-4', 'add', '--at', 'cloud-web:chat', '--do', 'types hello in the chat', '--see', 'Ola answers in the chat')
+    assert.equal(p.status, 0, p.stderr)
+    const r = run('check', 'OLA-4', 'internal', '--why', 'trying to skip the checker on a product ticket')
+    assert.equal(r.status, 1, r.stdout)
+    assert.match(r.stderr, /product ticket/)
   })
 } finally {
   rmSync(dir, { recursive: true, force: true })
