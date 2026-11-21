@@ -205,7 +205,7 @@ struct SessionsScreen: View {
       Section {
         ForEach(store.sessions) { s in
           Button { open(s.id) } label: {
-            PhoneSessionRow(session: s, running: store.running.contains(s.id), unseen: store.unseen.contains(s.id), needsYou: store.needsYou(s.id))
+            PhoneSessionRow(session: s, running: store.running.contains(s.id), unseen: store.unseen.contains(s.id), needsYou: store.needsYou(s.id), waiting: store.waitingWords(s.id))
           }
           .listRowBackground(Ola.room)
           .listRowSeparatorTint(Ola.roomRule)
@@ -315,6 +315,8 @@ struct PhoneSessionRow: View {
   var running: Bool
   var unseen: Bool
   var needsYou: Bool
+  /// "Needs your yes" or "Waits for your answer" (OLA-321).
+  var waiting: String? = nil
   var body: some View {
     HStack(alignment: .center, spacing: 12) {
       Hopping(running: running) { hopping in
@@ -327,7 +329,7 @@ struct PhoneSessionRow: View {
       .frame(width: 12)
       VStack(alignment: .leading, spacing: 3) {
         Text(session.title).font(OlaFont.sans(Metrics.ui + 1, unseen || needsYou ? .semibold : .medium)).foregroundStyle(Ola.onRoom).lineLimit(2)
-        Text(needsYou ? "Needs your yes" : running ? "Working" : shortTime(session.updated))
+        Text(needsYou ? waiting ?? "Needs your yes" : running ? "Working" : shortTime(session.updated))
           .font(OlaFont.sans(Metrics.meta, needsYou ? .semibold : .regular)).foregroundStyle(needsYou ? Ola.vermilion : running ? Ola.lamp : Ola.dim)
       }
       Spacer()

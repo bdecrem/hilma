@@ -135,6 +135,14 @@ public final class OlaStore {
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
   public var conversation: Conversation? { selectedID.flatMap { conversations[$0] } }
   public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil || conversations[id]?.question != nil }
+  /// The words under a session's title while it waits (OLA-321): a question with choices is not a
+  /// yes. A permission card waiting beside it comes first, since nothing runs until it is answered.
+  public func waitingWords(_ id: String) -> String? {
+    Self.waitingWords(approval: conversations[id]?.approval != nil, question: conversations[id]?.question != nil)
+  }
+  nonisolated public static func waitingWords(approval: Bool, question: Bool) -> String? {
+    approval ? "Needs your yes" : question ? "Waits for your answer" : nil
+  }
   public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" && !HostedPick.isHosted($0.modelID) } }
 
   // MARK: connecting

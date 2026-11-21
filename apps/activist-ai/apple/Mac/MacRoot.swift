@@ -219,7 +219,7 @@ struct Sidebar: View {
         let r = sec.runtime, st = sec.store
         Section(isExpanded: Binding(get: { !hidden(r) }, set: { if $0 == hidden(r) { toggle(r) } })) {
           ForEach(st.sessions) { s in
-            SessionRow(session: s, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id))
+            SessionRow(session: s, running: st.running.contains(s.id), unseen: st.unseen.contains(s.id), needsYou: st.needsYou(s.id), waiting: st.waitingWords(s.id))
               .tag("\(r.rawValue)/\(s.id)")
               // Screenshots (no app around the list): the system's selection does not draw off
               // screen, so the selected row gets the sidebar's selection tone instead.
@@ -275,12 +275,14 @@ struct SessionRow: View {
   var running: Bool
   var unseen: Bool
   var needsYou: Bool
+  /// "Needs your yes" or "Waits for your answer" (OLA-321).
+  var waiting: String? = nil
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 6) {
       VStack(alignment: .leading, spacing: 1) {
         Text(session.title).foregroundStyle(Ola.onRoom).lineLimit(1).truncationMode(.tail)
-        if needsYou { Text("Needs your yes").font(.system(size: Metrics.meta, weight: .medium)).foregroundStyle(Ola.vermilionText) }
+        if needsYou { Text(waiting ?? "Needs your yes").font(.system(size: Metrics.meta, weight: .medium)).foregroundStyle(Ola.vermilionText) }
       }
       Spacer(minLength: Space.xs)
       Hopping(running: running) { hopping in
