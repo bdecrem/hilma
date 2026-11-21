@@ -101,3 +101,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-21 02:33 | back2000 | labor_b · chile | claude-opus-5-5 | high | 8.89 | 34 | 43,137 | 3,259,024 | 2.47 | 28→38 | 5→6 | 0→0 | 22 | ok | `back2000 chile labor_b claude-opus-5-5 high` |
 | 2026-11-21 02:38 | back2000 | health_housing · argentina | claude-opus-5-5 | high | 5.35 | 32 | 43,025 | 2,100,746 | 2.11 | 34→40 | 6→6 | 0→0 | 16 | ok | `back2000 argentina health_housing claude-opus-5-5 high` |
 | 2026-11-21 02:40 | back2000 | health_housing · chile | claude-opus-5-5 | high | 8.81 | 55 | 52,195 | 3,769,802 | 2.83 | 35→42 | 6→6 | 0→0 | 34 | ok | `back2000 chile health_housing claude-opus-5-5 high` |
+| 2026-11-21 02:42 | back2000 | education · chile | claude-opus-5-5 | high | 11.88 | 49 | 48,235 | 3,382,210 | 2.57 | 38→43 | 6→6 | 0→0 | 32 | ok | `back2000 chile education claude-opus-5-5 high` |

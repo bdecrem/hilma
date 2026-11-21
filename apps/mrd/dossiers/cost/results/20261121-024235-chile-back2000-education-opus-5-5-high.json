@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile education claude-opus-5-5 high",
- "pid": 80611,
  "step": "back2000",
  "slug": "chile",
  "chunk": "education",
@@ -57,5 +56,900 @@
   "user": 172
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:54:27.905Z",
+ "minutes": 11.88,
+ "meters_after": {
+  "at": "2026-11-21T10:54:27.905Z",
+  "window": {
+   "pct": 43,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 43,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 43% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 193406,
+   "output": 48235,
+   "cache_read": 3002062,
+   "cache_write": 138507,
+   "cost_usd": 2.5681,
+   "total": 3382210
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 193342,
+    "output": 13060,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4074,
+    "cost_usd": 0.1559
+   },
+   "claude-opus-5-5": {
+    "input": 64,
+    "output": 35175,
+    "cache_read": 3002062,
+    "cache_write": 138507,
+    "thinking": 10103,
+    "cost_usd": 2.4122
+   }
+  }
+ },
+ "turns": 49,
+ "calls": 77,
+ "duration_ms": 712308,
+ "duration_api_ms": 413809,
+ "pages_read": 32,
+ "pages": [
+  {
+   "at": "2026-11-21T10:43:08.036Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "10º.- El derecho a la educación | educación básica | gratuito",
+   "ok": true,
+   "chars": 6409
+  },
+  {
+   "at": "2026-11-21T10:43:18.927Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "sistema gratuito | obligatoria | Ley 19.876",
+   "ok": true,
+   "chars": 6420
+  },
+  {
+   "at": "2026-11-21T10:43:31.442Z",
+   "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-876/gdoc",
+   "find": "educación básica | sustitúyese | publicación",
+   "ok": true,
+   "chars": 2195
+  },
+  {
+   "at": "2026-11-21T10:43:32.423Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043",
+   "find": "Artículo 4 | Artículo 3 | extranjer | Artículo 24",
+   "ok": true,
+   "chars": 4098
+  },
+  {
+   "at": "2026-11-21T10:43:44.661Z",
+   "url": "https://planipolis.iiep.unesco.org/sites/default/files/ressources/chile_ley_20370_ley_general_educacion.pdf",
+   "find": "Universalidad | toda la población | Interculturalidad | educación de adultos | Fecha Publicación | deroga",
+   "ok": true,
+   "chars": 639
+  },
+  {
+   "at": "2026-11-21T10:44:19.288Z",
+   "url": "https://transparencia.usach.cl/sites/default/files/paginas/20370.pdf",
+   "find": "Universalidad | toda la población | Interculturalidad | adultos | Fecha Publicación | Derógase",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:44:27.028Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1006043",
+   "find": "Universalidad | toda la población | Interculturalidad | adultos | Derógase",
+   "ok": true,
+   "chars": 935
+  },
+  {
+   "at": "2026-11-21T10:44:59.189Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043&idVersion=2009-09-12",
+   "find": "Universalidad | toda la población | Interculturalidad | adultos | Derógase",
+   "ok": true,
+   "chars": 5699
+  },
+  {
+   "at": "2026-11-21T10:45:09.525Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-09-22",
+   "find": "toda la población | 10º.- El derecho a la educación | Artículo 5º",
+   "ok": true,
+   "chars": 2202
+  },
+  {
+   "at": "2026-11-21T10:45:22.378Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-09-22",
+   "find": "acceso a ellas | educación básica | pleno desarrollo de la persona",
+   "ok": true,
+   "chars": 2210
+  },
+  {
+   "at": "2026-11-21T10:45:25.269Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-09-22",
+   "find": "derecho a la educación | 19.876 | libertad de enseñanza",
+   "ok": true,
+   "chars": 5428
+  },
+  {
+   "at": "2026-11-21T10:45:40.833Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1118991",
+   "find": "Artículo 103 | permanencia definitiva | Artículo 1.- | Artículo 2.-",
+   "ok": true,
+   "chars": 5279
+  },
+  {
+   "at": "2026-11-21T10:45:47.057Z",
+   "url": "https://www.ayudamineduc.cl/sites/default/files/alumnos_migrantes_web.pdf",
+   "find": "2005 | 1531 | Ordinario | 894 | 2003",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:46:03.874Z",
+   "url": "https://iura.cl/21091/103",
+   "find": "permanencia definitiva | enseñanza media",
+   "ok": true,
+   "chars": 1452
+  },
+  {
+   "at": "2026-11-21T10:46:19.366Z",
+   "url": "https://www.redalyc.org/journal/1735/173565055011/",
+   "find": "2005 | 1008 | 2003 | 894 | provisoria | RUT 100 | IPE",
+   "ok": true,
+   "chars": 9581
+  },
+  {
+   "at": "2026-11-21T10:46:20.408Z",
+   "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso",
+   "find": "1008 | 2005 | 2003 | 894 | 6232 | 1179",
+   "ok": true,
+   "chars": 8486
+  },
+  {
+   "at": "2026-11-21T10:46:31.848Z",
+   "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso",
+   "find": "En enero de 20 | estudiantes fantasma | Instructivo Presidencial",
+   "ok": true,
+   "chars": 4266
+  },
+  {
+   "at": "2026-11-21T10:46:40.116Z",
+   "url": "https://chile.justia.com/nacionales/decretos/d-s-n-84/gdoc",
+   "find": "Artículo 30 | entró en vigor | Fecha Publicación | Artículo 43",
+   "ok": true,
+   "chars": 5476
+  },
+  {
+   "at": "2026-11-21T10:46:49.708Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "education | school | Ministry of Education",
+   "ok": true,
+   "chars": 2932
+  },
+  {
+   "at": "2026-11-21T10:46:50.543Z",
+   "url": "https://bice.org/app/uploads/2014/06/05-chili-cdn-final-23-04-2007.pdf",
+   "find": "migra | refugee | education",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:47:00.094Z",
+   "url": "http://hrlibrary.umn.edu/crc/chile2002.html",
+   "find": "migrant | refugee | foreign | education",
+   "ok": true,
+   "chars": 4352
+  },
+  {
+   "at": "2026-11-21T10:47:00.904Z",
+   "url": "http://hrlibrary.umn.edu/crc/chile2007.html",
+   "find": "migrant | refugee | foreign",
+   "ok": true,
+   "chars": 4324
+  },
+  {
+   "at": "2026-11-21T10:47:07.409Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=239864",
+   "find": "extranjero | residencia definitiva | permanencia definitiva | chileno",
+   "ok": true,
+   "chars": 3354
+  },
+  {
+   "at": "2026-11-21T10:47:34.608Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "residente estudiante | Artículo 27 | Artículo 28",
+   "ok": true,
+   "chars": 2008
+  },
+  {
+   "at": "2026-11-21T10:47:44.294Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08",
+   "find": "residente estudiante | becados",
+   "ok": true,
+   "chars": 2022
+  },
+  {
+   "at": "2026-11-21T10:47:47.843Z",
+   "url": "https://chile.justia.com/nacionales/decretos-leyes/decreto-ley-n-1-094/gdoc",
+   "find": "Residente Estudiante | Artículo 27 | Artículo 48",
+   "ok": true,
+   "chars": 882
+  },
+  {
+   "at": "2026-11-21T10:48:46.942Z",
+   "url": "https://acnudh.org/26197/",
+   "find": "migrant | education",
+   "ok": true,
+   "chars": 4289
+  },
+  {
+   "at": "2026-11-21T10:48:49.441Z",
+   "url": "https://blogs.iadb.org/migracion/es/como-disminuir-las-barreras-de-acceso-de-ninos-migrantes-en-escuelas",
+   "find": "2005 | 2016 | IPE | sin RUN | 2017 | matrícula",
+   "ok": true,
+   "chars": 656
+  },
+  {
+   "at": "2026-11-21T10:49:20.477Z",
+   "url": "https://acnudh.org/26197/",
+   "find": "immigrant children | migrant children | asylum | schools",
+   "ok": true,
+   "chars": 4329
+  },
+  {
+   "at": "2026-11-21T10:49:21.262Z",
+   "url": "https://www.mineduc.cl/?p=11209",
+   "find": "IPE | RUT 100 | beneficios | migrantes",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:51:25.206Z",
+   "url": "https://acnudh.org/26197/",
+   "find": "irregular | refugee | Migrant",
+   "ok": true,
+   "chars": 3270
+  },
+  {
+   "at": "2026-11-21T10:51:28.440Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1118991",
+   "find": "Publicación: | Promulgación:",
+   "ok": true,
+   "chars": 2136
+  }
+ ],
+ "searches": [
+  "Ordinario 07/1008 (1531) 2005 Ministerio de Educación matrícula alumnos inmigrantes",
+  "\"La educación básica es obligatoria, debiendo el Estado financiar un sistema gratuito con tal objeto, destinado a asegurar el acceso a ella de toda la población\" Ley 19.876",
+  "Mineduc oficio 07/1008 1531 2005 alumnos extranjeros matrícula provisoria situación migratoria irregular",
+  "Ley 21.091 artículo 103 gratuidad extranjeros permanencia definitiva enseñanza media en Chile requisito",
+  "scielo Chile niños migrantes escuela \"2005\" oficio Ministerio de Educación matrícula irregular \"convenio\" 2003 Ministerio del Interior visa estudiante",
+  "\"07/1008\" Ministerio de Educación 2005 inmigrantes",
+  "Decreto 84 2005 Relaciones Exteriores promulga Convención Internacional protección derechos todos los trabajadores migratorios leychile",
+  "Comité Trabajadores Migratorios observaciones finales Chile 2011 CMW/C/CHL/CO/1 educación niños situación irregular",
+  "2003 oficio circular Departamento de Extranjería permiso de residencia estudiante niños matriculados establecimientos educacionales situación irregular padres convenio Mineduc",
+  "Instructivo Presidencial N° 5 2015 migrantes educación acceso permanencia \"independiente de su situación migratoria\"",
+  "estudiantes extranjeros sin RUT PSU inscripción educación superior Chile migrantes irregulares acceso universidad becas residencia definitiva barreras 2014",
+  "\"visación de residente estudiante\" \"Decreto Ley 1094\" artículo 27 texto",
+  "CRC/C/CHL/CO/4-5 2015 concluding observations Chile migrant children \"education\" refworld"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":125,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"Constitution art. 19 No. 10 inciso quinto (1980 wording, before Ley 19.876): basic education is compulsory and the State must finance a free system to ensure access 'de toda la poblacion'. The CRC (in force since 1990) supported this. Both reach every child on the territory whatever their status, but no instruction specific to migrants existed yet. The only practice evidence is a later academic account: access problems for migrant children, seen by Mineduc in the 1990s, were 'still evident' in the early 2000s. It covers irregular children chiefly, and evidence for this period is thin.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"The same constitutional guarantee, rewritten by Ley 19.876 (in force 22-05-2003) to cover basic and secondary education for 'toda la poblacion'. The Migrant Workers Convention (Decreto 84, art. 30) entered into force for Chile only in mid-2005, and Mineduc Ord. 07/1008 (1531) came only in August 2005, so neither counts on this date. Practice: the CRC's 2007 concluding observations found migrant and refugee children still discriminated against, 'particularly in their reduced access to education'.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Constitution art. 19 No. 10, plus CMW art. 30 (Decreto 84/2005: school access may not be denied because of irregular status) and Ley 20.370 (LGE, published 12-09-2009). The LGE's art. 4 says 'La educacion es un derecho de todas las personas' and requires a free compulsory system for the whole population. Mineduc Ord. 07/1008 (2005) allowed provisional enrolment whatever the migration status. Practice: the CMW Committee (2011) welcomed the Ord. but found that in some cases irregular children got no diploma, had their grades ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 125,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Constitution art. 19 No. 10 inciso quinto (1980 wording, before Ley 19.876): basic education is compulsory and the State must finance a free system to ensure access 'de toda la poblacion'. The CRC (in force since 1990) supported this. Both reach every child on the territory whatever their status, but no instruction specific to migrants existed yet. The only practice evidence is a later academic account: access problems for migrant children, seen by Mineduc in the 1990s, were 'still evident' in the early 2000s. It covers irregular children chiefly, and evidence for this period is thin."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Sometimes",
+      "basis": "The same constitutional guarantee, rewritten by Ley 19.876 (in force 22-05-2003) to cover basic and secondary education for 'toda la poblacion'. The Migrant Workers Convention (Decreto 84, art. 30) entered into force for Chile only in mid-2005, and Mineduc Ord. 07/1008 (1531) came only in August 2005, so neither counts on this date. Practice: the CRC's 2007 concluding observations found migrant and refugee children still discriminated against, 'particularly in their reduced access to education'."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Sometimes; Usually",
+      "basis": "Constitution art. 19 No. 10, plus CMW art. 30 (Decreto 84/2005: school access may not be denied because of irregular status) and Ley 20.370 (LGE, published 12-09-2009). The LGE's art. 4 says 'La educacion es un derecho de todas las personas' and requires a free compulsory system for the whole population. Mineduc Ord. 07/1008 (2005) allowed provisional enrolment whatever the migration status. Practice: the CMW Committee (2011) welcomed the Ord. but found that in some cases irregular children got no diploma, had their grades left out of the national register, or were refused re-enrolment."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Usually",
+      "basis": "Same legal base as 2010; the LGE was refunded into DFL 2/2009 with the guarantee unchanged. Practice: irregular children were generally admitted under provisional enrolment. But pupils on a 'RUT 100' provisional number were 'estudiantes fantasma', not registered in SIGE and cut off from benefits until Ord. 894/2016 and the IPE (January 2017). The CRC (2015) noted enduring discriminatory practices against immigrant children."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitucion Politica de la Republica",
+      "article": "Art. 19 No. 10 inciso quinto (1980 wording)",
+      "role": "predecessor",
+      "in_force": "1981-03-11 to 2003-05-22",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitucion Politica de la Republica, as amended by Ley 19.876",
+      "article": "Art. 19 No. 10 inciso quinto",
+      "role": "other_in_force",
+      "in_force": "2003-05-22 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 84 de 2005, Ministerio de Relaciones Exteriores (Convencion Internacional sobre la proteccion de los derechos de todos los trabajadores migratorios y de sus familiares)",
+      "article": "Art. 30",
+      "role": "other_in_force",
+      "in_force": "2005-06-08 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 20.370 General de Educacion (refunded in DFL 2/2009)",
+      "article": "Arts. 3 and 4",
+      "role": "other_in_force",
+      "in_force": "2009-09-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 18.962 Organica Constitucional de Ensenanza",
+      "article": "whole act (repealed in part by Ley 20.370)",
+      "role": "predecessor",
+      "in_force": "1990-03-10 to 2009-09-12",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Mineduc Oficio Ordinario 07/1008 (1531)",
+      "article": "whole instruction",
+      "role": "other_in_force",
+      "in_force": "2005-08 to 2016-11",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Mineduc Ordinario 894/2016 and Ordinario 329/2017 (IPE)",
+      "article": "whole instruction",
+      "role": "other_in_force",
+      "in_force": "2016-11 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Art. 17",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2003-05-22",
+      "instrument": "Ley 19.876, Reforma constitucional que establece la obligatoriedad y gratuidad de la educacion media",
+      "article": "Constitucion art. 19 No. 10 inciso quinto",
+      "kind": "amended",
+      "what_changed": "Replaced the inciso that made basic education compulsory and free for the whole population, extending it to secondary education. Coverage of 'toda la poblacion' was kept, so the indicator's answer is unchanged.",
+      "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-876/gdoc",
+      "passage": "Sustituyese el inciso quinto del numeral 10o del articulo 19 de la Constitucion Politica de la Republica, por el siguiente: La educacion basica y la educacion media son obligatorias, debiendo el Estado financiar un sistema gratuito con tal objeto, destinado a asegurar el acceso a ellas de toda la poblacion."
+     },
+     {
+      "date": "2005-06-08",
+      "instrument": "Decreto 84 de 2005, Ministerio de Relaciones Exteriores",
+      "article": "CMW art. 30",
+      "kind": "new_instrument",
+      "what_changed": "Promulgated the Migrant Workers Convention, which entered into force for Chile 1 July 2005. Art. 30 expressly bars denying or limiting school access because of a parent's or the child's irregular status. This adds an explicit treaty basis for irregular children.",
+      "url": "https://chile.justia.com/nacionales/decretos/d-s-n-84/gdoc",
+      "passage": "El acceso de los hijos de trabajadores migratorios a las instituciones de ensenanza preescolar o las escuelas publicas no podra denegarse ni limitarse a causa de la situacion irregular en lo que respecta a la permanencia o al empleo de cualquiera de los padres, ni del caracter irregular de la permanencia del hijo en el Estado de empleo."
+     },
+     {
+      "date": "2005-08",
+      "instrument": "Mineduc Oficio Ordinario 07/1008 (1531)",
+      "article": "whole instruction",
+      "kind": "practice",
+      "what_changed": "An administrative instruction, not law, creating provisional enrolment for migrant pupils whatever their or their parents' migration status. Known only from a secondary source (the original was not read).",
+      "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso",
+      "passage": "en agosto de 2005 el Oficio ordinario 07/1008-1531 apunto a asegurar el ingreso, la permanencia y el ejercicio de los derechos de los alumnos inmigrantes en los establecimientos educacionales, con independencia del estatus migratorio del menor y de sus padres. Para tal efecto creo la figura de la matricula provisoria"
+     },
+     {
+      "date": "2009-09-12",
+      "instrument": "Ley 20.370, Ley General de Educacion",
+      "article": "Arts. 3 and 4",
+      "kind": "new_instrument",
+      "what_changed": "Replaced the LOCE's general provisions. It states education is a right of all persons and that the State finances a free compulsory system for the whole population, with principles of universality, integration and interculturality. The coverage stays the same.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043&idVersion=2009-09-12",
+      "passage": "Articulo 4o.- La educacion es un derecho de todas las personas. ... La educacion basica y la educacion media son obligatorias, debiendo el Estado financiar un sistema gratuito destinado a asegurar el acceso a ellas de toda la poblacion"
+     },
+     {
+      "date": "2016-11",
+      "instrument": "Mineduc Ordinario 894/2016 and Ordinario 329/2017",
+      "article": "whole instruction",
+      "kind": "practice",
+      "what_changed": "Updated Ord. 07/1008 and introduced the IPE (from January 2017), which replaced 'RUT 100' so that pupils without a RUN, whatever their status, are registered and can receive benefits. This is administrative practice; the originals were not read.",
+      "url": "https://www.redalyc.org/journal/1735/173565055011/",
+      "passage": "el Ordinario 329/2017 (que complementa el ordinario 894/2016) y que establecio la entrega por parte del Ministerio de Educacion del Identificador Provisorio Escolar (IPE), un numero unico que se entrega a todos los estudiantes que no contaban con un numero de identificacion nacional definitivo (RUT), independiente a su estatus migratorio."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Concluding observations of the Committee on Migrant Workers: Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Concluding observations of the Committee on the Rights of the Child: Chile (CRC/C/CHL/CO/3)",
+      "url": "http://hrlibrary.umn.edu/crc/chile2007.html",
+      "year": 2007,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "Concluding observations of the Committee on the Rights of the Child: Chile (CRC/C/15/Add.173)",
+      "url": "http://hrlibrary.umn.edu/crc/chile2002.html",
+      "year": 2002,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "Concluding observations of the Committee on the Rights of the Child: Chile (CRC/C/CHL/CO/4-5)",
+      "url": "https://acnudh.org/26197/",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Desde una educacion intercultural para pueblos indigenas hacia otra pertinente al contexto migratorio actual. Un analisis basado en el caso de Chile",
+      "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Estado del arte sobre insercion de ninos y ninas migrantes en el sistema escolar chileno",
+      "url": "https://www.redalyc.org/journal/1735/173565055011/",
+      "year": null,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "LeyChile did not render the body of the Constitution. The 2003 change is dated from the text of Ley 19.876, and the pre-2003 wording is reconstructed from it. The LGE 2009 version and Decreto 84 were read directly. The Mineduc ordinarios (2005, 2016, 2017) were not read in the original, only through academic sources and the CMW Committee. A reported 2003 Interior Ministry circular could not be found. Practice evidence for 2000 is thin and indirect.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Constitucion Politica (DS 100/2005)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "LeyChile - Constitucion Politica, version 2005-09-22",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2005-09-22"
+     },
+     {
+      "title": "Ley 19.876 (Justia)",
+      "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-876/gdoc"
+     },
+     {
+      "title": "LeyChile - Ley 20.370",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043"
+     },
+     {
+      "title": "LeyChile - Ley 20.370 version 2009-09-12",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043&idVersion=2009-09-12"
+     },
+     {
+      "title": "Decreto 84/2005 (Justia)",
+      "url": "https://chile.justia.com/nacionales/decretos/d-s-n-84/gdoc"
+     },
+     {
+      "title": "CMW concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "CRC concluding observations Chile 2002",
+      "url": "http://hrlibrary.umn.edu/crc/chile2002.html"
+     },
+     {
+      "title": "CRC concluding observations Chile 2007",
+      "url": "http://hrlibrary.umn.edu/crc/chile2007.html"
+     },
+     {
+      "title": "CRC concluding observations Chile 2015",
+      "url": "https://acnudh.org/26197/"
+     },
+     {
+      "title": "Scielo - educacion intercultural contexto migratorio",
+      "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso"
+     },
+     {
+      "title": "Redalyc - Estado del arte insercion ninos migrantes",
+      "url": "https://www.redalyc.org/journal/1735/173565055011/"
+     }
+    ],
+    "starting_answer_concern": "The citation rests on Ley 21.325 art. 17, which was not in force on 1 January 2020 (in force February 2022). The 2020 answer must rest on Constitution art. 19 No. 10, LGE art. 4, CMW art. 30 and the Mineduc ordinarios; the protection answer still holds on that basis. The implementation rating 'Effectively Always' looks high for 2020. The sources document persistent gaps: the RUT 100 'ghost students', fixed only by the IPE in 2017; the CMW 2011 findings on diplomas and re-enrolment; and continuing problems reported around 2019-2020. 'Usually' would fit the evidence better.",
+    "confidence": "medium",
+    "notes": "No court ruling was relied on. Treaties (CRC; CMW via Decreto 84/2005) are relied on as ratified human-rights treaties binding state organs under Constitution art. 5 inciso 2. Part of the 2000 Yes rests on the constitutional text 'toda la poblacion', which is a specific free-education guarantee rather than a general equality clause. The Mineduc ordinarios are administrative instructions and are treated as practice evidence, not law."
+   },
+   {
+    "question_id": 127,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "No statute specific to migrants. Higher and adult education were reached by Constitution art. 19 No. 10 and the ratified ICESCR art. 13. Regular residents could enter public institutions on the same fee-paying terms as nationals. Study required a student visa or residence under DL 1.094, and irregular migrants lacked the ID needed to enrol. There is no practice evidence for this period; the rating is inferred."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "Same as 2000. CMW art. 43(1)(a),(c) gives documented migrant workers equal access to educational and vocational-training institutions, subject to admission requirements. It entered into force for Chile only in mid-2005, after this date. No practice evidence on adult or higher education was found for this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "CMW art. 43 now in force for regular migrant workers. Ley 20.370 (LGE, 12-09-2009) art. 3(a) says education must be within reach of all persons throughout life. Access for irregular migrants still depended on ID and visa. Practice: the CMW Committee (2011) found irregular children sometimes denied diplomas and grade registration, which blocks progression to higher studies. No direct evidence on adult education was found."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "Same legal base as 2010. Free tuition (gratuidad) did not yet exist in statute: it began in 2016 through budget-law glosas and was put into statute by Ley 21.091 in 2018. Practice: academic sources report that migrants without a definitive RUN still had problems registering for the university entrance test. Regular residents generally accessed institutions."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 21.091 sobre Educacion Superior",
+      "article": "Art. 1",
+      "role": "cited",
+      "in_force": "2018-05-29 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.091 sobre Educacion Superior",
+      "article": "Art. 103 letra a)",
+      "role": "cited",
+      "in_force": "2018-05-29 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Art. 17",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 84 de 2005, Ministerio de Relaciones Exteriores (CMW)",
+      "article": "Art. 43(1)(a),(c)",
+      "role": "other_in_force",
+      "in_force": "2005-06-08 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 20.370 General de Educacion (DFL 2/2009)",
+      "article": "Arts. 3(a) and 4",
+      "role": "other_in_force",
+      "in_force": "2009-09-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 18.962 Organica Constitucional de Ensenanza",
+      "article": "whole act",
+      "role": "predecessor",
+      "in_force": "1990-03-10 to 2009-09-12",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 27-28 (residente estudiante)",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-06-08",
+      "instrument": "Decreto 84 de 2005, Ministerio de Relaciones Exteriores",
+      "article": "CMW art. 43",
+      "kind": "new_instrument",
+      "what_changed": "Equal treatment for migrant workers in access to educational institutions and vocational training, subject to admission requirements. Part IV applies to documented migrants, so it supports the partial answer.",
+      "url": "https://chile.justia.com/nacionales/decretos/d-s-n-84/gdoc",
+      "passage": "Los trabajadores migratorios gozaran de igualdad de trato respecto de los nacionales del Estado de empleo en relacion con: a) El acceso a instituciones y servicios de ensenanza, con sujecion a los requisitos de admision ... c) El acceso a servicios e instituciones de formacion profesional y readiestramiento"
+     },
+     {
+      "date": "2009-09-12",
+      "instrument": "Ley 20.370, Ley General de Educacion",
+      "article": "Art. 3(a)",
+      "kind": "new_instrument",
+      "what_changed": "Principle of universality and lifelong education for all persons. This is general and does not change the status-dependent answer.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043&idVersion=2009-09-12",
+      "passage": "a) Universalidad y educacion permanente. La educacion debe estar al alcance de todas las personas a lo largo de toda la vida."
+     },
+     {
+      "date": "2018-05-29",
+      "instrument": "Ley 21.091 sobre Educacion Superior",
+      "article": "Arts. 1 and 103",
+      "kind": "new_instrument",
+      "what_changed": "Art. 1 makes higher education a right within reach of all persons without arbitrary discrimination. Art. 103 limits free tuition to Chileans, permanent residents, and residents who completed secondary school in Chile. This is the basis of the 2020 partial answer.",
+      "url": "https://iura.cl/21091/103",
+      "passage": "a) Ser chileno, extranjero con permanencia definitiva, o extranjero con residencia, y respecto a este ultimo caso, que haya cursado la ensenanza media completa en Chile."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Concluding observations of the Committee on Migrant Workers: Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Desde una educacion intercultural para pueblos indigenas hacia otra pertinente al contexto migratorio actual",
+      "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Ley 21.091 art. 103 (iura.cl)",
+      "url": "https://iura.cl/21091/103",
+      "year": 2018,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "not_available",
+    "sourcing_note": "Ley 21.091 arts. 1 and 103 were read in their current text; the publication date is from LeyChile. The LOCE, the DL 1.094 student-visa articles, the gratuidad budget glosas of 2016-2017 and the beca and loan rules could not be read. The pre-2018 answers are therefore inferred from the constitutional and treaty base and from general knowledge of admission practice.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - Ley 21.091",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1118991"
+     },
+     {
+      "title": "Ley 21.091 art. 103 (iura.cl)",
+      "url": "https://iura.cl/21091/103"
+     },
+     {
+      "title": "Decreto 84/2005 (Justia)",
+      "url": "https://chile.justia.com/nacionales/decretos/d-s-n-84/gdoc"
+     },
+     {
+      "title": "LeyChile - Ley 20.370 version 2009-09-12",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1006043&idVersion=2009-09-12"
+     },
+     {
+      "title": "LeyChile - DL 1.094",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "LeyChile - DL 1.094 version 2011",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "CMW concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "Scielo - educacion intercultural contexto migratorio",
+      "url": "https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0718-10432020000100337&lng=es&nrm=iso"
+     }
+    ],
+    "starting_answer_concern": "The citation includes Ley 21.325 art. 17, which was not in force on 1 January 2020; the 2020 answer rests on Ley 21.091 arts. 1 and 103 alone. The citation also says 'permanent residents', but art. 103 reaches temporary residents too if they completed secondary school in Chile.",
+    "confidence": "low",
+    "notes": "No court ruling was relied on. The CMW (Decreto 84/2005) is treated as binding under Constitution art. 5 inciso 2. The pre-2018 partial answer rests on constitutional and treaty provisions plus visa-based admission, with little direct sourcing. Practice evidence on adult and vocational education (EPJA, SENCE) for migrants was not found for any period."
+   }
+  ]
+ }
 }
