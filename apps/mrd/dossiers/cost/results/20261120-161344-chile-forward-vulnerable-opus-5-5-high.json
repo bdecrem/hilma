@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile vulnerable claude-opus-5-5 high",
- "pid": 45480,
  "step": "forward",
  "slug": "chile",
  "chunk": "vulnerable",
@@ -58,5 +57,757 @@
   "user": 102
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:01:32.178Z",
+ "minutes": 47.79,
+ "meters_after": {
+  "at": "2026-11-21T01:01:32.182Z",
+  "window": {
+   "pct": 11,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 44,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 11,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 44,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 11% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 44% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 139700,
+   "output": 26917,
+   "cache_read": 1592559,
+   "cache_write": 121944,
+   "cost_usd": 1.717,
+   "total": 1881120
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 139660,
+    "output": 11257,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3750,
+    "cost_usd": 0.1096
+   },
+   "claude-opus-5-5": {
+    "input": 40,
+    "output": 15660,
+    "cache_read": 1592559,
+    "cache_write": 121944,
+    "thinking": 3647,
+    "cost_usd": 1.6074
+   }
+  }
+ },
+ "turns": 30,
+ "calls": 47,
+ "duration_ms": 464396,
+ "duration_api_ms": 360248,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-21T00:13:51.864Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 7 | Artículo 13 | Artículo 41 | Artículo 42 | Artículo 70 | Ley 21.655 | versión",
+   "ok": true,
+   "chars": 8288
+  },
+  {
+   "at": "2026-11-21T00:14:07.937Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 7.- | Artículo 13.- | Artículo 22.- | Artículo 28.- | Artículo 41.- | Artículo 42.- | Artículo 70.-",
+   "ok": true,
+   "chars": 13071
+  },
+  {
+   "at": "2026-11-21T00:14:15.228Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 4.- | Artículo 5.- | 13. | siguientes subcategorías | humanitarias | Artículo 132 bis | Artículo 131",
+   "ok": true,
+   "chars": 16210
+  },
+  {
+   "at": "2026-11-21T00:16:29.118Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2024/02/20/43781/01/2456402.pdf",
+   "find": "Artículo 2 | ley N° 21.325 | niños | discapacidad | mujeres",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T00:17:13.689Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/08/07/43621/01/2357278.pdf",
+   "find": "Artículo único | Ley núm",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T00:24:31.678Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "Artículo 2 | ley N° 21.325 | artículo 131 | Promulgación",
+   "ok": true,
+   "chars": 8542
+  },
+  {
+   "at": "2026-11-21T00:25:01.895Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "Artículo único | ley Nº 21.325 | Promulgación",
+   "ok": true,
+   "chars": 2551
+  },
+  {
+   "at": "2026-11-21T00:25:08.202Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "Artículo único | ley Nº 21.325 | Promulgación",
+   "ok": true,
+   "chars": 2377
+  },
+  {
+   "at": "2026-11-21T00:25:42.152Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325 | Promulgación",
+   "ok": true,
+   "chars": 4572
+  },
+  {
+   "at": "2026-11-21T00:30:16.551Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1176043",
+   "find": "Artículo 10.- | niños, niñas | embarazadas | violencia | discapacidad | Decreto",
+   "ok": true,
+   "chars": 15613
+  },
+  {
+   "at": "2026-11-21T00:30:20.973Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043",
+   "find": "Versión: | Última modificación | Tipo Versión Desde Hasta",
+   "ok": true,
+   "chars": 3419
+  },
+  {
+   "at": "2026-11-21T00:30:35.042Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idParte=10221381&idVersion=",
+   "find": "Tipo Versión Desde Hasta",
+   "ok": true,
+   "chars": 2174
+  },
+  {
+   "at": "2026-11-21T00:33:03.564Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1010903",
+   "find": "Versión: | Tipo Versión Desde Hasta",
+   "ok": true,
+   "chars": 3967
+  },
+  {
+   "at": "2026-11-21T00:33:25.927Z",
+   "url": "https://serviciomigraciones.cl/sermig-ministerio-mujer-jornada-migracion-equidad-genero/",
+   "find": "baja cobertura | violencia | embarazo | permisos",
+   "ok": true,
+   "chars": 3047
+  },
+  {
+   "at": "2026-11-21T00:33:41.264Z",
+   "url": "https://eldesconcierto.cl/2025/08/27/27-ninos-venezolanos-obtienen-fallo-que-permite-usar-partidas-de-nacimiento-para-residencia-ante-falta-de-consulados-en-chile",
+   "find": "Corte Suprema | Servicio | partidas de nacimiento | ilegal",
+   "ok": true,
+   "chars": 5612
+  },
+  {
+   "at": "2026-11-21T00:35:41.127Z",
+   "url": "https://www.cnnchile.com/pais/corte-suprema-ordena-resolver-solicitud-de-visado-temporal-a-nina-venezolana-por-razones-humanitarias/",
+   "find": "Corte Suprema | plazo | niña | 2022 | 2023",
+   "ok": true,
+   "chars": 2057
+  },
+  {
+   "at": "2026-11-21T00:47:50.959Z",
+   "url": "https://www.theclinic.cl/2022/02/17/defensoria-de-la-ninez-migratoria-en-colchane/",
+   "find": "niños | Defensoría | Colchane",
+   "ok": true,
+   "chars": 3478
+  },
+  {
+   "at": "2026-11-21T00:47:51.940Z",
+   "url": "https://www.elmostrador.cl/noticias/pais/2024/07/01/la-doble-indiferencia-ante-los-ninos-migrantes-abandonados-en-el-desierto/",
+   "find": "niños | no acompañados | Defensoría | reconduc",
+   "ok": true,
+   "chars": 5601
+  }
+ ],
+ "searches": [
+  "Ley 21655 modifica ley 21.325 reconducción leychile idNorma",
+  "Ley 21589 Ley 21590 modifica ley 21.325 migración 2023 bcn.cl leychile",
+  "Decreto 177 2022 subcategorías migratorias residencia temporal modificación decreto 2024 2025 leychile",
+  "\"Decreto 177\" \"subcategorías migratorias de residencia temporal\" bcn.cl leychile navegar",
+  "Defensoría de la Niñez niños migrantes residencia temporal artículo 41 ley 21.325 informe 2024 reconducción niños Colchane",
+  "visa víctimas violencia intrafamiliar mujeres migrantes Chile SERMIG permisos otorgados 2023 2024 embarazadas residencia temporal",
+  "niños niñas adolescentes migrantes visa residencia temporal SERMIG demora Corte Suprema amparo 2023 2024 \"niños\" \"sin visa\"",
+  "personas migrantes con discapacidad Chile acceso permiso de residencia SENADIS credencial discapacidad migrantes irregulares barreras informe",
+  "2022 Defensoría de la Niñez niños migrantes visa temporal artículo 41 Servicio Nacional de Migraciones solicitudes pendientes niños Colchane frontera no acompañados"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":3,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 4 (interés superior del niño; cited by the MRD as art. 7)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 7\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 22 No. 2\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 28\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 41\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 70 No. 8\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 177 (2022), Ministerio del Interior y Seguridad Pública, establece las subcategorías migratorias de residencia temporal\",\"article\":\"Art. 10 letra h) § 5; Art. 45\",\"enacted\":\"2022-05-14\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-08-07\",\"instrument\":\"Ley 21.590\",\"article\":\"Ley 21.325 art. 134, inciso final\",\"kind\":\"amended\",\"what_changed\":\"Extended the detention period for carrying out administrative expulsions from 48 hours to five calendar days. It does not touch the child-specific provisions.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21590\",\"passage\":\"Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 3,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 4 (interés superior del niño; cited by the MRD as art. 7)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 7",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 22 No. 2",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 28",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 41",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 70 No. 8",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022), Ministerio del Interior y Seguridad Pública, establece las subcategorías migratorias de residencia temporal",
+      "article": "Art. 10 letra h) § 5; Art. 45",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134, inciso final",
+      "kind": "amended",
+      "what_changed": "Extended the detention period for carrying out administrative expulsions from 48 hours to five calendar days. It does not touch the child-specific provisions.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5 (and notification rules)",
+      "kind": "amended",
+      "what_changed": "Added alternative ways of notifying the start of expulsion proceedings (address or email). It does not touch arts. 4, 22, 28, 41 or 70.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno: \"En su primer contacto con el extranjero que ha ingresado al país, la autoridad contralora deberá apercibirlo a que indique la dirección de su estadía."
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Extended passenger-list duties to domestic transport. Not relevant to the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Artículo 2.- Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325, de Migración y Extranjería: 1. Intercálase entre las expresiones \"transporte internacional\" y \"de pasajeros\", la siguiente: \"y nacional\"."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131 inciso segundo (reconducción); Ley 20.430 several articles",
+      "kind": "amended",
+      "what_changed": "Widened immediate return (reconducción) to people who have already entered, up to 10 km from the land border, and lengthened the re-entry ban from six months to one year. It does not amend the child-specific provisions (arts. 4, 28, 41).",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería, del siguiente modo: a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\"."
+     }
+    ],
+    "implementation_then_now": "2023: the child-specific framework (art. 41 immediate temporary residence regardless of the parents' status; Decree 177 art. 45 with priority processing) was being applied. But the Defensoría de la Niñez reported in Feb 2022 that PDI had no parameters for handling children during reconducción at Colchane. 2024-2025: the El Mostrador reporting (2024) describes unaccompanied adolescents and overcrowded Mejor Niñez residences. The Corte Suprema repeatedly granted amparos (2025, including one for 27 Venezuelan children) after SERMIG archived children's temporary-residence applications for lack of passports, calling the Service's conduct illegal. The protection is applied in the main, with documented gaps that the courts correct. This is consistent with 'Usually' on both dates, and there is no evidence of a clear overall shift.",
+    "practice_sources": [
+     {
+      "title": "Defensoría de la Niñez fustigó al gobierno por manejo de crisis migratoria en Colchane (The Clinic)",
+      "url": "https://www.theclinic.cl/2022/02/17/defensoria-de-la-ninez-migratoria-en-colchane/",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "La doble indiferencia ante los niños migrantes abandonados en el desierto (El Mostrador)",
+      "url": "https://www.elmostrador.cl/noticias/pais/2024/07/01/la-doble-indiferencia-ante-los-ninos-migrantes-abandonados-en-el-desierto/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "27 niños venezolanos obtienen fallo que permite usar partidas de nacimiento para residencia (El Desconcierto)",
+      "url": "https://eldesconcierto.cl/2025/08/27/27-ninos-venezolanos-obtienen-fallo-que-permite-usar-partidas-de-nacimiento-para-residencia-ante-falta-de-consulados-en-chile",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Corte Suprema ordena resolver solicitud de visado temporal por razones humanitarias a niña venezolana (CNN Chile)",
+      "url": "https://www.cnnchile.com/pais/corte-suprema-ordena-resolver-solicitud-de-visado-temporal-a-nina-venezolana-por-razones-humanitarias/",
+      "year": null,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The LeyChile version list of Ley 21.325 was read: versions of 07-08-2023, 18-08-2023, 22-09-2023, 20-02-2024, 01-04-2025 and 02-06-2026 (the last one is outside the window). Each amending act in the window was opened, and none touches the cited articles. Decree 177 has only one version ('Versión Única', 14-05-2022). The court rulings were read only through press reports, not in full.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 versions (parte)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idParte=10221381&idVersion="
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "LeyChile – Decreto 177 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1176043"
+     },
+     {
+      "title": "LeyChile – Decreto 177 (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     },
+     {
+      "title": "The Clinic 2022 Colchane",
+      "url": "https://www.theclinic.cl/2022/02/17/defensoria-de-la-ninez-migratoria-en-colchane/"
+     },
+     {
+      "title": "El Mostrador 2024 niños migrantes",
+      "url": "https://www.elmostrador.cl/noticias/pais/2024/07/01/la-doble-indiferencia-ante-los-ninos-migrantes-abandonados-en-el-desierto/"
+     },
+     {
+      "title": "El Desconcierto 2025 fallo 27 niños",
+      "url": "https://eldesconcierto.cl/2025/08/27/27-ninos-venezolanos-obtienen-fallo-que-permite-usar-partidas-de-nacimiento-para-residencia-ante-falta-de-consulados-en-chile"
+     },
+     {
+      "title": "CNN Chile – Corte Suprema visado niña venezolana",
+      "url": "https://www.cnnchile.com/pais/corte-suprema-ordena-resolver-solicitud-de-visado-temporal-a-nina-venezolana-por-razones-humanitarias/"
+     }
+    ],
+    "starting_answer_concern": "The citation puts the best-interest principle in art. 7. Art. 7 is 'Migración segura, ordenada y regular'; the best interest of the child is art. 4 ('Interés superior del niño, niña y adolescente… cualquiera sea la situación migratoria de sus padres'). The children's visa sits in Decree 177 art. 10 letter h) § 5 and art. 45, not in art. 10 alone. The 'Yes' answer holds.",
+    "confidence": "medium",
+    "notes": "The protection answer rests on statute and decree, not on court rulings. The 2025 Supreme Court amparos are used only as practice evidence. The Ley 21.730 change (in force April 2025) to the definition of 'Ministerio' in art. 1 does not bear on the indicator. The 02-06-2026 Ley 21.816 version falls after the window. 2025 shows a recurring pattern: SERMIG archived child applications for lack of Venezuelan passports, and the courts corrected it. A reviewer could see this as a slide toward 'Sometimes; Usually', but the evidence is too thin to record a shift."
+   },
+   {
+    "question_id": 5,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 22 No. 2",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 70 (No. 8 razones humanitarias)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022), establece las subcategorías migratorias de residencia temporal",
+      "article": "Art. 10 letra h) §§ 2 and 4; Arts. 38-40, 43-44",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131 inciso segundo",
+      "kind": "amended",
+      "what_changed": "Widened reconducción (immediate return) at the border. It does not touch arts. 13, 22 or 70 or the women-specific permits in Decree 177.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería, del siguiente modo: a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Added notification rules for expulsion proceedings. Not relevant to the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     }
+    ],
+    "implementation_then_now": "The permits for women victims of domestic or gender violence and for pregnant women exist and are granted. SERMIG's own 2025 gender seminar reported that these permits went to women and noted progress on humanitarian permits. It also flagged 'baja cobertura en permisos otorgados a mujeres extranjeras afectadas por violencia intrafamiliar o de género' (data for 2024). The VIF permit can be requested only by a family court or the prosecutor's office, which limits uptake. No source for the period before 2023 was found, and nothing documents a change between the two dates. The starting 'Usually' is kept for both dates, though the low-coverage finding suggests a lower level.",
+    "practice_sources": [
+     {
+      "title": "SERMIG y Ministerio de la Mujer desarrollaron jornada sobre migración con enfoque de género",
+      "url": "https://serviciomigraciones.cl/sermig-ministerio-mujer-jornada-migracion-equidad-genero/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 21.325 version history and the amending acts were read, as was Decree 177 (single version, unchanged). Practice evidence is thin: one official SERMIG source, and the SERMIG PMG Género PDFs could not be opened because PDF extraction failed.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Decreto 177 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1176043"
+     },
+     {
+      "title": "LeyChile – Decreto 177 (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     },
+     {
+      "title": "SERMIG jornada género",
+      "url": "https://serviciomigraciones.cl/sermig-ministerio-mujer-jornada-migracion-equidad-genero/"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds through Decree 177 arts. 10 h) §2/§4, 38 ('podrá otorgarse a mujeres extranjeras que sean víctimas de violencia intrafamiliar o de violencia de género') and 43-44 (pregnancy). Art. 13 of Ley 21.325 is only a general equality clause. On implementation, SERMIG's own finding of low coverage of the VIF permits suggests 'Sometimes; Usually' may fit better than 'Usually'.",
+    "confidence": "low",
+    "notes": "Art. 22 No. 2 of Ley 21.325 names 'mujeres' among the vulnerable groups the Política Nacional must consider; it is unchanged. The protection answer relies on statute and decree, not on court rulings."
+   },
+   {
+    "question_id": 7,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 1 No. 13 (as cited; it defines 'Permiso de Residencia')",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 22 No. 2",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 42",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 20.422 sobre igualdad de oportunidades e inclusión social de personas con discapacidad",
+      "article": "Whole law (referenced by art. 42)",
+      "enacted": "2010-02-10",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Decreto 177 (2022)",
+      "article": "Arts. 12 d), 13, 40 (hijos con discapacidad as dependants)",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 art. 1 No. 12 (definition of 'Ministerio')",
+      "kind": "amended",
+      "what_changed": "Changed the definition of the responsible Ministry (Ministerio del Interior) when the security portfolio was split off. Numbering of art. 1 is unchanged; there is no effect on disability provisions.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "12. Ministerio: Ministerio del InteriorLey 21730 Art. sexto N° 1 D.O. 05.02.2025. 13. Permiso de Residencia: Autorización que habilita la residencia legal en Chile"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131 inciso segundo",
+      "kind": "amended",
+      "what_changed": "Reconducción reform. It does not touch art. 42 or art. 22.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería"
+     }
+    ],
+    "implementation_then_now": "No practice evidence specific to migrants with disabilities and their residence applications (art. 42 support or representation) could be read for either period. A 2022 Incluyeme study on Venezuelan migrants with disabilities, seen only in search results as a PDF that could not be opened, reportedly found barriers in regularisation. The starting 'Usually' is kept for both dates for lack of evidence of a shift. The rating is effectively inferred.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 21.325 version history was read and art. 42 is unchanged through every version. The version history of Ley 20.422 was seen only in part: its latest modification is Ley 21.805 (2026), and the amendments inside the window were not traced. No practice source on migrants with disabilities could be opened.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 20.422",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1010903"
+     },
+     {
+      "title": "LeyChile – Decreto 177 JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1176043"
+     }
+    ],
+    "starting_answer_concern": "Art. 1 No. 13 of Ley 21.325 defines 'Permiso de Residencia', not disability; disability appears in art. 1 No. 7 (discrimination). The operative provision is art. 42: 'El Estado propenderá a crear todas las condiciones necesarias para que las personas con discapacidad… soliciten sus permisos de residencia', with application through a carer or representative. The 'Yes' holds. The 'Usually' rating has no evidence behind it.",
+    "confidence": "low",
+    "notes": "The protection answer rests on statute (Ley 21.325 arts. 22 No. 2 and 42; Decree 177 arts. 12 d) and 40 for children with disabilities as dependants). No court ruling was relied on."
+   }
+  ]
+ }
 }
