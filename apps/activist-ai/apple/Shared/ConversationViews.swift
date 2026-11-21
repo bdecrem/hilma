@@ -132,6 +132,8 @@ struct RequestView: View {
 }
 
 extension Metrics {
+  /// The box's model pick: one width whatever it says (OLA-344).
+  static let pickWidth: CGFloat = 196
   /// The step icons and "You" share one left column, so the words after them line up.
   static let youColumn: CGFloat = 24
 }
@@ -547,9 +549,21 @@ struct Composer: View {
 struct QuietMenu<Items: View>: View {
   var label: String
   var help: String
+  /// A fixed width, so what the label says never changes the size of what holds it (OLA-344: the
+  /// box's pick grew from "Ola" to "DeepSeek V4 Pro, this session", the window's columns took a new
+  /// minimum size in the middle of a layout pass, again and again, and AppKit ended the app).
+  var width: CGFloat? = nil
   @ViewBuilder var items: Items
 
   var body: some View {
+    if let width {
+      menu.lineLimit(1).truncationMode(.tail).frame(width: width, alignment: .trailing).help(help)
+    } else {
+      menu.fixedSize().help(help)
+    }
+  }
+
+  private var menu: some View {
     Menu { items } label: {
       HStack(spacing: 3) {
         Text(label)
@@ -559,8 +573,7 @@ struct QuietMenu<Items: View>: View {
       .contentShape(Rectangle())
     }
     .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
-    .controlSize(.small).fixedSize()
-    .help(help)
+    .controlSize(.small)
   }
 }
 
@@ -581,7 +594,7 @@ struct EngineMenu: View {
     if store.offersEveryChoice {
       // Every model that can do a request here, picked before the first request or any other; a
       // pick sticks for this session, and a new session starts on Ola.
-      QuietMenu(label: store.nextChoice.boxLabel(nextOnly: store.nextOnly), help: "Who does your requests in this session. A new session starts on Ola.") {
+      QuietMenu(label: store.nextChoice.boxLabel(nextOnly: store.nextOnly), help: "Who does your requests in this session. A new session starts on Ola.", width: Metrics.pickWidth) {
         Picker("Who does this", selection: $store.nextChoice) {
           // Each with its typed command and its shortcut (OLA-337, OLA-339): "DeepSeek V4 Pro   /deepseek  ⌥⌘3".
           ForEach(store.choices.contains(store.nextChoice) ? store.choices : store.choices + [store.nextChoice]) { c in Text("\(c.name)    \(c.hint)").tag(c) }

@@ -23,6 +23,8 @@
 #   --try-again <model>  (mac) after the last answer, that request again with this model, by its
 #          shortcut (Control-Option-Command-<n>, Model, Try Again With) (OLA-340).
 #   --small         (mac) the window at 760 by 560.
+#   --size WxH      (mac) the window at that size, e.g. 1400x900 (OLA-344).
+#   --pick-rounds N (mac, with --pick) then Ola and the pick again, N times, by the shortcuts (OLA-344).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
 # Signs in as the made-up person `appdriver` (tools/drive-account.mjs), never anyone real: a fresh
@@ -44,7 +46,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -58,6 +60,8 @@ while [ $# -gt 0 ]; do
     --pick) PICK="$2"; shift 2 ;;
     --try-again) TRYAGAIN="$2"; shift 2 ;;
     --small) SMALL=1; shift ;;
+    --size) SIZE="$2"; shift 2 ;;
+    --pick-rounds) ROUNDS="$2"; shift 2 ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -125,14 +129,16 @@ if [ "$APPKIND" = mac ]; then
   FOLDER=""
   if [ "$WHERE" = local ]; then FOLDER="$RUN/folder"; mkdir -p "$FOLDER"; fi
   mkdir -p "$RUN/home"
-  python3 - "$RUN/script.json" "$OUT" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$PICK" "$TRYAGAIN" "$SMALL" <<'PY'
+  python3 - "$RUN/script.json" "$OUT" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$PICK" "$TRYAGAIN" "$SMALL" "$SIZE" "$ROUNDS" <<'PY'
 import json, sys
-f, out, pw, where, project, folder, card, wait, says, pick, again, small = sys.argv[1:]
+f, out, pw, where, project, folder, card, wait, says, pick, again, small, size, rounds = sys.argv[1:]
 s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "project": project, "says": json.loads(says), "card": card, "waitSeconds": float(wait)}
 if folder: s["folder"] = folder
 if pick: s["pick"] = pick
 if again: s["tryAgain"] = again
 if small: s["small"] = True
+if size: s["size"] = size
+if rounds: s["pickRounds"] = int(rounds)
 json.dump(s, open(f, "w"))
 PY
   prepare_account

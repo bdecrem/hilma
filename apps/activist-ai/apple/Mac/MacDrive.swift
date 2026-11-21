@@ -54,6 +54,10 @@ enum MacDrive {
     var pick: String?
     var tryAgain: String?
     var small: Bool?
+    /// The window's size, "1400x900" (OLA-344: the crash came at a person's own window size).
+    var size: String?
+    /// Picks the model this many times more, back and forth with Ola, before the first sentence (OLA-344).
+    var pickRounds: Int?
   }
 
   static var script: Script?
@@ -231,6 +235,7 @@ enum MacDrive {
     key(.return, in: sheet)
     _ = try await until(10, "Return did not start the session (Start disabled?); the sheet stayed") { window.attachedSheet == nil ? true : nil }
     if s.small == true { window.setContentSize(NSSize(width: 760, height: 560)) }
+    if let z = s.size?.split(separator: "x").compactMap({ Double($0) }), z.count == 2 { window.setContentSize(NSSize(width: z[0], height: z[1])) }
     try await settle(window, 1)
     step("a new session", shot: "new-session-started")
 
@@ -239,6 +244,16 @@ enum MacDrive {
       guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name); the choices are \(EngineChoice.all.map(\.name).joined(separator: ", "))") }
       _ = try await until(60, "\(c.name) is not offered here (the box lists \(store.choices.map(\.name).joined(separator: ", ")))") { store.choices.contains(c) ? true : nil }
       try await viaMenu(["Model", c.name], key: c.digit, modifiers: [.command, .option], in: window) { store.nextChoice == c }
+      // Back and forth with Ola, each time by the shortcut, the window settling between (OLA-344:
+      // build 30 crashed on Bart's Mac at the pick, every time, with Ola working on the Mac).
+      for r in 0..<(s.pickRounds ?? 0) {
+        for x in [EngineChoice.ola, c] {
+          shortcut("\(x.digit)", code: digitCode(x.digit), in: window, modifiers: [.command, .option])
+          _ = try await until(5, "round \(r + 1): Option-Command-\(x.digit) did not pick \(x.name)") { store.nextChoice == x ? true : nil }
+          try await settle(window, 0.6)
+        }
+      }
+      if let r = s.pickRounds, r > 0 { say("picked \(c.name) and Ola back and forth \(r) times; the app is still running") }
       record.picked = c.name
       try await settle(window, 0.8)
       step("picked \(c.name) at the box (Option-Command-\(c.digit))", shot: "picked")

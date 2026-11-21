@@ -84,6 +84,7 @@ struct MacRoot: View {
   var body: some View {
     NavigationSplitView {
       Sidebar(store: store, whereOla: whereOla, peerPreview: peerPreview)
+        .frame(minHeight: 0, maxHeight: .infinity)
         .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 320)
     } detail: {
       VStack(spacing: 0) {
@@ -92,11 +93,15 @@ struct MacRoot: View {
           .conversationPaper(treatment, filesShown: filesShown)
       }
       .background(treatment == .plain ? Ola.paper : Ola.room)
+      // Each column's smallest and largest size are fixed here, never read from what is in it
+      // (OLA-344: a size that followed the content changed in the middle of a layout pass).
+      .frame(minWidth: 360, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
       .inspector(isPresented: $filesShown) {
         // The plain window: the system's own inspector edge, no drawn margin.
         Group {
           if treatment == .plain { FilesPanel(store: store) } else { FilesPanel(store: store).filesPaper(treatment) }
         }
+        .frame(minHeight: 0, maxHeight: .infinity)
         .inspectorColumnWidth(min: 200, ideal: 248, max: 400)
       }
     }
