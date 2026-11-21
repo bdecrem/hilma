@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina labor_c claude-opus-5-5 high",
- "pid": 78724,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "labor_c",
@@ -57,5 +56,879 @@
   "user": 176
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:39:54.130Z",
+ "minutes": 6.2,
+ "meters_after": {
+  "at": "2026-11-21T10:39:54.130Z",
+  "window": {
+   "pct": 35,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 35,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 35% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 219056,
+   "output": 36867,
+   "cache_read": 2034965,
+   "cache_write": 129647,
+   "cost_usd": 2.0539,
+   "total": 2420535
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 219012,
+    "output": 14854,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4532,
+    "cost_usd": 0.1693
+   },
+   "claude-opus-5-5": {
+    "input": 44,
+    "output": 22013,
+    "cache_read": 2034965,
+    "cache_write": 129647,
+    "thinking": 5238,
+    "cost_usd": 1.8846
+   }
+  }
+ },
+ "turns": 45,
+ "calls": 65,
+ "duration_ms": 371368,
+ "duration_api_ms": 304848,
+ "pages_read": 29,
+ "pages": [
+  {
+   "at": "2026-11-21T10:33:57.765Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6 | seguridad social | ARTICULO 125",
+   "ok": true,
+   "chars": 5493
+  },
+  {
+   "at": "2026-11-21T10:33:58.900Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm",
+   "find": "ARTICULO 111 | ARTICULO 112 | ARTICULO 113",
+   "ok": true,
+   "chars": 6470
+  },
+  {
+   "at": "2026-11-21T10:33:59.551Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm",
+   "find": "ARTICULO 19 | ARTICULO 2",
+   "ok": true,
+   "chars": 5450
+  },
+  {
+   "at": "2026-11-21T10:34:05.375Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6 | ARTICULO 125 | ARTICULO 126",
+   "ok": true,
+   "chars": 4455
+  },
+  {
+   "at": "2026-11-21T10:34:06.417Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm",
+   "find": "Artículo 19 | Prestación básica universal | Requisitos",
+   "ok": true,
+   "chars": 4453
+  },
+  {
+   "at": "2026-11-21T10:34:17.125Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "seguridad social | previsi | ARTICULO 30 | ARTICULO 31 | ARTICULO 102 | tareas remuneradas",
+   "ok": true,
+   "chars": 6141
+  },
+  {
+   "at": "2026-11-21T10:34:31.167Z",
+   "url": "https://repositorio.mpd.gov.ar/documentos/Reyes Aguilera, Daniela c. Estado Nacional.pdf",
+   "find": "veinte años | inconstitucional | 4 de septiembre | Por ello",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:34:42.281Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-432-1997-43325/texto",
+   "find": "extranjeros | veinte | residencia",
+   "ok": true,
+   "chars": 4418
+  },
+  {
+   "at": "2026-11-21T10:34:43.834Z",
+   "url": "https://repositorio.mpd.gov.ar/documentos/Reyes%20Aguilera,%20Daniela%20c.%20Estado%20Nacional.pdf",
+   "find": "veinte años | inconstitucional | Por ello",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:34:55.142Z",
+   "url": "https://www.diariojudicial.com/news-19781-la-invalidez-no-tiene-banderas",
+   "find": "veinte | Corte | inconstitucional",
+   "ok": true,
+   "chars": 3376
+  },
+  {
+   "at": "2026-11-21T10:34:56.440Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/155000-159999/159466/norma.htm",
+   "find": "extranjeros | residencia legal | tres (3) años | ARTICULO 14 bis",
+   "ok": true,
+   "chars": 3402
+  },
+  {
+   "at": "2026-11-21T10:35:08.052Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "social security | non-contributory | residence | unemployment",
+   "ok": true,
+   "chars": 5416
+  },
+  {
+   "at": "2026-11-21T10:35:15.360Z",
+   "url": "https://www.acnur.org/fileadmin/Documentos/BDL/2012/8460.pdf",
+   "find": "seguridad social | no contributiv | residencia",
+   "ok": true,
+   "chars": 1596
+  },
+  {
+   "at": "2026-11-21T10:35:52.080Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "29. While welcoming | 30. The Committee | 31.",
+   "ok": true,
+   "chars": 3326
+  },
+  {
+   "at": "2026-11-21T10:36:02.235Z",
+   "url": "https://paho.org/sites/default/files/2021-12/068.pdf",
+   "find": "Seguridad social | no contributivas | desempleo | 48.",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:36:03.261Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/125000-129999/125990/norma.htm",
+   "find": "Artículo 54 | seguro de desempleo | Artículo 27",
+   "ok": true,
+   "chars": 3456
+  },
+  {
+   "at": "2026-11-21T10:36:12.011Z",
+   "url": "https://docs.argentina.justia.com/federales/decretos/decreto-n-582-2003-aug-14-2003.pdf",
+   "find": "extranjeros | CUARENTA | residencia",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:36:26.360Z",
+   "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000582_2003_08_12",
+   "find": "extranjeros | CUARENTA | residencia",
+   "ok": true,
+   "chars": 2597
+  },
+  {
+   "at": "2026-11-21T10:36:28.225Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-87632/texto",
+   "find": "extranjeros | CUARENTA | residencia",
+   "ok": true,
+   "chars": 2614
+  },
+  {
+   "at": "2026-11-21T10:36:43.370Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/260000-264999/263690/norma.htm",
+   "find": "Pensión Universal para el Adulto Mayor | extranjeros | diez (10) años | Artículo 13",
+   "ok": true,
+   "chars": 3522
+  },
+  {
+   "at": "2026-11-21T10:37:07.242Z",
+   "url": "https://www.argentina.gob.ar/node/159819",
+   "find": "extranjeros | veinte (20) | ARTÍCULO 13",
+   "ok": true,
+   "chars": 3306
+  },
+  {
+   "at": "2026-11-21T10:37:16.202Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/124232/norma.htm",
+   "find": "Artículo 54 | Artículo 27 | seguro de desempleo",
+   "ok": true,
+   "chars": 4516
+  },
+  {
+   "at": "2026-11-21T10:37:17.911Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 6 | seguridad social",
+   "ok": true,
+   "chars": 3452
+  },
+  {
+   "at": "2026-11-21T10:37:21.622Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/148620/20160728",
+   "find": "extranjeros | ARTÍCULO 13 | Pensión Universal",
+   "ok": true,
+   "chars": 3401
+  },
+  {
+   "at": "2026-11-21T10:37:36.535Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2019/09/committee-migrant-workers-raises-concerns-about-expedited",
+   "find": "seguridad social | social security | pension | residence | desempleo",
+   "ok": true,
+   "chars": 1862
+  },
+  {
+   "at": "2026-11-21T10:37:37.407Z",
+   "url": "https://ri.conicet.gov.ar/items/3ed463cc-0313-4ac0-a04d-18e83c92d1d4/full",
+   "find": "seguridad social | ANSES | jubilación | pensión",
+   "ok": true,
+   "chars": 2858
+  },
+  {
+   "at": "2026-11-21T10:37:56.262Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2016/10/IA2002-2003-14-Migrantes-una-deuda-pendiente.pdf",
+   "find": "seguridad social | jubilación | pensión",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:38:04.633Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=412",
+   "find": "Decreto 267/2006 | Ley 25.371 | Decreto 90/2023 | Ley 24.347",
+   "ok": true,
+   "chars": 3430
+  },
+  {
+   "at": "2026-11-21T10:38:18.272Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14 bis | Artículo 20",
+   "ok": true,
+   "chars": 3421
+  }
+ ],
+ "searches": [
+  "Ley 22.439 infoleg texto ley general de migraciones y fomento de la inmigración",
+  "Reyes Aguilera CSJN 2007 pensión por invalidez extranjera veinte años residencia decreto 432/97 inconstitucional",
+  "decreto 432/1997 pensiones no contributivas invalidez reglamentación extranjeros residencia infoleg",
+  "CMW/C/ARG/CO/1 2011 concluding observations Argentina social security migrant workers asignación universal por hijo residencia",
+  "CMW/C/ARG/CO/2 2019 Argentina seguridad social prestaciones no contributivas residencia trabajadores migratorios observaciones finales",
+  "Ley 26.202 Convención Internacional protección derechos todos los trabajadores migratorios infoleg aprobación",
+  "argentina.gob.ar normativa decreto 582/2003 pensiones a la vejez extranjeros cuarenta años residencia texto",
+  "argentina.gob.ar normativa nacional Ley 26202 convención trabajadores migratorios texto",
+  "\"Reyes Aguilera\" fallo texto completo saij Fallos 330:3853 \"decreto 432/97\" votos Lorenzetti Zaffaroni Petracchi Argibay",
+  "infoleg Ley 27.260 Pensión Universal para el Adulto Mayor artículo 13 extranjeros residencia legal mínima diez años",
+  "servicios.infoleg.gob.ar Ley 26202 trabajadores migratorios 2007 norma.htm",
+  "Ley 26202 Convención trabajadores migratorios",
+  "migrantes acceso seguridad social Argentina obstáculos práctica ANSES jubilación pensiones no contributivas CELS informe 2015 OR 2016 OR 2017 OR 2018 OR 2019",
+  "\"27260\" ley texto infoleg \"ciudadanos extranjeros, con residencia legal mínima acreditada en el país de veinte (20) años\""
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":109,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 22.439 arts. 26-29 let permanent, temporary and authorised residents work 'gozando de la protección de las leyes que rigen la materia'. The contributory pension system (Ley 24.241, art. 2 compulsory membership, art. 19 PBU) makes no distinction by nationality. Non-contributory old-age and disability pensions required foreigners to prove 20 years' continuous residence (Decreto 432/97, Anexo I, 1.e). So the answer is the same as in 2020. I found no practice evidence I could read for this period (CELS 2002-03 report located but not readable), so the rating is carried over.\"},{\"date\":\"2005-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 25.871 (from January 2004) art. 6 promises immigrants equal access to 'seguridad social'. Contributory schemes stay nationality-neutral. Decreto 582/2003 (Aug 2003) raised the residence requirement for foreigners claiming the non-contributory old-age pension to 40 years, while the disability pension kept 20 years. Access is therefore still equal only after a period of residence. I could read no practice evidence for this period, so the rating is carried over.\"},{\"date\":\"2010-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Sometimes\",\"basis\":\"Same statutes, plus three changes. Ley 26.202 approved the ICRMW, in force for Argentina from 2007; its art. 27 gives equal social-security treatment 'en la medida en que cumplan los requisitos previstos en la legislación'. Decreto 1602/2009 (Nov 2009) created the AUH child allowance, with 3 years' legal residence required for non-nationals (Ley 24.714 art. 14 ter). The CSJN's Reyes Aguilera ruling (4 Sept 2007) struck down the 20-yea",
+ "output": {
+  "answers": [
+   {
+    "question_id": 109,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Sometimes",
+      "basis": "Ley 22.439 arts. 26-29 let permanent, temporary and authorised residents work 'gozando de la protección de las leyes que rigen la materia'. The contributory pension system (Ley 24.241, art. 2 compulsory membership, art. 19 PBU) makes no distinction by nationality. Non-contributory old-age and disability pensions required foreigners to prove 20 years' continuous residence (Decreto 432/97, Anexo I, 1.e). So the answer is the same as in 2020. I found no practice evidence I could read for this period (CELS 2002-03 report located but not readable), so the rating is carried over."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 (from January 2004) art. 6 promises immigrants equal access to 'seguridad social'. Contributory schemes stay nationality-neutral. Decreto 582/2003 (Aug 2003) raised the residence requirement for foreigners claiming the non-contributory old-age pension to 40 years, while the disability pension kept 20 years. Access is therefore still equal only after a period of residence. I could read no practice evidence for this period, so the rating is carried over."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Sometimes",
+      "basis": "Same statutes, plus three changes. Ley 26.202 approved the ICRMW, in force for Argentina from 2007; its art. 27 gives equal social-security treatment 'en la medida en que cumplan los requisitos previstos en la legislación'. Decreto 1602/2009 (Nov 2009) created the AUH child allowance, with 3 years' legal residence required for non-nationals (Ley 24.714 art. 14 ter). The CSJN's Reyes Aguilera ruling (4 Sept 2007) struck down the 20-year rule only for the claimant. The CMW in 2011 documented excessive residence requirements of 3/15/20/40 years still being applied after that ruling, which supports 'Sometimes'."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Sometimes",
+      "basis": "Decreto 616/2010 art. 6 (May 2010) tells authorities to guarantee migrants' access to social security 'en igualdad de condiciones con los nacionales'. The residence requirements for non-contributory benefits and the AUH remained. Practice evidence is the CMW 2011 findings, which have not been corrected. Between 2015 and 2020 the PUAM (Ley 27.260, July 2016) added a 20-year residence rule for foreigners, and the CMW repeated its recommendation in 2019, which is consistent with the 2020 answer."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis (social security comprehensive and inalienable) and Art. 20 (foreigners enjoy all civil rights of citizens)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "role": "cited",
+      "in_force": "2004-01 to 2025-05-29 (original text); substituted by DNU 366/2025 from 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 24.241 Sistema Integrado de Jubilaciones y Pensiones",
+      "article": "Arts. 2, 17, 19",
+      "role": "cited",
+      "in_force": "1994-07-15 to today (art. 19 unchanged in substance 2000-2020)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 26-31",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01 (repealed by art. 124 Ley 25.871)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 432/1997 (reglamentación art. 9 Ley 13.478, pensiones a la vejez y por invalidez)",
+      "article": "Anexo I, punto 1, inc. e) (20 years' residence for foreigners)",
+      "role": "other_in_force",
+      "in_force": "1997-05-20 to after 2020 (old-age part replaced by Decreto 582/2003; disability annex replaced by Decreto 7/2023 and then Decreto 843/2024)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 582/2003 (pensiones a la vejez)",
+      "article": "Anexo I, punto 1, inc. d) (40 years' residence for foreigners)",
+      "role": "other_in_force",
+      "in_force": "2003-08-14 to beyond 2020",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (aprueba la Convención Internacional sobre la Protección de los Derechos de todos los Trabajadores Migratorios y de sus Familiares)",
+      "article": "Convention art. 27",
+      "role": "other_in_force",
+      "in_force": "2007-06-01 (in force for Argentina) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1602/2009 (Asignación Universal por Hijo), incorporating art. 14 ter into Ley 24.714",
+      "article": "Ley 24.714 art. 14 ter inc. a) (3 years' legal residence)",
+      "role": "other_in_force",
+      "in_force": "2009-11 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010 (reglamentario Ley 25.871)",
+      "article": "Art. 6",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 27.260 (Pensión Universal para el Adulto Mayor)",
+      "article": "Art. 13 (20 years' residence for foreigners)",
+      "role": "other_in_force",
+      "in_force": "2016-07 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2003-08-14",
+      "instrument": "Decreto 582/2003",
+      "article": "Anexo I, punto 1 d)",
+      "kind": "new_instrument",
+      "what_changed": "Replaced the old-age pension rules of Decreto 432/97. Foreigners must now prove 40 years' continuous residence, up from 20. This narrows non-contributory access for foreigners but keeps the 'after a period of time' answer.",
+      "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000582_2003_08_12",
+      "passage": "d) Ser extranjero, que acredite una residencia mínima continuada en el país de CUARENTA (40) años."
+     },
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6 (and art. 124 repealing Ley 22.439)",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. Art. 6 sets equal access for immigrants to social services and social security on the same terms as nationals.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 6° — El Estado en todas sus jurisdicciones, asegurará el acceso igualitario a los inmigrantes y sus familias en las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, en particular lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     },
+     {
+      "date": "2007-06-01",
+      "instrument": "Ley 26.202",
+      "article": "ICRMW art. 27",
+      "kind": "new_instrument",
+      "what_changed": "The ICRMW took effect for Argentina (law published BO 17-01-2007; ratified 23-02-2007). Art. 27 gives equal social-security treatment, subject to the requirements of national legislation. Treaties are directly applicable and rank above statutes (Constitution art. 75 inc. 22).",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/124232/norma.htm",
+      "passage": "Los trabajadores migratorios y sus familiares gozarán en el Estado de empleo, con respecto a la seguridad social, del mismo trato que los nacionales en la medida en que cumplan los requisitos previstos en la legislación aplicable de ese Estado"
+     },
+     {
+      "date": "2007-09-04",
+      "instrument": "CSJN, Reyes Aguilera, Daniela c/ Estado Nacional (Fallos 330:3853)",
+      "article": "Decreto 432/97 Anexo I 1.e",
+      "kind": "ruling",
+      "what_changed": "The Court declared the 20-year residence requirement unconstitutional for one Bolivian claimant of a disability pension. The majority reasoning was split, and the rule was not repealed. I read only a press report, so this counts as practice evidence.",
+      "url": "https://www.diariojudicial.com/news-19781-la-invalidez-no-tiene-banderas",
+      "passage": "La Corte Suprema de Justicia de la Nación declaró la inconstitucionalidad del inciso “e” del artículo 1º del decreto 432/97, dándole así la posibilidad a un discapacitado boliviano de poder obtener la pensión por invalidez."
+     },
+     {
+      "date": "2009-11",
+      "instrument": "Decreto 1602/2009",
+      "article": "Ley 24.714 art. 14 ter inc. a)",
+      "kind": "new_instrument",
+      "what_changed": "Created the non-contributory Asignación Universal por Hijo. It requires 3 years' legal residence where the child is not Argentine, a residence-based limit on a new social-security benefit.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/155000-159999/159466/norma.htm",
+      "passage": "a)Que el menor sea argentino, hijo de argentino nativo o por opción, naturalizado o residente, con residencia legal en el país no inferior a TRES (3) años previos a la solicitud."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 6",
+      "kind": "new_instrument",
+      "what_changed": "Regulated art. 6 of Ley 25.871: the Interior Ministry/DNM must work with other bodies to guarantee migrants' access to social security on equal terms.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "garantizar su acceso a los servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social, en igualdad de condiciones con los nacionales."
+     },
+     {
+      "date": "2011-09",
+      "instrument": "CMW, Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "article": "paras. 29-30",
+      "kind": "practice",
+      "what_changed": "The Committee found excessive residence requirements for non-contributory benefits (AUH 3 years, mothers' pension 15, disability 20, old-age 40) still applied after Reyes Aguilera, and recommended reviewing them.",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "passage": "The Committee is also concerned about the excessive residence requirements for migrant workers applying for non-contributory pensions for mothers with seven or more children (Law No. 23746 and Decree No. 2360/1990: 15 years), disability pensions (Law No. 18910 and Decree No. 432/1997: 20 years) or old-age pensions (Law No. 13478 and Decree No. 582/2003: 40 years)"
+     },
+     {
+      "date": "2016-07",
+      "instrument": "Ley 27.260 (PUAM)",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "Created the universal non-contributory old-age pension, with a 20-year residence requirement for foreigners. I read this from the official Derecho Fácil summary, not the statute itself.",
+      "url": "https://www.argentina.gob.ar/node/159819",
+      "passage": "Las personas extranjeras deben probar que tienen residencia en el país hace más de 20 años."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Reyes Aguilera, Daniela c/ Estado Nacional, R.350.XLI (Fallos 330:3853)",
+      "date": "2007-09-04",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "No later ruling overturning it was found. The CMW (2011) noted the residence requirements still being applied, and the requirement remained in the decree.",
+      "url": "https://www.diariojudicial.com/news-19781-la-invalidez-no-tiene-banderas"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on Argentina (CMW/C/ARG/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Diario Judicial, 'La invalidez no tiene banderas' (report on Reyes Aguilera)",
+      "url": "https://www.diariojudicial.com/news-19781-la-invalidez-no-tiene-banderas",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "García, L. E., CONICET repository: migrants' and refugees' access to non-contributory social security and the IFE (abstract)",
+      "url": "https://ri.conicet.gov.ar/items/3ed463cc-0313-4ac0-a04d-18e83c92d1d4/full",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the original and current texts of Ley 25.871 art. 6, Ley 22.439, Decretos 432/97, 582/2003, 1602/2009 and 616/2010, and Ley 26.202 on InfoLEG/argentina.gob.ar. Ley 27.260 is known only from the official summary. The Reyes Aguilera ruling and every PDF report (CELS 2002-2007, CMW 2019) could not be opened, so evidence for 2000 and 2005 is missing and the ratings for those dates are carried over.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 24.241 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Decreto 432/1997 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-432-1997-43325/texto"
+     },
+     {
+      "title": "Decreto 582/2003 (AFIP biblioteca)",
+      "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000582_2003_08_12"
+     },
+     {
+      "title": "Decreto 582/2003 (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-87632/texto"
+     },
+     {
+      "title": "Decreto 1602/2009 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/155000-159999/159466/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Ley 26.202 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/124232/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley simple: Pensión universal para el adulto mayor",
+      "url": "https://www.argentina.gob.ar/node/159819"
+     },
+     {
+      "title": "Decreto 894/2016 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/148620/20160728"
+     },
+     {
+      "title": "Diario Judicial: La invalidez no tiene banderas",
+      "url": "https://www.diariojudicial.com/news-19781-la-invalidez-no-tiene-banderas"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1 (UMN Human Rights Library)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CONICET repository item (García)",
+      "url": "https://ri.conicet.gov.ar/items/3ed463cc-0313-4ac0-a04d-18e83c92d1d4/full"
+     },
+     {
+      "title": "ACNUR PDF (error page)",
+      "url": "https://www.acnur.org/fileadmin/Documentos/BDL/2012/8460.pdf"
+     },
+     {
+      "title": "UN Geneva meeting summary 2019 (404)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2019/09/committee-migrant-workers-raises-concerns-about-expedited"
+     },
+     {
+      "title": "InfoLEG 125990 (wrong norm, SENASA resolution)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/125000-129999/125990/norma.htm"
+     },
+     {
+      "title": "InfoLEG 263690 (wrong norm)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/260000-264999/263690/norma.htm"
+     }
+    ],
+    "starting_answer_concern": "The 2023 citation leans on Ley 24.241 art. 19 (30 years of contributions), but that rule applies to nationals too. The real basis for 'after some period of time' is the residence requirements for non-contributory benefits: Decreto 432/97 (20 years), Decreto 582/2003 (40 years), AUH (3 years) and PUAM (20 years). Contributory protections are immediate and equal. The answer holds on those grounds.",
+    "confidence": "medium",
+    "notes": "Protection answers rest on statutes and decrees. Reyes Aguilera was used only as practice evidence: I did not read it in full, it was a split decision, and its effect was confined to the claimant. The ICRMW (Ley 26.202) is directly applicable under art. 75 inc. 22, but its art. 27 defers to national eligibility requirements. Ley 25.871 art. 6 was later amended by DNU 366/2025 (after 2020)."
+   },
+   {
+    "question_id": 111,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Equal access to all types of unemployment benefits after a duration of stay",
+      "implementation": "Rarely",
+      "basis": "Ley 24.013 Title IV (arts. 111-118, in force since Dec 1991) covers workers under the LCT with no distinction by nationality. Benefits depend on contributions to the Fondo Nacional del Empleo. Ley 22.439 arts. 26-27 let authorised residents work with the protection of labour laws, while art. 30 barred irregular migrants from working. The answer is kept as in 2020. I found no practice evidence on migrants' access to unemployment benefits for this period, so the rating is carried over."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Equal access to all types of unemployment benefits after a duration of stay",
+      "implementation": "Rarely",
+      "basis": "Ley 25.871 art. 6 (from January 2004) adds equal access to 'trabajo, empleo y seguridad social'. Ley 24.013 is unchanged. I found no practice evidence, so the rating is carried over (low confidence)."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Equal access to all types of unemployment benefits after a duration of stay",
+      "implementation": "Rarely",
+      "basis": "Decreto 267/2006 (BO 13-03-2006) replaced art. 113 c) (now 6 months of contributions in the last 3 years) and art. 117 (benefit duration scales with contribution period), without touching nationality. ICRMW art. 54(1)(b), through Ley 26.202 (in force 2007), adds equal treatment in unemployment benefits. I found no migrant-specific practice evidence, so the rating is carried over."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Equal access to all types of unemployment benefits after a duration of stay",
+      "implementation": "Rarely",
+      "basis": "Same provisions; Decreto 616/2010 art. 6 adds the equal-access duty for employment and social security. Up to 2020 nothing changed in the text bearing on migrants. The only practice signal is the general CMW 2011 concern about informality and documentation barriers; I found nothing specific to unemployment benefits."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 24.013 Ley Nacional de Empleo",
+      "article": "Arts. 111-118 (Título IV, Sistema integral de prestaciones por desempleo)",
+      "role": "cited",
+      "in_force": "1991-12-17 to today (art. 113 c) and art. 117 substituted by Decreto 267/2006; art. 112 first paragraph substituted by Decreto 90/2023, after 2020)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "role": "cited",
+      "in_force": "2004-01 to 2025-05-29 (original text); substituted by DNU 366/2025",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14 bis, 20",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (aprueba ICRMW)",
+      "article": "Convention art. 54(1)(b)",
+      "role": "cited",
+      "in_force": "2007-06-01 (in force for Argentina) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 26-31",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 6",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439 and set equal access for immigrants to work, employment and social security on the same terms as nationals.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "asegurará el acceso igualitario a los inmigrantes y sus familias en las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, en particular lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     },
+     {
+      "date": "2006-03-13",
+      "instrument": "Decreto 267/2006",
+      "article": "Ley 24.013 art. 113 inc. c) and art. 117",
+      "kind": "amended",
+      "what_changed": "Set the contribution requirement at 6 months within the 3 years before dismissal and tied benefit duration to the contribution period. This applies equally to nationals and foreigners and has no nationality condition.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm",
+      "passage": "c) Haber cotizado al Fondo Nacional del Empleo durante un período mínimo de SEIS (6) meses durante los TRES (3) años anteriores al cese del contrato de trabajo que dio lugar a la situación legal de desempleo; (Inciso sustituido por art. 2° del Decreto N° 267/2006 B.O. 13/3/2006)"
+     },
+     {
+      "date": "2007-06-01",
+      "instrument": "Ley 26.202",
+      "article": "ICRMW art. 54(1)(b)",
+      "kind": "new_instrument",
+      "what_changed": "The ICRMW took effect for Argentina, giving equal treatment with nationals in unemployment benefits regardless of permit conditions. It is directly applicable under Constitution art. 75 inc. 22.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/124232/norma.htm",
+      "passage": "los trabajadores migratorios gozarán de igualdad de trato respecto de los nacionales del Estado de empleo en relación con: a) La protección contra los despidos; b) Las prestaciones de desempleo;"
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 6",
+      "kind": "new_instrument",
+      "what_changed": "Regulated art. 6 of Ley 25.871: the authorities must guarantee migrants' access to work, employment and social security on equal terms.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "garantizar su acceso a los servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social, en igualdad de condiciones con los nacionales."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on Argentina (CMW/C/ARG/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read Ley 24.013's consolidated text with its amendment notes, part of InfoLEG's 'normas que modifican' list, the original and current Ley 25.871, Ley 22.439 and Ley 26.202. The pre-2006 wording of art. 113 c) was not read. I found no practice evidence specific to migrants' unemployment benefits for any date, and PDF reports could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 24.013 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm"
+     },
+     {
+      "title": "Ley 24.013 normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=412"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 26.202 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/124232/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1 (UMN Human Rights Library)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": "Ley 24.013 arts. 111-118 make no distinction by nationality or length of residence. The qualifying period is a contribution period (6 months in 3 years) that applies equally to nationals, and ICRMW art. 54 (Ley 26.202) guarantees equal treatment. On the text, 'Yes, immediate equal access to all types of unemployment benefits' looks more accurate. The 'Rarely' rating has no documented evidence behind it. The 2023 citation also mislabels Ley 24.013 as the 'Work Contract Act' (it is the Ley Nacional de Empleo; the LCT is Ley 20.744).",
+    "confidence": "low",
+    "notes": "No rulings relied on. Decreto 90/2023 (after 2020) rewrote art. 112's first paragraph to cover domestic workers under Ley 26.844; it does not bear on 2000-2020. The ratings for past dates are carried over from the starting answer for lack of practice evidence."
+   }
+  ]
+ }
 }
