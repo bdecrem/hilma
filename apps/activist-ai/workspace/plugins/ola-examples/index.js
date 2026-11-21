@@ -14,8 +14,8 @@
 //
 // Whose content: the committed library holds only test requests, written for it and kept apart from the seven
 // measured problems (evals/apps/problems.json), so the measure is not taught to the test. Bart's own kept
-// requests come from the Ola machine (`node evals/apps/examples.mjs kept`, which takes only his) into a file
-// outside the repo named by OLA_EXAMPLES_EXTRA (colon-separated paths). No other person's content is stored.
+// requests are the next source (not built yet, OLA-181): a file on the Ola machine, outside this public repo,
+// named by OLA_EXAMPLES_EXTRA (colon-separated paths), holding only his. No other person's content is stored.
 //
 // Switches: OLA_EXAMPLES=off turns it off (the "without examples" column of the measure);
 // OLA_EXAMPLES_FILE replaces the committed library (tests).
