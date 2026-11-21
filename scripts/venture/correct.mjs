@@ -288,7 +288,13 @@ if (cmd === 'add') {
   const level = Number(opt.level)
   if (!fix || !(level >= 1 && level <= 5)) die(`fix needs --fix "<what changed>" and --level 1..5 (at least ${o.need}, ${KINDS[o.need]})`)
   const req = required(w, { recorded: true })
-  const need = Math.max(o.need, req.need)
+  // the kind the tracker recorded when the fix was owed counts too: the notes' copy can be edited (fourteenth checker)
+  let heldNeed = 0
+  if (!onCopy || process.env.VENTURE_TRACKER_FAKE) {
+    try { heldNeed = Number((await (await trackerDb()).from('venture_state').select('value').eq('key', `owed-fix:${num}`).maybeSingle()).data?.value?.need ?? 0) } catch {}
+  }
+  const need = Math.max(o.need, req.need, heldNeed)
+  if (level < need) die(`Refused: correction ${num}'s fix must be kind ${need} or stronger (${KINDS[need]}); kind ${level} is not`)
   const problem = fixProblem(w, level, { ...req, need }, { whyLast: str('why-last') ?? o.why_last }) ?? (await settleProblem(str('where') ?? '', o))
   if (problem) die(problem)
   w.guards.push({ day: today(), what: fix, enforced: level >= 3, level, ...(str('where') ? { where: str('where') } : {}), ...(settledBy ? { commit: settledBy } : {}), settles: o.ref })
@@ -362,12 +368,17 @@ if (cmd === 'add') {
       const held = ((await db.from('venture_state').select('key, value').like('key', 'owed-fix:%')).data ?? [])
       // a line is keyed by the event (the number and the owed fix's own time), so a later fix under a reused
       // number, or the same change made again, is a line of its own (thirteenth checker)
-      const ev = (num, v) => `${num}-${String(v?.since ?? '').replace(/[^0-9]/g, '')}`
+      const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+      // and by the day: a mismatch that lasts, or the same edit made again another day, is a line each day
+      const ev = (num, v) => `${num}-${String(v?.since ?? '').replace(/[^0-9]/g, '')}-${day}`
       for (const o of owedNow) {
         const num = o.ref.replace(/\D/g, '')
         const h = held.find((x) => x.key === `owed-fix:${num}`)
         if (!h) await db.from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
-        else if (!h.value?.settled) {
+        else if (!h.value?.settled && h.value?.need === undefined) {
+          // rows written before the kind was kept: take it now, the first time the audit sees one
+          await db.from('venture_state').upsert({ key: h.key, value: { ...h.value, need: o.need }, at: new Date().toISOString() })
+        } else if (!h.value?.settled) {
           // the notes' entry must still say what the tracker recorded: its time (which decides overdue), ticket and kind
           const diff = ['since', 'issue', 'need'].filter((k) => h.value?.[k] !== undefined && String(h.value[k]) !== String(o[k]))
           if (diff.length) {
@@ -386,8 +397,8 @@ if (cmd === 'add') {
         const num = m[1]
         if (!/^Fix settled /m.test(m[2])) continue
         if (lines.some((w) => new RegExp(`\\bcorrection ${num}\\b[^\\n]*settled`).test(w))) continue
-        if (await ownLine(db, `settle-unrecorded-${num}`)) continue
-        await writeOverride(db, { key: `settle-unrecorded-${num}`, what: `correction ${num}'s owed fix is settled in the ledger with no record of correct.mjs settling it (edited by hand, or settled on a copy and copied over): read whether the fix exists`, tool: 'correct.mjs' })
+        if (await ownLine(db, `settle-unrecorded-${num}-${day}`)) continue
+        await writeOverride(db, { key: `settle-unrecorded-${num}-${day}`, what: `correction ${num}'s owed fix is settled in the ledger with no record of correct.mjs settling it (edited by hand, or settled on a copy and copied over): read whether the fix exists`, tool: 'correct.mjs' })
       }
     } catch (e) {
       console.error(`(the audit of settled fixes did not run: ${e.message})`)
