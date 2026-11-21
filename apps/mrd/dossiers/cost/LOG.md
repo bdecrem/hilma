@@ -73,3 +73,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 21:08 | back2000 | vulnerable · argentina | claude-opus-5-5 | high | 81.91 | 41 | 30,498 | 2,913,780 | 2.21 | 2→24 | 50→52 | 68→68 | 31 | ok | `back2000 argentina vulnerable claude-opus-5-5 high` |
 | 2026-11-20 21:08 | forward | labor_b · chile | claude-opus-5-5 | high | 81.81 | 57 | 49,501 | 4,792,816 | 2.98 | 2→24 | 50→52 | 68→68 | 38 | ok | `forward chile labor_b claude-opus-5-5 high` |
 | 2026-11-20 21:59 | back2000 | personhood · chile | claude-opus-5-5 | high | 80.36 | 27 | 23,892 | 2,153,385 | 1.83 | 15→? | 51→? | 68→? | 17 | ok | `back2000 chile personhood claude-opus-5-5 high` |
+| 2026-11-20 21:39 | back2000 | personhood · argentina | claude-opus-5-5 | high | 105.88 | 42 | 34,141 | 2,831,903 | 1.71 | 11→32 | 51→0 | 68→0 | 27 | ok | `back2000 argentina personhood claude-opus-5-5 high` |
