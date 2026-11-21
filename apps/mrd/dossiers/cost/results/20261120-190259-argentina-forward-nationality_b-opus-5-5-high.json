@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina nationality_b claude-opus-5-5 high",
- "pid": 54504,
  "step": "forward",
  "slug": "argentina",
  "chunk": "nationality_b",
@@ -58,5 +57,972 @@
   "user": 111
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:40:16.643Z",
+ "minutes": 37.29,
+ "meters_after": {
+  "at": "2026-11-21T03:40:16.643Z",
+  "window": {
+   "pct": 58,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 58,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 58% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 172906,
+   "output": 37137,
+   "cache_read": 3569193,
+   "cache_write": 155279,
+   "cost_usd": 2.559,
+   "total": 3934515
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 172840,
+    "output": 13712,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3558,
+    "cost_usd": 0.1341
+   },
+   "claude-opus-5-5": {
+    "input": 66,
+    "output": 23425,
+    "cache_read": 3569193,
+    "cache_write": 155279,
+    "thinking": 6792,
+    "cost_usd": 2.4248
+   }
+  }
+ },
+ "turns": 48,
+ "calls": 75,
+ "duration_ms": 555117,
+ "duration_api_ms": 469320,
+ "pages_read": 31,
+ "pages": [
+  {
+   "at": "2026-11-21T03:03:14.834Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 61 | Artículo 61 | Ley N° 346 | ARTÍCULO 2° de la Ley | ARTÍCULO 17 | regularizar | vigencia | apátrida",
+   "ok": true,
+   "chars": 15704
+  },
+  {
+   "at": "2026-11-21T03:03:46.283Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 38 | ARTÍCULO 39 | ARTÍCULO 41 | ARTÍCULO 42 | ARTÍCULO 43 | ARTÍCULO 44 | entrará en vigencia | nacionalidad de origen | renuncia",
+   "ok": true,
+   "chars": 8041
+  },
+  {
+   "at": "2026-11-21T03:03:51.771Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 17 | ARTICULO 61 | ARTÍCULO 61 | ARTÍCULO 17",
+   "ok": true,
+   "chars": 6534
+  },
+  {
+   "at": "2026-11-21T03:03:52.536Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 17 | ARTICULO 61",
+   "ok": true,
+   "chars": 5469
+  },
+  {
+   "at": "2026-11-21T03:04:05.971Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/45000-49999/48475/texact.htm",
+   "find": "ARTICULO 2 | ARTICULO 8 | ARTICULO 16 | nacionalidad | Decreto Nº 366/2025",
+   "ok": true,
+   "chars": 3639
+  },
+  {
+   "at": "2026-11-21T03:07:16.839Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": "ARTICULO 1 | ARTICULO 2 | ARTICULO 8 | ARTICULO 10 | 366/2025 | derogado",
+   "ok": true,
+   "chars": 6571
+  },
+  {
+   "at": "2026-11-21T03:07:17.617Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 2793
+  },
+  {
+   "at": "2026-11-21T03:07:23.249Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": "Son argentinos | Art. 7 | Art. 8 | Art. 9",
+   "ok": true,
+   "chars": 4239
+  },
+  {
+   "at": "2026-11-21T03:07:24.076Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican?page=2",
+   "find": null,
+   "ok": true,
+   "chars": 2829
+  },
+  {
+   "at": "2026-11-21T03:09:41.935Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828",
+   "find": "ARTÍCULO 17 | ARTÍCULO 59 | naturalizar | nacido en el territorio",
+   "ok": true,
+   "chars": 4126
+  },
+  {
+   "at": "2026-11-21T03:10:00.009Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-327259",
+   "find": "modificada | complementada | Texto actualizado | Esta norma",
+   "ok": true,
+   "chars": 1316
+  },
+  {
+   "at": "2026-11-21T03:10:01.922Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-92016/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 5361
+  },
+  {
+   "at": "2026-11-21T03:14:36.833Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/6196/La-justicia-declaro-la-inconstitucionalidad-del-DNU-366/2025-que-modifica-la-normativa-migratoria",
+   "find": null,
+   "ok": true,
+   "chars": 4786
+  },
+  {
+   "at": "2026-11-21T03:14:37.670Z",
+   "url": "https://www.ambito.com/politica/la-corte-suprema-tiene-sus-manos-otro-dnu-javier-milei-el-regimen-migratorio-n6331028",
+   "find": null,
+   "ok": true,
+   "chars": 6469
+  },
+  {
+   "at": "2026-11-21T03:15:00.017Z",
+   "url": "https://www.cels.org.ar/especiales/examenonu/wp-content/uploads/sites/13/2022/11/Migrantes-EPU-2023.pdf",
+   "find": "regularización | regularidad | radicaciones | demoras",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:01.555Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "artículo 61 | intimación | regularizar | radicaciones | residencia precaria | expulsión",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:07.063Z",
+   "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+   "find": "regulariz | expulsi | radicaci | irregular",
+   "ok": true,
+   "chars": 6505
+  },
+  {
+   "at": "2026-11-21T03:15:07.778Z",
+   "url": "https://chequeado.com/el-explicador/reforma-migratoria-que-cambia-que-ya-rige-y-que-necesita-pasar-por-el-congreso/",
+   "find": "Congreso | Bicameral | rige | ciudadanía | regulariz",
+   "ok": true,
+   "chars": 6586
+  },
+  {
+   "at": "2026-11-21T03:15:25.166Z",
+   "url": "https://observatoriomigracionyasilo.caref.org.ar/inicio/migracion-venezolana-en-argentina-papeles-faltantes-y-regimenes-especiales",
+   "find": "régimen | regulariz | 2024 | 2022 | Disposición",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:32.345Z",
+   "url": "https://noticiasdel6.com/argentina-registra-una-caida-del-16-en-las-radicaciones-de-extranjeros-en-lo-que-va-de-2024/",
+   "find": "radicaciones | 2023 | 2022",
+   "ok": true,
+   "chars": 4548
+  },
+  {
+   "at": "2026-11-21T03:15:49.361Z",
+   "url": "https://www.lacapital.com.ar/la-ciudad/migrantes-controlar-regularizar-o-expulsar-n10275117.html",
+   "find": "regulariz | expuls | artículo 17 | intimar",
+   "ok": true,
+   "chars": 3066
+  },
+  {
+   "at": "2026-11-21T03:15:50.374Z",
+   "url": "https://stabogados.com.ar/jurisprudencia-penal/migraciones-expulsion/Ley-25871-decreto-366-25",
+   "find": "artículo 61 | intimar | Congreso | Bicameral | vigente",
+   "ok": true,
+   "chars": 5514
+  },
+  {
+   "at": "2026-11-21T03:16:19.929Z",
+   "url": "https://www.hrw.org/world-report/2026/country-chapters/argentina",
+   "find": "migra | Decree 366 | deport",
+   "ok": true,
+   "chars": 3367
+  },
+  {
+   "at": "2026-11-21T03:16:32.391Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "Congress | regulari | deport | expul | Bicameral",
+   "ok": true,
+   "chars": 3406
+  },
+  {
+   "at": "2026-11-21T03:21:37.700Z",
+   "url": "https://help.unhcr.org/argentina/apatridia/",
+   "find": "naturaliz | nacional | residencia | DNI",
+   "ok": true,
+   "chars": 673
+  },
+  {
+   "at": "2026-11-21T03:25:51.188Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-327259/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 1025
+  },
+  {
+   "at": "2026-11-21T03:26:56.723Z",
+   "url": "https://www.lanacion.com.ar/politica/el-gobierno-ofrecio-a-sergio-ramirez-y-a-gioconda-belli-otorgarles-la-ciudadania-argentina-despues-nid21022023/",
+   "find": "ciudadanía | apátrida | trámite",
+   "ok": true,
+   "chars": 3556
+  },
+  {
+   "at": "2026-11-21T03:27:25.699Z",
+   "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina",
+   "find": "renuncia | Padilla | plenario | nacionalidad de origen",
+   "ok": true,
+   "chars": 3983
+  },
+  {
+   "at": "2026-11-21T03:27:26.330Z",
+   "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086",
+   "find": "renuncia | Padilla | plenario",
+   "ok": true,
+   "chars": 3964
+  },
+  {
+   "at": "2026-11-21T03:30:50.704Z",
+   "url": "https://www.argentina.gob.ar/servicio/obtener-la-ciudadania-argentina-por-naturalizacion",
+   "find": "nacionalidad de origen | renuncia | doble | Requisitos | Migraciones",
+   "ok": true,
+   "chars": 1972
+  },
+  {
+   "at": "2026-11-21T03:38:44.361Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+   "find": "Migraciones | fecha | Cámara | trámite",
+   "ok": true,
+   "chars": 4602
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 infoleg texto Ley 25.871 Ley 346 modificación",
+  "infoleg Ley 346 ciudadanía texto actualizado \"Decreto Nº 366/2025\"",
+  "infoleg Ley 27.512 apatridia texto artículo 17 naturalización",
+  "argentina.gob.ar normativa \"Ley 27512\" apátridas texto actualizado",
+  "DNU 366/2025 migraciones rechazo Congreso Senado Diputados amparo cautelar inconstitucionalidad",
+  "CAREF CELS informe 2025 regularización migratoria Argentina demoras radicación turnos Migraciones DNU 366 expulsiones",
+  "Argentina 2023 informe barreras regularización migratoria RADEX tasas migrantes situación irregular CAREF Amnistía",
+  "Dirección Nacional de Migraciones radicaciones otorgadas 2023 2024 2025 cifras residencias temporarias permanentes",
+  "CELS migrantes regularización \"Ley de Migraciones\" 2024 trámites residencia demoras tasas aumento Milei informe",
+  "Migraciones 2025 expulsiones récord intimación regularizar migrantes irregulares DNU 366 aplicación CAREF casos",
+  "CIDH comunicado octubre 2025 Argentina DNU 366 personas migrantes preocupación",
+  "apatridia Argentina CONARE personas reconocidas apátridas naturalización 2024 2025 ACNUR reglamentación Ley 27.512",
+  "Argentina nicaragüenses desnacionalizados ofrecimiento nacionalidad argentina 2023 apátridas Cancillería",
+  "\"Padilla\" Corte Suprema 2007 doble nacionalidad \"sin perder la de origen\" naturalización argentina fallo",
+  "Dirección Nacional de Migraciones carta de ciudadanía naturalización trámite requisitos 2025 disposición procedimiento renuncia nacionalidad de origen"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.46,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.49,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.56,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":71,\"answer_2023\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Corte Suprema de Justicia de la Nación, 'Padilla, Miguel M. s/ presentación' (P.1571.XL)\",\"article\":\"holding on admissibility of acquiring Argentine nationality without losing nationality of origin\",\"enacted\":\"2007-04-10\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 346 de Ciudadanía\",\"article\":\"Arts. 1, 2, 8 (whole text checked for any renunciation or loss clause)\",\"enacted\":\"1869-10-01\",\"history_read\":\"version_history\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia 366/2025 (DNU 366/2025)\",\"article\":\"Art. 37 (replaces Ley 346 art. 2); art. 43 (repeals Ley 346 arts. 3, 4, 5 and 11)\",\"kind\":\"amended\",\"what_changed\":\"Naturalisation now requires two years' 'continuous and legal' residence with no trips abroad, or a 'relevant investment', and the procedure moves from the federal courts to the DNM. Nothing in the amended Ley 346 requires naturalised persons to renounce their nationality of origin, so the indicator is not affected.\",\"url\":\"https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm\",\"passage\":\"1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud ... (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)\"}],\"implementation_then_now\":\"In 2023, practice f",
+ "output": {
+  "answers": [
+   {
+    "question_id": 71,
+    "answer_2023": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Corte Suprema de Justicia de la Nación, 'Padilla, Miguel M. s/ presentación' (P.1571.XL)",
+      "article": "holding on admissibility of acquiring Argentine nationality without losing nationality of origin",
+      "enacted": "2007-04-10",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Arts. 1, 2, 8 (whole text checked for any renunciation or loss clause)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU 366/2025)",
+      "article": "Art. 37 (replaces Ley 346 art. 2); art. 43 (repeals Ley 346 arts. 3, 4, 5 and 11)",
+      "kind": "amended",
+      "what_changed": "Naturalisation now requires two years' 'continuous and legal' residence with no trips abroad, or a 'relevant investment', and the procedure moves from the federal courts to the DNM. Nothing in the amended Ley 346 requires naturalised persons to renounce their nationality of origin, so the indicator is not affected.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud ... (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     }
+    ],
+    "implementation_then_now": "In 2023, practice followed the 2010 plenary ruling of the Cámara Nacional en lo Civil y Comercial Federal ('Zunino'). That ruling relied on 'Padilla' and ordered the 'renuncia a la nacionalidad de origen' requirement removed from the naturalisation application form. I found no documented case of renunciation being required since then. The 2025 move of naturalisation to the DNM caused months of delay in processing applications: per the June 2026 Cámara ruling, the digital procedure opened more than four months after the decree. That affects access to naturalisation, not the retention of the nationality of origin. No source shows renunciation being reintroduced. Rating unchanged at Effectively Always. The evidence on retention is indirect: it is the absence of any reported breach.",
+    "practice_sources": [
+     {
+      "title": "No es necesario renunciar a la nacionalidad de origen para acceder a la ciudadanía argentina (plenario Zunino, CNCivCom Fed.)",
+      "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Declararon la inconstitucionalidad de los artículos del DNU que trasladaron a Migraciones el trámite de ciudadanía (Volosh, CNCivCom Fed. Sala III)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The InfoLEG/argentina.gob.ar consolidated text of Ley 346 annotates every amendment, including DNU 366/2025, so the 2023 text can be read off it. I could not open the CSJN 'Padilla' decision itself, only press summaries of the 'Zunino' plenary that quote it.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Diario Judicial – plenario Zunino",
+      "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina"
+     },
+     {
+      "title": "Abogados.com.ar – Ratifican en pleno…",
+      "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086"
+     },
+     {
+      "title": "Palabras del Derecho – Volosh ruling",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-"
+     },
+     {
+      "title": "argentina.gob.ar naturalisation service page (404)",
+      "url": "https://www.argentina.gob.ar/servicio/obtener-la-ciudadania-argentina-por-naturalizacion"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' rests on case law, not statute. 'Padilla' was an electoral-roll case about Justice Zaffaroni, and its statement on dual nationality is an interpretive rule rather than a holding on naturalisation. The 2010 'Zunino' plenary applied it to naturalisation, which is arguably the better authority to cite. I did not read either decision in full, only press reproductions. Ley 346 remains silent on renunciation, so the answer also holds on the 'silence' reasoning used for Brazil.",
+    "confidence": "medium",
+    "notes": "No statute, decree or ruling in 2023–2025 bears on retaining the nationality of origin. DNU 366/2025 altered the naturalisation conditions and forum, not the dual-nationality rule. Courts (Juzgado Federal Paraná Aug 2025; CNCivCom Fed. Sala III Jun 2026; CNE 'Yang' 2026) declared parts of the DNU unconstitutional, but only for the parties to each case. As far as I found, Congress has not rejected the DNU."
+   },
+   {
+    "question_id": 133,
+    "answer_2023": "Yes, there is an opportunity to regularize after certain conditions are met",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, there is an opportunity to regularize after certain conditions are met",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 17",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 61",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU 366/2025)",
+      "article": "Art. 15 (replaces art. 61 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before: on finding irregular stay, the DNM 'deberá conminarlo' (shall order the person) to regularise within a set period before any expulsion. After: the DNM 'podrá intimarlo' (may order). The duty to offer a chance to regularise before expulsion becomes a discretionary power. This directly touches the indicator. Art. 17's general duty to adopt regularisation measures is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "la DIRECCIÓN NACIONAL DE MIGRACIONES podrá intimarlo a regularizar su situación en el plazo perentorio que fije a tal efecto, bajo apercibimiento de decretar su expulsión. ... (Artículo sustituido por art. 15 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU 366/2025)",
+      "article": "Art. 4 (replaces art. 20 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "'Residencia precaria' (granted while an application is pending) may be revoked, lasts up to 90 days, and no longer counts as residence for the 'arraigo' needed for permanent residence or naturalisation. This narrows the route to secure status for people regularising from an irregular position.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "La extensión y renovación de la ‘residencia precaria’ no genera derecho a una resolución favorable respecto de la admisión solicitada, ni resulta residencia válida a los efectos de acreditar arraigo, necesario para la obtención de la residencia permanente, o para la adquisición de la nacionalidad por naturalización"
+     }
+    ],
+    "implementation_then_now": "2023: regularisation ran through ordinary DNM residence applications. DNM data obtained through an access-to-information request show 98,391 temporary and permanent residence grants in January–July 2023. A CELS/CAREF UPR submission (known to me only from a search snippet) describes long-standing technological barriers and delays, so 'Usually' holds. 2024–2025: grants fell 16% in January–July 2024 (temporary grants fell 25%). In May 2025 DNU 366 made the offer to regularise discretionary and stopped precarious residence counting toward 'arraigo'. Civil-society monitoring (Hivos EU SEE alert, citing local organisations) reports the highest expulsion average in two decades in early 2025. The IACHR (October 2025, reported second-hand) and practitioners describe an enforcement-first approach with wider discretion. A DNM special regime for Venezuelans with missing documents (September 2024, known only from a search snippet) shows regularisation channels still operating. The shift is to 'Sometimes; Usually'. None of the data separate irregular migrants from all residence applicants.",
+    "practice_sources": [
+     {
+      "title": "Argentina registra una caída del 16% en las radicaciones de extranjeros en lo que va de 2024 (DNM data via access-to-information request)",
+      "url": "https://noticiasdel6.com/argentina-registra-una-caida-del-16-en-las-radicaciones-de-extranjeros-en-lo-que-va-de-2024/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El endurecimiento de las políticas migratorias en Argentina (El Salto, citing CELS, CAREF, IACHR Oct 2025)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Migrantes: ¿controlar para regularizar o para expulsar? (Paula Carello, La Capital)",
+      "url": "https://www.lacapital.com.ar/la-ciudad/migrantes-controlar-regularizar-o-expulsar-n10275117.html",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Reforma migratoria: qué cambia, qué ya rige (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-que-cambia-que-ya-rige-y-que-necesita-pasar-por-el-congreso/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Strong dating. InfoLEG has the original text (norma.htm, 'deberá conminarlo', in force on 1 Jan 2023 after Decreto 138/2021 repealed DNU 70/2017) and the consolidated text with the DNU 366/2025 annotation, in force from 29 May 2025. The amendments list shows nothing else touching arts. 17/61 before 2026; DNU 681/2026 came after the window. I could not open the CELS/CAREF UPR and CAREF DNU 366 reports (PDF extraction failed).",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-92016/normas-modifican"
+     },
+     {
+      "title": "DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Noticias del 6 – caída de radicaciones 2024",
+      "url": "https://noticiasdel6.com/argentina-registra-una-caida-del-16-en-las-radicaciones-de-extranjeros-en-lo-que-va-de-2024/"
+     },
+     {
+      "title": "Hivos EU SEE alert",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "El Salto – endurecimiento políticas migratorias",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     },
+     {
+      "title": "La Capital – controlar para regularizar o expulsar",
+      "url": "https://www.lacapital.com.ar/la-ciudad/migrantes-controlar-regularizar-o-expulsar-n10275117.html"
+     },
+     {
+      "title": "Chequeado – reforma migratoria",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-que-cambia-que-ya-rige-y-que-necesita-pasar-por-el-congreso/"
+     },
+     {
+      "title": "ST Abogados – DNU 366/25 cambios y cronología",
+      "url": "https://stabogados.com.ar/jurisprudencia-penal/migraciones-expulsion/Ley-25871-decreto-366-25"
+     },
+     {
+      "title": "HRW World Report 2026 – Argentina",
+      "url": "https://www.hrw.org/world-report/2026/country-chapters/argentina"
+     },
+     {
+      "title": "CELS – Migrantes EPU 2023 (PDF, extraction failed)",
+      "url": "https://www.cels.org.ar/especiales/examenonu/wp-content/uploads/sites/13/2022/11/Migrantes-EPU-2023.pdf"
+     },
+     {
+      "title": "CAREF – Informe DNU 366/2025 (PDF, extraction failed)",
+      "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf"
+     },
+     {
+      "title": "CAREF observatorio – migración venezolana (PDF, extraction failed)",
+      "url": "https://observatoriomigracionyasilo.caref.org.ar/inicio/migracion-venezolana-en-argentina-papeles-faltantes-y-regimenes-especiales"
+     }
+    ],
+    "starting_answer_concern": "The starting citation gives the 30-day period, extendable by 30, as if it were in art. 61. The statute leaves the period to the DNM ('plazo perentorio que fije'); the 30+30 days come from the regulations (Decreto 616/2010), which I did not read. The 2023 text also said 'deberá conminarlo', not 'shall order him or her to regularize'; the substance is the same.",
+    "confidence": "medium",
+    "notes": "The answer stays 'Yes' on 1 Jan 2026. Art. 17 is unchanged, ordinary residence criteria remain, and art. 61 still allows an order to regularise, though only at the DNM's discretion, so the protection is weaker. Courts have struck down parts of DNU 366 only for the parties to each case; I found no rejection by Congress. The implementation evidence is mostly about all migrants or about enforcement, not irregular workers specifically."
+   },
+   {
+    "question_id": 137,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853 (text of 1994)",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 27.512 General de Reconocimiento y Protección de las Personas Apátridas",
+      "article": "Arts. 17, 56, 58, 59",
+      "enacted": "2019-08-28",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 1 inc. 1 (ius soli)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 (naturalisation); arts. 3, 4, 5, 11",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU 366/2025)",
+      "article": "Art. 37 (replaces Ley 346 art. 2); art. 43 (repeals Ley 346 arts. 3, 4, 5, 11); art. 39 (replaces art. 6)",
+      "kind": "amended",
+      "what_changed": "Before: naturalisation after two years' continuous residence, decided by federal judges. After: two years' 'continuous and legal' residence with no trips abroad, or a relevant investment, granted by the DNM. Ley 27.512 art. 17 sends stateless persons to Ley 346 'and the facilities' of that law, so their naturalisation conditions changed. Ius soli (Ley 346 art. 1) and Ley 27.512 itself are unchanged.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Art. 2° — Son ciudadanos por naturalización: 1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud ... (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     }
+    ],
+    "implementation_then_now": "2023: Ley 27.512 guaranteed the right to naturalise, and ius soli (Ley 346 art. 1) gave citizenship to every child born in the territory. In February 2023 the government publicly offered Argentine citizenship to Nicaraguans stripped of their nationality (La Nación). I found no data on how many stateless persons were naturalised, so the starting 'Sometimes; Usually' rests on thin evidence. 2025: DNU 366 moved naturalisation to the DNM. The June 2026 Cámara ruling records that the DNM opened the digital procedure only more than four months later and issued instructions about ten months later. Naturalisation applications, including those of stateless persons, therefore faced a gap during mid-to-late 2025. Courts reached split, case-by-case decisions on the DNU. By 1 Jan 2026 a channel existed. I keep 'Sometimes; Usually' and note the disruption. None of the evidence covers stateless persons specifically.",
+    "practice_sources": [
+     {
+      "title": "El Gobierno ofreció a Sergio Ramírez y a Gioconda Belli otorgarles la ciudadanía argentina (La Nación)",
+      "url": "https://www.lanacion.com.ar/politica/el-gobierno-ofrecio-a-sergio-ramirez-y-a-gioconda-belli-otorgarles-la-ciudadania-argentina-despues-nid21022023/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Declararon la inconstitucionalidad de los artículos del DNU que trasladaron a Migraciones el trámite de ciudadanía (Volosh)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "La justicia declaró la inconstitucionalidad del DNU 366/2025 (Juzgado Federal n°1 Paraná, Mondragón Herrera)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6196/La-justicia-declaro-la-inconstitucionalidad-del-DNU-366/2025-que-modifica-la-normativa-migratoria",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "La Corte Suprema tiene en sus manos otro DNU de Milei: el régimen migratorio (Ámbito)",
+      "url": "https://www.ambito.com/politica/la-corte-suprema-tiene-sus-manos-otro-dnu-javier-milei-el-regimen-migratorio-n6331028",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 27.512 in the Boletín Oficial original (arts. 17, 56, 58, 59); argentina.gob.ar lists no amending norms. Ley 346's consolidated text annotates the DNU 366/2025 changes, so the 2023 text is visible from the annotations. I did not reopen Constitution art. 20. Practice evidence specific to stateless persons was not found, and the UNHCR statistics PDF could not be read.",
+    "sources_opened": [
+     {
+      "title": "Ley 27.512 – Boletín Oficial 28/08/2019",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828"
+     },
+     {
+      "title": "Ley 27.512 – ficha argentina.gob.ar",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-327259"
+     },
+     {
+      "title": "Ley 27.512 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-327259/normas-modifican"
+     },
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "UNHCR Help Argentina – apatridia",
+      "url": "https://help.unhcr.org/argentina/apatridia/"
+     },
+     {
+      "title": "La Nación – oferta de ciudadanía a nicaragüenses",
+      "url": "https://www.lanacion.com.ar/politica/el-gobierno-ofrecio-a-sergio-ramirez-y-a-gioconda-belli-otorgarles-la-ciudadania-argentina-despues-nid21022023/"
+     },
+     {
+      "title": "Palabras del Derecho – Mondragón Herrera",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6196/La-justicia-declaro-la-inconstitucionalidad-del-DNU-366/2025-que-modifica-la-normativa-migratoria"
+     },
+     {
+      "title": "Palabras del Derecho – Volosh",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-"
+     },
+     {
+      "title": "Ámbito – DNU migratorio en la Corte",
+      "url": "https://www.ambito.com/politica/la-corte-suprema-tiene-sus-manos-otro-dnu-javier-milei-el-regimen-migratorio-n6331028"
+     }
+    ],
+    "starting_answer_concern": "Ley 27.512 art. 17 grants a right to naturalise under Ley 346, which is a facilitated route rather than an automatic guarantee. The starting citation's art. 59 quote actually comes from a later paragraph of art. 59, which mainly concerns priority treatment and fee waivers. The strongest basis for the children of migrants is Ley 346 art. 1 inc. 1 (ius soli regardless of the parents' nationality), and the citation should name it.",
+    "confidence": "low",
+    "notes": "The protection stays 'Yes': ius soli and Ley 27.512 are untouched. The naturalisation conditions that Ley 27.512 imports from Ley 346 were tightened by DNU 366/2025 (in force 29 May 2025). Ley 27.512 says it prevails where more favourable, which may soften the new 'legal residence, no departures' rule for stateless persons. Court rulings against the DNU's Title III (Paraná, Aug 2025; later appellate rulings in 2026) apply only to the parties. I read them through press reports, not the decisions themselves, so they are used as practice evidence only."
+   }
+  ]
+ }
 }
