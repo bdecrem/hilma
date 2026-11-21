@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina family claude-opus-5-5 high",
- "pid": 54764,
  "step": "forward",
  "slug": "argentina",
  "chunk": "family",
@@ -59,5 +58,693 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:26:48.907Z",
+ "minutes": 22.69,
+ "meters_after": {
+  "at": "2026-11-21T03:26:48.908Z",
+  "window": {
+   "pct": 52,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 52,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 52% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 60614,
+   "output": 22730,
+   "cache_read": 1111844,
+   "cache_write": 114907,
+   "cost_usd": 1.5193,
+   "total": 1310095
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 60584,
+    "output": 6313,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2008,
+    "cost_usd": 0.0492
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 16417,
+    "cache_read": 1111844,
+    "cache_write": 114907,
+    "thinking": 5712,
+    "cost_usd": 1.4701
+   }
+  }
+ },
+ "turns": 19,
+ "calls": 29,
+ "duration_ms": 270529,
+ "duration_api_ms": 267358,
+ "pages_read": 12,
+ "pages": [
+  {
+   "at": "2026-11-21T03:04:12.667Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 3 | ARTICULO 10 | ARTICULO 74 | ARTICULO 75 | ARTICULO 84 | reunificación familiar",
+   "ok": true,
+   "chars": 16660
+  },
+  {
+   "at": "2026-11-21T03:04:40.809Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 22 | ARTICULO 23 | seguro | medios de vida | ARTICULO 8 | ARTICULO 76 | ARTICULO 77",
+   "ok": true,
+   "chars": 12693
+  },
+  {
+   "at": "2026-11-21T03:07:13.098Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 22 | ARTICULO 10 | ARTICULO 74 | ARTICULO 34 | ARTICULO 76 | ARTICULO 84",
+   "ok": true,
+   "chars": 12589
+  },
+  {
+   "at": "2026-11-21T03:15:06.777Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": null,
+   "ok": true,
+   "chars": 6360
+  },
+  {
+   "at": "2026-11-21T03:15:07.978Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "reunificación | artículo 22 | medios económicos | familia | recurso judicial | Cámara",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:17.138Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": "2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 2085
+  },
+  {
+   "at": "2026-11-21T03:15:22.796Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 22 | ARTICULO 23 | ARTÍCULO 10 | ARTICULO 10",
+   "ok": true,
+   "chars": 645
+  },
+  {
+   "at": "2026-11-21T03:15:32.840Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+   "find": "ARTÍCULO 5° | ARTÍCULO 6° | ARTÍCULO 21 | reunificación familiar | medios económicos | ARTÍCULO 23.-",
+   "ok": true,
+   "chars": 12566
+  },
+  {
+   "at": "2026-11-21T03:15:33.573Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 22.- | ARTICULO 23.- | ARTICULO 10.-",
+   "ok": true,
+   "chars": 7781
+  },
+  {
+   "at": "2026-11-21T03:16:19.156Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 86 | ARTICULO 78 | Cámara interviniente | ARTICULO 87",
+   "ok": true,
+   "chars": 7557
+  },
+  {
+   "at": "2026-11-21T03:21:26.060Z",
+   "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand",
+   "find": "medios económicos | reunificación | familia | recurso | judicial | conmina",
+   "ok": true,
+   "chars": 6925
+  },
+  {
+   "at": "2026-11-21T03:21:27.917Z",
+   "url": "https://abogadoscocuzzayasociados.com/cambios-en-las-residencias-migratorias-segun-el-dnu-366-2025/",
+   "find": "reunificación | medios económicos | matrimonio | cónyuge | permanente",
+   "ok": true,
+   "chars": 3086
+  }
+ ],
+ "searches": [
+  "DNU 366/2025 migraciones inconstitucionalidad fallo reunificación familiar medios económicos residencia permanente",
+  "Decreto 366/2025 infoleg \"Ley de Migraciones\" modificación texto boletín oficial 29/05/2025",
+  "Migraciones residencia permanente \"medios económicos\" requisito DNU 366 reunificación familiar cónyuge padre hijo argentino residencia temporaria práctica 2025",
+  "DNU 366/2025 recurso judicial Cámara 15 días patrocinio letrado acceso a la justicia migrantes CELS CAREF Defensoría General de la Nación crítica"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.49,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":73,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 3(d) (cited as 3.E)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 10\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 22 (permanent residence; family of Argentine citizens)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 23 inc. ñ (new temporary 'Reunificación familiar' subcategory)\",\"enacted\":\"2025-05-29\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Decreto 616/2010\",\"article\":\"Arts. 10, 22(a)-(b), 23\",\"enacted\":\"2010-05-06\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 26.202 (Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios y de sus Familiares)\",\"article\":\"Art. 44\",\"enacted\":\"2007\",\"history_read\":\"not_found\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025\",\"article\":\"Art. 5 (substitutes art. 22 Ley 25.871)\",\"kind\":\"amended\",\"what_changed\":\"Before: art. 22 made spouses, children and parents of Argentine citizens permanent residents and set no means test. After: anyone applying for permanent residence must prove sufficient economic means and no criminal record, and citizens' relatives are no longer permanent residents by law. Reunification through permanent residence (Decreto 616/2010 art. 22(a)-(b)) is still possible, but on these conditions.\",\"url\":\"https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250",
+ "output": {
+  "answers": [
+   {
+    "question_id": 73,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 3(d) (cited as 3.E)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 10",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 22 (permanent residence; family of Argentine citizens)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 23 inc. ñ (new temporary 'Reunificación familiar' subcategory)",
+      "enacted": "2025-05-29",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 10, 22(a)-(b), 23",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.202 (Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios y de sus Familiares)",
+      "article": "Art. 44",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 5 (substitutes art. 22 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before: art. 22 made spouses, children and parents of Argentine citizens permanent residents and set no means test. After: anyone applying for permanent residence must prove sufficient economic means and no criminal record, and citizens' relatives are no longer permanent residents by law. Reunification through permanent residence (Decreto 616/2010 art. 22(a)-(b)) is still possible, but on these conditions.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país y que no cuenta con antecedentes penales que pudieren motivar el rechazo de la solicitud, todo ello de acuerdo con las condiciones que establezca la reglamentación."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 6 (adds art. 23 inc. ñ Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Adds a statutory temporary-residence subcategory for family reunification. It covers the spouse, parent or child of an Argentine citizen, and the spouse, parent, or unmarried minor or disabled child of a permanent or temporary resident. It lasts up to 3 years (or the sponsor's term) and can be extended. The family members covered stay the same: immediate family only.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "ñ) Reunificación familiar: ser cónyuge, progenitor o hijo de argentino nativo, naturalizado o por opción; o ser cónyuge, progenitor o hijo soltero menor a DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de un residente permanente o temporario, con autorización para permanecer en el país por un máximo de TRES (3) años"
+     }
+    ],
+    "implementation_then_now": "2023: we read no practice source of our own for this period; we keep the MRD's 'Usually'. The Defensoría del Pueblo de la Provincia de Buenos Aires notes that its migration caseload was stable until 2023, which fits a functioning reunification channel. 2026: the same Defensoría reports that DNU 366/2025 formally keeps the family-reunification categories. It also reports that the new economic-means requirement is applied with wide discretion, and that DNM orders applicants who cannot prove means to leave the country ('conmina a hacer abandono'). This creates uncertainty for mixed and migrant families. Practice therefore shifted downward to between Sometimes and Usually.",
+    "practice_sources": [
+     {
+      "title": "A un año del DNU 366: crecen las restricciones migratorias y se dispara la demanda de asistencia en la Defensoría",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Cambios en las Residencias Migratorias según el DNU 366/2025 (Cocuzza y Asociados)",
+      "url": "https://abogadoscocuzzayasociados.com/cambios-en-las-residencias-migratorias-segun-el-dnu-366-2025/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "We read InfoLEG's texto original (the 2023 text: DNU 70/2017 was abrogated by Decreto 138/2021, and art. 22 was not touched in between), the texto actualizado with its amendment notes, and DNU 366/2025 in the Boletín Oficial. InfoLEG lists no amendment to Decreto 616/2010 in 2023-2025. Practice evidence for 2023 is thin.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 366/2025 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Defensoría del Pueblo PBA: A un año del DNU 366",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand"
+     },
+     {
+      "title": "Cocuzza y Asociados: Cambios en las Residencias Migratorias según el DNU 366/2025",
+      "url": "https://abogadoscocuzzayasociados.com/cambios-en-las-residencias-migratorias-segun-el-dnu-366-2025/"
+     }
+    ],
+    "starting_answer_concern": "In both versions the law covers only immediate family (spouses, parents, minor or disabled children). The MRD's own Colombia example codes such a limit as 'Conditional', so 'Yes' looks generous. Also, the reunification objective is art. 3(d), not 3(e), in the text.",
+    "confidence": "medium",
+    "notes": "DNU 366/2025 was in force on 1 January 2026; we found no evidence that Congress rejected it. The 2026 court rulings that annulled it (Cámara Nacional Electoral; Cámara Civil y Comercial Federal) concern the citizenship chapter and came after the window. We read only search snippets about them, not the rulings."
+   },
+   {
+    "question_id": 75,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 74",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 75-77, 79-80, 86, 89 (procedure)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 81, 84",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "repealed"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 21 (substitutes art. 74 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "The new art. 74 keeps administrative and judicial review of DNM decisions that deny admission or permanence (inc. a). It adds that the Director's own acts are not open to administrative review. The judicial remedy against refusals stays in place.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "procederá la revisión en sede administrativa y judicial, cuando: a) Se deniegue la admisión o la permanencia de un extranjero; ... No procederá la revisión en sede administrativa de los actos dictados por el Director Nacional de Migraciones"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Arts. 23-24, 34 (substitute arts. 76-77, repeal art. 84 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before: art. 84 allowed a judicial appeal within 30 working days once the administrative remedies (reconsideration, hierarchical, alzada) were exhausted. After: a written appeal with mandatory legal counsel goes directly to the Cámara Contencioso Administrativo Federal or a federal chamber within 15 judicial working days, on a short timetable. Reconsideration and alzada were removed. Separately, art. 89 now limits judicial review to legality, due process and reasonableness, and art. 86 limits free legal aid to return and expulsion proceedings.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 76. — Agotada la vía administrativa, podrá interponerse el recurso judicial dentro de los QUINCE (15) días hábiles judiciales ... ARTICULO 77. — El recurso judicial deberá ser interpuesto ante la Cámara Nacional de Apelaciones en lo Contencioso Administrativo Federal o las Cámaras Federales con asiento en las provincias. El recurso deberá ser presentado con patrocinio letrado"
+     }
+    ],
+    "implementation_then_now": "2023: we kept the MRD's 'Sometimes; Usually'; we read no practice source of our own for that period. 2026: the remedy still exists. Search results (not read) point to Cámara Contencioso Administrativo Federal rulings on competence disputes under the new direct-appeal route, and to a Ministerio Público de la Defensa paper arguing that DNU 366 undermines effective judicial protection. The Defensoría PBA reports DNU orders to leave the country that are hard to challenge. Without read evidence of a documented shift, we keep the rating, flagged low.",
+    "practice_sources": [
+     {
+      "title": "A un año del DNU 366: crecen las restricciones migratorias y se dispara la demanda de asistencia en la Defensoría",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "For the 2023 text we read InfoLEG's texto original of arts. 74-84; arts. 74 and 82 had been restored by Decreto 138/2021. We read the current text and DNU 366/2025 from InfoLEG and the Boletín Oficial. PDFs from the MPD repository and CAREF could not be opened (no PDF extraction).",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 366/2025 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Defensoría del Pueblo PBA: A un año del DNU 366",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "The protection answer rests on the statute, not on case law. The shorter deadline, mandatory counsel and narrower legal aid may well reduce effective access in practice; this should be revisited once the CAREF (2026) and MPD reports can be read."
+   },
+   {
+    "question_id": 77,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 3(d), 10",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 10, 22(a)-(b)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.618 (Matrimonio Igualitario)",
+      "article": "general",
+      "enacted": "2010-07-22",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In both years, 'spouse' (cónyuge) in art. 10, Decreto 616/2010 art. 22 and the new art. 23 ñ includes same-sex spouses under equal-marriage law. DNM Disposición 4880/2015 (InfoLEG note, still in force) also recognises registered unions (uniones convivenciales) for admission. We found no documented pattern of refusal in either period. We keep 'Usually', but we read no practice source specific to same-sex couples.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 10 has the same wording in the texto original and the texto actualizado, with no amendment note. Ley 26.618 and its Civil Code counterpart were not reopened; we know of no amendment.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 366/2025 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "DNU 366/2025 did not touch art. 10 or the meaning of 'cónyuge'. Its new means test (art. 22) affects all spouses equally and is coded under q79."
+   },
+   {
+    "question_id": 79,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There was right protection (as of January 1, 2023), but there is no such protection now (as of January 1, 2026)",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 3(d), 10",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 22",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 34",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 22(b), 23",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 5 (substitutes art. 22 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before: the law set no economic condition for permanent residence, and citizens' relatives were permanent residents by law. After: every applicant for permanent residence, including relatives applying under Decreto 616/2010 art. 22(a)-(b), must prove sufficient economic means. This brings in a resource condition.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país y que no cuenta con antecedentes penales"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 9 (substitutes art. 34 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before: art. 34 only regulated the places of entry and exit, plus humanitarian exceptions. After: foreigners seeking admission under any migration category must declare under oath that they hold health insurance. This is an insurance condition on entry, including for the family-reunification categories.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "los extranjeros que soliciten admisión bajo cualquiera de las categorías migratorias previstas en la normativa vigente deberán presentar una declaración jurada en la que manifiesten el propósito de su ingreso, que cuentan con un seguro de salud para atender sus necesidades médicas"
+     }
+    ],
+    "implementation_then_now": "2023: we keep the MRD's 'Usually; Effectively Always'. Under the 2004 text no means test applied, and the Defensoría PBA describes a stable pre-2024 situation; we read no 2023-specific source. 2026: the Defensoría PBA documents DNM applying the 'medios económicos suficientes' requirement without defined criteria, and ordering applicants who cannot meet it to leave the country. This confirms the resource condition is applied in practice. With a 'No' answer, implementation is 'Does Not Apply'.",
+    "practice_sources": [
+     {
+      "title": "A un año del DNU 366: crecen las restricciones migratorias y se dispara la demanda de asistencia en la Defensoría",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The amendment dates are firm: DNU 366/2025 is in the Boletín Oficial and InfoLEG gives it effect from 29/5/2025. Decreto 616/2010 was not amended to define the means test, so 'reglamentación' is still pending.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 366/2025 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Defensoría del Pueblo PBA: A un año del DNU 366",
+      "url": "https://www.defensorba.org.ar/contenido/a-un-ano-del-dnu-366-crecen-las-restricciones-migratorias-y-se-dispara-la-demand"
+     },
+     {
+      "title": "Cocuzza y Asociados: Cambios en las Residencias Migratorias según el DNU 366/2025",
+      "url": "https://abogadoscocuzzayasociados.com/cambios-en-las-residencias-migratorias-segun-el-dnu-366-2025/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "There is another reading. The new temporary art. 23 ñ reunification category has no statutory means test, and the DNU's preamble says reunification 'se verá garantizado en todos los casos'. A coder could therefore keep 'Yes' for the temporary route. We coded 'No' because the permanent route now requires proof of economic means, every entry requires a health-insurance declaration, and the Defensoría PBA documents the means test being applied."
+   }
+  ]
+ }
 }
