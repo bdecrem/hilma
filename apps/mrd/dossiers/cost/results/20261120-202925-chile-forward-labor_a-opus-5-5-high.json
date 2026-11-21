@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile labor_a claude-opus-5-5 high",
- "pid": 60329,
  "step": "forward",
  "slug": "chile",
  "chunk": "labor_a",
@@ -60,5 +59,837 @@
   "user": 117
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T04:55:44.042Z",
+ "minutes": 26.31,
+ "meters_after": {
+  "at": "2026-11-21T04:55:44.042Z",
+  "window": {
+   "pct": 74,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 50,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 74,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 50,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 74% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 50% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 88485,
+   "output": 26708,
+   "cache_read": 1946312,
+   "cache_write": 107208,
+   "cost_usd": 1.6872,
+   "total": 2168713
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 88433,
+    "output": 8357,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2776,
+    "cost_usd": 0.073
+   },
+   "claude-opus-5-5": {
+    "input": 52,
+    "output": 18351,
+    "cache_read": 1946312,
+    "cache_write": 107208,
+    "thinking": 4932,
+    "cost_usd": 1.6142
+   }
+  }
+ },
+ "turns": 30,
+ "calls": 48,
+ "duration_ms": 332699,
+ "duration_api_ms": 292243,
+ "pages_read": 19,
+ "pages": [
+  {
+   "at": "2026-11-21T04:29:32.276Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 14.- | Artículo 70.- | Artículo 73.- | Artículo 3.- | Artículo 7.- | Versión",
+   "ok": true,
+   "chars": 6342
+  },
+  {
+   "at": "2026-11-21T04:29:51.221Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 14.- | Artículo 70.- | Artículo 73.- | Artículo 19.- | Artículo 7.- Igualdad",
+   "ok": true,
+   "chars": 9547
+  },
+  {
+   "at": "2026-11-21T04:29:56.106Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "Los titulares y dependientes | Artículo 7.- | 7. Extranjero | Artículo 75.- | dependientes podrán",
+   "ok": true,
+   "chars": 4932
+  },
+  {
+   "at": "2026-11-21T04:30:01.798Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 14.- | Los dependientes estarán habilitados | Artículo 73.- | Artículo 13.-",
+   "ok": true,
+   "chars": 6457
+  },
+  {
+   "at": "2026-11-21T04:30:11.828Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01",
+   "find": "Artículo 14.- | Los dependientes estarán habilitados | Artículo 73.- | cualquiera que sea su etnia",
+   "ok": true,
+   "chars": 5471
+  },
+  {
+   "at": "2026-11-21T04:31:13.092Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436",
+   "find": "Art. 2° | Los actos de discriminación son | Art. 19. | Art. 62 bis | Art. 5°",
+   "ok": true,
+   "chars": 5896
+  },
+  {
+   "at": "2026-11-21T04:31:32.194Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096",
+   "find": "Artículo 2º | origen social | entrará en vigencia | Artículo primero transitorio",
+   "ok": true,
+   "chars": 4092
+  },
+  {
+   "at": "2026-11-21T04:31:47.365Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idLey=21675",
+   "find": "Artículo 57 | Código del Trabajo | inciso cuarto del artículo 2",
+   "ok": true,
+   "chars": 705
+  },
+  {
+   "at": "2026-11-21T04:34:10.756Z",
+   "url": "https://secretariadegenero.pjud.cl/images/documentos/ley21675/Ley_21675.pdf",
+   "find": "Artículo 57 | Código del Trabajo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:34:21.296Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "2º.- La igualdad ante la ley | 16º.- La libertad de trabajo | Se prohíbe cualquiera discriminación",
+   "ok": true,
+   "chars": 4104
+  },
+  {
+   "at": "2026-11-21T04:34:31.849Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043",
+   "find": "Artículo 19 | Versión | Modificaciones | actividades remuneradas",
+   "ok": true,
+   "chars": 6159
+  },
+  {
+   "at": "2026-11-21T04:34:34.632Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043",
+   "find": "Artículo 19 | Artículo 17 | Artículo 72 | Artículo 73",
+   "ok": true,
+   "chars": 8473
+  },
+  {
+   "at": "2026-11-21T04:37:38.680Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043",
+   "find": "Título Tercero | calidad de Dependiente | dependientes podrán",
+   "ok": true,
+   "chars": 5420
+  },
+  {
+   "at": "2026-11-21T04:37:56.501Z",
+   "url": "https://www.ecoi.net/en/document/2130540.html",
+   "find": "migrant | Venezuela | labor inspect | forced labor",
+   "ok": true,
+   "chars": 7377
+  },
+  {
+   "at": "2026-11-21T04:37:57.434Z",
+   "url": "https://www.ecoi.net/en/document/2128432.html",
+   "find": "migrant | discrimination | Haitian | equal pay | Acceptable Conditions",
+   "ok": true,
+   "chars": 2167
+  },
+  {
+   "at": "2026-11-21T04:38:01.166Z",
+   "url": "https://cl.boell.org/sites/default/files/2023-08/trabajo-y-migracion-fundacion-sol.pdf",
+   "find": "15,4 | brecha | discriminación",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:45:36.703Z",
+   "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp",
+   "find": "migrante | brecha | Fundación SOL | discrimin",
+   "ok": true,
+   "chars": 3348
+  },
+  {
+   "at": "2026-11-21T04:45:37.428Z",
+   "url": "https://www.ecoi.net/en/document/2066009.html",
+   "find": "migrant | racial profiling | xenophob | employment",
+   "ok": true,
+   "chars": 1944
+  },
+  {
+   "at": "2026-11-21T04:49:34.616Z",
+   "url": "https://www.ecoi.net/de/dokument/2077653.html",
+   "find": "migrant | Venezuela | Haiti | forced labor",
+   "ok": true,
+   "chars": 5366
+  }
+ ],
+ "searches": [
+  "Ley 21.643 modifica Código del Trabajo artículo 2 \"origen social\" entrada en vigencia 1 agosto 2024",
+  "Ley 21.675 artículo 57 Código del Trabajo artículo 2 inciso cuarto \"género\" bcn leychile idNorma",
+  "Decreto 177 2022 Ministerio del Interior subcategorías migratorias residencia temporal leychile",
+  "Chile 2024 Trafficking in Persons Report migrants forced labor labor inspectors Dirección del Trabajo",
+  "CERD observaciones finales Chile 2022 migrantes discriminación racial haitianos venezolanos",
+  "brecha salarial trabajadores migrantes Chile informe 2024 precariedad laboral informalidad estudio"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.69,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.7,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.71,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.72,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.73,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":95,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Arts. 13, 14\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código del Trabajo (DFL 1/2002)\",\"article\":\"Art. 1 (as cited; the nationality non-discrimination rule is in Art. 2, inciso cuarto)\",\"enacted\":\"unknown\",\"history_read\":\"current_text_only\",\"status\":\"could_not_establish\"},{\"instrument\":\"Código del Trabajo (DFL 1/2002)\",\"article\":\"Art. 2, inciso cuarto\",\"enacted\":\"2001\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Art. 19 N° 16\",\"enacted\":\"1980-10-24\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2024-08-01\",\"instrument\":\"Ley N° 21.643 (Ley Karin), artículo 1 N° 1 letra b)\",\"article\":\"Código del Trabajo art. 2, inciso cuarto\",\"kind\":\"amended\",\"what_changed\":\"The list of prohibited grounds for discrimination, which already included 'raza, color' and 'nacionalidad, ascendencia nacional', now ends with an open clause ('o cualquier otro motivo'). The law was published on 15 January 2024 and entered into force on the first day of the sixth month after publication. The equal-treatment protection that reaches migrants was widened slightly; the answer does not change.\",\"url\":\"https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096\",\"passage\":\"b) Sustitúyese en el inciso cuarto la frase \\\"u origen social,\\\" por la siguiente: \\\", origen social o cualquier otro motivo,\\\". ... Artículo primero.- La presente ley entrará en vigencia el primer día del sexto mes subsiguiente a su publicación en el Diario Oficial\"},{\"date\":\"202",
+ "output": {
+  "answers": [
+   {
+    "question_id": 95,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13, 14",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código del Trabajo (DFL 1/2002)",
+      "article": "Art. 1 (as cited; the nationality non-discrimination rule is in Art. 2, inciso cuarto)",
+      "enacted": "unknown",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Código del Trabajo (DFL 1/2002)",
+      "article": "Art. 2, inciso cuarto",
+      "enacted": "2001",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 N° 16",
+      "enacted": "1980-10-24",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-01",
+      "instrument": "Ley N° 21.643 (Ley Karin), artículo 1 N° 1 letra b)",
+      "article": "Código del Trabajo art. 2, inciso cuarto",
+      "kind": "amended",
+      "what_changed": "The list of prohibited grounds for discrimination, which already included 'raza, color' and 'nacionalidad, ascendencia nacional', now ends with an open clause ('o cualquier otro motivo'). The law was published on 15 January 2024 and entered into force on the first day of the sixth month after publication. The equal-treatment protection that reaches migrants was widened slightly; the answer does not change.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096",
+      "passage": "b) Sustitúyese en el inciso cuarto la frase \"u origen social,\" por la siguiente: \", origen social o cualquier otro motivo,\". ... Artículo primero.- La presente ley entrará en vigencia el primer día del sexto mes subsiguiente a su publicación en el Diario Oficial"
+     },
+     {
+      "date": "2024-06-14",
+      "instrument": "Ley N° 21.675, artículo 57",
+      "article": "Código del Trabajo art. 2, inciso cuarto",
+      "kind": "amended",
+      "what_changed": "'Género' was added after 'sexo' in the list of prohibited grounds. The date is the Diario Oficial publication date noted in the consolidated Code; I could not open the law itself to confirm when it entered into force. The nationality and race grounds are untouched.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436",
+      "passage": "Los actos de discriminación son las distinciones, exclusiones o preferencias basadas en motivos de raza, color,Ley 21675Art. 57D.O. 14.06.2024 sexo, género, ... nacionalidad, ascendencia ... nacional"
+     }
+    ],
+    "implementation_then_now": "2023: the TIP Report 2022 (covering 2021) says that all identified adult trafficking victims were foreigners and asks Chile to screen vulnerable migrants. That report is about trafficking victims, not about wage equality as such. 2026: ENCLA 2023, as reported in the press in 2025, finds a significant pay gap between migrants and Chileans, with informality, underemployment and low pay; Haitians are concentrated in fixed-term and per-job contracts. The 2025 TIP Report (covering 2024) records rising numbers of foreign labour-trafficking victims. Neither period shows a shift: the gaps are documented on both dates, and nothing in the window points to a change. The starting rating is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Sueldos de migrantes en Chile: 66% gana $800 mil bruto (ENCLA 2023), El Desconcierto",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2022 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 21.325 on LeyChile in its original version (12 February 2022), its intermediate version of 1 April 2025 (in force on 1 January 2026) and its current version; arts. 13 and 14 are identical in all three. For art. 2 of the Labour Code I read the current consolidated text with its amendment notes, plus the text of Ley 21.643. I could not open Ley 21.675 (PDF unreadable) or the Fundación SOL study.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (versions page)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – current text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – original version 2022-02-12",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Código del Trabajo – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436"
+     },
+     {
+      "title": "Ley 21.643",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096"
+     },
+     {
+      "title": "Constitución Política – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "El Desconcierto – ENCLA 2023 migrant wages",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp"
+     },
+     {
+      "title": "2025 TIP Report Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     },
+     {
+      "title": "2022 TIP Report Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     }
+    ],
+    "starting_answer_concern": "'Effectively Always' looks too high. ENCLA 2023 and studies based on CASEN data document a significant migrant–Chilean pay gap, part of it unexplained for Venezuelans, and high informality. 'Usually' or 'Sometimes; Usually' would fit the MRD's usual practice better. The citation's 'Labour Code article 1' should be article 2, inciso cuarto, which lists 'nacionalidad' as a prohibited ground. Ley 21.325 art. 14 carries the equal-labour-rights rule: 'Los extranjeros gozarán de los mismos derechos en materia laboral que los chilenos'.",
+    "confidence": "medium",
+    "notes": "Relied on statutes only, not court rulings. Four laws amended Ley 21.325 in the window (21.590, 21.589, 21.610 and 21.655). A comparison of the versions shows they did not touch arts. 13 or 14. Constitution art. 19 N°16 ('libre elección del trabajo con una justa retribución') carries no amendment note after 2005."
+   },
+   {
+    "question_id": 97,
+    "answer_2023": "Migrant workers have completely free choice of employment",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Migrant workers have completely free choice of employment",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 70, 73",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022), Ministerio del Interior y Seguridad Pública, establece las subcategorías migratorias de residencia temporal",
+      "article": "Art. 19",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No source I found documents the immigration authority blocking a change of employer, on either date. Decreto 177 art. 19 provides that a holder of the work-based temporary permit may change employer without informing SERMIG. The labour-trafficking findings in the 2022 and 2025 TIP reports concern exploitation, not legal tying to an employer. I found no practice evidence specific to employer changes in either period, so the starting rating is carried forward unchanged.",
+    "practice_sources": [
+     {
+      "title": "2025 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2022 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "In Ley 21.325, art. 73 ('Los residentes temporales podrán desarrollar actividades remuneradas') reads the same in the 2022, 2025 and current versions, and I read art. 70 in the current version. LeyChile lists Decreto 177 as 'Versión: Única - 14-MAY-2022', so it was never amended. The practice evidence is indirect.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – versions page",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – current text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – original version",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Decreto 177 – versions page",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     },
+     {
+      "title": "Decreto 177 – text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043"
+     },
+     {
+      "title": "Código del Trabajo – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436"
+     },
+     {
+      "title": "2025 TIP Report Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     },
+     {
+      "title": "2022 TIP Report Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     }
+    ],
+    "starting_answer_concern": "Decreto 177 art. 19 does support free change of employer: 'podrá cambiar de empleador sin necesidad de informarlo al Servicio Nacional de Migraciones'. Two limits weigh against 'completely free'. First, the work permit is first granted on the strength of a specific contract (art. 17), and the seasonal permit is capped at 6 months per year. Second, Labour Code art. 19, unchanged, requires that at least 85% of the workers of any employer with more than 25 employees be Chilean. A reviewer could reasonably judge the 'completely free' answer generous, and the 'Effectively Always' rating rests on no documented practice.",
+    "confidence": "medium",
+    "notes": "No ruling in the window was found. Labour Code art. 19 (85% national-workers quota) carries no amendment note in the window."
+   },
+   {
+    "question_id": 99,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería (not cited by the starting answer; checked)",
+      "article": "Art. 74",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022)",
+      "article": "Arts. 15, 72",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Because the starting answer is 'No', implementation is 'Does Not Apply' on both dates. I found no practice evidence on dependants' work in either period. The relevant law did not change between 2023 and 2026.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 74 of Ley 21.325 reads the same in the original (2022), 1 April 2025 and current versions. Decreto 177 has a single version (14 May 2022).",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – current text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – original version",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Decreto 177 – versions page",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     },
+     {
+      "title": "Decreto 177 – text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043"
+     }
+    ],
+    "starting_answer_concern": "The starting 'No' looks wrong. Ley 21.325 art. 74, in force unchanged since 12 February 2022, makes the spouse or partner ('cónyuge o conviviente') of a temporary resident eligible for a dependant permit and provides: 'Los dependientes estarán habilitados para realizar actividades remuneradas.' The restrictions the regulation may set apply only to the children (numeral 2). For spouses of Chileans and permanent residents, Decreto 177 art. 15 states that holders of the family-reunification permit 'podrán desempeñar actividades lícitas remuneradas'. Both provisions point to 'Yes, unrestricted right to work'. This is a disagreement with the first coder, not a change in the law.",
+    "confidence": "medium",
+    "notes": "Following the instructions, the starting answer is kept for both dates because no dated event explains a difference."
+   },
+   {
+    "question_id": 103,
+    "answer_2023": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 14",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Art. 2",
+      "enacted": "unknown",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Arts. 1, 3, 5",
+      "enacted": "unknown",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-01",
+      "instrument": "Ley N° 21.643 (Ley Karin), artículo 1 N° 1",
+      "article": "Código del Trabajo art. 2 (incisos segundo and cuarto)",
+      "kind": "amended",
+      "what_changed": "Art. 2 now defines sexual harassment, workplace harassment and third-party violence at work as contrary to the dignity of the worker, and the list of discrimination grounds now ends with 'o cualquier otro motivo'. These protections apply to all workers, migrants included. They widen protections equally and do not alter the equal-treatment answer.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096",
+      "passage": "b) El acoso laboral, entendiéndose por tal toda conducta que constituya agresión u hostigamiento ejercida por el empleador o por uno o más trabajadores... c) La violencia en el trabajo ejercida por terceros ajenos a la relación laboral... b) Sustitúyese en el inciso cuarto la frase \"u origen social,\" por la siguiente: \", origen social o cualquier otro motivo,\"."
+     }
+    ],
+    "implementation_then_now": "No shift is documented. ENCLA 2023 (reported 2025) shows that migrants are concentrated in lower-paid jobs. Contract stability also varies by nationality: 85.6% of Venezuelan employees have open-ended contracts, while Haitians mostly have per-job contracts. The 2025 TIP Report records labour-trafficking cases among foreign victims, and the 2024 US human-rights report finds labour-law enforcement generally effective but inspectorate staffing insufficient. Before 2023, the 2022 TIP Report shows a similar picture. The starting rating is carried forward for both dates.",
+    "practice_sources": [
+     {
+      "title": "El Desconcierto – ENCLA 2023 migrant employment conditions",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Chile",
+      "url": "https://www.ecoi.net/en/document/2128432.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2022 Trafficking in Persons Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I compared three versions of Ley 21.325 art. 14 (2022, 2025, current); it is unchanged. Labour Code art. 2 was read in its current consolidated text with amendment notes, and in the text of Ley 21.643. I did not read Labour Code arts. 1, 3 and 5. The US human-rights report covers all workers, not migrants specifically.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – current text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – original version",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Código del Trabajo – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436"
+     },
+     {
+      "title": "Ley 21.643",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096"
+     },
+     {
+      "title": "El Desconcierto – ENCLA 2023",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Chile",
+      "url": "https://www.ecoi.net/en/document/2128432.html"
+     },
+     {
+      "title": "2025 TIP Report Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     },
+     {
+      "title": "2022 TIP Report Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     }
+    ],
+    "starting_answer_concern": "'Effectively Always' looks too high. Informality, precarious contracts and labour exploitation of migrants are documented, and the inspectorate is reported understaffed. 'Usually' would be the MRD's usual rating where the law is honoured with known gaps. The legal answer itself holds: art. 14 of Ley 21.325 provides 'los mismos derechos en materia laboral que los chilenos'.",
+    "confidence": "medium",
+    "notes": "Relied on statutes only. The 2023–2025 amendments to Ley 21.325 did not touch art. 14."
+   },
+   {
+    "question_id": 135,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 1, 3, 7, 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 N° 2",
+      "enacted": "1980-10-24",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código del Trabajo (not cited by the starting answer; checked)",
+      "article": "Art. 2, inciso cuarto",
+      "enacted": "2001",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-01",
+      "instrument": "Ley N° 21.643, artículo 1 N° 1 letra b)",
+      "article": "Código del Trabajo art. 2, inciso cuarto",
+      "kind": "amended",
+      "what_changed": "The employment non-discrimination clause, which already prohibited distinctions based on 'raza, color' and 'nacionalidad, ascendencia nacional', gained an open-ended 'o cualquier otro motivo'. The race and ethnicity ban was already in force and continues; the answer does not change.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096",
+      "passage": "b) Sustitúyese en el inciso cuarto la frase \"u origen social,\" por la siguiente: \", origen social o cualquier otro motivo,\"."
+     }
+    ],
+    "implementation_then_now": "2023: CERD's concluding observations of September 2022 (CERD/C/CHL/CO/22-23) note rising hate speech and xenophobic rejection of migration, violence against migrants, and police racial profiling of migrant and Afro-descendant communities. I know their content only second-hand; the PDF could not be opened. 2026: ENCLA 2023 (reported 2025) shows labour-market outcomes that differ by nationality, with Haitians worst placed. Neither source shows a clear shift in the window, so 'Usually' is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations on Chile CERD/C/CHL/CO/22-23 (ecoi.net entry; PDF not readable)",
+      "url": "https://www.ecoi.net/en/document/2066009.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "El Desconcierto – ENCLA 2023 migrant employment by nationality",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 13 of Ley 21.325 ('cualquiera que sea su etnia, nacionalidad o idioma') reads the same in the 2022, 2025 and current versions, and I read arts. 3 and 7 in the current text. Constitution art. 19 N°2 carries amendment notes only from 1980 and 1999. The CERD content is second-hand because the PDF could not be read.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – current text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – original version",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Constitución Política – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Código del Trabajo – consolidated text",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436"
+     },
+     {
+      "title": "Ley 21.643",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1200096"
+     },
+     {
+      "title": "CERD concluding observations Chile 2022 – ecoi.net entry",
+      "url": "https://www.ecoi.net/en/document/2066009.html"
+     },
+     {
+      "title": "El Desconcierto – ENCLA 2023",
+      "url": "https://eldesconcierto.cl/2025/02/18/brecha-salarial-en-chile-661-de-la-poblacion-migrante-gana-800-mil-bruto-o-incluso-menos/amp"
+     }
+    ],
+    "starting_answer_concern": "The legal answer holds. Labour Code art. 2 ('raza, color... nacionalidad') is the most specific employment provision and could be added to the citation. Given the CERD findings on profiling and xenophobia, 'Sometimes; Usually' would also be defensible.",
+    "confidence": "medium",
+    "notes": "Relied on statutes, not rulings. Ley 20.609 (anti-discrimination) was not re-checked."
+   }
+  ]
+ }
 }
