@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile life claude-opus-5-5 high",
- "pid": 62583,
  "step": "back2000",
  "slug": "chile",
  "chunk": "life",
@@ -58,5 +57,678 @@
   "user": 174
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T05:57:38.749Z",
+ "minutes": 48.83,
+ "meters_after": {
+  "at": "2026-11-21T05:57:38.749Z",
+  "window": {
+   "pct": 15,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 51,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 15,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 51,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 15% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 51% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 77579,
+   "output": 18058,
+   "cache_read": 1308702,
+   "cache_write": 93297,
+   "cost_usd": 1.3065,
+   "total": 1497636
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 77537,
+    "output": 6192,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2159,
+    "cost_usd": 0.0608
+   },
+   "claude-opus-5-5": {
+    "input": 42,
+    "output": 11866,
+    "cache_read": 1308702,
+    "cache_write": 93297,
+    "thinking": 2810,
+    "cost_usd": 1.2456
+   }
+  }
+ },
+ "turns": 21,
+ "calls": 33,
+ "duration_ms": 337990,
+ "duration_api_ms": 317263,
+ "pages_read": 12,
+ "pages": [
+  {
+   "at": "2026-11-21T05:09:23.549Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1024319",
+   "find": "33 bis | víctima | no será | 411 bis | sanción | Artículo 4",
+   "ok": true,
+   "chars": 12406
+  },
+  {
+   "at": "2026-11-21T05:09:36.555Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 69 | Artículo 33 bis | Artículo 78 | trata de personas | Artículo 10",
+   "ok": true,
+   "chars": 3212
+  },
+  {
+   "at": "2026-11-21T05:09:40.468Z",
+   "url": "https://www.interior.gob.cl/transparencia/doc/MarcoNormativoAplicable/200/7962164.pdf",
+   "find": "Art. 69 | Artículo 69 | clandestinamente | 33 bis | trata",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:09:48.713Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idParte=0",
+   "find": "clandestinamente | 33 bis | Artículo 69 | Art. 69",
+   "ok": true,
+   "chars": 2998
+  },
+  {
+   "at": "2026-11-21T05:16:20.747Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "clandestinamente | 33 bis | trata de personas",
+   "ok": true,
+   "chars": 6471
+  },
+  {
+   "at": "2026-11-21T05:16:26.141Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 35.- | Artículo 78.- | Artículo 10.- | fuerza",
+   "ok": true,
+   "chars": 6495
+  },
+  {
+   "at": "2026-11-21T05:16:41.837Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1126341",
+   "find": "Artículo primero | letal | armas de fuego | migrantes | proporcionalidad",
+   "ok": true,
+   "chars": 3971
+  },
+  {
+   "at": "2026-11-21T05:16:52.319Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2010-01-01",
+   "find": "Art. 367 bis | 367 bis. | prostitución en el territorio",
+   "ok": true,
+   "chars": 2382
+  },
+  {
+   "at": "2026-11-21T05:17:07.261Z",
+   "url": "https://www.ecoi.net/en/document/1142952.html",
+   "find": "penalized | punish | detained | deport | smuggl | identified",
+   "ok": true,
+   "chars": 6369
+  },
+  {
+   "at": "2026-11-21T05:17:08.858Z",
+   "url": "https://www.ecoi.net/en/document/1225776.html",
+   "find": "Chile | penalized | punish | trata de blancas | 367",
+   "ok": true,
+   "chars": 5359
+  },
+  {
+   "at": "2026-11-21T05:29:43.473Z",
+   "url": "https://www.ecoi.net/en/document/1142952.html",
+   "find": "unlawful acts | penaliz | temporary residency | visa",
+   "ok": true,
+   "chars": 4363
+  },
+  {
+   "at": "2026-11-21T05:29:44.198Z",
+   "url": "https://www.ecoi.net/en/document/1225776.html",
+   "find": "unlawful acts | penaliz | deport | immigration violations",
+   "ok": true,
+   "chars": 3341
+  }
+ ],
+ "searches": [
+  "Ley 20.507 tipifica delitos de tráfico de migrantes y trata de personas leychile idNorma",
+  "Decreto Ley 1094 extranjería artículo 69 ingreso clandestino leychile bcn",
+  "\"Los extranjeros que ingresen al país o intenten egresar de él, clandestinamente\" artículo 69 decreto ley 1094",
+  "Decreto 1364 2018 Ministerio del Interior uso de la fuerza intervenciones orden público leychile",
+  "2015 Trafficking in Persons Report Chile \"penalized\" victims state.gov"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":9,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"DL 1.094 (1975), as amended by Ley 18.252 (1983), regulated entry through authorised crossing points (Art. 3) and made clandestine entry a crime (Art. 69). No provision prohibited officers from using force to prevent entry, and no such rule existed in DS 597/1984 or any police statute. No practice evidence was reviewed, since the answer is the lowest option.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"The regime was the same as in 2000 (DL 1.094 Arts. 3 and 69). None of the amendments to DL 1.094 between 2000 and 2005 touched the use of force at the border.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"No change. Ley 20.430 on refugees was published in April 2010, after this date, and contains no rule on force at the border.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"No change. Ley 20.507 (2011) added Art. 33 bis to DL 1.094 and new duties for the Investigations Police (PDI) on identifying people at entry and exit, but said nothing on the use of force against migrants.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 21\",\"role\":\"cited\",\"in_force\":\"2022-02-12 to today\",\"history_read\":\"not_found\"},{\"instrument\":\"Decreto Ley 1.094 de 1975, establece normas sobre extranjeros en Chile\",\"article\":\"Arts. 3, 69\",\"role\":\"predecessor\",\"in_force\":\"1975-07-19 to 2022-02-12\",\"history_read\":\"version_history\"},{\"instrument\":\"Decreto 1.364 de 2018, Ministerio del Interior y Seguridad Pública (uso de la fuerza en intervenciones policiales para el mantenimiento del orden público)\",\"article\":\"Artículo primero\",\"role\":\"other_in_force\",\"in_force\":\"2018-12-04 to today\",\"history_read\":\"version_history\"}],\"events\":[{\"date\":\"2018-12-04\",\"in",
+ "output": {
+  "answers": [
+   {
+    "question_id": 9,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 (1975), as amended by Ley 18.252 (1983), regulated entry through authorised crossing points (Art. 3) and made clandestine entry a crime (Art. 69). No provision prohibited officers from using force to prevent entry, and no such rule existed in DS 597/1984 or any police statute. No practice evidence was reviewed, since the answer is the lowest option."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The regime was the same as in 2000 (DL 1.094 Arts. 3 and 69). None of the amendments to DL 1.094 between 2000 and 2005 touched the use of force at the border."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.430 on refugees was published in April 2010, after this date, and contains no rule on force at the border."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.507 (2011) added Art. 33 bis to DL 1.094 and new duties for the Investigations Police (PDI) on identifying people at entry and exit, but said nothing on the use of force against migrants."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975, establece normas sobre extranjeros en Chile",
+      "article": "Arts. 3, 69",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 1.364 de 2018, Ministerio del Interior y Seguridad Pública (uso de la fuerza en intervenciones policiales para el mantenimiento del orden público)",
+      "article": "Artículo primero",
+      "role": "other_in_force",
+      "in_force": "2018-12-04 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2018-12-04",
+      "instrument": "Decreto 1.364 de 2018 (Ministerio del Interior y Seguridad Pública)",
+      "article": "Artículo primero",
+      "kind": "new_instrument",
+      "what_changed": "Sets general guidelines on police use of force when keeping public order: legality, preference for less harmful means, and a warning before firearm use. It does not address preventing migrants from entering, so the answer stays No.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1126341",
+      "passage": "Lineamientos generales sobre el uso de la fuerza en intervenciones policiales para el mantenimiento del orden público... 3) Los funcionarios policiales deberán evitar el uso intencional de armas letales, debiendo preferir el empleo de elementos o la adopción de medidas menos dañinas"
+     }
+    ],
+    "repealed_search": "I read the consolidated DL 1.094 (Art. 3 on authorised crossing points, Arts. 68-69 on clandestine entry, Arts. 81 ff. on control measures) and looked for any police or regulatory rule on force at the border between 2000 and 2020. I found no provision, then or later repealed, that prohibited force to prevent entry. The only instrument on force is Decreto 1.364/2018, which is general and covers public order only.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read DL 1.094 in its last consolidated version on LeyChile. It shows the amending laws next to each article, and Arts. 3 and 69 were unchanged during 2000-2020. Decreto 1.364 was read on LeyChile. I could not read DS 597/1984.",
+    "sources_opened": [
+     {
+      "title": "Decreto Ley 1094 - LeyChile (navigation page)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "Decreto Ley 1094 - LeyChile JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Decreto 1364 (2018) - LeyChile JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1126341"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer rests on statutes only. No ruling with a general rule on force at the border was found."
+   },
+   {
+    "question_id": 11,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 had no rule on lethal force at the border; it treated clandestine entry as a crime (Art. 69). No statute or regulation prohibited lethal force to prevent entry."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change from 2000."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. The general guideline to avoid intentional use of lethal weapons came only with Decreto 1.364 in December 2018, and even that covers public-order operations, not border entry."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 3, 69",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 1.364 de 2018, Ministerio del Interior y Seguridad Pública",
+      "article": "Artículo primero Nos. 3-4",
+      "role": "other_in_force",
+      "in_force": "2018-12-04 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2018-12-04",
+      "instrument": "Decreto 1.364 de 2018 (Ministerio del Interior y Seguridad Pública)",
+      "article": "Artículo primero Nos. 3-4",
+      "kind": "new_instrument",
+      "what_changed": "Police must avoid intentional use of lethal weapons and warn before using firearms, in public-order interventions. It is a general standard, not a prohibition reaching migrants at entry, so the answer stays No.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1126341",
+      "passage": "3) Los funcionarios policiales deberán evitar el uso intencional de armas letales, debiendo preferir el empleo de elementos o la adopción de medidas menos dañinas para lograr sus objetivos. 4) En caso que sea necesario emplear un arma de fuego, y siempre que sea posible, adecuado y útil, el funcionario policial advertirá claramente su intención de utilizarla."
+     }
+    ],
+    "repealed_search": "I searched DL 1.094 and police use-of-force instruments from 2000 to 2020 for any ban on lethal force against people entering. None was found, and nothing was repealed. Decreto 1.364/2018 is the only instrument on lethal weapons; it is general, limited to public order, and still in force.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DL 1.094 version history was read on LeyChile, and Decreto 1.364 has a single version. Earlier police use-of-force circulars, which are not norms published on LeyChile, were not read.",
+    "sources_opened": [
+     {
+      "title": "Decreto Ley 1094 - LeyChile JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Decreto 1364 (2018) - LeyChile JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1126341"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Decreto 1.364/2018 may be argued to be a general limit on lethal force. It is confined to public-order interventions and does not mention border entry or migrants, so it was not treated as the protection."
+   },
+   {
+    "question_id": 13,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "The only trafficking offence was Penal Code Art. 367 bis (Ley 19.409, 1995: facilitating entry or exit for prostitution), with no exemption for victims. DL 1.094 Art. 69 made clandestine entry a crime, and Art. 68 did the same for entry with false documents, with no exception for trafficked or smuggled people. No practice evidence was reviewed (lowest option)."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 19.927 (in force 2004-01-14) amended Art. 367 bis to add aggravated penalties but no victim exemption. Ley 19.806 (2002) amended DL 1.094 Art. 68 to bar conditional remission of sentences for false-document entry. Arts. 68-69 still applied to every foreigner."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "No change since 2005: Art. 367 bis CP and DL 1.094 Arts. 68-69 in force, no exemption. The 2011 US Trafficking in Persons report confirms that Chilean law before Ley 20.507 covered only cross-border movement for prostitution."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, the national law provides exemption",
+      "implementation": "Usually",
+      "basis": "Ley 20.507 (in force 2011-04-08) repealed Art. 367 bis and added Penal Code Arts. 411 bis to 411 octies, CPP Art. 78 bis on protecting victims, and DL 1.094 Art. 33 bis (temporary residence for trafficking victims). These are the provisions the 2020 'Yes' rests on. The 2014 US Trafficking in Persons report found 'no reports that the government punished trafficking victims for unlawful acts', but it covers trafficked people only, not smuggled migrants."
+     }
+    ],
+    "change_2000_2020": "There was no right protection (as of January 1, 2000), but there is now (as of January 1, 2020)",
+    "provisions": [
+     {
+      "instrument": "Ley 20.507, tipifica los delitos de tráfico de migrantes y trata de personas",
+      "article": "Arts. primero a séptimo",
+      "role": "cited",
+      "in_force": "2011-04-08 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Arts. 411 bis, 411 ter, 411 quáter, 411 quinquies, 411 sexies, 411 septies, 411 octies",
+      "role": "cited",
+      "in_force": "2011-04-08 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 78 bis",
+      "role": "cited",
+      "in_force": "2011-04-08 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 42/2005 (promulga Convención de Palermo y Protocolos)",
+      "article": "whole",
+      "role": "cited",
+      "in_force": "2005 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 7, 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 367 bis",
+      "role": "predecessor",
+      "in_force": "1995-09-07 to 2011-04-08",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Art. 33 bis",
+      "role": "predecessor",
+      "in_force": "2011-04-08 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 68, 69",
+      "role": "other_in_force",
+      "in_force": "1983-10-26 (current wording) to 2022-02-12",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2002-05-31",
+      "instrument": "Ley 19.806",
+      "article": "DL 1.094 Art. 68",
+      "kind": "amended",
+      "what_changed": "Excluded conditional remission of sentences for entry with false documents. It tightened punishment rather than exempting anyone, and the only exception (Art. 68, final paragraph) is for people who ask for asylum under Art. 35.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "En estos delitos no procederá la remisión condicional de la pena. Lo dispuesto en este artículo no regirá en el caso que el extranjero efectúe la declaración del inciso segundo del artículo 35."
+     },
+     {
+      "date": "2004-01-14",
+      "instrument": "Ley 19.927",
+      "article": "Código Penal Art. 367 bis",
+      "kind": "amended",
+      "what_changed": "Raised fines and added aggravating circumstances to the offence of facilitating entry or exit for prostitution. No exemption for victims was added.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2010-01-01",
+      "passage": "El que promoviere o facilitare la entrada o salida de personas del país para que éstas ejerzan la prostitución en el territorio nacional o en el extranjero, será castigado con la pena de presidio menor en su grado máximo y multa de veinte a treinta unidades tributarias mensuales."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "CP Arts. 411 bis-411 octies; CPP Art. 78 bis; DL 1.094 Art. 33 bis; repeal of CP Art. 367 bis",
+      "kind": "new_instrument",
+      "what_changed": "Created the offences of migrant smuggling and trafficking (targeting the facilitator), required prosecutors to protect victims, and gave trafficking victims the right to apply for temporary residence with no repatriation in case of danger. It is the basis of the 2020 'Yes', although it contains no explicit non-punishment clause.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1024319",
+      "passage": "Artículo 33 bis.- Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal por un período mínimo de seis meses"
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "Código Procesal Penal Art. 78 bis",
+      "kind": "enacted",
+      "what_changed": "New duty on the Ministerio Público to protect people smuggled and victims of trafficking during the criminal process.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1024319",
+      "passage": "Artículo 78 bis.- Protección de la integridad física y psicológica de las personas objeto del tráfico ilícito de migrantes y víctimas de trata de personas. El Ministerio Público adoptará las medidas necesarias... tendientes a asegurar la protección de las víctimas de estos delitos durante el proceso penal"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Trafficking in Persons Report 2014 - Chile (US Department of State)",
+      "url": "https://www.ecoi.net/en/document/1142952.html",
+      "year": 2014,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Trafficking in Persons Report 2011 - Chile (US Department of State)",
+      "url": "https://www.ecoi.net/en/document/1225776.html",
+      "year": 2011,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 20.507 itself, the LeyChile consolidated DL 1.094 with amendment notes, and the Penal Code as of 2010-01-01. The Diario Oficial PDFs and Decreto 42/2005 could not be read. Practice evidence covers trafficking victims about 2013-2014 only; for smuggled migrants and for 2000-2005 there is none.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.507 - LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1024319"
+     },
+     {
+      "title": "Decreto Ley 1094 - LeyChile JSON text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Código Penal, version 2010-01-01 - LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2010-01-01"
+     },
+     {
+      "title": "TIP Report 2014 - Chile",
+      "url": "https://www.ecoi.net/en/document/1142952.html"
+     },
+     {
+      "title": "TIP Report 2011 - Chile",
+      "url": "https://www.ecoi.net/en/document/1225776.html"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.507 contains no clause exempting trafficked or smuggled migrants from prosecution. It treats them as victims or 'afectados' and gives trafficking victims a residence right (Art. 33 bis), but DL 1.094 Art. 69 (clandestine entry) and Art. 68 (false documents) stayed in force without exception until February 2022. Smuggled migrants could therefore be prosecuted for clandestine entry. On the statutes, the 2020 answer would more accurately be 'No, government may punish trafficked or smuggled migrants'.",
+    "confidence": "low",
+    "notes": "The change from 2010 to 2015 follows the starting answer's reliance on Ley 20.507 (in force 8 April 2011); it is not my own reading that the law exempts migrants. The 'Usually' for 2015 rests on the TIP 2014 report, which covers trafficking victims only; nothing was found on whether smuggled migrants were prosecuted under Art. 69, hence low confidence."
+   }
+  ]
+ }
 }
