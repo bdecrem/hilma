@@ -1,0 +1,702 @@
+{
+ "status": "ok",
+ "job_id": "forward argentina vulnerable claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "argentina",
+ "chunk": "vulnerable",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2023 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  3,
+  5,
+  7
+ ],
+ "started_at": "2026-11-21T00:13:44.434Z",
+ "meters_before": {
+  "at": "2026-11-21T00:13:39.960Z",
+  "window": {
+   "pct": 6,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 44,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 6,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 44,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 6% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 44% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 273 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 35%\n\nLast 7d · 284 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  34%  Check which model \"general-purpose\" subagents use\n  29%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 34%"
+ },
+ "prompt_chars": {
+  "system": 24378,
+  "user": 106
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:01:32.179Z",
+ "minutes": 47.8,
+ "meters_after": {
+  "at": "2026-11-21T01:01:32.182Z",
+  "window": {
+   "pct": 11,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 44,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 11,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 44,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 11% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 44% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 100298,
+   "output": 22500,
+   "cache_read": 1569649,
+   "cache_write": 121575,
+   "cost_usd": 1.6735,
+   "total": 1814022
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 100260,
+    "output": 7344,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2591,
+    "cost_usd": 0.0837
+   },
+   "claude-opus-5-5": {
+    "input": 38,
+    "output": 15156,
+    "cache_read": 1569649,
+    "cache_write": 121575,
+    "thinking": 4357,
+    "cost_usd": 1.5898
+   }
+  }
+ },
+ "turns": 27,
+ "calls": 42,
+ "duration_ms": 464701,
+ "duration_api_ms": 381218,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-21T00:13:53.444Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 3° | ARTICULO 10 | ARTICULO 13 | ARTICULO 23 | ARTICULO 29 | 366/2025",
+   "ok": true,
+   "chars": 19433
+  },
+  {
+   "at": "2026-11-21T00:14:00.202Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "Tratamiento médico | Razones humanitarias | reunificación familiar, o por razones humanitarias | podrá admitir | Artículo sustituido por art. 7 | Artículo sustituido por art. 8 | dispensar",
+   "ok": true,
+   "chars": 10894
+  },
+  {
+   "at": "2026-11-21T00:14:09.217Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "Pacientes | discapacidad | menores de edad | niños | mujer",
+   "ok": true,
+   "chars": 4368
+  },
+  {
+   "at": "2026-11-21T00:14:10.144Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 29 | Pacientes | ARTICULO 62 | ARTICULO 70",
+   "ok": true,
+   "chars": 10375
+  },
+  {
+   "at": "2026-11-21T00:14:16.134Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "podrá admitir, excepcionalmente | Promover la protección de los derechos humanos | ARTICULO 70",
+   "ok": true,
+   "chars": 2305
+  },
+  {
+   "at": "2026-11-21T00:14:19.237Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "razones humanitarias o de reunificación familiar | Ministerio del Interior, podrá",
+   "ok": true,
+   "chars": 2376
+  },
+  {
+   "at": "2026-11-21T00:18:40.521Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=152155",
+   "find": null,
+   "ok": true,
+   "chars": 5360
+  },
+  {
+   "at": "2026-11-21T00:19:16.534Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=152155",
+   "find": "2023 | 2024 | 2025 | MODIFICACION",
+   "ok": true,
+   "chars": 6467
+  },
+  {
+   "at": "2026-11-21T00:19:17.345Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/texact.htm",
+   "find": "ARTICULO 3° | Ley N° 27.736 | i) | migrante",
+   "ok": true,
+   "chars": 6515
+  },
+  {
+   "at": "2026-11-21T00:19:24.669Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+   "find": "ARTÍCULO 8° | menores de edad | entrarán en vigencia | ARTÍCULO 6°",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T00:24:31.058Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 8° | menores de edad | vigencia | interés superior",
+   "ok": true,
+   "chars": 10524
+  },
+  {
+   "at": "2026-11-21T00:24:32.600Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=110778",
+   "find": "2023 | 2024 | 2025 | MODIFICACION",
+   "ok": true,
+   "chars": 5450
+  },
+  {
+   "at": "2026-11-21T00:25:10.318Z",
+   "url": "https://www.ecoi.net/en/file/local/2120138/g2417623.pdf",
+   "find": "migrant | asylum | disabilities | unaccompanied",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T00:25:43.492Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2024/05/CAREF.UNICEF.-Informe-Ninas-ninos-y-adolescentes-migrantes-en-Argentina.-Acciones-para-fortalecer-sus-derechos.-3.pdf",
+   "find": "expulsión | documentación | DNI | interés superior | discapacidad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T00:30:10.758Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/5425/El-Comite-de-Derechos-del-Nino-expreso-su-preocupacion-por-la-situacion-de-la-ninez-en-la-Argentina",
+   "find": "migra | refugi | discapacidad",
+   "ok": true,
+   "chars": 3483
+  },
+  {
+   "at": "2026-11-21T00:30:11.924Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "unconstitutional | children | court | women",
+   "ok": true,
+   "chars": 1819
+  },
+  {
+   "at": "2026-11-21T00:30:14.348Z",
+   "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+   "find": "niñ | mujeres | expuls | discapacidad",
+   "ok": true,
+   "chars": 5323
+  },
+  {
+   "at": "2026-11-21T00:33:13.141Z",
+   "url": "https://www.argentina.gob.ar/node/122342",
+   "find": "migrantes | violencia | documentación",
+   "ok": true,
+   "chars": 3132
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 migraciones Congreso rechazo DNU vigente diputados senado",
+  "niñas niños migrantes Argentina DNU 366/2025 expulsión interés superior informe CELS UNICEF 2025",
+  "Comité de los Derechos del Niño observaciones finales Argentina niños migrantes 2018 OR 2025 expulsión padres",
+  "CIDH comunicado octubre 2025 Argentina DNU 366 migrantes preocupación niñas niños",
+  "Corte Suprema \"C. D., A.\" Dirección Nacional de Migraciones 2022 interés superior niño expulsión fallo",
+  "mujeres migrantes violencia de género Argentina acceso justicia documentación informe 2023 2024 CAREF Amnistía"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.43,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":3,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Rarely\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Rarely\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Art. 75 incs. 22 and 23\",\"enacted\":\"1994-08-24\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 23.849 (approving the Convention on the Rights of the Child)\",\"article\":\"Art. 3(1)\",\"enacted\":\"1990\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 26.061 de Protección Integral de los Derechos de las Niñas, Niños y Adolescentes\",\"article\":\"whole law\",\"enacted\":\"2005-10-26\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 3\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 10\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 29\",\"enacted\":\"2004-01-21\",\"history_read\":\"amending_acts\",\"status\":\"replaced\"},{\"instrument\":\"CSJN, 'C. G., A. c/ EN – DNM s/ recurso directo DNM' (cited by the MRD as 'C.D., A.'), Fallos 345:905\",\"article\":\"ruling of 2022-09-06\",\"enacted\":\"2022-09-06\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025 (B.O. 29/5/2025), art. 8\",\"article\":\"Ley 25.871, art. 29\",\"kind\":\"replaced\",\"what_changed\":\"Before: DNM could exceptionally admit people caught by the art. 29 bars 'por razones humanitarias o de reunificación familiar'. After: the bars are wider. Admission is now also possible 'cuando se vieran afectados gravemente derechos de menores de edad' (an express ground based on children). But the waiver must be read restrictively, it is barred outright for certain crimes, and family un",
+ "output": {
+  "answers": [
+   {
+    "question_id": 3,
+    "answer_2023": "Yes",
+    "implementation_2023": "Rarely",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 incs. 22 and 23",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 23.849 (approving the Convention on the Rights of the Child)",
+      "article": "Art. 3(1)",
+      "enacted": "1990",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.061 de Protección Integral de los Derechos de las Niñas, Niños y Adolescentes",
+      "article": "whole law",
+      "enacted": "2005-10-26",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 3",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 10",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 29",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "replaced"
+     },
+     {
+      "instrument": "CSJN, 'C. G., A. c/ EN – DNM s/ recurso directo DNM' (cited by the MRD as 'C.D., A.'), Fallos 345:905",
+      "article": "ruling of 2022-09-06",
+      "enacted": "2022-09-06",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025 (B.O. 29/5/2025), art. 8",
+      "article": "Ley 25.871, art. 29",
+      "kind": "replaced",
+      "what_changed": "Before: DNM could exceptionally admit people caught by the art. 29 bars 'por razones humanitarias o de reunificación familiar'. After: the bars are wider. Admission is now also possible 'cuando se vieran afectados gravemente derechos de menores de edad' (an express ground based on children). But the waiver must be read restrictively, it is barred outright for certain crimes, and family unity must be strictly proven. The provision is cited for this indicator, so the protection changed in content.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Excepcionalmente, por motivos acreditados y fundados en razones humanitarias, de reunificación familiar o cuando se vieran afectados gravemente derechos de menores de edad, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá admitir en el país a los extranjeros comprendidos en los impedimentos previstos en el presente artículo. ... (Artículo sustituido por art. 8º del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 6",
+      "article": "Ley 25.871, art. 23 inc. ñ (new)",
+      "kind": "amended",
+      "what_changed": "Adds a temporary-residence subcategory for family reunification. It covers the unmarried child under 18 (or an adult child with disabilities) of a permanent or temporary resident, and says art. 10 must be taken into account. This is a new child-specific route; it bears on the indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ñ) Reunificación familiar: ser cónyuge, progenitor o hijo de argentino nativo, naturalizado o por opción; o ser cónyuge, progenitor o hijo soltero menor a DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de un residente permanente o temporario ... (Inciso incorporado por art. 6º del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, arts. 2 and 3",
+      "article": "Ley 25.871, arts. 7 and 8",
+      "kind": "replaced",
+      "what_changed": "Education: the guarantee for irregular migrants now covers only initial, primary and secondary schooling, which still protects children. Health: outside emergencies, only permanent residents get public health care on equal terms, with no exception for children. Not among the cited provisions, but this reduces the protection migrant children actually have.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "“ARTÍCULO 8°.- En casos de emergencia, no podrá negársele ni restringírsele el acceso a la asistencia social o a la atención sanitaria a todos los extranjeros que lo requieran, cualquiera sea su situación migratoria. Los extranjeros residentes permanentes podrán acceder al sistema de salud público en igualdad de condiciones que los ciudadanos argentinos."
+     }
+    ],
+    "implementation_then_now": "2023: I kept the MRD's 'Rarely'. The Supreme Court's September 2022 ruling had to overturn a DNM expulsion of a mother of Argentine children for failing to weigh the children's best interests. That shows a pattern of administrative disregard that courts correct case by case. I did not read the ruling itself, only search summaries. 2026: CAREF and the Observatorio Chausovsky, as cited by El Salto, and the IACHR (October 2025, as reported) document that DNU 366/2025 limits migrant children's access to public health care and narrows the family-based waivers. In August 2025 a federal court declared part of the decree unconstitutional in one case; the government kept the decree and appealed. This points to no improvement, so I kept 'Rarely'. The 2026 evidence is mostly about the new rules and their expected effects rather than documented case outcomes.",
+    "practice_sources": [
+     {
+      "title": "Endurecimiento de las políticas migratorias en Argentina (El Salto)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El Comité de Derechos del Niño expresó su preocupación por la situación de la niñez en la Argentina (Palabras del Derecho, on CRC concluding observations, Sept 2024)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/5425/El-Comite-de-Derechos-del-Nino-expreso-su-preocupacion-por-la-situacion-de-la-ninez-en-la-Argentina",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the current InfoLEG text of Ley 25.871, which marks each amendment with its date of entry into force, plus the original 2004 text and the DNU 366/2025 text. The 1 January 2023 version is the original art. 29, which was restored after DNU 70/2017 was repealed by Decreto 138/2021; I did not open 138/2021. The InfoLEG list of amending acts for Ley 26.061 shows no amendment in the window. I could not read the CRC 2024 observations or the CAREF/UNICEF PDFs (PDF extraction failed), nor the 2022 CSJN ruling itself.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Ley 26.061 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=110778"
+     },
+     {
+      "title": "El Salto – endurecimiento políticas migratorias Argentina",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     },
+     {
+      "title": "EU SEE / Hivos alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "Palabras del Derecho – CRC observaciones finales 2024",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/5425/El-Comite-de-Derechos-del-Nino-expreso-su-preocupacion-por-la-situacion-de-la-ninez-en-la-Argentina"
+     }
+    ],
+    "starting_answer_concern": "The citation misdescribes art. 29: in 2023 it allowed exceptional admission on humanitarian or family-reunification grounds. Suspending expulsion for parents was in arts. 62 and 70 (parent, child or spouse of an Argentine), not art. 29. The case is reported as 'C. G., A. c/ EN – DNM' (Fallos 345:905), not 'C.D., A.'. A Supreme Court decision on its facts is practice evidence, not a source of the protection. 'Rarely' looks harsh for 2023 given the statutory framework; 'Sometimes' would be defensible.",
+    "confidence": "medium",
+    "notes": "DNU 366/2025 is in force: no record of both chambers rejecting it under Ley 26.122 (searches showed only bills to annul it). Later events outside the window: Decreto 681/2026 (B.O. 30/7/2026) added a ground to the residence-cancellation article. Art. 62 (dispensation for parents of Argentines) now reads as a discretionary, restrictive humanitarian/family dispensation; I did not see which act amended it, so it is not recorded as an event. The 'Yes' rests on the statutes (Ley 25.871 arts. 10, 23 ñ, 29; Ley 26.061) and on the CRC's constitutional rank under art. 75(22); I did not rely on the court ruling."
+   },
+   {
+    "question_id": 5,
+    "answer_2023": "Yes",
+    "implementation_2023": "Rarely; Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 incs. 22 and 23",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Convención sobre la Eliminación de Todas las Formas de Discriminación contra la Mujer (constitutional rank, art. 75 inc. 22)",
+      "article": "whole",
+      "enacted": "1985",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 13",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.485 de Protección Integral para Prevenir, Sancionar y Erradicar la Violencia contra las Mujeres",
+      "article": "Art. 3",
+      "enacted": "2009-04-14",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-10-23",
+      "instrument": "Ley N° 27.736 (Ley Olimpia), art. 2 (B.O. 23/10/2023)",
+      "article": "Ley 26.485, art. 3 inc. d)",
+      "kind": "amended",
+      "what_changed": "Art. 3(d) widened from respect for women's 'dignity, reputation and identity' to include digital spaces ('incluso en los espacios digitales'). Art. 6(i) on digital violence was added. This extends the cited catalogue of rights for all women, migrant women included, but adds nothing specific to migration.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/texact.htm",
+      "passage": "d) Que se respete su dignidad, reputación e identidad, incluso en los espacios digitales. (Inciso sustituido por art. 2° de la Ley N° 27736 B.O. 23/10/2023)"
+     }
+    ],
+    "implementation_then_now": "2023: I kept the MRD's 'Rarely; Sometimes'. An INAM observatory report draws on the 2017 Línea 144 records and the testimony of migrant women; it finds that lack of documents, isolation and xenophobia hinder their access to services for gender violence. That report predates the window. 2026: no migrant-women-specific practice report from 2023-2025 could be read. DNU 366/2025 limits non-emergency public health care to permanent residents with no exception for pregnancy or victims of gender violence, which points to no improvement. The MPD's December 2025 alternative report to CEDAW, seen in search results only, notes that access-to-justice programmes for gender violence were dismantled. Rating unchanged, low evidential base.",
+    "practice_sources": [
+     {
+      "title": "El INAM presenta el primer informe sobre 'Relatos de las manifestaciones de la violencia basada en género en contextos migratorios'",
+      "url": "https://www.argentina.gob.ar/node/122342",
+      "year": null,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Endurecimiento de las políticas migratorias en Argentina (El Salto)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's consolidated Ley 26.485 marks the Ley 27.736 amendment and its date. The list of amending acts shows nothing else of substance in the window. Art. 13 of Ley 25.871 carries no amendment note. Practice evidence specific to migrant women in 2023-2025 was not found in readable form.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.485 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/texact.htm"
+     },
+     {
+      "title": "Ley 26.485 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=152155"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "INAM – informe violencia de género en contextos migratorios",
+      "url": "https://www.argentina.gob.ar/node/122342"
+     },
+     {
+      "title": "El Salto – endurecimiento políticas migratorias Argentina",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' is weak. Art. 13 of Ley 25.871 is a general non-discrimination clause (including 'sexo, género'), and Ley 26.485 protects all women. Neither gives migrant women a migration-specific protection, such as a residence permit for victims of violence. The trafficking laws (Leyes 26.364/26.842) and art. 23(m) humanitarian residence would be closer anchors. Under the MRD method, general equality clauses do not usually support a 'Yes'.",
+    "confidence": "low",
+    "notes": "I classed the change as 'not the same' only because a cited provision (Ley 26.485 art. 3) was amended within the window; in substance the protection for migrant women qua migrants is unchanged. A reviewer may prefer 'no change'."
+   },
+   {
+    "question_id": 7,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 23",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23 inc. h)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 6",
+      "article": "Ley 25.871, art. 23 inc. ñ (new)",
+      "kind": "amended",
+      "what_changed": "Adds a family-reunification temporary residence that covers an adult child 'mayor con capacidades diferentes' of a permanent or temporary resident. This is a narrow disability-related rule about dependants; art. 10 already recognised such reunification in 2004. It touches the indicator only at the margin.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "o ser cónyuge, progenitor o hijo soltero menor a DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de un residente permanente o temporario, con autorización para permanecer en el país por un máximo de TRES (3) años ... (Inciso incorporado por art. 6º del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is 'Does Not Apply'. I found no practice evidence specific to migrants with disabilities for either period.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 23(h) reads the same in the original 2004 text and the current consolidated text, with no amendment note; the new inc. ñ is dated by InfoLEG's note and the DNU text.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     }
+    ],
+    "starting_answer_concern": "Arguable. Art. 10 (in force since 2004) guarantees family reunification with 'hijos mayores con capacidades diferentes'. Art. 23(h) extends medical-treatment residence to the companions of persons with disabilities. The MRD coded Colombia 'Yes' on a comparable beneficiary rule (disabled dependants regardless of age), so a 'Yes' could be defended on the 2023 law too; the 2025 inc. ñ strengthens that reading.",
+    "confidence": "medium",
+    "notes": "Answer kept at 'No' on both dates, as the instructions require. The 2025 inc. ñ was added during the window and would reinforce a 'Yes' if the indicator were recoded."
+   }
+  ]
+ }
+}
