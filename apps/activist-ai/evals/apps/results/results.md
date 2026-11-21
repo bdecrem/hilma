@@ -2,15 +2,15 @@
 
 One run per cell, scored by the problem's check (passed sub-checks of all; the name in brackets is the first one that failed). Rebuilt by `node run.mjs report`. The Claude Code column ran on Bart's default model that day (Ola's `/claude` passes none). Screenshots and the built folders are on the iMac under `~/Library/Caches/ola-eval/runs-apps/`.
 
-| Problem | open weights (Nemotron 3.5 Super VL) | Claude Code | local |
-|---|---|---|---|
-| crossword (real request) | 1 of 7, fail (grid_5x5), 7 min | 7 of 7, pass, 2 min, Fable 5.2 | from Dec, when the Studio serves the model |
-| tip-split | 6 of 6, pass, 3 min | 6 of 6, pass, 49 s, Fable 5.2 | from Dec, when the Studio serves the model |
-| countdown | 2 of 5, fail (shows_10_days), 10 min | 5 of 5, pass, 50 s, Fable 5.2 | from Dec, when the Studio serves the model |
-| signup-sheet | 5 of 5, pass, 70 s | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
-| todo-due | 4 of 5, fail (shows_due_date), 25 s | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
-| memory-game | 6 of 7, fail (face_down_start), 23 s | 7 of 7, pass, 37 s, Fable 5.2 | from Dec, when the Studio serves the model |
-| unit-converter | 2 of 6, fail (temperature), 14 s | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
+| Problem | open weights (Nemotron 3.5 Super VL) | open weights, no worked example (OLA-181) | Claude Code | local |
+|---|---|---|---|---|
+| crossword (real request) | 1 of 7, fail (grid_5x5), 7 min | not run | 7 of 7, pass, 2 min, Fable 5.2 | from Dec, when the Studio serves the model |
+| tip-split | 6 of 6, pass, 3 min | not run | 6 of 6, pass, 49 s, Fable 5.2 | from Dec, when the Studio serves the model |
+| countdown | 2 of 5, fail (shows_10_days), 10 min | not run | 5 of 5, pass, 50 s, Fable 5.2 | from Dec, when the Studio serves the model |
+| signup-sheet | 5 of 5, pass, 70 s | not run | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
+| todo-due | 4 of 5, fail (shows_due_date), 25 s | not run | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
+| memory-game | 6 of 7, fail (face_down_start), 23 s | not run | 7 of 7, pass, 37 s, Fable 5.2 | from Dec, when the Studio serves the model |
+| unit-converter | 2 of 6, fail (temperature), 14 s | not run | not run (Claude runs capped at four problems) | from Dec, when the Studio serves the model |
 
 The requests, word for word:
 

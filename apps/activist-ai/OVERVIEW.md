@@ -74,10 +74,12 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 2. **The workspace.** Each project is one sealed Linux VM (Apple `container`) with `--network none`,
    a read-only root, no capabilities, and its own volume at `/work` holding its files and its own
    database (`/work/project.db`). opencode 2.3.0 runs inside. Idle projects stop after 30 minutes
-   and wake on the next request. At most 4 run at once. Two things run in every project: a note
+   and wake on the next request. At most 4 run at once. Three things run in every project: a note
    to the person when a file or a tool result carries text that tells an AI what to do (the
-   `ola-planted` plugin, also in the Mac's local runtime), and a record of which engine made each
-   file (`ola-db made-by`), which Ola reads before saying who made something.
+   `ola-planted` plugin, also in the Mac's local runtime), a record of which engine made each
+   file (`ola-db made-by`), which Ola reads before saying who made something, and, for a request to
+   make an app, page or game, the closest kept worked example in the model's instructions for that
+   request (the `ola-examples` plugin, also on the Mac; test requests only so far, OLA-181).
 3. **The model gateway.** The one address a workspace can reach. It holds the model keys, checks the
    caller's token (bound to that workspace's door), caps size, concurrency, time and weekly tokens,
    rebuilds every reply from an allowlist, and logs one line per request with no content. It also

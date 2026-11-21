@@ -22,13 +22,14 @@ final class LocalPlantedTests: XCTestCase {
     LocalServer.pluginsSource = plugins
     let dir = t.appendingPathComponent("plugins")
     let installed = LocalServer.installPlugins(into: dir)
-    XCTAssertEqual(installed.map(\.lastPathComponent), ["ola-planted"])
+    XCTAssertEqual(installed.map(\.lastPathComponent), ["ola-planted", "ola-examples"])
     for f in ["index.js", "package.json"] {
       XCTAssertEqual(try Data(contentsOf: installed[0].appendingPathComponent(f)), try Data(contentsOf: plugins.appendingPathComponent("ola-planted/\(f)")), f)
     }
     XCTAssertFalse(fm.isWritableFile(atPath: installed[0].appendingPathComponent("index.js").path))
     // Installed again (the next start) over the read-only copy.
-    XCTAssertEqual(LocalServer.installPlugins(into: dir).count, 1)
+    XCTAssertEqual(try Data(contentsOf: installed[1].appendingPathComponent("examples.json")), try Data(contentsOf: plugins.appendingPathComponent("ola-examples/examples.json")))
+    XCTAssertEqual(LocalServer.installPlugins(into: dir).count, 2)
   }
 
   /// The real opencode 2.3.0, started as the Mac app and `ola` start it, in a scratch HOME, against

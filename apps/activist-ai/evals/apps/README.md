@@ -99,6 +99,32 @@ on the iMac, then `./run-all.sh` and `node run.mjs report`, once the model allow
 resets (Monday Nov 23, 00:00 UTC). Compare the open-weights column with the table above, and look at
 every screenshot.
 
+## Worked examples (OLA-181): with and without
+
+The plugin `workspace/plugins/ola-examples` (in the image and in the Mac's local runtime) puts the
+closest kept worked example into the model's system prompt when a request asks to make an app, a
+page or a game: the example's request, what it plainly asked for, how it was built, how each thing
+was tried on the page, and the answer it ended with. One example, chosen by word overlap (BM25), no
+model call; below the threshold, nothing. The library, `examples.json`, holds only test requests
+written for it, none of them one of the seven here (the test proves it), so the measure is not
+taught to the test; each of the seven has a neighbor of its kind (the crossword gets the AI word
+game, the memory game tic-tac-toe, the to-do app the reading list).
+
+Bart's own kept requests (kept turns with "Store your conversations" on, status done, no switch to
+Claude after) are the next source; they stay on the Ola machine, outside this public repo, in a
+file named by `OLA_EXAMPLES_EXTRA`. No other person's content is stored.
+
+Checks: `node --test workspace/plugins/ola-examples/examples.test.mjs` (the matching, the note, the
+hook, the switches) and `node workspace/plugins/ola-examples/opencode.check.mjs` (Ola's own opencode
+2.3.0 against a stand-in model server: the example is in what the model receives; with
+`OLA_EXAMPLES=off` and for a request that is not an app request, it is not).
+
+The measure: the column `ola-noex` is the open-weights column with `OLA_EXAMPLES=off`. With a Mac
+app built from the commit that added the plugin (or later) frozen into the eval copy, run every
+problem in both columns the same day (`node run.mjs run <id> ola` and `node run.mjs run <id>
+ola-noex`), then `node run.mjs report` and look at every screenshot. Waits for the Together credit
+(OLA-346) and the test-run allowance (resets Monday Nov 23, 00:00 UTC).
+
 ## Limits
 
 - The check serves the folder with its own static server and never runs a server the model wrote

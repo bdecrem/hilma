@@ -133,9 +133,11 @@ public final class LocalServer: @unchecked Sendable {
   /// to an AI. The Mac app carries the folder in its Resources straight from ../workspace/plugins
   /// (project.yml), so the cloud and this Mac load one file; a check run from the repo points this at
   /// workspace/plugins.
-  public static let pluginNames = ["ola-planted"]
+  /// ola-examples (OLA-181): the closest kept worked example beside an app request.
+  public static let pluginNames = ["ola-planted", "ola-examples"]
   /// What of each plugin is installed, as the Containerfile copies it.
   static let pluginFiles = ["index.js", "package.json"]
+  static func pluginFiles(_ name: String) -> [String] { name == "ola-examples" ? pluginFiles + ["examples.json"] : pluginFiles }
   nonisolated(unsafe) public static var pluginsSource: URL? = Bundle.main.resourceURL.flatMap { r in
     let p = r.appendingPathComponent("plugins")
     return FileManager.default.fileExists(atPath: p.appendingPathComponent("ola-planted/index.js").path) ? p : nil
@@ -159,7 +161,7 @@ public final class LocalServer: @unchecked Sendable {
     for name in pluginNames {
       let to = dir.appendingPathComponent(name)
       guard (try? fm.createDirectory(at: to, withIntermediateDirectories: true)) != nil else { return [] }
-      for f in pluginFiles {
+      for f in Self.pluginFiles(name) {
         guard (try? fm.copyItem(at: src.appendingPathComponent("\(name)/\(f)"), to: to.appendingPathComponent(f))) != nil else { return [] }
         try? fm.setAttributes([.posixPermissions: 0o444], ofItemAtPath: to.appendingPathComponent(f).path)
       }
@@ -421,6 +423,9 @@ public final class LocalServer: @unchecked Sendable {
     env["OLA_PLANTED_WORK"] = Self.realPath(folder)
     env["OLA_PLANTED_OURS"] = [skillsDir, Self.pluginsHome, config, webTools].flatMap { [$0.path, Self.realPath($0)] }.joined(separator: ":")
     env["OLA_LIB"] = webTools.path
+    // ola-examples: OLA_EXAMPLES=off in the app's own environment turns the worked example off (the
+    // without-examples column of the app evals, OLA-181).
+    if let v = mine["OLA_EXAMPLES"] { env["OLA_EXAMPLES"] = v }
     // ola-page asks this app to render a page in its own web view (PageRender in the Mac app).
     env["OLA_RENDER_DIR"] = Self.support.appendingPathComponent("render").path
     env["XDG_CONFIG_HOME"] = config.path

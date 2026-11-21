@@ -27,6 +27,7 @@ const OLA = path.join(os.homedir(), 'Library/Caches/ola-eval/Ola.app/Contents/Ma
 const TOKEN = path.join(os.homedir(), 'Library/Caches/ola-eval/model-token')
 export const COLUMNS = {
   ola: 'open weights (Nemotron 3.5 Super VL)',
+  'ola-noex': 'open weights, no worked example (OLA-181)',
   claude: 'Claude Code',
   local: 'local',
 }
@@ -55,7 +56,7 @@ const arg = (name, dflt) => { const i = process.argv.indexOf(name); return i > 0
 
 async function runOne(id, column) {
   const p = problem(id)
-  if (!['ola', 'claude'].includes(column)) die('column: ola or claude')
+  if (!['ola', 'ola-noex', 'claude'].includes(column)) die('column: ola, ola-noex (Ola with no worked example, OLA-181) or claude')
   // Nothing a run does may open a window on this Mac's screen. The Claude fallback sets its own
   // PATH (ClaudeRunner.swift: ~/.local/bin first), so the stand-ins below cannot reach it; a
   // 2026-11-18 Claude run opened its game in the browser with `open`. Refused until that is solved.
@@ -74,6 +75,8 @@ async function runOne(id, column) {
     OLA_MODEL_TOKEN_FILE: TOKEN,
     OLA_MODEL_URL: 'http://127.0.0.1:14311/v1',
     BROWSER: '/usr/bin/true',
+    // The without-examples column of OLA-181's measure: the ola-examples plugin adds nothing.
+    ...(column === 'ola-noex' ? { OLA_EXAMPLES: 'off' } : {}),
   }
   env.PATH = `${standIns(path.join(support, 'bin'))}:${env.PATH}`
   const request = column === 'claude' ? `/claude ${p.request}` : p.request
@@ -107,7 +110,7 @@ async function runOne(id, column) {
   for (const pid of left) { try { process.kill(pid, 'SIGTERM') } catch {} }
   if (left.length) fs.appendFileSync(log, `\n[run.mjs] stopped ${left.length} process(es) the run left running\n`)
   const timedOut = seconds >= limit - 1
-  const model = column === 'ola' ? 'Nemotron 3.5 Super VL' : (process.env.ANTHROPIC_MODEL || 'Claude Code default model')
+  const model = column.startsWith('ola') ? 'Nemotron 3.5 Super VL' : (process.env.ANTHROPIC_MODEL || 'Claude Code default model')
   const meta = { problem: id, column, model, date: new Date().toISOString().slice(0, 10), started: stamp, seconds, exit: code, timedOut, dir }
   fs.writeFileSync(path.join(dir, 'meta.json'), JSON.stringify(meta, null, 2))
   return record(meta)
@@ -119,7 +122,7 @@ async function record(meta) {
   const lastMessage = fs.existsSync(path.join(meta.dir, 'transcript.txt')) ? fs.readFileSync(path.join(meta.dir, 'transcript.txt'), 'utf8').slice(-4000) : ''
   const r = await checkFolder(p, path.join(meta.dir, 'work'), { shot, lastMessage })
   const out = {
-    problem: meta.problem, column: meta.column, model: meta.model || (meta.column === 'ola' ? 'Nemotron 3.5 Super VL' : null), date: meta.date, seconds: meta.seconds, timedOut: meta.timedOut,
+    problem: meta.problem, column: meta.column, model: meta.model || (meta.column.startsWith('ola') ? 'Nemotron 3.5 Super VL' : null), date: meta.date, seconds: meta.seconds, timedOut: meta.timedOut,
     page: r.page, checks: r.checks, passed: r.checks.filter((c) => c.pass).length, total: r.checks.length,
     pass: r.checks.every((c) => c.pass), failure: meta.timedOut ? 'timeout' : (r.checks.find((c) => !c.pass)?.name || 'success'),
     notes: r.notes, screenshot: fs.existsSync(shot) ? shot : null, run: meta.dir,

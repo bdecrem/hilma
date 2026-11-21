@@ -78,6 +78,11 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-58 (OLA-181): the plugin ola-examples (plugins/ola-examples, at /opt/ola/plugins, named by the
+# system config): when a request asks to make an app, page or game, the closest worked example in its
+# examples.json (test requests only; a kept file of Bart's own requests can be added with
+# OLA_EXAMPLES_EXTRA) goes into the model's system prompt for that request: what it asked for, how it was
+# built, how each thing was tried. Adds text the model sees only. Builds on 2.3.0-57.
 # 2.3.0-57 (OLA-337): opencode.jsonc names a third model, `ola/deepseek-v4-pro` (DeepSeek V4 Pro at
 # the hosted provider), for the one request a person picks it for in the Mac app; the front desk
 # switches a session to it for that run and back after, as for `hosted`. `ola-made-by` names a change
@@ -185,6 +190,7 @@ COPY lib/olatext.py lib/olatwin.py lib/common-words.txt /opt/ola/lib/
 COPY opencode-system.jsonc /etc/opencode/opencode.jsonc
 COPY skills /opt/ola/skills
 COPY plugins/ola-planted/index.js plugins/ola-planted/package.json /opt/ola/plugins/ola-planted/
+COPY plugins/ola-examples/index.js plugins/ola-examples/package.json plugins/ola-examples/examples.json /opt/ola/plugins/ola-examples/
 ARG OLA_SKILLS_HASH=unknown
 LABEL ola.skills=${OLA_SKILLS_HASH}
 RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola /etc/opencode
