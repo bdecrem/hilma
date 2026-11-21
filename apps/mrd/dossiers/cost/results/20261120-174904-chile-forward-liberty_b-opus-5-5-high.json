@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile liberty_b claude-opus-5-5 high",
- "pid": 48955,
  "step": "forward",
  "slug": "chile",
  "chunk": "liberty_b",
@@ -58,5 +57,663 @@
   "user": 105
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T02:25:42.030Z",
+ "minutes": 36.62,
+ "meters_after": {
+  "at": "2026-11-21T02:25:42.031Z",
+  "window": {
+   "pct": 25,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 45,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 25,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 45,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 25% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 45% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 317 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%\n\nLast 7d · 328 requests · 3 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 62001,
+   "output": 22385,
+   "cache_read": 1700154,
+   "cache_write": 101762,
+   "cost_usd": 1.5675,
+   "total": 1886302
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 61955,
+    "output": 4138,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 945,
+    "cost_usd": 0.0483
+   },
+   "claude-opus-5-5": {
+    "input": 46,
+    "output": 18247,
+    "cache_read": 1700154,
+    "cache_write": 101762,
+    "thinking": 5103,
+    "cost_usd": 1.5193
+   }
+  }
+ },
+ "turns": 28,
+ "calls": 47,
+ "duration_ms": 366669,
+ "duration_api_ms": 315432,
+ "pages_read": 19,
+ "pages": [
+  {
+   "at": "2026-11-21T01:52:14.460Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 3.- | Artículo 13 | Artículo 133 | Artículo 134 | Artículo 141 | Versión | tortura",
+   "ok": true,
+   "chars": 9823
+  },
+  {
+   "at": "2026-11-21T01:52:22.262Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 133.- | Artículo 134.- | Artículo 141.- | Artículo 132 bis | tratos crueles",
+   "ok": true,
+   "chars": 8277
+  },
+  {
+   "at": "2026-11-21T01:52:26.732Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Los extranjeros privados de libertad conforme | Ley 21655 | Ley 21590 | Ley 21610 | 7. Igualdad | Artículo 1.- Definiciones",
+   "ok": true,
+   "chars": 8737
+  },
+  {
+   "at": "2026-11-21T02:01:42.125Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1195118",
+   "find": "cuarenta y ocho horas | cinco días | Artículo único",
+   "ok": true,
+   "chars": 2312
+  },
+  {
+   "at": "2026-11-21T02:02:00.399Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/08/07/43621/01/2357278.pdf",
+   "find": "cuarenta y ocho horas | cinco días",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:02:07.758Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "Art. 21. | expulsión de extranjeros | Ley 21568 | apremios ilegítimos",
+   "ok": true,
+   "chars": 2235
+  },
+  {
+   "at": "2026-11-21T02:02:11.534Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "Artículo 21.- | apremio ilegítimo | Artículo 19.- La Constitución asegura",
+   "ok": true,
+   "chars": 4474
+  },
+  {
+   "at": "2026-11-21T02:02:15.082Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Artículo 95.- | Artículo 132.- | Artículo 134.-",
+   "ok": true,
+   "chars": 4061
+  },
+  {
+   "at": "2026-11-21T02:02:19.426Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "Art. 150 A. | Art. 150 B. | Art. 150 D. | Ley 20968",
+   "ok": true,
+   "chars": 8151
+  },
+  {
+   "at": "2026-11-21T02:02:25.793Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1191005",
+   "find": "150 D | Artículo 7",
+   "ok": true,
+   "chars": 5419
+  },
+  {
+   "at": "2026-11-21T02:02:36.318Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1191005",
+   "find": "en incumplimiento de los reglamentos | 2. En el inciso primero del artículo 150",
+   "ok": true,
+   "chars": 2271
+  },
+  {
+   "at": "2026-11-21T02:02:37.606Z",
+   "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+   "find": "recintos | amparo | plazo | condiciones | tratos",
+   "ok": true,
+   "chars": 2606
+  },
+  {
+   "at": "2026-11-21T02:08:23.505Z",
+   "url": "https://www.biobiochile.cl/noticias/nacional/chile/2023/11/27/amp/gobierno-confirma-que-4-migrantes-que-debian-ser-expulsados-quedaron-libres-tras-presentar-un-recurso.shtml",
+   "find": "amparo | libertad | plazo | cinco días",
+   "ok": true,
+   "chars": 4104
+  },
+  {
+   "at": "2026-11-21T02:08:25.214Z",
+   "url": "https://www.diarioconstitucional.cl/2025/12/18/corte-suprema-acoge-amparo-y-deja-sin-efecto-prohibicion-de-ingreso-a-ciudadana-boliviana-por-falta-de-fundamentacion/",
+   "find": "amparo | Rol | fundament",
+   "ok": true,
+   "chars": 4583
+  },
+  {
+   "at": "2026-11-21T02:08:59.970Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "La autoridad contralora informará de ello al Servicio | Artículo 132.- Procedimiento",
+   "ok": true,
+   "chars": 2295
+  },
+  {
+   "at": "2026-11-21T02:09:00.753Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1201472",
+   "find": "artículo 131 | Artículo 2",
+   "ok": true,
+   "chars": 2639
+  },
+  {
+   "at": "2026-11-21T02:09:46.155Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12",
+   "find": "únicamente para hacer efectiva la expulsión | Asimismo, el extranjero que sea sorprendido",
+   "ok": true,
+   "chars": 4192
+  },
+  {
+   "at": "2026-11-21T02:17:52.420Z",
+   "url": "https://docstore.ohchr.org/SelfServices/FilesHandler.ashx?enc=6QkG1d%2FPPRiCAqhKb7yhssbGdmhvv7zVK1gdeqvSivZRkwxrn9tVMsSrVlx1nBhRENbIjtgRQXuQbg7qmnN9%2FDqIUZOp4F2m5vp5kI8sqdbiM2pqaMQTqTPJl6TyNl0D",
+   "find": "detención | expulsi | malos tratos | amparo",
+   "ok": true,
+   "chars": 1812
+  },
+  {
+   "at": "2026-11-21T02:20:48.871Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2023-01-01",
+   "find": "ART. 150 D.-",
+   "ok": true,
+   "chars": 2203
+  }
+ ],
+ "searches": [
+  "Ley 21.590 modifica artículo 134 ley 21.325 plazo privación de libertad expulsión cinco días",
+  "INDH Chile expulsiones migrantes privación de libertad PDI cuartel recurso de amparo 2024 2025 condiciones",
+  "Comité para la Prevención de la Tortura informe \"Privación de libertad de personas migrantes en proceso de expulsión administrativa\" pdf",
+  "Corte Suprema acoge amparo expulsión migrante 2022 2023 ilegalidad detención PDI fallo rol amparo extranjero",
+  "INDH querella apremios ilegítimos migrantes Chile 2024 PDI Carabineros extranjero tortura"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":21,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Chile\",\"article\":\"Art. 21 (recurso de amparo)\",\"enacted\":\"1980-10-24\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código Procesal Penal (Ley 19.696)\",\"article\":\"Art. 95 (amparo ante el juez de garantía)\",\"enacted\":\"2000\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Código Procesal Penal (Ley 19.696)\",\"article\":\"Art. 132\",\"enacted\":\"2000\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 134 inciso final (maximum length of detention to carry out expulsion)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Constitución Política de la República de Chile\",\"article\":\"Art. 19 Nº 7 letra c)\",\"enacted\":\"1980-10-24\",\"history_read\":\"version_history\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2023-05-03\",\"instrument\":\"Ley 21.568 (reforma constitucional)\",\"article\":\"Constitución, art. 19 Nº 7 letra c)\",\"kind\":\"amended\",\"what_changed\":\"Added a sentence saying the 48-hour limit for bringing detainees before a judge does not apply when an administrative expulsion is being carried out. Instead the law sets the maximum, which cannot exceed five calendar days. This concerns how long detention may last, not the right to challenge it; art. 21 amparo is untouched.\",\"url\":\"https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302\",\"passage\":\"Este lapso de cuarenta y ocho horas no se considerará para efectos de materialización de expulsiones administrativas. En este último caso, corresponderá a la ley fijar el plazo máxi",
+ "output": {
+  "answers": [
+   {
+    "question_id": 21,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 21 (recurso de amparo)",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 95 (amparo ante el juez de garantía)",
+      "enacted": "2000",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 132",
+      "enacted": "2000",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 134 inciso final (maximum length of detention to carry out expulsion)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 Nº 7 letra c)",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-05-03",
+      "instrument": "Ley 21.568 (reforma constitucional)",
+      "article": "Constitución, art. 19 Nº 7 letra c)",
+      "kind": "amended",
+      "what_changed": "Added a sentence saying the 48-hour limit for bringing detainees before a judge does not apply when an administrative expulsion is being carried out. Instead the law sets the maximum, which cannot exceed five calendar days. This concerns how long detention may last, not the right to challenge it; art. 21 amparo is untouched.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+      "passage": "Este lapso de cuarenta y ocho horas no se considerará para efectos de materialización de expulsiones administrativas. En este último caso, corresponderá a la ley fijar el plazo máximo, el que no podrá, en todo caso, exceder de cinco días corridos;"
+     },
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325, art. 134 inciso final",
+      "kind": "amended",
+      "what_changed": "Before: detention solely to carry out an expulsion was capped at 48 hours ('cuarenta y ocho horas'). After: the cap is five calendar days. A statutory length limit remains, so there is still a limit to enforce through amparo; the means of appeal did not change.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "En todo caso, el afectado podrá ser privado de libertad únicamente para hacer efectiva la expulsión por un plazo máximo de cincLey 21590 Art. único D.O. 07.08.2023o días corridos."
+     }
+    ],
+    "implementation_then_now": "In both periods, migrants held for expulsion used constitutional amparo before the Courts of Appeal and the Supreme Court, and courts granted it. In November 2023 orders not to proceed ('órdenes de no innovar') forced the PDI to release four Venezuelans awaiting a failed expulsion flight. In December 2025 the Supreme Court (Rol 51.745-2025) annulled an unreasoned PDI entry ban. The CPT (Chile's national torture-prevention mechanism) visited police facilities between November 2023 and October 2024. Its 2025 report found a lack of basic procedural guarantees in administrative detention for expulsion. That points to gaps in practice, but it is not a documented change from the earlier period. I see no shift; I keep the starting rating, though 'Usually' looks more accurate (see concern).",
+    "practice_sources": [
+     {
+      "title": "Gobierno confirma que 4 migrantes que debían ser expulsados quedaron libres tras presentar un recurso (BioBioChile)",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2023/11/27/amp/gobierno-confirma-que-4-migrantes-que-debian-ser-expulsados-quedaron-libres-tras-presentar-un-recurso.shtml",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Corte Suprema acoge amparo y deja sin efecto prohibición de ingreso a ciudadana boliviana (Rol 51.745-2025), Diario Constitucional",
+      "url": "https://www.diarioconstitucional.cl/2025/12/18/corte-suprema-acoge-amparo-y-deja-sin-efecto-prohibicion-de-ingreso-a-ciudadana-boliviana-por-falta-de-fundamentacion/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Informe de visita del CPT: Privación de libertad de personas migrantes en proceso de expulsión administrativa (Diario Constitucional summary)",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile consolidated texts and version notes for the Constitution, the Código Procesal Penal and Ley 21.325, including the 12-02-2022 version of Ley 21.325, which still shows the 48-hour cap. I could not open the Ley 21.590 PDF in the Diario Oficial, so its effect is taken from the LeyChile annotation. Practice evidence comes from the press and a summary of the CPT report; I did not read the full report.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 current text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 version of 12-02-2022",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile JSON – Constitución Política",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "LeyChile JSON – Código Procesal Penal",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "Diario Oficial – Ley 21.590 PDF (could not be read)",
+      "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/08/07/43621/01/2357278.pdf"
+     },
+     {
+      "title": "LeyChile idNorma=1195118 (wrong norm opened)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1195118"
+     },
+     {
+      "title": "BioBioChile, 27 Nov 2023",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2023/11/27/amp/gobierno-confirma-que-4-migrantes-que-debian-ser-expulsados-quedaron-libres-tras-presentar-un-recurso.shtml"
+     },
+     {
+      "title": "Diario Constitucional – CS Rol 51.745-2025",
+      "url": "https://www.diarioconstitucional.cl/2025/12/18/corte-suprema-acoge-amparo-y-deja-sin-efecto-prohibicion-de-ingreso-a-ciudadana-boliviana-por-falta-de-fundamentacion/"
+     },
+     {
+      "title": "Diario Constitucional – CPT report on migrant detention",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds: art. 21 of the Constitution reaches any unlawful arrest or detention and lets the court correct legal defects, and art. 95 of the Código Procesal Penal expressly covers legality and conditions. Length is covered through the statutory cap in art. 134 of Ley 21.325. The 'Effectively Always' rating has no evidence behind it. Known gaps argue for 'Usually': expulsions in 2021 went ahead before amparos were heard, and the 2025 CPT report found missing procedural guarantees.",
+    "confidence": "medium",
+    "notes": "Protection answer relies on statutes and the Constitution, not on a court ruling. The longer cap (48 h to 5 days) changes how long detention may lawfully last, not whether it can be challenged. Art. 141 of Ley 21.325 (judicial appeal against expulsion, with suspensive effect) is unchanged and supports the answer."
+   },
+   {
+    "question_id": 23,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 133",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 134",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 134",
+      "enacted": "2000",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 131 (reconducción) and art. 130 (no collective expulsions)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325, art. 134 inciso final",
+      "kind": "amended",
+      "what_changed": "The maximum detention to carry out an expulsion rose from 48 hours to five calendar days. Detention is still allowed only once a specific person's expulsion order is final ('firme y ejecutoriada'), so the individualized basis is unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "Una vez que se encuentre firme y ejecutoriada la resolución que ordena la expulsión, se podrá someter al afectado a restricciones y privaciones de libertad. ... por un plazo máximo de cincLey 21590 Art. único D.O. 07.08.2023o días corridos."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325, art. 131 inciso segundo",
+      "kind": "amended",
+      "what_changed": "Immediate reconducción at the border, done without an expulsion order, used to cover only people caught trying to enter. It now also covers people who have already entered up to 10 km inside the border; identity must also be registered, and the provisional entry ban rose from six months to one year. This is a summary border return, not detention under art. 134. It widens removal without an individual expulsion decision, but it does not authorise detention without one.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "Asimismo, el extranjero que sea sorprendido por la autoridad contralora Ley 21655 Art. 2º a), b), c) y d) D.O. 20.02.2024intentando ingresar o habiendo ingresado al territorio nacional eludiendo el control migratorio ... o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre ... previa acreditación de su identidad y de su registro, será inmediatamente reembarcado o reconducido"
+     }
+    ],
+    "implementation_then_now": "Detention for expulsion follows an individual expulsion resolution in both periods, and art. 130 (individual analysis, no collective expulsions) is unchanged. Courts kept reviewing individual cases. In 2023 amparos stopped expulsions and led to releases. In December 2025 the Supreme Court (Rol 51.745-2025) annulled a PDI entry ban for failing to weigh personal and family circumstances. That case is about entry bans, not detention, but it shows formulaic, non-individualized PDI action. The 2025 CPT report (visits November 2023–October 2024) also found gaps in procedural guarantees. Neither source shows a change from the earlier period, so I keep the starting rating.",
+    "practice_sources": [
+     {
+      "title": "Corte Suprema Rol 51.745-2025 (Diario Constitucional report)",
+      "url": "https://www.diarioconstitucional.cl/2025/12/18/corte-suprema-acoge-amparo-y-deja-sin-efecto-prohibicion-de-ingreso-a-ciudadana-boliviana-por-falta-de-fundamentacion/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Informe de visita del CPT sobre privación de libertad de migrantes en expulsión administrativa (Diario Constitucional summary)",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "BioBioChile, 27 Nov 2023 – migrants released after amparo",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2023/11/27/amp/gobierno-confirma-que-4-migrantes-que-debian-ser-expulsados-quedaron-libres-tras-presentar-un-recurso.shtml",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the current text and the 12-02-2022 version of Ley 21.325 on LeyChile. Its version list runs: original 12-02-2022; Ley 21.590 (07-08-2023); Ley 21.589 (18-08-2023); Ley 21.610 (22-09-2023); Ley 21.655 (20-02-2024); a version of 01-04-2025; Ley 21.816 (02-06-2026, outside the window). Art. 133 carries no amendment note; art. 134 CPP was last amended in 2016. I found no practice evidence for before 2023.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 current text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 version of 12-02-2022",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile JSON – Código Procesal Penal",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "LeyChile idNorma=1201472 (wrong norm opened while looking for Ley 21.655)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1201472"
+     },
+     {
+      "title": "Diario Constitucional – CS Rol 51.745-2025",
+      "url": "https://www.diarioconstitucional.cl/2025/12/18/corte-suprema-acoge-amparo-y-deja-sin-efecto-prohibicion-de-ingreso-a-ciudadana-boliviana-por-falta-de-fundamentacion/"
+     },
+     {
+      "title": "Diario Constitucional – CPT report on migrant detention",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     },
+     {
+      "title": "BioBioChile, 27 Nov 2023",
+      "url": "https://www.biobiochile.cl/noticias/nacional/chile/2023/11/27/amp/gobierno-confirma-que-4-migrantes-que-debian-ser-expulsados-quedaron-libres-tras-presentar-un-recurso.shtml"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds on art. 134 (detention only after a final individual expulsion order) read with art. 130 (each case analysed individually). Art. 133 is about revoking expulsion orders and adds little. The 'Effectively Always' rating is unsupported. Summary reconducciones under art. 131, widened in 2024, involve brief holding without an individual expulsion decision, and Supreme Court rulings find PDI measures that ignore personal circumstances. 'Usually' looks more defensible.",
+    "confidence": "medium",
+    "notes": "The protection answer relies on the statute, not on a ruling. Ley 21.655's change to reconducción is recorded because it extends removal without an individual expulsion resolution; I do not treat it as changing the answer, since art. 131 does not authorise detention."
+   },
+   {
+    "question_id": 25,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 1 Nº 7, 3, 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal (as amended by Ley 20.968)",
+      "article": "Arts. 150 A, 150 B, 150 C",
+      "enacted": "2016-11-22",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal (as amended by Ley 20.968)",
+      "article": "Art. 150 D",
+      "enacted": "2016-11-22",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 Nº 1 ('Se prohíbe la aplicación de todo apremio ilegítimo')",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 808 de 1988 (Convención contra la Tortura)",
+      "article": "whole",
+      "enacted": "1988",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-04-10",
+      "instrument": "Ley 21.560 (Ley Naín-Retamal)",
+      "article": "Código Penal, art. 150 D, incisos primero y segundo",
+      "kind": "amended",
+      "what_changed": "Before, the crime of illegitimate coercion or cruel, inhuman or degrading treatment covered any official who acted 'abusando de su cargo o sus funciones'. It also punished failure to stop it 'o estando en posición', and gave a higher penalty when the victim was in the official's custody. After, it covers an official who 'en incumplimiento de los reglamentos respectivos actúe abusando de su cargo o que en el ejercicio de sus funciones' inflicts it. Liability for failing to stop it now requires authority 'y estando en posición', and the custody aggravation is gone, which matters for detained migrants. The offence still exists, so the answer stays 'Yes', but the cited protection is narrower.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1191005",
+      "passage": "2. Reemplázanse los incisos primero y segundo del artículo 150 D, por los siguientes: \"Artículo 150 D.- El empleado público que, en incumplimiento de los reglamentos respectivos actúe abusando de su cargo o que en el ejercicio de sus funciones, aplique, ordene o consienta en que se apliquen apremios ilegítimos u otros tratos crueles, inhumanos o degradantes, que no alcancen por su gravedad a constituir tortura"
+     }
+    ],
+    "implementation_then_now": "No source I found shows systematic torture of migrants by Chilean authorities in either period. The CPT (Chile's national torture-prevention mechanism) visited police facilities holding migrants for expulsion between November 2023 and October 2024. Its 2025 report found material conditions and practices that may amount to a risk of cruel, inhuman or degrading treatment, and a lack of basic guarantees. That is evidence of gaps in 2023–2025. I found no comparable monitoring for before 2023, and nothing that shows a change in practice, so I keep the starting rating. The evidence covers migrants detained for expulsion (mostly irregular), not migrants generally or asylum seekers.",
+    "practice_sources": [
+     {
+      "title": "Informe de visita del CPT: Privación de libertad de personas migrantes en proceso de expulsión administrativa (Diario Constitucional summary)",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read art. 150 D of the Código Penal both in the LeyChile version as of 2023-01-01 and in the current text, and I read the amending Ley 21.560 itself. Arts. 150 A–C and Ley 21.325 arts. 3 and 13 carry no amendments in the window. Practice evidence is thin: one summary of the CPT report, not the report itself.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – Código Penal current text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984"
+     },
+     {
+      "title": "LeyChile JSON – Código Penal version as of 2023-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2023-01-01"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.560",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1191005"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 current text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Constitución Política",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Diario Constitucional – CPT report on migrant detention",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     },
+     {
+      "title": "OHCHR docstore (CMW concluding observations attempt; server error)",
+      "url": "https://docstore.ohchr.org/SelfServices/FilesHandler.ashx?enc=6QkG1d%2FPPRiCAqhKb7yhssbGdmhvv7zVK1gdeqvSivZRkwxrn9tVMsSrVlx1nBhRENbIjtgRQXuQbg7qmnN9%2FDqIUZOp4F2m5vp5kI8sqdbiM2pqaMQTqTPJl6TyNl0D"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds: art. 19 Nº 1 of the Constitution bans all illegitimate coercion for 'todas las personas'; arts. 150 A–D criminalise torture and cruel, inhuman or degrading treatment regardless of nationality; and art. 3 of Ley 21.325 protects the human rights of foreigners 'sin importar su condición migratoria'. The rating 'Usually; Effectively Always' rests on no cited evidence. The CPT's 2023–2024 findings argue for 'Usually' at most for detained migrants.",
+    "confidence": "low",
+    "notes": "The protection answer relies on the Constitution and statutes; treaties (CAT, Decree 808/1988) are cited only as background. I chose 'not the same' because art. 150 D, a cited provision, was narrowed in the window even though the option stays 'Yes'. A reviewer could reasonably treat the change as immaterial to the indicator and code 'no change'."
+   }
+  ]
+ }
 }
