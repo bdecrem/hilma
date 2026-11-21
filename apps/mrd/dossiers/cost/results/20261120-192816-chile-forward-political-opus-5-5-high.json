@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile political claude-opus-5-5 high",
- "pid": 57084,
  "step": "forward",
  "slug": "chile",
  "chunk": "political",
@@ -57,5 +56,487 @@
   "user": 100
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:41:01.249Z",
+ "minutes": 12.74,
+ "meters_after": {
+  "at": "2026-11-21T03:41:01.249Z",
+  "window": {
+   "pct": 58,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 58,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 58% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 74215,
+   "output": 15056,
+   "cache_read": 756332,
+   "cache_write": 89913,
+   "cost_usd": 1.116,
+   "total": 935516
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 74191,
+    "output": 5805,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1852,
+    "cost_usd": 0.0603
+   },
+   "claude-opus-5-5": {
+    "input": 24,
+    "output": 9251,
+    "cache_read": 756332,
+    "cache_write": 89913,
+    "thinking": 2595,
+    "cost_usd": 1.0557
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 30,
+ "duration_ms": 196259,
+ "duration_api_ms": 125168,
+ "pages_read": 13,
+ "pages": [
+  {
+   "at": "2026-11-21T03:28:25.145Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Art. 14 | Artículo 14 | extranjeros avecindados | Art. 13 | Art. 15",
+   "ok": true,
+   "chars": 8469
+  },
+  {
+   "at": "2026-11-21T03:29:17.515Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idParte=8697624",
+   "find": "avecindados | cinco años | Artículo 14",
+   "ok": true,
+   "chars": 5425
+  },
+  {
+   "at": "2026-11-21T03:30:50.463Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2025/10/07/44268/01/2709766.pdf",
+   "find": null,
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:31:03.014Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1217064",
+   "find": "avecindados | diez años | transitorio | 2026",
+   "ok": true,
+   "chars": 2294
+  },
+  {
+   "at": "2026-11-21T03:31:09.401Z",
+   "url": "https://immichile.cl/se-publica-ley-que-aumenta-los-requisitos-para-el-sufragio-de-personas-extranjeras/",
+   "find": "21.773 | diez años | 2026 | avecindados",
+   "ok": true,
+   "chars": 3269
+  },
+  {
+   "at": "2026-11-21T03:31:24.003Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21773",
+   "find": "avecindados | Quincuagésima cuarta | Promulgación | Publicación",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:38:50.267Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21779",
+   "find": "extranjeros | Publicación | Artículo transitorio | multa",
+   "ok": true,
+   "chars": 4034
+  },
+  {
+   "at": "2026-11-21T03:38:58.427Z",
+   "url": "https://www.diarioconstitucional.cl/2025/10/12/congreso-aprueba-nuevas-reglas-para-el-voto-obligatorio-y-sufragio-de-extranjeros/",
+   "find": "21.773 | diez años | 2026 | avecindados | extranjeros",
+   "ok": true,
+   "chars": 2292
+  },
+  {
+   "at": "2026-11-21T03:39:10.915Z",
+   "url": "https://actualidadjuridica.doe.cl/ley-modifica-la-carta-fundamental-en-materia-de-derecho-de-sufragio-de-personas-extranjeras/",
+   "find": "avecindados | 2026 | Quincuagésima",
+   "ok": true,
+   "chars": 2816
+  },
+  {
+   "at": "2026-11-21T03:39:12.537Z",
+   "url": "https://www.bcn.cl/portal/leyfacil/recurso/como-votar",
+   "find": "extranjeros | avecindados | años",
+   "ok": true,
+   "chars": 3323
+  },
+  {
+   "at": "2026-11-21T03:39:53.213Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=251693",
+   "find": "Artículo 73 | ciudadano con derecho a sufragio | Ser ciudadano",
+   "ok": true,
+   "chars": 3995
+  },
+  {
+   "at": "2026-11-21T03:39:59.419Z",
+   "url": "https://www.bcn.cl/portal/leyfacil/recurso/concejales",
+   "find": "requisitos | ciudadano | extranjero",
+   "ok": true,
+   "chars": 2182
+  },
+  {
+   "at": "2026-11-21T03:40:21.543Z",
+   "url": "https://www.cnnchile.com/pais/mas-de-786-mil-extranjeros-componen-padron-elecciones-municipales-aumentaron-163-proceso-anterior/",
+   "find": "extranjeros | Servel | padrón",
+   "ok": true,
+   "chars": 2501
+  }
+ ],
+ "searches": [
+  "reforma constitucional voto extranjeros avecindados artículo 14 2025 ley",
+  "reforma constitucional voto extranjeros diez años publicada Diario Oficial ley N° 21",
+  "ley multas incumplimiento deber de sufragio extranjeros publicada 2025 ley 21.7",
+  "\"Ley 21773\" bcn leychile modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras",
+  "Servel padrón electoral extranjeros habilitados para votar 2025 cifra"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.56,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.58,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.59,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":91,\"answer_2023\":\"No right to vote in any election\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No right to vote in any election\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Constitución Política de la República (Decreto 100, 2005, texto refundido)\",\"article\":\"Art. 14, inciso primero\",\"enacted\":\"1980-08-11\",\"history_read\":\"amending_acts\",\"status\":\"replaced\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Art. 15, inciso segundo\",\"enacted\":\"1980-08-11\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Art. 13\",\"enacted\":\"1980-08-11\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"DFL N° 2 (2017), texto refundido Ley 18.556 / Ley 18.700\",\"article\":\"Art. 66\",\"enacted\":\"2017\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"Ley N° 20.568\",\"article\":\"Art. 3\",\"enacted\":\"2012-01-31\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"}],\"events\":[{\"date\":\"2026-01-01\",\"instrument\":\"Ley N° 21.773, Modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras (D.O. 7-oct-2025)\",\"article\":\"Constitución Art. 14 inciso primero; Art. 15 inciso segundo; disposición transitoria quincuagésima cuarta\",\"kind\":\"amended\",\"what_changed\":\"Art. 14 previously let foreigners resident ('avecindados') in Chile for more than five years vote. It now requires more than ten uninterrupted years, counted only from the grant of a permanent residence permit, with no absences of more than 90 days in any 12-month period. The 54th transitory provision brings this into force 'desde el año 2026', after the 2025 elections. The vote stays conditioned on long permanent residence, not on lawful presence, so under the MRD convention the answer is unchanged, but the condition is much stricter.\",\"url\":\"htt",
+ "output": {
+  "answers": [
+   {
+    "question_id": 91,
+    "answer_2023": "No right to vote in any election",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No right to vote in any election",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República (Decreto 100, 2005, texto refundido)",
+      "article": "Art. 14, inciso primero",
+      "enacted": "1980-08-11",
+      "history_read": "amending_acts",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 15, inciso segundo",
+      "enacted": "1980-08-11",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 13",
+      "enacted": "1980-08-11",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "DFL N° 2 (2017), texto refundido Ley 18.556 / Ley 18.700",
+      "article": "Art. 66",
+      "enacted": "2017",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley N° 20.568",
+      "article": "Art. 3",
+      "enacted": "2012-01-31",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2026-01-01",
+      "instrument": "Ley N° 21.773, Modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras (D.O. 7-oct-2025)",
+      "article": "Constitución Art. 14 inciso primero; Art. 15 inciso segundo; disposición transitoria quincuagésima cuarta",
+      "kind": "amended",
+      "what_changed": "Art. 14 previously let foreigners resident ('avecindados') in Chile for more than five years vote. It now requires more than ten uninterrupted years, counted only from the grant of a permanent residence permit, with no absences of more than 90 days in any 12-month period. The 54th transitory provision brings this into force 'desde el año 2026', after the 2025 elections. The vote stays conditioned on long permanent residence, not on lawful presence, so under the MRD convention the answer is unchanged, but the condition is much stricter.",
+      "url": "https://immichile.cl/se-publica-ley-que-aumenta-los-requisitos-para-el-sufragio-de-personas-extranjeras/",
+      "passage": "«Artículo 14.- Los extranjeros avecindados en Chile por más de diez años ininterrumpidos, y que cumplan con los requisitos señalados en el inciso primero del artículo 13, podrán ejercer el derecho de sufragio en los casos y formas que determine la ley. Para estos efectos, los extranjeros sólo se considerarán avecindados a partir del momento en que obtengan un permiso de residencia definitiva.» ... «comenzarán a regir desde el año 2026»"
+     },
+     {
+      "date": "2025-10-23",
+      "instrument": "Ley N° 21.779, modifica la Ley N° 18.700 para sancionar el incumplimiento de la obligación de sufragar",
+      "article": "Ley 18.700, new Art. 139 bis",
+      "kind": "amended",
+      "what_changed": "Introduces fines for 'ciudadanos' who do not vote. This satisfies the precondition in the 54th transitory provision of Ley 21.773. Foreigners entitled to vote are not fined (per BCN Ley Fácil). It does not change who may vote.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21779",
+      "passage": "\"Artículo 139 bis.- El ciudadano que no sufrague en las elecciones será sancionado con una multa a beneficio municipal de 0,5 a 1,5 unidades tributarias mensuales."
+     }
+    ],
+    "implementation_then_now": "The answer is the lowest option on both dates, so implementation is 'Does Not Apply'. For the record, Servel data show the conditional right is applied in practice: foreigners are registered automatically. There were 676,028 foreign electors for the December 2023 plebiscite and more than 786,000 for the October 2024 municipal and regional elections (CNN Chile, citing Servel). Media reports cite about 886,000 for the 2025 presidential and parliamentary elections. The 10-year rule applies from 2026, so its effect on the voter roll could not be seen by 1 January 2026.",
+    "practice_sources": [
+     {
+      "title": "Más de 786 mil extranjeros componen padrón para elecciones municipales (CNN Chile, citing Servel)",
+      "url": "https://www.cnnchile.com/pais/mas-de-786-mil-extranjeros-componen-padron-elecciones-municipales-aumentaron-163-proceso-anterior/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "BCN Ley Fácil – Cómo votar (updated 24-10-2025)",
+      "url": "https://www.bcn.cl/portal/leyfacil/recurso/como-votar",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The amendment is dated from the text of Ley 21.773 as reproduced by ImmiChile and confirmed by BCN's official Ley Fácil guide ('Hasta las elecciones ... de 2025, rige la exigencia de llevar cinco años avecindado ... A partir de 2026, se amplía ... a 10 años'). LeyChile rendered only the Constitution's index, not the article text or its versions, and the Diario Oficial PDF could not be parsed. The 2023 text (five years) was rebuilt from this amending act. The DFL 2 and Ley 20.568 articles cited by the starting answer were not opened.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Constitución Política (Decreto 100)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "LeyChile – Constitución Política (part view)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idParte=8697624"
+     },
+     {
+      "title": "ImmiChile – Se publica Ley que aumenta los requisitos para el sufragio de personas extranjeras",
+      "url": "https://immichile.cl/se-publica-ley-que-aumenta-los-requisitos-para-el-sufragio-de-personas-extranjeras/"
+     },
+     {
+      "title": "DOE Actualidad Jurídica – Ley modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras",
+      "url": "https://actualidadjuridica.doe.cl/ley-modifica-la-carta-fundamental-en-materia-de-derecho-de-sufragio-de-personas-extranjeras/"
+     },
+     {
+      "title": "BCN Ley Fácil – Cómo votar",
+      "url": "https://www.bcn.cl/portal/leyfacil/recurso/como-votar"
+     },
+     {
+      "title": "LeyChile – Ley 21.779",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21779"
+     },
+     {
+      "title": "Diario Constitucional – Congreso aprueba nuevas reglas para el voto obligatorio y sufragio de extranjeros",
+      "url": "https://www.diarioconstitucional.cl/2025/10/12/congreso-aprueba-nuevas-reglas-para-el-voto-obligatorio-y-sufragio-de-extranjeros/"
+     },
+     {
+      "title": "CNN Chile – Más de 786 mil extranjeros componen padrón",
+      "url": "https://www.cnnchile.com/pais/mas-de-786-mil-extranjeros-componen-padron-elecciones-municipales-aumentaron-163-proceso-anterior/"
+     }
+    ],
+    "starting_answer_concern": "Art. 14 lets resident foreigners vote in every popular election, including presidential, parliamentary and plebiscites, not only local ones. The 'No' seems to follow the MRD convention (as in the Argentina and Colombia examples) that a right conditioned on long residence is not one that lawful presence creates. If that convention were dropped, Chile would be 'Right to vote in national elections' on both dates, and the change would be 'right protections both in 2023 and 2026 but they are not the same' (five years before, ten years of permanent residence after).",
+    "confidence": "medium",
+    "notes": "Ley 21.773 was published on 2025-10-07. It applies 'desde el año 2026', read here as from 1 January 2026, so the ten-year rule is in force on 1 January 2026. Its precondition, a law on fines for non-voting, was met by Ley 21.779 (D.O. 2025-10-23). The answer is kept at 'No' for consistency with the starting answer, but the substantive conditional right was materially narrowed in the window. No court ruling on this point was relied on."
+   },
+   {
+    "question_id": 93,
+    "answer_2023": "No right to run for public office in any election",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No right to run for public office in any election",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 13 (citizenship as condition for elective office) and Art. 14 inciso segundo (naturalised persons eligible only after 5 years)",
+      "enacted": "1980-08-11",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley N° 18.695, Orgánica Constitucional de Municipalidades",
+      "article": "Art. 73 (requirements to be concejal/alcalde)",
+      "enacted": "1988",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No protection on either date, so 'Does Not Apply'. Elective office stays reserved to citizens: a concejal must be 'ciudadano con derecho a voto' (BCN Ley Fácil). Foreigners can run only after naturalisation, and then only after five years as nationals. No practice shift applies.",
+    "practice_sources": [
+     {
+      "title": "BCN Ley Fácil – Concejales",
+      "url": "https://www.bcn.cl/portal/leyfacil/recurso/concejales",
+      "year": 2021,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 21.773 (2025) replaced only the first paragraph of Art. 14 (foreigners' vote) and amended Art. 15. Its text, as read, does not touch citizenship or eligibility rules. LeyChile did not render the article text of the Constitution or of Ley 18.695 Art. 73. The eligibility requirement was read in BCN's official Ley Fácil guide.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Constitución Política (Decreto 100)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "LeyChile – Ley 18.695 Orgánica Constitucional de Municipalidades",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=251693"
+     },
+     {
+      "title": "BCN Ley Fácil – Concejales",
+      "url": "https://www.bcn.cl/portal/leyfacil/recurso/concejales"
+     },
+     {
+      "title": "ImmiChile – Ley 21.773 text",
+      "url": "https://immichile.cl/se-publica-ley-que-aumenta-los-requisitos-para-el-sufragio-de-personas-extranjeras/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Starting answer kept. No amendment, new instrument or ruling in 2023–2026 opened candidacy to non-naturalised foreigners."
+   }
+  ]
+ }
 }
