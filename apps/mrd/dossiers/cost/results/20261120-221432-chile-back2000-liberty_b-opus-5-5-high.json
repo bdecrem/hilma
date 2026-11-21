@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile liberty_b claude-opus-5-5 high",
- "pid": 66323,
  "step": "back2000",
  "slug": "chile",
  "chunk": "liberty_b",
@@ -58,5 +57,1100 @@
   "user": 175
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T07:25:57.703Z",
+ "minutes": 71.41,
+ "meters_after": {
+  "at": "2026-11-21T07:25:57.704Z",
+  "window": {
+   "pct": 32,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 32,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 32% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 121148,
+   "output": 37053,
+   "cache_read": 2405802,
+   "cache_write": 136341,
+   "cost_usd": 2.2232,
+   "total": 2700344
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 121098,
+    "output": 9337,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3010,
+    "cost_usd": 0.0968
+   },
+   "claude-opus-5-5": {
+    "input": 50,
+    "output": 27716,
+    "cache_read": 2405802,
+    "cache_write": 136341,
+    "thinking": 8414,
+    "cost_usd": 2.1264
+   }
+  }
+ },
+ "turns": 43,
+ "calls": 66,
+ "duration_ms": 497379,
+ "duration_api_ms": 413498,
+ "pages_read": 32,
+ "pages": [
+  {
+   "at": "2026-11-21T06:16:01.559Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 84 | Artículo 89 | Artículo 90 | Artículo 81",
+   "ok": true,
+   "chars": 2237
+  },
+  {
+   "at": "2026-11-21T06:16:01.647Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Art. 21. | apremio ilegítimo | Art. 5º",
+   "ok": true,
+   "chars": 3324
+  },
+  {
+   "at": "2026-11-21T06:16:11.146Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 84 | Artículo 89 | Artículo 90 | Artículo 81",
+   "ok": true,
+   "chars": 8782
+  },
+  {
+   "at": "2026-11-21T06:16:11.237Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=6483",
+   "find": "Artículo 84 | Artículo 89 | Art. 84 | Art. 89",
+   "ok": true,
+   "chars": 2191
+  },
+  {
+   "at": "2026-11-21T06:16:14.926Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "cinco días | privado de su libertad | Ley 21325 | versiones",
+   "ok": true,
+   "chars": 4073
+  },
+  {
+   "at": "2026-11-21T06:16:15.693Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "Artículo 21.- | apremio ilegítimo | derechos esenciales que emanan",
+   "ok": true,
+   "chars": 5927
+  },
+  {
+   "at": "2026-11-21T06:16:20.892Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Artículo 95.- | Artículo 132.- | Artículo 134.- | Artículo 484.-",
+   "ok": true,
+   "chars": 5924
+  },
+  {
+   "at": "2026-11-21T06:16:21.853Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "corrigiendo por sí esos defectos | amenaza en su derecho a la libertad personal",
+   "ok": true,
+   "chars": 2502
+  },
+  {
+   "at": "2026-11-21T06:16:25.919Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Comparecencia judicial | su legalidad sólo podrá impugnarse | desde el 16 de junio de 2",
+   "ok": true,
+   "chars": 5972
+  },
+  {
+   "at": "2026-11-21T06:16:26.878Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "Art. 150 A | Art. 150 D | apremios ilegítimos",
+   "ok": true,
+   "chars": 7739
+  },
+  {
+   "at": "2026-11-21T06:16:32.161Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2015-01-01",
+   "find": "Art. 150 A | tormentos | Art. 150 B",
+   "ok": true,
+   "chars": 3622
+  },
+  {
+   "at": "2026-11-21T06:16:36.789Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1096847",
+   "find": "Sustitúyese el artículo 150 A | Derógase | tormentos",
+   "ok": true,
+   "chars": 2235
+  },
+  {
+   "at": "2026-11-21T06:25:41.211Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "no podrá exceder | con el objeto de poner",
+   "ok": true,
+   "chars": 4045
+  },
+  {
+   "at": "2026-11-21T06:29:12.721Z",
+   "url": "https://premiosentencias.sinfronteras.org.mx/wp-content/uploads/documentos/15. Sentencia (9 abril 2014 + Chile).pdf",
+   "find": "Rol | indefinido | Borgoño | se acoge | ilegal",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:29:14.689Z",
+   "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/",
+   "find": "amparo | Borgoño | Corte",
+   "ok": true,
+   "chars": 3049
+  },
+  {
+   "at": "2026-11-21T06:31:04.300Z",
+   "url": "https://premiosentencias.sinfronteras.org.mx/wp-content/uploads/documentos/15.%20Sentencia%20(9%20abril%202014%20+%20Chile).pdf",
+   "find": "Rol | indefinido | Borgoño | se acoge | cinco días",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:31:53.384Z",
+   "url": "https://derechoshumanos.udp.cl/cms/wp-content/uploads/2020/12/Cap200820DDHH20de20los20migrantes20y20refugiados.pdf",
+   "find": "amparo | expulsión | detención | Corte Suprema",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:33:17.935Z",
+   "url": "https://www.diarioconstitucional.cl/2019/10/01/cs-revoco-sentencia-y-acoge-amparo-contra-intendencia-regional-de-arica-y-parinacota-por-decretar-la-expulsion-de-dos-ciudadanos-dominicanos-del-pais/",
+   "find": "Rol | amparo | fundamenta | arbitrari",
+   "ok": true,
+   "chars": 2254
+  },
+  {
+   "at": "2026-11-21T06:33:18.794Z",
+   "url": "https://ungeneva.org/es/news-media/meeting-summary/2018/07/committee-against-torture-examines-chiles-report",
+   "find": "migra | extranjer | tortura",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:59:27.028Z",
+   "url": "https://www.hrw.org/world-report/2020/country-chapters/chile",
+   "find": "torture | migrant | Venezuela | abuses",
+   "ok": true,
+   "chars": 5349
+  },
+  {
+   "at": "2026-11-21T06:59:36.187Z",
+   "url": "https://hrlibrary.umn.edu/cat/observations/chile2004.html",
+   "find": "torture | definition | overcrowding | foreign",
+   "ok": true,
+   "chars": 5421
+  },
+  {
+   "at": "2026-11-21T06:59:37.088Z",
+   "url": "https://webarchive.archive.unhcr.org/20230528152743oe_/https://www.refworld.org/docid/4226d99123.html",
+   "find": "Torture | refugee | habeas | immigrant | foreign",
+   "ok": true,
+   "chars": 873
+  },
+  {
+   "at": "2026-11-21T07:01:21.960Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136104.htm",
+   "find": "Torture | Prison and Detention | refugee | Arbitrary Arrest | immigrant",
+   "ok": true,
+   "chars": 7457
+  },
+  {
+   "at": "2026-11-21T07:18:48.369Z",
+   "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp",
+   "find": "amparo | Corte Suprema | retenido | días",
+   "ok": true,
+   "chars": 4009
+  },
+  {
+   "at": "2026-11-21T07:19:11.338Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "Torture and Other | habeas | refugee | expel | immigra | foreign",
+   "ok": true,
+   "chars": 7408
+  },
+  {
+   "at": "2026-11-21T07:19:13.069Z",
+   "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html",
+   "find": "Rol | días | condiciones | amparo",
+   "ok": true,
+   "chars": 2513
+  },
+  {
+   "at": "2026-11-21T07:19:38.381Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=15722",
+   "find": "Decreto 39 | 1562 | reserva | Artículo 16",
+   "ok": true,
+   "chars": 5421
+  },
+  {
+   "at": "2026-11-21T07:19:39.976Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "cinco días | privado de su libertad | detenido | Artículo 176 | fundado",
+   "ok": true,
+   "chars": 8535
+  },
+  {
+   "at": "2026-11-21T07:19:44.941Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "establecimiento carcelario | privarse de libertad | se le podrá privar | hasta por | expulsión será dispuesta",
+   "ok": true,
+   "chars": 8585
+  },
+  {
+   "at": "2026-11-21T07:19:50.272Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "Artículo 175° | Artículo 176° | Artículo 177° | Su interposición susp | Artículo 167°",
+   "ok": true,
+   "chars": 5878
+  },
+  {
+   "at": "2026-11-21T07:19:54.548Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 86.- Para hacer efecti",
+   "ok": true,
+   "chars": 2197
+  },
+  {
+   "at": "2026-11-21T07:23:51.443Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 133.- | Artículo 134.- | Artículo 13.- ",
+   "ok": true,
+   "chars": 4515
+  }
+ ],
+ "searches": [
+  "Decreto 808 1988 promulga Convención contra la Tortura leychile idNorma",
+  "INDH informe misión observación Cuartel Borgoño extranjeros expulsión condiciones detención",
+  "Corte Suprema acoge amparo extranjeros expulsión falta de fundamentación decreto 2018 2019 migrantes",
+  "Comité contra la Tortura observaciones finales Chile 2018 migrantes expulsión detención",
+  "state.gov 2004 Country Reports on Human Rights Practices Chile torture prison conditions",
+  "Corte Suprema amparo extranjeros detenidos PDI expulsión plazo cinco días ilegal 2007 OR 2008 OR 2009 OR 2010",
+  "\"Chile\" 2014 Country Reports on Human Rights Practices state.gov \"Prison and Detention Center Conditions\" migrants Haitians",
+  "leychile \"Decreto 597\" 1984 \"Reglamento de Extranjería\" idNorma",
+  "leychile Decreto 808 1988 \"Convención contra la tortura\" promulga idNorma"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":21,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Constitution Art. 21 (amparo, unchanged since 1980) let any person 'arrestado, detenido o preso con infracción' of the Constitution or laws, and anyone suffering 'cualquiera otra privación, perturbación o amenaza' to personal liberty, go to court. The court could order release or correct defects. DL 1.094 Art. 89 allowed a judicial reclamación to the Supreme Court against expulsion decrees. The Código Procesal Penal (Art. 95) was not yet in force anywhere: it was published Oct 2000 and in force from 16-12-2000 in two regions. No migrant-specific practice evidence was found for this period; the 2020 rating is carried forward.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Same constitutional amparo and DL 1.094 Art. 89. CPP Art. 95 ('amparo ante el juez de garantía' to examine legality and conditions) was in force in all regions except the Región Metropolitana, where it applied only from 16-06-2005. CAT 2004 concerns ill-treatment and overcrowding in general, not migrants' access to amparo; there is no migrant-specific evidence.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Constitution Art. 21, DL 1.094 Arts. 89-90 and CPP Art. 95 were in force nationwide. CPP Art. 132 was amended by Ley 20.074 (14-11-2005), which does not affect the review right. No migrant-specific practice found for c.2010.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Same provisions; none was amended in a way relevant to the indicator. Practice: in March 2013 the Santiago Court of Appeals, confirmed by the Supreme Court, granted amparo to 17 migrants held about two months in insalubrious, overcrowded conditions at Cuartel Borgoño pending expulsion. The court ordered their release and an investigation. This shows the",
+ "output": {
+  "answers": [
+   {
+    "question_id": 21,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Constitution Art. 21 (amparo, unchanged since 1980) let any person 'arrestado, detenido o preso con infracción' of the Constitution or laws, and anyone suffering 'cualquiera otra privación, perturbación o amenaza' to personal liberty, go to court. The court could order release or correct defects. DL 1.094 Art. 89 allowed a judicial reclamación to the Supreme Court against expulsion decrees. The Código Procesal Penal (Art. 95) was not yet in force anywhere: it was published Oct 2000 and in force from 16-12-2000 in two regions. No migrant-specific practice evidence was found for this period; the 2020 rating is carried forward."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same constitutional amparo and DL 1.094 Art. 89. CPP Art. 95 ('amparo ante el juez de garantía' to examine legality and conditions) was in force in all regions except the Región Metropolitana, where it applied only from 16-06-2005. CAT 2004 concerns ill-treatment and overcrowding in general, not migrants' access to amparo; there is no migrant-specific evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Constitution Art. 21, DL 1.094 Arts. 89-90 and CPP Art. 95 were in force nationwide. CPP Art. 132 was amended by Ley 20.074 (14-11-2005), which does not affect the review right. No migrant-specific practice found for c.2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions; none was amended in a way relevant to the indicator. Practice: in March 2013 the Santiago Court of Appeals, confirmed by the Supreme Court, granted amparo to 17 migrants held about two months in insalubrious, overcrowded conditions at Cuartel Borgoño pending expulsion. The court ordered their release and an investigation. This shows the remedy works, after delay."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República (Decreto 100/2005 texto refundido; original 1980)",
+      "article": "Art. 21",
+      "role": "cited",
+      "in_force": "1980-10-24 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 95",
+      "role": "cited",
+      "in_force": "2000-12-16 (gradual by region; Región Metropolitana 2005-06-16) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 132",
+      "role": "cited",
+      "in_force": "2000-12-16 (gradual) to today; amended 2005-11-14 (Ley 20.074), 2016-07-05 (Ley 20.931), 2025-10-01 (Ley 21.771)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 484 (entry into force by region)",
+      "role": "other_in_force",
+      "in_force": "2000-12-16 to today (amended by Ley 19.762, 2001, and Ley 19.919, 2003)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975 (Ley de Extranjería)",
+      "article": "Arts. 84, 89, 90",
+      "role": "other_in_force",
+      "in_force": "1983 (text from Ley 18.252) to 2022-02-12 (repealed by Ley 21.325)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Art. 174",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022 (replaced by Decreto 296/2022)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-12-16",
+      "instrument": "Ley 19.696, Código Procesal Penal",
+      "article": "Arts. 95, 132, 484",
+      "kind": "new_instrument",
+      "what_changed": "The new CPP entered into force region by region: Coquimbo and Araucanía on 16-12-2000, Región Metropolitana on 16-06-2005. It adds 'amparo ante el juez de garantía' (Art. 95), covering legality and conditions of any deprivation of liberty, to the constitutional amparo.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+      "passage": "regirá para las regiones de Coquimbo y de la Araucanía, desde el 16 de diciembre de 2000; ... y para la Región Metropolitana de Santiago, desde el 16 de junio de 2005."
+     },
+     {
+      "date": "2005-11-14",
+      "instrument": "Ley 20.074",
+      "article": "CPP Art. 132",
+      "kind": "amended",
+      "what_changed": "Rewrote Art. 132 (first judicial hearing of detainee; fiscal's absence leads to release). It does not change the right to challenge detention.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+      "passage": "Artículo 132. Comparecencia judicial. A la primera audiencia judicial del detenido deberá concurrir el fiscal o el abogado asistente del fiscal. La ausencia de éstos dará lugar a la liberación del detenido."
+     },
+     {
+      "date": "2013-03",
+      "instrument": "Corte Suprema, confirming Corte de Apelaciones de Santiago (amparo, Cuartel Borgoño)",
+      "article": "Constitución Art. 21",
+      "kind": "practice",
+      "what_changed": "Amparo granted for 17 migrants held about two months in insalubrious, overcrowded conditions pending expulsion. The court ordered release and an investigation. Practice evidence only (press report).",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html",
+      "passage": "También se ordenó la libertad inmediata de los inmigrantes detenidos y enviar informes al Ministerio Público, al Ministerio del Interior y a la dirección general de la PDI respecto de los funcionarios que tuvieron detenidos cerca de dos meses a estos extranjeros."
+     },
+     {
+      "date": "2018-04",
+      "instrument": "Corte Suprema, amparo Clema Neus",
+      "article": "Constitución Art. 21",
+      "kind": "practice",
+      "what_changed": "The Supreme Court granted amparo to a Haitian national held two weeks at Santiago airport and annulled the entry refusal. Practice evidence (press report).",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp",
+      "passage": "El máximo tribunal del país decidió acoger el recurso de amparo interpuesto a favor del ciudadano haitiano Clema Neus, quien estuvo retenido por dos semanas en el aeropuerto de Pudahuel por la Policía de Investigaciones."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema (confirming Corte de Apelaciones de Santiago)",
+      "date": "2013-03",
+      "reference": "Amparo, 17 migrants at Cuartel Borgoño (rol not identified)",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/"
+     },
+     {
+      "court": "Corte Suprema",
+      "date": "2018-04",
+      "reference": "Amparo Clema Neus (rol not identified)",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp"
+     },
+     {
+      "court": "Corte Suprema",
+      "date": "2019-10",
+      "reference": "Amparo vs Intendencia de Arica y Parinacota (two Dominican nationals)",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.diarioconstitucional.cl/2019/10/01/cs-revoco-sentencia-y-acoge-amparo-contra-intendencia-regional-de-arica-y-parinacota-por-decretar-la-expulsion-de-dos-ciudadanos-dominicanos-del-pais/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Fiscalía deberá investigar a la PDI por retención de inmigrantes (Cooperativa)",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Suprema ordena a fiscalía investigar a la PDI por retención ilegal de inmigrantes (The Clinic)",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Corte Suprema ordena a la PDI liberar a haitiano retenido dos semanas en el aeropuerto (El Desconcierto)",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "CS revocó sentencia y acoge amparo contra Intendencia de Arica (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2019/10/01/cs-revoco-sentencia-y-acoge-amparo-contra-intendencia-regional-de-arica-y-parinacota-por-decretar-la-expulsion-de-dos-ciudadanos-dominicanos-del-pais/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Constitution Art. 21 and DL 1.094 Arts. 84/89/90 were read on LeyChile with amendment markers: no change 2000-2020 (Art. 21 only CPR 1980; DL 1.094 only Ley 18.252/1983). The CPP entry-into-force schedule was read in Art. 484. The old Código de Procedimiento Penal amparo (in force for 2000/2005 in Santiago) was not read. Practice before 2013 is absent.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 (LeyChile navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "Constitución Política (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Código Procesal Penal (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "DS 597 Reglamento de Extranjería (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "Cooperativa 2013",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html"
+     },
+     {
+      "title": "The Clinic 2013",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/"
+     },
+     {
+      "title": "El Desconcierto 2018",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp"
+     },
+     {
+      "title": "Diario Constitucional 2019",
+      "url": "https://www.diarioconstitucional.cl/2019/10/01/cs-revoco-sentencia-y-acoge-amparo-contra-intendencia-regional-de-arica-y-parinacota-por-decretar-la-expulsion-de-dos-ciudadanos-dominicanos-del-pais/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection answer relies on statutes and the Constitution, not on court rulings; the rulings are practice evidence only, read via press. The CPP's gradual entry into force (2000-2005) added an explicit 'conditions' review, but the constitutional amparo (Art. 21 inc. 3, 'cualquiera otra privación, perturbación o amenaza') already reached all three aspects under the starting coding's reading, so the answer is unchanged. Implementation for 2000/2005/2010 has no migrant-specific evidence (low confidence for those dates)."
+   },
+   {
+    "question_id": 23,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "DL 1.094 Art. 84 requires expulsion 'por decreto supremo fundado' (tourists: Intendente resolution 'sin más trámite'). DS 597 Art. 176 limits deprivation of liberty to what is 'estrictamente necesarias'. Detention during the Art. 89 reclamación is automatic. No practice evidence for c.2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; no amendment to DL 1.094 Arts. 81-90 or DS 597 Arts. 167-176 since 1983/1984. No migrant-specific practice evidence c.2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. Ley 20.430 (refugees, 2010) did not alter expulsion-detention rules. DS 597 Art. 59 (asylum seekers detainable up to 15 days 'cuando existan fundados temores' of absconding) still appears in the text. No practice evidence c.2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. Practice: the 2013 Cuartel Borgoño case shows about two months of detention of 17 migrants pending expulsion, found unlawful on amparo. This points to non-individualised, prolonged administrative detention."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 133, 134",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 134",
+      "role": "cited",
+      "in_force": "2000-12-16 (gradual) to today; amended by Ley 19.789 (2001/2002), Ley 19.950 (2004), Ley 20.931 (2016)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Art. 84 (expulsion by 'decreto supremo fundado')",
+      "role": "predecessor",
+      "in_force": "1983 (Ley 18.252) to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 81, 82, 89, 90",
+      "role": "predecessor",
+      "in_force": "1975/1983 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Arts. 167, 174, 176; Art. 59 (asylum seekers)",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 133-134; repeal of DL 1.094",
+      "kind": "replaced",
+      "what_changed": "After the 2020 date: Art. 134 allows restrictions and deprivation of liberty only once the expulsion order is final, in specified facilities with listed rights. It replaced DL 1.094 Arts. 84/89 and DS 597 Art. 176.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "Artículo 134.- Ejecución de la medida de expulsión. Una vez que se encuentre firme y ejecutoriada la resolución que ordena la expulsión, se podrá someter al afectado a restricciones y privaciones de libertad."
+     },
+     {
+      "date": "2013-03",
+      "instrument": "Corte Suprema / Corte de Apelaciones de Santiago, amparo Cuartel Borgoño",
+      "article": "Constitución Art. 21; DL 1.094 Art. 89",
+      "kind": "practice",
+      "what_changed": "Release of 17 migrants detained about two months pending expulsion. Practice evidence of prolonged, non-individualised detention.",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html",
+      "passage": "respecto de los funcionarios que tuvieron detenidos cerca de dos meses a estos extranjeros."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema (confirming Corte de Apelaciones de Santiago)",
+      "date": "2013-03",
+      "reference": "Amparo, Cuartel Borgoño (rol not identified)",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Fiscalía deberá investigar a la PDI por retención de inmigrantes (Cooperativa)",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Corte Suprema ordena a la PDI liberar a haitiano retenido (El Desconcierto)",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DL 1.094 version markers show no amendment of Arts. 81-90 between 1983 and its 2022 repeal. DS 597 was read in its last consolidated text, where Arts. 174 and 176 carry no amendment markers. Practice before 2013 is absent; the 2013/2018 evidence comes from press reports.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Código Procesal Penal (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "Cooperativa 2013",
+      "url": "https://cooperativa.cl/noticias/pais/judicial/corte-suprema/fiscalia-debera-investigar-a-la-pdi-por-retencion-de-inmigran/2013-03-26/113741.html"
+     },
+     {
+      "title": "El Desconcierto 2018",
+      "url": "https://eldesconcierto.cl/2018/04/05/corte-suprema-ordena-a-la-pdi-liberar-a-haitiano-que-fue-retenido-por-dos-semanas-en-el-aeropuerto-de-santiago/amp"
+     }
+    ],
+    "starting_answer_concern": "The 2020 answer cites Ley 21.325 Arts. 133-134, not in force until 12-02-2022. Its predecessor, DL 1.094, required a 'decreto supremo fundado' for the expulsion itself, but made detention automatic during the reclamación (Art. 89: 'permanecerá privado de su libertad'). It also allowed tourist expulsions 'sin más trámite' (Art. 84). Only the regulation (DS 597 Art. 176) limited deprivation of liberty to what is 'estrictamente necesarias'. A 'Yes' for an individualised detention determination in 2020 is therefore doubtful. The 2020 implementation 'Sometimes; Effectively Always' is not a permitted neighbouring pair.",
+    "confidence": "low",
+    "notes": "The 2020 implementation could not be carried forward verbatim (not a valid option); 'Sometimes; Usually' is used for past dates on the strength of the 2013 Borgoño evidence. The CPP Art. 134 citation concerns criminal flagrancy detention, not immigration detention. The answer rests on statutes and regulation, not rulings."
+   },
+   {
+    "question_id": 25,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Constitution Art. 19 No. 1 ('Se prohíbe la aplicación de todo apremio ilegítimo', for 'todas las personas') and Art. 5 inc. 2 (treaty rights). The UN Convention against Torture was promulgated by Decreto 808/1988, with reservations withdrawn in 1991 and on 23-12-1999. Penal Code Art. 150 A (Ley 19.567, 1998) punished 'tormentos o apremios ilegítimos, físicos o mentales'. No migrant-specific practice evidence; general evidence comes from CAT 2004."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions (Ley 20.050 of Aug 2005 did not touch Art. 19 No. 1). CAT 2004 noted 'continued ill-treatment of persons, in some cases amounting to torture' by Carabineros, PDI and Gendarmería, and an incomplete torture definition. This concerns detainees generally, not migrants."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; Penal Code Art. 150 A in its 1998 text. No migrant-specific practice evidence found for c.2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions (150 A in 1998 text, read in the 2015 version). The US State Department's 2014 report notes reports of excessive force, abuse and degrading treatment by Carabineros, PDI and Gendarmería, and INDH concern over abuses against immigrants. Ley 20.968 (22-11-2016) later replaced 150 A and added 150 B-D, explicitly penalising CIDT."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 1 (inc. 4: prohibition of 'apremio ilegítimo'); Art. 5 inc. 2",
+      "role": "cited",
+      "in_force": "1980-10-24 (Art. 5 inc. 2 text from Ley 18.825, 1989) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Arts. 150 A, 150 B, 150 C, 150 D (as inserted/replaced by Ley 20.968)",
+      "role": "cited",
+      "in_force": "2016-11-22 to today (150 D amended by Ley 21.560, 2023-04-10)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Penal (text of Ley 19.567)",
+      "article": "Arts. 150 A, 150 B (1998 text: 'tormentos o apremios ilegítimos')",
+      "role": "predecessor",
+      "in_force": "1998-07-01 to 2016-11-22",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.968 que tipifica delitos de tortura y de tratos crueles, inhumanos y degradantes",
+      "article": "Art. 1",
+      "role": "cited",
+      "in_force": "2016-11-22 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 808 de 1988, Relaciones Exteriores (promulga la Convención contra la Tortura)",
+      "article": "whole; reservations withdrawn by DTO 39 (1991) and DTO 1562 (23-12-1999)",
+      "role": "cited",
+      "in_force": "1988-11-26 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 1 No. 7, 3, 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2016-11-22",
+      "instrument": "Ley 20.968",
+      "article": "Código Penal Arts. 150 A-150 D",
+      "kind": "replaced",
+      "what_changed": "Before: Art. 150 A punished a public employee who applied 'tormentos o apremios ilegítimos, físicos o mentales' to a person deprived of liberty. After: a separate torture offence with the CAT-style definition, and Art. 150 D on 'apremios ilegítimos u otros tratos crueles, inhumanos o degradantes'. Both before and after, the answer is Yes.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1096847",
+      "passage": "3. Sustitúyese el artículo 150 A por el que sigue: \"Artículo 150 A.- El empleado público que, abusando de su cargo o sus funciones, aplicare, ordenare o consintiere en que se aplique tortura, será penado con presidio mayor en su grado mínimo."
+     },
+     {
+      "date": "1998-07-01",
+      "instrument": "Ley 19.567",
+      "article": "Código Penal Art. 150 A",
+      "kind": "enacted",
+      "what_changed": "Text in force on 1 Jan 2000, 2005, 2010 and 2015: it criminalised torment and illegitimate coercion of persons deprived of liberty (pre-2000 context).",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2015-01-01",
+      "passage": "ART. 150 A. El empleado público que aplicare a una persona privada de libertad tormentos o apremios ilegítimos, físicos o mentales, u ordenare o consintiere su aplicación, será castigado con las penas de presidio o reclusión menor en sus grados medio a máximo"
+     },
+     {
+      "date": "1999-12-23",
+      "instrument": "Decreto 1562, Relaciones Exteriores",
+      "article": "Decreto 808/1988 reservation (e)",
+      "kind": "amended",
+      "what_changed": "Withdrew Chile's last CAT reservation (on Art. 30.1) just before the 2000 date; the earlier reservations a), b), d) had been withdrawn in 1991. Marginal to the indicator.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=15722",
+      "passage": "El artículo único del DTO 1562, Relaciones Exteriores, publicado el 23.12.1999, retiró la reserva contenida en el literal e) de este decreto, formuladas a esta Convención."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CAT Conclusions and recommendations: Chile, CAT/C/CR/32/5 (2004)",
+      "url": "https://hrlibrary.umn.edu/cat/observations/chile2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "US State Department Country Report on Human Rights Practices 2014 - Chile (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Human Rights Watch World Report 2020 - Chile",
+      "url": "https://www.hrw.org/world-report/2020/country-chapters/chile",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Penal Code was read in its 2015 version (Ley 19.567 text) and its current version (Ley 20.968). Constitution Art. 19 No. 1 and Decreto 808 notes were read on LeyChile. The American Convention promulgation decree was not read. Practice sources concern detainees generally, not migrants specifically; there is no source c.2000 or c.2010.",
+    "sources_opened": [
+     {
+      "title": "Código Penal current (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984"
+     },
+     {
+      "title": "Código Penal version 2015-01-01 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2015-01-01"
+     },
+     {
+      "title": "Ley 20.968 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1096847"
+     },
+     {
+      "title": "Decreto 808/1988 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=15722"
+     },
+     {
+      "title": "Constitución Política (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "CAT 2004 Chile",
+      "url": "https://hrlibrary.umn.edu/cat/observations/chile2004.html"
+     },
+     {
+      "title": "State Dept 2014 Chile (ecoi)",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     },
+     {
+      "title": "HRW World Report 2020 Chile",
+      "url": "https://www.hrw.org/world-report/2020/country-chapters/chile"
+     },
+     {
+      "title": "State Dept 2009 (wrong country page returned)",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136104.htm"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "The protection answer rests on the Constitution (Art. 19 No. 1, applying to 'todas las personas' including migrants) and on the CAT incorporated via promulgation decree and Art. 5 inc. 2; the Penal Code reinforces it. No court ruling is relied on. Ley 21.325 Arts. 1, 3 and 13 postdate 2020 and are irrelevant to the past dates. Implementation evidence is about detainees and protesters generally (HRW 2020 covers the October 2019 protests, i.e. before the 2020 date); none is migrant-specific, hence low confidence."
+   }
+  ]
+ }
 }
