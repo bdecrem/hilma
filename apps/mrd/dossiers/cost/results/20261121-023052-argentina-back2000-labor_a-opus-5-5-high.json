@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina labor_a claude-opus-5-5 high",
- "pid": 77970,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "labor_a",
@@ -60,5 +59,1407 @@
   "user": 191
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:38:44.179Z",
+ "minutes": 7.86,
+ "meters_after": {
+  "at": "2026-11-21T10:38:44.179Z",
+  "window": {
+   "pct": 34,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 34,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 34% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 161135,
+   "output": 43814,
+   "cache_read": 2948611,
+   "cache_write": 147728,
+   "cost_usd": 2.5323,
+   "total": 3301288
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 161081,
+    "output": 12405,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4280,
+    "cost_usd": 0.1323
+   },
+   "claude-opus-5-5": {
+    "input": 54,
+    "output": 31409,
+    "cache_read": 2948611,
+    "cache_write": 147728,
+    "thinking": 8643,
+    "cost_usd": 2.3999
+   }
+  }
+ },
+ "turns": 40,
+ "calls": 62,
+ "duration_ms": 470678,
+ "duration_api_ms": 373031,
+ "pages_read": 27,
+ "pages": [
+  {
+   "at": "2026-11-21T10:31:02.818Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 5 | ARTICULO 6 | ARTICULO 13 | ARTICULO 16 | ARTICULO 20 | ARTICULO 23 | ARTICULO 51 | ARTICULO 53 | ARTICULO 56 | ARTICULO 125",
+   "ok": true,
+   "chars": 20741
+  },
+  {
+   "at": "2026-11-21T10:31:16.277Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6° | ARTICULO 22 | l) Nacionalidad | ARTICULO 51 | ARTICULO 124 | ARTICULO 125",
+   "ok": true,
+   "chars": 9523
+  },
+  {
+   "at": "2026-11-21T10:31:17.393Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 31 | ARTICULO 32 | ARTICULO 33 | ARTICULO 34 | ARTICULO 35 | ARTICULO 102 | ARTICULO 96",
+   "ok": true,
+   "chars": 8894
+  },
+  {
+   "at": "2026-11-21T10:31:22.041Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 12 | ARTICULO 13 | ARTICULO 27 | legislación laboral | Ley 24.393 | cónyuge",
+   "ok": true,
+   "chars": 10030
+  },
+  {
+   "at": "2026-11-21T10:31:32.553Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/texto",
+   "find": "ARTICULO 15 | ARTICULO 21 | ARTICULO 22 | ARTICULO 23 | cónyuge | trabajar | ARTICULO 24",
+   "ok": true,
+   "chars": 1931
+  },
+  {
+   "at": "2026-11-21T10:31:33.567Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+   "find": "ARTICULO 23.- | ARTICULO 22.- | ARTICULO 51.- | ARTICULO 56.- | cónyuge | grupo familiar",
+   "ok": true,
+   "chars": 12220
+  },
+  {
+   "at": "2026-11-21T10:31:46.862Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Art. 17. | Art. 81. | Art. 172 | Art. 3° | Art. 1°",
+   "ok": true,
+   "chars": 8560
+  },
+  {
+   "at": "2026-11-21T10:31:50.929Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Igualdad de trato | Art. 81",
+   "ok": true,
+   "chars": 3447
+  },
+  {
+   "at": "2026-11-21T10:31:52.032Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20465/texact.htm",
+   "find": "ARTICULO 1 | raza | nacionalidad",
+   "ok": true,
+   "chars": 3567
+  },
+  {
+   "at": "2026-11-21T10:31:53.025Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14 bis | Artículo 20 | Artículo 16 | jerarquía constitucional",
+   "ok": true,
+   "chars": 6523
+  },
+  {
+   "at": "2026-11-21T10:32:01.394Z",
+   "url": "https://webarchive.archive.unhcr.org/20230527050228if_/https://www.refworld.org/pdfid/3db7ffd84.pdf",
+   "find": "Artículo 15 | Artículo 22 | contratado | cónyuge | cambio de empleador | trabajar",
+   "ok": true,
+   "chars": 903
+  },
+  {
+   "at": "2026-11-21T10:32:15.420Z",
+   "url": "https://www.acnur.org/fileadmin/Documentos/BDL/2001/0046.pdf",
+   "find": "ARTICULO 15 | contratado | cónyuge | ARTICULO 22 | ARTICULO 23 | ARTICULO 24 | empleador",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:32:47.670Z",
+   "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/12/5884/13.pdf",
+   "find": "Argentina | 1023 | contratado | cónyuge | empleador",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:32:54.533Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/norma.htm",
+   "find": "ARTICULO 15 | contratado | cónyuge | ARTICULO 22 | ARTICULO 23 | ARTICULO 24 | empleador",
+   "ok": true,
+   "chars": 675
+  },
+  {
+   "at": "2026-11-21T10:33:08.694Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53426/texto",
+   "find": "ARTICULO | trabaj | contrat",
+   "ok": true,
+   "chars": 7053
+  },
+  {
+   "at": "2026-11-21T10:33:21.022Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican",
+   "find": "Decreto | Ley",
+   "ok": true,
+   "chars": 2907
+  },
+  {
+   "at": "2026-11-21T10:33:33.540Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-22537/texto",
+   "find": "cónyuge | artículo 15 | temporari",
+   "ok": true,
+   "chars": 2750
+  },
+  {
+   "at": "2026-11-21T10:33:52.318Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-22535/texto",
+   "find": "ARTICULO 1 | ARTICULO 2 | ARTICULO 4",
+   "ok": true,
+   "chars": 2727
+  },
+  {
+   "at": "2026-11-21T10:34:00.122Z",
+   "url": "https://www.fidh.org/IMG/pdf/Rapargentine559econjCELS-1.pdf",
+   "find": "trabaj | salario | discrimina | 22.439 | bolivian",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:34:31.455Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "discrimin | labour | working conditions | exploitation | employment | domestic | inspection",
+   "ok": true,
+   "chars": 10448
+  },
+  {
+   "at": "2026-11-21T10:34:44.837Z",
+   "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+   "find": "migra | Bolivia | Paraguay | discrimination | indigenous",
+   "ok": true,
+   "chars": 5158
+  },
+  {
+   "at": "2026-11-21T10:34:45.493Z",
+   "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+   "find": "migra | Bolivia | foreign | discrimination",
+   "ok": true,
+   "chars": 5384
+  },
+  {
+   "at": "2026-11-21T10:34:49.580Z",
+   "url": "https://tbinternet.ohchr.org/Treaties/CMW/Shared%20Documents/ARG/CMW_C_ARG_CO_2_37078_S.pdf",
+   "find": "explotación | condiciones laborales | discrimina | inspección | trabajo doméstico | textil",
+   "ok": true,
+   "chars": 675
+  },
+  {
+   "at": "2026-11-21T10:35:33.379Z",
+   "url": "https://amnistia.org.ar/wp-content/uploads/delightful-downloads/2019/08/TB-CMW-31-Argentina-review-August-2019.pdf",
+   "find": "discrimina | labour | work | racial",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:35:40.884Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2019/09/committee-migrant-workers-raises-concerns-about-expedited",
+   "find": "trabaj | explota | discrimina | textil | doméstic | inspec",
+   "ok": true,
+   "chars": 1853
+  },
+  {
+   "at": "2026-11-21T10:35:51.349Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "work | labour | discrimin | Committee",
+   "ok": true,
+   "chars": 4717
+  },
+  {
+   "at": "2026-11-21T10:36:19.268Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "Sustitúyese el artículo | Incorpórase",
+   "ok": true,
+   "chars": 6461
+  }
+ ],
+ "searches": [
+  "Ley 22.439 Ley General de Migraciones y de Fomento de la Inmigración infoleg texto",
+  "Decreto 1023/94 Reglamento de Migración residentes temporarios trabajo \"cónyuge\" infoleg",
+  "\"Decreto 1023/94\" reglamento de migración texto \"trabajador contratado\" artículo",
+  "Decreto 1023/1994 reglamento migración argentina texto artículo 15 \"residentes temporarios\" \"contrato de trabajo\" empleador",
+  "\"La Dirección Nacional de Migraciones podrá conceder residencia permanente o temporaria\" 1023/94",
+  "Ley 24.493 mano de obra nacional extranjeros residencia permanente texto infoleg",
+  "Comité trabajadores migratorios observaciones finales Argentina CMW/C/ARG/CO/1 2011 trabajo condiciones",
+  "CERD concluding observations Argentina 2004 CERD/C/65/CO/1 migrants Bolivia Paraguay discrimination",
+  "CMW/C/ARG/CO/2 concluding observations Argentina 2019 migrant workers labour exploitation",
+  "Committee migrant workers Argentina 2019 concluding observations \"textile\" OR \"domestic work\" exploitation migrant workers irregular recommend",
+  "talleres textiles trabajadores bolivianos explotación Buenos Aires informe 2015 OR 2016 inspección trabajo migrantes"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":95,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"In force: Constitution art. 14 bis ('igual remuneración por igual tarea', for every worker); LCT 20.744 arts. 17 (no discrimination by 'nacionalidad') and 81 (equal treatment); Ley 22.439 arts. 26-27 (permanent and temporary residents work 'gozando de la protección de las leyes que rigen la materia'). Art. 109 of Ley 22.439 let the employer off its labour obligations where a worker lawful at hiring later became irregular. Practice: CERD 2001 records that undocumented immigrants from neighbouring countries were vulnerable in the economic crisis. There is no wage-specific evidence.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 25.871 (in force 21 Jan 2004) replaced Ley 22.439. Its art. 6 (equal access to rights in 'trabajo, empleo'), art. 16 and art. 56 (labour obligations owed 'cualquiera sea su condición migratoria') removed the art. 109 carve-out. Constitution art. 14 bis and LCT arts. 17 and 81 were unchanged. Practice evidence for 2004-05 is thin: CERD 2004 mainly welcomes the new law.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Same provisions; Decreto 616/2010 (May 2010) came after this date. Practice: CMW 2011 (covering the late 2000s) found that irregular migrant workers often received 'inadequate pay' and worked excessive hours in textiles, agriculture and domestic work. No pattern of wage discrimination against formally employed regular migrants was documented.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Same provisions (Ley 25.871 arts. 6, 16, 56; Decreto 616/2010 art. 56 on free legal aid; LCT arts. 17, 81; Constitution art. 14 bis). DNU 70/2017 came later and did not touch these articles. The practice evidence is the CMW 2011 findings and CELS's 2019 report on the CMW review (textile workers). Evidence for 2015 itself i",
+ "output": {
+  "answers": [
+   {
+    "question_id": 95,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "In force: Constitution art. 14 bis ('igual remuneración por igual tarea', for every worker); LCT 20.744 arts. 17 (no discrimination by 'nacionalidad') and 81 (equal treatment); Ley 22.439 arts. 26-27 (permanent and temporary residents work 'gozando de la protección de las leyes que rigen la materia'). Art. 109 of Ley 22.439 let the employer off its labour obligations where a worker lawful at hiring later became irregular. Practice: CERD 2001 records that undocumented immigrants from neighbouring countries were vulnerable in the economic crisis. There is no wage-specific evidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 (in force 21 Jan 2004) replaced Ley 22.439. Its art. 6 (equal access to rights in 'trabajo, empleo'), art. 16 and art. 56 (labour obligations owed 'cualquiera sea su condición migratoria') removed the art. 109 carve-out. Constitution art. 14 bis and LCT arts. 17 and 81 were unchanged. Practice evidence for 2004-05 is thin: CERD 2004 mainly welcomes the new law."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; Decreto 616/2010 (May 2010) came after this date. Practice: CMW 2011 (covering the late 2000s) found that irregular migrant workers often received 'inadequate pay' and worked excessive hours in textiles, agriculture and domestic work. No pattern of wage discrimination against formally employed regular migrants was documented."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions (Ley 25.871 arts. 6, 16, 56; Decreto 616/2010 art. 56 on free legal aid; LCT arts. 17, 81; Constitution art. 14 bis). DNU 70/2017 came later and did not touch these articles. The practice evidence is the CMW 2011 findings and CELS's 2019 report on the CMW review (textile workers). Evidence for 2015 itself is thin."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "role": "cited",
+      "in_force": "1957 (text kept in 1994 reform) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 16, 56",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 6 replaced by Decreto 366/2025 from 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.744 de Contrato de Trabajo",
+      "article": "Arts. 17 and 81",
+      "role": "cited",
+      "in_force": "1974/1976 to today (unchanged; art. 17 bis added by Ley 26.592 in 2010)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 26, 27, 109",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 56",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 124 (repeal of Ley 22.439 and Decreto 1023/94)",
+      "kind": "replaced",
+      "what_changed": "Ley 22.439, including art. 109 (which exempted employers from labour obligations towards workers who became irregular after hiring), was replaced by Ley 25.871 arts. 6, 16 and 56, which keep labour rights irrespective of migratory status.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/94 y toda otra norma contraria a la presente ley, que no obstante retendrán su validez y vigencia hasta tanto se produzca la entrada en vigor de esta última y su reglamentación."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 56",
+      "kind": "enacted",
+      "what_changed": "New: an employer's labour-law obligations towards a foreign worker apply whatever the worker's migratory status. This reaches the indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "La aplicación de la presente ley no eximirá al empleador o dador de trabajo del cumplimiento de las obligaciones emergentes de la legislación laboral respecto del extranjero, cualquiera sea su condición migratoria"
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 6 (original text)",
+      "kind": "enacted",
+      "what_changed": "Equal access for immigrants and their families to the protections nationals enjoy, in particular in work and employment.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "asegurará el acceso igualitario a los inmigrantes y sus familias en las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, en particular lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 56",
+      "kind": "new_instrument",
+      "what_changed": "Regulated art. 56: migrants may use free legal services, which may not refuse them for lack of documents. Adds a means of enforcement.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+      "passage": "los extranjeros podrán recurrir al asesoramiento que brindan los servicios jurídicos gratuitos que funcionan en el país, los cuales no podrán negarles atención debido a la falta de documentación argentina o a su calidad de extranjeros."
+     },
+     {
+      "date": "2017-02-01",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Arts. 20, 20 bis, 29, 54 et seq. of Ley 25.871",
+      "kind": "amended",
+      "what_changed": "Amended admission, impediment, domicile and expulsion provisions. It did not touch arts. 5, 6, 16 or 56. No effect on this indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 2° — Sustitúyese el artículo 20 de la Ley N° 25.871 y su modificatoria por el siguiente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/304/Add.112",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/65/CO/1",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS: UN urges Argentina to derogate and suspend decree that violates migrant rights",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original and updated texts of Ley 25.871, the text of Ley 22.439 as published on argentina.gob.ar, and the updated texts of the LCT and the Constitution. The LCT's amendment list shows arts. 17 and 81 unchanged. Practice evidence on wages is indirect for 2000-2005 and thin for 2015.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 20.744 LCT texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CERD 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The 2023 citation names the ICRMW as approved by 'Act 26.602'. Decreto 616/2010 art. 23(a) cites Ley 26.202 as the approving law; the ICRMW only applies from 2007. The 'Yes' itself holds.",
+    "confidence": "medium",
+    "notes": "The answer rests on statutes, not rulings. Through 2020, the equal-pay guarantee for regular workers rests on Constitution art. 14 bis and LCT arts. 17 and 81, all in force before 2000. The 2004 change widened protection for irregular workers (art. 56 replaced 22.439 art. 109)."
+   },
+   {
+    "question_id": 97,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes",
+      "basis": "Under Ley 22.439 and Reglamento 1434/87 as amended by Decreto 1023/94, the labour route to temporary residence was 'trabajador contratado'. Art. 15(e) as replaced by Decreto 1117/98 required a written contract with an employer established in the country, and the DNM resolved each application on the basis of that contract. Temporary residents could work only during the authorised stay (22.439 art. 27). Ley 24.493 reserved work to nationals and to foreigners authorised by migration law. There was no nationality-based (Mercosur) residence. Practice: CERD 2001 found residence papers costly and procedures 'lengthy and excessively bureaucratic'."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 (from 21 Jan 2004) art. 23(a) created the 'trabajador migrante' subcategory: up to 3 years, 'con permiso para trabajar bajo relación de dependencia'. Art. 23(l) gave residence on nationality grounds to Mercosur, Chilean and Bolivian nationals, with no employer tie. The law had no regulation; art. 124 kept Decreto 1023/94 valid in the meantime. Practice evidence for 2004-05 is thin."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Usually",
+      "basis": "Same statutory provisions; Decreto 616/2010 came after this date (May 2010). Practice: CMW 2011 records Patria Grande granting residence to more than half of 423,711 Mercosur applicants, which opened employment choice to most regional migrants. It also records the exploitation of irregular workers."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 arts. 23(a), 23(l) and 51, plus Decreto 616/2010 art. 23(a) (which refers to the ICRMW definitions) and art. 22(c) (permanent residence after 2 or 3 years). DNU 70/2017 came later and did not amend these articles. There is little practice evidence specific to 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 6, 16, 19, 23(a), 23(l), 51",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 6 replaced 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 22(c), 23(a)",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 12, 26, 27, 28, 31",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1434/87 (Reglamento) as amended by Decreto 1023/94 and Decreto 1117/98",
+      "article": "Art. 15(e) (trabajadores contratados); Reglamento art. 36",
+      "role": "predecessor",
+      "in_force": "1987/1994 to 2010-05 (repealed by Decreto 616/2010)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 24.493 (Mano de obra nacional)",
+      "article": "Arts. 1, 2",
+      "role": "other_in_force",
+      "in_force": "1995-06-28 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "1998",
+      "instrument": "Decreto 1117/98",
+      "article": "Art. 15(e) Decreto 1434/87; arts. 32, 36 Reglamento 1023/94",
+      "kind": "amended",
+      "what_changed": "Defined the labour route as workers contracted by employers established in Argentina under a written contract. Change of category to 'temporario trabajador-contratado' was allowed only for those who had entered before the decree. This was the regime in force on 1 Jan 2000.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53426/texto",
+      "passage": "'e) Trabajadores contratados por personas de existencia visible o ideal establecidas en el país, para prestar servicios para estas de conformidad con la legislación argentina, siempre que la contratación se celebre por escrito."
+     },
+     {
+      "date": "1995-06-28",
+      "instrument": "Ley 24.493",
+      "article": "Arts. 1-2",
+      "kind": "enacted",
+      "what_changed": "Reserved work to nationals and to foreigners authorised by migration law, and barred work authorisation for transitory residents where national labour was available. In force throughout 2000-2020.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-22535/texto",
+      "passage": "será reservada exclusivamente a los ciudadanos argentinos nativos o nacionalizados y a los extranjeros habilitados por la Ley General de Migraciones para desempeñar tareas remuneradas"
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 23(a), 23(l)",
+      "kind": "replaced",
+      "what_changed": "Replaced the 22.439/1023/94 categories. Created the 'trabajador migrante' subcategory (dependent work) and residence by Mercosur/associated nationality, which carries no employer tie.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "l) Nacionalidad: Ciudadanos nativos de Estados Parte del MERCOSUR, Chile y Bolivia, con autorización para permanecer en el país por dos (2) años, prorrogables con entradas y salidas múltiples"
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 22(c), 23(a)",
+      "kind": "new_instrument",
+      "what_changed": "Regulated Ley 25.871: migrant-worker definitions follow the ICRMW, and permanent residence ('arraigo') follows 2 years (Mercosur) or 3 years of temporary residence. Repealed Decreto 1023/94.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+      "passage": "a) Trabajador migrante: A los fines de esta subcategoría se tendrán en cuenta las definiciones y condiciones establecidas por la CONVENCION INTERNACIONAL SOBRE LA PROTECCION DE TODOS LOS TRABAJADORES MIGRATORIOS Y DE SUS FAMILIARES, aprobada por Ley Nº 26.202."
+     },
+     {
+      "date": "2017-02-01",
+      "instrument": "DNU 70/2017",
+      "article": "Various articles of Ley 25.871",
+      "kind": "amended",
+      "what_changed": "Did not amend arts. 23 or 51. No effect on this indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 2° — Sustitúyese el artículo 20 de la Ley N° 25.871 y su modificatoria por el siguiente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/304/Add.112",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS on CMW 2019 review",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I could not open the text of Decreto 1434/87 and Decreto 1023/94: argentina.gob.ar has no text page, and the ACNUR copy returned 403. The 2000 regime is rebuilt from Decreto 1117/98, which replaced art. 15(e), and from Ley 22.439. Practice evidence for 2005 and 2015 is thin.",
+    "sources_opened": [
+     {
+      "title": "Decreto 1117/98",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53426/texto"
+     },
+     {
+      "title": "Decreto 1023/94 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican"
+     },
+     {
+      "title": "Decreto 1023/94 texto (not found)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/texto"
+     },
+     {
+      "title": "Ley 24.493",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-22535/texto"
+     },
+     {
+      "title": "Decreto 845/95",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-22537/texto"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "Neither Ley 25.871 art. 23(a) nor Decreto 616/2010 art. 23(a), which I read, expressly ties the 'trabajador migrante' permit to an employer or requires a new permit to change employer; any tie comes from DNM practice and requirements. Most migrants hold art. 23(l) nationality residence with free choice of employment, so the 2020 answer may understate the protection. The 2023 citation also gives the ICRMW as 'Act 26.602'; the approving law is Ley 26.202.",
+    "confidence": "medium",
+    "notes": "The option stays the same across all dates, but the regime changed: in 2000, labour residence depended on a written contract with a specific employer and no nationality route existed. From 2004, art. 23(l) (Mercosur nationality) gave most regional migrants residence free of any employer tie. This is why the change is coded 'not the same'."
+   },
+   {
+    "question_id": 99,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, unrestricted right to work",
+      "implementation": "Usually",
+      "basis": "Ley 22.439 art. 26: permanent residents may carry out any paid activity. Art. 27: temporary residents may do so 'por cuenta propia o en relación de dependencia' during their stay. Neither requires separate permission. Decreto 1117/98 shows that primary family members of permanent or temporary residents could apply for admission, but the derived-residence rule in Decreto 1434/87 art. 15 could not be read. Practice: CERD 2001 found residence papers costly and procedures bureaucratic."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, unrestricted right to work",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 art. 22: spouses of Argentines are permanent residents. Art. 51: permanent residents may do any work, and temporary residents may work during their stay, with no separate permit. Until regulation, Decreto 1023/94 stayed valid (art. 124). No practice evidence specific to spouses."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, unrestricted right to work",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions; Decreto 616/2010 (May 2010) came after this date. No documented pattern of spouses being refused work."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, unrestricted right to work",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Decreto 616/2010 art. 22(a)-(b) gives permanent residence to spouses of Argentines and of permanent residents. The last paragraph of art. 23 gives temporary residence to spouses of temporary residents, and Ley 25.871 art. 51 lets them work. DNM Disposición 4880/2015 (from 1 Oct 2015) extended this to registered unions convivenciales; it came after this date. No adverse practice evidence."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871",
+      "article": "Arts. 9, 22, 23, 51",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 22(a)-(b), 23 (last paragraph), 23(a)",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 26, 27",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1434/87 as amended by Decreto 1023/94 and 1117/98",
+      "article": "Art. 15; Reglamento art. 32",
+      "role": "predecessor",
+      "in_force": "1987/1994 to 2010-05",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Disposición DNM 4880/2015 (text per Disposición 6206/2017)",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "2015-10-01 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 51",
+      "kind": "replaced",
+      "what_changed": "Replaced Ley 22.439 arts. 26-27 with materially the same rule: permanent residents may do any paid work, temporary residents during their authorised stay.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Los extranjeros admitidos o autorizados como \"residentes permanentes\" podrán desarrollar toda tarea o actividad remunerada o lucrativa, por cuenta propia o en relación de dependencia... Los extranjeros admitidos o autorizados como \"residentes temporarios\" podrán desarrollarlas sólo durante el período de su permanencia autorizada."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23, last paragraph",
+      "kind": "new_instrument",
+      "what_changed": "Expressly grants temporary residence to the spouse of a temporary resident (family reunification). Under art. 51 of the law, that residence carries the right to work.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+      "passage": "la DIRECCION NACIONAL DE MIGRACIONES otorgará residencia temporaria a quien acredite ser cónyuge, progenitor o hijo soltero menor de DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de inmigrante con residencia temporaria."
+     },
+     {
+      "date": "2015-10-01",
+      "instrument": "Disposición DNM 4880/2015 (text per Disposición 6206/2017)",
+      "article": "Art. 1",
+      "kind": "new_instrument",
+      "what_changed": "Registered unions convivenciales are treated like marriage for admission under Ley 25.871 art. 22 and Decreto 616/10 arts. 22-23. This extends the indicator to partners.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "se reconoce, con análogos efectos jurídicos al matrimonio, a los fines de su admisión, en los términos de los artículos 22 de la Ley N° 25.871, 22 incisos a) y b) y 23, última parte del Decreto N° 616/10... a los extranjeros que acrediten unión convivencial"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/304/Add.112",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The 2000 rule on derived residence for spouses (Decreto 1434/87 art. 15 as amended by 1023/94) could not be read. The coding rests on Ley 22.439 arts. 26-27, which I read, and on Decreto 1117/98. No practice source deals specifically with spouses at any date, so the ratings are inferred.",
+    "sources_opened": [
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Decreto 1117/98",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53426/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "The answer is the same on every date. The work right of a spouse who holds residence follows from the residence category (22.439 arts. 26-27, later 25.871 art. 51). The spouse must still obtain residence, which counts as applying for status, not for a work permit."
+   },
+   {
+    "question_id": 103,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Sometimes",
+      "basis": "Constitution art. 14 bis (limited hours, paid rest and holidays, protection against arbitrary dismissal) applies to every worker. LCT art. 17 bars discrimination by nationality. Ley 22.439 arts. 26-27 let permit holders work 'gozando de la protección de las leyes que rigen la materia'. Practice: CERD 2001 notes the crisis hit immigrants from neighbouring countries hard. There is no direct evidence on employment conditions."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 arts. 5, 6 and 56 were added from Jan 2004; the constitutional and LCT guarantees were unchanged. Practice evidence for this period is thin."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Sometimes",
+      "basis": "Same provisions. Practice: CMW 2011 found excessive hours, abuse and forced labour among migrant workers in textiles, agriculture and domestic work. It asked Argentina to ensure 'conditions of work equal to those of nationals' — mostly concerning irregular workers."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Sometimes",
+      "basis": "Same provisions; Decreto 616/2010 art. 56 adds free legal aid. CELS's 2019 report on the CMW review notes abuses against textile workers. There is little practice evidence for 2015 itself."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14 bis, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994 text to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871",
+      "article": "Arts. 5, 6, 56",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 6 replaced 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 56 (arts. 5-6 not checked)",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 26, 27, 109",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 20.744 LCT",
+      "article": "Arts. 17, 75, 81",
+      "role": "other_in_force",
+      "in_force": "1976 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Arts. 5, 6",
+      "kind": "enacted",
+      "what_changed": "Added an express guarantee of equal treatment and equal access to work and employment protections. The protection for permit holders already existed under the Constitution, the LCT and 22.439 arts. 26-27.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "El Estado asegurará las condiciones que garanticen una efectiva igualdad de trato a fin de que los extranjeros puedan gozar de sus derechos y cumplir con sus obligaciones"
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 124",
+      "kind": "replaced",
+      "what_changed": "Repealed Ley 22.439, whose art. 27 had given temporary residents the protection of labour laws.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/94"
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 56",
+      "kind": "new_instrument",
+      "what_changed": "Gives access to free legal services to enforce art. 56 rights.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+      "passage": "los extranjeros podrán recurrir al asesoramiento que brindan los servicios jurídicos gratuitos que funcionan en el país"
+     },
+     {
+      "date": "2017-02-01",
+      "instrument": "DNU 70/2017",
+      "article": "Various",
+      "kind": "amended",
+      "what_changed": "Did not touch arts. 5, 6 or 56. No effect on this indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 2° — Sustitúyese el artículo 20 de la Ley N° 25.871 y su modificatoria por el siguiente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/304/Add.112",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS on CMW 2019 review",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the statutory texts for each date (Ley 22.439, the original and updated Ley 25.871, the LCT, the Constitution). The practice evidence mostly concerns irregular or informal workers, not permit holders, and is thin for 2005 and 2015.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 20.744 LCT",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "Ley 22.439",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The 2023 citation cites Decreto 616/2010 arts. 5-6. I read only art. 56 of the decree; whether arts. 5-6 are regulated was not checked.",
+    "confidence": "medium",
+    "notes": "For permit holders, equal employment conditions rested on the Constitution and the LCT throughout 2000-2020. Ley 25.871 added express equality clauses but did not change the protection's content."
+   },
+   {
+    "question_id": 135,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "In force: Ley 23.592 art. 1 (acts discriminatory on grounds of 'raza... nacionalidad'; remedy and damages) and arts. 2-3 (aggravated penalties, racist propaganda). LCT arts. 17 and 81 ban discrimination by race at work. CERD has constitutional rank (Constitution art. 75 inc. 22). Practice: CERD 2001 found xenophobic attitudes towards immigrants from neighbouring countries, which had 'given rise, on occasion, to violent incidents'."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "From 21 Jan 2004, Ley 25.871 art. 13 adds a migration-specific definition of discrimination that includes 'etnia' and 'caracteres físicos'. Ley 23.592 was unchanged. Practice evidence for this period is thin: CERD 2004 regrets the lack of data on racial-discrimination complaints."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Same provisions. Practice: CMW 2011 notes 'discriminatory attitudes towards migrants from African and neighbouring countries', xenophobic statements by politicians, and the Parque Indoamericano killings."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Same provisions. Practice: CELS's 2019 report on the CMW review describes police harassment of Senegalese and Haitian street vendors and the association of migrants with crime. There is little evidence for 2015 itself."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (unamended)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 23.592 (Actos discriminatorios)",
+      "article": "Arts. 1-3",
+      "role": "other_in_force",
+      "in_force": "1988 to today (arts. 4-6 added by Ley 24.782 in 1997)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.744 LCT",
+      "article": "Arts. 17, 81",
+      "role": "other_in_force",
+      "in_force": "1976 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 13",
+      "kind": "enacted",
+      "what_changed": "New migration-specific definition of discriminatory acts, including ethnicity and physical characteristics. It adds to Ley 23.592, which already covered race and nationality.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "se considerarán discriminatorios todos los actos u omisiones determinados por motivos tales como etnia, religión, nacionalidad, ideología, opinión política o gremial, sexo, género, posición económica o caracteres físicos"
+     },
+     {
+      "date": "1988-08",
+      "instrument": "Ley 23.592",
+      "article": "Art. 1",
+      "kind": "enacted",
+      "what_changed": "General anti-discrimination statute covering race and nationality; in force throughout 2000-2020 with no change to art. 1.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20465/texact.htm",
+      "passage": "se considerarán particularmente los actos u omisiones discriminatorios determinados por motivos tales como raza, religión, nacionalidad, ideología, opinión política o gremial, sexo, posición económica, condición social o caracteres físicos."
+     },
+     {
+      "date": "2017-02-01",
+      "instrument": "DNU 70/2017",
+      "article": "Various",
+      "kind": "amended",
+      "what_changed": "Did not touch art. 13. No effect on this indicator.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 2° — Sustitúyese el artículo 20 de la Ley N° 25.871 y su modificatoria por el siguiente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/304/Add.112",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations Argentina, CERD/C/65/CO/1",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS on CMW 2019 review",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 23.592's updated text with its amendment notes and the original and updated texts of Ley 25.871 art. 13. The practice evidence comes from UN treaty bodies around 2000, 2010 and 2019; 2005 and 2015 are thin.",
+    "sources_opened": [
+     {
+      "title": "Ley 23.592",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20465/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 20.744 LCT",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CERD 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The 2023 citation leaves out Ley 23.592, the main operative anti-discrimination statute; the answer still holds.",
+    "confidence": "medium",
+    "notes": "Before Ley 25.871, the prohibition rested on Ley 23.592 (1988), LCT arts. 17 and 81, and CERD with constitutional rank (1994). These are statutes, not court rulings."
+   }
+  ]
+ }
 }
