@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile labor_c claude-opus-5-5 high",
- "pid": 76561,
  "step": "back2000",
  "slug": "chile",
  "chunk": "labor_c",
@@ -57,5 +56,694 @@
   "user": 172
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:30:29.516Z",
+ "minutes": 5.23,
+ "meters_after": {
+  "at": "2026-11-21T10:30:29.516Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 164513,
+   "output": 27708,
+   "cache_read": 1384249,
+   "cache_write": 111099,
+   "cost_usd": 1.609,
+   "total": 1687569
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 164477,
+    "output": 12172,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3754,
+    "cost_usd": 0.1325
+   },
+   "claude-opus-5-5": {
+    "input": 36,
+    "output": 15536,
+    "cache_read": 1384249,
+    "cache_write": 111099,
+    "thinking": 4336,
+    "cost_usd": 1.4765
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 49,
+ "duration_ms": 313241,
+ "duration_api_ms": 234483,
+ "pages_read": 19,
+ "pages": [
+  {
+   "at": "2026-11-21T10:25:41.236Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=184979&idVersion=2001-05-14",
+   "find": "Artículo 1 | Artículo 2 | Artículo 12 | Artículo 25 | entrará en vigencia",
+   "ok": true,
+   "chars": 2155
+  },
+  {
+   "at": "2026-11-21T10:25:47.642Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=4824",
+   "find": "Artículo 41 | Artículo 42 | subsidio de cesantía | extranjer",
+   "ok": true,
+   "chars": 2202
+  },
+  {
+   "at": "2026-11-21T10:25:57.867Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=4824",
+   "find": "Artículo 42 | Artículo 43 | Artículo 44",
+   "ok": true,
+   "chars": 892
+  },
+  {
+   "at": "2026-11-21T10:26:27.067Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=184979&idVersion=2001-05-14",
+   "find": "Artículo 1º | Artículo 2º | Artículo 12 | Disposiciones Transitorias",
+   "ok": true,
+   "chars": 968
+  },
+  {
+   "at": "2026-11-21T10:26:59.879Z",
+   "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-728/gdoc",
+   "find": "Artículo 1º | Artículo 2º | Artículo 12 | primer día del mes | entrará en vigencia",
+   "ok": true,
+   "chars": 10122
+  },
+  {
+   "at": "2026-11-21T10:27:00.859Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=4824&r=1",
+   "find": "Artículo 42 | Artículo 43 | trabajadores dependientes | cesantes",
+   "ok": true,
+   "chars": 4026
+  },
+  {
+   "at": "2026-11-21T10:27:24.120Z",
+   "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-174745.html",
+   "find": "Artículo | cesante | requisitos",
+   "ok": true,
+   "chars": 2767
+  },
+  {
+   "at": "2026-11-21T10:27:25.462Z",
+   "url": "https://www.chileatiende.gob.cl/fichas/29169/1/pdf",
+   "find": "Requisitos | extranjer | Detalles",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:27:42.052Z",
+   "url": "https://www.bcn.cl/leychile/navegar?i=30107",
+   "find": "Artículo 1 | técnico | sistema de previsión | Artículo 7",
+   "ok": true,
+   "chars": 3032
+  },
+  {
+   "at": "2026-11-21T10:27:48.221Z",
+   "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-6445.html",
+   "find": "exentos | técnico | requisitos",
+   "ok": true,
+   "chars": 5429
+  },
+  {
+   "at": "2026-11-21T10:27:56.120Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=269892",
+   "find": "Acreditar residencia | veinte años | Artículo 3",
+   "ok": true,
+   "chars": 2109
+  },
+  {
+   "at": "2026-11-21T10:28:10.363Z",
+   "url": "https://www.suseso.gob.cl/612/w3-article-24031.html",
+   "find": "tres años | residencia | extranjer",
+   "ok": true,
+   "chars": 3316
+  },
+  {
+   "at": "2026-11-21T10:28:21.077Z",
+   "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-127395.html",
+   "find": "veinte años | residencia",
+   "ok": true,
+   "chars": 2269
+  },
+  {
+   "at": "2026-11-21T10:28:35.993Z",
+   "url": "https://iura.cl/dl3500/2",
+   "find": "Artículo 2 | afiliación automática",
+   "ok": true,
+   "chars": 1346
+  },
+  {
+   "at": "2026-11-21T10:28:36.761Z",
+   "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html",
+   "find": "extranjer | visa | cotizaciones",
+   "ok": true,
+   "chars": 3485
+  },
+  {
+   "at": "2026-11-21T10:28:56.371Z",
+   "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-10260.html",
+   "find": "extranjeros | cotizantes | afiliados | 2009",
+   "ok": true,
+   "chars": 5469
+  },
+  {
+   "at": "2026-11-21T10:28:58.305Z",
+   "url": "https://www.emol.com/noticias/Economia/2020/01/03/972135/Afiliados-extranjeros-pensiones-suben-1000.html",
+   "find": "2009 | Seguro de Cesantía | estudio",
+   "ok": true,
+   "chars": 4504
+  },
+  {
+   "at": "2026-11-21T10:29:15.310Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "social security | pension | unemployment | 18.156",
+   "ok": true,
+   "chars": 2147
+  },
+  {
+   "at": "2026-11-21T10:29:18.915Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "contract | employers | labour inspection | equality of treatment",
+   "ok": true,
+   "chars": 2157
+  }
+ ],
+ "searches": [
+  "Ley 19.728 seguro de cesantía leychile idNorma",
+  "DFL 150 1981 subsidio de cesantía leychile sistema único de prestaciones familiares",
+  "DFL 150 \"subsidio de cesantía\" artículo 42 \"trabajadores del sector privado\" \"doce meses\" requisitos texto",
+  "suseso \"DFL 150 de 1982 Mintrab, artículo 42\"",
+  "Ley 18.156 exención cotizaciones previsionales técnicos extranjeros texto artículo 1 leychile",
+  "decreto ley 869 1975 pensiones asistenciales \"residido en el país\" \"tres años\" artículo 1",
+  "Ley 20.255 artículo 3 letra d \"residencia en el territorio de la República de Chile por un lapso no inferior a veinte años\"",
+  "decreto ley 3.500 artículo 2 \"trabajadores dependientes\" afiliación obligatoria extranjeros AFP cotizar igual que chilenos Dirección del Trabajo dictamen",
+  "Superintendencia de Pensiones estudio afiliados extranjeros cotizantes sistema AFP seguro de cesantía inmigrantes Chile informe",
+  "migrantes Chile acceso pensión básica solidaria requisito 20 años residencia excluidos informe INDH o Comité Trabajadores Migratorios observaciones Chile 2011",
+  "CMW/C/CHL/CO/1 concluding observations Chile 2011 social security migrant workers Law 18.156 pension"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":109,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Effectively Always\",\"basis\":\"Contributory pensions under DL 3.500 (1980), art. 2: every dependent worker is affiliated automatically, with no nationality test. Ley 18.156 (as amended by Ley 18.726, 1988) only let foreign technicians who kept a foreign scheme opt out and later get a refund. The non-contributory assistance pension (PASIS, DL 869/1975) required 3 years' continuous residence. No practice evidence specific to this period was found; the rating is carried over from the starting answer.\"},{\"date\":\"2005-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Effectively Always\",\"basis\":\"Same framework as in 2000: DL 3.500 art. 2, the Ley 18.156 opt-out and the PASIS 3-year residence condition. No practice evidence for this period; the rating is carried over.\"},{\"date\":\"2010-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Effectively Always\",\"basis\":\"Ley 20.255 (pension reform; Pensión Básica Solidaria in force from July 2008) replaced PASIS with the basic solidarity pension. Its art. 3(c) requires 20 years' residence, including 4 of the last 5 years. The waiting period got longer but stayed within the same answer option; contributory affiliation did not change. Superintendencia de Pensiones data show 18,590 new foreign affiliates in 2009, so foreign workers were in practice being affiliated.\"},{\"date\":\"2015-01-01\",\"answer\":\"Equal access to all types of social security protections after some period of time\",\"implementation\":\"Effectively Always\",\"basis\":\"No change to DL 3.500 art. 2, Ley 18.156 or Ley 20.255 art. 3. The Superintendencia study (reported by Emol, Jan 2020) shows foreign affiliation rising steeply between 2009 and 2018. It also notes a",
+ "output": {
+  "answers": [
+   {
+    "question_id": 109,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Effectively Always",
+      "basis": "Contributory pensions under DL 3.500 (1980), art. 2: every dependent worker is affiliated automatically, with no nationality test. Ley 18.156 (as amended by Ley 18.726, 1988) only let foreign technicians who kept a foreign scheme opt out and later get a refund. The non-contributory assistance pension (PASIS, DL 869/1975) required 3 years' continuous residence. No practice evidence specific to this period was found; the rating is carried over from the starting answer."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Effectively Always",
+      "basis": "Same framework as in 2000: DL 3.500 art. 2, the Ley 18.156 opt-out and the PASIS 3-year residence condition. No practice evidence for this period; the rating is carried over."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Effectively Always",
+      "basis": "Ley 20.255 (pension reform; Pensión Básica Solidaria in force from July 2008) replaced PASIS with the basic solidarity pension. Its art. 3(c) requires 20 years' residence, including 4 of the last 5 years. The waiting period got longer but stayed within the same answer option; contributory affiliation did not change. Superintendencia de Pensiones data show 18,590 new foreign affiliates in 2009, so foreign workers were in practice being affiliated."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Equal access to all types of social security protections after some period of time",
+      "implementation": "Effectively Always",
+      "basis": "No change to DL 3.500 art. 2, Ley 18.156 or Ley 20.255 art. 3. The Superintendencia study (reported by Emol, Jan 2020) shows foreign affiliation rising steeply between 2009 and 2018. It also notes a 13–14-month delay in obtaining a RUN (national ID number), during which workers contribute under a provisional ID. Ley 21.325 art. 16 (2022) came later."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "confidence": "medium",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 3.500 (1980), Sistema de Pensiones",
+      "article": "Art. 2 (automatic affiliation)",
+      "role": "other_in_force",
+      "in_force": "1981 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 18.156 (exención de cotizaciones a técnicos extranjeros), modificada por Ley 18.726",
+      "article": "Arts. 1 and 7",
+      "role": "other_in_force",
+      "in_force": "1982 to today (amended 1988-07-23)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto Ley 869 (1975), pensiones asistenciales (PASIS)",
+      "article": "Art. 1 (3-year residence)",
+      "role": "predecessor",
+      "in_force": "1975 to 2008-07 (replaced by the Ley 20.255 PBS)",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 20.255 (Reforma Previsional)",
+      "article": "Art. 3(c) (20-year residence for PBS vejez)",
+      "role": "predecessor",
+      "in_force": "2008-07 to 2022 (repealed and replaced by Ley 21.419, PGU)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 16 para. 2",
+      "role": "cited",
+      "in_force": "2022-02 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "1988-07-23",
+      "instrument": "Ley 18.726",
+      "article": "Ley 18.156 arts. 1 and 7",
+      "kind": "amended",
+      "what_changed": "Repealed letter a) of art. 1 and added art. 7, which lets foreign workers with AFP contributions claim a refund if they meet the art. 1 conditions. This is an optional exemption for foreign technicians, not a denial of coverage. It predates 2000 and was in force throughout.",
+      "url": "https://www.bcn.cl/leychile/navegar?i=30107",
+      "passage": "Artículo 7°.- En el caso de que trabajadores extranjeros registraren cotizaciones en una Administradora de Fondos de Pensiones, podrán solicitar la devolución de los fondos previsionales que hubieren depositado, siempre que den cumplimiento a los requisitos establecidos en el artículo 1° de esta ley."
+     },
+     {
+      "date": "2008-07",
+      "instrument": "Ley 20.255",
+      "article": "Art. 3(c)",
+      "kind": "new_instrument",
+      "what_changed": "Created the Pensión Básica Solidaria de vejez, replacing PASIS (DL 869, which required 3 years' continuous residence; read via SUSESO Dictamen 10744-1985). The new pension requires 20 years' residence, including 4 of the last 5. The residence-period condition remains, so the answer option is unchanged.",
+      "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-127395.html",
+      "passage": "c) Acreditar residencia en el territorio de la República de Chile por un lapso no inferior a veinte años continuos o discontinuos, contados desde que el peticionario haya cumplido veinte años de edad; y, en todo caso, por un lapso no inferior a cuatro años de residencia en los últimos cinco años"
+     },
+     {
+      "date": "1985-09-13",
+      "instrument": "SUSESO Dictamen 10744-1985 (on DL 869, 1975)",
+      "article": "DL 869 art. 1",
+      "kind": "practice",
+      "what_changed": "Administrative interpretation confirming that PASIS required 3 years' continuous residence immediately before the application. This was the rule in force in 2000 and 2005.",
+      "url": "https://www.suseso.gob.cl/612/w3-article-24031.html",
+      "passage": "podrán gozar de pensión asistencial las personas inválidas mayores de 18 años y los ancianos mayores de 65 años que carecen de recursos y que tengan una residencia continua en el país, de por lo menos, tres años inmediatamente anteriores a la fecha de la presentación de la solicitud"
+     },
+     {
+      "date": "2012-03-28",
+      "instrument": "Dirección del Trabajo, Ord. Nº 1539/17",
+      "article": "Ley 18.156; DL 3.500 art. 19",
+      "kind": "practice",
+      "what_changed": "Labour Directorate ruling: foreign workers must pay unemployment-insurance contributions even when exempt from pension contributions under Ley 18.156. The Directorate also enforces contribution duties for foreign workers who lack a work visa.",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html",
+      "passage": "Los trabajadores extranjeros se encuentran obligados a efectuar cotizaciones por concepto de seguro de cesantía, independientemente de que respecto de ellos, opere o no, la exención de efectuar cotizaciones previsionales por concepto de enfermedad, vejez, invalidez y muerte, establecida en la Ley Nº18.156."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Nuevos afiliados extranjeros al sistema de pensiones aumentaron más de 1.000% en la última década (on Superintendencia de Pensiones study)",
+      "url": "https://www.emol.com/noticias/Economia/2020/01/03/972135/Afiliados-extranjeros-pensiones-suben-1000.html",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Superintendencia de Pensiones – Los migrantes y el sistema de pensiones",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-10260.html",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "CMW Concluding Observations Chile, CMW/C/CHL/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I could not read the full LeyChile texts and version histories (the API needs a key and long laws load only their index), so the texts came from SUSESO, Superintendencia de Pensiones and iura copies. DL 869 is known only through a SUSESO dictamen. The exact day Ley 20.255 entered into force was not read. Practice evidence before 2009 is absent.",
+    "sources_opened": [
+     {
+      "title": "LeyChile Ley 18.726",
+      "url": "https://www.bcn.cl/leychile/navegar?i=30107"
+     },
+     {
+      "title": "Superintendencia de Pensiones Título XI Ley 18.156",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-6445.html"
+     },
+     {
+      "title": "SUSESO Ley 20.255 art. 3",
+      "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-127395.html"
+     },
+     {
+      "title": "SUSESO Dictamen 10744-1985 (DL 869)",
+      "url": "https://www.suseso.gob.cl/612/w3-article-24031.html"
+     },
+     {
+      "title": "LeyChile Ley 20.255 (index only)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=269892"
+     },
+     {
+      "title": "iura DL 3.500 art. 2",
+      "url": "https://iura.cl/dl3500/2"
+     },
+     {
+      "title": "DT Ord. 1539/17 (2012)",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html"
+     },
+     {
+      "title": "Superintendencia de Pensiones – Los migrantes y el sistema de pensiones",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-10260.html"
+     },
+     {
+      "title": "Emol 2020 on SP study",
+      "url": "https://www.emol.com/noticias/Economia/2020/01/03/972135/Afiliados-extranjeros-pensiones-suben-1000.html"
+     },
+     {
+      "title": "CMW CO Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "LeyChile obtxml (API-key notice)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=4824"
+     }
+    ],
+    "starting_answer_concern": "The 2020 answer cannot rest on Ley 21.325 art. 16 (in force 2022). It rests on DL 3.500 art. 2 (immediate, nationality-neutral contributory coverage) and Ley 20.255 art. 3 (20-year residence for the non-contributory pension), which together support the same option. 'Effectively Always' is generous: the Superintendencia study documents 13–14-month RUN delays and provisional-ID contributions, and informal work keeps many migrants out of coverage. 'Usually' would be more consistent with the MRD's guidance.",
+    "notes": "Between 2000 and 2020 the only substantive change was the 2008 move from PASIS (3 years' residence) to the PBS (20 years). It lengthened the waiting period without changing the answer option. Ley 18.156 is an optional exemption for foreign technicians covered abroad and does not deny anyone access. No court ruling was relied on."
+   },
+   {
+    "question_id": 111,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, immediate equal access to all types of unemployment benefits",
+      "implementation": "Effectively Always",
+      "basis": "Before the unemployment-insurance law, the only scheme was the cesantía subsidy in DFL 150 (1981/82), Title II, arts. 41 ff. Art. 43 grants it to dependent workers dismissed for reasons beyond their control who have 12 months of contributions in the previous 2 years. It sets no nationality or residence condition. No practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, immediate equal access to all types of unemployment benefits",
+      "implementation": "Effectively Always",
+      "basis": "Ley 19.728 (published 2001-05-14; the insurance began operating on 2002-10-01). Art. 1 covers all dependent workers under the Código del Trabajo. Art. 2 excludes only domestic workers, apprentices, under-18s and pensioners, and none of these exclusions turns on nationality. The DFL 150 subsidy remained for workers not covered by the insurance. No practice evidence for this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, immediate equal access to all types of unemployment benefits",
+      "implementation": "Effectively Always",
+      "basis": "Ley 19.728 was amended (e.g. Ley 20.328, 2009) without any nationality condition. Superintendencia data that combine AFP and unemployment-insurance records show foreign workers affiliated in rising numbers from 2009."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, immediate equal access to all types of unemployment benefits",
+      "implementation": "Effectively Always",
+      "basis": "Same provisions. The Labour Directorate's Ord. 1539/17 (2012) confirms that foreign workers, including technicians exempt under Ley 18.156, must contribute to the unemployment insurance, and that it enforces contributions even for workers without a work visa."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "confidence": "medium",
+    "provisions": [
+     {
+      "instrument": "Ley 19.728, establece un Seguro de Desempleo",
+      "article": "Arts. 1, 2, 12",
+      "role": "cited",
+      "in_force": "2002-10-01 to today (art. 60: operative after the Superintendencia authorisation)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "DFL 150 (1981, publ. 1982), Ministerio del Trabajo, Sistema de Subsidios de Cesantía",
+      "article": "Arts. 41–43",
+      "role": "predecessor",
+      "in_force": "1982 to today (residual; incompatible with Ley 19.728 affiliation)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 18.156",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "1982 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 13–14",
+      "role": "cited",
+      "in_force": "2022-02 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2002-10-01",
+      "instrument": "Ley 19.728",
+      "article": "Arts. 1, 2, 60",
+      "kind": "new_instrument",
+      "what_changed": "Created compulsory unemployment insurance for all dependent workers under the Código del Trabajo, with no nationality condition. Under art. 60 it operated from the month after the Superintendencia authorised the managing company (Res. 1; operations from October 2002, date taken from that resolution's note and not read in full).",
+      "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-728/gdoc",
+      "passage": "Artículo 1º.- Establécese un seguro obligatorio de cesantía, en adelante \"el Seguro\", en favor de los trabajadores dependientes regidos por el Código del Trabajo, en las condiciones previstas en la presente ley."
+     },
+     {
+      "date": "1982",
+      "instrument": "DFL 150 (Mintrab)",
+      "article": "Art. 43",
+      "kind": "enacted",
+      "what_changed": "Cesantía subsidy for dismissed dependent workers with 12 months of contributions. This was the scheme in force on 1 January 2000; it has no nationality condition.",
+      "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-174745.html",
+      "passage": "a) Estar cesantes, entendiéndose que lo están los trabajadores dependientes que con posterioridad al 1° de Agosto de 1974 fueren despedidos por causas ajenas a su voluntad... b) Tener, a lo menos, 52 semanas o 12 meses, continuos o discontinuos, de imposiciones"
+     },
+     {
+      "date": "2012-03-28",
+      "instrument": "Dirección del Trabajo, Ord. Nº 1539/17",
+      "article": "Ley 19.728; Ley 18.156",
+      "kind": "practice",
+      "what_changed": "Confirms foreign workers are bound by, and therefore covered by, the unemployment insurance regardless of the Ley 18.156 pension exemption.",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html",
+      "passage": "Los trabajadores extranjeros se encuentran obligados a efectuar cotizaciones por concepto de seguro de cesantía, independientemente de que respecto de ellos, opere o no, la exención"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "DT Ord. 1539/17 (2012)",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html",
+      "year": 2012,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Emol 2020 on Superintendencia de Pensiones study (AFP and Seguro de Cesantía records)",
+      "url": "https://www.emol.com/noticias/Economia/2020/01/03/972135/Afiliados-extranjeros-pensiones-suben-1000.html",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original 2001 text of Ley 19.728 (Justia copy of the LeyChile version) and the current text of DFL 150 art. 43 (SUSESO). LeyChile version histories could not be loaded, so amendments after 2002 (Ley 20.328, 2009; Ley 20.829, 2015) were not read. No practice evidence before 2009.",
+    "sources_opened": [
+     {
+      "title": "LeyChile Ley 19.728 original version (index)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=184979&idVersion=2001-05-14"
+     },
+     {
+      "title": "Justia Ley 19.728 original text",
+      "url": "https://chile.justia.com/nacionales/leyes/ley-n-19-728/gdoc"
+     },
+     {
+      "title": "LeyChile DFL 150 (partial)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=4824"
+     },
+     {
+      "title": "LeyChile DFL 150 (partial, r=1)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=4824&r=1"
+     },
+     {
+      "title": "SUSESO DFL 150 art. 43",
+      "url": "https://www.suseso.gob.cl/612/w3-propertyvalue-174745.html"
+     },
+     {
+      "title": "DT Ord. 1539/17",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-100564.html"
+     },
+     {
+      "title": "Superintendencia de Pensiones Título XI",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-6445.html"
+     },
+     {
+      "title": "Emol 2020",
+      "url": "https://www.emol.com/noticias/Economia/2020/01/03/972135/Afiliados-extranjeros-pensiones-suben-1000.html"
+     },
+     {
+      "title": "LeyChile obtxml (API-key notice)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=184979&idVersion=2001-05-14"
+     }
+    ],
+    "starting_answer_concern": "For 2020 the answer rests on Ley 19.728 art. 1, not on Ley 21.325 arts. 13–14 (in force 2022). 'Effectively Always' overlooks informality and RUN delays among migrants; 'Usually' would be more defensible. Domestic workers were excluded until Ley 21.269 (2020), but that exclusion applied to nationals too.",
+    "notes": "No nationality condition at any date. In 2000 the only scheme was the DFL 150 subsidy; from October 2002 the Ley 19.728 insurance applied. Both were open to foreign dependent workers on the same terms as nationals."
+   }
+  ]
+ }
 }
