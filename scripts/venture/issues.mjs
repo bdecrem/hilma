@@ -749,13 +749,19 @@ if (cmd === 'overrides') {
     if (!cases.value) return `; the automatic run's results could not be read (${cases.error ?? 'no result file'})`
     const mine = Object.values(cases.value.cases ?? {}).filter((x) => x.ticket === r.id && x.place === c.at)
     if (!mine.length) return `; no automatic run covers ${c.at} for ${r.id}`
-    if (mine.length > 3) {
-      const n = {}
-      for (const x of mine) n[x.status] = (n[x.status] ?? 0) + 1
-      const rel = [...new Set(mine.map((x) => x.release).filter(Boolean))]
-      return `; the automatic run at ${c.at}, ${mine.length} cases: ${Object.entries(n).map(([s, k]) => `${k} ${s}`).join(', ')}${rel.length ? ` (on ${rel.join(', ')})` : ''}`
-    }
-    return `; the automatic run at ${c.at}: ` + mine.map((x) => `${x.id} ${x.status}${x.tries ? ` (${x.tries})` : ''}${x.release ? ` on ${x.release}` : ''}${x.at ? `, ${when(x.at)}` : ''}${x.didNotRun ? `, did not run ${when(x.didNotRun.at)} on ${x.didNotRun.release ?? '?'}` : ''}`).join('; ')
+    const one = (x) => `${x.id} ${x.status}${x.tries ? ` (${x.tries})` : ''}${x.release ? ` on ${x.release}` : ''}${x.at ? `, ${when(x.at)}` : ''}${x.didNotRun ? `, did not run ${when(x.didNotRun.at)} on ${x.didNotRun.release ?? '?'}` : ''}`
+    // OLA-264 checker, Nov 20: the case whose sentence the check itself asks is shown in full, first; the
+    // rest in full when few, as counts with the run's release and time when many.
+    const words = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter((w) => w.length > 2)
+    const doW = new Set(words(c.do))
+    const own = mine.filter((x) => { const w = words(x.say); return w.length && w.filter((y) => doW.has(y)).length / w.length >= 0.7 })
+    const rest = mine.filter((x) => !own.includes(x))
+    const n = {}
+    for (const x of rest) n[x.status] = (n[x.status] ?? 0) + 1
+    const rel = [...new Set(rest.map((x) => x.release).filter(Boolean))]
+    const at = rest.map((x) => x.at).filter(Boolean).sort().pop()
+    const others = rest.length <= 3 ? `${own.length ? 'others: ' : ''}${rest.map(one).join('; ')}` : `${rest.length} ${own.length ? 'other ' : ''}cases: ${Object.entries(n).map(([s, k]) => `${k} ${s}`).join(', ')}${rel.length ? ` (on ${rel.join(', ')}${at ? `, ${when(at)}` : ''})` : ''}`
+    return `; the automatic run at ${c.at}: ${own.length ? `${own.map(one).join('; ')}; ` : (mine.length === 1 ? `its one case there is not this check's sentence; ` : `none of its ${mine.length} cases there is this check's sentence; `)}${others}`
   }
   if (cmd === 'say') {
     const id = normId(pos[0])
