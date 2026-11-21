@@ -286,6 +286,7 @@ let newWeakLine = null
 if (cmd === 'add') {
   await fpGate()
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
+  const words_ = words
   if (!title || !words || !did || !cause) die('add needs --title, --words (his words), --did (what the agent had done) and --cause (the real cause)')
   const list = weak()
   let w = list.find((x) => x.id === str('weakness'))
@@ -377,6 +378,20 @@ if (cmd === 'add') {
   // a fix given with the correction is the agent's own word that it is built: whether the file or ticket
   // carries it is the same judgment as settling an owed fix, so a fix of kind 3 or stronger, and a "no stronger
   // fix" claim, are a line a person reads the same day, as every settle is (twentieth checker)
+  // twenty-second checker: which weakness a correction is filed under decides how strong its fix must be,
+  // and that is the agent's own pick (the same correction refused under my-reading at kind 1 was taken under
+  // ola-places). No script can say where a correction belongs, so a fix of kind 1 or 2 given where the
+  // weakness closest in words to the correction would need more is a line naming that weakness
+  if (!owed && !cannot && level <= 2 && !newWeakLine) {
+    const words = (x) => new Set(String(x).toLowerCase().match(/[a-z]{4,}/g) ?? [])
+    const mineW = words(`${title} ${words_ ?? ''} ${did} ${cause}`)
+    const rank = list.filter((x) => x.id !== w.id).map((x) => ({ x, k: [...words(`${x.name} ${x.what ?? ''}`)].filter((t) => mineW.has(t)).length })).sort((a, b) => b.k - a.k)
+    const near = rank[0]?.k > 0 ? rank[0].x : null
+    if (near) {
+      const r2 = required(near)
+      if (r2.need > level) newWeakLine = `filed under ${w.id} with a kind-${level} fix; by its words it is closest to ${near.id} ("${near.name}"), whose next fix must be kind ${r2.need}: read where the correction belongs`
+    }
+  }
   if (newWeakLine && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
     try { const { writeOverride } = await import('./_overrides.mjs'); await writeOverride(await trackerDb(), { what: `correction ${n}: ${newWeakLine}${onCopy ? ` (on a copy of the notes, ${process.env.VENTURE_PRIVATE})` : ''}`, tool: 'correct.mjs' }) } catch (e) { console.error(`(the line for the new weakness was not written: ${e.message})`) }
   }
