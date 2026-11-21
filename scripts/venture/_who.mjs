@@ -56,7 +56,10 @@ export function toolShell() {
   if (process.env.VENTURE_TRACKER_FAKE && process.env.VENTURE_TEST_SHELL !== undefined) return process.env.VENTURE_TEST_SHELL
   const ps = (pid) => {
     try {
-      const out = execFileSync('ps', ['-ww', '-o', 'ppid=,args=', '-p', String(pid)], { encoding: 'utf8', maxBuffer: 8e6 }).replace(/^\s+/, '')
+      // LC_ALL=C: under a UTF-8 locale (Bart's terminal) ps prints a byte past ASCII as itself, under C as
+      // vis(3) does; the record is compared in the vis form, so ps must always print that form (Nov 20,
+      // 6:27 pm: a lead session's own read-only calls were flagged as borrowed tokens for an em dash)
+      const out = execFileSync('ps', ['-ww', '-o', 'ppid=,args=', '-p', String(pid)], { encoding: 'utf8', maxBuffer: 8e6, env: { ...process.env, LC_ALL: 'C', LANG: 'C', LC_CTYPE: 'C' } }).replace(/^\s+/, '')
       const sp = out.indexOf(' ')
       return { ppid: Number(out.slice(0, sp)), args: out.slice(sp + 1).replace(/\n$/, '') }
     } catch { return null }

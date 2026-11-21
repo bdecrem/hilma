@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 15
+export const TRACKER_VERSION = 16
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -146,7 +146,12 @@ const check = (r, what) => {
   if (!v.error && seen < TRACKER_VERSION) await db.from('venture_state').upsert({ key: 'tracker_version', value: { v: TRACKER_VERSION, at: new Date().toISOString(), host: hostname() }, at: new Date().toISOString() })
 }
 const idArg = /^(OLA-)?\d+$/i.test(String(pos[0] ?? '')) ? `OLA-${Number(String(pos[0]).replace(/\D/g, ''))}` : null
+// A read-only call changes nothing a guard protects, so what it was run with is not a way around one
+// (the lead, Nov 20, 6:30 pm: its own inbox and claims calls were listed as borrowed tokens)
+const READ_ONLY = new Set(['inbox', 'claims', 'show', 'say', 'unchecked', 'list', 'overrides'])
+const readOnly = READ_ONLY.has(cmd) || (cmd === 'check' && pos.length <= 1)
 async function flushWays() {
+  if (readOnly) { envWays.length = 0; return }
   while (envWays.length) await writeOverride(db, { ticket: idArg, what: `${envWays.shift()}: issues.mjs ${cmd}` })
 }
 if (cmd !== 'hook') await flushWays()

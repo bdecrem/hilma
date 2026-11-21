@@ -99,5 +99,25 @@ expect('B releases its own claim', r.code === 0 && !/OLA-240/.test(claims()), r.
 r = run(tc, 'claim', 'OLA-267', '--who', 'builder2')
 expect('then the second builder starts', r.code === 0 && /OLA-267[^\n]*builder2/.test(claims()), r.out)
 
+// the lead, Nov 20, 6:30 pm: read-only calls never write an override line, even with a token not their own
+{
+  const n0 = (overrides().match(/not this command's own/g) ?? []).length
+  shellOverride = ta
+  for (const a of [['inbox'], ['claims'], ['show', 'OLA-240'], ['check', 'OLA-240'], ['list'], ['overrides']]) run(tb, ...a)
+  shellOverride = null
+  expect('read-only calls with a token not their own leave no line', (overrides().match(/not this command's own/g) ?? []).length === n0, overrides())
+}
+// the same lead command, live: inside a real Claude Code command (toolShell finds it), the caller is known in
+// a chained command with several tracker calls and a byte past ASCII, under a UTF-8 locale (Bart's terminal)
+// and under C. Run this test from a Claude Code Bash command; from a plain shell this part is skipped.
+{
+  const live = spawnSync('node', ['-e', `import('${join(here, '_who.mjs')}').then(m=>console.log(m.toolShell()===null?'none':JSON.stringify(m.caller())))`], { encoding: 'utf8', env: { ...process.env, VENTURE_TRACKER_FAKE: '', VENTURE_TEST_SHELL: '' } }).stdout.trim()
+  if (live === 'none' || !process.env.VENTURE_CALLER) console.log('skip live locale test (not run from a Claude Code command the hook saw)')
+  else for (const loc of ['en_US.UTF-8', 'C']) {
+    const out = spawnSync('node', ['-e', `import('${join(here, '_who.mjs')}').then(m=>console.log(JSON.stringify(m.caller())))`], { encoding: 'utf8', env: { ...process.env, LC_ALL: loc, LANG: loc, VENTURE_TRACKER_FAKE: '', VENTURE_TEST_SHELL: '' } }).stdout.trim()
+    expect(`this command's own caller is known under LC_ALL=${loc}`, /"known":true/.test(out), out)
+  }
+}
+
 console.log(fails ? `${fails} failed (copy in ${dir})` : 'all passed')
 process.exit(fails ? 1 : 0)
