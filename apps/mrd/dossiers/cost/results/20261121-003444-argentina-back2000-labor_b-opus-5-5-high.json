@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina labor_b claude-opus-5-5 high",
- "pid": 71653,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "labor_b",
@@ -59,5 +58,1225 @@
   "user": 188
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:15:48.045Z",
+ "minutes": 101.07,
+ "meters_after": {
+  "at": "2026-11-21T10:15:48.046Z",
+  "window": {
+   "pct": 5,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 3,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 5,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 3,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 5% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 3% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 142536,
+   "output": 42841,
+   "cache_read": 3231689,
+   "cache_write": 159216,
+   "cost_usd": 2.6728,
+   "total": 3576282
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 142474,
+    "output": 10695,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3437,
+    "cost_usd": 0.1096
+   },
+   "claude-opus-5-5": {
+    "input": 62,
+    "output": 32146,
+    "cache_read": 3231689,
+    "cache_write": 159216,
+    "thinking": 12406,
+    "cost_usd": 2.5632
+   }
+  }
+ },
+ "turns": 44,
+ "calls": 72,
+ "duration_ms": 630752,
+ "duration_api_ms": 532247,
+ "pages_read": 31,
+ "pages": [
+  {
+   "at": "2026-11-21T08:34:53.475Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 22 | ARTICULO 23 | ARTICULO 56 | ARTICULO 61 | ARTICULO 62 | ARTICULO 125",
+   "ok": true,
+   "chars": 15849
+  },
+  {
+   "at": "2026-11-21T08:34:54.439Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 22 | ARTICULO 23 | ARTICULO 61 | ARTICULO 62",
+   "ok": true,
+   "chars": 12557
+  },
+  {
+   "at": "2026-11-21T08:34:59.719Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 22 | ARTICULO 61 | ARTICULO 62 | ARTICULO 17",
+   "ok": true,
+   "chars": 8525
+  },
+  {
+   "at": "2026-11-21T08:35:00.845Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "TRES (3) años continuo | ARTICULO 17 | ARTICULO 20",
+   "ok": true,
+   "chars": 5324
+  },
+  {
+   "at": "2026-11-21T08:35:04.154Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "Tener arraigo por haber gozado",
+   "ok": true,
+   "chars": 2253
+  },
+  {
+   "at": "2026-11-21T08:35:05.334Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "d) Haber desnaturalizado | e) Que el residente | f) | ARTICULO 63",
+   "ok": true,
+   "chars": 6555
+  },
+  {
+   "at": "2026-11-21T08:35:08.707Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "deberá transcurrir un plazo de dos (2) años",
+   "ok": true,
+   "chars": 2270
+  },
+  {
+   "at": "2026-11-21T08:35:09.932Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "ARTÍCULO 62 | ARTÍCULO 61 | desnaturalizado | Vigencia | ARTÍCULO 29",
+   "ok": true,
+   "chars": 8569
+  },
+  {
+   "at": "2026-11-21T08:35:13.561Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "desnaturalizado las razones",
+   "ok": true,
+   "chars": 3426
+  },
+  {
+   "at": "2026-11-21T08:35:14.592Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "ARTÍCULO 3 | entrará en vigencia | vigor",
+   "ok": true,
+   "chars": 3478
+  },
+  {
+   "at": "2026-11-21T08:35:18.730Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "subvencionada | ARTICULO 63",
+   "ok": true,
+   "chars": 3334
+  },
+  {
+   "at": "2026-11-21T08:40:54.867Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto",
+   "find": "temporario | permanente | artículo 15",
+   "ok": true,
+   "chars": 3298
+  },
+  {
+   "at": "2026-11-21T08:40:56.388Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/texto",
+   "find": "ARTICULO 15 | ARTICULO 16 | ARTICULO 17 | cambio de categoría | contrato de trabajo | rescisión",
+   "ok": true,
+   "chars": 1937
+  },
+  {
+   "at": "2026-11-21T08:41:01.367Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/norma.htm",
+   "find": "ARTICULO 15 | ARTICULO 16 | ARTICULO 17 | cambio de categoría",
+   "ok": true,
+   "chars": 645
+  },
+  {
+   "at": "2026-11-21T08:55:04.233Z",
+   "url": "https://webarchive.archive.unhcr.org/20230527050228if_/https://www.refworld.org/pdfid/3db7ffd84.pdf",
+   "find": "Artículo 15 | ARTICULO 15 | contrato de trabajo | cambio de categoría | Artículo 16",
+   "ok": true,
+   "chars": 904
+  },
+  {
+   "at": "2026-11-21T09:08:56.139Z",
+   "url": "https://www.acnur.org/fileadmin/Documentos/BDL/2001/0046.pdf",
+   "find": "ARTICULO 15 | Artículo 15 | ARTICULO 16 | contrato | cancel | cambio de categoría | Artículo 17",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T09:22:49.327Z",
+   "url": "https://www.acnur.org/fileadmin/Documentos/BDL/2001/0046.pdf",
+   "find": "temporarios | contrato",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T09:23:33.441Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3217
+  },
+  {
+   "at": "2026-11-21T09:27:45.792Z",
+   "url": "https://www.scba.gob.ar/includes/descarga.asp?id=23502&n=Decreto+1023+de+1994.pdf",
+   "find": "ARTICULO 15 | Artículo 15 | subsisten las razones | contratados | cambio de categoría | ARTICULO 16 | ARTICULO 22",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:10:08.617Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm",
+   "find": "contrato de trabajo | ARTICULO 12 | ARTICULO 13 | ARTICULO 14 | ARTICULO 15 | ARTICULO 22 | ARTICULO 33 | ARTICULO 37 | ARTICULO 40 | cambio de categoría",
+   "ok": true,
+   "chars": 10242
+  },
+  {
+   "at": "2026-11-21T10:11:12.718Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-74127/texto",
+   "find": "permanente | temporari",
+   "ok": true,
+   "chars": 2757
+  },
+  {
+   "at": "2026-11-21T10:11:29.502Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-74960/texto",
+   "find": "permanente | temporari",
+   "ok": true,
+   "chars": 4344
+  },
+  {
+   "at": "2026-11-21T10:11:39.189Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Art. 17. | Art. 40. | Art. 42. | Art. 81. | Art. 153. | Art. 14. | Art. 3°",
+   "ok": true,
+   "chars": 10586
+  },
+  {
+   "at": "2026-11-21T10:11:44.094Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Art. 153 | Art. 81. —Igualdad de trato",
+   "ok": true,
+   "chars": 4488
+  },
+  {
+   "at": "2026-11-21T10:11:49.217Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 65 | ARTICULO 124",
+   "ok": true,
+   "chars": 3441
+  },
+  {
+   "at": "2026-11-21T10:12:32.279Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "labour | employment | residence | permanent | inspection | wages | article 51 | article 52",
+   "ok": true,
+   "chars": 12479
+  },
+  {
+   "at": "2026-11-21T10:12:33.202Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "residence | work | labour | regulariz",
+   "ok": true,
+   "chars": 4210
+  },
+  {
+   "at": "2026-11-21T10:12:52.943Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto",
+   "find": "permanente | temporaria | DOS (2) años | Artículo 1",
+   "ok": true,
+   "chars": 6409
+  },
+  {
+   "at": "2026-11-21T10:12:55.832Z",
+   "url": "https://www.pagina12.com.ar/diario/ultimas/20-72259-2006-08-30.html",
+   "find": "residencia | permanente | temporaria",
+   "ok": true,
+   "chars": 3131
+  },
+  {
+   "at": "2026-11-21T10:13:00.675Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto",
+   "find": "CAPITULO II | años | vencimiento | Art. 1",
+   "ok": true,
+   "chars": 6401
+  },
+  {
+   "at": "2026-11-21T10:13:40.554Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm",
+   "find": "ARTICULO 102 | ARTICULO 103 | ARTICULO 18 | ARTICULO 17",
+   "ok": true,
+   "chars": 4701
+  }
+ ],
+ "searches": [
+  "Decreto 1023/94 Reglamento de Migración infoleg residentes temporarios cambio de categoría permanente",
+  "\"Decreto 1023/94\" \"residentes temporarios\" artículo 15 \"trabajador contratado\" texto reglamento migración",
+  "Decreto 1023/1994 reglamento migración texto \"residentes temporarios\" \"artículo 15\" \"contratados\" argentina.gob.ar normativa",
+  "\"1023/94\" migración \"residente temporario\" \"contrato de trabajo\" extinción cancelación residencia trabajador contratado Ley 22.439",
+  "Ley 22.439 Ley General de Migraciones y Fomento de la Inmigración texto infoleg servicios.infoleg.gob.ar",
+  "\"Reglamento de Migración\" 1994 \"Artículo 15\" \"Trabajadores contratados por personas de existencia visible o ideal\"",
+  "Disposición DNM 3/94 artículo 4 residencia permanente residentes temporarios tres años incisos c) e) f) j) artículo 15 Decreto 1023/94",
+  "CELS informe migrantes Argentina residencia temporaria \"trabajador migrante\" pérdida empleo radicación precariedad laboral Dirección Nacional de Migraciones 2018 2019",
+  "Committee on Migrant Workers concluding observations Argentina 2019 CMW/C/ARG/CO/2 regularization labour exploitation migrant workers",
+  "Programa Patria Grande radicaciones otorgadas residencias permanentes temporarias balance Dirección Nacional de Migraciones 2006 2010",
+  "\"Ley Videla\" 22.439 radicación \"contrato de trabajo\" requisito trabajadores limítrofes irregularidad década 1990 scielo"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.01,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":101,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Loss of employment automatically implies the loss of immigration status\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 22.439 art. 20 let the authority cancel a temporary residence 'cuando se desnaturalizaren los motivos' for which it was granted. Arts. 37–38 then provided only an order to leave or expulsion. There was no period to regularise or find a new job. Decreto 1023/94 could not be opened, and I found no practice evidence for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 25.871 has been in force since 21 Jan 2004. Art. 61 obliged the DNM ('deberá conminarlo') to give an irregular migrant a deadline to regularise before expulsion. Art. 65 bars loss of residence for breach of an employment-contract obligation unless that obligation was a condition of the permit. Art. 62(d) cancels a residence whose grounds are 'desnaturalizado'. The DNM fixed the deadline case by case, since there was no regulation until 2010. I found no practice evidence on job loss itself for this period; the rating is inferred.\"},{\"date\":\"2010-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"Same statutory regime as in 2005. Decreto 616/2010 (May 2010) was not yet in force. The CMW's 2011 concluding observations, covering practice around 2010, found that the DNM did not weigh personal circumstances or length of stay before ordering expulsion. The Committee asked that migrants get 'adequate time to apply for residence... in accordance with article 61'.\"},{\"date\":\"2015-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Dec",
+ "output": {
+  "answers": [
+   {
+    "question_id": 101,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Loss of employment automatically implies the loss of immigration status",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 art. 20 let the authority cancel a temporary residence 'cuando se desnaturalizaren los motivos' for which it was granted. Arts. 37–38 then provided only an order to leave or expulsion. There was no period to regularise or find a new job. Decreto 1023/94 could not be opened, and I found no practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 has been in force since 21 Jan 2004. Art. 61 obliged the DNM ('deberá conminarlo') to give an irregular migrant a deadline to regularise before expulsion. Art. 65 bars loss of residence for breach of an employment-contract obligation unless that obligation was a condition of the permit. Art. 62(d) cancels a residence whose grounds are 'desnaturalizado'. The DNM fixed the deadline case by case, since there was no regulation until 2010. I found no practice evidence on job loss itself for this period; the rating is inferred."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "Same statutory regime as in 2005. Decreto 616/2010 (May 2010) was not yet in force. The CMW's 2011 concluding observations, covering practice around 2010, found that the DNM did not weigh personal circumstances or length of stay before ordering expulsion. The Committee asked that migrants get 'adequate time to apply for residence... in accordance with article 61'."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes; Usually",
+      "basis": "Decreto 616/2010 art. 61 (from May 2010): where the grounds for admission were 'desnaturalizado', the DNM must give the migrant up to 30 days to regularise, extendable by 30 more. Art. 20(a) allows a change of category. This is the starting answer's basis, unchanged until 2020; DNU 70/2017 changed art. 62 only in 2017. I found no practice source dated around 2015, so the 2020 rating is carried back."
+     }
+    ],
+    "change_2000_2020": "There was no right protection (as of January 1, 2000), but there is now (as of January 1, 2020)",
+    "confidence": "low",
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 61, 62(d), 63, 65, 124",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. Art. 61 created a duty to give irregular migrants a deadline to regularise. Art. 65 bars loss of residence for breach of a work-contract obligation unless it was a condition of the permit. Art. 62(d) cancels a residence whose grounds are 'desnaturalizado'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 65. — Ningún extranjero o familiar suyo será privado de su autorización de residencia ni expulsado por el solo hecho de no cumplir una obligación emanada de un contrato de trabajo, a menos que el cumplimiento de esa obligación constituya condición necesaria para dicha autorización o permiso."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 61 (texto original)",
+      "kind": "new_instrument",
+      "what_changed": "On finding an irregular stay, the DNM must order regularisation within a deadline it sets before decreeing expulsion. There was no equivalent in Ley 22.439 art. 37.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "la Dirección Nacional de Migraciones deberá conminarlo a regularizar su situación en el plazo perentorio que fije para tal efecto, bajo apercibimiento de decretar su expulsión."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010 (reglamentación de la Ley 25.871)",
+      "article": "Anexo I, arts. 61 and 20(a)",
+      "kind": "new_instrument",
+      "what_changed": "Fixed the regularisation window at up to 30 days, extendable by 30, where the grounds for admission were 'desnaturalizado'. Art. 20(a) allows a change of category or subcategory. This is the basis of the starting answer.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "Cuando se verifique que un extranjero hubiere desnaturalizado los motivos que autorizaron su ingreso al territorio argentino o permaneciera en éste vencido el plazo de permanencia acordado, la DIRECCION NACIONAL DE MIGRACIONES lo intimará a fin de que, en un plazo que no exceda de TREINTA (30) días, se presente a regularizar su situación migratoria"
+     },
+     {
+      "date": "2017-01",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "art. 6 (sustituye art. 62 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Rewrote the cancellation grounds. Denatured grounds became inc. e), and cancellation became discretionary ('podrá cancelar'). The art. 61 regularisation duty and Decreto 616 art. 61 were untouched, so the answer did not change.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "e) Se hayan desnaturalizado las razones que motivaron la concesión de una residencia permanente, temporaria o transitoria, o cuando la instalación en el país hubiera sido subvencionada total o parcialmente"
+     },
+     {
+      "date": "2021-03-05",
+      "instrument": "Decreto 138/2021",
+      "article": "art. 2 (restitución de textos de la Ley 25.871)",
+      "kind": "repealed",
+      "what_changed": "Repealed DNU 70/2017 and restored the original texts. This is after the 2020 date and recorded for completeness.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Artículo 20 restituido por art. 2º del Decreto Nº 138/2021 B.O. 5/3/2021. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL;"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "art. 15 (sustituye art. 61 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Art. 61 now says the DNM 'podrá intimarlo', where it used to say 'deberá conminarlo'. This is after 2020 and recorded for completeness.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "la DIRECCIÓN NACIONAL DE MIGRACIONES podrá intimarlo a regularizar su situación en el plazo perentorio que fije a tal efecto, bajo apercibimiento de decretar su expulsión."
+     }
+    ],
+    "notes": "The 2000 answer rests on Ley 22.439 arts. 20, 37–38 (read), which give no regularisation period. Decreto 1023/94 (Reglamento de Migración) could not be opened: the InfoLEG link was dead and the ACNUR and SCBA PDFs failed. It might have contained a change-of-category rule. The 50-point answer for 2005 and 2010 rests on the art. 61 duty to give a regularisation deadline, which the DNM set itself; the length was fixed at 30+30 days only by Decreto 616/2010. ICRMW art. 51 (Ley 26.202, 2007) was not read and is not relied on. No rulings were relied on.",
+    "past_versions": "read_the_version_in_force",
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS – UN urges Argentina to derogate and suspend decree that violates migrant rights (CMW 2019)",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "arts. 18, 20, 37, 38",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 61",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (replaced by DNU 366/2025 from 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 62",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (replaced by DNU 70/2017 in 2017, restored by Decreto 138/2021, replaced by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 65",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 23(a)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 61",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 20(a)",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "not read",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-05 (retained by art. 124 Ley 25.871 until regulation)",
+      "history_read": "not_found"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm"
+     },
+     {
+      "title": "Decreto 1023/1994 – normas que modifican (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican"
+     },
+     {
+      "title": "CMW concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019 on CMW review",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "sourcing_note": "The Ley 25.871 original and current texts, Decreto 616/2010, DNU 70/2017 and Ley 22.439 were all read on InfoLEG. Decreto 1023/94 could not be read, so the 2000 answer is weaker. Practice evidence is thin: CMW 2011 for around 2010 and the CMW 2019 review via CELS; nothing for 2000, 2005 or 2015.",
+    "starting_answer_concern": "The citation's Decreto 616/2010 arts. 23(i) and 23(m) are unregulated or about humanitarian grounds, and do not concern job loss. The 30+30-day window in art. 61 is a general regularisation window, not a job-search period. The answer holds, but the cited articles should be corrected. The CMW (2019) also noted that self-employment was not a residence criterion, which narrows the ways to regularise after losing a dependent job."
+   },
+   {
+    "question_id": 113,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Disposición DNM 3/94 art. 4, as recited in Disposición DNM 5717/98: the DNM could grant permanent residence to temporary residents admitted under art. 15 incs. c), e), f) and j) of Decreto 1434/87 as amended by Decreto 1023/94, after 3 years of continuous legal residence. Inc. e) is, per secondary sources, contracted workers. Disp. 5717/98 set the procedure. I found no practice evidence for this period; the rating is carried from the starting answer."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 art. 22 provides for permanent admission. Art. 124 kept Decreto 1023/94 and its DNM rules valid until the law was regulated, so the 3-year route for listed subcategories continued (reconstructed). I found no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Same as 2005; Decreto 616/2010 was not yet in force. CMW 2011 notes that Patria Grande granted permanent or temporary residence to more than half of 423,711 applicants. That is evidence on regularisation in general, not specifically on switching from temporary to permanent status."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Decreto 616/2010 art. 22(c) (from May 2010): 'arraigo' after 2 continuous years of temporary residence for MERCOSUR or associated-state nationals and 3 years for others. This is unchanged to 2020. DNU 70/2017 later excluded time spent on a 'residencia precaria' from arraigo. I found no practice source dated around 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "1998-09-28",
+      "instrument": "Disposición DNM 5717/1998",
+      "article": "arts. 1–2 (referring to art. 4 Disposición DNM 3/94)",
+      "kind": "enacted",
+      "what_changed": "Set the procedure for changing from temporary to permanent residence under Disp. 3/94 art. 4. That route required 3 years' continuous legal residence and was limited to the listed art. 15 subcategories. This was the rule in force on 1 Jan 2000.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto",
+      "passage": "la Dirección Nacional de Migraciones podrá otorgar residencia permanente en la República a todo extranjero con residencia temporaria que se le hubiere otorgado en función de haber sido encuadrado en los incisos c), e), f) y j) del Artículo 15 del Decreto 1434/87 modificado por su similar N° 1023/94 y que acredite una residencia legal continua en el país de 3 años."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 22, 23, 124",
+      "kind": "new_instrument",
+      "what_changed": "Defined permanent and temporary residents, including the 'trabajador migrante' subcategory. Repealed Ley 22.439 and Decreto 1023/94, but kept them valid until the new law was regulated.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/94 y toda otra norma contraria a la presente ley, que no obstante retendrán su validez y vigencia hasta tanto se produzca la entrada en vigor de esta última y su reglamentación."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 22(c)",
+      "kind": "new_instrument",
+      "what_changed": "Made 'arraigo' through 2 or 3 years of continuous temporary residence a general route to permanent residence. This is the basis of the starting answer.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "c) Tener arraigo por haber gozado de residencia temporaria por DOS (2) años continuos o más, si fuere nacional de los países del MERCADO COMUN DEL SUR (MERCOSUR) o Estados Asociados; y TRES (3) años continuos o más, en los demás casos."
+     },
+     {
+      "date": "2017-01",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "art. 2 (sustituye art. 20 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Time spent on a 'residencia precaria' no longer counts toward arraigo for permanent residence. The art. 22(c) route was untouched. Repealed by Decreto 138/2021.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ni resulta residencia válida a los efectos del arraigo, necesario para la obtención de la residencia permanente, o para la adquisición de la nacionalidad por naturalización."
+     }
+    ],
+    "notes": "The 2000 route is known from Disposición 5717/98's recital of Disp. 3/94 art. 4. I could not read Decreto 1023/94 itself, so the identification of inc. e) as 'trabajadores contratados' is second-hand (search snippets). The view that this route continued in 2004–2010 rests on Ley 25.871 art. 124 and on DNM acts of that era citing Decreto 1023/94; it is reconstructed. Seasonal workers are 'residentes transitorios' (art. 24(e)) and have no arraigo route. No rulings were relied on.",
+    "past_versions": "reconstructed_from_amending_acts",
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Disposición DNM 5717/1998",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto",
+      "year": 1998,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2000"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Disposición DNM 3/94 (art. 4), as applied by Disposición DNM 5717/98",
+      "article": "art. 4",
+      "role": "predecessor",
+      "in_force": "1994 to 2010-05 (reconstructed)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "art. 15",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-05",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 17, 22, 23",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 22 replaced by DNU 366/2025 from 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 22",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 20 (as replaced by DNU 70/2017)",
+      "role": "other_in_force",
+      "in_force": "2017-01 to 2021-03-05",
+      "history_read": "amending_acts"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Disposición DNM 5717/1998",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto"
+     },
+     {
+      "title": "Disposición DNM 4737/2002",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-74127/texto"
+     },
+     {
+      "title": "Disposición DNM 6027/2002",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-74960/texto"
+     },
+     {
+      "title": "Ley 25.871 – texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "Disposición DNM 53.253/2005 (Patria Grande)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto"
+     },
+     {
+      "title": "CMW concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "sourcing_note": "The 2010–2020 basis (Decreto 616 art. 22(c)) was read directly. The 2000 basis comes from Disp. 5717/98's recital of Disp. 3/94; Decreto 1023/94 itself could not be read. I found no practice evidence specific to switching from temporary to permanent status for any date.",
+    "starting_answer_concern": null
+   },
+   {
+    "question_id": 115,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Disposición 5717/98 says the route was limited to temporary residents admitted under art. 15 incs. c), e), f) and j) of Decreto 1434/87 as amended by 1023/94. It adds that 'la mera residencia temporaria por más de tres años no es configurativa de criterio de admisión'. The route was therefore conditional on the permit type."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 itself sets no time-based route to permanence. Art. 124 kept Decreto 1023/94 and the subcategory-limited DNM rule in force until regulation (reconstructed)."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged from 2005; Decreto 616/2010 entered into force only in May 2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Decreto 616/2010 art. 22(c) opened arraigo-based permanent residence to holders of any temporary residence. Art. 20(a) allows a change of category. This is the starting answer's basis, unchanged to 2020. No practice evidence was found for around 2015, so the 2020 rating is carried back."
+     }
+    ],
+    "change_2000_2020": "There was no right protection (as of January 1, 2000), but there is now (as of January 1, 2020)",
+    "confidence": "low",
+    "events": [
+     {
+      "date": "1998-09-28",
+      "instrument": "Disposición DNM 5717/1998",
+      "article": "considerandos and art. 2(5)",
+      "kind": "enacted",
+      "what_changed": "Confirmed that the temporary-to-permanent route depended on the art. 15 subcategory. Time spent as a temporary resident was not enough on its own.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto",
+      "passage": "Que la mera residencia temporaria por más de tres años no es configurativa de criterio de admisión, habida cuenta del carácter taxativo de las circunstancias enumeradas en el Art. 15 del Decreto 1434/97 sustituido por su similar N° 1023/94."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "art. 124",
+      "kind": "new_instrument",
+      "what_changed": "Kept Decreto 1023/94 valid until the new law was regulated.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "que no obstante retendrán su validez y vigencia hasta tanto se produzca la entrada en vigor de esta última y su reglamentación."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 22(c)",
+      "kind": "new_instrument",
+      "what_changed": "Arraigo after 2 or 3 years now applies to any temporary residence, with further DNM conditions possible 'según el tipo de residencia temporaria'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "Asimismo, deberá dar cumplimiento a las demás condiciones que determine la DIRECCION NACIONAL DE MIGRACIONES según el tipo de residencia temporaria de que se trate."
+     }
+    ],
+    "notes": "The 2000 'No' relies on Disposición 5717/98 (read), which was in force then. The 'No' for 2005 and 2010 is reconstructed from art. 124 of Ley 25.871, with no DNM act read that confirms the old rule was still applied. Decreto 1023/94 itself could not be opened. Repealed-protection search: not needed, since the 2020 answer is the top option.",
+    "past_versions": "reconstructed_from_amending_acts",
+    "practice_sources": [
+     {
+      "title": "Disposición DNM 5717/1998",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto",
+      "year": 1998,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2000"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Disposición DNM 3/94 art. 4 / Disposición DNM 5717/98",
+      "article": "art. 4 / arts. 1–2",
+      "role": "predecessor",
+      "in_force": "1994/1998 to 2010-05 (reconstructed)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 17, 20, 22, 23",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (arts. 20 and 22 amended by DNU 70/2017, restored 2021, amended by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, arts. 20(a), 22(c)",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "art. 15",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-05",
+      "history_read": "not_found"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Disposición DNM 5717/1998",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-53248/texto"
+     },
+     {
+      "title": "Ley 25.871 – texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 1023/1994 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican"
+     }
+    ],
+    "sourcing_note": "The 2000 answer rests on a DNM disposition that was read. For 2005 and 2010 the continuation of the old rule is inferred from art. 124. I found no practice evidence on switching for any date.",
+    "starting_answer_concern": "Decreto 616 art. 22(c) lets the DNM impose further conditions by temporary-residence type. Seasonal migrant workers (art. 24(e)) are transitory, not temporary, residents and have no arraigo route. Strictly, the route therefore does depend on permit type for some temporary workers."
+   },
+   {
+    "question_id": 117,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley de Contrato de Trabajo art. 17 bans discrimination by nationality. Art. 42 keeps a worker's right to wages and severance even when the contract has a prohibited object, which covers irregular migrants whose employment Ley 22.439 arts. 30–31 forbade. Ley 22.439 art. 104 obliged officials to report irregular residents, which likely deterred claims. I found no practice evidence for this period; the rating is inferred."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Sometimes; Usually",
+      "basis": "Since 21 Jan 2004, Ley 25.871 art. 56 says employers' labour obligations apply 'cualquiera sea su condición migratoria'. Arts. 16, 67 and 68 add further protection. The LCT is unchanged. I found no practice evidence specific to this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same law as in 2005 (Decreto 616 art. 56 on free legal aid came in May 2010). CMW 2011 welcomed art. 56. It was concerned, however, that irregular migrant workers in textiles, agriculture and domestic work faced exploitation and that women domestic workers had 'limited access to judicial remedies'."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 art. 56, Decreto 616/2010 art. 56 (free legal services may not refuse migrants for lack of documents) and LCT arts. 17 and 42. Unchanged to 2020. I found no practice source dated around 2015, so the 2020 rating is carried back."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 16, 56",
+      "kind": "new_instrument",
+      "what_changed": "Added an explicit guarantee that employers' labour-law obligations apply whatever the worker's migration status. Under Ley 22.439, by contrast, arts. 30–31 banned work by irregular migrants and art. 104 required officials to report them.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 56. — La aplicación de la presente ley no eximirá al empleador o dador de trabajo del cumplimiento de las obligaciones emergentes de la legislación laboral respecto del extranjero, cualquiera sea su condición migratoria"
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 56",
+      "kind": "new_instrument",
+      "what_changed": "Free legal services may not refuse migrants for lack of Argentine documents when they claim the rights in art. 56.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "los extranjeros podrán recurrir al asesoramiento que brindan los servicios jurídicos gratuitos que funcionan en el país, los cuales no podrán negarles atención debido a la falta de documentación argentina o a su calidad de extranjeros."
+     }
+    ],
+    "notes": "LCT arts. 17 and 42 carry no amendment notes on InfoLEG and were in force throughout 2000–2020. Ley 22.439 arts. 30, 31 and 104 were read and were in force until January 2004. No rulings were relied on. The starting answer's 'Usually' for 2020 is kept; the 2010 rating is lowered on CMW 2011 practice evidence.",
+    "past_versions": "read_the_version_in_force",
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS – UN urges Argentina to derogate and suspend decree that violates migrant rights (CMW 2019)",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Ley 20.744 de Contrato de Trabajo",
+      "article": "arts. 17, 40, 42",
+      "role": "other_in_force",
+      "in_force": "1976 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.744 de Contrato de Trabajo",
+      "article": "art. 153",
+      "role": "cited",
+      "in_force": "1976 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 16, 56, 67, 68",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "arts. 30, 31, 104",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, art. 56",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "sources_opened": [
+     {
+      "title": "Ley 20.744 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "CMW concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019 on CMW review",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "sourcing_note": "All statutes were read on InfoLEG. Practice evidence exists only for around 2010 (CMW 2011) and 2019. The ratings for 2000, 2005 and 2015 are inferred.",
+    "starting_answer_concern": "The citation's LCT art. 153 deals with proportional annual leave, not nationality. The proper bases are LCT arts. 17 and 42 and Ley 25.871 arts. 16 and 56. 'Act 28.871' is a typo for 25.871. The answer itself holds."
+   }
+  ]
+ }
 }
