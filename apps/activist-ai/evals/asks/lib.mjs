@@ -566,6 +566,12 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
   for (const r of results) {
     const key = `${r.id}@${r.place}`
     const was = table.cases[key] ?? {}
+    if (r.ok === null && r.didNotRun) {
+      // It was tried but never reached Ola (OLA-231 check 7): what it had stands, and the record says so.
+      table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status ?? 'not run', everPassed: !!was.everPassed, didNotRun: { at: now, release: r.release, why: r.why } }
+      r.status = 'did not run'
+      continue
+    }
     if (r.ok === null) {
       // Not run: keeps what it had, if it ever ran; otherwise listed as not run.
       table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status && was.status !== 'not run' ? was.status : 'not run', why: was.why ?? r.why, everPassed: !!was.everPassed }
@@ -589,6 +595,7 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
       everPassed: ever,
       firstPassed: was.firstPassed ?? (r.ok ? { at: now, release: r.release } : null),
       lastPassed: r.ok ? { at: now, release: r.release } : was.lastPassed ?? null,
+      didNotRun: null,
     }
   }
   // Cases no longer in the set leave the table.
@@ -607,11 +614,82 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
 /** The verdict of a case at a place from its tries (OLA-251). The runner tries until two passes or two
  *  fails, as before; only the words changed: "works" is two passes in a row. Two passes with a fail
  *  among three tries is "works sometimes (2 of 3)", never reported as works. */
-export function verdictOf(tries) {
+//  Since OLA-231 (Nov 20) the passes needed are set per case (passesNeeded): a request that failed for a
+//  person needs five, the rest two, and the verdict prints the count ("works (5 of 5)").
+export function verdictOf(tries, need = 2) {
   const passes = tries.filter((t) => t.ok).length
-  if (passes >= 2 && tries.length === 2) return { ok: true, status: 'passing', verdict: 'works' }
-  if (passes >= 2) return { ok: true, status: 'works sometimes', verdict: `works sometimes (${passes} of ${tries.length})` }
-  return { ok: false, status: null, verdict: 'fails' }
+  if (passes >= need && passes === tries.length) return { ok: true, status: 'passing', verdict: `works (${passes} of ${passes})` }
+  if (passes >= need) return { ok: true, status: 'works sometimes', verdict: `works sometimes (${passes} of ${tries.length})` }
+  return { ok: false, status: null, verdict: `fails (${passes} of ${tries.length})` }
+}
+/** The runner tries a case at a place until it has the passes it needs or two fails. */
+export const triesDone = (tries, need = 2) => tries.filter((t) => t.ok).length >= need || tries.filter((t) => !t.ok).length >= 2
+/** Passes needed before a case shows as working (OLA-231): five when the request once failed for a
+ *  person (the case says so with "passes": 5; add-case.mjs writes it), two otherwise. A checker tried
+ *  the publish sentence 19 times and it failed about one in five: two in a row pass that 2 times in 3. */
+export const passesNeeded = (c) => Math.max(2, Number(c.passes) || 2)
+
+/** A try that could not reach Ola (a connection refused, reset or dropped) says nothing about Ola: it
+ *  is reported as "did not run" and tried again, never counted as a pass or a fail (OLA-231 check 7,
+ *  OLA-270). A connection refused or reset in the middle of a try is the network's or the test's own. */
+const LOST = /\b(fetch failed|ECONNRESET|ECONNREFUSED|EPIPE|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|UND_ERR_SOCKET|UND_ERR_CONNECT_TIMEOUT|other side closed|socket hang up)\b/
+export function lostConnection(e) {
+  const code = e?.cause?.code ?? e?.code ?? ''
+  return LOST.test(String(code)) || LOST.test(String(e?.message ?? ''))
+}
+
+/** One asks run at a time (they share the made-up account). The run an update starts (after: true)
+ *  WAITS for a run that is going and then runs, so every update is tested (OLA-231 check 5); only a
+ *  newer update's run replaces a waiting one. A builder's run (after: false) leaves it to a run that is
+ *  going or an update's run that is waiting. Returns true when this process holds the lock. */
+export async function takeRunLock({ after, state = STATE, pollMs = 15_000, maxMs = 4 * 3600_000, log = say } = {}) {
+  mkdirSync(state, { recursive: true })
+  const LOCK = path.join(state, 'run.pid')
+  const WAITER = path.join(state, 'after-deploy.waiting')
+  const pidIn = (f) => {
+    try {
+      return Number(readFileSync(f, 'utf8'))
+    } catch {
+      return 0
+    }
+  }
+  const alive = (pid) => {
+    try {
+      return !!pid && pid !== process.pid && (process.kill(pid, 0), true)
+    } catch {
+      return false
+    }
+  }
+  const drop = (f) => () => {
+    try {
+      if (pidIn(f) === process.pid) rmSync(f)
+    } catch {}
+  }
+  if (after) {
+    writeFileSync(WAITER, String(process.pid))
+    process.on('exit', drop(WAITER))
+    const since = Date.now()
+    let told = false
+    while (alive(pidIn(LOCK))) {
+      if (pidIn(WAITER) !== process.pid) {
+        log(`asks: a newer update's run (pid ${pidIn(WAITER)}) is waiting to test the newer release; this one leaves it to that run`)
+        return false
+      }
+      if (!told) log(`asks: another run is going (pid ${pidIn(LOCK)}); this one waits its turn and runs after it`), (told = true)
+      if (Date.now() - since > maxMs) throw new Error(`asks: the run holding the lock (pid ${pidIn(LOCK)}) has gone on for ${Math.round(maxMs / 60_000)} min; this update's run stops waiting (a stuck run: look at it)`)
+      await sleep(pollMs)
+    }
+    if (told) log(`asks: the other run finished after ${Math.round((Date.now() - since) / 60_000)} min; this one runs now`)
+  } else {
+    const other = alive(pidIn(LOCK)) ? pidIn(LOCK) : alive(pidIn(WAITER)) ? pidIn(WAITER) : 0
+    if (other) {
+      log(`asks: ${other === pidIn(LOCK) ? 'another run is going' : "an update's run is waiting for its turn"} (pid ${other}); this one leaves it to that run`)
+      return false
+    }
+  }
+  writeFileSync(LOCK, String(process.pid))
+  process.on('exit', drop(LOCK))
+  return true
 }
 
 export function readCases(file = path.join(HERE, 'cases.json')) {

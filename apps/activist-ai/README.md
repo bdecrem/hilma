@@ -1550,10 +1550,21 @@ kinds for these cases: `ran:<regex>` (a step's command matches) and `newfile:<re
 file the request made, not there before); a setup step `wrote` puts a fixture from
 `evals/asks/fixtures/` into the folder. The never list adds "blames having no network". A run gives
 the machine's turn to a waiting deploy between cases, and only one asks run goes at a time
-(`~/ola-asks/run.pid`).
+(`~/ola-asks/run.pid`). **The run an update starts waits its turn** (OLA-231, Nov 20): when a
+builder's or a checker's run holds the made-up account, it waits (`~/ola-asks/after-deploy.waiting`)
+and runs after it, so every update is tested; only a newer update's run replaces a waiting one, and a
+builder's run does not start ahead of a waiting update's run (it says so and exits).
 
-**A ratchet.** The model is in the loop, so a case is tried until it passes twice or fails twice (at
-most three tries), and the result says how many tries it took. **"Works" is two passes in a row**
+**A lost connection is not Ola failing.** A try that could not reach Ola (`fetch failed`,
+`ECONNRESET`, refused, timed out) is **did not run**: printed so, tried again after 20 s, never
+counted as a pass or a fail. After three in a row the case is `did not run` at that place for this
+run; the result file keeps what it had before and writes `didNotRun` beside it.
+
+**A ratchet.** The model is in the loop, so a case is tried until it has the passes it needs or fails
+twice, and the result prints the count (`works (5 of 5)`, `5 of 6 passed, 5 needed`). **A request
+that failed for a person needs five passes** (`"passes": 5` in the case; `add-case.mjs` writes it,
+`--passes 2` overrides; today every publish case and who-made-index): a checker found publishing
+failed about one try in five, which two in a row would pass two times in three. The rest need two. **"Works" is two passes in a row**
 (since Nov 20, OLA-251): pass, pass is `passing`; two passes with a fail between them (pass, fail,
 pass or fail, pass, pass) is **works sometimes (2 of 3)**, a status of its own in the result file
 (`status: "works sometimes"`, `verdict`, `summary.worksSometimes`), on the board (`asks.worksSometimes`)

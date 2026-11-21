@@ -8,8 +8,9 @@
 //
 // A ratchet: every case and place records whether it has EVER passed on the live server. A case that
 // passed before and fails now is STOPPED WORKING, reported first; one that never passed is "not
-// working yet". The model is in the loop, so a case is tried until it passes twice or fails twice
-// (at most 3 tries); the result says how many tries it took. Since Nov 20 (OLA-251) "works" means two
+// working yet". The model is in the loop, so a case is tried until it has the passes it needs (two;
+// five for a request that failed for a person, "passes": 5, OLA-231) or fails twice; the result prints
+// the count. A try that could not reach Ola (a lost connection) did not run: tried again, never counted. Since Nov 20 (OLA-251) "works" means two
 // passes in a row: pass, pass is "passing"; two passes with a fail among three tries is "works
 // sometimes (2 of 3)", its own status, never reported as works. Places as the tracker names them
 // (scripts/venture/issues.mjs): this runner reaches cloud-web:chat (a project on app.ola.cx through
@@ -38,7 +39,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STATE, ratchet, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STATE, lostConnection, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -49,22 +50,13 @@ const LATEST = process.env.OLA_ASKS_LATEST || path.join(STAGING, 'asks-latest.js
 mkdirSync(STATE, { recursive: true })
 
 // One run at a time: two would share the made-up account and empty each other's project (OLA-232:
-// a run is long now, and a deploy starts one after every deploy). A later one leaves it to the first.
-const LOCK = path.join(STATE, 'run.pid')
-try {
-  const other = Number(readFileSync(LOCK, 'utf8'))
-  if (other && other !== process.pid) {
-    process.kill(other, 0)
-    say(`asks: another run is going (pid ${other}); this one leaves it to that run`)
-    process.exit(0)
-  }
-} catch {}
-writeFileSync(LOCK, String(process.pid))
-process.on('exit', () => {
-  try {
-    if (Number(readFileSync(LOCK, 'utf8')) === process.pid) rmSync(LOCK)
-  } catch {}
-})
+// a run is long now, and a deploy starts one after every deploy).
+// OLA-231 check 5: the run an update starts WAITS for a run that is going (a builder's or a checker's)
+// and then runs, so every update is tested: it never steps aside. Only a newer update's run replaces a
+// waiting one (it tests the newer release). While an update's run waits, a builder's run does not start
+// ahead of it. A builder's run still leaves it to a run that is going, and says so.
+const LOST_MAX = 3 // connection losses in a row before a case is "did not run" at a place
+if (!(await takeRunLock({ after: args.includes('--after-deploy') }))) process.exit(0)
 const cases = readCases(arg('--cases', undefined)).filter((c) => !ONLY || ONLY.includes(c.id))
 if (!cases.length) throw new Error(`no case ${ONLY?.join(', ')} in the cases`)
 
@@ -126,19 +118,27 @@ try {
       continue
     }
     for (const c of mine) {
-      // Until it passes twice or fails twice: 2 of 3.
+      // Until it has the passes it needs (two, or five for a request that failed for a person) or fails twice.
+      const need = passesNeeded(c)
       const tries = []
-      while (tries.filter((t) => t.ok).length < 2 && tries.filter((t) => !t.ok).length < 2) {
+      const lost = [] // tries that could not reach Ola: did not run, tried again, never counted
+      while (!triesDone(tries, need) && lost.length < LOST_MAX) {
         const s0 = Date.now()
         let r
         try {
           r = await runCase(T, c)
         } catch (e) {
-          r = { ok: false, why: `the run broke: ${e.message}` }
+          r = lostConnection(e) ? { ok: null, why: `did not run: the connection to Ola was lost (${e.message})` } : { ok: false, why: `the run broke: ${e.message}` }
         }
         r.secs = Math.round((Date.now() - s0) / 1000)
-        tries.push(r)
-        say(`  try ${tries.length}: ${r.ok ? 'pass' : 'fail'}  ${c.id}@${place} (${r.secs} s): ${r.why}`)
+        if (r.ok === null) {
+          lost.push(r)
+          say(`  did not run  ${c.id}@${place} (${r.secs} s): ${r.why}; trying again in 20 s, not counted`)
+          await new Promise((res) => setTimeout(res, 20_000))
+        } else {
+          tries.push(r)
+          say(`  try ${tries.length}: ${r.ok ? 'pass' : 'fail'}  ${c.id}@${place} (${r.secs} s, ${tries.filter((t) => t.ok).length} of ${need} passes needed): ${r.why}`)
+        }
         // A page from this try is taken down, so the next try has to publish its own.
         try {
           takeDownSites()
@@ -151,9 +151,14 @@ try {
         await T.call('GET', '/api/session').catch(() => {})
       }
       await yieldToDeploy()
-      const v = verdictOf(tries)
+      if (!triesDone(tries, need)) {
+        // The connection kept failing: the case did not run here; its earlier result stands.
+        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: the connection to Ola was lost ${lost.length} times (${lost.at(-1)?.why ?? ''}); ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
+        continue
+      }
+      const v = verdictOf(tries, need)
       const last = tries.findLast((t) => t.ok === v.ok) ?? tries.at(-1)
-      results.push(row(c, place, { ...last, ok: v.ok, tries, verdict: v }))
+      results.push(row(c, place, { ...last, ok: v.ok, tries, verdict: v, lost: lost.length, need }))
     }
     if (runtime === 'local' && local) say(`local runtime ${await local.stop()}`), (local = null)
   }
@@ -178,7 +183,7 @@ function row(c, place, r) {
     say: c.say,
     ok: !!r.ok,
     release: liveRelease(),
-    tries: `${tries.filter((t) => t.ok).length} of ${tries.length} passed`,
+    tries: `${tries.filter((t) => t.ok).length} of ${tries.length} passed${r.need ? `, ${r.need} needed` : ''}${r.lost ? `, ${r.lost} did not run (connection lost)` : ''}`,
     sometimes: r.verdict?.status === 'works sometimes',
     verdict: r.verdict?.verdict ?? (r.ok ? 'works' : 'fails'),
     why: r.why,
@@ -273,14 +278,15 @@ mkdirSync(path.dirname(LATEST), { recursive: true })
 writeFileSync(LATEST, JSON.stringify(table, null, 2) + '\n')
 appendFileSync(path.join(STATE, 'log.jsonl'), JSON.stringify({ at: now, release, secs, results }) + '\n')
 
-const order = { 'STOPPED WORKING': 0, 'not working yet': 1, 'works sometimes': 2, passing: 3, 'not run': 4 }
+const order = { 'STOPPED WORKING': 0, 'not working yet': 1, 'did not run': 2, 'works sometimes': 3, passing: 4, 'not run': 5 }
 const ran = results.filter((r) => r.ok !== null)
+const lostOnes = results.filter((r) => r.didNotRun)
 console.log('')
 for (const r of [...results].sort((a, b) => order[a.status] - order[b.status])) {
-  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status === 'works sometimes' ? r.verdict : r.status === 'passing' ? 'works (passing)' : r.status
+  const head = r.status === 'STOPPED WORKING' ? 'STOPPED WORKING (it worked before)' : r.status === 'works sometimes' || r.status === 'passing' ? r.verdict : r.status === 'did not run' ? 'did not run (connection lost)' : r.status
   console.log(`${head.padEnd(34)} case ${`${r.id}@${r.place}`.padEnd(38)} ${r.tries ? `${r.tries}, ${r.secs} s, on ${r.release}` : ''}  ${r.ticket ?? ''}`)
-  console.log(`${''.padEnd(34)}   "${r.say.slice(0, 110)}"${r.ok === false || r.status === 'not run' ? `\n${''.padEnd(34)}   ${String(r.why).slice(0, 400)}` : ''}`)
+  console.log(`${''.padEnd(34)}   "${r.say.slice(0, 110)}"${r.ok === false || r.ok === null ? `\n${''.padEnd(34)}   ${String(r.why).slice(0, 400)}` : ''}`)
 }
-console.log(`\n${ran.filter((r) => r.ok && !r.sometimes).length} of ${ran.length} work (two passes in a row)${ran.some((r) => r.sometimes) ? `, ${ran.filter((r) => r.sometimes).length} work sometimes (2 of 3)` : ''} on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${results.length - ran.length} place(s) not run. Results: ${LATEST}`)
+console.log(`\n${ran.filter((r) => r.ok && !r.sometimes).length} of ${ran.length} work (every try passed, 2 or 5 needed)${ran.some((r) => r.sometimes) ? `, ${ran.filter((r) => r.sometimes).length} work sometimes` : ''} on ${release} in ${Math.floor(secs / 60)} min ${secs % 60} s; ${lostOnes.length ? `${lostOnes.length} did not run (the connection to Ola was lost, not counted); ` : ''}${results.length - ran.length - lostOnes.length} place(s) not run. Results: ${LATEST}`)
 console.log(`Cite a case in a ticket check: issues.mjs check OLA-n pass <k> --case <id>@<place> --on ${release}`)
 process.exit(ran.every((r) => r.ok) ? 0 : 1)

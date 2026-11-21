@@ -141,6 +141,8 @@ const c = {
   must,
   mustNot: many('--must-not'),
   ...(one('--minutes') ? { limitMin: Number(one('--minutes')) } : {}),
+  // OLA-231: a request that failed for a person needs five passes before it shows as working (--passes 2 to override).
+  passes: Number(one('--passes', 5)),
   from: {
     date: one('--date', source ? new Date(source.at).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) : new Date().toISOString().slice(0, 10)),
     ticket,
@@ -151,6 +153,6 @@ const c = {
 }
 doc.cases.push(c)
 writeFileSync(file, JSON.stringify(doc, null, 2) + '\n')
-console.log(`added ${id} (${places.join(', ')}): ${must.join('; ')}`)
+console.log(`added ${id} (${places.join(', ')}), ${c.passes} passes needed: ${must.join('; ')}`)
 console.log(source ? `his words, from the log: "${say}" (${pacific(source.at)}, ${c.from.where})` : `his words, as described: "${say}"`)
 console.log(`next: commit evals/asks/cases.json with [${ticket}]; to try it now on the test server: node evals/asks/run.mjs --case ${id}`)

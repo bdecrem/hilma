@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet } from './lib.mjs'
+import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -92,6 +92,7 @@ test('add-case adds a case the runner reads, in one command', () => {
   assert.deepEqual(c.places, ['cloud-web:chat', 'cloud-mac:chat', 'cloud-phone:chat', 'local-mac:chat', 'local-phone:chat'])
   assert.deepEqual(c.must, ['site:survey', 'file:chart.png'])
   assert.equal(c.from.ticket, 'OLA-999')
+  assert.equal(c.passes, 5, 'a failure of a person needs five passes (OLA-231)')
   assert.match(c.id, /^make-a-chart-of/)
   const again = spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), 'make a chart of the survey and publish it', '--runtime', 'cloud', '--must', 'site:survey', '--ticket', 'OLA-999'], { encoding: 'utf8' })
   assert.notEqual(again.status, 0)
@@ -226,19 +227,19 @@ void fileURLToPath
 test('OLA-251: works is two passes in a row; 2 of 3 is works sometimes; the tries are as before', () => {
   const P = { ok: true }
   const F = { ok: false }
-  assert.deepEqual(verdictOf([P, P]), { ok: true, status: 'passing', verdict: 'works' })
+  assert.deepEqual(verdictOf([P, P]), { ok: true, status: 'passing', verdict: 'works (2 of 2)' })
   for (const t of [[P, F, P], [F, P, P]]) assert.deepEqual(verdictOf(t), { ok: true, status: 'works sometimes', verdict: 'works sometimes (2 of 3)' })
   for (const t of [[F, F], [P, F, F], [F, P, F]]) assert.equal(verdictOf(t).ok, false)
-  // the runner's loop is unchanged: it stops at two passes or two fails, so never more than three tries
-  const loop = (seq) => {
+  // the runner's loop: it stops at two passes or two fails, so never more than three tries for a case that needs two
+  const loop = (seq, need = 2) => {
     const tries = []
-    while (tries.filter((t) => t.ok).length < 2 && tries.filter((t) => !t.ok).length < 2) tries.push(seq[tries.length])
+    while (!triesDone(tries, need)) tries.push(seq[tries.length])
     return tries
   }
   for (const seq of [[P, P, P], [P, F, P], [F, P, P], [F, F, P], [P, F, F]]) assert.ok(loop(seq).length <= 3)
   assert.equal(loop([P, P, F]).length, 2)
   const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
-  assert.ok(src.includes("while (tries.filter((t) => t.ok).length < 2 && tries.filter((t) => !t.ok).length < 2)"), 'the number of tries is exactly as before')
+  assert.ok(src.includes('while (!triesDone(tries, need) && lost.length < LOST_MAX)'), 'the runner uses the same stopping rule')
   // the abilities list counts it apart, never as passing
   const L = lines({ latest: { cases: { 'web-search@cloud-web:chat': { status: 'works sometimes', at: 'x' } } } })
   assert.equal(L.find((l) => l.ability === 'web-search' && l.place === 'cloud-web:chat').status, 'sometimes')
@@ -252,10 +253,96 @@ test('OLA-251: the result file says works for pass, pass and works sometimes (2 
   const results = [res('a', [{ ok: true }, { ok: true }]), res('b', [{ ok: true }, { ok: false }, { ok: true }])]
   const t = ratchet({ cases: {} }, results, { now: 'n', release: 'r1', known: new Set(['a@cloud-web:chat', 'b@cloud-web:chat']), lastRun: {} })
   assert.equal(t.cases['a@cloud-web:chat'].status, 'passing')
-  assert.equal(t.cases['a@cloud-web:chat'].verdict, 'works')
+  assert.equal(t.cases['a@cloud-web:chat'].verdict, 'works (2 of 2)')
   assert.equal(t.cases['b@cloud-web:chat'].status, 'works sometimes')
   assert.equal(t.cases['b@cloud-web:chat'].verdict, 'works sometimes (2 of 3)')
   assert.equal(t.summary.passing, 1)
   assert.equal(t.summary.worksSometimes, 1)
 })
 
+
+test('OLA-231 check 6: a request that failed for a person needs five passes, and the result prints the count', () => {
+  const P = { ok: true }
+  const F = { ok: false }
+  const cases = readCases()
+  for (const id of ['publish-bart', 'publish-again', 'take-it-down', 'publish-third-page', 'share-link']) assert.equal(passesNeeded(cases.find((c) => c.id === id)), 5, id)
+  assert.equal(passesNeeded(cases.find((c) => c.id === 'translate')), 2)
+  // two passes are not enough for a case that needs five
+  assert.equal(triesDone([P, P], 5), false)
+  assert.deepEqual(verdictOf([P, P, P, P, P], 5), { ok: true, status: 'passing', verdict: 'works (5 of 5)' })
+  // the one-in-five failure the checker saw is caught: four passes and a fail is never "works"
+  assert.notEqual(verdictOf([P, P, F, P, P, P], 5).status, 'passing')
+  assert.equal(verdictOf([P, P, F, P, P, P], 5).verdict, 'works sometimes (5 of 6)')
+  assert.equal(verdictOf([P, F, P, F], 5).ok, false)
+  // at most six tries for five passes (two fails stop it)
+  const loop = (seq) => {
+    const tries = []
+    while (!triesDone(tries, 5)) tries.push(seq[tries.length])
+    return tries
+  }
+  assert.equal(loop([P, P, P, P, P, P]).length, 5)
+  assert.equal(loop([P, F, P, P, P, P]).length, 6)
+  assert.equal(loop([P, F, P, F, P, P]).length, 4)
+})
+
+test('OLA-231 check 7: a try that could not reach Ola did not run; it is never a pass or a fail', () => {
+  const e = new TypeError('fetch failed')
+  e.cause = { code: 'ECONNRESET', message: 'other side closed' }
+  assert.ok(lostConnection(e))
+  assert.ok(lostConnection(new Error('fetch failed (ECONNREFUSED: connect ECONNREFUSED 127.0.0.1:4096)')))
+  assert.ok(!lostConnection(new Error('the request was not taken: 500 boom')))
+  assert.ok(!lostConnection(new Error('emptying the project: no such container')))
+  // in the record: what the case had stands, and the did-not-run is written beside it
+  const known = new Set(['a@cloud-web:chat'])
+  let t = ratchet({ cases: {} }, [{ id: 'a', place: 'cloud-web:chat', say: 'x', ok: false, tries: '0 of 2 passed', verdict: 'fails (0 of 2)', release: 'r1' }], { now: 'n1', release: 'r1', known, lastRun: {} })
+  assert.equal(t.cases['a@cloud-web:chat'].status, 'not working yet')
+  const lost = { id: 'a', place: 'cloud-web:chat', say: 'x', ok: null, didNotRun: true, release: 'r2', why: 'did not run: the connection to Ola was lost 3 times' }
+  t = ratchet(t, [lost], { now: 'n2', release: 'r2', known, lastRun: {} })
+  assert.equal(lost.status, 'did not run')
+  assert.equal(t.cases['a@cloud-web:chat'].status, 'not working yet', 'unchanged: not counted as a fail or a pass')
+  assert.equal(t.cases['a@cloud-web:chat'].release, 'r1')
+  assert.equal(t.cases['a@cloud-web:chat'].didNotRun.release, 'r2')
+  // the runner treats it so: a lost connection is put apart from the tries
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.ok(src.includes('lostConnection(e) ? { ok: null'), 'a lost connection is ok: null')
+  assert.ok(src.includes('lost.push(r)'), 'and kept apart from the tries')
+})
+
+test('OLA-231 check 5: the run an update starts waits for a run that is going, then runs', async () => {
+  const state = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+  const said = []
+  const log = (s) => said.push(s)
+  // a builder's run holds the lock: a child process standing in for it
+  const { spawn } = await import('node:child_process')
+  const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
+  writeFileSync(path.join(state, 'run.pid'), String(holder.pid))
+  // a second builder's run leaves it (as before)
+  assert.equal(await takeRunLock({ after: false, state, log }), false)
+  // the update's run waits, and runs once the other finishes
+  const t0 = Date.now()
+  setTimeout(() => holder.kill(), 600)
+  const got = await takeRunLock({ after: true, state, pollMs: 100, log })
+  assert.equal(got, true)
+  assert.ok(Date.now() - t0 >= 500, 'it waited')
+  assert.ok(said.some((s) => /waits its turn/.test(s)), said.join(' | '))
+  assert.equal(Number(readFileSync(path.join(state, 'run.pid'), 'utf8')), process.pid)
+  // while an update's run waits, a builder's run does not go ahead of it
+  const state2 = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+  const waiter = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
+  writeFileSync(path.join(state2, 'after-deploy.waiting'), String(waiter.pid))
+  assert.equal(await takeRunLock({ after: false, state: state2, log }), false)
+  assert.ok(said.at(-1).includes("an update's run is waiting"))
+  // a newer update's run replaces a waiting one
+  const holder2 = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
+  writeFileSync(path.join(state2, 'run.pid'), String(holder2.pid))
+  const waiting = takeRunLock({ after: true, state: state2, pollMs: 100, log })
+  await new Promise((r) => setTimeout(r, 300))
+  writeFileSync(path.join(state2, 'after-deploy.waiting'), String(waiter.pid))
+  assert.equal(await waiting, false)
+  assert.ok(said.at(-1).includes('newer update'))
+  holder2.kill()
+  waiter.kill()
+  // the runner calls it, and no longer steps aside after an update
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.ok(src.includes("takeRunLock({ after: args.includes('--after-deploy') })"))
+})

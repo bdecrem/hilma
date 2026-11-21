@@ -15,6 +15,7 @@
         "site:Bart"
       ],
       "mustNot": [],
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-230",
@@ -45,6 +46,7 @@
         "no separate claude",
         "\\bnot (?:built |made |written |created )?by claude"
       ],
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-224",
@@ -76,6 +78,7 @@
         "no separate claude",
         "\\bnot (?:built |made |written |created )?by claude"
       ],
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-224",
@@ -440,6 +443,7 @@
       "must": [
         "site:Garden Club"
       ],
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-232",
@@ -559,6 +563,7 @@
       ],
       "mustNot": [],
       "limitMin": 20,
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-250",
@@ -583,6 +588,7 @@
       ],
       "mustNot": [],
       "limitMin": 16,
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-250",
@@ -632,6 +638,7 @@
       ],
       "mustNot": [],
       "limitMin": 24,
+      "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-267",
