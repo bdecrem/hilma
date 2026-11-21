@@ -148,7 +148,9 @@ final class WhereOlaWorks {
   /// The cloud runtime is attached at once; the local runtime's server is started when it is set
   /// up (it keeps running while the cloud is on screen) and stopped when it no longer is.
   func apply() async {
-    defer { configureClaude() }
+    // The cloud project's hosted model and picks are asked for after every setup change too (OLA-337:
+    // with no local runtime set up nothing asked, and the box offered only Ola in a cloud project).
+    defer { configureClaude(); Task { await refreshCloudHosted() } }
     generation += 1
     let mine = generation
     problem = nil
@@ -574,10 +576,15 @@ extension WhereOlaWorks {
 
   /// Asks the cloud project's front desk about its hosted open model and the picked choices.
   func refreshCloudHosted() async {
-    let cloud = store.config?.account == true ? store : peer.config?.account == true ? peer : nil
-    guard let cloud else { return }
-    cloudHosted = HostedStatus.from(fallback: await cloud.cloudFallback())
-    configureClaude()
+    // The cloud store may still be connecting: asked again for up to half a minute.
+    for attempt in 0..<10 {
+      if attempt > 0 { try? await Task.sleep(nanoseconds: 3_000_000_000) }
+      let cloud = store.config?.account == true ? store : peer.config?.account == true ? peer : nil
+      guard let cloud, let j = await cloud.cloudFallback() else { continue }
+      cloudHosted = HostedStatus.from(fallback: j)
+      configureClaude()
+      return
+    }
   }
 
   /// Saves one runtime's fallbacks and tells both stores.

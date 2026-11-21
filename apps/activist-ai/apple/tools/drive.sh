@@ -21,7 +21,7 @@
 #   --pick <model>  (mac) the model for the session, picked at the box before the first sentence by its
 #          shortcut (Option-Command-<n>): Ola, Hosted, "DeepSeek V4 Pro" (or deepseek), Claude (OLA-339).
 #   --try-again <model>  (mac) after the last answer, that request again with this model, by its
-#          shortcut (Shift-Option-Command-<n>, Model, Try Again With) (OLA-340).
+#          shortcut (Control-Option-Command-<n>, Model, Try Again With) (OLA-340).
 #   --small         (mac) the window at 760 by 560.
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #

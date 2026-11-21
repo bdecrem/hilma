@@ -334,7 +334,7 @@ public enum EngineChoice: Hashable, Sendable, Identifiable {
     }
   }
 
-  /// Its number for the shortcuts: Option-Command-<n> picks it for the box, Shift-Option-Command-<n>
+  /// Its number for the shortcuts: Option-Command-<n> picks it for the box, Control-Option-Command-<n>
   /// sends the last request again with it.
   public var digit: Int { (Self.all.firstIndex(of: self) ?? 0) + 1 }
 

@@ -491,6 +491,13 @@ public final class OlaStore {
     }
   }
 
+  /// The pick for the box from the keyboard (the Model menu): one not offered here says so.
+  public func pick(_ c: EngineChoice) {
+    guard choices.contains(c) else { problem = Problem(text: "\(c.name) is not offered here."); return }
+    nextChoice = c
+    nextOnly = false
+  }
+
   /// "Try again with" for the latest finished request (the menu bar's Try Again With, and a
   /// checker's drive): nil when there is none or the choice is not offered here.
   public func tryLastAgain(with c: EngineChoice) async {

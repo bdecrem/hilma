@@ -32,7 +32,7 @@ import Vision
 ///   "waitSeconds": n, "pick": model?, "tryAgain": model?, "small": bool?}
 /// "pick" (OLA-339/340): the model picked at the box before the first sentence, by its shortcut
 /// (Option-Command-<n>, the Model menu), e.g. "DeepSeek V4 Pro". "tryAgain": after the last answer,
-/// that request again with this model, by Shift-Option-Command-<n> (Model, Try Again With).
+/// that request again with this model, by Control-Option-Command-<n> (Model, Try Again With).
 /// "small": the window at 760 by 560. After every answer the run fails unless "Try again with"
 /// under the latest request is all in view, above the box (OLA-337).
 /// Result: <out>/transcript.json and one PNG per step; exit 0 only when every sentence got a finished
@@ -237,9 +237,8 @@ enum MacDrive {
     // The model for this session, picked at the box before the first request (OLA-339).
     if let name = s.pick {
       guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name); the choices are \(EngineChoice.all.map(\.name).joined(separator: ", "))") }
-      _ = try await until(30, "\(c.name) is not offered here (the box lists \(store.choices.map(\.name).joined(separator: ", ")))") { store.choices.contains(c) ? true : nil }
-      shortcut("\(c.digit)", code: digitCode(c.digit), in: window, modifiers: [.command, .option])
-      _ = try await until(5, "Option-Command-\(c.digit) did not pick \(c.name) (the box says \(store.nextChoice.name))") { store.nextChoice == c ? true : nil }
+      _ = try await until(60, "\(c.name) is not offered here (the box lists \(store.choices.map(\.name).joined(separator: ", ")))") { store.choices.contains(c) ? true : nil }
+      try await viaMenu(["Model", c.name], key: c.digit, modifiers: [.command, .option], in: window) { store.nextChoice == c }
       record.picked = c.name
       try await settle(window, 0.8)
       step("picked \(c.name) at the box (Option-Command-\(c.digit))", shot: "picked")
@@ -349,11 +348,11 @@ enum MacDrive {
       defer { record.said.append(said) }
       guard store.choices.contains(c) else { throw Failed(why: "\(c.name) is not offered under Try again with here") }
       let before = store.conversation?.turns.count ?? 0
-      shortcut("\(c.digit)", code: digitCode(c.digit), in: window, modifiers: [.command, .option, .shift])
+      try await viaMenu(["Model", "Try Again With", c.name], key: c.digit, modifiers: [.command, .option, .control], in: window) { (store.conversation?.turns.count ?? 0) > before }
       said.sentAt = now
-      _ = try await until(30, "Shift-Option-Command-\(c.digit) sent nothing") { (store.conversation?.turns.count ?? 0) > before ? true : nil }
+      _ = try await until(30, "Control-Option-Command-\(c.digit) sent nothing") { (store.conversation?.turns.count ?? 0) > before ? true : nil }
       said.status = "sent"
-      step("Try again with \(c.name) (Shift-Option-Command-\(c.digit))", shot: "try-again-sent")
+      step("Try again with \(c.name) (Control-Option-Command-\(c.digit))", shot: "try-again-sent")
       let t = try await until(wait, "no finished answer from \(c.name) after \(Int(wait)) s") { () -> Turn? in
         guard let t = store.conversation?.turns.last, !t.isRunning else { return nil }
         return t
@@ -380,6 +379,25 @@ enum MacDrive {
   }
 
   static var store: OlaStore?
+
+  /// A menu bar command: its keyboard shortcut first, as a person presses it; if the shortcut does not
+  /// reach it, the menu item itself (Model, its name), as a person clicks it. Says which way worked.
+  static func viaMenu(_ path: [String], key d: Int, modifiers: NSEvent.ModifierFlags, in w: NSWindow, done: () -> Bool) async throws {
+    let keys = (modifiers.contains(.control) ? "Control-" : "") + "Option-Command-\(d)"
+    shortcut("\(d)", code: digitCode(d), in: w, modifiers: modifiers)
+    if (try? await until(3, "") { done() ? true : nil }) != nil { say("\(path.joined(separator: " > ")): by its shortcut, \(keys)"); return }
+    var menu = NSApp.mainMenu
+    var item: NSMenuItem?
+    for (i, name) in path.enumerated() {
+      menu?.update()
+      item = menu?.items.first { $0.title == name }
+      if i < path.count - 1 { menu = item?.submenu }
+    }
+    guard let menu, let item, let index = menu.items.firstIndex(of: item) else { throw Failed(why: "no menu item \(path.joined(separator: " > ")) in the menu bar") }
+    say("\(keys) did not reach \(path.joined(separator: " > ")) (its shortcut: \(item.keyEquivalentModifierMask.rawValue) \(item.keyEquivalent.debugDescription), enabled \(item.isEnabled)); choosing the menu item")
+    menu.performActionForItem(at: index)
+    _ = try await until(5, "\(path.joined(separator: " > ")) did nothing") { done() ? true : nil }
+  }
 
   /// The key codes of 1 to 9 on a US keyboard.
   static func digitCode(_ d: Int) -> UInt16 { [18, 19, 20, 21, 23, 22, 26, 28, 25][max(0, min(8, d - 1))] }
