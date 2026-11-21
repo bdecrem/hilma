@@ -12,7 +12,7 @@
 #   bart/ola-bart.sh permissions [lots|ask]   the machine's "Lots of permissions" (approver.mjs): show or set it
 #   bart/ola-bart.sh password    print the password ONCE, for the apps' Keychain (on the machine only)
 #   bart/ola-bart.sh uninstall   remove the job and the token; keeps ~/ola-bart and the password file
-#   bart/ola-bart.sh files       only (re)write the skills, the tools and the config (a check uses it with
+#   bart/ola-bart.sh files       only (re)write the skills, the tools, the config and run.sh (a check uses it with
 #                                OLA_BART_STATE and OLA_BART_PROJECT pointing at a scratch folder)
 #
 # Nothing here prints a secret, except `password`, which exists to do exactly that.
@@ -291,6 +291,11 @@ JSON
 
 write_runner() {
   mkdir -p "$STATE/bin"
+  # The settings run.sh restores at every start (OLA-249), from what write_config just wrote.
+  install -m 400 "$STATE/config/opencode/opencode.jsonc" "$STATE/bin/opencode.jsonc.sealed.tmp"
+  mv -f "$STATE/bin/opencode.jsonc.sealed.tmp" "$STATE/bin/opencode.jsonc.sealed"
+  local SEALED_SHA
+  SEALED_SHA=$(shasum -a 256 "$STATE/bin/opencode.jsonc.sealed" | cut -d' ' -f1)
   cat > "$STATE/bin/run.sh" <<SH
 #!/bin/bash
 # launchd's entry for $LABEL. Secrets come from the env file, never the command line.
@@ -302,29 +307,44 @@ set -a; . "$ENVF"; set +a
 # the permissions (see apple/README.md, "Ola ignores other tools' skills").
 export OPENCODE_DISABLE_CLAUDE_CODE=1 OPENCODE_DISABLE_PROJECT_CONFIG=1
 export XDG_CONFIG_HOME="$STATE/config" XDG_DATA_HOME="$STATE/data" XDG_STATE_HOME="$STATE/state" XDG_CACHE_HOME="$STATE/cache"
+# Only Ola's models (OLA-249). opencode with no provider it can use turns on its own free hosted
+# models and answers with one, and it reloads its settings file live. So the settings are restored
+# at every start from the sealed copy write_runner made (its checksum is in this file; a changed copy
+# stops the start), handed to opencode in the environment, where deleting or damaging the file cannot
+# reach them, and opencode's free models and its download of the model list are off.
+[ "\$(shasum -a 256 "$STATE/bin/opencode.jsonc.sealed" | cut -d' ' -f1)" = "$SEALED_SHA" ] || { echo "Ola's sealed settings were changed; run ola-bart.sh install" >&2; exit 1; }
+cp "$STATE/bin/opencode.jsonc.sealed" "$STATE/config/opencode/opencode.jsonc"
+chmod 600 "$STATE/config/opencode/opencode.jsonc"
+export OPENCODE_CONFIG_CONTENT="\$(cat "$STATE/bin/opencode.jsonc.sealed")" OPENCODE_DISABLE_FREE_MODELS=1 OPENCODE_DISABLE_MODELS_FETCH=1
 # Ola's web commands first on the PATH; downloads land in the project's sources/.
 export PATH="$STATE/bin/web:\$PATH" OLA_WORK="$PROJECT" OLA_LIB="$STATE/bin/web" OLA_GATEWAY_HOSTPORT=127.0.0.1:4180
 export OLA_PAGE_CHROMIUM="$(chromium)"
 cd "$PROJECT"
-# Three processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
-# the gateway), the phone's door (the iPhone's "On the Ola machine", signed in with an Ola account)
-# and opencode. If one stops, all stop, and launchd starts them again.
+# opencode first, and nothing reaches it from the phone or the Mac's "On this Mac" mode until it has
+# shown only Ola's models (model-guard.mjs); then the guard watches every 2 s for as long as it runs.
+"$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT" &
+oc=\$!
+trap 'kill \$oc \${fwd:-} \${door:-} \${guard:-} 2>/dev/null' TERM INT EXIT
+node "$STATE/bin/model-guard.mjs" "$HOST:$PORT" once --wait 60
+node "$STATE/bin/model-guard.mjs" "$HOST:$PORT" watch --every 2 &
+guard=\$!
+# Four processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
+# the gateway), the phone's door (the iPhone's "On the Ola machine", signed in with an Ola account),
+# opencode and the model guard. If one stops, all stop, and launchd starts them again.
 node "$STATE/bin/forward.mjs" "$HOST" "$FPORT" 4180 &
 fwd=\$!
 # The door also answers the ask-first steps under "Lots of permissions" (approver.mjs, the choice in
 # $STATE/permissions), so no app has to be open for them to go ahead.
 OLA_BART_PHONE_HANDLES="$PHONE_HANDLES" OLA_BART_PERMISSIONS="$STATE/permissions" node "$STATE/bin/phone-door.mjs" "$HOST" "$DPORT" "$HOST:$PORT" &
 door=\$!
-"$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT" &
-oc=\$!
-trap 'kill \$fwd \$door \$oc 2>/dev/null' TERM INT EXIT
 # macOS's bash 3.2 has no wait -n.
-while kill -0 \$fwd 2>/dev/null && kill -0 \$door 2>/dev/null && kill -0 \$oc 2>/dev/null; do sleep 2; done
+while kill -0 \$fwd 2>/dev/null && kill -0 \$door 2>/dev/null && kill -0 \$oc 2>/dev/null && kill -0 \$guard 2>/dev/null; do sleep 2; done
 exit 1
 SH
   cp "$HERE/forward.mjs" "$STATE/bin/forward.mjs"
   cp "$HERE/phone-door.mjs" "$STATE/bin/phone-door.mjs"
   cp "$HERE/approver.mjs" "$STATE/bin/approver.mjs"
+  cp "$HERE/model-guard.mjs" "$STATE/bin/model-guard.mjs"
   chmod 700 "$STATE/bin/run.sh"
 }
 
@@ -395,7 +415,8 @@ case "${1:-}" in
     write_web_tools
     write_skills
     write_config
-    echo "wrote $STATE/skills, $STATE/bin/web and $STATE/config/opencode/opencode.jsonc (browser for ola-page: $(chromium))"
+    write_runner
+    echo "wrote $STATE/skills, $STATE/bin/web, $STATE/config/opencode/opencode.jsonc and $STATE/bin/run.sh (browser for ola-page: $(chromium))"
     ;;
   start) launchctl bootstrap "gui/$UID_" "$PLIST" && echo started ;;
   stop) launchctl bootout "gui/$UID_/$LABEL" && echo stopped ;;

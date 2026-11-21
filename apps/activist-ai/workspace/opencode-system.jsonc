@@ -23,6 +23,11 @@
     { "action": "skill.use", "resource": "app-designer", "effect": "allow" },
     { "action": "skill.use", "resource": "sound", "effect": "allow" },
     { "action": "skill.use", "resource": "publish", "effect": "allow" },
-    { "action": "skill.use", "resource": "batch-quotes", "effect": "allow" }
+    { "action": "skill.use", "resource": "batch-quotes", "effect": "allow" },
+    // Only Ola's models (OLA-249): opencode with no provider it can use turns on its own free hosted
+    // models. Here that has no way out (no network, the door serves only the gateway), so this is the
+    // second guard, the same pair as Bart's own Ola (bart/ola-bart.sh).
+    { "action": "provider.use", "resource": "*", "effect": "deny" },
+    { "action": "provider.use", "resource": "ola", "effect": "allow" }
   ]
 }

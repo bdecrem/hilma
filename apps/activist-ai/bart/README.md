@@ -61,6 +61,25 @@ behind the gateway is a hosted stand-in (Together.ai), so use made-up data only*
 Studio serves the model. opencode's own free hosted models (opencode.ai) are switched off by a
 policy in the config, so the conversation goes nowhere but the gateway.
 
+**Only Ola's models, even when the config file is gone (OLA-249, 2026-11-20).** The policy alone
+was not enough: opencode reloads its config file live, and with the file deleted or damaged it turned
+its free hosted models back on (`opencode/big-pickle` first) within seconds. Now `run.sh`, at every
+start, restores the config from a sealed copy (`~/.ola-bart/bin/opencode.jsonc.sealed`, written by
+`install` and `files`; its checksum is in `run.sh`, and a changed copy stops the start with "run
+ola-bart.sh install"), hands the same text to opencode in `OPENCODE_CONFIG_CONTENT` and sets
+`OPENCODE_DISABLE_FREE_MODELS=1` and `OPENCODE_DISABLE_MODELS_FETCH=1`. Then `model-guard.mjs`
+(the mini's copy of OlaKit's ModelGuard) checks `/api/model` and `/api/model/default` before the
+forwarder and the phone door start, and every 2 s after: any model not of provider `ola`, or no
+model at all, logs "Ola stopped because its settings on the Ola machine are missing or damaged, so
+nothing was sent" and stops the job; launchd starts it again from the sealed copy. Check (real
+opencode, a scratch HOME and state, its own ports, no network but loopback, nothing of the install
+touched; six cases: deleted, damaged, another provider planted as the default, restart, a changed
+sealed copy):
+
+```bash
+bash bart/model-guard-check.sh
+```
+
 **One thing to know:** `workspace/ws.mjs` rewrites the tokens file from the workspaces it knows
 whenever a workspace is created, rotated or destroyed, and that drops `bart`. The apps then show the
 model refusing. Put it back with `ola-bart.sh token` (it is also checked by `status`). The lasting fix is
