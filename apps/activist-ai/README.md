@@ -3374,6 +3374,49 @@ nothing executing, one comparison at a time on the machine, which is what the la
 priority lane exists); real-task comparisons have no checks (judge only); a copy of a PDF-heavy task
 gets text stand-ins only (the generator may write .txt, .csv, .md, .json and .xlsx).
 
+## Ola counting its own failures, and "This was wrong" (2026-11-21, OLA-235)
+
+Bart's ticket, Nov 20: "Today the only way a failure of Ola is found is that Bart hits it and says so
+to Kit ... Ola should find its own failures: a label for each refusal and tool error (no content
+leaves the project), a daily count on the Learning page with the most frequent kinds turned into
+cases in the request test set (OLA-231); and for the person, one tap that turns a bad answer into a
+permanent test."
+
+**Faults, labels only** (`frontdesk/faults.mjs`, platform migration 18, table `faults`). When a run
+in a cloud project ends (the project's event stream, `workspaces.mjs` `onRunEnded`), the front desk
+reads that one turn from the project's opencode and works out in memory what went wrong: a
+**refusal** (Ola's answer tells the person it cannot: `cannot_here`, `not_switched_on`,
+`no_network`, `do_it_yourself`, `no_tool`, `cannot`), a **step** that failed (`step_shell`,
+`step_invalid`, `step_not_found`, `step_denied`, `step_timeout`, `step_web`, `step_other`; a step
+the person said no to is not a fault), or a **run** that stopped (`run_quota`, `run_busy`,
+`run_model`, `run_stopped`; the person pressing Stop is not a fault). One row per kind per turn:
+when, runtime, engine, type, kind, the kind of work (`switches.mjs kindOf`). No request, answer,
+file name or person; the turn's opencode id only so a turn is counted once. It covers every cloud
+run, whichever product sent it. A turn a person stores from their Mac (kept turns, local runtime) is
+read the same way when it arrives; a Mac that does not store its turns is not counted. Proof that
+nothing else is kept: `test/faults.test.mjs` plants a name in a request and finds it in no file of
+the database.
+
+`node frontdesk/admin.mjs faults [--days 7] [--json]` prints requests, requests with a failure per
+100, by type, by kind (most frequent first) and by day, and the marks below.
+`scripts/venture/learning.mjs` reads the JSON over Tailscale for the board's Learning page ("When
+Ola says it cannot, or a step fails"). The daily sweep takes the most frequent kind and turns it into
+cases in the request tests (`evals/asks`, above): `admin.mjs kept --days 1` or a mark gives the
+sentence, `evals/asks/add-case.mjs` writes the case.
+
+**"This was wrong"** (table `wrong_marks`). Under every finished answer of Ola's own model or the
+hosted model in the web app, a quiet link; tapped, a card asks "Keep this as a test for Ola?", says
+that Ola's team will read the request and this answer on Ola's computer to make a test, takes an
+optional "What was wrong?", and keeps it only on "Yes, keep it as a test". The front desk reads the
+turn from the project itself (`POST /api/wrong` with the conversation and the turn's id, never the
+text from the page), keeps the request and the answer word for word with who and when, and the line
+then reads "Kept as a test" with Undo (`DELETE /api/wrong`, the row is deleted). A second tap does
+not keep it twice; `GET /api/wrong?conversation=` tells the page which turns are marked. Viewers
+cannot mark. On this machine only: `node frontdesk/admin.mjs wrong [--days 30] [--id n] [--json]`;
+`evals/asks/add-case.mjs --from-wrong <n> --must … --ticket OLA-nnn` writes the case from it and
+records the case's id on the mark (`admin.mjs wrong case <n> <case-id>`). The Mac and iPhone apps do
+not have the link yet (a follow-up ticket); their cloud runs are counted all the same.
+
 ## Learning from every switch to Claude (2026-11-19, OLA-157)
 
 Bart, Nov 18: "When I switch to Use Claude for an app after I used a lower model, that choice means

@@ -159,6 +159,16 @@ async function facts() {
         `test tasks: ${w.tasks.copies} made-up copies (${w.tasks.candidates} became candidates, \`admin.mjs compare candidates\`), ${w.tasks.waiting} waiting, ${w.tasks.kept} drafts from kept conversations (\`admin.mjs switches tasks\`), ${w.tasks.labels_only} labels only`,
       ])
     } else add('Ola: switches to Claude', [`not read: ${(sws.stderr || 'no answer').trim().split('\n').pop()}`])
+    // Ola's own failures (OLA-235): the day's refusals, failed steps and stopped requests by kind, and the marks.
+    const fs1 = ssh('faults --json --days 1')
+    if (fs1.status === 0) {
+      const f = JSON.parse(fs1.stdout.trim().split('\n').pop())
+      add('Ola: requests that went wrong, the last day (labels and counts only; the most frequent kind becomes cases, SWEEP.md)', [
+        `${f.turns} of ${f.requests} requests${f.per100 === null ? '' : `, ${f.per100} per 100`}: said it cannot ${f.types.refusal}, steps failed ${f.types.step}, stopped ${f.types.run}`,
+        `by kind: ${f.kinds.map((k) => `${k.words} (${k.kind}) ${k.n}`).join(', ') || 'none'}`,
+        `marked "This was wrong": ${f.wrong.marked}, ${f.wrong.waiting} without a case yet (\`admin.mjs wrong\`, then \`add-case.mjs --from-wrong <n>\`)`,
+      ])
+    } else add('Ola: requests that went wrong', [`not read: ${(fs1.stderr || 'no answer').trim().split('\n').pop()}`])
     add('Ola: kept requests that day (only people who turned on "Store your conversations")', rows.map((k) => `${new Date(k.at).toISOString().slice(11, 16)}Z ${k.handle} ${k.product}/${k.runtime} ${k.engine}${k.switched_from ? ` (AFTER ${k.switched_from})` : ''} ${k.status}: ${String(k.request).replace(/\s+/g, ' ').slice(0, 300)}`))
   })
 

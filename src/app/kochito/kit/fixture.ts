@@ -102,6 +102,13 @@ export function fixture(): BoardData {
           kinds: [{ kind: 'app', words: 'apps', n: 4 }, { kind: 'design', words: 'design', n: 3 }, { kind: 'data', words: 'data', n: 2 }], largest: { kind: 'app', words: 'apps', n: 4 },
           tasks: { copies: 3, candidates: 2, waiting: 1, kept: 4, labels_only: 1 },
           by_day: Array.from({ length: 14 }, (_, n) => ({ day: `2026-11-${String(5 + n).padStart(2, '0')}`, requests: 15 + n, switches: [0, 1, 0, 0, 2, 1, 0, 0, 1, 0, 2, 1, 3, 2][n] })),
+        },
+        faults: {
+          at: T('2026-11-18', 10, 20), days: 7, requests: 142, turns: 17, per100: 12, types: { refusal: 8, step: 11, run: 3 },
+          kinds: [{ kind: 'cannot_here', type: 'refusal', words: 'said it cannot do this here', n: 5 }, { kind: 'step_shell', type: 'step', words: 'a command stopped with an error', n: 7 }, { kind: 'step_not_found', type: 'step', words: 'a file was not there', n: 4 }, { kind: 'no_network', type: 'refusal', words: 'blamed having no network', n: 3 }, { kind: 'run_busy', type: 'run', words: 'the model was busy or did not answer', n: 3 }].sort((a, b) => b.n - a.n) as never,
+          largest: { kind: 'step_shell', words: 'a command stopped with an error', n: 7 },
+          wrong: { marked: 2, cases: 1, waiting: 1 },
+          by_day: Array.from({ length: 14 }, (_, n) => ({ day: `2026-11-${String(5 + n).padStart(2, '0')}`, turns: [1, 0, 2, 1, 0, 3, 1, 0, 2, 1, 1, 2, 2, 1][n], refusal: 1, step: 1, run: 0 })),
         } },
       weaknesses: [
         { id: 'a', side: 'kit', name: 'A made-up weakness that came back', what: 'Made up.', seen: 4, first: '2026-11-13', last: '2026-11-17', by_day: {}, came_back: 2, guard: { day: '2026-11-15', what: 'a made-up check before every send', enforced: true }, guards: 2, status: 'back', held_days: null, quiet_days: 1, bet: { text: 'a made-up thing to build', issue: 'OLA-212' }, replay: { at: T('2026-11-18', 2, 40), cases: 3, prevented: 2, failing: [{ id: 'c80-made-up', title: 'A made-up case that fails', since: '2026-11-18', why: 'a made-up reason' }] } },

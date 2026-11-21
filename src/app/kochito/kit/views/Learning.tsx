@@ -1,4 +1,4 @@
-import { openCounts, type BoardData, type Claim, type Issue, type Learning, type Replay, type ReplayAttempt, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
+import { openCounts, type BoardData, type Claim, type Issue, type Learning, type Replay, type ReplayAttempt, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Faults, type Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
@@ -159,6 +159,46 @@ function SwitchesSec({ s, now, today }: { s: Switches | undefined; now: string; 
 }
 
 const ORDER = { back: 0, open: 1, guarded: 2 } as const
+// Ola's own failures (OLA-235): when Ola told a person it cannot, a step failed, or a request stopped,
+// counted by kind on the Ola machine (labels only), and the answers people marked "This was wrong".
+function FaultsSec({ f, now, today }: { f: Faults | undefined; now: string; today: string }) {
+  if (!f) return <p className="bd-empty">Not measured yet: the Ola machine has not reported them.</p>
+  const old = Date.parse(now) - Date.parse(f.at) > DAY
+  return (
+    <>
+      <div className="bd-ind">
+        <div className="now">
+          <b>{f.per100 ?? '–'}</b> <span className="sub">requests with a failure, per 100</span>
+          <p>
+            {f.turns} of {f.requests} {f.requests === 1 ? 'request' : 'requests'}, the last {f.days} days: Ola said it cannot {f.types.refusal} {f.types.refusal === 1 ? 'time' : 'times'}, {f.types.step} {f.types.step === 1 ? 'step' : 'steps'} failed, {f.types.run} {f.types.run === 1 ? 'request' : 'requests'} stopped.
+            {f.largest ? (
+              <>
+                {' '}
+                The most frequent: {f.largest.words} ({f.largest.n}).
+              </>
+            ) : null}
+          </p>
+          <p className={`m${old ? ' bd-amber' : ' faint'}`}>{old ? `as of ${at(f.at, now)}` : `read ${at(f.at, now)}`}</p>
+        </div>
+        <Bars items={f.by_day.map((x) => ({ key: x.day, v: x.turns, label: x.day.slice(8).replace(/^0/, ''), title: `${dayShort(x.day)}: ${x.turns} ${x.turns === 1 ? 'request' : 'requests'} with a failure (said it cannot ${x.refusal}, steps ${x.step}, stopped ${x.run})`, last: x.day === today }))} />
+      </div>
+      {f.kinds.length > 0 && (
+        <ol className="bd-kv">
+          {f.kinds.slice(0, 8).map((k) => (
+            <li key={k.kind}>
+              <b>{k.n}</b>
+              <span>{k.words}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="bd-p">
+        Marked wrong by the person: {f.wrong.marked} {f.wrong.marked === 1 ? 'answer' : 'answers'}, {f.wrong.cases} made into a test case, {f.wrong.waiting} waiting for one.
+      </p>
+    </>
+  )
+}
+
 function Weaknesses({ list, today, base }: { list: Weakness[]; today: string; base: string }) {
   const rows = [...list].sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.seen - a.seen)
   const days = (n: number | null) => (n === null ? '' : n === 0 ? 'since today' : n === 1 ? '1 day' : `${n} days`)
@@ -551,6 +591,14 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
           A switch is a request handed to Claude or the hosted open model right after Ola&rsquo;s own model had the last turn in that conversation: the first result was not good enough. The Ola machine records each one as labels and counts only (the kind of work, why, from which engine to which), never the request. Where the owner allows it, a switch also becomes a test task: a made-up copy of the request scored against Claude, or, for people who store their conversations, the request with both attempts. Every Friday the largest group is fixed, measured before and after. Lower is better.
         </p>
         <SwitchesSec s={l?.ola.switches} now={now} today={d.today} />
+      </section>
+
+      <section className="bd-sec" aria-labelledby="faults-h">
+        <h2 id="faults-h">When Ola says it cannot, or a step fails</h2>
+        <p className="bd-p" style={{ margin: '0 0 8px' }}>
+          After each request in a cloud project, and each request a person stores from their Mac, the Ola machine records what went wrong as labels only: Ola told the person it cannot (and the kind of reason), a step failed (and how), or the request stopped. Never the request or the answer. The most frequent kinds become cases in the request tests, which run after every update of the server. Under any answer, a person can tap &ldquo;This was wrong&rdquo;; with their yes, that request and the answer are kept on the Ola machine and made into a test case. Lower is better.
+        </p>
+        <FaultsSec f={l?.ola.faults} now={now} today={d.today} />
       </section>
 
       <section className="bd-sec" aria-labelledby="ideas-h">

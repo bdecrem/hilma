@@ -13,7 +13,7 @@ import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
 import { StretchCard } from './StretchCard.tsx'
 import { QuestionCard } from './QuestionCard.tsx'
-import { canOpen, compare, desk, plainPath } from '../lib/api.ts'
+import { canOpen, compare, desk, plainPath, wrong } from '../lib/api.ts'
 import { CompareLine, CompareSheet } from './Compare.tsx'
 
 // Requests that work in any project, empty or not: nothing here names a file the person may not have.
@@ -110,6 +110,20 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   const poll = setInterval(() => props.open && pending() && void refetchCompare(), 4000)
   onCleanup(() => clearInterval(poll))
   const [sheet, setSheet] = createSignal<{ message: string | null; id: string | null } | null>(null)
+
+  // "This was wrong" (OLA-235): which turns of this conversation the person kept as a test.
+  const [wrongMarked, { mutate: setWrongMarked }] = createResource(
+    () => (props.open && s().sessionID ? `${s().sessionID}|${s().turns.length}` : null),
+    (k) => wrong.marked(k.split('|')[0]).then((r) => r.marked).catch((): string[] => []),
+  )
+  const markWrong = async (turn: string, why: string) => {
+    await wrong.mark(s().sessionID!, turn, why)
+    setWrongMarked([...(wrongMarked() ?? []), turn])
+  }
+  const unmarkWrong = async (turn: string) => {
+    await wrong.unmark(s().sessionID!, turn)
+    setWrongMarked((wrongMarked() ?? []).filter((x) => x !== turn))
+  }
 
   // "Ask … instead" under a finished Ola reply: one for each fallback that is switched on.
   const insteadOf = (): Fallback[] => (['hosted', 'claude'] as Fallback[]).filter((f) => (f === 'claude' ? s().claude?.enabled : s().hosted?.enabled))
@@ -242,6 +256,10 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                   compared={cmp()?.results?.[t.id] ?? null}
                   onCompare={() => setSheet({ message: t.id, id: null })}
                   onOpenCompare={(id) => setSheet({ message: t.id, id })}
+                  canMarkWrong={!!s().sessionID}
+                  markedWrong={(wrongMarked() ?? []).includes(t.id)}
+                  onMarkWrong={(why) => markWrong(t.id, why)}
+                  onUnmarkWrong={() => unmarkWrong(t.id)}
                 />
               )}
             </For>
@@ -429,7 +447,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   )
 }
 
-function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: string[]; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void; canCompare: boolean; compared: CompareResultLine | null; onCompare: () => void; onOpenCompare: (id: string) => void }) {
+function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: string[]; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void; canCompare: boolean; compared: CompareResultLine | null; onCompare: () => void; onOpenCompare: (id: string) => void; canMarkWrong: boolean; markedWrong: boolean; onMarkWrong: (why: string) => Promise<void>; onUnmarkWrong: () => Promise<void> }) {
   const t = () => props.turn
   const byClaude = () => t().engine === 'claude'
   const byHosted = () => t().engine === 'hosted'
@@ -584,6 +602,9 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
             </button>
           </p>
         </Show>
+        <Show when={props.canMarkWrong && !byClaude() && !running() && t().status !== 'sending' && /^[A-Za-z0-9_-]{1,80}$/.test(t().id) && !/^(local|claude)-/.test(t().id)}>
+          <WrongMark marked={props.markedWrong} onMark={props.onMarkWrong} onUnmark={props.onUnmarkWrong} />
+        </Show>
         <Show when={props.instead.length && !byClaude() && !byHosted() && !running()}>
           <p class="ask-claude">
             <For each={props.instead}>
@@ -598,6 +619,77 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
       </div>
       </Show>
     </li>
+  )
+}
+
+// "This was wrong" under an answer (OLA-235): one tap, then one yes that says exactly what is kept.
+function WrongMark(props: { marked: boolean; onMark: (why: string) => Promise<void>; onUnmark: () => Promise<void> }) {
+  const [asking, setAsking] = createSignal(false)
+  const [why, setWhy] = createSignal('')
+  const [busy, setBusy] = createSignal(false)
+  const [problem, setProblem] = createSignal<string | null>(null)
+  const act = async (f: () => Promise<void>) => {
+    setBusy(true)
+    setProblem(null)
+    try {
+      await f()
+      setAsking(false)
+      setWhy('')
+    } catch (e) {
+      setProblem(e instanceof Error && e.message ? e.message : 'That did not reach Ola’s computer. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div class="wrong-mark">
+      <Show
+        when={!props.marked}
+        fallback={
+          <p class="wrong-kept" role="status">
+            Kept as a test. Ola’s team will add it to the requests Ola is checked against after every update.{' '}
+            <button type="button" class="link-button on-paper" disabled={busy()} onClick={() => act(props.onUnmark)}>
+              Undo
+            </button>
+          </p>
+        }
+      >
+        <Show
+          when={asking()}
+          fallback={
+            <p class="wrong-ask">
+              <button type="button" class="link-button on-paper" onClick={() => setAsking(true)}>
+                This was wrong
+              </button>
+            </p>
+          }
+        >
+          <div class="wrong-card" role="group" aria-labelledby="wrong-title">
+            <p class="wrong-title" id="wrong-title">
+              Keep this as a test for Ola?
+            </p>
+            <p class="wrong-body">Ola’s team will read your request and this answer, here on Ola’s computer, to make a test that Ola has to pass after every update. Nothing else from this project is kept, and you can undo it.</p>
+            <label class="wrong-why">
+              <span>What was wrong? (optional)</span>
+              <textarea rows={2} maxLength={2000} value={why()} onInput={(e) => setWhy(e.currentTarget.value)} />
+            </label>
+            <Show when={problem()}>
+              <p class="wrong-problem" role="alert">
+                {problem()}
+              </p>
+            </Show>
+            <div class="wrong-actions">
+              <button type="button" class="primary-button small" disabled={busy()} onClick={() => act(() => props.onMark(why().trim()))}>
+                Yes, keep it as a test
+              </button>
+              <button type="button" class="ghost-button small" disabled={busy()} onClick={() => setAsking(false)}>
+                Not now
+              </button>
+            </div>
+          </div>
+        </Show>
+      </Show>
+    </div>
   )
 }
 

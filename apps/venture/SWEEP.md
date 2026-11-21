@@ -303,6 +303,12 @@ reason, one that is gets its checks.
   the largest group) and how many became test tasks: made-up copies scored against Claude, whose
   losses are candidates (`admin.mjs compare candidates` on the Ola machine), and drafts from kept
   conversations (`admin.mjs switches tasks`). The largest group gets the Friday fix (below).
+- Ola's own failures (OLA-235): `admin.mjs faults --days 1` on the Ola machine counts the day's
+  requests where Ola said it cannot, a step failed or the request stopped, by kind. The most
+  frequent kind that is not already a case becomes cases in the request tests the same day: a real
+  sentence for it (`admin.mjs kept --days 1`, or a mark) through `evals/asks/add-case.mjs`. Every
+  answer a person marked "This was wrong" (`admin.mjs wrong`; "waiting" on the board) becomes a case
+  with `add-case.mjs --from-wrong <n>`, its `--must` written from what the person said was wrong.
 - Each failed test and each thing Bart said about Ola's output.
 - How requests are routed and approved: the wrong engine, an approval asked too often or not at
   all, a step that took too long, an alarm on the machine.

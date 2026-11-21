@@ -131,7 +131,7 @@ export type Claim = { who: string; role?: string; since?: string; at: string }
 export type Learning = {
   at: string
   kit: { percent: number; label: string; corrections: number; repeats: number; latest_day?: { day: string; corrections: number; repeats: number }; by_day?: { day: string; corrections: number; repeats: number }[]; steers?: { day: string; rate: number }; replay?: { prevented: number; of: number }; goal: number; errors?: { day: string; n: number; repeats: number; total: number; since: string }; escapes?: { total: number; by_day: { day: string; n: number }[]; latest: { day: string; n: number } | null; label: string }; only_written?: { id: string; name: string; seen: number; stuck: string | null }[] | null; owed?: { n: number; overdue: number; oldest_days: number | null; list: { ref: string; weakness: string; name: string; issue: string; need: number; since: string }[]; label: string }; overrides?: { day: string; n: number; label: string } }
-  ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number; switches?: Switches }
+  ola: { percent: number; label: string; model: string; own?: { passed: number; runs: number; rate: number }; claude?: { passed: number; runs: number; rate: number }; measured?: string; rounds?: { date: string; model: string; rate: number; share: number }[]; open?: string[]; goal: number; switches?: Switches; faults?: Faults }
   weaknesses?: Weakness[]
   doc: string
 }
@@ -151,6 +151,21 @@ export type Switches = {
   largest: { kind: string; words: string; n: number } | null
   tasks: { copies: number; candidates: number; waiting: number; kept: number; labels_only: number }
   by_day: { day: string; requests: number; switches: number }[]
+}
+/** Ola's own failures (OLA-235; apps/activist-ai/frontdesk/faults.mjs, read by scripts/venture/
+ *  learning.mjs): requests where Ola told the person it cannot, a step failed, or the request stopped,
+ *  by kind, over the last `days` days; and answers people marked "This was wrong". Labels and counts only. */
+export type Faults = {
+  at: string
+  days: number
+  requests: number
+  turns: number
+  per100: number | null
+  types: { refusal: number; step: number; run: number }
+  kinds: { kind: string; type: 'refusal' | 'step' | 'run'; words: string; n: number }[]
+  largest: { kind: string; words: string; n: number } | null
+  wrong: { marked: number; cases: number; waiting: number }
+  by_day: { day: string; turns: number; refusal: number; step: number; run: number }[]
 }
 /** One named weakness of Kit or of Ola (scripts/venture/_weak.mjs; Bart, Nov 18: "a system that gets
  *  smarter and better each day by studying what it did wrong, how to prevent that same

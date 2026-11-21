@@ -40,6 +40,12 @@
 //                  the board's Learning page reads the --json
 //   node admin.mjs switches tasks [--kind app] [--days 7] [--json]   the draft test tasks from kept conversations
 //                  (people who store them): the request word for word, both attempts; on this machine only
+//   node admin.mjs faults [--days 7] [--json]          when Ola told a person it cannot, a step failed, or a request
+//                  stopped (OLA-235): labels and counts only (per 100 requests, by kind, by day); the board
+//                  reads the --json
+//   node admin.mjs wrong [--days 30] [--id n] [--json] answers people marked "This was wrong", with their yes: the
+//                  request and the answer word for word, on this machine only; add-case.mjs --from-wrong <id> reads it
+//   node admin.mjs wrong case <id> <case-id>          records the asks case written from a mark
 //   node admin.mjs app-allowance <handle> <tokens|default>   their weekly allowance on Ola from the Mac app and
 //                  the command line (all their computers together); default: the gateway's own number.
 //                  (allow-devices and disallow-devices are no longer needed: every active account may.)
@@ -87,6 +93,7 @@ import { writeHostedGrants } from './hosted.mjs'
 import { writeBatchGrants } from './jobs.mjs'
 import { leftovers, weekly } from './compare.mjs'
 import { drafts, KINDS as WORK_KINDS, summary as switchSummary } from './switches.mjs'
+import { marks as wrongMarks, summary as faultSummary } from './faults.mjs'
 import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 import { makeSiteNames, makeSites } from './sites.mjs'
@@ -644,6 +651,40 @@ switch (cmd) {
     console.log(`  to Claude ${s.to.claude}, to the hosted model ${s.to.hosted}; asked ${s.reasons.asked}, stuck ${s.reasons.stuck}, always ${s.reasons.always}`)
     console.log(`  by kind: ${s.kinds.map((k) => `${k.words} ${k.n}`).join(', ') || 'none'}${s.largest ? `; the largest group: ${s.largest.words}` : ''}`)
     console.log(`  test tasks: ${s.tasks.copies} made-up copies (${s.tasks.candidates} became candidates), ${s.tasks.waiting} waiting, ${s.tasks.kept} drafts from kept conversations, ${s.tasks.labels_only} labels only`)
+    break
+  }
+  case 'faults': {
+    const days = Number(flags.days ?? 7)
+    if (!Number.isFinite(days) || days <= 0 || days > 3650) fail('--days: 1 to 3650')
+    if (args[0]) fail('faults [--days 7] [--json]')
+    const s = faultSummary(db, { days })
+    if (flags.json) { console.log(JSON.stringify(s)); break }
+    console.log(`${s.turns} request(s) of ${s.requests} went wrong in the last ${days} day(s)${s.per100 === null ? '' : `: ${s.per100} per 100`}`)
+    console.log(`  said it cannot ${s.types.refusal}, steps that failed ${s.types.step}, requests that stopped ${s.types.run}`)
+    for (const k of s.kinds) console.log(`  ${String(k.n).padStart(4)}  ${k.words} (${k.kind})`)
+    console.log(`  marked wrong by people: ${s.wrong.marked} (${s.wrong.cases} made into test cases, ${s.wrong.waiting} waiting)`)
+    break
+  }
+  case 'wrong': {
+    if (args[0] === 'case') {
+      const [, id, caseId] = args
+      if (!/^\d+$/.test(id ?? '') || !/^[a-z0-9-]{2,60}$/.test(caseId ?? '')) fail('wrong case <id> <case-id>')
+      const r = db.prepare('UPDATE wrong_marks SET case_id = ? WHERE id = ?').run(caseId, Number(id))
+      if (!r.changes) fail(`no mark ${id}`)
+      console.log(`mark ${id}: case ${caseId}`)
+      break
+    }
+    if (args[0]) fail('wrong [--days 30] [--id n] [--json] | wrong case <id> <case-id>')
+    const days = Number(flags.days ?? 30)
+    const list = wrongMarks(db, { days, id: flags.id ? Number(flags.id) : null })
+    if (flags.json) { console.log(JSON.stringify(list, null, 1)); break }
+    for (const m of list) {
+      console.log(`#${m.id}  ${m.when}  ${m.handle} in ${m.project}  ${m.engine}${m.kinds.length ? `  ${m.kinds.join(', ')}` : ''}${m.case ? `  case ${m.case}` : '  no case yet'}`)
+      console.log(`    asked: ${m.request.replace(/\s+/g, ' ').slice(0, 400)}`)
+      console.log(`    answer: ${m.answer.replace(/\s+/g, ' ').slice(0, 300)}`)
+      if (m.why) console.log(`    why: ${m.why.replace(/\s+/g, ' ').slice(0, 300)}`)
+    }
+    console.log(`${list.length} mark(s)`)
     break
   }
   case 'kept': {

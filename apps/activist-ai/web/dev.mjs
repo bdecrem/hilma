@@ -32,6 +32,7 @@ import { makeHostedStandin } from './server/hosted-standin.mjs'
 import { makeCompareStandin } from './server/compare-standin.mjs'
 import { openDb } from '../frontdesk/db.mjs'
 import { makeJobs } from '../frontdesk/jobs.mjs'
+import { makeFaults } from '../frontdesk/faults.mjs'
 import { ACCEPTABLE_USE, folderCtx, makeSites, sitesConfig } from '../frontdesk/sites.mjs'
 import { startFakeVercel } from './server/fake-vercel.mjs'
 const fixtureName = fixture.project.name
@@ -294,6 +295,8 @@ const pyJson = (args) =>
     })
   })
 let devJobs = null
+// "This was wrong" (OLA-235): the front desk's own code, on the dev opencode.
+const devFaults = makeFaults({ db: devDb, workspaces: { oc: (_slug, m, pathname) => oc(m, pathname) } })
 const hostedStandin = makeHostedStandin({ oc, grantsFile: hostedEnv.GATEWAY_HOSTED_FILE ?? path.join(run, 'gateway-hosted-unused'), provider: hostedEnv.HOSTED_BASE_URL ? HOSTED_PROVIDER : null, usage: gatewayUsage, claudeInfo: () => claudeStandin.info(), role: () => devRole })
 devJobs = makeJobs({
   db: devDb,
@@ -345,6 +348,19 @@ const server = http.createServer(async (req, res) => {
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/role' && req.method === 'POST') {
       devRole = url.searchParams.get('to') === 'member' ? 'member' : 'owner'
       return json(res, 200, { role: devRole, claudeOnce: claudeStandin.st.onceRuns ?? 0 })
+    }
+    if (p === '/api/wrong' && req.method === 'GET') return json(res, 200, { marked: devFaults.marked(devWs.id, devPerson, url.searchParams.get('conversation')) })
+    if (p === '/api/wrong' && (req.method === 'POST' || req.method === 'DELETE')) {
+      if (devRole !== 'owner' && devRole !== 'member') return json(res, 403, { error: 'read_only' })
+      let raw = ''
+      for await (const c of req) raw += c
+      let body = null
+      try {
+        body = JSON.parse(raw || 'null')
+      } catch {}
+      if (!body) return json(res, 400, { error: 'bad_json' })
+      const r = req.method === 'POST' ? await devFaults.mark(devWs, devPerson, body) : devFaults.unmark(devWs, devPerson, body)
+      return json(res, r.status, r.body)
     }
     if (p === '/api/project' && req.method === 'GET') return json(res, 200, await projectPayload(files))
     if (p === '/api/site' && req.method === 'GET') return json(res, 200, { published: devSites.status('dev-project'), canPublish: devRole === 'owner', configured: true, origin: fakeVercel.origin, acceptableUse: ACCEPTABLE_USE })

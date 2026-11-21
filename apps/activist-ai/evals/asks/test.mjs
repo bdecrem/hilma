@@ -192,6 +192,16 @@ test('add-case takes the sentence from the stored conversation, word for word, w
   assert.match(r.stdout, /could not be read/)
   assert.equal(cases()[4].from.words, 'description')
   assert.notEqual(run('--from-log', 'members', '--places', 'cloud-web:chat').status, 0)
+  // OLA-235: an answer a person marked "This was wrong": the request as the project had it, with the mark's number
+  writeFileSync(path.join(dir, 'wrong.json'), JSON.stringify([{ id: 7, at: at2, project: 'hello', handle: 'dana', request: 'send this flyer as a text to my phone', answer: "I don't have a tool for that.", why: 'it should say how', kinds: ['no_tool'] }]))
+  const env2 = { ...env, OLA_ASKS_WRONG_JSON: path.join(dir, 'wrong.json') }
+  const runW = (...a) => spawnSync(process.execPath, [path.join(dir, 'add-case.mjs'), ...a, '--must', 'says:x', '--ticket', 'OLA-999'], { encoding: 'utf8', env: env2 })
+  r = runW('--from-wrong', '7', '--places', 'cloud-web:chat')
+  assert.equal(r.status, 0, r.stderr)
+  const w = cases().at(-1)
+  assert.equal(w.say, 'send this flyer as a text to my phone')
+  assert.deepEqual([w.from.words, w.from.mark, w.from.handle, w.from.what], ['log', 7, 'dana', 'marked wrong: it should say how'])
+  assert.notEqual(runW('--from-wrong', '8', '--places', 'cloud-web:chat').status, 0, 'no such mark: nothing written')
 })
 
 test('OLA-232: the network excuse is a failure for any request; a not-offered case may say it cannot', () => {

@@ -691,6 +691,44 @@ const MIGRATIONS = [
   ) STRICT;
   CREATE INDEX site_names_person ON site_names(person_id);
   `,
+  // 18: Ola counting its own failures (OLA-235, faults.mjs). `faults`: labels only, one row per kind
+  // of failure in a turn (no request, answer, file name or person); `turn_key` (an opencode id or a
+  // kept turn's id, never content) only so a turn is counted once. `wrong_marks`: "This was wrong",
+  // the request and Ola's answer word for word, kept because the person said yes to exactly that;
+  // deleted when they take the mark back. `case_id`: the asks case written from it (add-case.mjs).
+  `
+  CREATE TABLE faults (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    runtime TEXT NOT NULL CHECK (runtime IN ('local', 'cloud')),
+    engine TEXT NOT NULL CHECK (engine IN ('ola', 'hosted', 'claude')),
+    type TEXT NOT NULL CHECK (type IN ('refusal', 'step', 'run')),
+    kind TEXT NOT NULL CHECK (length(kind) <= 40 AND kind NOT GLOB '*[^a-z_]*'),
+    work TEXT NOT NULL CHECK (work IN ('app', 'design', 'document', 'data', 'research', 'other')),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    kept_turn_id INTEGER REFERENCES kept_turns(id) ON DELETE SET NULL,
+    turn_key TEXT NOT NULL CHECK (length(turn_key) <= 160),
+    UNIQUE (turn_key, kind)
+  ) STRICT;
+  CREATE INDEX faults_at ON faults(at);
+  CREATE TABLE wrong_marks (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    person_id INTEGER NOT NULL REFERENCES people(id),
+    session TEXT NOT NULL CHECK (length(session) <= 120),
+    turn_id TEXT NOT NULL CHECK (length(turn_id) <= 120),
+    engine TEXT NOT NULL CHECK (engine IN ('ola', 'hosted', 'claude')),
+    work TEXT NOT NULL,
+    kinds TEXT NOT NULL,
+    request TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    why TEXT,
+    case_id TEXT,
+    UNIQUE (workspace_id, session, turn_id, person_id)
+  ) STRICT;
+  CREATE INDEX wrong_marks_at ON wrong_marks(at);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */

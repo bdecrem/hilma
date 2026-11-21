@@ -38,6 +38,8 @@
 //   --wake                    also read cloud projects whose computer is stopped
 //   --separate                each --before sentence and the case in a conversation of its own (a
 //                             person coming back to a project that published before; OLA-267)
+//   --from-wrong <n>          take the sentence from an answer a person marked "This was wrong" (OLA-235;
+//                             admin.mjs wrong lists them); the mark records the case's id
 // Off the Ola machine it asks it over ssh (OLA_ASKS_HOST, default admin@100.95.51.98).
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -50,23 +52,35 @@ const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'cases.json
 const argv = process.argv.slice(2)
 const many = (name) => argv.flatMap((a, i) => (a === name && argv[i + 1] !== undefined ? [argv[i + 1]] : []))
 const one = (name, dflt) => many(name).at(-1) ?? dflt
-const flags = new Set(['--places', '--runtime', '--must', '--must-not', '--ticket', '--id', '--what', '--date', '--minutes', '--from-log', '--pick', '--handle', '--days', '--before'])
+const flags = new Set(['--from-wrong', '--places', '--runtime', '--must', '--must-not', '--ticket', '--id', '--what', '--date', '--minutes', '--from-log', '--pick', '--handle', '--days', '--before'])
 const given = argv.find((a, i) => !a.startsWith('--') && !flags.has(argv[i - 1]))
 const fail = (m) => (console.error(m), process.exit(2))
-if (!given && !one('--from-log')) fail('usage: add-case.mjs "<the person\'s sentence>" | --from-log "<words or time>"  --runtime cloud,local --must "<outcome>" --ticket OLA-nnn')
+if (!given && !one('--from-log') && !one('--from-wrong')) fail('usage: add-case.mjs "<the person\'s sentence>" | --from-log "<words or time>"  --runtime cloud,local --must "<outcome>" --ticket OLA-nnn')
 
 // ---------------------------------------------------------------- the stored conversation
 const handle = one('--handle', 'bart')
 const days = one('--days', '2')
 function readLog() {
   if (process.env.OLA_ASKS_LOG_JSON) return JSON.parse(readFileSync(process.env.OLA_ASKS_LOG_JSON, 'utf8'))
-  const cmd = ['frontdesk/admin.mjs', 'asked', handle, '--days', days, '--json', ...(argv.includes('--wake') ? ['--wake'] : [])]
+  return admin(['asked', handle, '--days', days, '--json', ...(argv.includes('--wake') ? ['--wake'] : [])])
+}
+/** One admin.mjs command on the Ola machine (here, or over ssh); its last line of JSON, or { error }. */
+function admin(args, { raw = false } = {}) {
+  const cmd = ['frontdesk/admin.mjs', ...args]
   const here = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
   const r = existsSync(path.join(here, 'frontdesk/admin.mjs'))
     ? spawnSync(process.execPath, cmd, { cwd: here, encoding: 'utf8', timeout: 240_000 })
     : spawnSync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', process.env.OLA_ASKS_HOST || 'admin@100.95.51.98', `cd ~/ola-staging/current/apps/activist-ai && node ${cmd.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(' ')}`], { encoding: 'utf8', timeout: 240_000 })
   if (r.status !== 0) return { error: (r.stderr || r.error?.message || `exit ${r.status}`).trim().split('\n').pop() }
+  if (raw) return { out: r.stdout }
   try { return JSON.parse(r.stdout.trim().split('\n').pop()) } catch { return { error: 'the Ola machine did not answer with the list' } }
+}
+// A mark "This was wrong" (OLA-235): the request as the project had it, kept with the person's yes.
+function readMark(n) {
+  if (process.env.OLA_ASKS_WRONG_JSON) return JSON.parse(readFileSync(process.env.OLA_ASKS_WRONG_JSON, 'utf8'))
+  const r = admin(['wrong', '--id', String(n), '--json'], { raw: true })
+  if (r.error) return r
+  try { return JSON.parse(r.out) } catch { return { error: 'the Ola machine did not answer with the mark' } }
 }
 const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase()
 const pacific = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -85,9 +99,18 @@ function atOf(q) {
 }
 let say = given
 let source = null
-const log = readLog()
+const fromWrong = one('--from-wrong')
+const log = fromWrong ? { rows: [] } : readLog()
 const rows = log.rows ?? []
-if (one('--from-log')) {
+if (fromWrong) {
+  if (!/^\d+$/.test(fromWrong)) fail('--from-wrong <n>: the number admin.mjs wrong prints')
+  const list = readMark(fromWrong)
+  if (list.error) fail(`the mark could not be read (${list.error})`)
+  const m = Array.isArray(list) ? list.find((x) => String(x.id) === fromWrong) : null
+  if (!m) fail(`no mark #${fromWrong} on the Ola machine (admin.mjs wrong lists them)`)
+  say = m.request.trim()
+  source = { at: m.at, place: 'cloud-web:chat', source: `marked wrong #${m.id} by ${m.handle} in ${m.project}`, runtime: 'cloud', mark: m.id, why: m.why }
+} else if (one('--from-log')) {
   if (log.error) fail(`the stored conversation could not be read (${log.error}). Give his sentence as he typed it instead; the case records it as a description.`)
   const q = one('--from-log')
   const at = atOf(q)
@@ -146,13 +169,18 @@ const c = {
   from: {
     date: one('--date', source ? new Date(source.at).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) : new Date().toISOString().slice(0, 10)),
     ticket,
-    what: one('--what', ''),
+    what: one('--what', source?.why ? `marked wrong: ${source.why}` : ''),
     words: source ? 'log' : 'description',
-    ...(source ? { handle, at: new Date(source.at).toISOString(), where: source.place ?? `${source.runtime} (${source.source})`, log: source.source } : {}),
+    ...(source?.mark ? { mark: source.mark } : {}),
+    ...(source ? { handle: source.mark ? source.source.split(' by ')[1].split(' in ')[0] : handle, at: new Date(source.at).toISOString(), where: source.place ?? `${source.runtime} (${source.source})`, log: source.source } : {}),
   },
 }
 doc.cases.push(c)
 writeFileSync(file, JSON.stringify(doc, null, 2) + '\n')
 console.log(`added ${id} (${places.join(', ')}), ${c.passes} passes needed: ${must.join('; ')}`)
 console.log(source ? `his words, from the log: "${say}" (${pacific(source.at)}, ${c.from.where})` : `his words, as described: "${say}"`)
+if (source?.mark && !process.env.OLA_ASKS_WRONG_JSON) {
+  const r = admin(['wrong', 'case', String(source.mark), id], { raw: true })
+  console.log(r.error ? `note: the mark was not updated with the case (${r.error}); run admin.mjs wrong case ${source.mark} ${id} on the Ola machine` : `mark #${source.mark} now names case ${id}`)
+}
 console.log(`next: commit evals/asks/cases.json with [${ticket}]; to try it now on the test server: node evals/asks/run.mjs --case ${id}`)

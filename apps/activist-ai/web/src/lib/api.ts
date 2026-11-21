@@ -205,6 +205,12 @@ export const hosted = {
   run: (body: { request: string; conversation: string; once?: boolean; why?: 'asked' | 'stuck'; switchedFrom?: 'ola'; fromMessage?: string }) => post<{ ok: true; run: string; provider: string }>('/api/hosted/run', body),
 }
 
+/** "This was wrong" (OLA-235, frontdesk/faults.mjs): the person's yes keeps that request and Ola's answer as a test case to write. */
+export const wrong = {
+  marked: (conversation: string) => call<{ marked: string[] }>(`/api/wrong?conversation=${encodeURIComponent(conversation)}`),
+  mark: (conversation: string, turn: string, why: string) => post<{ ok: true; id: number; already?: boolean }>('/api/wrong', { conversation, turn, why, yes: true }),
+  unmark: (conversation: string, turn: string) => call<{ ok: true; deleted: number }>('/api/wrong', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ conversation, turn }) }),
+}
 /** "Compare with Claude" (frontdesk/compare.mjs): owner only. */
 export const compare = {
   info: (conversation?: string | null) => call<import('./types.ts').CompareInfo>(`/api/compare${conversation ? `?conversation=${encodeURIComponent(conversation)}` : ''}`),

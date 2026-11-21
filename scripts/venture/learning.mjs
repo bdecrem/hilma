@@ -108,6 +108,26 @@ else {
   console.log(`Switches: ${sw.switches} in ${sw.requests} requests over ${sw.days} days${sw.per100 === null ? '' : ` (${sw.per100} per 100)`}${sw.largest ? `; the largest group: ${sw.largest.words} (${sw.largest.n})` : ''}`)
 }
 
+// Ola's own failures (OLA-235): requests where Ola said it cannot, a step failed or the request
+// stopped, by kind, and answers people marked "This was wrong" (frontdesk/faults.mjs, `admin.mjs faults
+// --json`): labels and counts only, the same way as the switches.
+function machineFaults() {
+  const r = spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', 'export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs faults --json --days 7'], { encoding: 'utf8', timeout: 30000 })
+  if (r.status !== 0) return { error: (r.stderr || 'the Ola machine did not answer').trim().split('\n').pop().slice(0, 200) }
+  try {
+    const s = JSON.parse(r.stdout.trim().split('\n').pop())
+    return typeof s.turns === 'number' && Array.isArray(s.kinds) ? s : { error: 'the Ola machine answered something else' }
+  } catch {
+    return { error: 'the Ola machine answered something else' }
+  }
+}
+const fl = machineFaults()
+if (fl.error) console.log(`faults: not read (${fl.error})`)
+else {
+  ola.faults = fl
+  console.log(`Faults: ${fl.turns} of ${fl.requests} requests over ${fl.days} days${fl.per100 === null ? '' : ` (${fl.per100} per 100)`}${fl.largest ? `; the most frequent: ${fl.largest.words} (${fl.largest.n})` : ''}; marked wrong ${fl.wrong.marked}`)
+}
+
 // The weaknesses ledger (scripts/venture/_weak.mjs): every correction and sweep finding filed under
 // a named weakness, with whether its guard is holding.
 const weaknesses = weaknessStatus(loadWeaknesses(root), new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }))
@@ -153,6 +173,10 @@ if (!dry) {
   )
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   const { data: st } = await db.from('venture_state').select('key, value').in('key', ['steers', 'steer_replay', 'learning'])
+  if (!value.ola.faults) {
+    const prev = st?.find((x) => x.key === 'learning')?.value?.ola?.faults
+    if (prev) value.ola.faults = prev // the last reading, with its own `at`
+  }
   if (!value.ola.switches) {
     const prev = st?.find((x) => x.key === 'learning')?.value?.ola?.switches
     if (prev) value.ola.switches = prev // the last reading, with its own `at`

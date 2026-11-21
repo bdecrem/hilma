@@ -2146,6 +2146,66 @@ button.thing-action {
 .ask-claude {
   margin-top: var(--s3);
 }
+/* "This was wrong" under an answer (OLA-235): a quiet link, then one card with the yes. */
+.wrong-mark {
+  margin-top: var(--s2);
+}
+.wrong-ask,
+.wrong-kept {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--fs-ui);
+}
+.wrong-card {
+  margin-top: var(--s2);
+  padding: var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  max-width: 560px;
+}
+.wrong-title {
+  margin: 0 0 var(--s2);
+  font-weight: 650;
+  color: var(--ink);
+}
+.wrong-body {
+  margin: 0 0 var(--s3);
+  color: var(--ink-2);
+  font-size: var(--fs-ui);
+  line-height: 1.45;
+}
+.wrong-why {
+  display: grid;
+  gap: var(--s1);
+  margin-bottom: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--fs-ui);
+}
+.wrong-why textarea {
+  width: 100%;
+  padding: var(--s2);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+.wrong-problem {
+  margin: 0 0 var(--s3);
+  color: var(--vermilion-text);
+}
+.wrong-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+.wrong-actions .primary-button {
+  min-height: 36px;
+  padding: 0 var(--s3);
+  font-size: var(--fs-ui);
+}
 .settings .setting {
   margin-top: var(--s6);
   max-width: 760px;

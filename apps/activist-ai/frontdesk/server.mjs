@@ -38,6 +38,7 @@ import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
+import { makeFaults } from './faults.mjs'
 import { NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
@@ -242,6 +243,7 @@ export function makeFrontDesk(cfg = config()) {
   // VM before it goes on, with a note in front of it when Claude or the hosted model worked in that
   // conversation since Ola's last turn; its run's end records what it changed.
   let madeBy = null
+  let faults = null
   const onPrompt = async (slug, sessionID, text) => {
     // A request that names Claude gets the fact of whether Claude can take it here (claude.mjs claudeNote, OLA-232).
     const wsRow = NAMES_CLAUDE.test(text ?? '') ? db.prepare('SELECT id, slug FROM workspaces WHERE slug = ?').get(slug) : null
@@ -268,12 +270,18 @@ export function makeFrontDesk(cfg = config()) {
     log(`${slug}: a publish ask was answered no for the person (${parsed.bad ? 'not a form we act on' : 'its check refused it'})`)
     await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: `Not published, and the person was not asked: ${why}` })
   }
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' }) })
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => {
+    madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' })
+    // OLA-235: what went wrong in the turn, as labels (faults.mjs); never the request or the answer.
+    const wsId = db.prepare('SELECT id FROM workspaces WHERE slug = ?').get(slug)?.id
+    if (wsId) faults?.fromRun(slug, wsId, sessionID).catch((e) => log(`faults: not read in ${slug} (${e?.message ?? e})`))
+  } })
+  faults = makeFaults({ db, workspaces, log })
   madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), served: (slug, session, since) => gatewayServed(cfg.claude, `ws-${slug}`, session, since), log })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })
-  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, onPeople: () => hosted.writeGrants(),
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, faults, onPeople: () => hosted.writeGrants(),
     // OLA-181: one person's kept requests become worked examples in every project's VM (examples.mjs).
     onKept: (personId) => {
       const who = db.prepare('SELECT handle FROM people WHERE id = ?').get(personId)?.handle
@@ -627,6 +635,17 @@ export function makeFrontDesk(cfg = config()) {
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
     // front desk's memory: no exec, does not wake the workspace, is not use.
     if (p === '/api/runs' && req.method === 'GET') return json(res, 200, workspaces.runsOf(ws.slug))
+    // "This was wrong" (OLA-235, faults.mjs): the person's yes keeps that request and Ola's answer, on
+    // this machine, as a test case to write. GET: which turns of a conversation this person marked.
+    if (p === '/api/wrong' && req.method === 'GET') return json(res, 200, { marked: faults.marked(ws.id, sess.personId, url.searchParams.get('conversation')) })
+    if (p === '/api/wrong' && (req.method === 'POST' || req.method === 'DELETE')) {
+      if (!canRun) return json(res, 403, readOnly)
+      const body = await readJson(req, 16 * 1024)
+      if (!body) return json(res, 400, { error: 'bad_json' })
+      if (req.method === 'POST') await workspaces.ensureRunning(ws.slug)
+      const r = req.method === 'POST' ? await faults.mark(ws, sess.personId, body) : faults.unmark(ws, sess.personId, body)
+      return json(res, r.status, r.body)
+    }
     // Which engine last changed each file (OLA-224): the project's own record, `ola-db made-by
     // --json` inside the VM (names, engines and times only), for Files. One exec, one transfer slot.
     if (p === '/api/made-by' && req.method === 'GET') {

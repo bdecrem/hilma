@@ -201,7 +201,7 @@ export const deviceView = (d) => ({
 
 // ---------------------------------------------------------------- the server's half
 
-export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null, onPeople = null, onKept = null }) {
+export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null, faults = null, onPeople = null, onKept = null }) {
   const key = cfg.key
   const enabled = !!key
   const codes = new Map() // pass id -> { challenge, personId, name, kind, exp }
@@ -417,6 +417,8 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
       Number.isFinite(b.seconds) ? Math.max(0, Math.round(b.seconds)) : null, t.request, t.answer, JSON.stringify(steps), one(b.switched_from, KEPT.engine))
     // A switch to a fallback (OLA-157): its labels, and the kept turns are its draft test task.
     if (switches && one(b.switched_from, KEPT.engine)) switches.fromKept(db.prepare('SELECT id FROM kept_turns WHERE person_id = ? AND session = ? AND turn = ?').get(dev.personId, t.session, t.turn).id)
+    // What went wrong in a turn run on the Mac (OLA-235): labels only; a cloud turn was counted when its run ended.
+    if (faults && t.runtime === 'local') faults.fromKept(db.prepare('SELECT id FROM kept_turns WHERE person_id = ? AND session = ? AND turn = ?').get(dev.personId, t.session, t.turn).id)
     keptChanged(dev.personId)
     return json(res, 200, { ok: true })
   }
