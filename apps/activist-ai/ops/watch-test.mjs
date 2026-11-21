@@ -155,6 +155,7 @@ const ENV = () => ({
   OLA_WATCH_KEY_FROM: path.join(T, 'venture.env'),
   OLA_WATCH_SEND_BASE: `http://127.0.0.1:${PORTS.imsg}`,
   OLA_WATCH_PUSH_EVERY_MIN: '0', // the board push is off except in its own test
+  OLA_WATCH_OFF: 'models', // the model check has its own tests (ops/models-test.mjs)
 })
 /** One run at a Pacific wall-clock time on 2026-11-17 (PST, UTC-8), e.g. at('14:00'). */
 const at = (hhmm, day = 17) => {

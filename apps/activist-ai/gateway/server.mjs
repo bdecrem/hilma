@@ -75,8 +75,10 @@ const SETTINGS = {
   // A person's own caller (p-<id>, from GATEWAY_PEOPLE_TOKENS_FILE): their week's tokens, all their
   // devices together. 0: the same as GATEWAY_WEEKLY_TOKENS.
   GATEWAY_PEOPLE_WEEKLY_TOKENS: [0, 0, 1e12],
+  // The model check's own caller (`probe`, OLA-214): its week's tokens, apart from everyone else's.
+  GATEWAY_PROBE_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PROBE_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -135,6 +137,11 @@ function loadConfig(env) {
   const peopleFile = env.GATEWAY_PEOPLE_TOKENS_FILE ? resolve(env.GATEWAY_PEOPLE_TOKENS_FILE) : null
   const people = peopleFile ? readPeople(peopleFile, tokens, (m) => console.error(`people: ${m}`)) ?? [] : []
   tokens.push(...people)
+  // GATEWAY_PROBE_FILE (OLA-214; default: gateway-probe beside GATEWAY_TOKENS_FILE): the model
+  // check's token (ops/models.mjs writes it, mode 600). Its caller, `probe`, sends made-up requests
+  // on the machine's own port to see whether each model still answers a real-size one.
+  const probeFile = env.GATEWAY_PROBE_FILE ? resolve(env.GATEWAY_PROBE_FILE) : tokensFile ? join(dirname(tokensFile), 'gateway-probe') : null
+  tokens.push(...readProbe(probeFile, tokens, (m) => console.error(`probe: ${m}`)))
   const names = new Set(tokens.map((t) => t.name))
   const digests = new Set(tokens.map((t) => t.digest.toString('hex')))
   let usageDigest = null
@@ -191,6 +198,7 @@ function loadConfig(env) {
   // GATEWAY_QUOTAS: "name=tokens per week" for callers who differ from GATEWAY_WEEKLY_TOKENS
   const peopleWeekly = num.GATEWAY_PEOPLE_WEEKLY_TOKENS || num.GATEWAY_WEEKLY_TOKENS
   const quotas = new Map([...names].map((n) => [n, isPersonName(n) ? peopleWeekly : num.GATEWAY_WEEKLY_TOKENS]))
+  quotas.set(PROBE, num.GATEWAY_PROBE_WEEKLY_TOKENS)
   const envPeopleQuotas = new Map()
   if (env.GATEWAY_QUOTAS) {
     env.GATEWAY_QUOTAS.split(',').forEach((pair, i) => {
@@ -236,6 +244,8 @@ function loadConfig(env) {
     key,
     tokens,
     tokensFile,
+    probeFile,
+    probeWeekly: num.GATEWAY_PROBE_WEEKLY_TOKENS,
     peopleFile,
     people: new Set(people.map((t) => t.name)),
     peopleQuotasFile,
@@ -288,6 +298,7 @@ function readTokens(line, file, bad) {
       if (!TOKEN.test(token)) return bad(`${where} entry ${i + 1} (${name}): the token must be 24 to 512 printable characters with no space or comma`)
       const digest = sha(token)
       if (name === 'usage') return bad(`${where} entry ${i + 1}: the name usage is reserved for the usage token`)
+      if (name === PROBE) return bad(`${where} entry ${i + 1}: the name probe is reserved for the model check (GATEWAY_PROBE_FILE)`)
       // p-<id> is a person's caller, given only by the people file (with its standing web grant).
       if (isPersonName(name)) return bad(`${where} entry ${i + 1}: names p-<number> are for GATEWAY_PEOPLE_TOKENS_FILE only`)
       if (names.has(name)) return bad(`${where}: the name ${name} appears twice`)
@@ -312,6 +323,30 @@ function readTokens(line, file, bad) {
     }
   }
   return tokens
+}
+
+/** The model check's caller (OLA-214). */
+const PROBE = 'probe'
+
+/**
+ * The model check's token file: mode 600, one token (24 to 512 printable characters). A missing
+ * file is no probe caller. A file that does not check out is kept out, its problem said by name.
+ */
+function readProbe(file, others, bad) {
+  if (!file) return []
+  let st = null
+  try {
+    st = statSync(file)
+  } catch {
+    return []
+  }
+  if (!st.isFile()) return bad('GATEWAY_PROBE_FILE is not a file'), []
+  if ((st.mode & 0o077) !== 0) return bad('GATEWAY_PROBE_FILE must be readable by this account only (mode 600)'), []
+  const token = readFileSync(file, 'utf8').trim()
+  if (!TOKEN.test(token)) return bad('GATEWAY_PROBE_FILE must hold one token of 24 to 512 printable characters with no space or comma'), []
+  const digest = sha(token)
+  if (others.some((t) => t.digest.equals(digest))) return bad('GATEWAY_PROBE_FILE: this token is already given to another caller'), []
+  return [{ name: PROBE, digest }]
 }
 
 /** A person's caller name: p-<their id in the platform database>. */
@@ -775,6 +810,10 @@ function fault(message, offered) {
 async function complete(body, offered, signal, deadline, tally, overQuota, target = null) {
   let last = 'no attempt made'
   let lastStatus = 502
+  // The model server's own words on its last refusal (OLA-214). Never logged and never sent to an
+  // ordinary caller (they can echo our key; `redact` scrubs every reply anyway): only the model
+  // check's caller gets them, so the alarm can say what the provider said.
+  let said = null
   for (let attempt = 1; attempt <= TRIES; attempt++) {
     // The quota is re-checked before every try: the tokens a slow burst already spent are in the
     // store by now, so a caller cannot keep retrying (or keep its queued requests going) past the
@@ -817,6 +856,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
     }
     if (r.status === 429 || r.status >= 500) {
       last = `the model server answered ${r.status}`
+      said = wordsOf(json, r.text)
       if (attempt < TRIES) await pause(400 * attempt, signal)
       if (signal.aborted) return { status: 499, why: 'the caller went away' }
       continue
@@ -826,7 +866,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
       continue
     }
     if (r.status < 200 || r.status > 299) {
-      const said = typeof json.error?.message === 'string' ? json.error.message : ''
+      said = wordsOf(json, r.text)
       // Together reports the model's own malformed output as a 4xx "Parse error"; that is worth
       // another try. The text is read here only to classify it; it is never sent on.
       if (/parse error|failed to process token/i.test(said)) {
@@ -838,7 +878,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
       // message per status class, and 401/403 is hidden as a 502 so a bad key looks like any
       // other upstream failure.
       const status = r.status === 401 || r.status === 403 ? 502 : r.status >= 400 && r.status <= 499 ? r.status : 502
-      return { status, error: upstreamMessage(r.status), why: `the model server answered ${r.status}` }
+      return { status, error: upstreamMessage(r.status), why: `the model server answered ${r.status}`, said }
     }
     const message = json.choices?.[0]?.message
     if (!message || typeof message !== 'object') {
@@ -853,7 +893,14 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
     if ((message.tool_calls || []).length && !C.keepText) message.content = null
     return { status: 200, json }
   }
-  return { status: lastStatus, error: `${last}, ${TRIES} times`, why: `${last}, ${TRIES} times` }
+  return { status: lastStatus, error: `${last}, ${TRIES} times`, why: `${last}, ${TRIES} times`, said }
+}
+
+/** The model server's own words in a refusal, short and on one line (for the model check only). */
+function wordsOf(json, text) {
+  const e = json?.error
+  const w = typeof e?.message === 'string' ? e.message : typeof e === 'string' ? e : typeof json?.message === 'string' ? json.message : typeof json?.detail === 'string' ? json.detail : String(text || '')
+  return w.replace(/\s+/g, ' ').trim().slice(0, 300) || null
 }
 
 // ---------------------------------------------------------------- talking to the caller
@@ -1029,6 +1076,17 @@ async function handle(req, res, rec, signal) {
   if (rec.route === 'search' || rec.route === 'fetch' || rec.route === 'lookup') return web.handle(req, res, rec, who, signal)
   if (rec.route === 'models' && req.method === 'GET') {
     rec.status = 200
+    // The model check (OLA-214) is told what each name runs on, the backup models and the hosted
+    // slot, so it can try each model the machine depends on and name it when one fails.
+    if (who === PROBE)
+      return send(res, 200, {
+        object: 'list',
+        data: [
+          ...[...C.models].map(([id, upstream]) => ({ id, object: 'model', kind: C.sp.spec[id].kind, upstream })),
+          ...[...C.backups].map(([of, upstream]) => ({ id: `backup:${of}`, object: 'model', kind: 'chat', upstream, backup_of: of })),
+          ...(hosted ? [{ id: 'hosted', object: 'model', kind: 'chat', upstream: C.hosted.model, provider: hosted.provider }] : []),
+        ],
+      })
     return send(res, 200, { object: 'list', data: [...[...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola', kind: C.sp.spec[id].kind, images: C.sp.spec[id].images > 0 })), ...(hosted ? [{ id: 'hosted', object: 'model', owned_by: 'ola', kind: 'chat', images: false }] : [])] })
   }
   // The specialists that are not chat: embed, rerank, transcribe, draw (one name per route).
@@ -1058,6 +1116,15 @@ async function handle(req, res, rec, signal) {
     return no(400, 'the request is not JSON', 'the request is not JSON', 'invalid_request_error')
   }
   if (!body || typeof body !== 'object' || Array.isArray(body)) return no(400, 'the request is not a JSON object', 'the request is not a JSON object', 'invalid_request_error')
+  // The model check (OLA-214) may name a backup model directly (`backup:general`), and its requests
+  // never go anywhere but the model they name: no backup, no design hand-off, so a refusal shows.
+  const isProbe = who === PROBE
+  let probeBackup = null
+  if (isProbe && typeof body.model === 'string' && body.model.startsWith('backup:')) {
+    probeBackup = C.backups.get(body.model.slice('backup:'.length)) ?? null
+    if (!probeBackup) return no(400, 'an unknown model name', 'no backup model by that name', 'invalid_request_error')
+    body.model = body.model.slice('backup:'.length)
+  }
   const isHosted = body.model === 'hosted' && hosted !== null
   if (typeof body.model !== 'string' || !(C.models.has(body.model) || isHosted)) {
     // A specialist name that this machine has no server for: one plain sentence, nothing sent.
@@ -1075,8 +1142,8 @@ async function handle(req, res, rec, signal) {
   // and Ola is told to say that a stronger design model is available.
   let served = body.model
   let note = null
-  if (!isHosted && C.models.has('design') && (body.model === 'design' || (body.model === 'general' && isDesignTurn(body.messages)))) {
-    if (design.may(who)) (served = 'design'), (rec.design = 'served')
+  if (!isHosted && !probeBackup && C.models.has('design') && (body.model === 'design' || (body.model === 'general' && !isProbe && isDesignTurn(body.messages)))) {
+    if (isProbe || design.may(who)) (served = 'design'), (rec.design = 'served')
     else if (C.models.has('general')) (served = 'general'), (note = WITHHELD), (rec.design = 'withheld')
     else return no(403, 'design work may not leave this machine', 'The design model is off for this project. Its owner can turn on the hosted model in Settings.', 'permission_error')
   }
@@ -1085,7 +1152,8 @@ async function handle(req, res, rec, signal) {
   const cap = bodyCap(s)
   if (raw.length > cap) return no(413, 'the body was over the size cap', `the request is larger than ${cap} bytes`, 'invalid_request_error')
   // The hosted open model: only for a project whose owner turned it on, within its month's budget.
-  if (isHosted) {
+  // The model check's made-up request is no project's work and needs no one's yes.
+  if (isHosted && !isProbe) {
     const r = hosted.refusal(who, req)
     if (r) return no(r.status, r.why, r.message, r.type)
   }
@@ -1150,7 +1218,8 @@ async function handle(req, res, rec, signal) {
     const wantStream = body.stream === true
     const wantUsage = body.stream_options?.include_usage === true
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
-    const upstreamBody = { model: isHosted ? hosted.model : C.models.get(served), stream: false }
+    const upstreamBody = { model: isHosted ? hosted.model : (probeBackup ?? C.models.get(served)), stream: false }
+    if (probeBackup) rec.backup = probeBackup
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
     if (served === 'design') {
       // Never a small output allowance for the design model (it answers empty when its reasoning uses it up).
@@ -1162,7 +1231,7 @@ async function handle(req, res, rec, signal) {
     const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
     upstreamBody.messages = withNote(withInstructions(served, body.messages), note)
     out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(served) ?? null))
-    if (served === 'design' && out.status !== 200 && out.status !== 499 && out.status !== 429 && C.models.has('general')) {
+    if (served === 'design' && !isProbe && out.status !== 200 && out.status !== 499 && out.status !== 429 && C.models.has('general')) {
       // The design model refused or failed: Ola's own everyday model does it, once, never a backup model.
       rec.design = 'failed'
       rec.served = served = 'general'
@@ -1173,7 +1242,7 @@ async function handle(req, res, rec, signal) {
       if ('max_completion_tokens' in body) upstreamBody.max_completion_tokens = body.max_completion_tokens
       out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, targets.get('general') ?? null)
     }
-    const backup = isHosted || rec.design ? null : C.backups?.get(body.model)
+    const backup = isHosted || rec.design || isProbe ? null : C.backups?.get(body.model)
     if (out.status !== 200 && backup && /answered 5\d\d/.test(out.why || '')) {
       upstreamBody.model = backup
       rec.backup = backup
@@ -1186,7 +1255,7 @@ async function handle(req, res, rec, signal) {
       else send(res, 200, clean)
     } else {
       rec.why = out.why
-      if (out.status !== 499) fail(res, out.status, out.error, out.type || 'upstream_error', out.headers)
+      if (out.status !== 499) send(res, out.status, { error: { message: out.error, type: out.type || 'upstream_error', ...(isProbe && out.said ? { provider_said: out.said } : {}) } }, out.headers)
     }
   } finally {
     release()
@@ -1423,13 +1492,14 @@ function reloadTokens(why) {
   const peopleProblems = []
   const main = readTokens(process.env.GATEWAY_TOKENS, C.tokensFile, (m) => problems.push(m))
   const mainOk = !problems.length
-  const others = mainOk ? main : C.tokens.filter((t) => !C.people.has(t.name))
+  const others = mainOk ? main : C.tokens.filter((t) => !C.people.has(t.name) && t.name !== PROBE)
   let people = C.peopleFile ? readPeople(C.peopleFile, others, (m) => peopleProblems.push(m)) : []
   // Kept out: the people in force stay, less any whose token a workspace now holds.
   if (people === null) people = C.tokens.filter((t) => C.people.has(t.name) && !others.some((o) => o.digest.equals(t.digest) || o.name === t.name))
   for (const p of problems) console.error(`tokens: ${p}`)
   for (const p of peopleProblems) console.error(`people: ${p}`)
-  const fresh = [...others, ...people]
+  const probe = readProbe(C.probeFile, [...others, ...people], (m) => console.error(`probe: ${m}`))
+  const fresh = [...others, ...people, ...probe]
   const ok = mainOk && !peopleProblems.length
   const next = stateOf(fresh)
   if (next === tokenState) {
@@ -1443,6 +1513,7 @@ function reloadTokens(why) {
   tokenState = next
   for (const n of after) {
     if (C.people.has(n)) C.quotas.set(n, personQuota(n))
+    else if (n === PROBE) C.quotas.set(n, C.probeWeekly)
     else if (!C.quotas.has(n)) C.quotas.set(n, C.weekly)
     queue.addCaller(n)
   }
@@ -1461,7 +1532,7 @@ process.on('SIGHUP', () => reloadTokens('signal'))
 {
   // A change to either file (ws.mjs and the front desk replace theirs by rename) is picked up at
   // once; a stat every few seconds catches what a watch can miss.
-  const files = [C.tokensFile, C.peopleFile, C.peopleQuotasFile].filter(Boolean)
+  const files = [C.tokensFile, C.peopleFile, C.peopleQuotasFile, C.probeFile].filter(Boolean)
   let soon = null
   const later = () => (clearTimeout(soon), (soon = setTimeout(() => reloadTokens('file'), 100)))
   for (const dir of new Set(files.map((f) => dirname(f)))) {

@@ -2158,3 +2158,94 @@ test('design: its settings are checked; with no design model set and not on Toge
     await g.stop()
   }
 })
+
+// ---------------------------------------------------------------- the model check's caller (OLA-214)
+
+test('probe: the model check gets its own caller from a file, sees each model, never a fallback, and the provider\'s words', async () => {
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'probe-'))
+  const tokensFile = path.join(dir, 'gateway-tokens')
+  writeTokens(tokensFile, `ws-one:${T.a}`)
+  const probeFile = path.join(dir, 'gateway-probe')
+  const P = tok()
+  const env = {
+    ...baseEnv(up.url),
+    GATEWAY_TOKENS_FILE: tokensFile,
+    GATEWAY_MODELS: `${MODELS},design=up/design-1`,
+    GATEWAY_BACKUP_MODELS: 'general=up/backup-1',
+    GATEWAY_PROBE_WEEKLY_TOKENS: '3000',
+    HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: `hosted-key-${tok()}`, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: path.join(dir, 'gateway-hosted'),
+  }
+  delete env.GATEWAY_TOKENS
+  const g = await gateway(env)
+  try {
+    // No file yet: no such caller. The file appears (mode 600): it is read within seconds, no restart.
+    assert.equal((await call(g, P, null, { method: 'GET', path: '/v1/models' })).status, 401)
+    writeFileSync(probeFile, `${P}\n`, { mode: 0o600 })
+    const m = await waitFor(async () => {
+      const r = await call(g, P, null, { method: 'GET', path: '/v1/models' })
+      return r.status === 200 && r
+    }, 8000, 'the probe file to be read')
+    const ids = Object.fromEntries(m.json.data.map((x) => [x.id, x.upstream]))
+    assert.deepEqual(ids, { general: 'up/general-1', fast: 'up/fast-1', design: 'up/design-1', 'backup:general': 'up/backup-1', hosted: 'Big/Open-Model-1' })
+    // An ordinary caller sees names only, never what they run on.
+    const plain = await call(g, T.a, null, { method: 'GET', path: '/v1/models' })
+    assert.ok(plain.json.data.every((x) => x.upstream === undefined) && !plain.json.data.some((x) => x.id.startsWith('backup:')))
+    // general refusing: the probe sees the refusal with the provider's words, and no backup is tried.
+    const before = up.st.seen.length
+    const r = await call(g, P, chat({ tag: 'p1', status: 503, error: 'Model is launching soon. Please try again later.' }))
+    assert.equal(r.status, 502)
+    assert.match(r.json.error.message, /answered 503, 3 times/)
+    assert.equal(r.json.error.provider_said, 'Model is launching soon. Please try again later.')
+    assert.ok(!up.st.seen.slice(before).some((x) => x.model === 'up/backup-1'), 'the probe never falls back')
+    // An ordinary caller: the same refusal is covered by the backup, and the provider's words never reach it.
+    const w = await call(g, T.a, chat({ tag: 'p2', failFor: 'up/general-1' }))
+    assert.equal(w.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/backup-1')
+    const w2 = await call(g, T.a, chat({ tag: 'p3', status: 400, error: 'secret-ish provider words' }))
+    assert.ok(!w2.text.includes('secret-ish'), 'only the probe gets the provider\'s words')
+    // The backup model by name, for the probe only.
+    assert.equal((await call(g, P, chat({ tag: 'p4' }, 'backup:general'))).status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/backup-1')
+    assert.equal((await call(g, T.a, chat({ tag: 'p5' }, 'backup:general'))).status, 400)
+    // The design model by name: a failure is the design model's, never handed to general.
+    const d = await call(g, P, chat({ tag: 'p6', status: 500, error: 'design down' }, 'design'))
+    assert.equal(d.status, 502)
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1')
+    // The hosted slot: no project's yes needed for a made-up request (an ordinary caller is refused).
+    assert.equal((await call(g, T.a, chat({ tag: 'p7' }, 'hosted'))).status, 403)
+    assert.equal((await call(g, P, chat({ tag: 'p8' }, 'hosted'))).status, 200)
+    assert.equal(hostedUp.st.seen.at(-1).model, 'Big/Open-Model-1')
+    // Its own small week: used up, it gets the gateway's own 429, and nobody else's week is touched.
+    assert.equal((await call(g, P, chat({ tag: 'p9', usage: [5000, 5] }))).status, 200)
+    const over = await call(g, P, chat({ tag: 'p10' }))
+    assert.equal(over.status, 429)
+    assert.equal(over.json.error.type, 'insufficient_quota')
+    assert.equal((await call(g, T.a, chat({ tag: 'p11' }))).status, 200)
+    // The log keeps its rule: no provider words in it.
+    assert.ok(!g.out.includes('launching soon') && !g.out.includes('secret-ish'), 'the provider\'s words were logged')
+  } finally {
+    await g.stop()
+  }
+})
+
+test('probe: the name is reserved, and a probe file that does not check out is kept out', async () => {
+  const g0 = run({ ...baseEnv('http://127.0.0.1:9/v1'), GATEWAY_TOKENS: `probe:${tok()}` })
+  await waitFor(() => g0.code !== undefined, 5000, 'refusal')
+  assert.equal(g0.code, 1)
+  assert.match(g0.err, /reserved for the model check/)
+  const dir = mkdtempSync(path.join(TMP, 'probe2-'))
+  const f = path.join(dir, 'p')
+  const P = tok()
+  writeFileSync(f, P, { mode: 0o644 })
+  chmodSync(f, 0o644)
+  const g = await gateway({ ...baseEnv('http://127.0.0.1:9/v1'), GATEWAY_PROBE_FILE: f })
+  try {
+    assert.match(g.err, /GATEWAY_PROBE_FILE must be readable by this account only/)
+    assert.ok(!g.err.includes(P))
+    assert.equal((await call(g, P, null, { method: 'GET', path: '/v1/models' })).status, 401)
+  } finally {
+    await g.stop()
+  }
+})

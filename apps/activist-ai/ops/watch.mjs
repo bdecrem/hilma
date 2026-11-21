@@ -29,6 +29,10 @@
 //               a warning
 //   7 nightly   the certificate's days left as served (warn at 21 or fewer: renewal is failing) and
 //               each status file that exists (cert.json, backup.json ... {at, ok}); read, never run
+//   8 models    the model check (ops/models.mjs, OLA-214): each model Ola depends on gets a real-size
+//               request with tools, through the gateway as the caller `probe`, when it is due (every
+//               15 minutes for the everyday model, less often for dearer ones); two failures in a row
+//               put a line on the board and in this record. Never texted, not even in the daily note.
 //
 // The board: every PUSH_EVERY_MIN minutes (10; 0 turns it off) a run also posts a compact status to
 // <base>/api/venture/status for app.kochitolabs.com (Bart, 2026-11-17: "make sure it is updated at
@@ -59,6 +63,7 @@ import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { summary as abilitySummary } from '../evals/asks/abilities.mjs'
+import { MODEL_DEFAULTS, modelConditions, runModels } from './models.mjs'
 
 const HOME = homedir()
 const OLA = process.env.OLA_HOME || path.join(HOME, '.ola')
@@ -119,10 +124,12 @@ export const DEFAULTS = {
   SYSCTL_BIN: '/usr/sbin/sysctl',
   LAUNCHCTL_BIN: '/bin/launchctl',
   CONTAINER_BIN: process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container',
+  // 8 the model check (ops/models.mjs)
+  ...MODEL_DEFAULTS,
 }
 /** Items that may wake someone: disk, the web app, the public address, the Almanac. */
 const NIGHT_ITEMS = new Set([1, 3, 4, 5])
-const IDS = ['disk', 'memory', 'web', 'public', 'almanac', 'vms', 'nightly']
+const IDS = ['disk', 'memory', 'web', 'public', 'almanac', 'vms', 'nightly', 'models']
 
 // ---------------------------------------------------------------- small helpers
 function readEnv(file) {
@@ -566,7 +573,7 @@ export function boardStatus(S, state, r, conds, now) {
   // texted. Never from state.active alone: an entry there keeps the sentence of the run that set
   // it, and one left behind (the disk, after DISK_TEXTS went off on Nov 17, was no longer passed
   // to decide() and so never cleared) showed "almost full (n GB left)" beside 73 GB free (OLA-164).
-  const alarms = conds.filter((c) => c.level === 'alarm' && c.say && (state.active?.[c.id] || (c.id === 'disk' && !S.DISK_TEXTS)))
+  const alarms = conds.filter((c) => c.level === 'alarm' && c.say && (state.active?.[c.id] || c.quiet || (c.id === 'disk' && !S.DISK_TEXTS)))
   const warns = conds.filter((c) => c.level === 'warn').map((c) => c.note).filter(Boolean)
   const parts = {}
   const names = { fd: 'web app', gw: 'model connection', tls: 'secure front', tunnel: 'tunnel' }
@@ -656,6 +663,9 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   const t0 = Date.now()
   const r = {}
   const sizesDue = !state.sizes || now - Date.parse(state.sizes.at) >= S.SIZES_EVERY_MIN * 60_000
+  // The model check (item 8) can take a minute: it starts now and is waited for after any text has
+  // gone out, so it never holds back an alarm. A failure of the check itself is a quiet warning.
+  const models = want('models') ? runModels(S, now, { dry, redact }).catch((e) => ({ models: {}, list: { ok: false, why: redact(e.message).slice(0, 120) } })) : null
   await Promise.all([
     want('disk') && probes.disk(S).then((v) => (r.disk = v)),
     want('disk') && sizesDue && !dry && probes.sizes(S).then((v) => (state.sizes = { at: new Date(now).toISOString(), gb: v })),
@@ -681,18 +691,23 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   // The disk is not texted (DISK_TEXTS off): forget any alarm or all-clear for it that an earlier
   // run left in the state, so nothing downstream can repeat its old sentence (OLA-164).
   if (!S.DISK_TEXTS) for (const k of ['active', 'clears', 'streak']) if (state[k]) delete state[k].disk
-  const d = decide(S, state, conds.filter((c) => c.level !== 'test' && !(c.id === 'disk' && !S.DISK_TEXTS)), now, { muted })
+  const d = decide(S, state, conds.filter((c) => c.level !== 'test' && !c.quiet && !(c.id === 'disk' && !S.DISK_TEXTS)), now, { muted })
   let text = d.text
   if (force.includes('test')) text = 'Ola: test of the new alarm. Nothing is wrong.'
   let sent = null
   if (text && !dry) sent = await send(S, text)
   if (!force.includes('test')) d.after(sent?.ok)
+  // The model check's result: shown, never texted (`quiet`, kept out of decide above).
+  if (models) {
+    r.models = await models
+    conds.push(...modelConditions(S, r.models, S.TWO_IN_A_ROW))
+  }
   // Remember this run.
   // A listing that failed (the container system not answering) counts as none running, so a drop
   // it caused is recorded once, not at every run while it lasts.
   if (r.vms) state.vms = { running: r.vms.running ?? [], at: new Date(now).toISOString(), deploying: r.vms.deploying, suite: r.vms.suite, listed: r.vms.running !== null }
   if (readings.memory) state.memory = `${readings.memory.pressure}, swap ${readings.memory.swapPct}%`
-  const alarms = Object.keys(state.active)
+  const alarms = [...Object.keys(state.active), ...conds.filter((c) => c.quiet && c.level === 'alarm').map((c) => c.id)]
   const warns = conds.filter((c) => c.level === 'warn').map((c) => c.id)
   const line = conds.map((c) => c.detail).filter(Boolean).join('; ')
   state.lastRun = { at: new Date(now).toISOString(), ms: Date.now() - t0, alarms, warns, line, ...(sent && !sent.ok ? { sendFailed: sent.why } : {}) }

@@ -1584,7 +1584,7 @@ Ola's words in `~/ola-asks/log.jsonl`. Offline checks of the runner itself: `nod
 On 2026-11-16 the mini's disk filled to 100% and, twice the same evening, every sealed VM on it
 stopped at once; nobody was told until a builder got stuck. Since then `ops/watch.mjs` runs every 2
 minutes (launchd `cx.ola.watch`, loaded by `node ops/ola.mjs install`) and texts the owner. Each run
-takes under a second; it changes nothing it checks (the Almanac gets one GET, the public address
+takes under a second (up to a minute or two when the model check, item 8 below, is due); it changes nothing it checks (the Almanac gets one GET, the public address
 one GET without a passcode).
 
 **How it texts.** The Venture bridge, as the morning text does: a POST to `/api/venture/imsg` on
@@ -1684,6 +1684,48 @@ not to run at all), `KEY_FROM`, `ALMANAC_URL`, `PUBLIC_HOST`. Tests: `node --tes
 does not know it yet): after the deploy that brings `ops/watch.mjs`,
 `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs install` (the other jobs say "already
 loaded" and are not restarted), then `node ops/watch.mjs --dry` and `node ops/ola.mjs status`.
+
+### The model check (item 8, OLA-214, 2026-11-20)
+
+On Nov 19 Together refused every real-size request to Nemotron for about a day while small test
+requests went through, and nothing noticed (OLA-206); the backup model covered people, not
+detection. Now the alarm also sends each model Ola depends on one request shaped like a real one:
+the size of a conversation's first step (11,400 tokens in: an opencode-like prompt around
+`workspace/AGENTS.md`, Ola's ten tools defined, a real output allowance of 32,000 so reasoning has
+room), a tool call expected back; the specialists get a 2,700-token document and a question, text
+expected. Code: `ops/models.mjs`, run from `ops/watch.mjs`; it never holds back an alarm text (it is
+waited for after any text has gone out).
+
+- **Through the gateway, as its own made-up caller.** The caller `probe`, on 127.0.0.1:4180, with
+  its token in `~/.ola/gateway-probe` (made by the check on its first run, mode 600; the gateway reads
+  `GATEWAY_PROBE_FILE`, by default that file beside `GATEWAY_TOKENS_FILE`, within seconds, no restart)
+  and its own week, `GATEWAY_PROBE_WEEKLY_TOKENS` (20 million; a day uses about 1.8 million), so it
+  can never use up a person's or a project's. The gateway gives this caller alone: the upstream id
+  of each name and the backup models (`GET /v1/models`), a backup model by name (`backup:general`),
+  the hosted slot without a project's yes (the request is made up), no backup and no design hand-off
+  (so a refusal shows), and the provider's own words in a refusal (`error.provider_said`, scrubbed of
+  keys; never in the log).
+- **One try per model**, through its first name: the models served on Nov 20 are
+  `nvidia/NVIDIA-Nemotron-3.5-Super-VL` (general), `openai/gpt-oss-120b` (general's backup),
+  `thinkingmachines/Inkling-2-Small` (design), `meta-models/Muse-Glimmer-30B` (see, read, translate,
+  ocr, route) and `zai-org/GLM-5.3` (hosted). Names that are not chat models (embed, rerank,
+  transcribe, draw) are not tried.
+- **How often, by cost** (measured live Nov 20 at Together's list prices): Nemotron every 15 minutes
+  ($0.170 a day), Muse Glimmer every 30 ($0.064), gpt-oss-120b hourly ($0.062), Inkling-2-Small every
+  2 hours ($0.045), GLM-5.3 every 6 hours ($0.062): **$0.40 a day**. All five every 15 minutes would
+  be $2.40. A model that failed is tried again 15 minutes later, whatever its interval.
+  `MODELS_EVERY` in `~/.ola/watch.env` changes the intervals; `node ops/models.mjs cost` prints the day
+  from the last measured pass.
+- **It fails** on a refusal (a 4xx or 5xx, a content filter), a 429, an empty answer three times, a
+  tool call that does not check out, or no answer within 90 s. **Two in a row** put one line on the
+  board and in the watch's record (`ALARM model-...` in `ops/ola.mjs status`): "Ola's model
+  <id> (<names>) has refused real-size requests since <when>, N checks in a row: "<the provider's
+  words>"". **Never texted**, not even in the daily note (Bart: texts are only for what he must act
+  on now). The next pass that works clears it. The check's own allowance used up, or the check not
+  able to list the models, is a warning on the board about the check, never blamed on a model.
+- `node ops/models.mjs` tries every model now and prints each result; `node ops/models.mjs show` the
+  last record (`~/.ola/models-state.json`). Tests: `node --test ops/models-test.mjs` (8, seconds, the
+  real gateway against a fake model server; an update runs them, suite `models`).
 
 ## Slash commands and reactions (all surfaces)
 
