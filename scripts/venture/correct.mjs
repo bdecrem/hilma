@@ -93,12 +93,15 @@ async function checkFp(db, writeOverride, ownLine) {
   if (!fpRow) return recordFp(cur)
   // only the version correct.mjs wrote last: an older one copied back is a rollback (sixteenth checker); a
   // machine that has not pulled the notes yet shows the same way, and should pull
-  if ((fpRow.known ?? []).at(-1) === fpList(cur)) return
+  if ((fpRow.known ?? []).at(-1) === fpList(cur)) return false
   const ids = cur.filter((w) => fpRow.last?.[w.id] !== fpOf(w)).map((w) => w.id)
   const gone = Object.keys(fpRow.last ?? {}).filter((id) => !cur.some((w) => w.id === id))
   const dayNow = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
-  const key = `weak-changed-${fpList(cur)}-${dayNow}`
+  // keyed by this file AND the version written last (seventeenth checker: keyed by the file alone, a version
+  // flagged once could be copied back again after later writes, the same day, with no new line)
+  const key = `weak-changed-${fpList(cur)}-${(fpRow.known ?? []).at(-1) ?? 'none'}-${dayNow}`
   if (!(await ownLine(db, key))) await writeOverride(db, { key, what: `data/weaknesses.json is not the version correct.mjs wrote last (a hand edit, a rollback, or notes not pulled on this machine; changed: ${[...ids, ...gone.map((g) => g + ' removed')].join(', ') || 'order'}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
+  return true
 }
 async function fpGate() {
   if (onCopy && !process.env.VENTURE_TRACKER_FAKE) return
@@ -106,7 +109,14 @@ async function fpGate() {
     const { writeOverride } = await import('./_overrides.mjs')
     const db = await trackerDb()
     const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' }
-    await checkFp(db, writeOverride, ownLine)
+    // add and fix refuse to read a file that is not the version written last: its guards and counts decide how
+    // strong a fix must be and which number comes next (seventeenth checker: after a rollback a kind-1 fix was
+    // taken where kind 4 was due, and a number was used twice). Pull the notes; a deliberate edit is made known
+    // with correct.mjs accept-notes --why "…", which is a line.
+    if (await checkFp(db, writeOverride, ownLine)) {
+      console.error('Refused: data/weaknesses.json is not the version correct.mjs wrote last (a line is in issues.mjs overrides). Pull the notes (node scripts/venture/sync.mjs pull) and run this again; if the file was changed on purpose, node scripts/venture/correct.mjs accept-notes --why "what was changed and why".')
+      process.exit(1)
+    }
   } catch (e) {
     console.error(`(the check of data/weaknesses.json against the tracker did not run: ${e.message})`)
   }
@@ -376,6 +386,17 @@ if (cmd === 'add') {
     await writeOverride(await trackerDb(), { ticket: o.issue, what: onCopy && !process.env.VENTURE_TRACKER_FAKE ? `(on a copy of the notes, ${process.env.VENTURE_PRIVATE}) ${what}` : what, tool: 'correct.mjs' })
   }
   console.log(NEXT)
+} else if (cmd === 'accept-notes') {
+  // a deliberate change to data/weaknesses.json made past this tool: stored as the version written last, with a line
+  const why = argv[argv.indexOf('--why') + 1]
+  if (!argv.includes('--why') || !why || why.startsWith('--') || why.trim().length < 15) { console.error('accept-notes needs --why "what was changed and why" (15 characters or more)'); process.exit(1) }
+  if (onCopy && !process.env.VENTURE_TRACKER_FAKE) { console.log('a copy of the notes: nothing to accept'); process.exit(0) }
+  const { writeOverride } = await import('./_overrides.mjs')
+  const db = await trackerDb()
+  const list = weak()
+  await writeOverride(db, { key: `weak-accepted-${fpList(list)}-${Date.now()}`, what: `data/weaknesses.json accepted as it is, past correct.mjs (${why}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
+  await recordFp(list)
+  console.log('accepted; a line is in issues.mjs overrides')
 } else if (cmd === 'at') {
   // OLA-258: an entry recorded later than Bart said it gets his time in its heading; the time it was recorded stays in the entry
   const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
