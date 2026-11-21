@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina family claude-opus-5-5 high",
- "pid": 75060,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "family",
@@ -59,5 +58,1247 @@
   "user": 184
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:30:40.224Z",
+ "minutes": 9.68,
+ "meters_after": {
+  "at": "2026-11-21T10:30:40.224Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 167833,
+   "output": 58575,
+   "cache_read": 3697487,
+   "cache_write": 171584,
+   "cost_usd": 3.156,
+   "total": 4095479
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 167767,
+    "output": 13064,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4537,
+    "cost_usd": 0.1333
+   },
+   "claude-opus-5-5": {
+    "input": 66,
+    "output": 45511,
+    "cache_read": 3697487,
+    "cache_write": 171584,
+    "thinking": 10559,
+    "cost_usd": 3.0227
+   }
+  }
+ },
+ "turns": 43,
+ "calls": 75,
+ "duration_ms": 580217,
+ "duration_api_ms": 518465,
+ "pages_read": 29,
+ "pages": [
+  {
+   "at": "2026-11-21T10:21:09.114Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 3º | ARTICULO 10. | ARTICULO 22. | ARTICULO 23. | ARTICULO 74. | ARTICULO 84 | ARTICULO 89 | ARTICULO 98 | ARTICULO 125",
+   "ok": true,
+   "chars": 16607
+  },
+  {
+   "at": "2026-11-21T10:21:18.104Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 3 | reunificación | ARTICULO 22 | ARTICULO 74 | ARTICULO 84 | ARTICULO 89 | ARTICULO 98",
+   "ok": true,
+   "chars": 14662
+  },
+  {
+   "at": "2026-11-21T10:21:32.503Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "Antecedentes Normativos | Artículo 74 | Artículo 84 | Artículo 22 | Artículo 10 | Artículo 3",
+   "ok": true,
+   "chars": 10599
+  },
+  {
+   "at": "2026-11-21T10:21:36.421Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 10 | ARTICULO 22 | ARTICULO 23 | ARTICULO 74 | ARTICULO 84 | Vigencia | ARTICULO 3",
+   "ok": true,
+   "chars": 14603
+  },
+  {
+   "at": "2026-11-21T10:21:41.080Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "n) Especiales | podrán ser autorizados | grupo familiar | ARTICULO 74 | ARTICULO 76",
+   "ok": true,
+   "chars": 6057
+  },
+  {
+   "at": "2026-11-21T10:21:41.864Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=167004",
+   "find": "modifica | Decreto",
+   "ok": true,
+   "chars": 1283
+  },
+  {
+   "at": "2026-11-21T10:21:54.567Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "Razones humanitarias | 1. Personas necesi | Los extranjeros que soliciten su residencia temporaria en virtud | cónyuge",
+   "ok": true,
+   "chars": 6588
+  },
+  {
+   "at": "2026-11-21T10:21:58.438Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 24.- | n) Especiales | ARTICULO 29.-",
+   "ok": true,
+   "chars": 4110
+  },
+  {
+   "at": "2026-11-21T10:22:03.905Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/norma.htm",
+   "find": "cónyuge | residente permanente | Artículo 15 | medios de vida | solvencia | recurso",
+   "ok": true,
+   "chars": 669
+  },
+  {
+   "at": "2026-11-21T10:22:06.947Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/texto",
+   "find": "cónyuge | Artículo 15 | Artículo 17 | medios de vida | solvencia | sostén",
+   "ok": true,
+   "chars": 1915
+  },
+  {
+   "at": "2026-11-21T10:22:20.247Z",
+   "url": "https://www.scba.gob.ar/includes/descarga.asp?id=23502&n=Decreto+1023+de+1994.pdf",
+   "find": "ARTICULO 15 | cónyuges | solvencia | medios | ARTICULO 16 | recurso | sexo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:22:38.241Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto",
+   "find": "ARTICULO 1 | familia | cónyuge | ARTICULO 72 | ARTICULO 80 | recurso | judicial",
+   "ok": true,
+   "chars": 14585
+  },
+  {
+   "at": "2026-11-21T10:22:39.034Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican",
+   "find": "Decreto | Ley",
+   "ok": true,
+   "chars": 2907
+  },
+  {
+   "at": "2026-11-21T10:22:44.860Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto",
+   "find": "De los recursos | reconsideración | alzada | Cámara | ARTICULO 95 | ARTICULO 79",
+   "ok": true,
+   "chars": 9475
+  },
+  {
+   "at": "2026-11-21T10:22:56.236Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican",
+   "find": "Ley | Decreto",
+   "ok": true,
+   "chars": 3342
+  },
+  {
+   "at": "2026-11-21T10:23:02.190Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/texact.htm",
+   "find": "cónyuges | ARTICULO 15 | medios de vida | solvencia | sostén",
+   "ok": true,
+   "chars": 647
+  },
+  {
+   "at": "2026-11-21T10:23:59.803Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm",
+   "find": "1023/94 | artículo 15 | cónyuge | familiar",
+   "ok": true,
+   "chars": 5199
+  },
+  {
+   "at": "2026-11-21T10:24:05.891Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm",
+   "find": "Disposición | VISTO | ARTICULO 12 | ARTICULO 19",
+   "ok": true,
+   "chars": 5427
+  },
+  {
+   "at": "2026-11-21T10:24:27.428Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/169608/norma.htm",
+   "find": "ARTICULO 2 | mismo o de diferente sexo | ARTICULO 42 | Sancionada | Promulgada",
+   "ok": true,
+   "chars": 5500
+  },
+  {
+   "at": "2026-11-21T10:24:38.803Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "family | reunification | judicial | remedy | appeal | expulsion | regularization",
+   "ok": true,
+   "chars": 9437
+  },
+  {
+   "at": "2026-11-21T10:24:39.693Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2019/09/committee-migrant-workers-raises-concerns-about-expedited",
+   "find": "familia | reunificación | recurso | judicial | expulsión",
+   "ok": true,
+   "chars": 1850
+  },
+  {
+   "at": "2026-11-21T10:24:55.497Z",
+   "url": "https://www.oas.org/en/iachr/decisions/2011/ARSA12306EN.DOC",
+   "find": "judicial review | 22.439 | Law 25.871 | habeas corpus | appeal",
+   "ok": true,
+   "chars": 645
+  },
+  {
+   "at": "2026-11-21T10:25:07.544Z",
+   "url": "https://oas.org/es/cidh/decisiones/2011/ARSA12306ES.doc",
+   "find": "22.439 | control judicial | revisión judicial | Ley 25.871 | proceso sumario",
+   "ok": true,
+   "chars": 647
+  },
+  {
+   "at": "2026-11-21T10:25:40.896Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 43 | Artículo 20 | Artículo 18",
+   "ok": true,
+   "chars": 5381
+  },
+  {
+   "at": "2026-11-21T10:25:47.170Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "reunificación familiar | ARTÍCULO 74 | Artículo 74 | 69 quater | 69 septies | recurso judicial",
+   "ok": true,
+   "chars": 10595
+  },
+  {
+   "at": "2026-11-21T10:26:05.591Z",
+   "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+   "find": "judicial | familia | reunificación | Videla | expuls",
+   "ok": true,
+   "chars": 5279
+  },
+  {
+   "at": "2026-11-21T10:26:06.283Z",
+   "url": "https://www.derechoenzapatillas.com/amp/2014/y-para-todos-los-hombres-del-mundo/",
+   "find": "mismo sexo | matrimonio | conviv | reunificación | residencia",
+   "ok": true,
+   "chars": 6497
+  },
+  {
+   "at": "2026-11-21T10:26:27.162Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "family | judicial | appeal | access to justice | reunification",
+   "ok": true,
+   "chars": 5245
+  },
+  {
+   "at": "2026-11-21T10:26:27.891Z",
+   "url": "https://www.scoop.co.nz/stories/WO2103/S00324.htm",
+   "find": "family | judicial | 125 | appeal",
+   "ok": true,
+   "chars": 4312
+  }
+ ],
+ "searches": [
+  "infoleg Decreto 1023/94 reglamento de migración residentes permanentes cónyuge hijos padres de residente permanente",
+  "\"Decreto 1023/94\" \"Reglamento de Migración\" texto artículo 15 \"residentes permanentes\" \"padres, cónyuges\"",
+  "Ley 22.439 Ley General de Migraciones y Fomento de la Inmigración texto infoleg norma.htm",
+  "Decreto 1023/1994 reglamento migración \"hijos solteros menores de veintiún\" \"residentes permanentes o temporarios\" artículo 15",
+  "\"1023/94\" reglamento migración artículo 15 \"padres, cónyuges e hijos de argentinos\" residente permanente texto",
+  "Committee on Migrant Workers concluding observations Argentina 2011 CMW/C/ARG/CO/1 family reunification refworld",
+  "CIDH caso 12.306 Juan Carlos de la Torre Argentina solución amistosa ley 22.439 control judicial expulsión informe",
+  "cidh.org annualrep Argentina 12306 De la Torre admisibilidad htm \"22.439\"",
+  "\"Ley Videla\" migrantes ausencia de control judicial expulsiones CELS informe 2000 2001 radicación familiares",
+  "Migraciones residencia matrimonio igualitario cónyuge mismo sexo extranjero radicación DNM 2011 2012 2013",
+  "CMW/C/ARG/CO/2 2019 concluding observations Argentina family reunification Decree 70/2017 expulsion family unity"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":73,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 22.439 (art. 12) left admission categories to the Executive. Its regulation, Decreto 1023/94, art. 15(b), gave residence to the parents, spouses, unmarried children under 21 and disabled children of permanent or temporary residents. I could not read the decree; its content is rebuilt from a 2006 DNM disposition that applies the same categories. Practice evidence is thin: a December 2003 Página/12 report quoting CELS says regularisation under the Ley Videla was blocked by red tape and costs above 2,500 pesos for a family of four.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Ley 25.871 was in force from 21 Jan 2004. Arts. 3(d) and 10 guarantee reunification with parents, spouses, unmarried minor children and disabled adult children; art. 22 makes relatives of Argentines permanent residents. Until Decreto 616/2010 the Decreto 1023/94 categories stayed applicable under art. 124, and DNM Disp. 48.328/2006 art. 13(b) still applies them to relatives of permanent residents. Practice: a blog citing figures says that in 2004 over 13,700 residence applications were filed and fewer than 3,000 resolved. This is thin, second-hand evidence.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"The law was the same as in 2005. Decreto 616/2010 was published on 6 May 2010 and took effect 60 days later, so on this date the transitional Decreto 1023/94 categories still applied. Practice: the CMW 2011 concluding observations record mass regularisation (Patria Grande granted residence to more than half of 423,711 applicants). They raise no concern about family-based residence, but criticise the DNM for ignoring family ties when ordering expulsions.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Decreto 616/2010 was in force from July 2010. Art. 22(a)-(b) gives permanent reside",
+ "output": {
+  "answers": [
+   {
+    "question_id": 73,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Ley 22.439 (art. 12) left admission categories to the Executive. Its regulation, Decreto 1023/94, art. 15(b), gave residence to the parents, spouses, unmarried children under 21 and disabled children of permanent or temporary residents. I could not read the decree; its content is rebuilt from a 2006 DNM disposition that applies the same categories. Practice evidence is thin: a December 2003 Página/12 report quoting CELS says regularisation under the Ley Videla was blocked by red tape and costs above 2,500 pesos for a family of four."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 was in force from 21 Jan 2004. Arts. 3(d) and 10 guarantee reunification with parents, spouses, unmarried minor children and disabled adult children; art. 22 makes relatives of Argentines permanent residents. Until Decreto 616/2010 the Decreto 1023/94 categories stayed applicable under art. 124, and DNM Disp. 48.328/2006 art. 13(b) still applies them to relatives of permanent residents. Practice: a blog citing figures says that in 2004 over 13,700 residence applications were filed and fewer than 3,000 resolved. This is thin, second-hand evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "The law was the same as in 2005. Decreto 616/2010 was published on 6 May 2010 and took effect 60 days later, so on this date the transitional Decreto 1023/94 categories still applied. Practice: the CMW 2011 concluding observations record mass regularisation (Patria Grande granted residence to more than half of 423,711 applicants). They raise no concern about family-based residence, but criticise the DNM for ignoring family ties when ordering expulsions."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Decreto 616/2010 was in force from July 2010. Art. 22(a)-(b) gives permanent residence to the spouse, parent, unmarried child under 18 or disabled adult child of Argentines and of permanent residents; the last paragraph of art. 23 gives temporary residence to the same relatives of temporary residents. This is the same regime the starting answer rests on; DNU 70/2017 later only narrowed the family-unity waiver in expulsion cases. I found no readable 2013-2016 practice source specific to family residence, so the rating carries forward from the 2010-2011 evidence."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 3(d) (MRD cites 3.E)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 10",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 22 (relatives of Argentines; original text)",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to 2025-05-29 (replaced by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I, arts. 10, 22(a)-(b), 23 last paragraph",
+      "role": "cited",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "Art. 15 (family of Argentines and of residents)",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-07 (repealed by Decreto 616/2010 art. 2)",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 22.439 Ley General de Migraciones y de Fomento de la Inmigración",
+      "article": "Art. 12",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Disposición DNM 53.253/2005 as amended by Disposición DNM 48.328/2006",
+      "article": "Art. 13(b)",
+      "role": "other_in_force",
+      "in_force": "2006-12 to 2010",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley N° 25.871",
+      "article": "Arts. 3(d), 10, 22, 124",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. It put a statutory guarantee of family reunification into law and kept Decreto 1023/94 in force until the new regulation took effect.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 10. — El Estado garantizará el derecho de reunificación familiar de los inmigrantes con sus padres, cónyuges, hijos solteros menores o hijos mayores con capacidades diferentes."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley N° 25.871",
+      "article": "Art. 124",
+      "kind": "repealed",
+      "what_changed": "Repealed Ley 22.439 and Decreto 1023/94, which nevertheless stayed in force until the new law and its regulation took effect.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/94 y toda otra norma contraria a la presente ley, que no obstante retendrán su validez y vigencia hasta tanto se produzca la entrada en vigor de esta última y su reglamentación."
+     },
+     {
+      "date": "2006-12-21",
+      "instrument": "Disposición DNM 48.328/2006",
+      "article": "Art. 13(b) of Disp. 53.253/2005",
+      "kind": "practice",
+      "what_changed": "The DNM applied the inherited 1023/94-era family category (children under 21) to relatives of permanent residents under Patria Grande.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm",
+      "passage": "b) Padres, cónyuges, hijos solteros menores de VEINTIUN (21) años o hijos discapacitados de residentes permanentes: acreditar tal carácter mediante la presentación de las respectivas actas o partidas registrales"
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I arts. 10, 22, 23; art. 2-3",
+      "kind": "new_instrument",
+      "what_changed": "First regulation of Ley 25.871 (in force 60 days after publication on 6 May 2010). It set the reunification categories (child under 18) for relatives of permanent and temporary residents and repealed Decreto 1023/94.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "b) Ser cónyuge, progenitor, hijo soltero menor de DIECIOCHO (18) años no emancipado o mayor con capacidad diferente, de un residente permanente, teniendo en cuenta principios de unidad, sostén y con el alcance del derecho de reunificación familiar"
+     },
+     {
+      "date": "2015-10-01",
+      "instrument": "Disposición DNM 4880/2015",
+      "article": "Note to Ley 25.871 arts. 10, 22",
+      "kind": "new_instrument",
+      "what_changed": "Gave registered cohabiting partners (unión convivencial) of Argentines or residents the same effect as spouses. This came after 1 Jan 2015.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "se reconoce, con análogos efectos jurídicos al matrimonio, a los fines de su admisión ... a los extranjeros que acrediten unión convivencial, con nacional argentino o con ciudadano extranjero radicado permanente o temporario en el país"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Art. 29 and 62 of Ley 25.871",
+      "kind": "amended",
+      "what_changed": "Required proof of cohabitation when family reunification is invoked to waive impediments or cancellation of residence. This affects expulsion waivers, not the reunification avenue for settled migrants. Repealed in March 2021.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "Cuando en los términos del párrafo precedente se invoque el derecho a la reunificación familiar, deberá acreditarse la convivencia del grupo familiar."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Página/12, 'Un final para el fantasma de Videla'",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+      "year": 2003,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "Derecho en Zapatillas, 'Y para todos los hombres del mundo…' (with 2015 update)",
+      "url": "https://www.derechoenzapatillas.com/amp/2014/y-para-todos-los-hombres-del-mundo/",
+      "year": 2014,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "CMW Concluding observations Argentina CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the original and current texts of Ley 25.871 and Ley 22.439, and Decreto 616/2010, on InfoLEG and argentina.gob.ar. The Decreto 1023/94 text (an SCBA PDF) could not be opened, so its art. 15 is rebuilt from DNM Disp. 48.328/2006. Practice evidence before 2010 is thin and general, not specific to family residence.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 ficha (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=167004"
+     },
+     {
+      "title": "Ley 22.439 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Decreto 1023/1994 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/normas-modifican"
+     },
+     {
+      "title": "Disposición DNM 48.328/2006",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "Página/12 19.12.2003",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1"
+     },
+     {
+      "title": "Derecho en Zapatillas 2014/2015",
+      "url": "https://www.derechoenzapatillas.com/amp/2014/y-para-todos-los-hombres-del-mundo/"
+     }
+    ],
+    "starting_answer_concern": "The reunification objective is art. 3(d) of Ley 25.871, not 3(e). Temporary residents' relatives are covered by the last paragraph of Decreto 616 art. 23, not by an 'art. 23.N'. Neither point changes the answer.",
+    "confidence": "medium",
+    "notes": "No court decision is relied on; the protection rests on statutes and regulations only. Ley 26.202 (the Migrant Workers Convention) is cited through Decreto 616 art. 10; I did not open Ley 26.202 itself. The scope narrowed between 2000 and 2020: the age limit for children fell from under 21 (1023/94 era) to under 18 (Decreto 616). That narrowing, together with the 2004 statutory guarantee, is why I chose 'not the same' rather than a change in implementation only."
+   },
+   {
+    "question_id": 75,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Conditional",
+      "implementation": "Rarely",
+      "basis": "Under Ley 22.439, arts. 73-80, a refusal of admission or residence could be challenged only by administrative reconsideration and an appeal to the Ministry of the Interior, whose 'decisión ... causará ejecutoria, no existiendo ulterior recurso'. Judicial review was left only to the general constitutional amparo (CN art. 43, from 1994). Practice: CELS, quoted in the press in 2003, describes DNM decisions taken 'sin ningún control judicial'."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 arts. 74 and 79-84 (in force 21 Jan 2004) provide administrative and judicial review when 'se deniegue la admisión o la permanencia'. Art. 82 gives appeals suspensive effect, and arts. 87-88 bar fees from blocking access to remedies. Practice: in Dec 2003 CELS warned the law could stay a dead letter until regulated, and that Decreto 322/95 still demanded a 300-peso fee to appeal. No later review of the 2004-2005 period could be read."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions as in 2005; Decreto 616/2010 left arts. 74-85 unregulated. Practice: the CMW in 2011 noted 'the rights of migrants to appeal decisions of the DNM'. It also noted that temporary permits are not extended while appeals are pending, which leaves appellants in irregular status."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; DNU 70/2017 (in force 31 Jan 2017) came later and mainly changed expulsion procedure. No readable practice source for 2013-2016 was found, so the 2010-2011 rating carries forward."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 74",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (replaced by DNU 366/2025 on 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 79, 82, 84, 87-89, 98",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today (art. 82 replaced by DNU 70/2017 2017-01-31 to 2021-03-05; arts. 84 repealed and 89, 98 replaced by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 73-80",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 43 (amparo)",
+      "role": "other_in_force",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Arts. 69 bis-69 octies, 74 bis, 82",
+      "role": "other_in_force",
+      "in_force": "2017-01-31 to 2021-03-05",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley N° 25.871",
+      "article": "Art. 74",
+      "kind": "new_instrument",
+      "what_changed": "Replaced the Ley 22.439 scheme, which barred any further recourse after the Ministry's decision. It introduced administrative and judicial review of refusals of admission or residence.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "procederá la revisión en sede administrativa y judicial, cuando: a) Se deniegue la admisión o la permanencia de un extranjero;"
+     },
+     {
+      "date": "1981-03-27",
+      "instrument": "Ley N° 22.439",
+      "article": "Art. 80",
+      "kind": "enacted",
+      "what_changed": "The text in force in 2000: an appeal went to the Ministry of the Interior, with no further recourse. Background to the 2000 answer.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto",
+      "passage": "ARTICULO 80. – Todo recurso de apelación deberá ser fundado e interpuesto en el plazo de Diez (10) días hábiles, a contar de la notificación de la denegatoria. La decisión del Ministerio del Interior causará ejecutoria, no existiendo ulterior recurso."
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Art. 69 septies (new)",
+      "kind": "amended",
+      "what_changed": "Created a summary procedure with 3-day judicial appeals against expulsion. It did not alter art. 74(a) review of refusals of residence. Repealed by Decreto 138/2021.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 69 septies.- Agotada la instancia administrativa conforme lo dispuesto por el artículo 69 quinquies, podrá interponerse el recurso judicial en un plazo de TRES (3) días hábiles desde su notificación."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto Nº 366/2025",
+      "article": "Art. 74",
+      "kind": "replaced",
+      "what_changed": "Replaced art. 74 but kept judicial review of refusals of admission or residence. This is after 2020 and is noted only for completeness.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "(Artículo sustituido por art. 21 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Página/12, 'Un final para el fantasma de Videla' (quoting CELS)",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+      "year": 2003,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations Argentina CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS, UN urges Argentina to derogate decree 70/2017",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "UN Treaty Bodies press release, 24 March 2021",
+      "url": "https://www.scoop.co.nz/stories/WO2103/S00324.htm",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original texts of Ley 22.439 and Ley 25.871. Ley 24.393 amended other articles of Ley 22.439; I did not open it, but art. 80 is shown unamended in the text I read. The IACHR De la Torre friendly settlement (Report 85/11) was blocked by Cloudflare, and CELS annual-report PDFs could not be converted.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "Página/12 19.12.2003",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     },
+     {
+      "title": "UN press release 2021 (Scoop)",
+      "url": "https://www.scoop.co.nz/stories/WO2103/S00324.htm"
+     },
+     {
+      "title": "IACHR Report 85/11 De la Torre (blocked)",
+      "url": "https://oas.org/es/cidh/decisiones/2011/ARSA12306ES.doc"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "I coded 2000 as 'Conditional' by analogy with the instrument's Colombia tutela example: the migration statute excluded any judicial appeal, and only the general amparo of CN art. 43 remained. No court decision is relied on. The 2017-2020 evidence (125 family-unity expulsion cases, 3-day appeal deadlines) concerns expulsions under DNU 70/2017, not refusals of reunification."
+   },
+   {
+    "question_id": 77,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The family categories in Decreto 1023/94 and Ley 22.439 used 'cónyuge', which under the Civil Code then meant only a different-sex marriage. There was no national recognition of same-sex couples; the Buenos Aires City civil union of 2002-2003 is local and not part of the migration framework. No practice is relevant."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 art. 10 and art. 22 refer to 'cónyuges'; marriage was still different-sex only, since Ley 26.618 did not yet exist."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same as 2005. Ley 26.618 was enacted on 15 Jul 2010 and promulgated on 21 Jul 2010, after this date."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Since Ley 26.618 (July 2010), Civil Code art. 172 gives marriage the same requirements and effects regardless of sex. Art. 42 applies every legal reference to marriage to same-sex marriages too, so 'cónyuge' in Ley 25.871 art. 10 and Decreto 616 art. 22-23 includes same-sex spouses. I found no practice source for this period; the implementation rating carries over from the starting answer, with low confidence."
+     }
+    ],
+    "change_2000_2020": "There was no right protection (as of January 1, 2000), but there is now (as of January 1, 2020)",
+    "provisions": [
+     {
+      "instrument": "Ley N° 26.618 (Matrimonio Civil)",
+      "article": "Arts. 2 (Civil Code art. 172) and 42",
+      "role": "cited",
+      "in_force": "2010-07 to today (Civil Code replaced by Código Civil y Comercial, Ley 26.994, from 2015-08-01, which keeps the rule)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 10",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I arts. 22(a)-(b), 23 last paragraph",
+      "role": "cited",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94",
+      "article": "Art. 15",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-07",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-07",
+      "instrument": "Ley N° 26.618",
+      "article": "Art. 2 (Código Civil art. 172), art. 42",
+      "kind": "new_instrument",
+      "what_changed": "Opened marriage to same-sex couples and extended every legal reference to marriage, which brings same-sex spouses within the migration law's 'cónyuges'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/169608/norma.htm",
+      "passage": "El matrimonio tendrá los mismos requisitos y efectos, con independencia de que los contrayentes sean del mismo o de diferente sexo."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley N° 25.871",
+      "article": "Art. 10",
+      "kind": "new_instrument",
+      "what_changed": "Created a reunification right for 'cónyuges' that was gender-neutral on its face but tied to the Civil Code's definition of marriage.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 10. — El Estado garantizará el derecho de reunificación familiar de los inmigrantes con sus padres, cónyuges, hijos solteros menores o hijos mayores con capacidades diferentes."
+     },
+     {
+      "date": "2015-10-01",
+      "instrument": "Disposición DNM 4880/2015",
+      "article": "Note to Ley 25.871 arts. 10, 22",
+      "kind": "new_instrument",
+      "what_changed": "Extended spouse treatment to registered cohabiting partners, including same-sex partners under the Civil and Commercial Code. This came after 1 Jan 2015.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "se reconoce, con análogos efectos jurídicos al matrimonio, a los fines de su admisión ... a los extranjeros que acrediten unión convivencial"
+     }
+    ],
+    "repealed_search": "For 2000-2010 I searched for any national recognition of same-sex partners in Ley 22.439, Decreto 1023/94 (as reflected in DNM Disp. 48.328/2006, which lists only 'padres, cónyuges, hijos'), Ley 25.871 and DNM dispositions. I found none before Ley 26.618, and no protection that existed and was later repealed.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Derecho en Zapatillas (reproduces Disposición DNM 4880/2015)",
+      "url": "https://www.derechoenzapatillas.com/amp/2014/y-para-todos-los-hombres-del-mundo/",
+      "year": 2015,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 26.618 on InfoLEG, but the page did not show the exact date it was published in the Boletín Oficial. I found no practice evidence on same-sex spouse residences for any period.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.618 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/169608/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Disposición DNM 48.328/2006",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Derecho en Zapatillas",
+      "url": "https://www.derechoenzapatillas.com/amp/2014/y-para-todos-los-hombres-del-mundo/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Protection follows from the general marriage-equality statute, Ley 26.618 art. 42, applied to Ley 25.871's 'cónyuges'. The implementation rating for 2015 has no practice evidence behind it."
+   },
+   {
+    "question_id": 79,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "I found no income, means or insurance condition for family-based residence in Ley 22.439. The family categories of Decreto 1023/94 art. 15 (rebuilt from later DNM rules) require only proof of the family tie and of the relative's residence; the decree itself could not be read. Practice: CELS in 2003 reported that procedure costs above 2,500 pesos for a family of four were a frequent barrier. These are fees, not a resource condition."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 art. 10 and the original art. 22 impose no means requirement; the requirement to prove 'medios económicos suficientes' was added only by DNU 366/2025. DNM Disp. 48.328/2006 asks family applicants for documents proving the tie and the relative's residence, with no income test. Practice evidence is thin."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same law as 2005. Decreto 616/2010 (in force July 2010) imposes means tests only on other categories such as rentistas, not on art. 22(a)-(b) or art. 23 family residence. Practice: the CMW 2011 observations raise no resource-based barrier to family residence; their concerns are fees and documentation."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions: Ley 25.871 arts. 10 and 22 (original) and Decreto 616 arts. 22-23, none with an income or insurance condition for family members. No specific practice source was found; the rating carries forward."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 3(d), 10, 22 (original text, no means requirement)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 22 replaced 2025-05-29 by DNU 366/2025, which added a means requirement)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I arts. 22(a)-(b), 23 last paragraph",
+      "role": "cited",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94",
+      "article": "Art. 15",
+      "role": "predecessor",
+      "in_force": "1994-07-05 to 2010-07",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 12, 24",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley N° 25.871",
+      "article": "Art. 22 (original)",
+      "kind": "new_instrument",
+      "what_changed": "Defined permanent residence, including relatives of Argentines, with no means test.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Asimismo, se considerarán residentes permanentes los inmigrantes parientes de ciudadanos argentinos, nativos o por opción, entendiéndose como tales al cónyuge, hijos y padres."
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Decreto 616/2010",
+      "article": "Anexo I art. 23 last paragraph",
+      "kind": "new_instrument",
+      "what_changed": "Granted temporary residence to relatives of temporary residents on proof of the family tie alone. This is the same regime as in 2020.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "la DIRECCION NACIONAL DE MIGRACIONES otorgará residencia temporaria a quien acredite ser cónyuge, progenitor o hijo soltero menor de DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de inmigrante con residencia temporaria."
+     },
+     {
+      "date": "2006-12-21",
+      "instrument": "Disposición DNM 48.328/2006",
+      "article": "Art. 13 of Disp. 53.253/2005",
+      "kind": "practice",
+      "what_changed": "Shows the documents required for family-based permanent residence: proof of the tie and of the relative's residence, with no income test.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm",
+      "passage": "acreditar tal carácter mediante la presentación de las respectivas actas o partidas registrales y agregar constancias documentales que acrediten la calidad de residente permanente de alguno de sus padres, cónyuge o hijo."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto Nº 366/2025",
+      "article": "Art. 22 Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "Added a requirement to prove sufficient economic means for permanent residence. This is after 2020 and noted only for completeness.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Página/12, 'Un final para el fantasma de Videla' (quoting CELS on costs)",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+      "year": 2003,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations Argentina CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "For 2004-2020 the original Ley 25.871 and Decreto 616/2010 texts were read. For 2000, Decreto 1023/94 could not be opened; the absence of a means test there is inferred from Ley 22.439 and later DNM rules.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Disposición DNM 48.328/2006",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123602/norma.htm"
+     },
+     {
+      "title": "Decreto 1023/94 PDF (SCBA) - could not be converted",
+      "url": "https://www.scba.gob.ar/includes/descarga.asp?id=23502&n=Decreto+1023+de+1994.pdf"
+     },
+     {
+      "title": "Página/12 19.12.2003",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "Ley 25.871 art. 73 requires a caución from persons or companies that sponsor a foreigner's entry; it is not a family-reunification resource test. The change in implementation between 2000 and 2020 rests on thin evidence: high procedural costs under the Ley Videla, reported in 2003."
+   }
+  ]
+ }
 }

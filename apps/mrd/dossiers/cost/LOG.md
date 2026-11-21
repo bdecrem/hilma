@@ -92,3 +92,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-21 02:15 | back2000 | nationality_b · argentina | claude-opus-5-5 | high | 15.15 | 55 | 67,396 | 4,632,427 | 3.40 | 5→23 | 3→5 | 0→0 | 34 | ok | `back2000 argentina nationality_b claude-opus-5-5 high` |
 | 2026-11-21 02:22 | back2000 | family · chile | claude-opus-5-5 | high | 8.02 | 27 | 29,302 | 1,825,731 | 1.82 | 14→23 | 4→5 | 0→0 | 19 | ok | `back2000 chile family claude-opus-5-5 high` |
 | 2026-11-21 02:25 | back2000 | labor_c · chile | claude-opus-5-5 | high | 5.23 | 32 | 27,708 | 1,687,569 | 1.61 | 17→23 | 4→5 | 0→0 | 19 | ok | `back2000 chile labor_c claude-opus-5-5 high` |
+| 2026-11-21 02:20 | back2000 | family · argentina | claude-opus-5-5 | high | 9.68 | 43 | 58,575 | 4,095,479 | 3.16 | 10→23 | 4→5 | 0→0 | 29 | ok | `back2000 argentina family claude-opus-5-5 high` |
