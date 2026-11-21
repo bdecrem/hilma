@@ -114,3 +114,13 @@
 .mrd .cr-ver .cr-impl { color: var(--mute); }
 .mrd .cr .ck-item details ul { overflow-wrap: anywhere; }
 .mrd .cr .ck-item a { overflow-wrap: anywhere; }
+
+/* Costa Rica quality control pass: the simpler page and its before / after dossiers */
+.mrd .cr-cite { font-size: 14px; line-height: 1.55; max-width: 80ch; margin: 6px 0; }
+.mrd .cr-pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 13px; line-height: 1.5; margin-top: 6px; }
+.mrd .cr-tag.cr-verified { color: var(--mute); border-color: var(--rule); }
+.mrd .cr-tag.cr-review { color: var(--red); border-color: var(--red); }
+.mrd .cr-tag.cr-pending { color: var(--mute); border-color: var(--mute); }
+.mrd .cr-sum { font-size: 17px; line-height: 1.6; max-width: 72ch; margin: 14px 0; }
+.mrd .cr-links { margin-top: 12px; display: grid; gap: 8px; font-size: 16px; }
+.mrd .cr .ck-readers { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }

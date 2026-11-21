@@ -1,0 +1,11 @@
+{
+  "note": "From the session records and today's run logs. dossier_check_runs keeps one row per step and group of indicators, so a rerun overwrites the earlier cost; these totals add the overwritten runs back. Dollars are API-equivalent.",
+  "rows": [
+    {"step": "Source check of the first coding", "date": "17 Nov", "model": "Claude Sonnet 5.5", "effort": "low", "answers": 64, "cost": 30.76},
+    {"step": "Second reader", "date": "17 Nov", "model": "Claude Opus 5.5", "effort": "high", "answers": 64, "cost": 81.54},
+    {"step": "Coded again", "date": "17 Nov", "model": "Claude Fable 5.2", "effort": "high (the first answer at extra high, $14.23)", "answers": 8, "cost": 53.45},
+    {"step": "Coded again", "date": "20 Nov", "model": "Claude Opus 5.5", "effort": "high", "answers": 17, "cost": 21.51, "detail": "17 answers ($15.11), then a repair round for the 7 whose own sources failed ($6.40)"},
+    {"step": "Source check of the recodes", "date": "17 and 20 Nov", "model": "Claude Sonnet 5.5", "effort": "low", "answers": 25, "cost": 13.46}
+  ],
+  "total": 200.72
+}
