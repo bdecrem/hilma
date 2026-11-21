@@ -87,6 +87,8 @@ try {
   const again = await twin('0123456789ae', 'Clean harbor_roster.csv: drop the repeated volunteers and say how many there were.', flaky.address().port)
   flaky.close()
   ok('a lost model reply costs one attempt, not the copy: the next attempt makes it', calls >= 2 && again.leak?.verdict === 'clean' && again.files?.length === 1, JSON.stringify(again).slice(0, 300))
+  ok('each try is said for the log: the lost one, then the clean one', JSON.stringify(again.tries) === '["lost","clean"]', JSON.stringify(again.tries))
+  ok('a refused copy says its tries for the log, every one a leak', Array.isArray(leak.tries) && leak.tries.length === 4 && leak.tries.every((t) => t === 'leak'), JSON.stringify(leak.tries))
 } finally {
   model.server.close()
   rmSync(dir, { recursive: true, force: true })

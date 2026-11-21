@@ -58,6 +58,18 @@ test('the stored history rebuilds the same turn', () => {
   assert.match(turns[0].answer, /56/)
 })
 
+test('a tab that watched the run and one that loaded it later say the same "Worked for" (OLA-87)', () => {
+  for (const file of ['fake-ask.jsonl', 'glm-ask.jsonl']) {
+    const { state, messages } = replay(file)
+    // The page that sent it started its clock earlier than Ola's computer received it.
+    const live = state.turns[0]
+    const loaded = turnsFromMessages(messages, null)[0]
+    assert.equal(live.at, loaded.at, file)
+    assert.equal(live.ended, loaded.ended, file)
+    assert.equal(runSummary(live), runSummary(loaded), file)
+  }
+})
+
 test('events for another session change nothing', () => {
   const state = emptyConversation()
   state.sessionID = 'ses_a'

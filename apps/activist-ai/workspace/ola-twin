@@ -256,6 +256,8 @@ def make_in(tid, folder, request, context, seed, g):
     last = None
     unreached = None
     unusable = None
+    # What each try came to, for the front desk's log line: "leak", "lost" (no reply), "unusable", "clean"/"unsure".
+    tries = []
     # Four tries: the everyday model's generator sometimes fails to run three times in a row
     # (first-user walk J on WebKit, OLA-87), and a person told "could not make a copy" is left stuck.
     for attempt in range(4):
@@ -268,6 +270,7 @@ def make_in(tid, folder, request, context, seed, g):
             # this long prompt (the gateway's 502 after its own three tries; first-user walk J,
             # OLA-87), and the next attempt usually answers.
             unreached = type(e).__name__
+            tries.append("lost")
             continue
         tokens_in += ti
         tokens_out += to
@@ -285,11 +288,13 @@ def make_in(tid, folder, request, context, seed, g):
         except (ValueError, RuntimeError, OSError) as e:
             unusable = type(e).__name__ + ": " + str(e)[:80]
             note = "Your last answer could not be used (" + str(e)[:200] + "). Answer again with the JSON object only."
+            tries.append("unusable")
             continue
         checks = checks + [c for c in T.family_checks(kind) if c["name"] not in {x["name"] for x in checks}]
         view = T.twin_view(files_dir, names)
         leak = T.check_leaks(idx, {"request": treq + "\n" + source, "checks": checks, "files": view})
         last = (kind, treq, source, checks, truth, names, files_dir, leak)
+        tries.append(leak["verdict"])
         if leak["verdict"] != "leak":
             break
         note = "Your last copy still carried things from the task: " + ", ".join(sorted({f["text"] for f in leak["findings"] if f["severity"] == "leak"}))[:1500] + ". Invent them instead."
@@ -309,7 +314,7 @@ def make_in(tid, folder, request, context, seed, g):
         fail("the copy is too big to compare", 4)
     bundle = {"id": tid, "kind": kind, "request": treq, "generator": source, "seed": seed, "checks": checks, "truth": truth, "files": files}
     digest = hashlib.sha256(json.dumps(bundle, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-    rec = dict(bundle, sha256=digest, leak=leak, tokens_in=tokens_in, tokens_out=tokens_out, ms=int((time.time() - t0) * 1000), read=len(read))
+    rec = dict(bundle, sha256=digest, leak=leak, tokens_in=tokens_in, tokens_out=tokens_out, tries=tries, ms=int((time.time() - t0) * 1000), read=len(read))
     out(rec)
 
 

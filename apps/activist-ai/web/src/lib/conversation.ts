@@ -143,7 +143,12 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
     case 'session.inbox.delivered':
     case 'session.execution.started':
       if (turn.status === 'sending') turn.status = 'working'
-      if (ev.type === 'session.inbox.delivered' && turn.id.startsWith('local-') && d.inboxID) turn.id = d.inboxID
+      if (ev.type === 'session.inbox.delivered' && turn.id.startsWith('local-') && d.inboxID) {
+        turn.id = d.inboxID
+        // The request's time on Ola's computer (the stored user message has the same one), not the
+        // page's clock, so "Worked for" reads the same here as in a tab that loads it later (OLA-87).
+        if (ev.created) turn.at = ev.created
+      }
       return true
     case 'session.tool.input.started': {
       if (stepFor(turn, d.id)) return false

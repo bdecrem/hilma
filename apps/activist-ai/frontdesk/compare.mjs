@@ -790,6 +790,9 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       const verdict = out.leak.verdict
       const kind = KINDS.includes(out.kind) ? out.kind : 'other'
       set(id, { verdict, kind, twin_sha256: digest(out), state: verdict === 'clean' ? 'ready' : verdict === 'unsure' ? 'held' : 'refused', ola_tokens: (out.tokens_in ?? 0) + (out.tokens_out ?? 0) })
+      // Why a copy was held or refused, for whoever reads the log (first-user walk J, OLA-87): the
+      // kinds of finding and what each try came to, never the words found.
+      if (verdict !== 'clean') log(`compare: ${id} ${verdict === 'unsure' ? 'held' : 'refused'} (${Object.entries(out.leak.counts ?? {}).map(([k, n]) => `${String(k).slice(0, 20)} ${Number(n) || 0}`).join(', ') || 'no counts'}; tries: ${Array.isArray(out.tries) ? out.tries.map((t) => String(t).slice(0, 10)).join(' ') : '?'})`)
       audit(db, { actor: personId, action: 'compare_twin_made', workspace: ws.id, ok: verdict !== 'leak', tokensIn: out.tokens_in ?? null, tokensOut: out.tokens_out ?? null })
       if (verdict === 'clean') keepTwin(id, out)
       // A held or refused copy may carry the project's words: it is kept in the project's VM for the
