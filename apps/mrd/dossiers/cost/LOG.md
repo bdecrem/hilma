@@ -60,3 +60,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 19:41 | forward | labor_c · chile | claude-opus-5-5 | high | 24.26 | 20 | 14,186 | 998,375 | 1.12 | 61→? | 48→? | 67→? | 14 | ok | `forward chile labor_c claude-opus-5-5 high` |
 | 2026-11-20 19:40 | forward | family · chile | claude-opus-5-5 | high | 42.04 | 31 | 33,647 | 2,612,472 | 2.12 | 58→69 | 48→49 | 67→67 | 19 | ok | `forward chile family claude-opus-5-5 high` |
 | 2026-11-20 19:51 | forward | health_housing · argentina | claude-opus-5-5 | high | 38.18 | 20 | 18,556 | 1,351,694 | 1.31 | 63→70 | 49→49 | 67→67 | 12 | ok | `forward argentina health_housing claude-opus-5-5 high` |
+| 2026-11-20 19:51 | forward | labor_b · argentina | claude-opus-5-5 | high | 39.28 | 32 | 23,510 | 2,298,566 | 1.78 | 63→71 | 49→49 | 67→67 | 22 | ok | `forward argentina labor_b claude-opus-5-5 high` |

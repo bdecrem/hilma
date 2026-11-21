@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina labor_b claude-opus-5-5 high",
- "pid": 59035,
  "step": "forward",
  "slug": "argentina",
  "chunk": "labor_b",
@@ -59,5 +58,828 @@
   "user": 118
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T04:31:14.015Z",
+ "minutes": 39.28,
+ "meters_after": {
+  "at": "2026-11-21T04:31:14.015Z",
+  "window": {
+   "pct": 71,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 49,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 71,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 49,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 71% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 49% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 94825,
+   "output": 23510,
+   "cache_read": 2059835,
+   "cache_write": 120396,
+   "cost_usd": 1.7838,
+   "total": 2298566
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 94775,
+    "output": 6731,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1845,
+    "cost_usd": 0.0728
+   },
+   "claude-opus-5-5": {
+    "input": 50,
+    "output": 16779,
+    "cache_read": 2059835,
+    "cache_write": 120396,
+    "thinking": 3768,
+    "cost_usd": 1.7109
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 53,
+ "duration_ms": 343058,
+ "duration_api_ms": 313398,
+ "pages_read": 22,
+ "pages": [
+  {
+   "at": "2026-11-21T03:52:06.230Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 22 | ARTICULO 23 | ARTICULO 56 | ARTICULO 61 | ARTICULO 62",
+   "ok": true,
+   "chars": 13991
+  },
+  {
+   "at": "2026-11-21T04:02:02.293Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "m) Especiales | e) cesaran las condiciones | hubiese sido condenado, en la REPÚBLICA ARGENTINA o en el exterior, por delito doloso | Artículo sustituido por art. 6º",
+   "ok": true,
+   "chars": 3570
+  },
+  {
+   "at": "2026-11-21T04:02:05.554Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "Especiales: | cesaren las condiciones | ARTICULO 63",
+   "ok": true,
+   "chars": 9146
+  },
+  {
+   "at": "2026-11-21T04:04:26.576Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "cesado las condiciones | razones que motivaron | Artículo sustituido por art. 16 | g) hubiese",
+   "ok": true,
+   "chars": 6041
+  },
+  {
+   "at": "2026-11-21T04:04:30.894Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 22 | ARTICULO 61 | ARTICULO 62 | ARTICULO 20",
+   "ok": true,
+   "chars": 5868
+  },
+  {
+   "at": "2026-11-21T04:04:36.487Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 22 | ARTICULO 61 | ARTICULO 62 | arraigo | Modificado por",
+   "ok": true,
+   "chars": 659
+  },
+  {
+   "at": "2026-11-21T04:04:39.993Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 22 | ARTICULO 61 | arraigo",
+   "ok": true,
+   "chars": 8464
+  },
+  {
+   "at": "2026-11-21T04:04:49.006Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004",
+   "find": "modific | Normas que",
+   "ok": true,
+   "chars": 1378
+  },
+  {
+   "at": "2026-11-21T04:04:53.360Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=167004",
+   "find": "modificada | complementada | Texto",
+   "ok": true,
+   "chars": 1300
+  },
+  {
+   "at": "2026-11-21T04:04:54.543Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/325858/20250529",
+   "find": "ARTÍCULO 5° | ARTÍCULO 15 | Considerando | medios económicos | ARTÍCULO 6°",
+   "ok": true,
+   "chars": 1380
+  },
+  {
+   "at": "2026-11-21T04:04:59.371Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004",
+   "find": "2023 | 2024 | 2025 | 2026",
+   "ok": true,
+   "chars": 2093
+  },
+  {
+   "at": "2026-11-21T04:05:11.704Z",
+   "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 5° | ARTÍCULO 15 | ARTÍCULO 16 | entrada en vigencia | ARTÍCULO 6°",
+   "ok": true,
+   "chars": 9494
+  },
+  {
+   "at": "2026-11-21T04:05:12.389Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+   "find": "2025 | 2026",
+   "ok": true,
+   "chars": 6431
+  },
+  {
+   "at": "2026-11-21T04:05:17.528Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "desnaturalizado las razones | permanecido fuera del territorio",
+   "ok": true,
+   "chars": 2293
+  },
+  {
+   "at": "2026-11-21T04:05:18.497Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Art. 153 | Art. 17. | Art. 81",
+   "ok": true,
+   "chars": 6509
+  },
+  {
+   "at": "2026-11-21T04:05:26.791Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 63",
+   "ok": true,
+   "chars": 2206
+  },
+  {
+   "at": "2026-11-21T04:05:27.628Z",
+   "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 17.- | ARTÍCULO 63.-",
+   "ok": true,
+   "chars": 2286
+  },
+  {
+   "at": "2026-11-21T04:12:36.278Z",
+   "url": "https://www.perfil.com/noticias/amp/politica/la-justicia-freno-su-reforma-migratoria-pero-milei-insiste-con-un-nuevo-dnu-contra-extranjeros.phtml",
+   "find": "Sala III | Cámara | CAREF | inconstitucional | fallo",
+   "ok": true,
+   "chars": 3611
+  },
+  {
+   "at": "2026-11-21T04:17:20.005Z",
+   "url": "https://migrationnetwork.un.org/system/files/resources_files/Libro%20Red%20Argentina%2020%20a%C3%B1os%20%20Ley%2025.871.pdf",
+   "find": "justicia laboral | residencia permanente | trabajador migrante | demoras | informalidad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:22:23.968Z",
+   "url": "https://observatoriomigracionyasilo.caref.org.ar/inicio/wp-content/uploads/2025/08/DNU-366-2025-Minuta-encuentro-organizaciones-sociedad-civil-junio-2025-casa-nazaret-vf.pdf",
+   "find": "residencia permanente | medios económicos | trabajo | precaria | arraigo | laboral",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:22:30.416Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "residence | court | unconstitutional | permanent | work",
+   "ok": true,
+   "chars": 3813
+  },
+  {
+   "at": "2026-11-21T04:22:31.111Z",
+   "url": "https://chequeado.com/?p=95232",
+   "find": "residencia | trabajo | permanente | medios",
+   "ok": true,
+   "chars": 6490
+  }
+ ],
+ "searches": [
+  "Decreto 616/2010 reglamentación Ley 25.871 infoleg texto actualizado",
+  "Decreto 366/2025 infoleg migraciones texto completo \"medios económicos suficientes\" residencia permanente",
+  "DNU 366/2025 migraciones rechazo Congreso o cautelar suspensión juez 2025",
+  "CELS CAREF informe implementación DNU 366/2025 residencias Migraciones trámites radicación 2025",
+  "trabajadores migrantes Argentina informalidad reclamos laborales OIT informe 2023 2024 acceso a la justicia",
+  "CELS informe DNU 366/2025 impacto migrantes residencias Migraciones demoras 2025",
+  "Disposición DNM 2025 residencia permanente acreditar medios económicos suficientes antecedentes penales reglamentación artículo 22 Ley 25.871"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.63,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.64,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.65,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.66,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.67,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.67,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.68,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.69,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":101,\"answer_2023\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 23.a (trabajador migrante)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 23.l (nacionalidad MERCOSUR)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 61\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 62 (former inc. d, now inc. f: desnaturalización de las razones de la concesión)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 63\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Decreto 616/2010\",\"article\":\"Art. 61 (30 días + prórroga de 30 días para regularizar)\",\"enacted\":\"2010-05-06\",\"history_read\":\"amending_acts\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia 366/2025 (DNU-2025-366-APN-PTE)\",\"article\":\"Art. 15, which replaces Art. 61 of Ley 25.871\",\"kind\":\"amended\",\"what_changed\":\"Before: on finding that a stay was irregular, DNM 'deberá conminarlo a regularizar su situación' (it was obliged to give the migrant a deadline to regularize). After: DNM 'podrá intimarlo' (it may do so). The statutory regularization deadline becomes discretionary. Decree 616/2010 Art. 61 (30 + 30 days) was",
+ "output": {
+  "answers": [
+   {
+    "question_id": 101,
+    "answer_2023": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23.a (trabajador migrante)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23.l (nacionalidad MERCOSUR)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 61",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 62 (former inc. d, now inc. f: desnaturalización de las razones de la concesión)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 63",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 61 (30 días + prórroga de 30 días para regularizar)",
+      "enacted": "2010-05-06",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU-2025-366-APN-PTE)",
+      "article": "Art. 15, which replaces Art. 61 of Ley 25.871",
+      "kind": "amended",
+      "what_changed": "Before: on finding that a stay was irregular, DNM 'deberá conminarlo a regularizar su situación' (it was obliged to give the migrant a deadline to regularize). After: DNM 'podrá intimarlo' (it may do so). The statutory regularization deadline becomes discretionary. Decree 616/2010 Art. 61 (30 + 30 days) was not amended.",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "“ARTÍCULO 61.- Al constatar la irregularidad de la permanencia de un extranjero en el país, y atendiendo a las circunstancias de profesión del extranjero, su parentesco con nacionales argentinos, el plazo de permanencia acreditado y demás condiciones personales y sociales, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá intimarlo a regularizar su situación en el plazo perentorio que fije a tal efecto, bajo apercibimiento de decretar su expulsión."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 16, which replaces Art. 62 of Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "Art. 62 was rewritten. The cancellation ground that covers a lost job ('hubiese desnaturalizado las razones que motivaron su concesión') moves from inc. d) to inc. f). Its substance is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "f) hubiese desnaturalizado las razones que motivaron su concesión o cuando la actividad en el país hubiere sido subvencionada total o parcialmente, directa o indirectamente por el ESTADO NACIONAL y no se cumplieren o se violaren las condiciones expresamente establecidas para la subvención;"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 17, which replaces Art. 63 of Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "Before: any cancellation led to an order to leave or to expulsion, depending on circumstances (Art. 63.a). After: cancellation under inc. f) (desnaturalización) leads to an order to leave within a set period or to expulsion. Only cancellation for absence (inc. e) still offers an 'intimación a regularizar'.",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "c) la cancelación de la residencia conforme el inciso f) del artículo 62 de la presente ley conlleva la conminación a hacer abandono del país dentro del plazo que se fije o bien la expulsión del territorio nacional, teniendo en consideración las circunstancias fácticas y personales del interesado;"
+     }
+    ],
+    "implementation_then_now": "No source documents what DNM does when a temporary 'trabajador migrante' resident (Art. 23.a) loses a job. In practice the issue arises at renewal, when a new contract or another criterion (MERCOSUR nationality, family) must be shown. Before 2023, mandatory intimation (Art. 61) and the 30+30-day window in Decree 616/2010 were the general rule. After the DNU, civil-society monitoring (Hivos/EU SEE, Aug. 2025) reports more discretion for DNM and record expulsions in 2025, but this concerns mainly criminal-record cases, not job loss. I keep 'Sometimes; Usually' for both dates and have found no documented shift for this group.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Reforma migratoria: qué cambia, qué ya rige y qué necesita pasar por el Congreso (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-que-cambia-que-ya-rige-y-que-necesita-pasar-por-el-congreso/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The 2023 text was read on InfoLEG: the original Ley 25.871, whose Arts. 61-63 had been restored by Decreto 138/2021. The 2026 text was read in InfoLEG's texto actualizado and in DNU 366/2025 itself. The InfoLEG list of norms affecting Decree 616/2010 shows no change to Art. 61 in the window. No practice evidence specific to job loss was found.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que lo modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Ley 25.871 actualización (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Hivos EU SEE alert on DNU 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "Chequeado explainer on DNU 366/2025",
+      "url": "https://chequeado.com/?p=95232"
+     },
+     {
+      "title": "Perfil, La Justicia frenó su reforma migratoria (30-07-2026)",
+      "url": "https://www.perfil.com/noticias/amp/politica/la-justicia-freno-su-reforma-migratoria-pero-milei-insiste-con-un-nuevo-dnu-contra-extranjeros.phtml"
+     }
+    ],
+    "starting_answer_concern": "The citation's references to 'Art. 62.e, i, m' and 'Decree Arts. 23.i, m' do not match the 2004 text. The relevant cancellation ground was Art. 62.d (desnaturalización). The answer category itself holds.",
+    "confidence": "low",
+    "notes": "Congress did not reject DNU 366/2025. Per press, the Cámara Nacional Electoral annulled it on 30 June 2026 in a case about the citizenship articles. That ruling is after the window, under appeal to the CSJN, and was not read, so it is not recorded as an event. A federal court ruling of August 2025 was confined to a specific case. Decreto 681/2026 (B.O. 30/7/2026) further replaced Art. 63.c, also after the window."
+   },
+   {
+    "question_id": 113,
+    "answer_2023": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 17",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 20",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 22",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 22.c (arraigo: 2 years MERCOSUR / 3 years others)",
+      "enacted": "2010-05-06",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 5, which replaces Art. 22 of Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "Art. 22 used to define the permanent resident and grant that status directly to relatives of Argentines. It now requires every applicant to prove sufficient economic means and no disqualifying criminal record. Relatives of Argentines move to a new temporary category (Art. 23.ñ). The 2-3 year arraigo route from temporary residence in Decree 616/2010 Art. 22.c remains, but with added conditions.",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país y que no cuenta con antecedentes penales que pudieren motivar el rechazo de la solicitud, todo ello de acuerdo con las condiciones que establezca la reglamentación."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 4, which replaces Art. 20 of Ley 25.871",
+      "kind": "amended",
+      "what_changed": "Precarious residence is cut from 180 to 90 days. Time spent on it no longer counts towards the arraigo needed for permanent residence, which narrows how the qualifying period is counted.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "La extensión y renovación de la ‘residencia precaria’ no genera derecho a una resolución favorable respecto de la admisión solicitada, ni resulta residencia válida a los efectos de acreditar arraigo, necesario para la obtención de la residencia permanente, o para la adquisición de la nacionalidad por naturalización."
+     }
+    ],
+    "implementation_then_now": "Before 2023, temporary residents, migrant workers included, routinely moved to permanent residence through the arraigo route (Decree 616/2010 Art. 22.c). I found no study of approval rates for either date. After 29 May 2025 the new economic-means and criminal-record conditions apply by law, but I found no DNM disposition setting the economic-means standard before 1 January 2026 and no documented pattern of refusals on that ground. Civil-society alerts (Hivos/EU SEE 2025) describe tighter conditions and more DNM discretion, not systematic denials. I keep 'Usually' at both dates.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Reforma migratoria: qué cambia, qué ya rige y qué necesita pasar por el Congreso (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-que-cambia-que-ya-rige-y-que-necesita-pasar-por-el-congreso/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The original Art. 22 (in force in January 2023) and the DNU's replacement text were both read. Decree 616/2010 Art. 22 was read in its only published text, and InfoLEG lists no amendment to it in the window. Practice evidence is indirect, and the CAREF PDFs could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que lo modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Hivos EU SEE alert on DNU 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "Chequeado explainer on DNU 366/2025",
+      "url": "https://chequeado.com/?p=95232"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Seasonal migrant workers are transitory residents (Art. 24.e) and are not on the temporary-to-permanent arraigo route. Congress has not rejected DNU 366/2025. The 2026 court rulings against it are after the window, concern mainly the citizenship articles, and were not read."
+   },
+   {
+    "question_id": 115,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 17",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 20",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 22",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 22",
+      "enacted": "2010-05-06",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 5, which replaces Art. 22 of Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "Adds economic-means and criminal-record requirements for every permanent-residence applicant, whatever the prior temporary subcategory. It does not make access depend on visa type, so it does not change this indicator.",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país y que no cuenta con antecedentes penales que pudieren motivar el rechazo de la solicitud"
+     }
+    ],
+    "implementation_then_now": "The arraigo route in Decree 616/2010 Art. 22.c applies to holders of any temporary residence under Art. 23, and practice before and after 2025 shows conversions from the various subcategories. I found no evidence of the visa-type conditionality being applied differently after DNU 366/2025. Evidence is indirect (civil-society alerts on the DNU), so 'Usually' is kept at both dates with low confidence.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Texts for both dates were read on InfoLEG and in the DNU. InfoLEG's list of norms affecting Decree 616/2010 shows no change to Art. 22 in the window. No practice data broken down by visa type was found.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que lo modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=167004"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Hivos EU SEE alert on DNU 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' is doubtful even for 2023. Decree 616/2010 Art. 22.c lets DNM set further conditions 'según el tipo de residencia temporaria de que se trate'. Seasonal migrant workers and other transitory residents (Art. 24) are not on the arraigo route. By the Chile example's standard, this points to 'No'.",
+    "confidence": "low",
+    "notes": "No change in the window bears on whether the route depends on visa type."
+   },
+   {
+    "question_id": 117,
+    "answer_2023": "Yes, same as citizens",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes, same as citizens",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Contrato de Trabajo 20.744",
+      "article": "Art. 153",
+      "enacted": "1974",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Contrato de Trabajo 20.744",
+      "article": "Art. 17 (no discrimination by nationality)",
+      "enacted": "1974",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 56",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Labour courts and labour inspectorates are open to migrant workers whatever their status (Ley 25.871 Art. 56; Decree 616/2010 Art. 56 on free legal aid). Studies of the 2015-2023 period found migrants are more often in informal work and face barriers in reaching labour justice. These are the ILO-linked and academic sources surfaced by search; I could not open them. Nothing shows a shift in 2023-2025. 'Sometimes; Usually' is kept at both dates, with low confidence because the practice sources could not be read in full.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The LCT texto actualizado on InfoLEG shows no amendment note on Arts. 17 or 153. DNU 70/2023, Ley 27.742 (2024) and Ley 27.802 (B.O. 6/3/2026, after the window) amended other LCT articles. Ley 25.871 Art. 56 carries no amendment note. The practice PDFs (UN Network book, ILO) could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.744 LCT texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     }
+    ],
+    "starting_answer_concern": "LCT Art. 153 concerns proportional annual leave, not redress, and is a weak anchor. Ley 25.871 Art. 56 (which the citation numbers '28.871') and LCT Art. 17 support the answer. DNU 366/2025's new Art. 6 ties equal access to labour rights to 'cada categoría migratoria', but Art. 56 still guarantees labour obligations 'cualquiera sea su condición migratoria'.",
+    "confidence": "low",
+    "notes": "No amendment, new instrument or ruling in the window affects redress for breach of contract."
+   }
+  ]
+ }
 }
