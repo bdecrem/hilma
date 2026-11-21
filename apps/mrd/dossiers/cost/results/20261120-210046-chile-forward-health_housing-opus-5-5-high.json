@@ -1,0 +1,501 @@
+{
+ "status": "ok",
+ "job_id": "forward chile health_housing claude-opus-5-5 high",
+ "step": "forward",
+ "slug": "chile",
+ "chunk": "health_housing",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2023 coding",
+ "fixture": null,
+ "country": {
+  "id": 10,
+  "iso": "CHL",
+  "name": "Chile",
+  "lang": "Spanish"
+ },
+ "qids": [
+  119,
+  123
+ ],
+ "started_at": "2026-11-21T05:00:46.445Z",
+ "meters_before": {
+  "at": "2026-11-21T05:00:41.611Z",
+  "window": {
+   "pct": 0,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 50,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 0,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 50,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 0% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 50% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 343 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  16%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 354 requests · 3 sessions\n  58%  Start fresh when you switch tasks · run /clear\n  34%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  16%  Compact before you step away · run /compact\n  Top subagents: general-purpose 34%"
+ },
+ "prompt_chars": {
+  "system": 18616,
+  "user": 102
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T05:07:10.851Z",
+ "minutes": 6.41,
+ "meters_after": {
+  "at": "2026-11-21T05:07:10.851Z",
+  "window": {
+   "pct": 2,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 50,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 2,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 50,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 2% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 50% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 353 requests · 2 sessions\n  58%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  16%  Compact before you step away · run /compact\n  Top subagents: general-purpose 36%\n\nLast 7d · 364 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 87768,
+   "output": 18358,
+   "cache_read": 1033804,
+   "cache_write": 96801,
+   "cost_usd": 1.2818,
+   "total": 1236731
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 87738,
+    "output": 6946,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1623,
+    "cost_usd": 0.0722
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 11412,
+    "cache_read": 1033804,
+    "cache_write": 96801,
+    "thinking": 3736,
+    "cost_usd": 1.2095
+   }
+  }
+ },
+ "turns": 26,
+ "calls": 42,
+ "duration_ms": 195093,
+ "duration_api_ms": 138399,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-21T05:00:59.238Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 15 | Artículo 18 | Acceso a la salud | vivienda",
+   "ok": true,
+   "chars": 4360
+  },
+  {
+   "at": "2026-11-21T05:01:04.399Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 15.- | Artículo 18.- | vivienda | Ley 21655 | Ley 21816",
+   "ok": true,
+   "chars": 7321
+  },
+  {
+   "at": "2026-11-21T05:01:13.438Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 15.- | Artículo 18.- | fechaVersion | Version",
+   "ok": true,
+   "chars": 950
+  },
+  {
+   "at": "2026-11-21T05:01:17.089Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Derecho al acceso a la salud | vivienda propia | Versión",
+   "ok": true,
+   "chars": 4818
+  },
+  {
+   "at": "2026-11-21T05:02:31.923Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2024/02/20/43781/01/2456402.pdf",
+   "find": "artículo 15 | artículo 18 | salud | vivienda | Artículo 2",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:02:39.757Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "21.325 | artículo 15 | artículo 18 | salud",
+   "ok": true,
+   "chars": 2563
+  },
+  {
+   "at": "2026-11-21T05:02:43.093Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "artículo 15 | artículo 18 | salud | vivienda | Artículo 2",
+   "ok": true,
+   "chars": 5361
+  },
+  {
+   "at": "2026-11-21T05:02:43.942Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "21.325 | artículo 15 | artículo 18 | salud",
+   "ok": true,
+   "chars": 2445
+  },
+  {
+   "at": "2026-11-21T05:02:44.719Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325 | artículo 15 | artículo 18 | salud",
+   "ok": true,
+   "chars": 3319
+  },
+  {
+   "at": "2026-11-21T05:04:11.511Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20584",
+   "find": "Artículo 2º | Comparar | Versión",
+   "ok": true,
+   "chars": 5668
+  },
+  {
+   "at": "2026-11-21T05:04:35.650Z",
+   "url": "https://uchile.cl/noticias/240371/obligacion-del-sector-salud-de-entregar-informacion-de-usuarios-extranjeros",
+   "find": "proyecto | ley | irregular | 202",
+   "ok": true,
+   "chars": 4510
+  },
+  {
+   "at": "2026-11-21T05:04:37.188Z",
+   "url": "https://repositorio.udd.cl/bitstreams/b4f32ef4-b281-4a31-928d-cc4b4522020b/download",
+   "find": "barreras | irregular | FONASA | rechazo | discrimina",
+   "ok": true,
+   "chars": 602
+  },
+  {
+   "at": "2026-11-21T05:05:24.847Z",
+   "url": "https://faro.udd.cl/files/2025/12/br57-migracion-y-vivienda.pdf",
+   "find": "residencia definitiva | cinco años | decreto | DS49 | DS52 | arriendo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:05:29.748Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2025/01/Acta-segunda-sesion-Consejo-Politica-Migratoria-2024.pdf",
+   "find": "cinco años | vivienda | subsidio | salud",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:05:46.108Z",
+   "url": "https://www.minvu.gob.cl/beneficio/vivienda/subsidio-para-construir-una-vivienda-de-hasta-950-uf-ds49/",
+   "find": "extranjer | definitiva",
+   "ok": true,
+   "chars": 2432
+  },
+  {
+   "at": "2026-11-21T05:05:55.378Z",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12465819",
+   "find": "irregular | barrier | regardless of migration status | 2017",
+   "ok": true,
+   "chars": 5413
+  },
+  {
+   "at": "2026-11-21T05:05:56.199Z",
+   "url": "https://www.oecd.org/en/publications/international-migration-outlook-2026_a9eab36b-en/full-report/chile_a38689eb",
+   "find": "irregular | health | benefits | 2025",
+   "ok": true,
+   "chars": 4498
+  },
+  {
+   "at": "2026-11-21T05:06:08.067Z",
+   "url": "https://www.amnesty.org/en/location/americas/south-america/chile/report-chile/",
+   "find": "migra | health | housing | irregular",
+   "ok": true,
+   "chars": 4441
+  }
+ ],
+ "searches": [
+  "Ley 21.325 modificaciones versiones leychile \"21.655\" \"21.589\" OR \"21.724\" OR \"21.816\" migración",
+  "migrantes irregulares acceso salud Chile Fonasa barreras informe 2024",
+  "Servicio Jesuita a Migrantes informe acceso salud migrantes situación irregular NIP Fonasa 2023 rechazo atención",
+  "migrantes subsidio habitacional residencia definitiva requisito MINVU campamentos extranjeros 2024 informe",
+  "decreto MINVU exige cinco años residencia definitiva extranjeros subsidio habitacional DS49 modificación",
+  "Chile migrants health care access irregular status report 2023 OR 2024 OR 2025 denied care Human Rights Watch OR Amnesty OR UNHCR OR \"Committee\""
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.01,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":119,\"answer_2023\":\"Yes, for all visa types (including irregular migrants)\",\"implementation_2023\":\"Usually; Effectively Always\",\"answer_2026\":\"Yes, for all visa types (including irregular migrants)\",\"implementation_2026\":\"Usually; Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 15\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República de Chile\",\"article\":\"Art. 19\",\"enacted\":\"1980\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"},{\"instrument\":\"Ley 20.584 (derechos y deberes de las personas en su atención de salud)\",\"article\":\"Art. 2\",\"enacted\":\"2012-04-24\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"In 2023 and in 2026 the law gave the same entitlement: Art. 15 gives resident and irregular foreigners access to health care 'en igualdad de condiciones que los nacionales'. In practice irregular migrants get in through FONASA's provisional identifier (NIP, tramo A). Studies published in 2023–2025 (e.g. Carreño-Calderón et al. 2025, BMC Int J Equity Health, using CASEN 2022 and interviews) document continuing barriers: lack of information, cultural and administrative obstacles, low uptake of programmes. They do not show formal exclusion. I found no documented shift in practice between the two dates. Proposals to restrict benefits for irregular migrants (Amnesty 2025) and a 2026 proposal to make FONASA report irregular users were still bills, and the latter came after the window.\",\"practice_sources\":[{\"title\":\"Addressing health inequalities and barriers to access among adolescent migrants in Chile: a mixed methods study (Carreño-Calderón et al., Int J Equity Health 24:234)\",\"url\":\"https:",
+ "output": {
+  "answers": [
+   {
+    "question_id": 119,
+    "answer_2023": "Yes, for all visa types (including irregular migrants)",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes, for all visa types (including irregular migrants)",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 15",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19",
+      "enacted": "1980",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Ley 20.584 (derechos y deberes de las personas en su atención de salud)",
+      "article": "Art. 2",
+      "enacted": "2012-04-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In 2023 and in 2026 the law gave the same entitlement: Art. 15 gives resident and irregular foreigners access to health care 'en igualdad de condiciones que los nacionales'. In practice irregular migrants get in through FONASA's provisional identifier (NIP, tramo A). Studies published in 2023–2025 (e.g. Carreño-Calderón et al. 2025, BMC Int J Equity Health, using CASEN 2022 and interviews) document continuing barriers: lack of information, cultural and administrative obstacles, low uptake of programmes. They do not show formal exclusion. I found no documented shift in practice between the two dates. Proposals to restrict benefits for irregular migrants (Amnesty 2025) and a 2026 proposal to make FONASA report irregular users were still bills, and the latter came after the window.",
+    "practice_sources": [
+     {
+      "title": "Addressing health inequalities and barriers to access among adolescent migrants in Chile: a mixed methods study (Carreño-Calderón et al., Int J Equity Health 24:234)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12465819",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Amnesty International, Chile 2025",
+      "url": "https://www.amnesty.org/en/location/americas/south-america/chile/report-chile/",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Universidad de Chile, Escuela de Salud Pública – Declaración pública sobre la obligación del sector salud de entregar información de usuarios extranjeros",
+      "url": "https://uchile.cl/noticias/240371/obligacion-del-sector-salud-de-entregar-informacion-de-usuarios-extranjeros",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "LeyChile's version list for Ley 21.325 shows the original text (12-02-2022 to 06-08-2023), then amendments by Leyes 21.590, 21.589, 21.610 and 21.655 and a 01-04-2025 version, all inside the window. I read each of the four acts. They amend Arts. 5, 100, 131/134 and Ley 20.430, and none of them touches Art. 15. Today's Art. 15 matches the MRD's 2023 quote word for word. LeyChile prints no amendment note on Ley 20.584 Art. 2 (Art. 1 carries a Ley 21.541 note), and its amendments in the window (21.541, 21.668, 21.746) do not appear to touch Art. 2. I could not read the version history of Constitution Art. 19. Practice evidence is thin and academic.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, última versión)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 full text (obtxml)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 texto original version and version list",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 20.584 with version list",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20584"
+     },
+     {
+      "title": "PMC – Adolescent migrants health barriers in Chile",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12465819"
+     },
+     {
+      "title": "Amnesty International – Chile 2025",
+      "url": "https://www.amnesty.org/en/location/americas/south-america/chile/report-chile/"
+     },
+     {
+      "title": "Universidad de Chile – Declaración pública",
+      "url": "https://uchile.cl/noticias/240371/obligacion-del-sector-salud-de-entregar-informacion-de-usuarios-extranjeros"
+     },
+     {
+      "title": "OECD International Migration Outlook 2026 – Chile",
+      "url": "https://www.oecd.org/en/publications/international-migration-outlook-2026_a9eab36b-en/full-report/chile_a38689eb"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds: Art. 15 expressly covers irregular migrants on equal terms with nationals. On implementation, documented administrative and informational barriers for irregular migrants, plus low FONASA affiliation of migrant households, suggest 'Usually' is the better fit than 'Usually; Effectively Always'. I kept the starting rating because nothing shows a change.",
+    "confidence": "medium",
+    "notes": "Art. 15 text (current, identical to the 2023 quote): 'Los extranjeros residentes o en condición migratoria irregular, ya sea en su calidad de titulares o dependientes, tendrán acceso a la salud conforme a los requisitos que la autoridad de salud establezca, en igualdad de condiciones que los nacionales.' I relied on statutes, not court rulings. The 2026 government proposal to make health bodies report irregular migrants came after the window and, as far as I found, had not been enacted."
+   },
+   {
+    "question_id": 123,
+    "answer_2023": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 18",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The law limits equal access to own-housing programmes to foreigners with residencia definitiva. MINVU's DS49 page still requires a foreigner's ID card with permanencia definitiva and the matching certificate, which is a statement of law, not practice. Secondary reports (Faro UDD 2025, seen in search results only, since the PDF could not be read) say foreigners were about 4.6% of DS1 beneficiaries in 2014–2024 and 4.2% of DS49 beneficiaries in 2024. That suggests definitive residents do get subsidies, though below their share of the population. Migrants without definitive residence, including the large population in campamentos, are excluded under the rules. I found no documented shift in practice over the window. A 2024 Consejo de Política Migratoria minute reportedly mentions a planned decree requiring five years of definitive residence, but I could not read it or find the decree.",
+    "practice_sources": [
+     {
+      "title": "MINVU – Subsidio para construir una vivienda DS49 (requisitos)",
+      "url": "https://www.minvu.gob.cl/beneficio/vivienda/subsidio-para-construir-una-vivienda-de-hasta-950-uf-ds49/",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 21.325's version list (original text plus Leyes 21.590, 21.589, 21.610, 21.655 and a 01-04-2025 version) was read, and so were the four amending acts. None amends Art. 18, whose current text reads 'Los extranjeros titulares de residencia definitiva gozarán de los mismos derechos en materia de vivienda propia que los nacionales'. I could not open the practice PDFs (Faro UDD br57, the 2024 Consejo minute), so the implementation evidence is weak.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, última versión)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 full text (obtxml)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 texto original version and version list",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "MINVU – DS49 subsidy page",
+      "url": "https://www.minvu.gob.cl/beneficio/vivienda/subsidio-para-construir-una-vivienda-de-hasta-950-uf-ds49/"
+     }
+    ],
+    "starting_answer_concern": "The MRD rated implementation 'Effectively Always; Effectively Never', two non-neighbouring levels that probably mean definitive residents versus everyone else. That pair is not an allowed option. Since the protection answer covers definitive residents only, I record 'Usually' for that group on both dates. This is a translation of the starting rating into the allowed options, not a change. Art. 18 covers only 'vivienda propia' (ownership). Rental subsidies (DS52) are not covered by it, and I did not check their rules.",
+    "confidence": "low",
+    "notes": "No ruling or new instrument in the window was found that changes access to public housing for migrants. A reported MINVU plan (2024) for a five-years-of-definitive-residence requirement could not be verified in a decree."
+   }
+  ]
+ }
+}
