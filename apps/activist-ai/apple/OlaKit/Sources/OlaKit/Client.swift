@@ -12,6 +12,9 @@ public struct ServerConfig: Equatable, Sendable {
   /// (`OlaCloud`, `<base>/api/device/w/<project>/oc`); `password` is this device's Ola account key,
   /// sent as a Bearer token. The same conversations the website shows.
   public var account: Bool
+  /// The folder an engine on this Mac works in (LocalServer), so a folder with no sessions yet is
+  /// named rightly (OLA-341); nil for the machine, the phone and the cloud.
+  public var folder: String?
   public init(url: URL, password: String, viaMac: Bool = false, macName: String? = nil, account: Bool = false) {
     self.url = url
     self.password = password

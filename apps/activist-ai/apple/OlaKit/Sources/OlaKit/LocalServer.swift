@@ -515,7 +515,8 @@ public final class LocalServer: @unchecked Sendable {
     processLock.withLock { process = p; exited = ended }
     if let pidFile { try? String(p.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8) }
     trace?("pid \(p.processIdentifier)")
-    let config = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: password)
+    var config = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: password)
+    config.folder = folder.path
     let client = OpenCodeClient(config)
     let t0 = Date()
     var lastError = ""

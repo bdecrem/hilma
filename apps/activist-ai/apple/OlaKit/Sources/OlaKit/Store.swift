@@ -1151,8 +1151,12 @@ public final class OlaStore {
     try? await client?.switchModel(id, to: back)
   }
 
-  public var projectFolder: String {
-    guard let d = sessions.first?.directory else { return "~/ola-bart" }
+  public var projectFolder: String { Self.projectFolder(firstSession: sessions.first?.directory, configFolder: config?.folder) }
+
+  /// The folder as Bart says it: the sessions' own, else the folder the engine on this Mac was
+  /// started in (an empty new folder, OLA-341: it said ~/ola-bart), else the machine's ~/ola-bart.
+  nonisolated public static func projectFolder(firstSession: String?, configFolder: String?) -> String {
+    guard let d = firstSession ?? configFolder else { return "~/ola-bart" }
     return d.replacingOccurrences(of: #"^/Users/[^/]+"#, with: "~", options: .regularExpression)
   }
 }
