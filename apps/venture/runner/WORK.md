@@ -34,8 +34,12 @@ close it with proof. Nobody will answer a question in this run.
   update changed the version under a checker mid-check). After Ola server code is pushed, mark the
   ticket ready on its commit (`issues.mjs ready <id> --on <commit>`), then run
   `node scripts/venture/runner.mjs deploy`. It starts `ola.mjs deploy --unsigned` only when a ready
-  ticket's commits are not live, the last update attempt is 45 minutes old (or a P0 waits), and no
-  checker has worked on the live server for 15 minutes; otherwise it prints one line why and exits 3.
+  ticket's commits are not live, no other update is running, and no checker has worked on the live
+  server for 15 minutes; otherwise it prints one line why and exits 3. There is no spacing between
+  updates (OLA-338, Nov 21: the 45 minutes made a 30-minute fix take almost five hours). An update
+  runs only the suites the change touches, each under a time limit; a suite that fails is run once
+  more by itself, and the update's line in deploys.log names a suite that failed and where its
+  output is kept, or one that passed only on the rerun (OLA-334, OLA-335).
   On exit 3, go on to the next ticket: the next run (or a later one) updates the server. Never run
   `ola.mjs deploy` yourself. A refused deploy (it runs the suites and switches only if all pass) is a
   failed check: fix it or say on the ticket why not. The web app on Vercel deploys by
@@ -49,9 +53,17 @@ close it with proof. Nobody will answer a question in this run.
   why). When it is built (and, for server code, live once the gate let the update through; `issues.mjs say` shows a pass on an older release as such): `issues.mjs ready <id> --on "<commit or release>"` and a comment in plain
   words: what changed, how you tested it. Then start a checker: a subagent with a fresh context
   and the brief in `apps/venture/CHECKER.md`, which does each check on the live thing and records
-  pass or fail. When every check has passed:
+  pass or fail (three tries of his exact path unless the check says more). One checker takes every
+  ready ticket the same update of the test server carried, not one checker per ticket. When every
+  check has passed:
   `node scripts/venture/issues.mjs done <id> --proof "<what proved it>" --commit <hash>…`.
-  An internal ticket closes on proof ("walked: …" or "no user path: …").
+- **The project's own tools** (scripts/venture, apps/venture, hooks, Ola's ops tools) get **no
+  checker** (OLA-338, Bart, Nov 21). Mark the ticket internal, run its tests, and comment the exact
+  test commands and their counts. The lead (the session open in the day) runs them once and closes it:
+  `issues.mjs done <id> --proof "no user path: <why nothing reaches a person>; lead ran <test>: n of n"`
+  (`done` refuses an internal "no user path" close without that line, or when a test failed). Do
+  not start a checker for it. End such a run with `RUNNER: waiting until <the next 8 am Pacific, as
+  ISO>`, so no later run picks it up again before the lead has run the tests.
 - **Too big for one run:** land a complete, checked piece, push it, and comment on the ticket
   exactly what is done and what is left. The next run continues.
 - **It waits on another ticket** that is not done: comment which one and why, change nothing

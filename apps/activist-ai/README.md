@@ -1317,6 +1317,23 @@ rule, including the cross-part cases: a shared file the front desk check imports
 the pass code the TLS front imports, the gateway every VM suite starts. The update that runs is the
 previous release's tool, so this takes effect from the second update after it lands.
 
+**A time limit per suite, and a failed suite run once more (OLA-335, OLA-334, 2026-11-21,
+`ops/suite.mjs`).** On Nov 21 from 1:12 to 1:43 am the automatic check's apps suite (`swift test`)
+sat in `OnlyOlasModelsTests.testSettingsFileDamagedWhileItRuns` and held the turn: `LocalServer.stop()`
+sent the engine SIGTERM and waited for it with no limit, and the engine, its settings file changed
+while it ran, does not end on SIGTERM (measured after the fix: both "while it runs" cases end at the
+5 s grace, so the engine was killed each time). `stop()` now kills it after `stopGrace` (5 s). And
+every suite of an update or a check runs under a limit, in its own process group (`LIMITS`: front
+desk 25 min, web 20, workspace 15, apps 15, gateway and TLS 8, the rest 5; `OLA_SUITE_LIMIT_MIN`
+overrides them for tests): at the limit the group gets SIGTERM, then SIGKILL 5 s later, the suite
+counts as failed and is not rerun, no new suite starts, and the refusal gives the turn back. A suite
+that fails otherwise runs once more by itself after the others: its first output is kept in
+`~/Library/Logs/ola/<deploy|check>-<commit12>-<suite>-first.txt`; when the rerun passes the update
+goes on and its `deploys.log` / `checks.log` line ends `FAILED ONCE, PASSED ON THE RERUN: …` (and
+`deployed.json` has `flaky`); when it fails too the refusal names the suite and both kept outputs.
+`node --test ops/suite-test.mjs` (also a suite) holds it. Like the selection, it takes effect from
+the second update after it lands.
+
 **A deploy drops no request (OLA-94).** Only the jobs whose code changed are restarted
 (`ops/restart.mjs`): the TLS front, the tunnel and the gateway keep running from the release they
 started in when their files (their import closure, `ngrok.yml` for the tunnel) are the same in the

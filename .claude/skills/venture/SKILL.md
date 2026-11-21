@@ -47,7 +47,8 @@ commits changing the server's code while they hold it. A refused builder waits w
 priority) instead of a polling loop; `--beside "<folders>"` starts beside the holder when
 its recent commits touch none of them. The one who built a ticket cannot pass its checks:
 the tracker reads which agent runs the command (`scripts/venture/_who.mjs`), not the name.
-The test server is updated only through `runner.mjs deploy` (OLA-272).
+The test server is updated only through `runner.mjs deploy` (OLA-272), with no spacing between
+updates since OLA-338 (step 4b).
 
 ## 1. Load the state
 
@@ -187,6 +188,45 @@ points that have bitten already:
   BETS.md (a number where possible, how sure, what each outcome triggers).
   Anything a later session may need goes in `private/` (documents) or
   `private/data/` (data), never only in a scratchpad.
+
+### 4b. The light way of working (OLA-338, since Nov 21)
+
+Bart, Nov 21, 5:26 am, typed: "Ola-338 yes", after finding that the Nov 20 rules made a 30-minute
+button fix take 4 h 46 min (about 45% of it waiting for the Mac mini). Five rules; the tools hold
+the ones marked so:
+
+1. **Anything Bart will touch is tried once by a second agent** (a checker, `apps/venture/CHECKER.md`)
+   on the live site or the real build before he is told it works. `issues.mjs say` and the checks
+   enforce it, unchanged.
+2. **The project's own tools get no second agent** (scripts/venture, apps/venture, hooks, Ola's ops
+   tools): the builder's tests, then the lead runs them once. Mark the ticket
+   `issues.mjs check <id> internal --why "…"` and close it with
+   `issues.mjs done <id> --proof "no user path: <why>; lead ran <test>: n of n"`. `done` refuses that
+   close without the lead line or when a count is not n of n; `unchecked` does not list it; never
+   start a checker for it.
+3. **One check pass per update of the test server, not per ticket**: when an update is live, one
+   checker gets every ready ticket it carried. Each check is tried three times on his exact path
+   unless its text says more.
+4. **The update of the test server** (`runner.mjs deploy`, `_plate.mjs` `deployGate`, and
+   `apps/activist-ai/ops/ola.mjs`): no spacing between updates; one at a time; never while a checker
+   works on the live server; only the suites the change touches; every suite under a time limit
+   (`ops/suite.mjs`), stopped and counted as failed at it, the turn given back; a failed suite rerun
+   once by itself, and deploys.log names a suite that failed and where its output is kept, or one
+   that passed only on the rerun. The automatic check (`ola.mjs ci`) has the same limits.
+5. **Agents report only when finished** (no progress messages); **no hourly check between 10 pm
+   and 7 am Pacific**; **a fresh session each morning** (the lead hands off at night and Bart's
+   morning starts with `/venture` in a new session).
+
+**The hourly check** (the lead's recurring check while a session is open, e.g. `/loop 1h`; not
+between 10 pm and 7 am Pacific). Its standard wording:
+
+> Hourly check. If it is between 10 pm and 7 am Pacific, do nothing and stop. Otherwise:
+> `node scripts/venture/runner.mjs status` and `node scripts/venture/issues.mjs unchecked`. If an
+> update of the test server went live with ready tickets, start ONE checker for all of them
+> (apps/venture/CHECKER.md brief, three tries of his exact path per check unless a check says more).
+> Never start a checker for an internal ticket: the project's own tools close on the builder's tests
+> run once by the lead (`done --proof "no user path: ...; lead ran <test>: n of n"`). Read finished
+> agents' reports; do not ask running agents for progress. Report to Bart only what changed for him.
 
 ## 5. Talk to Bart
 

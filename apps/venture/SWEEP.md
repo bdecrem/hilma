@@ -38,8 +38,11 @@ Before anything else, the three things that say whether "it works" could be trus
   no check, and what that check now does differently. A checker's pass that failed for him is the
   most important finding of the day.
 - `node scripts/venture/issues.mjs unchecked`: tickets ready with no checker, tickets in progress
-  with no checks, and the day's closings without checks. Read every "internal" reason and every
-  skipped place as a stranger would; reopen what does not hold.
+  with no checks, and the day's closings without checks (internal tickets are not listed: since
+  OLA-338 the project's own tools get no checker and close on "no user path: …; lead ran <test>:
+  n of n", which `done` enforces). Read every skipped place as a stranger would, and the day's
+  internal closings in `issues.mjs list --day <day>`: an internal ticket whose change reaches a
+  person (an app, the live server) was marked wrongly; reopen what does not hold.
 - The request test set on the test server (OLA-231): every request that stopped working, and every
   failure of Ola today that is not yet a case in it. A case is written from the stored conversation
   of what Bart typed (on the mini: `frontdesk/admin.mjs kept bart`), with his exact words, the place
@@ -191,7 +194,8 @@ are immediately implemented"; OLA-331). An idea is work, not a proposal he can d
    Kit, `model`, `apps` or `web` for Ola) with its checks written before the post: what Bart does
    and must then see, one per place (`issues.mjs check <id> add --at ... --do ... --see ...`), or,
    when nothing a person does or sees changes, `issues.mjs check <id> internal --why "..."` naming
-   the test that proves it.
+   the test that proves it (no checker: the lead runs that test once and closes it with
+   `done --proof "no user path: ...; lead ran <test>: n of n"`, OLA-338).
 2. The last step of the review hands both to builders the same night. A session that is open
    starts an Opus builder per part of the code each idea touches (the builder starts the ticket,
    builds, tests, pushes, `issues.mjs ready`). With no session open, the mini's agent takes them:
