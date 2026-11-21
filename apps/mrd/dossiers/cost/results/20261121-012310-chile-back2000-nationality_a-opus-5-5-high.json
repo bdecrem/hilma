@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile nationality_a claude-opus-5-5 high",
- "pid": 72570,
  "step": "back2000",
  "slug": "chile",
  "chunk": "nationality_a",
@@ -59,5 +58,1225 @@
   "user": 180
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:21:06.692Z",
+ "minutes": 57.94,
+ "meters_after": {
+  "at": "2026-11-21T10:21:06.694Z",
+  "window": {
+   "pct": 11,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 4,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 11,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 4,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 11% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 4% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 89181,
+   "output": 52143,
+   "cache_read": 3153092,
+   "cache_write": 157770,
+   "cost_usd": 2.8434,
+   "total": 3452186
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 89115,
+    "output": 8279,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3077,
+    "cost_usd": 0.0731
+   },
+   "claude-opus-5-5": {
+    "input": 66,
+    "output": 43864,
+    "cache_read": 3153092,
+    "cache_write": 157770,
+    "thinking": 9435,
+    "cost_usd": 2.7703
+   }
+  }
+ },
+ "turns": 37,
+ "calls": 72,
+ "duration_ms": 800961,
+ "duration_api_ms": 607495,
+ "pages_read": 28,
+ "pages": [
+  {
+   "at": "2026-11-21T09:23:37.853Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Artículo 10 | Artículo 11 | nacionalización",
+   "ok": true,
+   "chars": 8429
+  },
+  {
+   "at": "2026-11-21T09:27:24.837Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444",
+   "find": "Artículo 2 | Artículo 3 | Artículo 8 | Artículo 9 | cancelar | Ley 20888",
+   "ok": true,
+   "chars": 7139
+  },
+  {
+   "at": "2026-11-21T09:27:31.162Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29",
+   "find": "Artículo 2 | Artículo 3 | Artículo 8",
+   "ok": true,
+   "chars": 5628
+  },
+  {
+   "at": "2026-11-21T09:27:37.895Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08",
+   "find": "Artículo 3 | Artículo 8",
+   "ok": true,
+   "chars": 5259
+  },
+  {
+   "at": "2026-11-21T10:10:17.803Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1981-06-25",
+   "find": "Artículo 2 | Versión:",
+   "ok": true,
+   "chars": 2824
+  },
+  {
+   "at": "2026-11-21T10:10:42.655Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208",
+   "find": "Artículo único | 21 | refugiados | permanencia definitiva",
+   "ok": true,
+   "chars": 3498
+  },
+  {
+   "at": "2026-11-21T10:11:01.655Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+   "find": "artículo 10 | artículo 11 | artículo 12 | dignidad de la patria | Publicación",
+   "ok": true,
+   "chars": 8417
+  },
+  {
+   "at": "2026-11-21T10:11:35.116Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129&idVersion=2005-08-25",
+   "find": "Artículo 10 | Artículo 11 | dignidad de la patria | Versión:",
+   "ok": true,
+   "chars": 5562
+  },
+  {
+   "at": "2026-11-21T10:11:46.436Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129&idVersion=2005-08-25",
+   "find": "se pierde | carta de nacionalización | nacionalidad chilena",
+   "ok": true,
+   "chars": 2201
+  },
+  {
+   "at": "2026-11-21T10:11:56.116Z",
+   "url": "https://webarchive.archive.unhcr.org/20221021163105if_/https://www.refworld.org/pdfid/3db948db4.pdf",
+   "find": "se pierde | dignidad de la patria | carta de nacionalización | Artículo 10",
+   "ok": true,
+   "chars": 894
+  },
+  {
+   "at": "2026-11-21T10:12:30.789Z",
+   "url": "https://www.diputados.gob.mx/bibliot/publica/public/paises/chilecnst.htm",
+   "find": "se pierde | dignidad de la patria | Artículo 10",
+   "ok": true,
+   "chars": 8488
+  },
+  {
+   "at": "2026-11-21T10:12:43.177Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2019-12-24",
+   "find": "se pierde | Son chilenos | carta de nacionalización | Versión:",
+   "ok": true,
+   "chars": 4039
+  },
+  {
+   "at": "2026-11-21T10:12:56.064Z",
+   "url": "https://www.camara.cl/camara/doc/leyes_normas/constitucion_politica.pdf",
+   "find": "se pierde | Son chilenos | Por cancelación de la carta",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:13:28.456Z",
+   "url": "https://dga.mop.gob.cl:443/legistlacionynormas/Legislacin y Normas/DTO-100_22-SEP-2005.pdf",
+   "find": "se pierde | Son chilenos | Por cancelación de la carta",
+   "ok": true,
+   "chars": 1398
+  },
+  {
+   "at": "2026-11-21T10:14:10.803Z",
+   "url": "https://www.interior.gob.cl/transparencia/doc/MarcoNormativoAplicable/200/7965748.pdf",
+   "find": "se pierde | Son chilenos | Por cancelación de la carta",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:14:26.343Z",
+   "url": "https://www.constituteproject.org/constitution/Chile_2021?lang=es",
+   "find": "se pierde | Son chilenos | cancelación de la carta",
+   "ok": true,
+   "chars": 5520
+  },
+  {
+   "at": "2026-11-21T10:14:51.450Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435",
+   "find": "nacionaliza | permanencia definitiva | residencia",
+   "ok": true,
+   "chars": 4537
+  },
+  {
+   "at": "2026-11-21T10:14:56.600Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15",
+   "find": "permanencia definitiva | residencia permanente | Artículo 45 | Artículo 13",
+   "ok": true,
+   "chars": 3052
+  },
+  {
+   "at": "2026-11-21T10:15:02.472Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=1012435&idVersion=2010-04-15",
+   "find": "permanencia definitiva | residencia permanente | Artículo 13 | Documentos",
+   "ok": true,
+   "chars": 3035
+  },
+  {
+   "at": "2026-11-21T10:15:25.366Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156",
+   "find": "permanencia definitiva | residencia permanente | nacionaliza",
+   "ok": true,
+   "chars": 3346
+  },
+  {
+   "at": "2026-11-21T10:15:28.968Z",
+   "url": "https://www.refworld.org/es/node/132392",
+   "find": "permanencia definitiva | residencia permanente | Artículo 13 | nacionaliz",
+   "ok": true,
+   "chars": 600
+  },
+  {
+   "at": "2026-11-21T10:16:03.648Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+   "find": "permanencia definitiva | residencia permanente | nacionaliz | Artículo 13",
+   "ok": true,
+   "chars": 6562
+  },
+  {
+   "at": "2026-11-21T10:16:11.221Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "refugiado | Artículo 41 | permanencia definitiva | \"vigencias\"",
+   "ok": true,
+   "chars": 12514
+  },
+  {
+   "at": "2026-11-21T10:16:16.349Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 39 | Artículo 42 | Artículo 29 | Artículo 30",
+   "ok": true,
+   "chars": 8451
+  },
+  {
+   "at": "2026-11-21T10:16:22.842Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 36 | Artículo 37",
+   "ok": true,
+   "chars": 4421
+  },
+  {
+   "at": "2026-11-21T10:17:07.754Z",
+   "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html",
+   "find": "nacionaliza | refugiad | solicitudes",
+   "ok": true,
+   "chars": 3027
+  },
+  {
+   "at": "2026-11-21T10:17:09.434Z",
+   "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/",
+   "find": "nacionaliza | refugiad | rechaz | 2010",
+   "ok": true,
+   "chars": 2683
+  },
+  {
+   "at": "2026-11-21T10:17:17.565Z",
+   "url": "https://www.interior.gob.cl/sitio-2010-2014/n6288_04-11-2011.html",
+   "find": "nacionaliza | 1.189 | refugiad",
+   "ok": true,
+   "chars": 3366
+  }
+ ],
+ "searches": [
+  "Decreto 5142 1960 nacionalización de extranjeros leychile texto refundido",
+  "Ley 20.888 modifica los requisitos para obtener la nacionalización leychile",
+  "leychile Decreto 1150 1980 Constitución Política \"sentencia judicial condenatoria por delitos contra la dignidad de la patria\"",
+  "Ley 20.430 refugiado \"permanencia definitiva\" artículo residencia \"refugiado\" nacionalización Chile carta de nacionalización refugiados",
+  "cartas de nacionalización otorgadas Chile estadísticas Departamento de Extranjería y Migración 2005 2010 2015 número nacionalizaciones",
+  "\"cancelación de la carta de nacionalización\" Chile decreto caso Corte Suprema artículo 12 Constitución"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.01,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":63,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"In force: Constitution 1980 art. 11 nº3 (loss of nationality 'por sentencia judicial condenatoria por delitos contra la dignidad de la patria o los intereses esenciales y permanentes del Estado') and nº4 (cancellation of the carta), plus DS 5142/1960 art. 8 (cancellation for conviction under State Security Law 12.927 or 'ocurrencias que hagan indigno'). Only serious/state-security offences reach nationality. No documented cancellation practice found for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Same text as 2000: Ley 20.050, which repealed art. 11 nº3, was published and in force only on 26-08-2005, after this date. DS 5142 art. 8 unchanged. No practice evidence of cancellations found.\"},{\"date\":\"2010-01-01\",\"answer\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Ley 20.050 (26-08-2005) repealed the constitutional conviction ground; loss now only via cancellation of the carta, which DS 5142 art. 8 still allows for State Security Law convictions or 'indignidad'. Same option, narrower grounds. No documented cancellations found.\"},{\"date\":\"2015-01-01\",\"answer\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation\":\"Usually; Effectively Always\",\"basis\":\"Constitution art. 11 (post-2005) and DS 5142 art. 8 unchanged; Ley 20.888 (2016) did not touch art. 8. No practice evidence of cancellations for convictions found; government releases 2011-2013 report only grants.\"}],\"change_2000_2020\":\"There have been right protections both in 2000 and 2020 but they are no",
+ "output": {
+  "answers": [
+   {
+    "question_id": 63,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+      "implementation": "Usually; Effectively Always",
+      "basis": "In force: Constitution 1980 art. 11 nº3 (loss of nationality 'por sentencia judicial condenatoria por delitos contra la dignidad de la patria o los intereses esenciales y permanentes del Estado') and nº4 (cancellation of the carta), plus DS 5142/1960 art. 8 (cancellation for conviction under State Security Law 12.927 or 'ocurrencias que hagan indigno'). Only serious/state-security offences reach nationality. No documented cancellation practice found for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same text as 2000: Ley 20.050, which repealed art. 11 nº3, was published and in force only on 26-08-2005, after this date. DS 5142 art. 8 unchanged. No practice evidence of cancellations found."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 20.050 (26-08-2005) repealed the constitutional conviction ground; loss now only via cancellation of the carta, which DS 5142 art. 8 still allows for State Security Law convictions or 'indignidad'. Same option, narrower grounds. No documented cancellations found."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Constitution art. 11 (post-2005) and DS 5142 art. 8 unchanged; Ley 20.888 (2016) did not touch art. 8. No practice evidence of cancellations for convictions found; government releases 2011-2013 report only grants."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Decreto 5.142 de 1960 (texto refundido DL 747 de 1925), Ministerio del Interior",
+      "article": "Art. 8",
+      "role": "cited",
+      "in_force": "1960-10-29 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República (DL 3.464/1980)",
+      "article": "Art. 11 nº3 (pérdida por sentencia condenatoria por delitos contra la dignidad de la patria)",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to 2005-08-25",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República (Decreto 100 de 2005)",
+      "article": "Art. 11 (renuncia, decreto supremo por servicios a enemigos, cancelación de la carta, ley que revoque gracia)",
+      "role": "cited",
+      "in_force": "2005-08-26 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Arts. 16, 17 (suspension/loss of ciudadanía, i.e. political rights, not nationality)",
+      "role": "cited",
+      "in_force": "1981 to today (art. 16 nº2 and 17 nº3 amended by Ley 20.050, 2005-08-26)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 86, 88",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050, Reforma constitucional que introduce diversas modificaciones a la Constitución Política de la República",
+      "article": "Constitución art. 11 nº3; arts. 16 nº2, 17 nº3",
+      "kind": "amended",
+      "what_changed": "Repealed art. 11 nº3 (loss of nationality by conviction for crimes against the dignity of the homeland or the essential interests of the State); the remaining loss grounds include cancellation of the carta. Also amended suspension/loss of ciudadanía (arts. 16-17). Narrows conviction-based loss, but the answer stays 'only major convictions' because of DS 5142 art. 8.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "5. Introdúcense las siguientes enmiendas al artículo 11: a) Sustitúyese el número 1º, por el siguiente: \"1º Por renuncia voluntaria manifestada ante autoridad chilena competente. Esta renuncia sólo producirá efectos si la persona, previamente, se ha nacionalizado en país extranjero;\", y b) Derógase el número 3.º."
+     },
+     {
+      "date": "1981-03-11",
+      "instrument": "Constitución Política de la República de Chile 1980 (texto anterior a 2005)",
+      "article": "Art. 11 nº3",
+      "kind": "enacted",
+      "what_changed": "Text in force on 1 Jan 2000 and 2005: loss of nationality by criminal conviction for crimes against the dignity of the homeland.",
+      "url": "https://www.diputados.gob.mx/bibliot/publica/public/paises/chilecnst.htm",
+      "passage": "3.- Por sentencia judicial condenatoria por delitos contra la dignidad de la patria o los intereses esenciales y permanentes del Estado, así considerados por ley aprobada con quórum calificado. En estos procesos, los hechos se apreciarán siempre en conciencia; 4.- Por cancelación de la carta de nacionalización"
+     },
+     {
+      "date": "1960-10-29",
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 8",
+      "kind": "enacted",
+      "what_changed": "Cancellation of the carta for a grant in breach of art. 3, for 'indignidad', or for a conviction under Ley 12.927. Unchanged in every version (1960, 2016, 2022).",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08",
+      "passage": "Artículo 8.o El que la cancele deberá también ser fundado en haber sido concedida con infracción a lo dispuesto en el artículo 3.o de esta ley, o en haber acaecido ocurrencias que hagan indigno al poseedor de la carta de nacionalización de tal gracia o por haber sido condenado por alguno de los delitos contemplados en la ley número 12,927"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Gobierno entrega cartas de nacionalización a 138 nuevos compatriotas",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DS 5142 art. 8 read in the 1960 and 2016 LeyChile versions (identical) and in the current text. The pre-2005 Constitution art. 11 was read from a reproduction (diputados.gob.mx) and the Ley 20.050 amending text on LeyChile. No documented cancellation of a carta for a conviction was found for any period, so implementation rests on absence of evidence.",
+    "sources_opened": [
+     {
+      "title": "DS 5142 (LeyChile, current)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444"
+     },
+     {
+      "title": "DS 5142 texto original",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29"
+     },
+     {
+      "title": "DS 5142 versión 2016-2022",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     },
+     {
+      "title": "Ley 20.050",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "Constitución de Chile (texto pre-2005)",
+      "url": "https://www.diputados.gob.mx/bibliot/publica/public/paises/chilecnst.htm"
+     },
+     {
+      "title": "Constitute Project, Chile 2021 (es)",
+      "url": "https://www.constituteproject.org/constitution/Chile_2021?lang=es"
+     },
+     {
+      "title": "DL 3464 versión 2003-2005 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=7129&idVersion=2005-08-25"
+     },
+     {
+      "title": "Decreto 100 versión 2019",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302&idVersion=2019-12-24"
+     },
+     {
+      "title": "Constitución LeyChile current",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "Interior 2013 press release",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html"
+     }
+    ],
+    "starting_answer_concern": "The MRD's 2020 implementation 'Rarely; Effectively Always' pairs non-neighbouring levels and is not an allowed option; I rated past dates 'Usually; Effectively Always' because no cancellation is documented. Ley 21.325 arts. 86/88, cited by the MRD, were not in force in 2020; the 2020 answer rests on DS 5142 art. 8 and Constitution art. 11.",
+    "confidence": "medium",
+    "notes": "Arts. 16-17 of the Constitution concern ciudadanía (voting/political rights), not nationality; Ley 20.050 amended them but they do not affect nationality status. The 'indignidad' ground in DS 5142 art. 8 is open-ended, but the explicit conviction ground is limited to State Security Law offences. A 2026 inaplicabilidad filing against art. 8 DL 747 was seen only in search results (not read) and is outside the period."
+   },
+   {
+    "question_id": 65,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Constitution art. 10 nº4 (carta de nacionalización, with renunciation of prior nationality unless a treaty applies) and DS 5142 art. 2 (21 years, more than five years' continuous residence, permanencia definitiva per DL 1432/1976). Economic migrants reached permanencia definitiva via DL 1094 arts. 23 (sujeto a contrato, after two years) and 31 (temporario). Practice evidence thin: the Interior 2013 release covers naturalisations over the prior ten years (from about 2003)."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same text as 2000 (Ley 20.050 entered into force 26-08-2005). Practice: the Interior 2013 release reports naturalisations of people from over 112 countries over the preceding decade; no specific data read for 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 20.050 (2005) replaced art. 10 nº4 with 'Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley', dropping the constitutional renunciation requirement. DS 5142 art. 2 unchanged. Practice: 1,189 people completed naturalisation between 2010 and Nov 2011 (Interior 2011)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same law as 2010 (Ley 20.888, which lowered the age to 18, came into force 08-01-2016, after this date). Practice: applications rose 14% 2008-2012; 11,246 people naturalised 2010-2019 (Interior 2013; CNN Chile 2019)."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 2",
+      "role": "predecessor",
+      "in_force": "1960-10-29 to today (amended DL 1432/1976; Ley 20.888, 2016-01-08)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 10 nº4",
+      "role": "cited",
+      "in_force": "1981 to today (replaced by Ley 20.050, 2005-08-26)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 23, 29, 31, 41-42 (permanencia definitiva)",
+      "role": "other_in_force",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 78-83",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050",
+      "article": "Constitución art. 10 nº4",
+      "kind": "amended",
+      "what_changed": "Replaced nº4, removing the requirement to renounce the previous nationality; naturalisation 'en conformidad a la ley'. Broadens the pathway.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "c) Reemplázase el número 4.º, por el siguiente: \"4.º Los extranjeros que obtuvieren carta de nacionalización en conformidad a la ley.\"."
+     },
+     {
+      "date": "2016-01-08",
+      "instrument": "Ley 20.888, Modifica los requisitos para obtener la nacionalización",
+      "article": "DS 5142 art. 2",
+      "kind": "amended",
+      "what_changed": "Minimum age lowered from 21 to 18 and 'continuada' deleted from the five-year residence requirement; new inciso for children aged 14+ and for children of refugees.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208",
+      "passage": "1.- En el artículo 2º: a) Sustitúyese, en su inciso primero, el guarismo \"21\" por \"18\", y suprímese en el mismo la palabra \"continuada\"."
+     },
+     {
+      "date": "1960-10-29",
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 2",
+      "kind": "enacted",
+      "what_changed": "Base text: 21 years and more than five years' continuous residence (DL 1432/1976 later added permanencia definitiva and the renunciation formalities).",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29",
+      "passage": "Artículo 2°.- Puede otorgarse carta de nacionalización a los extranjeros que hayan cumplido 21 años de edad, que tengan más de cinco años de residencia continuada en el territorio de la República"
+     },
+     {
+      "date": "1975-07-19",
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Art. 23",
+      "kind": "enacted",
+      "what_changed": "Contract-worker visa holders may request permanencia definitiva after two years, giving economic migrants the residence base for naturalisation.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "El residente sujeto a contrato podrá solicitar su permanencia definitiva al cumplir dos años de residencia."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Subsecretario Ubilla entregó cartas de nacionalidad a 147 nuevos chilenos",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n6288_04-11-2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Gobierno entrega cartas de nacionalización a 138 nuevos compatriotas",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Más de 11 mil ciudadanos extranjeros se han convertido en nuevos chilenos en la última década",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "DS 5142 art. 2 read in the 1960 original and 2016 versions; the 1981-2016 LeyChile version displayed the original text, so the pre-2016 wording was reconstructed from Ley 20.888 and the DL 1432 notes. Practice data are government press releases (2011, 2013) and press (2019); nothing specific for 2000-2005.",
+    "sources_opened": [
+     {
+      "title": "DS 5142 current",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444"
+     },
+     {
+      "title": "DS 5142 texto original",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29"
+     },
+     {
+      "title": "DS 5142 versión 1981",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1981-06-25"
+     },
+     {
+      "title": "DS 5142 versión 2016",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     },
+     {
+      "title": "Ley 20.888",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208"
+     },
+     {
+      "title": "Ley 20.050",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "Constitución pre-2005",
+      "url": "https://www.diputados.gob.mx/bibliot/publica/public/paises/chilecnst.htm"
+     },
+     {
+      "title": "Constitute Project, Chile 2021 (es)",
+      "url": "https://www.constituteproject.org/constitution/Chile_2021?lang=es"
+     },
+     {
+      "title": "DL 1094 JSON LeyChile",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Interior 2011",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n6288_04-11-2011.html"
+     },
+     {
+      "title": "Interior 2013",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html"
+     },
+     {
+      "title": "CNN Chile 2019",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 implementation 'Rarely; Usually' pairs non-neighbouring levels and is not an allowed option; past dates rated 'Usually'. The MRD citation's 'pena aflictiva' bar and five-year term come from Ley 21.325; in 2020 the bars were DS 5142 art. 3 (any conviction or pending prosecution for crimes or simple delitos), and the minimum age was 18 only from 2016 (21 before).",
+    "confidence": "medium",
+    "notes": "DS 5142 art. 3 (pre-2022) barred applicants who had been convicted of, or were being prosecuted for, crimes or simple delitos; Ley 21.325 art. 175 nº11 deleted it (in force 2022). The 2018 regularisation and the 2018 visas changed residence practice, not the naturalisation statute."
+   },
+   {
+    "question_id": 67,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Kept at the starting answer: no dated event between 2000 and 2020 changed refugees' access to naturalisation, so the past dates follow the 2020 'No'. But in force at this date: DL 1094 arts. 34-40 bis (asylum/refugee visa, Ley 19.476 of 1996), art. 37 (asylee may request permanencia definitiva after two years), and DS 5142 art. 2. No practice evidence specific to refugees."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same law as 2000; kept at the starting answer (see concern). No refugee-specific practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1094 refugee provisions still in force (Ley 20.430, which gives refugees permanent residence, came into force 15-04-2010, after this date). Kept at the starting answer."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 art. 45 (from 2010) entitles recognised refugees to permanent residence, which together with DS 5142 art. 2 is a route to naturalisation. Ley 20.507 (2011) added temporary residence for trafficking victims (DL 1094 art. 33 bis). Kept at the starting answer because no event explains a different coding; see concern."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 34, 34 bis, 37, 40 (asilo político / refugiado)",
+      "role": "predecessor",
+      "in_force": "1975 (34 bis and 38-40 bis per Ley 19.476, 1996) to 2010-04-15 for refugees (repealed in that respect by Ley 20.430 art. 49)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 20.430, Establece disposiciones sobre protección de refugiados",
+      "article": "Art. 45",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 2 (incl. final inciso on refugees' children)",
+      "role": "other_in_force",
+      "in_force": "1960 to today; refugee inciso from 2016-01-08",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094",
+      "article": "Art. 33 bis (trafficking victims)",
+      "role": "other_in_force",
+      "in_force": "2011-04-08 to 2022-02-11",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 70",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "Art. 45",
+      "kind": "new_instrument",
+      "what_changed": "Recognised refugees and their families are entitled to a permanent residence permit, the residence status DS 5142 art. 2 requires for naturalisation. Ley 20.430 art. 49 repealed DL 1094's refugee provisions.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+      "passage": "Artículo 45.- Documentación de Residencia. Las personas a quienes se les haya reconocido la condición de refugiado y sus familias, tendrán derecho a que se les otorgue un permiso de residencia permanente, de acuerdo a lo preceptuado en la legislación que establece normas sobre extranjeros en Chile"
+     },
+     {
+      "date": "1996",
+      "instrument": "Decreto Ley 1.094 (as amended by Ley 19.476)",
+      "article": "Arts. 34 bis, 37",
+      "kind": "amended",
+      "what_changed": "In force on 1 Jan 2000 and 2005: refugees entitled to a residence visa; holders of the asylum visa may request permanencia definitiva after two years.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Artículo 37.- La visación de residente con asilo político tendrá una duración máxima de dos años. ... El residente con asilo político podrá solicitar la permanencia definitiva al cumplir dos años de residencia en Chile."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1094 art. 33 bis",
+      "kind": "amended",
+      "what_changed": "Trafficking victims may apply for temporary residence of at least six months, with the possibility of regularising their status.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Artículo 33 bis.- Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal por un período mínimo de seis meses"
+     },
+     {
+      "date": "2016-01-08",
+      "instrument": "Ley 20.888",
+      "article": "DS 5142 art. 2, new final inciso",
+      "kind": "amended",
+      "what_changed": "Minor children of recognised refugees may naturalise as soon as one parent has obtained the carta, with no other requirement: an explicit humanitarian-family route before 2020.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208",
+      "passage": "\"Los menores de 18 años, cuyo padre o madre tenga la calidad de refugiados reconocidos por Chile, podrán nacionalizarse chilenos desde el momento en que, al menos, uno de sus padres haya obtenido la carta de nacionalización, sin necesidad de cumplir cualquier otro requisito legal.\""
+     }
+    ],
+    "repealed_search": "Searched DL 1094 (refugee/asylum provisions arts. 34-40 bis and permanencia definitiva arts. 41-42), Ley 20.430 (2010 original), DS 5142 versions (1960, 2016, 2022) and Ley 20.888. Found no humanitarian pathway that was repealed or narrowed before 2020. Instead, pathways were in force throughout: DL 1094 art. 37 until 2010, Ley 20.430 art. 45 from 2010, and DS 5142 art. 2, extended to refugees' children in 2016.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Más de 11 mil ciudadanos extranjeros se han convertido en nuevos chilenos en la última década",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 20.430 original text read via LeyChile JSON; DL 1094 read in its final consolidated text (refugee articles from Ley 19.476 of 1996, unchanged until 2010). No refugee-specific naturalisation statistics found.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.430 LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "Ley 20.430 texto original (LeyChile page)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "Ley 20.430 texto original (leychile.cl)",
+      "url": "https://www.leychile.cl/Navegar?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "Ley 20.430 JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "Decreto 837 reglamento",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156"
+     },
+     {
+      "title": "Refworld Ley 20.430 (blocked)",
+      "url": "https://www.refworld.org/es/node/132392"
+     },
+     {
+      "title": "DL 1094 JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Ley 20.888",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208"
+     },
+     {
+      "title": "DS 5142 versión 2016",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     },
+     {
+      "title": "CNN Chile 2019",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'No' looks wrong on its own date. Recognised refugees were entitled to permanent residence (Ley 20.430 art. 45) and, after more than five years' residence, could apply for a carta under DS 5142 art. 2. Ley 20.888 (2016) explicitly addressed refugees' children in DS 5142 art. 2. Before 2010, DL 1094 art. 37 let asylees obtain permanencia definitiva after two years. The statutory law supports 'Yes' on every date from 2000 to 2020; past dates were kept at 'No' only because no dated event explains a difference from the starting answer.",
+    "confidence": "medium",
+    "notes": "The MRD's 2023 answer ('Yes', citing Ley 21.325 art. 70) matches the statutory position that already existed before 2020. The 2019 CNN piece quotes the Interior undersecretary saying many naturalised people came from places with political persecution, which is weak practice evidence that humanitarian migrants did naturalise."
+   },
+   {
+    "question_id": 69,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "DS 5142 art. 2: the general route (five years' residence plus permanencia definitiva) and a pre-2016 final inciso letting children of naturalised parents obtain a carta at 18. Family migrants got temporario visas for family ties (DL 1094 art. 29) and permanencia definitiva after one year (art. 31). Constitution art. 10 nº3: children of Chileans born abroad became Chilean by living in Chile for more than one year. Practice for 2000 is thin."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same as 2000 (Ley 20.050 in force only from 26-08-2005). Practice thin: the Interior 2013 release covers the prior decade."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 20.050 replaced art. 10 nº3: children of Chileans born abroad are Chilean without the residence requirement, subject to a generational limit; the renunciation requirement was also removed. DS 5142 art. 2 and DL 1094 arts. 29/31 unchanged. Practice: 1,189 naturalisations 2010-2011, including families (Interior 2011)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same law as 2010. Ley 20.888 (in force 08-01-2016) later let foreigners' children apply from 14, and refugees' children once a parent had naturalised. Practice: rising applications 2008-2012 (Interior 2013)."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 2 (incisos on children)",
+      "role": "predecessor",
+      "in_force": "1960 to today (final inciso replaced and new inciso added by Ley 20.888, 2016-01-08)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 29, 31 (residente temporario por vínculos de familia), 23 inc. 3 (family of contract workers)",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-11",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Política",
+      "article": "Art. 10 nº2/nº3 (hijos de chilenos nacidos en el extranjero)",
+      "role": "other_in_force",
+      "in_force": "1981 to today (replaced by Ley 20.050, 2005-08-26)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 85",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Código Civil",
+      "article": "Art. 133",
+      "role": "cited",
+      "in_force": "not relied on for the 2000-2020 answers",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "1960-10-29",
+      "instrument": "Decreto 5.142 de 1960",
+      "article": "Art. 2, final inciso (pre-2016)",
+      "kind": "enacted",
+      "what_changed": "Children of naturalised parents could obtain a carta at 18 if they met the other requirements. Replaced by Ley 20.888 in 2016.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29",
+      "passage": "Podrá otorgarse también carta de nacionalización a los hijos de padre o madre chilenos nacionalizados, que hayan cumplido 18 años de edad y que reúnan los demás requisitos indicados en el inciso primero."
+     },
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050",
+      "article": "Constitución art. 10 nº2-3",
+      "kind": "amended",
+      "what_changed": "Removed the requirement to live in Chile ('avecindarse') for children of Chileans born abroad and added a generational limit.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "b) Sustitúyese el número 3.º, por el siguiente: \"3º Los hijos de padre o madre chilenos, nacidos en territorio extranjero. Con todo, se requerirá que alguno de sus ascendientes en línea recta de primer o segundo grado, haya adquirido la nacionalidad chilena en virtud de lo establecido en los números 1º, 4º ó 5º;\"."
+     },
+     {
+      "date": "2016-01-08",
+      "instrument": "Ley 20.888",
+      "article": "DS 5142 art. 2",
+      "kind": "amended",
+      "what_changed": "Replaced the final inciso: children of foreigners aged 14+ with five years' residence and permanencia definitiva may apply. Also added the inciso on refugees' children.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208",
+      "passage": "b) Reemplázase el inciso final, que pasa a ser penúltimo, por el siguiente: \"Con todo, también podrán solicitar carta de nacionalización los hijos de extranjeros que hayan cumplido 14 años de edad, tengan más de cinco años de residencia en el territorio de la República"
+     },
+     {
+      "date": "1975-07-19",
+      "instrument": "Decreto Ley 1.094",
+      "article": "Arts. 29, 31",
+      "kind": "enacted",
+      "what_changed": "Temporario visa for family ties, with permanencia definitiva after one year: the residence base for naturalisation.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Artículo 29.- Se otorgará visación de residente temporario al extranjero que tenga el propósito de radicarse en Chile, siempre que acredite vínculos de familia o intereses en el país"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Subsecretario Ubilla entregó cartas de nacionalidad a 147 nuevos chilenos",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n6288_04-11-2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Gobierno entrega cartas de nacionalización a 138 nuevos compatriotas",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Más de 11 mil ciudadanos extranjeros se han convertido en nuevos chilenos en la última década",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The pre-2016 final inciso of DS 5142 art. 2 was read in the 1960 original and confirmed by Ley 20.888, which still calls it the 'inciso final'; the 1981-2016 version was reconstructed. Practice sources cover naturalisations generally, not family migrants specifically; nothing specific for 2000-2005.",
+    "sources_opened": [
+     {
+      "title": "DS 5142 texto original",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=1960-10-29"
+     },
+     {
+      "title": "DS 5142 versión 2016",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444&idVersion=2016-01-08"
+     },
+     {
+      "title": "DS 5142 current",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444"
+     },
+     {
+      "title": "Ley 20.888",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1086208"
+     },
+     {
+      "title": "Ley 20.050",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "Constitución pre-2005",
+      "url": "https://www.diputados.gob.mx/bibliot/publica/public/paises/chilecnst.htm"
+     },
+     {
+      "title": "Constitute Project, Chile 2021 (es)",
+      "url": "https://www.constituteproject.org/constitution/Chile_2021?lang=es"
+     },
+     {
+      "title": "DL 1094 JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Interior 2011",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n6288_04-11-2011.html"
+     },
+     {
+      "title": "Interior 2013",
+      "url": "https://www.interior.gob.cl/sitio-2010-2014/n8025_14-08-2013.html"
+     },
+     {
+      "title": "CNN Chile 2019",
+      "url": "https://www.cnnchile.com/pais/11-mil-ciudadanos-extranjeros-carta-nacionalizacion_20190925/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 implementation 'Rarely; Usually' pairs non-neighbouring levels and is not an allowed option; past dates rated 'Usually'. The MRD's citation (Ley 21.325 art. 85: a reduced two-year term for spouses and relatives of Chileans) describes a provision that did not exist before 2022. In 2000-2020 there was no reduced term for spouses of Chileans; the family pathway was the general five-year route plus the provisions on children.",
+    "confidence": "medium",
+    "notes": null
+   }
+  ]
+ }
 }
