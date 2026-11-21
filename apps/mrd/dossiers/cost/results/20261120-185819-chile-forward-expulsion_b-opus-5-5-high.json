@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile expulsion_b claude-opus-5-5 high",
- "pid": 53864,
  "step": "forward",
  "slug": "chile",
  "chunk": "expulsion_b",
@@ -59,5 +58,1069 @@
   "user": 110
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:40:03.378Z",
+ "minutes": 41.73,
+ "meters_after": {
+  "at": "2026-11-21T03:40:03.379Z",
+  "window": {
+   "pct": 58,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 58,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 58% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 149513,
+   "output": 37172,
+   "cache_read": 3197161,
+   "cache_write": 144954,
+   "cost_usd": 2.4271,
+   "total": 3528800
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 149445,
+    "output": 11828,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3232,
+    "cost_usd": 0.1209
+   },
+   "claude-opus-5-5": {
+    "input": 68,
+    "output": 25344,
+    "cache_read": 3197161,
+    "cache_write": 144954,
+    "thinking": 9372,
+    "cost_usd": 2.3062
+   }
+  }
+ },
+ "turns": 47,
+ "calls": 77,
+ "duration_ms": 675662,
+ "duration_api_ms": 519417,
+ "pages_read": 33,
+ "pages": [
+  {
+   "at": "2026-11-21T02:58:24.109Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 126 | Artículo 131 | Artículo 132 | Artículo 141 | refugio | Ley 21655 | Ley 21.655",
+   "ok": true,
+   "chars": 6162
+  },
+  {
+   "at": "2026-11-21T03:01:34.874Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 132.- | Artículo 131.- | Artículo 128 | Artículo 129.- | Artículo 141.- | Artículo 10.-",
+   "ok": true,
+   "chars": 2196
+  },
+  {
+   "at": "2026-11-21T03:01:44.963Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 132.- | Artículo 131.- | Artículo 129.- | Artículo 141.- | Artículo 10.-",
+   "ok": true,
+   "chars": 3412
+  },
+  {
+   "at": "2026-11-21T03:01:55.286Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2021/04/20/42934/01/1930044.pdf",
+   "find": "Artículo 10.- | Artículo 126.- | Artículo 129.- | Artículo 131.- | Artículo 132.- | Artículo 141.- | Artículo 134.-",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:02:16.869Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 132.- | Artículo 131.- | Artículo 129.- | Artículo 141.- | Artículo 10.- | Artículo 132 bis",
+   "ok": true,
+   "chars": 10765
+  },
+  {
+   "at": "2026-11-21T03:02:21.667Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "contraviniendo la prohibición de ingreso del número 3 | sus descargos res | Artículo 4.- | refugio | Artículo 136.-",
+   "ok": true,
+   "chars": 13313
+  },
+  {
+   "at": "2026-11-21T03:02:22.801Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 131.- | Artículo 132.- | Artículo 132 bis | fecha_version | Artículo 141.-",
+   "ok": true,
+   "chars": 986
+  },
+  {
+   "at": "2026-11-21T03:03:41.539Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "presentación efectuada por el ext | asistido por un intérprete conforme al artículo 5 | Artículo 134.- | Artículo 142.-",
+   "ok": true,
+   "chars": 6755
+  },
+  {
+   "at": "2026-11-21T03:03:55.726Z",
+   "url": "https://iura.cl/21655/",
+   "find": "artículo 131 | Artículo 1 | Artículo 2 | informad | refugio",
+   "ok": true,
+   "chars": 3439
+  },
+  {
+   "at": "2026-11-21T03:04:09.312Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1012435",
+   "find": "Artículo 4.- | Artículo 5.- | Artículo 6.- | intención de solicitar | deberá informar | Artículo 26 | Artículo 36 | tercer país | Artículo 27",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:09:39.606Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435",
+   "find": "Artículo 4 | intención de solicitar | deberá informar | tercer país | Ley 21655 | Texto Original",
+   "ok": true,
+   "chars": 8265
+  },
+  {
+   "at": "2026-11-21T03:09:43.966Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1012435",
+   "find": "Artículo 4°.- | Artículo 26.- | Artículo 27.- | Artículo 28 bis | Artículo 28 ter | intención | informar",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:14:37.092Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=1012435",
+   "find": "Artículo 4°.- | Artículo 26.- | Artículo 27.- | intención | deberá informar",
+   "ok": true,
+   "chars": 2170
+  },
+  {
+   "at": "2026-11-21T03:15:05.014Z",
+   "url": "https://iura.cl/21655/index.html",
+   "find": "Art. 1º | href",
+   "ok": true,
+   "chars": 1598
+  },
+  {
+   "at": "2026-11-21T03:15:20.498Z",
+   "url": "https://www.camara.cl/cms/condicion-de-refugiado-y-procedimientos-relacionados-contaran-con-nueva-regulacion/",
+   "find": "frontera | informar | manifestar | reconducción",
+   "ok": true,
+   "chars": 3528
+  },
+  {
+   "at": "2026-11-21T03:15:49.053Z",
+   "url": "https://actualidadjuridica.doe.cl/ley-establece-una-etapa-inicial-en-el-procedimiento-de-determinacion-de-la-condicion-de-refugiado/",
+   "find": "Artículo 26 | intención | informar | frontera | 131",
+   "ok": true,
+   "chars": 2706
+  },
+  {
+   "at": "2026-11-21T03:15:50.579Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156",
+   "find": "Artículo 6 | intención | informar | frontera | Artículo 36",
+   "ok": true,
+   "chars": 5280
+  },
+  {
+   "at": "2026-11-21T03:21:36.754Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "artículo 26 | intención | informará | artículo 131 | Artículo 2",
+   "ok": true,
+   "chars": 9051
+  },
+  {
+   "at": "2026-11-21T03:21:57.568Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "Artículo | 132 bis | Publicación",
+   "ok": true,
+   "chars": 4807
+  },
+  {
+   "at": "2026-11-21T03:21:57.759Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "21.325 | Publicación | Artículo",
+   "ok": true,
+   "chars": 2419
+  },
+  {
+   "at": "2026-11-21T03:22:10.067Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+   "find": "Última modificación | Versión: | 01-ABR-2025",
+   "ok": true,
+   "chars": 4080
+  },
+  {
+   "at": "2026-11-21T03:22:13.859Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325 | Publicación",
+   "ok": true,
+   "chars": 3929
+  },
+  {
+   "at": "2026-11-21T03:22:14.512Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325 | Publicación",
+   "ok": true,
+   "chars": 4306
+  },
+  {
+   "at": "2026-11-21T03:25:51.734Z",
+   "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+   "find": "expul | migrant | asylum | refugee | border",
+   "ok": true,
+   "chars": 6396
+  },
+  {
+   "at": "2026-11-21T03:25:52.853Z",
+   "url": "https://www.diarioconstitucional.cl/2025/04/21/corte-suprema-revoca-orden-de-abandono-y-acoge-amparo-de-extranjero-exige-razonabilidad-en-procedimientos-migratorios/",
+   "find": "Rol | descargos | expulsión | considerando",
+   "ok": true,
+   "chars": 2421
+  },
+  {
+   "at": "2026-11-21T03:26:31.497Z",
+   "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+   "find": "Applying for asylum is difficult | expelled | deport",
+   "ok": true,
+   "chars": 2210
+  },
+  {
+   "at": "2026-11-21T03:26:31.588Z",
+   "url": "https://www.hrw.org/world-report/2026/country-chapters/chile",
+   "find": "asylum | expul | deport | migrant | refugee",
+   "ok": true,
+   "chars": 1778
+  },
+  {
+   "at": "2026-11-21T03:26:33.831Z",
+   "url": "https://www.hrw.org/world-report/2025/country-chapters/chile",
+   "find": "asylum | expul | deport | refugee | reconduc",
+   "ok": true,
+   "chars": 1779
+  },
+  {
+   "at": "2026-11-21T03:26:45.516Z",
+   "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/119147",
+   "find": "refugio | expulsión | reconducción | Rol | 2024 | 2025",
+   "ok": true,
+   "chars": 4704
+  },
+  {
+   "at": "2026-11-21T03:26:48.116Z",
+   "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/127287",
+   "find": "refugio | expulsión | reconducción | Rol | descargos",
+   "ok": true,
+   "chars": 3435
+  },
+  {
+   "at": "2026-11-21T03:26:58.993Z",
+   "url": "https://www.diarioconstitucional.cl/2025/12/24/corte-suprema-anula-orden-de-expulsion-por-exigir-carpeta-tributaria-de-empleador-a-extranjero/",
+   "find": "expulsión | Rol | 129 | descargos",
+   "ok": true,
+   "chars": 3658
+  },
+  {
+   "at": "2026-11-21T03:27:11.790Z",
+   "url": "https://www.diarioconstitucional.cl/2025/07/07/corte-suprema-ordena-nuevo-pronunciamiento-tras-expulsion-de-madre-venezolana-sin-ponderar-unidad-familiar/",
+   "find": "descargos | notific | 129 | Rol",
+   "ok": true,
+   "chars": 3195
+  },
+  {
+   "at": "2026-11-21T03:27:12.584Z",
+   "url": "https://www.diarioconstitucional.cl/2026/01/27/corte-suprema-deja-sin-efecto-expulsion-por-falta-de-proporcionalidad-y-vulneracion-del-debido-proceso/",
+   "find": "descargos | notific | debido proceso | Rol",
+   "ok": true,
+   "chars": 4572
+  }
+ ],
+ "searches": [
+  "Ley 21.655 modifica ley 21.325 reconducción ley 20.430 texto artículo 131",
+  "\"Ley 21.325\" diario oficial 20 abril 2021 pdf migración y extranjería",
+  "\"Ley 21655\" OR \"Ley 21.655\" reconducción refugio leychile",
+  "ley 20.430 artículo \"manifestar\" \"intención de solicitar refugio\" autoridad contralora \"deberá informarles\" requisitos plazos",
+  "\"autoridad contralora\" \"su intención de solicitar\" refugio \"requisitos, plazos y procedimientos\" artículo 26 ley 20.430",
+  "bcn.cl leychile navegar idNorma \"Ley 21655\" \"etapa inicial al procedimiento de determinación de la condición de refugiado\"",
+  "ley publicada marzo 2025 modifica \"ley N° 21.325\" migración vigencia 1 abril 2025",
+  "Corte Suprema acoge amparo expulsión administrativa migrante descargos artículo 132 ley 21.325 falta de notificación 2024",
+  "INDH informe reconducciones frontera Colchane refugio información 2024 2025 vulneración debido proceso",
+  "Corte Suprema reconducción ilegal solicitante refugio no se le permitió solicitar refugio amparo 2023 Colchane fallo",
+  "pjud.cl Corte Suprema deja sin efecto expulsión no se notificó inicio del procedimiento descargos ley 21.325 2023"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.46,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.49,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":55,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley 20.430 que establece disposiciones sobre protección de refugiados\",\"article\":\"Art. 26 (inciso tercero, formerly segundo)\",\"enacted\":\"2010-04-15\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Ley 20.430\",\"article\":\"Art. 29 inciso primero\",\"enacted\":\"2010-04-15\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 131 (reconducción; right to be informed of the procedure and remedies)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2024-02-20\",\"instrument\":\"Ley Nº 21.655, modifica la ley Nº 20.430 ... y la ley Nº 21.325, en relación con la medida de reconducción\",\"article\":\"Ley 20.430 art. 26 (new inciso tercero) and art. 29\",\"kind\":\"amended\",\"what_changed\":\"Art. 26 was rewritten: foreigners must tell the border authority they intend to seek refuge, and only then are they told the requirements and deadlines. Art. 29 requires detailed information once a claim is admitted. Neither provision makes the authority tell anyone, before expulsion or refusal of entry, that asylum may be available. The indicator is touched but not met.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21655\",\"passage\":\"Al ingresar al territorio nacional, los extranjeros deberán informar a la autoridad contralora de frontera sobre su intención de solicitar refugio en Chile, en cuyo caso serán trasladados a la dependencia más cercana de la Policía de Investigaciones [...] y se les informará sobre los requisitos y plazos que contempla el procedimiento conducente al reconocimiento de la condición de refugiado.\"}],\"implementation_then_now\":\"The answer is No on both dates, so implementation does not apply. F",
+ "output": {
+  "answers": [
+   {
+    "question_id": 55,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430 que establece disposiciones sobre protección de refugiados",
+      "article": "Art. 26 (inciso tercero, formerly segundo)",
+      "enacted": "2010-04-15",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 29 inciso primero",
+      "enacted": "2010-04-15",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 131 (reconducción; right to be informed of the procedure and remedies)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley Nº 21.655, modifica la ley Nº 20.430 ... y la ley Nº 21.325, en relación con la medida de reconducción",
+      "article": "Ley 20.430 art. 26 (new inciso tercero) and art. 29",
+      "kind": "amended",
+      "what_changed": "Art. 26 was rewritten: foreigners must tell the border authority they intend to seek refuge, and only then are they told the requirements and deadlines. Art. 29 requires detailed information once a claim is admitted. Neither provision makes the authority tell anyone, before expulsion or refusal of entry, that asylum may be available. The indicator is touched but not met.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Al ingresar al territorio nacional, los extranjeros deberán informar a la autoridad contralora de frontera sobre su intención de solicitar refugio en Chile, en cuyo caso serán trasladados a la dependencia más cercana de la Policía de Investigaciones [...] y se les informará sobre los requisitos y plazos que contempla el procedimiento conducente al reconocimiento de la condición de refugiado."
+     }
+    ],
+    "implementation_then_now": "The answer is No on both dates, so implementation does not apply. For context: HRW (World Report 2024, covering 2023) reports that immigration officials have wide discretion over who receives an asylum application form. This concerns asylum seekers at the border and does not affect the rating.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch, World Report 2024: Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the text of Ley 21.655 on LeyChile, and the LeyChile version history for Ley 20.430 (versions dated 15-04-2010, 12-02-2022 and 20-02-2024, the last made by Ley 21.655). I could not open the pre-2024 wording of Ley 20.430 art. 26, which LeyChile loads dynamically, or any PDFs.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 20.430 (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "LeyChile – Ley 20.430 (navegar)",
+      "url": "https://www.leychile.cl/Navegar?idNorma=1012435"
+     },
+     {
+      "title": "LeyChile – Decreto 837 (reglamento Ley 20.430)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156"
+     },
+     {
+      "title": "LeyChile XML – Ley 21.325 texto vigente",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "iura.cl – Ley 21.655 resumen",
+      "url": "https://iura.cl/21655/"
+     },
+     {
+      "title": "DOE Actualidad Jurídica – Ley 21.655",
+      "url": "https://actualidadjuridica.doe.cl/ley-establece-una-etapa-inicial-en-el-procedimiento-de-determinacion-de-la-condicion-de-refugiado/"
+     },
+     {
+      "title": "Cámara de Diputados – nueva regulación refugio",
+      "url": "https://www.camara.cl/cms/condicion-de-refugiado-y-procedimientos-relacionados-contaran-con-nueva-regulacion/"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     }
+    ],
+    "starting_answer_concern": "In the MRD's Brazil example, a border-information duty triggered by the person's request (Law 9.474 art. 7) counted towards a Yes. Under that reading, Chile's amended art. 26 might be argued to qualify. I keep No because Chile's duty arises only after the person states an intention to seek asylum, and nothing requires advising people of asylum before reconducción or expulsion.",
+    "confidence": "medium",
+    "notes": "No court ruling relied on. Ley 21.325 art. 131 gives people facing reconducción the right to be heard and to be informed of the reconducción procedure and the remedies, not of asylum."
+   },
+   {
+    "question_id": 57,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 4 (No devolución)",
+      "enacted": "2010-04-15",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 10 (protección complementaria)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "Art. 2 inciso final (llegada directa / tercer país)",
+      "enacted": "2024-02-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley Nº 21.655",
+      "article": "Ley 20.430 art. 2, new inciso final",
+      "kind": "amended",
+      "what_changed": "Adds a direct-arrival rule: refugee recognition under numerals 1 and 2 is limited to people who arrive directly, meaning no more than 60 days in a third country. It adds no ban on removal to a country that might refoule the person onwards. It does not create the protection.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Solo tendrán derecho a que se les reconozca la calidad de refugiado de conformidad con los numerales 1 y 2 quienes lleguen directamente desde el territorio en que su vida o libertad esté amenazada. Se entenderá que llegan directamente quienes lo hacen en un viaje con escalas siempre que la estadía en un tercer país no se haya extendido por más de sesenta días."
+     }
+    ],
+    "implementation_then_now": "Not applicable on either date because the answer is No. I found no rule or ruling in the window that bars removal to a country likely to refoule the person onwards.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the current text of Ley 20.430 art. 4 on LeyChile. In that text, the Ley 21.655 annotations appear on arts. 2 and 3 but not on art. 4. I read Ley 21.325 art. 10 from the current consolidated XML; LeyChile's version list shows no amending law for it.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 20.430",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile XML – Ley 21.325",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.430 art. 4 extends non-refoulement to 'cualquier forma de devolución hacia las fronteras de un país donde estuviere en peligro la seguridad de la persona'. This is the ordinary non-refoulement rule and does not explicitly reach onward (chain) refoulement, so No holds.",
+    "confidence": "medium",
+    "notes": null
+   },
+   {
+    "question_id": 59,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 126-130, 133, 135, 136",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 131 (reconducción)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 132 and new Art. 132 bis",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 134 (detention for execution)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley Nº 21.590",
+      "article": "Ley 21.325 art. 134 inciso final",
+      "kind": "amended",
+      "what_changed": "Raises the maximum detention for carrying out an expulsion from 48 hours to five calendar days. This is within the cited range but does not change the grounds for expulsion or the requirement of a decision.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley Nº 21.589",
+      "article": "Ley 21.325 arts. 5, 132, 132 bis, 147",
+      "kind": "amended",
+      "what_changed": "Changes how the opening of expulsion proceedings is notified: by certified letter or email to the last registered address, deemed served on the third day. A new art. 132 bis makes the PDI notify people who entered clandestinely when the complaint is filed. Expulsion by reasoned resolution is kept.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Tratándose de la notificación por carta certificada, ésta se entenderá practicada al tercer día desde la fecha de recepción de la carta en la oficina de correos que corresponda y, en el caso de la notificación por correo electrónico, ésta se entenderá efectuada al tercer día desde la fecha de su envío."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley Nº 21.655",
+      "article": "Ley 21.325 art. 131 inciso segundo",
+      "kind": "amended",
+      "what_changed": "Extends immediate reconducción, which needs no individual expulsion resolution, to people who have already entered irregularly or are found within 10 km of the land border. This narrows who gets the individualised expulsion procedure.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\". b) Reemplázase la frase \"ya sea por pasos habilitados o no, o valiéndose de documentos falsificados\", por la siguiente: \"ya sea por pasos habilitados o no, o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre o dentro del mar territorial..."
+     }
+    ],
+    "implementation_then_now": "2023: I keep the starting rating (Usually; Effectively Always). The MRD coder noted that few expulsions had been issued under the new law, and I did not read separate practice evidence from 2022. 2025: Supreme Court and appeals courts repeatedly annulled expulsions because the Servicio weighed only the irregular entry and ignored the art. 129 factors or proportionality. Examples are CS Rol 390-2026 (confirming CA La Serena Rol 64-2025) and the Talca case of July 2025. There is also a documented pattern of orders voided by the courts. Expulsions are made by reasoned resolution under law, with known gaps, so I rate 2026 Usually.",
+    "practice_sources": [
+     {
+      "title": "Diario Constitucional – Corte Suprema deja sin efecto expulsión por falta de proporcionalidad y vulneración del debido proceso (CS Rol 390-2026)",
+      "url": "https://www.diarioconstitucional.cl/2026/01/27/corte-suprema-deja-sin-efecto-expulsion-por-falta-de-proporcionalidad-y-vulneracion-del-debido-proceso/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Diario Constitucional – Corte Suprema ordena nuevo pronunciamiento tras expulsión de madre venezolana",
+      "url": "https://www.diarioconstitucional.cl/2025/07/07/corte-suprema-ordena-nuevo-pronunciamiento-tras-expulsion-de-madre-venezolana-sin-ponderar-unidad-familiar/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Poder Judicial – Corte Suprema anula orden de abandono del país de ciudadana colombiana con arraigo",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/119147",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Diario Constitucional – Corte Suprema anula orden de expulsión por exigir carpeta tributaria (CS Rol 52249-2025)",
+      "url": "https://www.diarioconstitucional.cl/2025/12/24/corte-suprema-anula-orden-de-expulsion-por-exigir-carpeta-tributaria-de-empleador-a-extranjero/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "LeyChile's version history for Ley 21.325 lists these versions: original 12-02-2022; Ley 21.590 (07-08-2023); Ley 21.589 (18-08-2023); Ley 21.610 (22-09-2023, art. 100 only); Ley 21.655 (20-02-2024); Ley 21.730 (01-04-2025, Ministry of Public Security, articles not checked); Ley 21.816 (02-06-2026, after the window). I read the amending acts and the current XML text. I could not open the 2022 text directly, so it is rebuilt from the amending acts. Practice evidence is from press summaries of rulings, not the rulings themselves.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 versiones",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 version 2022-02-12",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 version 2025-04-01",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "LeyChile XML – Ley 21.325",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Diario Constitucional CS 390-2026",
+      "url": "https://www.diarioconstitucional.cl/2026/01/27/corte-suprema-deja-sin-efecto-expulsion-por-falta-de-proporcionalidad-y-vulneracion-del-debido-proceso/"
+     },
+     {
+      "title": "Diario Constitucional Talca 2025",
+      "url": "https://www.diarioconstitucional.cl/2025/07/07/corte-suprema-ordena-nuevo-pronunciamiento-tras-expulsion-de-madre-venezolana-sin-ponderar-unidad-familiar/"
+     },
+     {
+      "title": "Diario Constitucional CS 52249-2025",
+      "url": "https://www.diarioconstitucional.cl/2025/12/24/corte-suprema-anula-orden-de-expulsion-por-exigir-carpeta-tributaria-de-empleador-a-extranjero/"
+     },
+     {
+      "title": "Diario Constitucional abril 2025",
+      "url": "https://www.diarioconstitucional.cl/2025/04/21/corte-suprema-revoca-orden-de-abandono-y-acoge-amparo-de-extranjero-exige-razonabilidad-en-procedimientos-migratorios/"
+     },
+     {
+      "title": "PJUD noticia 119147",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/119147"
+     },
+     {
+      "title": "PJUD noticia 127287",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/127287"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     }
+    ],
+    "starting_answer_concern": "The 'Effectively Always' half of the 2023 rating seems high. Even in 2022, art. 131 reconducción allowed removal without an individual expulsion decision.",
+    "confidence": "medium",
+    "notes": "The Yes rests on statute: arts. 127-130 and 132 (expulsion 'por resolución fundada' on statutory grounds, after weighing the art. 129 factors) and the art. 130 ban on collective expulsions. These are unchanged. The rulings cited are case-specific and count only as practice evidence; I read them through Diario Constitucional and Poder Judicial press summaries, not the full judgments."
+   },
+   {
+    "question_id": 61,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 132 (descargos within 10 days)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 141 (recurso judicial ante Corte de Apelaciones, suspensive)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 131 (reconducción: right to be heard at the border; recourse from abroad, non-suspensive)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley Nº 21.589",
+      "article": "Ley 21.325 art. 132; new art. 132 bis; art. 5",
+      "kind": "amended",
+      "what_changed": "Before: the opening of proceedings was notified under art. 147, then 10 days for descargos. After: notice may go by certified letter or email to the last registered address and is deemed served on the third day, and the PDI notifies clandestine entrants. The 10-day window for descargos is kept, but it may now start without the person actually knowing.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Sustitúyese la frase \"en conformidad al artículo 147 y\", por lo siguiente: \"personalmente o por carta certificada dirigida al último domicilio registrado en el Servicio o en la Policía de Investigaciones de Chile, salvo que éste hubiere registrado, ante cualquiera de ellas, un correo electrónico para su notificación. Efectuada dicha notificación\"."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley Nº 21.655",
+      "article": "Ley 21.325 art. 131 inciso segundo",
+      "kind": "amended",
+      "what_changed": "Extends immediate reconducción to people who have already entered irregularly or are within 10 km of the border. They get only a hearing at the border and a non-suspensive appeal from abroad, not art. 132 descargos or the suspensive art. 141 appeal.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\"."
+     }
+    ],
+    "implementation_then_now": "2023: I keep the starting rating (Usually; Effectively Always). The MRD coder noted few expulsions under the new law, and I found no separate 2022 practice evidence. 2025: courts repeatedly found that the opportunity to submit descargos was not real. In the Talca 2025 case, notice was sent to the wrong email. In CS Rol 390-2026 / CA La Serena 64-2025, the Servicio could not prove effective notice of the proceedings. Both courts ordered the proceedings reopened. Art. 141 judicial review works and is used successfully, so I rate 2026 Usually.",
+    "practice_sources": [
+     {
+      "title": "Diario Constitucional – CS Rol 390-2026 (expulsión sin notificación efectiva del procedimiento)",
+      "url": "https://www.diarioconstitucional.cl/2026/01/27/corte-suprema-deja-sin-efecto-expulsion-por-falta-de-proporcionalidad-y-vulneracion-del-debido-proceso/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Diario Constitucional – notificación a correo incorrecto, Corte de Talca confirmada por CS",
+      "url": "https://www.diarioconstitucional.cl/2025/07/07/corte-suprema-ordena-nuevo-pronunciamiento-tras-expulsion-de-madre-venezolana-sin-ponderar-unidad-familiar/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Poder Judicial – CS anula orden de abandono (Dec. 2024)",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/119147",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the art. 132 and art. 131 amendments in the text of Ley 21.589 and Ley 21.655 on LeyChile. I read art. 141 in the current consolidated XML; it has no amendment in the version list. The pre-2023 text is rebuilt from the amending acts. Practice evidence comes from press summaries of court decisions, and I found none for 2022.",
+    "sources_opened": [
+     {
+      "title": "LeyChile XML – Ley 21.325",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 versiones",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Diario Constitucional CS 390-2026",
+      "url": "https://www.diarioconstitucional.cl/2026/01/27/corte-suprema-deja-sin-efecto-expulsion-por-falta-de-proporcionalidad-y-vulneracion-del-debido-proceso/"
+     },
+     {
+      "title": "Diario Constitucional Talca 2025",
+      "url": "https://www.diarioconstitucional.cl/2025/07/07/corte-suprema-ordena-nuevo-pronunciamiento-tras-expulsion-de-madre-venezolana-sin-ponderar-unidad-familiar/"
+     },
+     {
+      "title": "PJUD noticia 119147",
+      "url": "https://www.pjud.cl/prensa-y-comunicaciones/noticias-del-poder-judicial/119147"
+     }
+    ],
+    "starting_answer_concern": "The citation should mention that the 10-day descargos step does not apply where art. 91 incisos 2-3 apply (persons already notified of an order to leave). It should also mention that people subject to art. 131 reconducción get only a hearing at the border and a non-suspensive remedy from abroad.",
+    "confidence": "medium",
+    "notes": "The Yes rests on statute: art. 132 (ten days to present descargos) and art. 141 (suspensive appeal to the Court of Appeals). The rulings are practice evidence only, read through press summaries. Ley 21.816 (in force 02-06-2026) is outside the window."
+   }
+  ]
+ }
 }
