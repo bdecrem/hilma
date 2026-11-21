@@ -208,7 +208,16 @@ struct Sidebar: View {
 
   /// The system's own sidebar (OLA-207): a source list with collapsible sections, the system's row
   /// height, type, selection and keyboard handling, as in Notes and Mail.
+  /// The list ends above the machine's footer (OLA-316): as a bottom inset, the footer has no
+  /// background of its own, so with ~25 sessions the last rows drew through "The machine is idle".
   var body: some View {
+    VStack(spacing: 0) {
+      list
+      MachineFooter(store: store).darkFrame()
+    }
+  }
+
+  var list: some View {
     List(selection: whereOla == nil ? .constant(nil) : selection) {
       Button { if whereOla != nil { NewSessionChooser.shared.shown = true } else { store.newSession() } } label: {
         Label("New Session", systemImage: "square.and.pencil").foregroundStyle(Ola.onRoom).contentShape(Rectangle())
@@ -246,7 +255,6 @@ struct Sidebar: View {
     }
     .listStyle(.sidebar)
     .darkFrame()
-    .safeAreaInset(edge: .bottom, spacing: 0) { MachineFooter(store: store) }
     .onDeleteCommand { if let s = store.selected, store.runtime != .cloud { deleting = s } }
     .alert("Rename session", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
       TextField("Name", text: $newTitle)
