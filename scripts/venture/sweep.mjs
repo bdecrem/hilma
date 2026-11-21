@@ -16,6 +16,8 @@
 //                                                       post of a day also texts Bart the day's two ideas
 //                                                       (one for Kit, one for Ola); --no-text skips that
 //   node scripts/venture/sweep.mjs show [--day D]       what is stored
+//   node scripts/venture/sweep.mjs ideas [--day D]      earlier reviews' ideas whose ticket is neither done nor
+//                                                       dropped (exit 1 when any): post refuses while one is (OLA-331)
 //   node scripts/venture/sweep.mjs weaknesses           the ledger: every weakness, how often it was seen,
 //                                                       its guard and whether the guard is holding
 // Days are Pacific. Entries live in venture_state "sweeps" ({ at, since, days: [newest first] });
@@ -27,20 +29,20 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
-import { openCounts } from './_plate.mjs'
+import { openCounts, unbuiltIdeas } from './_plate.mjs'
 import { overridesOf } from './_overrides.mjs'
 import { fakeClient } from './_fakedb.mjs'
 import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const env = Object.fromEntries(
+// VENTURE_TRACKER_FAKE=<file.json>: a copy of the tracker (_fakedb.mjs), for tests; nothing then reaches the live page or Bart
+const FAKE = !!process.env.VENTURE_TRACKER_FAKE
+const env = FAKE && !existsSync(root + '.env.local') ? {} : Object.fromEntries(
   readFileSync(root + '.env.local', 'utf8')
     .split('\n')
     .filter((l) => /^[A-Z0-9_]+=/.test(l))
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
-// VENTURE_TRACKER_FAKE=<file.json>: a copy of the tracker (_fakedb.mjs), for tests; nothing then reaches the live page or Bart
-const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 const db = FAKE ? fakeClient(process.env.VENTURE_TRACKER_FAKE) : createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 const args = process.argv.slice(2)
 const cmd = args[0]
@@ -170,6 +172,8 @@ async function facts() {
 
 // ---------------------------------------------------------------- the entry
 const IDEA_MAX = 220 // characters of an idea's one sentence
+/** The day's one text to Bart: the two ideas, which are being built (OLA-331). */
+const ideasText = (d, ideas) => `Daily ideas, ${d}, both being built now.\nKit, for how the project is run: ${ideas.kit.text} (${ideas.kit.issue})\nOla, for the code engine: ${ideas.ola.text} (${ideas.ola.issue})\nhttps://app.kochitolabs.com/learning`
 // A one-week daily task (Bart, 2026-11-19, 6:31 am: "add a daily task for the next week, then review
 // if useful: improvements to the learning system"; OLA-182). From `from` to `to` every entry names
 // one improvement made that day to the learning system itself (`learning`); the entry of `review`
@@ -280,6 +284,17 @@ function checkEntry(e) {
   return bad
 }
 
+// OLA-331 (Bart, Nov 20, 11 pm: "They should always be built duh!! So they are immediately
+// implemented"): a daily idea is work. The review after it cannot be posted while it is unbuilt.
+async function unbuilt(d) {
+  const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
+  const ids = old.days.flatMap((x) => [x.ideas?.kit?.issue, x.ideas?.ola?.issue]).filter(Boolean)
+  const r = ids.length ? await db.from('venture_issues').select('id, title, status').in('id', ids) : { data: [] }
+  if (r.error) die(`venture_issues: ${r.error.message}`)
+  return unbuiltIdeas(old.days, r.data, d)
+}
+const unbuiltLine = (u) => `${u.id} (the ${u.side === 'kit' ? 'Kit' : 'Ola'} idea of ${u.day}, ${u.status})${u.title ? `: ${u.title.slice(0, 90)}` : ''}`
+
 if (cmd === '--wait') {
   for (;;) {
     const due = await sweepDue(db).catch(() => [])
@@ -310,6 +325,28 @@ if (cmd === '--wait') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
+  {
+    const u = await unbuilt(e.day)
+    if (u.length) die(`the entry was not stored: ${u.length} daily idea(s) of an earlier review ${u.length === 1 ? 'is' : 'are'} neither done nor dropped, and every idea is built before the next review is posted (OLA-331):\n- ${u.map(unbuiltLine).join('\n- ')}\nBuild each now (an Opus builder per part of the code, SWEEP.md "One idea for each side, every day"); only Bart drops one.`)
+    // the day's own two ideas are work: a P1 (or P0) ticket with its checks written, ready for a builder tonight
+    const own = ['kit', 'ola'].map((s) => e.ideas?.[s]?.issue).filter((x) => /^OLA-\d+$/.test(x ?? ''))
+    if (own.length) {
+      const r = await db.from('venture_issues').select('id, priority, status').in('id', own)
+      const acc = await db.from('venture_state').select('key, value').in('key', own.map((x) => `accept:${x}`))
+      if (r.error || acc.error) die(`venture_issues: ${(r.error ?? acc.error).message}`)
+      const no = []
+      for (const id of own) {
+        const t = r.data.find((x) => x.id === id)
+        const a = acc.data.find((x) => x.key === `accept:${id}`)?.value
+        if (!t) no.push(`${id} is not in the tracker: open it (issues.mjs add ... --pri P1)`)
+        else {
+          if (!['P0', 'P1'].includes(t.priority)) no.push(`${id} is ${t.priority}: a daily idea is P1 work (issues.mjs edit ${id} --pri P1)`)
+          if (!a?.checks?.length && !a?.internal) no.push(`${id} has no checks: write them (issues.mjs check ${id} add --at ... --do ... --see ...) or, when nothing a person does or sees changes, issues.mjs check ${id} internal --why "..." naming the test`)
+        }
+      }
+      if (no.length) die(`the entry was not stored: the day's ideas are built tonight, so each is a P1 ticket with its checks (OLA-331):\n- ${no.join('\n- ')}`)
+    }
+  }
   const bad = checkEntry(e)
   // OLA-251, tenth pass: a fix settled in the ledger past correct.mjs becomes a line before the day's lines are counted
   spawnSync('node', [root + 'scripts/venture/correct.mjs', 'audit'], { encoding: 'utf8', stdio: ['ignore', 'ignore', 'inherit'] })
@@ -389,7 +426,7 @@ if (cmd === '--wait') {
   // (after a correction is added) changes the page and sends nothing.
   if (!told && !args.includes('--no-text')) {
     const d = new Date(`${entry.day}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
-    const text = `Daily ideas, ${d}.\nKit, for how the project is run: ${ideas.kit.text} (${ideas.kit.issue})\nOla, for the code engine: ${ideas.ola.text} (${ideas.ola.issue})\nhttps://app.kochitolabs.com/learning`
+    const text = ideasText(d, ideas)
     const sent = spawnSync('node', [root + 'scripts/venture/imsg.mjs', 'send', text], { encoding: 'utf8' })
     if (sent.status === 0) {
       entry.ideas.told = new Date().toISOString()
@@ -401,6 +438,10 @@ if (cmd === '--wait') {
     }
   }
   console.log('https://app.kochitolabs.com/learning')
+} else if (cmd === 'ideas') {
+  const u = await unbuilt(day)
+  if (!u.length) console.log(`every idea of the reviews before ${day} is done or dropped`)
+  else (console.log(`${u.length} daily idea(s) of the reviews before ${day} not built yet (sweep.mjs post refuses until each is done or dropped):\n${u.map(unbuiltLine).join('\n')}`), process.exit(1))
 } else if (cmd === 'weaknesses') {
   console.log(ledgerLines().join('\n'))
 } else if (cmd === 'show') {
@@ -414,5 +455,5 @@ if (cmd === '--wait') {
     for (const side of ['kit', 'ola']) if (d.ideas?.[side]) console.log(`  IDEA ${side.toUpperCase().padEnd(3)} ${d.ideas[side].text} ${d.ideas[side].issue}${d.ideas.told ? '' : '  (Bart not texted yet)'}`)
   }
 } else {
-  die('usage: sweep.mjs weaknesses | --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D]')
+  die('usage: sweep.mjs weaknesses | --wait | due | gather [--day D] | template [--day D] | post <entry.json> | show [--day D] | ideas [--day D]')
 }

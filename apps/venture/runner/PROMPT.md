@@ -41,8 +41,11 @@ differences because you are unattended:
 - **The daily sweep.** When this run was woken for it, follow `apps/venture/SWEEP.md` for each
   day named. You cannot change code here: a change that needs code becomes a ticket
   (`issues.mjs add`) and goes under `open` in the entry. The entry carries one idea for Kit and
-  one for Ola, each with its own new ticket (SWEEP.md, "One idea for each side, every day").
-  `sweep.mjs post` texts Bart those two ideas once; send no other text about the sweep.
+  one for Ola, each with its own new P1 ticket and its checks (SWEEP.md, "One idea for each side,
+  every day"): every idea is built at once, and the runner's next work runs take them before any
+  ticket but a P0. `sweep.mjs post` refuses while an earlier day's idea is neither done nor
+  dropped: say so in the journal and leave the post for after they are built. `sweep.mjs post`
+  texts Bart those two ideas once; send no other text about the sweep.
 - **A text to Bart is a touch.** His own texts and voice notes already got an
   immediate answer from the server; do the thing he asked for, and text him
   only when it is done and he needs to know, or when money or a customer is at

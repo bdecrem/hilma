@@ -2,7 +2,6 @@ import { openCounts, type BoardData, type Issue, type Learning, type Replay, typ
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
-import { STATUS } from './common'
 
 // Learning (app.kochitolabs.com/learning; Bart, Nov 18: "Instead of numbers, make it Learning").
 // Top: the headline numbers, Kit (the share of his corrections that were new, not repeats), Ola
@@ -18,7 +17,8 @@ import { STATUS } from './common'
 // Daily ideas (Bart, Nov 18, 11:13 pm: "daily loop for kit and Ola each to think of one idea or
 // improvement to make the overall system and the code engine work better. Notify me each day when
 // that happened. Document on the learning page"): each sweep carries one idea for Kit and one for
-// Ola, each with its evidence and a ticket; the list shows them by day with the ticket's status.
+// Ola, each with its evidence and a ticket; the list shows them by day with where each build stands
+// in the tracker (built on a date, being built, dropped on a date; OLA-331).
 // Data: venture_state "learning" (scripts/venture/learning.mjs) and "sweeps" (scripts/venture/
 // sweep.mjs post; the procedure is apps/venture/SWEEP.md). Missing: "not measured yet", "not
 // swept"; older than a day: "as of <when>" in amber. Never a made-up number.
@@ -317,8 +317,23 @@ function Changes({ name, what, items, base, weak }: { name: string; what: string
   )
 }
 
+// OLA-331 (Bart, Nov 20: "They should always be built duh!! So they are immediately implemented"):
+// every idea is built at once, so its line says where the build stands, read from the tracker only.
+// No tracker read: nothing is shown, never a remembered word.
+export function ideaState(t: Pick<Issue, 'status' | 'finished_at' | 'day'> | undefined): string | null {
+  if (!t) return null
+  const on = t.day ?? (t.finished_at ? pday(t.finished_at) : null)
+  const d = on ? dayShort(on).replace(/^[A-Za-z]+, /, '') : null
+  if (t.status === 'done') return d ? `built ${d}` : 'built'
+  if (t.status === 'dropped') return d ? `dropped ${d}` : 'dropped'
+  if (t.status === 'waiting') return 'being built, waiting on Bart'
+  return 'being built'
+}
+
 function Idea({ who, i, base, issues }: { who: string; i: SweepIdea; base: string; issues: Issue[] | null }) {
-  const st = i.issue ? issues?.find((x) => x.id === i.issue)?.status : undefined
+  const t = i.issue ? issues?.find((x) => x.id === i.issue) : undefined
+  const st = t?.status
+  const word = ideaState(t)
   return (
     <div className="idea">
       <span className="who">{who}</span>
@@ -327,7 +342,7 @@ function Idea({ who, i, base, issues }: { who: string; i: SweepIdea; base: strin
       {i.issue && (
         <p className="tk">
           <a href={`${href(base, '/issues')}/${i.issue}`} className="m">{i.issue}</a>
-          {st && <span className={`st ${st}`}>{STATUS[st].toLowerCase().replace('bart', 'Bart')}</span>}
+          {st && word && <span className={`st ${st}`}>{word}</span>}
         </p>
       )}
     </div>

@@ -8,6 +8,8 @@
 //   limitFrom(out, now)       did a `claude -p` run stop at the plan's usage limit, and when it resets
 //   openAt(issues, t)         how many tickets were open at time t (from the tracker's own records)
 //   leadLine(...)             the one line `runner.mjs status` prints and the board shows
+//   ideaTickets(days)         the latest reviews' idea tickets, which the pick puts right after P0 (OLA-331)
+//   unbuiltIdeas(days, issues, day)  earlier reviews' ideas not done or dropped, which stop sweep.mjs post
 
 export const MIN = 60e3
 export const CLAIM_TTL = 45 * MIN // a claim not renewed for this long has expired
@@ -36,14 +38,17 @@ export const isRecurring = (i, recurring = []) => /^(daily|weekly) task\b/i.test
  * tickets: the runner's own record per ticket ({ runs, fails, skippedAt, blockedBy });
  * sessionOpen: an interactive session's heartbeat is fresh.
  */
-export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, waiters = {}, lanes = {}, building = {}, now = Date.now() } = {}) {
+export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, waiters = {}, lanes = {}, building = {}, ideas = [], now = Date.now() } = {}) {
   const passed = []
   const byId = new Map(issues.map((i) => [i.id, i]))
   const age = (iso) => (iso ? now - Date.parse(iso) : Infinity)
   const pos = (id) => (order.includes(id) ? order.indexOf(id) : Infinity)
+  // OLA-331: the reviews' daily ideas (ideaTickets) come right after P0, before every other P1 and P2
+  const rank = (i) => (i.priority === 'P0' ? 0 : ideas.includes(i.id) ? 1 : 2 + (PRI[i.priority] ?? 9))
+  const ipos = (id) => (ideas.includes(id) ? ideas.indexOf(id) : Infinity)
   const cand = issues
     .filter((i) => i.status === 'open' || i.status === 'in_progress')
-    .sort((a, b) => (PRI[a.priority] ?? 9) - (PRI[b.priority] ?? 9) || pos(a.id) - pos(b.id) || String(a.opened_at).localeCompare(String(b.opened_at)) || a.num - b.num)
+    .sort((a, b) => rank(a) - rank(b) || ipos(a.id) - ipos(b.id) || pos(a.id) - pos(b.id) || String(a.opened_at).localeCompare(String(b.opened_at)) || a.num - b.num)
   for (const i of cand) {
     const c = claims[i.id]
     const t = tickets[i.id] ?? {}
@@ -67,6 +72,34 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
     return { pick: i, passed }
   }
   return { pick: null, passed }
+}
+
+// ------------------------------------------------------------------ the daily ideas (OLA-331)
+// Bart, Nov 20, 11 pm: "They should always be built duh!! So they are immediately implemented".
+// Each review (venture_state "sweeps") carries two ideas, each a ticket; they are work, not proposals.
+export const IDEA_DAYS = 7 // the reviews whose ideas the runner puts first
+/** The idea tickets of the latest reviews, oldest review first (an earlier day's idea that is not
+ *  built stops the next review's post, so it goes first); days: the sweeps' `days`. */
+export function ideaTickets(days = [], last = IDEA_DAYS) {
+  const recent = [...days].filter((d) => d?.day).sort((a, b) => b.day.localeCompare(a.day)).slice(0, last).reverse()
+  return [...new Set(recent.flatMap((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue]).filter((x) => /^OLA-\d+$/.test(x ?? '')))]
+}
+/** The ideas of reviews before `day` whose ticket is neither done nor dropped: [{ id, day, side, status, title }].
+ *  A ticket the tracker does not hold counts as not built. */
+export function unbuiltIdeas(days = [], issues = [], day) {
+  const byId = new Map(issues.map((i) => [i.id, i]))
+  const out = []
+  for (const d of [...days].sort((a, b) => a.day.localeCompare(b.day))) {
+    if (!d?.day || d.day >= day) continue
+    for (const side of ['kit', 'ola']) {
+      const id = d.ideas?.[side]?.issue
+      if (!id || out.some((o) => o.id === id)) continue
+      const i = byId.get(id)
+      if (i && ['done', 'dropped'].includes(i.status)) continue
+      out.push({ id, day: d.day, side, status: i?.status ?? 'not in the tracker', title: i?.title ?? '' })
+    }
+  }
+  return out
 }
 
 /** After a run: what to record for the ticket. made: commits naming it landed on main during the run. */

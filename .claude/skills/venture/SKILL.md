@@ -252,7 +252,13 @@ otherwise.
 Each entry also carries one idea for Kit (how the project is run) and one for Ola (the code
 engine), each with its own ticket; the day's first `sweep.mjs post` texts Bart the two, and the
 Learning page lists them under "Daily ideas" (Bart, Nov 18: "Notify me each day when that
-happened. Document on the learning page").
+happened. Document on the learning page"). Every idea is built at once (Bart, Nov 20: "They
+should always be built duh!! So they are immediately implemented"; OLA-331): its ticket is P1
+with its checks written (or `check <id> internal --why` naming a test), and the review's last
+step hands both to builders the same night, an Opus builder per part of the code from an open
+session, otherwise the mini's agent, which takes idea tickets right after P0. `sweep.mjs post`
+refuses the next review while an earlier idea is neither done nor dropped (`sweep.mjs ideas`
+lists them).
 
 ## 7. Review, at the end of every cycle
 

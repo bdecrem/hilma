@@ -51,7 +51,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { checkDeploys } from './_overrides.mjs'
-import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
+import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, ideaTickets, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -410,8 +410,10 @@ async function decide(seen) {
   const waiters = Object.fromEntries((ws.data ?? []).map((w) => [w.key.slice(WAIT_PREFIX.length), { ...w.value, at: w.at }]))
   const acc = await db.from('venture_state').select('key, value').like('key', 'accept:%')
   const lanes = Object.fromEntries((acc.data ?? []).filter((x) => x.value?.lane).map((x) => [x.key.slice('accept:'.length), x.value.lane]))
-  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, waiters, lanes, now: Date.now() })
-  return { lim, live, issues, tickets, plate: p, choice }
+  // the latest reviews' daily ideas go right after P0 (OLA-331: "They should always be built")
+  const ideas = ideaTickets((await getState(db, 'sweeps'))?.value?.days ?? [])
+  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, waiters, lanes, ideas, now: Date.now() })
+  return { lim, live, issues, tickets, plate: p, choice, ideas }
 }
 
 // ------------------------------------------------------------------ updates of the test server (OLA-272)
@@ -548,7 +550,7 @@ if (cmd === 'status') {
       if (await replayDue()) say('would run the nightly replay test (steer-replay.mjs --nightly) before the tracker')
       else if (seen.why.length) say(`would not answer (the open session does): ${seen.why.join('; ')}`)
       for (const x of d.choice.passed) say(`  passed over ${x.id}: ${x.why}`)
-      if (d.choice.pick) { const i = d.choice.pick; say(`would start a work run on ${i.id} (${i.priority}, ${i.status === 'open' ? 'next up' : 'doing'}, opened ${i.opened_at.slice(0, 10)}${d.plate.order.includes(i.id) ? `, #${d.plate.order.indexOf(i.id) + 1} on ${d.plate.file}` : ''}): ${i.title}`) }
+      if (d.choice.pick) { const i = d.choice.pick; say(`would start a work run on ${i.id} (${i.priority}, ${i.status === 'open' ? 'next up' : 'doing'}, opened ${i.opened_at.slice(0, 10)}${d.plate.order.includes(i.id) ? `, #${d.plate.order.indexOf(i.id) + 1} on ${d.plate.file}` : ''}${d.ideas.includes(i.id) ? ', a daily idea' : ''}): ${i.title}`) }
       else say('no ticket to work')
       break
     }

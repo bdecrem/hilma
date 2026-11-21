@@ -182,13 +182,28 @@ that was already an idea). It starts from something in the day's record or the l
 checked against the open tickets first (`issues.mjs list --status open,in_progress,waiting`): an
 idea that is already a ticket is not new. `text` is one sentence of at most 220 characters that
 says what would be built, in words Bart understands; `why` says what in the record points to it
-and how it would be measured. Each idea gets its own ticket (`issues.mjs add … --pri P2`, area
-`ops` or `board` for Kit, `model`, `apps` or `web` for Ola), opened as next up: the idea is a
-proposal, and building it follows the plate like any other ticket.
+and how it would be measured.
 
-The first post of the day texts Bart the two ideas (`sweep.mjs post` does it and records it; a
-repost sends nothing). The Learning page lists them by day under "Daily ideas", with each
-ticket's status.
+**Every idea is built at once** (Bart, Nov 20, 11 pm: "They should always be built duh!! So they
+are immediately implemented"; OLA-331). An idea is work, not a proposal he can drop:
+
+1. Each idea gets its own ticket at P1 (`issues.mjs add ... --pri P1`, area `ops` or `board` for
+   Kit, `model`, `apps` or `web` for Ola) with its checks written before the post: what Bart does
+   and must then see, one per place (`issues.mjs check <id> add --at ... --do ... --see ...`), or,
+   when nothing a person does or sees changes, `issues.mjs check <id> internal --why "..."` naming
+   the test that proves it.
+2. The last step of the review hands both to builders the same night. A session that is open
+   starts an Opus builder per part of the code each idea touches (the builder starts the ticket,
+   builds, tests, pushes, `issues.mjs ready`). With no session open, the mini's agent takes them:
+   its pick puts the latest reviews' idea tickets right after P0 (`_plate.mjs`, `ideaTickets`),
+   before any other work.
+3. `sweep.mjs post` refuses the next review while an idea of an earlier review is neither done nor
+   dropped, and names each one; `sweep.mjs ideas` lists them beforehand. Only Bart drops an idea.
+
+The first post of the day texts Bart the two ideas and that both are being built (`sweep.mjs post`
+does it and records it; a repost sends nothing); no other text about them. The Learning page lists
+them by day under "Daily ideas", each with where its build stands in the tracker: built on a date,
+being built, or dropped on a date.
 
 ### One improvement to the learning system, every day until Nov 25
 
@@ -269,7 +284,7 @@ existing tasks of that kind, and the entry says so.
     node scripts/venture/sweep.mjs template --day 2026-11-18 > apps/venture/private/data/sweeps/2026-11-18.json
 
 Fill it in and post it (posting also refreshes the ledger on the page, and the day's first post
-texts Bart the two ideas):
+texts Bart the two ideas). Then hand both idea tickets to builders (step 2 above):
 
     node scripts/venture/sweep.mjs post apps/venture/private/data/sweeps/2026-11-18.json
 

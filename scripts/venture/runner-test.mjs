@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline checks of the runner's choices (OLA-211): node scripts/venture/runner-test.mjs
 import assert from 'node:assert/strict'
-import { afterRun, caseKey, deployGate, caseState, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, zonedTime } from './_plate.mjs'
+import { afterRun, caseKey, deployGate, caseState, ideaTickets, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, unbuiltIdeas, zonedTime } from './_plate.mjs'
 
 let n = 0
 const ok = (name, f) => { f(); n++; console.log(`ok ${name}`) }
@@ -189,6 +189,38 @@ ok('OLA-272: the test server is updated only for a ready ticket, 45 minutes apar
   assert.equal(deployGate({ pending: ready, lastAttempt: ago(60), checkerAt: [{ id: 'OLA-7', at: ago(16), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, true, 'a checker 16 minutes ago')
   assert.equal(deployGate({ pending: [{ id: 'OLA-6', priority: 'P0' }], lastAttempt: ago(5), checkerAt: [{ id: 'OLA-7', at: ago(3), what: 'a checker claim' }], now: NOW }).ok, false, 'a P0 does not interrupt a checker')
   assert.equal(deployGate({ pending: ready, checkerAt: [], now: NOW }).ok, true, 'no attempt on record')
+})
+
+// OLA-331 (Bart, Nov 20: "They should always be built duh!! So they are immediately implemented")
+ok('daily ideas first: after P0, before every other P1 and P2, older review first', () => {
+  const days = [
+    { day: '2026-11-19', ideas: { kit: { issue: 'OLA-213' }, ola: { issue: 'OLA-214' } } },
+    { day: '2026-11-20', ideas: { kit: { issue: 'OLA-324' }, ola: { issue: 'OLA-325' } } },
+    { day: '2026-11-10', ideas: { kit: { issue: 'OLA-100' }, ola: { issue: 'OLA-101' } } },
+  ]
+  assert.deepEqual(ideaTickets(days), ['OLA-100', 'OLA-101', 'OLA-213', 'OLA-214', 'OLA-324', 'OLA-325'])
+  assert.deepEqual(ideaTickets(days, 2), ['OLA-213', 'OLA-214', 'OLA-324', 'OLA-325'], 'only the latest reviews')
+  const ideas = ideaTickets(days, 2)
+  const issues = [I(5, 'P1'), I(6, 'P1'), I(325, 'P2'), I(324, 'P2')]
+  assert.equal(pickTicket(issues, { now: NOW }).pick.id, 'OLA-5', 'without the ideas, priority decides')
+  assert.equal(pickTicket(issues, { ideas, now: NOW }).pick.id, 'OLA-324', 'a P2 idea before an older P1')
+  assert.equal(pickTicket([...issues, I(9, 'P0')], { ideas, now: NOW }).pick.id, 'OLA-9', 'a P0 still goes first')
+  assert.equal(pickTicket([...issues, I(214, 'P2')], { ideas, now: NOW }).pick.id, 'OLA-214', 'the older review first')
+  const r = pickTicket([...issues, I(214, 'P2')], { ideas, claims: { 'OLA-214': { who: 'builder', at: ago(5) } }, now: NOW })
+  assert.equal(r.pick.id, 'OLA-324', 'an idea a builder holds is passed over like any ticket')
+  assert.equal(pickTicket([I(5, 'P1'), I(324, 'P2', 'done')], { ideas, now: NOW }).pick.id, 'OLA-5', 'a built idea is not picked')
+})
+
+ok('unbuilt ideas of earlier reviews: neither done nor dropped, the day itself excluded', () => {
+  const days = [
+    { day: '2026-11-19', ideas: { kit: { issue: 'OLA-213' }, ola: { issue: 'OLA-214' } } },
+    { day: '2026-11-20', ideas: { kit: { issue: 'OLA-324' }, ola: { issue: 'OLA-325' } } },
+  ]
+  const issues = [I(213, 'P1', 'done'), I(214, 'P1', 'dropped'), I(324, 'P1', 'in_progress'), I(325, 'P1', 'waiting')]
+  assert.deepEqual(unbuiltIdeas(days, issues, '2026-11-21').map((x) => x.id), ['OLA-324', 'OLA-325'])
+  assert.deepEqual(unbuiltIdeas(days, issues, '2026-11-20').map((x) => x.id), [], 'a repost of the same day is not held by its own ideas')
+  assert.equal(unbuiltIdeas(days, [], '2026-11-21')[0].status, 'not in the tracker')
+  assert.deepEqual(unbuiltIdeas(days, issues.map((i) => ({ ...i, status: 'done' })), '2026-11-21'), [])
 })
 
 console.log(`${n} checks passed`)
