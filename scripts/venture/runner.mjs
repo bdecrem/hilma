@@ -52,7 +52,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { checkDeploys } from './_overrides.mjs'
-import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, ideaTickets, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
+import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -443,15 +443,11 @@ async function deployFacts() {
   const acc = (await db.from('venture_state').select('key, value').like('key', 'accept:%')).data ?? []
   const ids = acc.filter((x) => x.value?.ready).map((x) => x.key.slice('accept:'.length))
   const rows = ids.length ? (await db.from('venture_issues').select('id, priority, status').in('id', ids)).data ?? [] : []
-  const pending = []
-  for (const r of rows.filter((x) => x.status === 'in_progress')) {
-    const c = run('git', ['log', '-1', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--format=%H']).stdout.trim()
-    if (!c) continue
-    const files = run('git', ['log', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--name-only', '--format=']).stdout.split('\n').filter(Boolean)
-    if (!files.some(isServerFile)) continue // nothing of the server's code: no update needed for it
-    const inLive = live ? run('git', ['merge-base', '--is-ancestor', c, live]).status === 0 : false
-    if (!inLive) pending.push({ id: r.id, priority: r.priority, commit: c.slice(0, 8) })
-  }
+  const pending = deployPending(rows, {
+    hasCommit: (r) => run('git', ['log', '-1', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--format=%H']).stdout.trim(),
+    hasServerFiles: (r) => run('git', ['log', 'origin/main', '-E', `--grep=${r.id}([^0-9]|$)`, '--name-only', '--format=']).stdout.split('\n').filter(Boolean).some(isServerFile),
+    isLive: (r, c) => live ? run('git', ['merge-base', '--is-ancestor', c, live]).status === 0 : false,
+  })
   const now = Date.now()
   const checkerAt = []
   // Only checks done on the live server hold an update back: a check whose place is one of the places Ola is

@@ -338,6 +338,19 @@ export const liveWaiters = (waiters = {}, now = Date.now()) => Object.fromEntrie
 //   (c) no checker recorded a check on the live server, and no such checker's claim was renewed, in the
 //       last CHECKER_QUIET (never while a second agent's check is running on the live server).
 export const CHECKER_QUIET = 15 * MIN
+const isDeployable = (i) => ['open', 'in_progress'].includes(i.status)
+
+/** Ready tickets (rows are already filtered to those marked ready) whose server commits are not live. */
+export function deployPending(rows, { hasCommit, hasServerFiles, isLive = () => false } = {}) {
+  const pending = []
+  for (const r of rows.filter(isDeployable)) {
+    const c = hasCommit(r)
+    if (!c || !hasServerFiles(r) || isLive(r, c)) continue // no commit, nothing of the server's code, or already live
+    pending.push({ id: r.id, priority: r.priority, commit: c.slice(0, 8) })
+  }
+  return pending
+}
+
 /** pending: [{ id, priority }] ready tickets whose commits are not live; lastAttempt: ISO or null (reported only);
  *  updating: null, or "why" when an update is running now; checkerAt: [{ id, at, what }] recent check results
  *  and checker claims. Returns { ok, why, nextAllowed }. */

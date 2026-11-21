@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline checks of the runner's choices (OLA-211): node scripts/venture/runner-test.mjs
 import assert from 'node:assert/strict'
-import { afterRun, caseKey, deployGate, caseState, ideaTickets, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, unbuiltIdeas, zonedTime } from './_plate.mjs'
+import { afterRun, caseKey, deployGate, deployPending, caseState, ideaTickets, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, unbuiltIdeas, zonedTime } from './_plate.mjs'
 
 let n = 0
 const ok = (name, f) => { f(); n++; console.log(`ok ${name}`) }
@@ -188,6 +188,17 @@ ok('OLA-272 + OLA-338: the test server is updated for a ready ticket, with no sp
   assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), checkerAt: [{ id: 'OLA-7', at: ago(16), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, true, 'a checker 16 minutes ago')
   assert.equal(deployGate({ pending: [{ id: 'OLA-6', priority: 'P0' }], lastAttempt: ago(5), checkerAt: [{ id: 'OLA-7', at: ago(3), what: 'a checker claim' }], now: NOW }).ok, false, 'a P0 does not interrupt a checker')
   assert.equal(deployGate({ pending: ready, checkerAt: [], now: NOW }).ok, true, 'no attempt on record')
+})
+
+ok('OLA-351: a ready ticket still next up is pending for the test server too', () => {
+  const rows = [I(235, 'P1', 'open'), I(236, 'P1', 'in_progress'), I(237, 'P1', 'done')]
+  const facts = {
+    hasCommit: (r) => r.id === 'OLA-237' ? 'eeeeeeeeeeeeeeeeeeee' : 'cccccccccccccccccccc',
+    hasServerFiles: () => true,
+    isLive: (r) => r.id === 'OLA-236',
+  }
+  assert.deepEqual(deployPending(rows, facts), [{ id: 'OLA-235', priority: 'P1', commit: 'cccccccc' }])
+  assert.equal(deployGate({ pending: deployPending(rows, facts), now: NOW }).ok, true, 'the gate sees the ready ticket whose run could not start it')
 })
 
 // OLA-331 (Bart, Nov 20: "They should always be built duh!! So they are immediately implemented")
