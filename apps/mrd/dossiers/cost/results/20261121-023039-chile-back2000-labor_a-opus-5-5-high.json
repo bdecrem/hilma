@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile labor_a claude-opus-5-5 high",
- "pid": 77776,
  "step": "back2000",
  "slug": "chile",
  "chunk": "labor_a",
@@ -60,5 +59,1538 @@
   "user": 187
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:40:30.397Z",
+ "minutes": 9.84,
+ "meters_after": {
+  "at": "2026-11-21T10:40:30.397Z",
+  "window": {
+   "pct": 35,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 35,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 35% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 176441,
+   "output": 51901,
+   "cache_read": 4838554,
+   "cache_write": 170484,
+   "cost_usd": 3.231,
+   "total": 5237380
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 176357,
+    "output": 14182,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 5457,
+    "cost_usd": 0.1447
+   },
+   "claude-opus-5-5": {
+    "input": 84,
+    "output": 37719,
+    "cache_read": 4838554,
+    "cache_write": 170484,
+    "thinking": 12705,
+    "cost_usd": 3.0863
+   }
+  }
+ },
+ "turns": 53,
+ "calls": 95,
+ "duration_ms": 589949,
+ "duration_api_ms": 464961,
+ "pages_read": 39,
+ "pages": [
+  {
+   "at": "2026-11-21T10:31:00.264Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=207436&idVersion=2000-01-01",
+   "find": "Art. 2° | nacionalidad | Art. 19",
+   "ok": true,
+   "chars": 6450
+  },
+  {
+   "at": "2026-11-21T10:31:12.131Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436&idVersion=2000-01-01",
+   "find": "Art. 2 | nacionalidad u origen social | Art. 19",
+   "ok": true,
+   "chars": 4877
+  },
+  {
+   "at": "2026-11-21T10:31:32.813Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19739",
+   "find": "artículo 2 | sindicación | Fecha Publicación",
+   "ok": true,
+   "chars": 2265
+  },
+  {
+   "at": "2026-11-21T10:31:39.051Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+   "find": "artículo 2º | nacionalidad | vigencia | primer día del mes",
+   "ok": true,
+   "chars": 6363
+  },
+  {
+   "at": "2026-11-21T10:31:42.522Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+   "find": "Publicación | entrará en vigencia | Artículo primero transitorio | diciembre",
+   "ok": true,
+   "chars": 3380
+  },
+  {
+   "at": "2026-11-21T10:31:57.800Z",
+   "url": "https://www.wipo.int/wipolex/en/text/489581",
+   "find": "Son contrarios a los principios | nacionalidad u origen social | Art. 19",
+   "ok": true,
+   "chars": 3378
+  },
+  {
+   "at": "2026-11-21T10:32:15.296Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2000-01-01",
+   "find": "Artículo 23 | sujeta a contrato | familia | Artículo 48 | actividades remuneradas",
+   "ok": true,
+   "chars": 2510
+  },
+  {
+   "at": "2026-11-21T10:32:25.108Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2000-01-01",
+   "find": "Artículo 23 | Artículo 24 | Artículo 26 | Artículo 29 | Artículo 30 | Artículo 48",
+   "ok": true,
+   "chars": 11092
+  },
+  {
+   "at": "2026-11-21T10:32:32.746Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01",
+   "find": "Artículo 23 | Artículo 25 | Artículo 33 BIS | versiones | fecha_version",
+   "ok": true,
+   "chars": 8526
+  },
+  {
+   "at": "2026-11-21T10:32:37.840Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01",
+   "find": "\"versiones\" | tipo_version_s",
+   "ok": true,
+   "chars": 2552
+  },
+  {
+   "at": "2026-11-21T10:32:49.462Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-06-01",
+   "find": "Artículo 35 | Artículo 36 | Artículo 37 | Artículo 38 | dependientes | actividades remuneradas | Artículo 49",
+   "ok": true,
+   "chars": 12554
+  },
+  {
+   "at": "2026-11-21T10:32:59.313Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01",
+   "find": "Artículo 35° | Artículo 39° | Artículo 40° | Artículo 49° | Artículo 50° | tipo_version_s",
+   "ok": true,
+   "chars": 11665
+  },
+  {
+   "at": "2026-11-21T10:33:05.263Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-01-01",
+   "find": "Artículo 39° | Artículo 40°",
+   "ok": true,
+   "chars": 4439
+  },
+  {
+   "at": "2026-11-21T10:33:14.109Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01",
+   "find": "1930 | DTO 2910",
+   "ok": true,
+   "chars": 5426
+  },
+  {
+   "at": "2026-11-21T10:33:25.042Z",
+   "url": "https://docs.chile.justia.com/nacionales/codigos/codigo-del-trabajo.pdf",
+   "find": "Art. 2° | Son contrarios a los principios | Art. 62 bis | Art. 19. El ochenta",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:33:29.191Z",
+   "url": "https://leyes-cl.com/codigo_del_trabajo/2.htm",
+   "find": "raza | nacionalidad | Ley",
+   "ok": true,
+   "chars": 5353
+  },
+  {
+   "at": "2026-11-21T10:33:33.977Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+   "find": "Artículo 2º | raza o etnia | Código del Trabajo | Publicación",
+   "ok": true,
+   "chars": 6118
+  },
+  {
+   "at": "2026-11-21T10:33:42.837Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+   "find": "Artículo 15 | Artículo 16 | Artículo 17 | inciso cuarto del artículo 2º",
+   "ok": true,
+   "chars": 1720
+  },
+  {
+   "at": "2026-11-21T10:33:45.988Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092",
+   "find": "Artículo 15 | Artículo 16 | Artículo 17 | Código del Trabajo",
+   "ok": true,
+   "chars": 5433
+  },
+  {
+   "at": "2026-11-21T10:34:03.117Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302&idVersion=2006-01-01",
+   "find": "Hombres y mujeres son iguales ante la ley | Se prohíbe cualquiera discriminación | La libertad de trabajo y su protección",
+   "ok": true,
+   "chars": 4436
+  },
+  {
+   "at": "2026-11-21T10:34:26.099Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "labour | discrimination | wage | employer | Labour Code | family",
+   "ok": true,
+   "chars": 8112
+  },
+  {
+   "at": "2026-11-21T10:34:26.724Z",
+   "url": "https://www.refworld.org/policy/polrec/cerd/2009/70074",
+   "find": "migrant | Peru | discrimination | employment",
+   "ok": true,
+   "chars": 616
+  },
+  {
+   "at": "2026-11-21T10:34:59.075Z",
+   "url": "https://hrlibrary.umn.edu/country/chile2013.html",
+   "find": "migrant | Peru | Bolivia | employment",
+   "ok": true,
+   "chars": 5392
+  },
+  {
+   "at": "2026-11-21T10:35:00.054Z",
+   "url": "https://minrel.gob.cl/minrel/site/artic/20080902/asocfile/20080902204316/observaciones_finales_cerd_15_18.pdf",
+   "find": "migrantes | peruanos | empleo | trabajo",
+   "ok": true,
+   "chars": 3256
+  },
+  {
+   "at": "2026-11-21T10:35:19.688Z",
+   "url": "https://webarchive.archive.unhcr.org/20221007183540mp_/https://www.refworld.org/docid/4acc851a0.html",
+   "find": "migrant | Peru | employment",
+   "ok": true,
+   "chars": 848
+  },
+  {
+   "at": "2026-11-21T10:36:06.888Z",
+   "url": "https://www.justice.gov/eoir/media/309166/dl",
+   "find": "Peru | foreign workers | immigrant | migrant",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:36:08.140Z",
+   "url": "https://politicaspublicas.uc.cl/web/content/uploads/2016/12/N°-90-Derechos-laborales-de-los-migrantes-3.pdf",
+   "find": "Dirección del Trabajo | fiscalizaciones | denuncias | informalidad | remuneraciones",
+   "ok": true,
+   "chars": 1901
+  },
+  {
+   "at": "2026-11-21T10:36:45.451Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+   "find": "Peru | foreign workers | immigrant | migrant",
+   "ok": true,
+   "chars": 2382
+  },
+  {
+   "at": "2026-11-21T10:36:46.277Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+   "find": "Peru | foreign workers | immigrant | migrant",
+   "ok": true,
+   "chars": 5445
+  },
+  {
+   "at": "2026-11-21T10:36:50.845Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+   "find": "national origin | Acceptable Conditions of Work | Labor Directorate | foreign",
+   "ok": true,
+   "chars": 5464
+  },
+  {
+   "at": "2026-11-21T10:36:51.741Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+   "find": "national origin | Acceptable Conditions of Work | Labor Directorate | nationality",
+   "ok": true,
+   "chars": 5081
+  },
+  {
+   "at": "2026-11-21T10:36:56.321Z",
+   "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/",
+   "find": "migrant | Haiti | foreign workers | national origin",
+   "ok": true,
+   "chars": 4882
+  },
+  {
+   "at": "2026-11-21T10:37:04.574Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "migrant | immigrant | Peru | foreign workers | national origin",
+   "ok": true,
+   "chars": 6436
+  },
+  {
+   "at": "2026-11-21T10:37:08.417Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "Discrimination with Respect to Employment | Acceptable Conditions of Work | informal",
+   "ok": true,
+   "chars": 5352
+  },
+  {
+   "at": "2026-11-21T10:37:11.386Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "personal appea | e. Acceptable Conditions",
+   "ok": true,
+   "chars": 4158
+  },
+  {
+   "at": "2026-11-21T10:37:15.806Z",
+   "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/",
+   "find": "Discrimination with Respect to Employment | immigrants | informal sector",
+   "ok": true,
+   "chars": 5514
+  },
+  {
+   "at": "2026-11-21T10:37:20.187Z",
+   "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/",
+   "find": "migrant | asylum | employment",
+   "ok": true,
+   "chars": 3229
+  },
+  {
+   "at": "2026-11-21T10:37:37.941Z",
+   "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+   "find": "Peru | immigrant | nationality | Acceptable Conditions of Work",
+   "ok": true,
+   "chars": 2265
+  },
+  {
+   "at": "2026-11-21T10:37:40.718Z",
+   "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+   "find": "Section 5 | Labor Code prohibits | discrimination based on",
+   "ok": true,
+   "chars": 3461
+  }
+ ],
+ "searches": [
+  "Ley 19.759 artículo 2° Código del Trabajo \"raza, color, sexo, edad, estado civil, sindicación\" inciso texto anterior 1994 discriminaciones",
+  "Decreto con Fuerza de Ley 1 1994 Código del Trabajo texto original artículo 2 \"son contrarios a los principios de las leyes laborales\"",
+  "\"Código del Trabajo\" 1994 \"DFL 1\" leychile idNorma texto 24 enero 1994 fija texto refundido",
+  "\"Son contrarios a los principios de las leyes laborales las discriminaciones, exclusiones o preferencias basadas en motivos de raza\"",
+  "leychile Decreto 597 1984 reglamento de extranjería idNorma",
+  "bcn.cl leychile \"DFL 1\" \"1994\" \"FIJA TEXTO REFUNDIDO, COORDINADO Y SISTEMATIZADO DEL CODIGO DEL TRABAJO\" derogado 2003",
+  "CMW/C/CHL/CO/1 concluding observations Chile 2011 Committee on Migrant Workers labour exploitation discrimination",
+  "CERD/C/CHL/CO/15-18 2009 Chile concluding observations migrants Peruvians discrimination employment",
+  "Country Reports on Human Rights Practices Chile 2004 state.gov Peruvian immigrants domestic workers discrimination",
+  "INDH Informe Anual 2017 derechos laborales personas migrantes Chile capítulo trabajadores migrantes",
+  "2014 Country Reports on Human Rights Practices Chile migrant workers \"Labor Directorate\" discrimination immigrants",
+  "Dirección del Trabajo estudio inmigrantes peruanos trabajadoras de casa particular Santiago 2003 2004 condiciones laborales discriminación"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":95,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Labour Code (DFL 1/1994), art. 2, inciso 2, as it stood before July 2001. I rebuilt it from Ley 19.739, which inserted 'edad, estado civil,' between 'sexo' and 'sindicación' in that inciso. It declared discrimination on grounds including race and nationality contrary to labour-law principles. Constitution art. 19 No. 16 (free choice of work 'con una justa retribución'; ban on any discrimination not based on personal capacity) also applied. Practice evidence is thin: the US State Department 1999 report only covers minimum-wage setting, with nothing on migrants.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Ley 19.759 (in force 1 Dec 2001) rewrote art. 2. It defines 'actos de discriminación' as distinctions based on 'raza, color, ... nacionalidad, ascendencia nacional u origen social' that impair 'igualdad de oportunidades o de trato en el empleo'. DFL 1/2002 (published 16 Jan 2003) carried it into the new consolidated code. US State Department 2004 report: the Labour Code bans nationality discrimination 'however, such discrimination occurred in practice'. There is no migrant-specific wage data.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same Labour Code art. 2. The constitutional clause was unchanged in substance after the Ley 20.050 reform (2005). Practice: the US State Department 2009 report says the government enforced the anti-discrimination bans but discrimination continued. The CMW (2011) reported exploitation and abusive conditions of women migrant domestic workers, especially irregular ones, and urged more labour inspection.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same Labour Code art. 2. Ley 20.609 (2012) adds a general civil remedy against arbitrary discrimination based on nationality and race. Practice: the US State Department 2014 report says em",
+ "output": {
+  "answers": [
+   {
+    "question_id": 95,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Labour Code (DFL 1/1994), art. 2, inciso 2, as it stood before July 2001. I rebuilt it from Ley 19.739, which inserted 'edad, estado civil,' between 'sexo' and 'sindicación' in that inciso. It declared discrimination on grounds including race and nationality contrary to labour-law principles. Constitution art. 19 No. 16 (free choice of work 'con una justa retribución'; ban on any discrimination not based on personal capacity) also applied. Practice evidence is thin: the US State Department 1999 report only covers minimum-wage setting, with nothing on migrants."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 19.759 (in force 1 Dec 2001) rewrote art. 2. It defines 'actos de discriminación' as distinctions based on 'raza, color, ... nacionalidad, ascendencia nacional u origen social' that impair 'igualdad de oportunidades o de trato en el empleo'. DFL 1/2002 (published 16 Jan 2003) carried it into the new consolidated code. US State Department 2004 report: the Labour Code bans nationality discrimination 'however, such discrimination occurred in practice'. There is no migrant-specific wage data."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same Labour Code art. 2. The constitutional clause was unchanged in substance after the Ley 20.050 reform (2005). Practice: the US State Department 2009 report says the government enforced the anti-discrimination bans but discrimination continued. The CMW (2011) reported exploitation and abusive conditions of women migrant domestic workers, especially irregular ones, and urged more labour inspection."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same Labour Code art. 2. Ley 20.609 (2012) adds a general civil remedy against arbitrary discrimination based on nationality and race. Practice: the US State Department 2014 report says employment discrimination 'continued to occur'. CESCR (June 2015) found persistent discrimination against migrants 'particularly in the areas of employment'."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código del Trabajo (DFL 1 de 1994, Ministerio del Trabajo), art. 2 incisos 2-3",
+      "article": "Art. 2",
+      "role": "predecessor",
+      "in_force": "1994 to 2001-12-01",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 19.759 (amending Código del Trabajo art. 2)",
+      "article": "Art. único N° 2 (new art. 2 incisos 2-6)",
+      "role": "predecessor",
+      "in_force": "2001-12-01 to 2003-01-16 (then carried into DFL 1/2002)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Código del Trabajo (DFL 1 de 2002, Ministerio del Trabajo y Previsión Social)",
+      "article": "Art. 1 and Art. 2",
+      "role": "cited",
+      "in_force": "2003-01-16 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República (1980; texto refundido DS 100/2005)",
+      "article": "Art. 19 N° 16 (incisos 2-3) and N° 2",
+      "role": "cited",
+      "in_force": "1981-03-11 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.609 que establece medidas contra la discriminación",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2012-07-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13, 14",
+      "role": "cited",
+      "in_force": "2022-02-12 to today (not in force 2000-2020)",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-07-06",
+      "instrument": "Ley 19.739",
+      "article": "Código del Trabajo art. 2 inciso 2",
+      "kind": "amended",
+      "what_changed": "Added age and civil status to the inciso 2 list of banned grounds, which already ran 'sexo ... sindicación'. This shows the pre-2001 inciso already listed discrimination grounds; race and nationality remained.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19739",
+      "passage": "Introdúcense las siguientes modificaciones al artículo 2º del Código del Trabajo: a) Intercálase, en el inciso segundo, entre la coma (,) que sigue a la palabra \"sexo\" y el término \"sindicación\", la expresión \"edad, estado civil,\"."
+     },
+     {
+      "date": "2001-12-01",
+      "instrument": "Ley 19.759",
+      "article": "Código del Trabajo art. 2 incisos 2-6",
+      "kind": "replaced",
+      "what_changed": "Replaced incisos 2-3 with a definition of discrimination covering race, colour, nationality and national extraction in equality of opportunity or treatment in employment, and made it part of every employment contract. In force on the 1st day of the second month after publication (published 5 Oct 2001). The protection continues.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+      "passage": "Los actos de discriminación son las distinciones, exclusiones o preferencias basadas en motivos de raza, color, sexo, edad, estado civil, sindicación, religión, opinión política, nacionalidad, ascendencia nacional u origen social, que tengan por objeto anular o alterar la igualdad de oportunidades o de trato en el empleo y la ocupación."
+     },
+     {
+      "date": "2003-01-16",
+      "instrument": "DFL 1 de 2002, fija texto refundido del Código del Trabajo",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "New consolidated Labour Code; art. 2 keeps the Ley 19.759 wording. No change in substance.",
+      "url": "https://www.wipo.int/wipolex/en/text/489581",
+      "passage": "Son contrarios a los principios de las leyes laborales los actos de discriminación. Los actos de discriminación son las distinciones, exclusiones o preferencias basadas en motivos de raza, color, sexo, edad, estado civil, sindicación, religión, opinión política, nacionalidad, ascendencia nacional u origen social"
+     },
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050 (reforma constitucional)",
+      "article": "Constitución art. 19 N° 16",
+      "kind": "amended",
+      "what_changed": "The consolidated text carries a Ley 20.050 note at art. 19 No. 16. The right to free choice of work 'con una justa retribución' and the ban on discrimination not based on capacity appear in the post-2005 text. I did not read the pre-2005 wording directly.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302&idVersion=2006-01-01",
+      "passage": "Toda persona tiene derecho a la libre contratación y a la libre elección del trabajo con una justa retribución. Se prohíbe cualquiera discriminación que no se base en la capacidad o idoneidad personal, sin perjuicio de que la ley pueda exigir la nacionalidad chilena o límites de edad para determinados casos."
+     },
+     {
+      "date": "2012-07-24",
+      "instrument": "Ley 20.609",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "General anti-discrimination law with a judicial remedy, covering arbitrary discrimination based on race or ethnicity and nationality. It reinforces the protection.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+      "passage": "en particular cuando se funden en motivos tales como la raza o etnia, la nacionalidad, la situación socioeconómica, el idioma"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "US Department of State, 1999 Country Reports on Human Rights Practices: Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "US Department of State, Country Reports on Human Rights Practices 2004: Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "US Department of State, 2009 Country Reports on Human Rights Practices: Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW Concluding observations on Chile (CMW/C/CHL/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "US Department of State, Country Report on Human Rights Practices 2014: Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CESCR Concluding observations E/C.12/CHL/CO/4 (2015)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I did not see the 1994 Labour Code text directly; LeyChile's 207436 is the 2002 code and its text did not render. I rebuilt the pre-2001 art. 2 from Ley 19.739, which proves inciso 2 listed banned grounds. Ley 19.759 and the 2002 text were read. Practice evidence for 2000 is very thin and nothing measures migrant wage gaps directly.",
+    "sources_opened": [
+     {
+      "title": "LeyChile Código del Trabajo idNorma 207436 (version page)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=207436&idVersion=2000-01-01"
+     },
+     {
+      "title": "LeyChile JSON Código del Trabajo",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436&idVersion=2000-01-01"
+     },
+     {
+      "title": "Ley 19.739",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19739"
+     },
+     {
+      "title": "Ley 19.759",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759"
+     },
+     {
+      "title": "WIPO Lex Código del Trabajo (BCN text)",
+      "url": "https://www.wipo.int/wipolex/en/text/489581"
+     },
+     {
+      "title": "Código del Trabajo art. 2 (current)",
+      "url": "https://leyes-cl.com/codigo_del_trabajo/2.htm"
+     },
+     {
+      "title": "Constitución (2006 version, LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302&idVersion=2006-01-01"
+     },
+     {
+      "title": "Ley 20.609",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609"
+     },
+     {
+      "title": "Ley 20.609 JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092"
+     },
+     {
+      "title": "US DOS 1999 Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html"
+     },
+     {
+      "title": "US DOS 2004 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "US DOS 2009 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "CMW 2011 Chile",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "US DOS 2014 Chile (ecoi)",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     },
+     {
+      "title": "CESCR 2015 Chile (ICJ)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/"
+     },
+     {
+      "title": "US DOS 2019 Chile",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds. Ley 21.325 arts. 13-14 were not in force on 1 Jan 2020; the 2020 answer rests on Labour Code art. 2 and Constitution art. 19 No. 16 (the citation's 'art. 16' should read art. 19 No. 16). The implementation rating 'Sometimes; Effectively Always' is not a valid neighbouring pair. I used its centre, 'Usually', for the past dates, and the documented pattern of discrimination and exploitation of migrant domestic workers fits 'Usually'.",
+    "confidence": "medium",
+    "notes": "No court ruling relied on. Ley 20.348 (2009, art. 62 bis) concerns only gender pay equality and was not used. The Labour Code applies to all workers regardless of nationality."
+   },
+   {
+    "question_id": 97,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes; Usually",
+      "basis": "DL 1.094 arts. 23-25: the contract-bound visa ('residente sujeto a contrato') is granted to fulfil a specific contract, and ending that contract voids the visa, 'sin perjuicio del derecho de su titular de solicitar una nueva visación'. DS 597 art. 40 (1984 text) requires the new contract and the finiquito with the old employer for a new visa. No practice evidence specific to this period was found."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes; Usually",
+      "basis": "Decreto 2910 (D.O. 23 May 2000) amended DS 597 arts. 39-40: there is no termination where labour continuity exists under the Labour Code, and a judicial or administrative document may replace the finiquito. The rule is otherwise unchanged. No period-specific practice evidence was found."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; the DL 1.094 amendments of 2010 (Ley 20.430) did not touch arts. 23-26. The CMW (2011) noted the 85% Chilean-worker quota in Labour Code art. 19 as a restriction on migrant employment, but said nothing on employer changes."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions; Decreto 1930 (D.O. 7 Mar 2015) changed only DS 597 art. 41 (artists). Ley 20.507 (2011) added DL 1.094 art. 33 bis (trafficking victims). No documented change in practice on employer switches."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 de 1975 (Ley de Extranjería)",
+      "article": "Arts. 23, 24, 25, 26",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Arts. 35-40",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Art. 49 inciso 3 (temporary residents may carry out any lawful activity)",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Arts. 19-20 (85% Chilean-worker quota)",
+      "role": "other_in_force",
+      "in_force": "1994 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 70, 73",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 177 (Ministerio del Interior)",
+      "article": "Art. 19",
+      "role": "cited",
+      "in_force": "post-2022 (not in force 2000-2020)",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910 (Interior), modifica DS 597",
+      "article": "DS 597 arts. 39, 40, 47",
+      "kind": "amended",
+      "what_changed": "Art. 39: no contract termination where labour continuity exists. Art. 40: a new contract visa needs the new contract plus the finiquito, or an authority's document proving termination. Change of employer still requires a new visa.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01",
+      "passage": "En caso de solicitarse una nueva visación de residente sujeto a contrato, el extranjero deberá acompañar a su petición el respectivo contrato de trabajo, con las menciones que señala el artículo 37, el finiquito que haya celebrado con su anterior empleador, y a falta de éste, el documento emanado de la autoridad administrativa o judicial competente"
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430 (refugiados)",
+      "article": "DL 1.094 (version of 2010-04-15)",
+      "kind": "amended",
+      "what_changed": "A new version of DL 1.094 began on this date; arts. 23-26 are identical in the 2000 and 2020 texts. Does not touch the indicator.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01",
+      "passage": "{\"desde\":\"2010-04-15\",\"hasta\":\"2011-04-07\",\"tipo_version\":\"1\",\"tipo_version_s\":\"Intermedio\"}"
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 art. 33 bis",
+      "kind": "amended",
+      "what_changed": "Added temporary residence for trafficking victims. Not about choice of employment.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01",
+      "passage": "Artículo 33 bis.-Ley 20507 Art. TERCERO Nº 2 D.O. 08.04.2011 Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal"
+     },
+     {
+      "date": "2015-03-07",
+      "instrument": "Decreto 1930 (Interior)",
+      "article": "DS 597 art. 41",
+      "kind": "amended",
+      "what_changed": "Deleted incisos of art. 41 on artists. Does not touch employer change.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01",
+      "passage": "INCISOS SUPDecreto 1930 Art. PRIMERO N° 1 D.O. 07.03.2015RIMIDOS."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on Chile (CMW/C/CHL/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile versions of DL 1.094 and DS 597 in force on 1 Jan 2000, mid-2000 and 1 Jan 2020, and their version lists. Dating is strong. I found no practice evidence on employer changes for any period.",
+    "sources_opened": [
+     {
+      "title": "LeyChile DL 1094 navigation page",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2000-01-01"
+     },
+     {
+      "title": "DL 1094 version 2000-01-01 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2000-01-01"
+     },
+     {
+      "title": "DL 1094 version 2020-01-01 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01"
+     },
+     {
+      "title": "DS 597 version 2000-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-01-01"
+     },
+     {
+      "title": "DS 597 version 2000-06-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-06-01"
+     },
+     {
+      "title": "DS 597 version 2020-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01"
+     },
+     {
+      "title": "WIPO Lex Código del Trabajo (art. 19)",
+      "url": "https://www.wipo.int/wipolex/en/text/489581"
+     },
+     {
+      "title": "CMW 2011 Chile",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": "Ley 21.325 arts. 70/73 and Decree 177 were not in force in 2020; the answer rests on DL 1.094 arts. 23-25 and DS 597 arts. 39-40. This fits contract-visa holders only. Temporary-visa holders (DS 597 art. 49: 'podrán desarrollar cualesquiera clase de actividad lícita') and permanent residents could choose employment freely. The rating also ignores the Labour Code art. 19 quota. The implementation rating has no documented basis in any period.",
+    "confidence": "medium",
+    "notes": "Executive measures of the 2010s (Mercosur residence visas from 2009, the 'motivos laborales' temporary visa of 2015, the 2018 visas) widened access to employer-independent permits. I did not read them in this session, so they are not recorded as events."
+   },
+   {
+    "question_id": 99,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DS 597 art. 35 (1984 text): contract-visa dependants (spouse etc.) 'no están habilitados para realizar actividades remuneradas en el país'. Art. 49: temporary-visa dependants 'no podrán realizar actividades remuneradas'. Art. 46: the same bar applies to student dependants. A spouse needed their own visa or authorisation."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Arts. 35, 46 and 49 of DS 597 were unchanged by Decreto 2910 (2000). DL 1.094 art. 23 inciso 3 grants the same visa to family members without a work entitlement."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change to DS 597 arts. 35/49 or DL 1.094 arts. 23/29 (Ley 20.430 of 2010 did not touch them)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Decreto 1930 (Mar 2015) amended only art. 41; arts. 35 and 49 are identical in the 2020 version."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Art. 35 inciso 2",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Art. 49 inciso 2",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Art. 46",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 23 inciso 3, 29",
+      "role": "other_in_force",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910 (Interior)",
+      "article": "DS 597 arts. 39, 40, 47",
+      "kind": "amended",
+      "what_changed": "Amended the contract-visa and student provisions, but not the dependants' bar in arts. 35 and 49, which reads the same before and after.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-06-01",
+      "passage": "Igual clase de visación se otorgará al cónyuge, padre e hijos de ambos o de uno de ellos, siempre que vivan a expensas del titular de la visa. Estos beneficiarios en la condición de dependientes no están habilitados para realizar actividades remuneradas en el país."
+     },
+     {
+      "date": "2015-03-07",
+      "instrument": "Decreto 1930 (Interior)",
+      "article": "DS 597 art. 41",
+      "kind": "amended",
+      "what_changed": "Changed only art. 41; the 2020 text of art. 49 still bars dependants from paid work.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01",
+      "passage": "Se podrá otorgar esta misma clase de visación a los miembros de su familia que vivan con él, entendiéndose por tales al cónyuge, padre o hijos de ambos o de uno de ellos, en la condición de dependientes y no podrán realizar actividades remuneradas en el país."
+     }
+    ],
+    "repealed_search": "I checked the DS 597 versions in force on 1 Jan 2000, after Decreto 2910 (May 2000) and on 1 Jan 2020 (arts. 35, 46, 49), and DL 1.094 arts. 23 and 29 in the 2000 and 2020 versions. Its version list shows changes in 2002, 2010 and 2011; DS 597's shows 2000, 2015 and 2020. No version granted dependants an automatic right to work, so no protection was repealed or narrowed.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the versions of DS 597 and DL 1.094 in force on the relevant dates on LeyChile. Dating is strong. Practice evidence is not needed since the protection is absent.",
+    "sources_opened": [
+     {
+      "title": "DS 597 version 2000-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-01-01"
+     },
+     {
+      "title": "DS 597 version 2000-06-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-06-01"
+     },
+     {
+      "title": "DS 597 version 2020-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2020-01-01"
+     },
+     {
+      "title": "DL 1094 version 2000-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2000-01-01"
+     },
+     {
+      "title": "DL 1094 version 2020-01-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2020-01-01"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The 2020 'No' is confirmed by DS 597 arts. 35 and 49, which bar dependants of contract and temporary visa holders from paid work."
+   },
+   {
+    "question_id": 103,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Effectively Always",
+      "basis": "The Labour Code (DFL 1/1994) applies to all workers without nationality distinction: hours, rest, holidays, safety and dismissal. Art. 2 inciso 2 barred nationality-based discrimination (rebuilt from Ley 19.739). DS 597 art. 36 f) requires contract-visa contracts to comply with labour and social-security rules. The quota in arts. 19-20 limits hiring, not conditions. No migrant-specific practice evidence was found; I kept the starting level."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Effectively Always",
+      "basis": "Ley 19.759 (Dec 2001) defined discrimination as covering 'igualdad de oportunidades o de trato en el empleo' on nationality grounds. DFL 1/2002 kept it. US State Department 2004: such discrimination 'occurred in practice'. Evidence is thin, so I kept the starting level and flagged it."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Effectively Always",
+      "basis": "Same law. The CMW (2011) found women migrant domestic workers 'often victims of ill-treatment, exploitation or abusive working conditions' and urged more labour inspection. That points below the starting level, but it is not a dated shift, so I kept the level and flagged it."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, migrants have a right to the same employment conditions and protections",
+      "implementation": "Effectively Always",
+      "basis": "Same law, plus Ley 20.609 (2012). US State Department 2014: inspectors do not cover the informal economy and employment discrimination continued. CESCR 2015: persistent discrimination against migrants in employment. Starting level kept; concern noted."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código del Trabajo (DFL 1/1994; DFL 1/2002 from 2003-01-16)",
+      "article": "Arts. 1-3, 5",
+      "role": "cited",
+      "in_force": "1994 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Art. 2 (anti-discrimination incisos)",
+      "role": "cited",
+      "in_force": "1994 to today (rewritten 2001-12-01)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Art. 36 letra f)",
+      "role": "other_in_force",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 14",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-07-06",
+      "instrument": "Ley 19.739",
+      "article": "Código del Trabajo art. 2 inciso 2",
+      "kind": "amended",
+      "what_changed": "Added age and civil status to the existing list of banned discrimination grounds. Equal-treatment coverage of foreigners continues.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19739",
+      "passage": "Intercálase, en el inciso segundo, entre la coma (,) que sigue a la palabra \"sexo\" y el término \"sindicación\", la expresión \"edad, estado civil,\"."
+     },
+     {
+      "date": "2001-12-01",
+      "instrument": "Ley 19.759",
+      "article": "Código del Trabajo art. 2",
+      "kind": "replaced",
+      "what_changed": "New definition of discrimination covering nationality and equality of treatment in employment, deemed part of every employment contract.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+      "passage": "Lo dispuesto en los incisos segundo y tercero de este artículo y las obligaciones que de ellos emanan para los empleadores, se entenderán incorporadas en los contratos de trabajo que se celebren."
+     },
+     {
+      "date": "2003-01-16",
+      "instrument": "DFL 1 de 2002 (Código del Trabajo refundido)",
+      "article": "Arts. 2, 19",
+      "kind": "new_instrument",
+      "what_changed": "Consolidated code; equal-treatment rule kept. Art. 19 keeps the 85% Chilean-worker quota for employers with more than 25 workers, which concerns hiring rather than conditions.",
+      "url": "https://www.wipo.int/wipolex/en/text/489581",
+      "passage": "Art. 19. El ochenta y cinco por ciento, a lo menos, de los trabajadores que sirvan a un mismo empleador será de nacionalidad chilena. Se exceptúa de esta disposición el empleador que no ocupa más de veinticinco trabajadores."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "US Department of State, Country Reports on Human Rights Practices 2004: Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations on Chile (CMW/C/CHL/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "US Department of State, Country Report on Human Rights Practices 2014: Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CESCR Concluding observations E/C.12/CHL/CO/4 (2015)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The pre-2001 art. 2 was rebuilt from Ley 19.739 and Ley 19.759. The 1994 code text itself could not be opened. DS 597 versions were read directly. Practice evidence is general (discrimination, domestic workers, informal sector) and thin before 2010.",
+    "sources_opened": [
+     {
+      "title": "Ley 19.739",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19739"
+     },
+     {
+      "title": "Ley 19.759",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759"
+     },
+     {
+      "title": "WIPO Lex Código del Trabajo",
+      "url": "https://www.wipo.int/wipolex/en/text/489581"
+     },
+     {
+      "title": "DS 597 version 2000-06-01",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-06-01"
+     },
+     {
+      "title": "US DOS 2004 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "CMW 2011 Chile",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "US DOS 2014 Chile (ecoi)",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     },
+     {
+      "title": "CESCR 2015 Chile (ICJ)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/"
+     },
+     {
+      "title": "US DOS 2019 Chile",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds; Ley 21.325 art. 14 was not in force in 2020, so the 2020 answer rests on the Labour Code. The 'Effectively Always' rating looks too high. CMW 2011 and CESCR 2015 document breaches (abusive conditions of migrant domestic workers, discrimination in employment), and the US State Department notes no inspection of the informal economy. 'Usually' would match the evidence. I kept the starting level on past dates because there is no dated shift.",
+    "confidence": "medium",
+    "notes": "No ruling relied on."
+   },
+   {
+    "question_id": 135,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Labour Code (DFL 1/1994) art. 2 inciso 2 listed race among banned grounds (rebuilt from Ley 19.739). Constitution art. 19 No. 2 (no privileged groups, no arbitrary differences) and No. 16 (ban on discrimination not based on capacity) also applied. US State Department 1999 notes the Constitution 'does not ban specifically discrimination based on race'. The Labour Code ban covers employment only. Practice evidence for 2000 is minimal."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 19.759 (Dec 2001) defines discrimination as distinctions based on 'raza, color, ... nacionalidad, ascendencia nacional'. US State Department 2004: the Labour Code prohibits race and nationality discrimination 'however, such discrimination occurred in practice'."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same provisions. US State Department 2009: the government enforced the bans but discrimination continued, with skinhead violence against immigrants. The CMW (2011) noted discriminatory attitudes and stigmatisation of migrant workers."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 20.609 (in force 24 Jul 2012) explicitly bans arbitrary discrimination based on 'raza o etnia, la nacionalidad' in all fields, with a judicial action. CERD (2013): migrants 'particularly those of Latin American origin, continue to face discrimination'. CESCR 2015 found the same."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 N° 2",
+      "role": "cited",
+      "in_force": "1981-03-11 to today (amended by Ley 19.611 of 1999 and Ley 20.050 of 2005)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 N° 16 inciso 3",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "1994 to today (rewritten 2001-12-01)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 20.609",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2012-07-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 1, 3, 7, 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-12-01",
+      "instrument": "Ley 19.759",
+      "article": "Código del Trabajo art. 2",
+      "kind": "replaced",
+      "what_changed": "Restated the employment ban on discrimination based on race, colour, nationality and national extraction (race was already listed before). The protection continues.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+      "passage": "Los actos de discriminación son las distinciones, exclusiones o preferencias basadas en motivos de raza, color, sexo, edad, estado civil, sindicación, religión, opinión política, nacionalidad, ascendencia nacional u origen social"
+     },
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050",
+      "article": "Constitución art. 19",
+      "kind": "amended",
+      "what_changed": "Constitutional reform. The art. 19 No. 2 wording on equality and the ban on arbitrary differences appears in the post-2005 text. The equality clause does not name race.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302&idVersion=2006-01-01",
+      "passage": "2º.- La igualdad ante la ley. En Chile no hay persona ni grupo privilegiados. En Chile no hay esclavos y el que pise su territorio queda libre. Hombres y mujeres son iguales ante la ley. Ni la ley ni autoridad alguna podrán establecer diferencias arbitrarias;"
+     },
+     {
+      "date": "2012-07-24",
+      "instrument": "Ley 20.609",
+      "article": "Arts. 2, 17",
+      "kind": "new_instrument",
+      "what_changed": "First general statute expressly banning arbitrary discrimination on race or ethnicity and nationality, with a civil remedy. Art. 17 adds an aggravating circumstance to Código Penal art. 12. It broadens the protection beyond employment.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092",
+      "passage": "\"21ª. Cometer el delito o participar en él motivado por la ideología, opinión política, religión o creencias de la víctima; la nación, raza, etnia o grupo social a que pertenezca"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "US Department of State, 1999 Country Reports on Human Rights Practices: Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+      "year": 2000,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "US Department of State, Country Reports on Human Rights Practices 2004: Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "US Department of State, 2009 Country Reports on Human Rights Practices: Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW Concluding observations on Chile (CMW/C/CHL/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CERD Concluding observations on Chile (CERD/C/CHL/CO/19-21), 2013",
+      "url": "https://hrlibrary.umn.edu/country/chile2013.html",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CESCR Concluding observations E/C.12/CHL/CO/4 (2015)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "US Department of State, 2019 Country Reports on Human Rights Practices: Chile",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Before 2012, the race ban rests on Labour Code art. 2 (pre-2001 text rebuilt from Ley 19.739; Ley 19.759 and the 2002 text read) and the general constitutional equality clauses. Ley 20.609 was read. The CERD 2009 text could not be opened (blocked), and pre-2005 practice evidence is minimal.",
+    "sources_opened": [
+     {
+      "title": "Ley 19.739",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19739"
+     },
+     {
+      "title": "Ley 19.759",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759"
+     },
+     {
+      "title": "Constitución 2006 version (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302&idVersion=2006-01-01"
+     },
+     {
+      "title": "Ley 20.609",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609"
+     },
+     {
+      "title": "Ley 20.609 JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1042092"
+     },
+     {
+      "title": "US DOS 1999 Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html"
+     },
+     {
+      "title": "US DOS 2004 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "US DOS 2009 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "CMW 2011 Chile",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "CERD 2013 Chile",
+      "url": "https://hrlibrary.umn.edu/country/chile2013.html"
+     },
+     {
+      "title": "CESCR 2015 Chile (ICJ)",
+      "url": "https://www.icj.org/sogiunjurisprudence/concluding-observations-ec-12chlco4-19-june-2015-chile/"
+     },
+     {
+      "title": "US DOS 2019 Chile",
+      "url": "https://www.state.gov/reports/2019-country-reports-on-human-rights-practices/chile/"
+     },
+     {
+      "title": "CERD 2009 (refworld, blocked)",
+      "url": "https://www.refworld.org/policy/polrec/cerd/2009/70074"
+     },
+     {
+      "title": "CERD 2009 (UNHCR archive, blocked)",
+      "url": "https://webarchive.archive.unhcr.org/20221007183540mp_/https://www.refworld.org/docid/4acc851a0.html"
+     },
+     {
+      "title": "CERD 2009 Spanish (minrel, redirected)",
+      "url": "https://minrel.gob.cl/minrel/site/artic/20080902/asocfile/20080902204316/observaciones_finales_cerd_15_18.pdf"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'Yes' holds, but it rests on Ley 20.609 art. 2, Labour Code art. 2 and Constitution art. 19 No. 2, not Ley 21.325, which was not in force. Before July 2012 the express race ban was confined to employment (Labour Code art. 2). The Constitution gave only general equality, so the 2000-2010 'Yes' is narrower in scope but still a statutory race ban.",
+    "confidence": "medium",
+    "notes": "ICERD (ratified 1971) was not relied on as directly applicable. No court ruling relied on."
+   }
+  ]
+ }
 }
