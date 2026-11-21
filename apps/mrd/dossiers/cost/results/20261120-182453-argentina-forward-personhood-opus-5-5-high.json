@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina personhood claude-opus-5-5 high",
- "pid": 49737,
  "step": "forward",
  "slug": "argentina",
  "chunk": "personhood",
@@ -59,5 +58,748 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T02:51:27.341Z",
+ "minutes": 26.57,
+ "meters_after": {
+  "at": "2026-11-21T02:51:27.341Z",
+  "window": {
+   "pct": 32,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 46,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 32,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 46,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 32% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 46% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 327 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  10%  Compact before you step away · run /compact\n  Top subagents: general-purpose 36%\n\nLast 7d · 338 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 185409,
+   "output": 31602,
+   "cache_read": 1639856,
+   "cache_write": 123179,
+   "cost_usd": 1.8261,
+   "total": 1980046
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 185373,
+    "output": 13234,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4339,
+    "cost_usd": 0.1452
+   },
+   "claude-opus-5-5": {
+    "input": 36,
+    "output": 18368,
+    "cache_read": 1639856,
+    "cache_write": 123179,
+    "thinking": 5675,
+    "cost_usd": 1.6809
+   }
+  }
+ },
+ "turns": 34,
+ "calls": 51,
+ "duration_ms": 414902,
+ "duration_api_ms": 394734,
+ "pages_read": 20,
+ "pages": [
+  {
+   "at": "2026-11-21T02:25:04.306Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 20 | ARTICULO 22 | ARTICULO 23 | ARTICULO 24 | ARTICULO 30 | ARTICULO 31 | ARTICULO 32 | ARTICULO 33 | 366/2025",
+   "ok": true,
+   "chars": 16665
+  },
+  {
+   "at": "2026-11-21T02:25:05.252Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016",
+   "find": null,
+   "ok": true,
+   "chars": 6358
+  },
+  {
+   "at": "2026-11-21T02:25:16.651Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 20 | ARTICULO 22 | ARTICULO 25 | ARTICULO 26",
+   "ok": true,
+   "chars": 5394
+  },
+  {
+   "at": "2026-11-21T02:25:17.647Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 30 | ARTICULO 20 | ARTICULO 32",
+   "ok": true,
+   "chars": 630
+  },
+  {
+   "at": "2026-11-21T02:25:21.198Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 30 | ARTICULO 20.- | ARTICULO 32",
+   "ok": true,
+   "chars": 5517
+  },
+  {
+   "at": "2026-11-21T02:25:53.604Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 26 | ARTICULO 69 | Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.) ARTICULO 26",
+   "ok": true,
+   "chars": 4608
+  },
+  {
+   "at": "2026-11-21T02:26:06.279Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/145000-149999/145345/texact.htm",
+   "find": "ARTICULO 27 | ARTICULO 28 | ARTICULO 29 | ARTICULO 54 | sustituido | incorporado",
+   "ok": true,
+   "chars": 8554
+  },
+  {
+   "at": "2026-11-21T02:26:11.513Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=145345",
+   "find": "2023 | 2024 | 2025 | Ley ",
+   "ok": true,
+   "chars": 3184
+  },
+  {
+   "at": "2026-11-21T02:26:18.686Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": "Art. 1 | ARTICULO 1 | Son argentinos | 366/2025",
+   "ok": true,
+   "chars": 6414
+  },
+  {
+   "at": "2026-11-21T02:26:22.543Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm",
+   "find": "ARTICULO 294 | ARTICULO 292",
+   "ok": true,
+   "chars": 4072
+  },
+  {
+   "at": "2026-11-21T02:26:37.514Z",
+   "url": "https://www.argentina.gob.ar/node/159693",
+   "find": "ARTICULO 1 | recién nacido | modifica | Texto",
+   "ok": true,
+   "chars": 4307
+  },
+  {
+   "at": "2026-11-21T02:26:53.240Z",
+   "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/51646",
+   "find": "Artículo 1 | ARTICULO 1 | modific",
+   "ok": true,
+   "chars": 3402
+  },
+  {
+   "at": "2026-11-21T02:27:22.279Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/03/Papeles-de-Migracion-07-Inscripciones-de-nacimientos.pdf",
+   "find": "conclusi | negaron | rechaz | sin documento | testigos | DNI de | obstácul | dificultad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:27:41.648Z",
+   "url": "https://www.cels.org.ar/especiales/examenonu/wp-content/uploads/sites/13/2022/11/Migrantes-EPU-2023.pdf",
+   "find": "DNI | documentación | demoras | radicación | precaria | nacimiento",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:48:30.666Z",
+   "url": "https://caref.org.ar/revistas/papeles-de-migracion-07",
+   "find": "nacimiento | inscripción | migrantes",
+   "ok": true,
+   "chars": 1127
+  },
+  {
+   "at": "2026-11-21T02:49:15.871Z",
+   "url": "https://eldiario.com/2024/05/07/defensoria-argentina-recomendo-gobierno-milei-facilitar-tramites-migrantes-venezolanos/",
+   "find": "Defensoría | residencia | documentación | Migraciones",
+   "ok": true,
+   "chars": 4521
+  },
+  {
+   "at": "2026-11-21T02:49:17.007Z",
+   "url": "https://observatoriomigracionyasilo.caref.org.ar/inicio/migracion-venezolana-en-argentina-papeles-faltantes-y-regimenes-especiales",
+   "find": "DNI | renovar | residencia | 2023 | 2024",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:49:24.402Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-403802/texto",
+   "find": "ARTÍCULO 1 | Régimen | residencia",
+   "ok": true,
+   "chars": 3359
+  },
+  {
+   "at": "2026-11-21T02:49:30.557Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-403802/texto",
+   "find": "ARTÍCULO 1° | ARTÍCULO 2° | ARTÍCULO 3° | vigencia",
+   "ok": true,
+   "chars": 5411
+  },
+  {
+   "at": "2026-11-21T02:50:07.954Z",
+   "url": "https://chequeado.com/el-explicador/visita-del-papa-leon-xiv-cual-es-la-realidad-de-los-migrantes-en-argentina/",
+   "find": "residencias | DNI | 366 | regular | documentación",
+   "ok": true,
+   "chars": 6545
+  }
+ ],
+ "searches": [
+  "DNU 366/2025 migraciones rechazo Congreso o medida cautelar suspensión artículos",
+  "infoleg Ley 346 ciudadanía texto actualizado Decreto 366/2025 artículo 1",
+  "infoleg Ley 26.413 Registro del Estado Civil y Capacidad de las Personas texto actualizado",
+  "Ley 24.540 régimen de identificación de recién nacidos infoleg texto actualizado",
+  "\"24540\" infoleg anexos texact \"recién nacidos\" \"Todo niño nacido vivo o muerto\"",
+  "Argentina migrantes demoras radicación Dirección Nacional de Migraciones 2025 informe CELS CAREF documentación tasas aumento",
+  "inscripción de nacimiento hijos de madres migrantes sin documento Argentina dificultades registro civil informe",
+  "Argentina ley prohíbe retención de documentos de identidad trabajador empleador \"retención de documentos\" ley 26.842 artículo",
+  "CAREF \"Papeles de Migración\" inscripciones de nacimientos Jujuy Misiones progenitores migrantes",
+  "Migraciones demoras turnos residencia DNI extranjeros 2025 aumento tasas migratorias Decreto 366 radicaciones caída",
+  "Defensoría del Pueblo o ACNUR Argentina 2024 migrantes venezolanos acceso DNI residencia demoras Migraciones RADEX",
+  "Migraciones residencias otorgadas 2024 2025 cifras radicaciones resueltas extranjeros Argentina"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":27,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley 25.871 de Migraciones (consolidated text, InfoLEG)\",\"article\":\"Arts. 30-33 (Capítulo III 'De los documentos') and the provisions amended by DNU 366/2025\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"The starting answer is 'No' (no law gives migrant workers a right not to have their identity documents confiscated by private parties), so implementation is 'Does Not Apply' on both dates. I found no amendment, new instrument or ruling between 1 January 2023 and 1 January 2026 that creates such a right. DNU 366/2025 rewrote many articles of Ley 25.871, but none of the provisions I read deals with confiscation or retention of documents.\",\"practice_sources\":[],\"past_versions\":\"read_the_version_in_force\",\"sourcing_note\":\"I read the consolidated Ley 25.871 (InfoLEG texto actualizado, with the DNU 366/2025 annotations) and its original text. A web search found no provision against employers retaining workers' documents. The trafficking statutes (Ley 26.364 / Ley 26.842) and the Penal Code's servitude provisions were not read article by article.\",\"sources_opened\":[{\"title\":\"Ley 25.871 – texto actualizado (InfoLEG)\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm\"},{\"title\":\"Ley 25.871 – normas que modifican (InfoLEG)\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016\"},{\"title\":\"Ley 25.871 – texto original (InfoLEG)\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm\"}],\"starting_answer_concern\":\"Not wrong on what I read, but not fully checked. A full recoding should look at the trafficking framework (Ley 26.364 as amended by ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 27,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones (consolidated text, InfoLEG)",
+      "article": "Arts. 30-33 (Capítulo III 'De los documentos') and the provisions amended by DNU 366/2025",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The starting answer is 'No' (no law gives migrant workers a right not to have their identity documents confiscated by private parties), so implementation is 'Does Not Apply' on both dates. I found no amendment, new instrument or ruling between 1 January 2023 and 1 January 2026 that creates such a right. DNU 366/2025 rewrote many articles of Ley 25.871, but none of the provisions I read deals with confiscation or retention of documents.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the consolidated Ley 25.871 (InfoLEG texto actualizado, with the DNU 366/2025 annotations) and its original text. A web search found no provision against employers retaining workers' documents. The trafficking statutes (Ley 26.364 / Ley 26.842) and the Penal Code's servitude provisions were not read article by article.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     }
+    ],
+    "starting_answer_concern": "Not wrong on what I read, but not fully checked. A full recoding should look at the trafficking framework (Ley 26.364 as amended by Ley 26.842) and the Penal Code's servitude/forced-labour offences. Like the Brazilian example, they may punish retention of documents as a means of exploitation. I did not read those articles, so I cite none.",
+    "confidence": "medium",
+    "notes": "No change. The answer on both dates follows the MRD starting answer ('No, no such right specified or implied in any law')."
+   },
+   {
+    "question_id": 29,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 24.540 – Régimen de identificación de recién nacidos",
+      "article": "Art. 1",
+      "enacted": "1995-09-22",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Arts. 1, 2, 3",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.413 – Registro del Estado Civil y Capacidad de las Personas",
+      "article": "Arts. 27-40, 54",
+      "enacted": "2008-10-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025, arts. 37, 38 y 43",
+      "article": "Ley 346, art. 2 (replaced), art. 2 bis (added), art. 3 (repealed)",
+      "kind": "amended",
+      "what_changed": "DNU 366/2025 rewrote the naturalisation rules in Ley 346: two years of continuous lawful residence before the DNM, or a 'relevant investment'. It repealed art. 3. Art. 1 (citizenship by birth on Argentine soil 'sea cual fuere la nacionalidad de sus padres') is unchanged, and birth registration is not affected.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Art. 2° — Son ciudadanos por naturalización: 1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud ... (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025.) ... Art. 3° (Artículo derogado por art. 43 del Decreto Nº 366/2025 B.O. 29/5/2025."
+     }
+    ],
+    "implementation_then_now": "The law is the same on both dates. Ley 26.413 art. 27 requires registration of 'todos los que ocurran en el territorio de la Nación'. Art. 36(c) lets parents who have no identity documents establish age and nationality through two witnesses. The InfoLEG list of amending acts shows nothing after Ley 27.611 (2021). For practice, CAREF ran a 2024–2025 project on birth registration of children of migrant parents in Jujuy and Misiones to 'identificar posibles dificultades'; its report came out in 2025–2026. I could read only the HTML summary, not the PDF findings. Nothing I read documents a pattern of refusals that would justify moving the rating, so I keep 'Effectively Always' on both dates. The rating rests on thin, second-hand evidence.",
+    "practice_sources": [
+     {
+      "title": "Papeles de Migración 07 – Inscripciones de nacimientos de hijos/as de madres y padres migrantes en Jujuy y Misiones (CAREF, summary page)",
+      "url": "https://caref.org.ar/revistas/papeles-de-migracion-07",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the Ley 26.413 consolidated text and its full list of amending acts on InfoLEG (none after 2021). For Ley 346 I read the consolidated text with the DNU 366/2025 annotations. For Ley 24.540 art. 1 I read only the original text (CABA Boletín Oficial copy); its InfoLEG history page was not found. Constitution art. 20 is unchanged since there has been no reform after 1994. The CAREF report is a PDF the tool could not open.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.413 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/145000-149999/145345/texact.htm"
+     },
+     {
+      "title": "Ley 26.413 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=145345"
+     },
+     {
+      "title": "Ley 346 – texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 24.540 – Boletín Oficial CABA (texto original)",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/51646"
+     },
+     {
+      "title": "Ley simple: Identificación de la persona recién nacida (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/node/159693"
+     },
+     {
+      "title": "CAREF – Papeles de Migración 07",
+      "url": "https://caref.org.ar/revistas/papeles-de-migracion-07"
+     },
+     {
+      "title": "CAREF – Papeles de Migración 07 PDF (could not be extracted)",
+      "url": "https://caref.org.ar/wp-content/uploads/2026/03/Papeles-de-Migracion-07-Inscripciones-de-nacimientos.pdf"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds. 'Effectively Always' may be generous. Registration rules are set province by province, a UNICEF study (reported by La Nación, seen only in search results) put unregistered births at about 2.4% in 2014, and CAREF is examining difficulties faced by migrant families in border provinces. 'Usually; Effectively Always' may fit the evidence better. Separately, Ley 346 arts. 2–3 concern naturalisation, not birth registration, so citing them for this indicator adds nothing.",
+    "confidence": "medium",
+    "notes": "No change for this indicator. The DNU 366/2025 changes to Ley 346 affect only naturalisation. Search results report that the Cámara Nacional Electoral annulled the citizenship part of DNU 366/2025. I did not read that ruling, so I rely on neither it nor its scope."
+   },
+   {
+    "question_id": 31,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 20",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 22-26",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 30-33",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamento de la Ley 25.871)",
+      "article": "Art. 30",
+      "enacted": "2010-05-06",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025, art. 4º",
+      "article": "Ley 25.871, art. 20",
+      "kind": "amended",
+      "what_changed": "Before: the 'residencia precaria' was valid up to 180 days and renewable until the application was decided. After: it is valid up to 90 days, renewable only 'por resolución fundada', and it does not count toward arraigo or naturalisation. It still lets holders stay, travel, work and study, so the residency/work document still exists, in narrower form.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Su validez será de hasta NOVENTA (90) días corridos y podrá ser renovada por resolución fundada de la referida autoridad migratoria. La residencia a la que refiere el párrafo anterior habilitará a sus titulares a permanecer, egresar, ingresar, trabajar y estudiar durante su período de vigencia ... (Artículo sustituido por art. 4º del Decreto Nº 366/2025 B.O. 29/5/2025."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025, art. 5º",
+      "article": "Ley 25.871, art. 22",
+      "kind": "amended",
+      "what_changed": "Permanent residence now requires proof of sufficient economic means and no disqualifying criminal record. Relatives of Argentine citizens no longer get it automatically. This affects who qualifies for the status, not the duty to document those admitted.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes para subsistir en el país y que no cuenta con antecedentes penales que pudieren motivar el rechazo de la solicitud ... (Artículo sustituido por art. 5º del Decreto Nº 366/2025 B.O. 29/5/2025."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025, art. 6º",
+      "article": "Ley 25.871, art. 23 inc. ñ)",
+      "kind": "amended",
+      "what_changed": "Adds a temporary-residence subcategory for family reunification. The other art. 23 subcategories, including 'trabajador migrante' with a work permit, are unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ñ) Reunificación familiar: ser cónyuge, progenitor o hijo de argentino nativo, naturalizado o por opción ... (Inciso incorporado por art. 6º del Decreto Nº 366/2025 B.O. 29/5/2025."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025, art. 7º",
+      "article": "Ley 25.871, art. 25",
+      "kind": "amended",
+      "what_changed": "Temporary and transitory residents must leave when their permit expires, and art. 61 now applies explicitly if they do not. The duty to issue documents is not affected.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "El extranjero admitido como ‘residente temporario’ o ‘residente transitorio’ podrá permanecer en el territorio nacional durante el plazo de residencia autorizado, con sus debidas prórrogas, y deberá abandonar el país al expirar dicho plazo. En caso de incumplimiento, procederá la aplicación del artículo 61"
+     },
+     {
+      "date": "2024-09-16",
+      "instrument": "Disposición DNM 388/2024 (DI-2024-388-APN-DNM#JGM)",
+      "article": "Anexo I, arts. 1-2",
+      "kind": "new_instrument",
+      "what_changed": "A temporary special regularisation regime for Venezuelan nationals who could not meet the general requirements, often because their documents had expired. It ran 90 days from entry into force, ten days after publication on 6 Sept 2024, and was extended once for 30 days from 20 Dec 2024 by Disposición 1177/2024. It had lapsed by 1 Jan 2026.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-403802/texto",
+      "passage": "Resulta objeto del presente régimen, la regularización migratoria de aquellos nativos de la República Bolivariana de Venezuela que se encuentren en el territorio nacional con anterioridad a la entrada en vigencia de la presente medida y no alcancen los requisitos para regularizar su situación a través del régimen general."
+     }
+    ],
+    "implementation_then_now": "The core mandate is the same on both dates. Ley 25.871 art. 30 lets permanent and temporary residents obtain the DNI. Art. 33 requires the DNI to show nationality, type of residence and expiry. Decreto 616/2010 art. 30 requires the DNM to notify RENAPER of each residence granted. None of these was amended. Around 2023, documentation worked for most residents, with known gaps. In April 2024 the Defensoría del Pueblo recommended letting Venezuelans without valid documents apply for residence, and the DNM then ran the 2024 special regime. After DNU 366/2025, CAREF and CELS told the IACHR that the new economic-means requirement became a barrier and that permanent residences granted fell sharply. That drop is documented mainly for 2026 and concerns who qualifies for a status, not whether people granted residence receive documents. I keep 'Usually; Effectively Always' for both dates; the 2026 rating may fall in later coding.",
+    "practice_sources": [
+     {
+      "title": "Defensoría de Argentina recomendó al gobierno de Milei facilitar trámites para migrantes venezolanos (El Diario, on Defensoría del Pueblo resolution of 9 April 2024)",
+      "url": "https://eldiario.com/2024/05/07/defensoria-argentina-recomendo-gobierno-milei-facilitar-tramites-migrantes-venezolanos/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Visita del papa León XIV: cuál es la realidad de los migrantes en Argentina (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/visita-del-papa-leon-xiv-cual-es-la-realidad-de-los-migrantes-en-argentina/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Disposición DNM 388/2024 – Régimen Especial de Regularización Migratoria para Nativos de Venezuela",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-403802/texto",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Dating is strong. InfoLEG's consolidated Ley 25.871 annotates each DNU 366/2025 substitution with its date of entry into force (29/5/2025), and I read the original text in force on 1 Jan 2023 (art. 20 had been restored by Decreto 138/2021). Practice evidence is second-hand: CELS and CAREF PDFs and the UNHCR factsheet could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto 616/2010 – texto (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texact (not found)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm"
+     },
+     {
+      "title": "Disposición DNM 388/2024",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-403802/texto"
+     },
+     {
+      "title": "El Diario – Defensoría recommendation 2024",
+      "url": "https://eldiario.com/2024/05/07/defensoria-argentina-recomendo-gobierno-milei-facilitar-tramites-migrantes-venezolanos/"
+     },
+     {
+      "title": "Chequeado – realidad de los migrantes en Argentina",
+      "url": "https://chequeado.com/el-explicador/visita-del-papa-leon-xiv-cual-es-la-realidad-de-los-migrantes-en-argentina/"
+     },
+     {
+      "title": "CELS – Migrantes EPU 2023 (PDF, could not be extracted)",
+      "url": "https://www.cels.org.ar/especiales/examenonu/wp-content/uploads/sites/13/2022/11/Migrantes-EPU-2023.pdf"
+     },
+     {
+      "title": "CAREF observatorio – migración venezolana (could not be extracted)",
+      "url": "https://observatoriomigracionyasilo.caref.org.ar/inicio/migracion-venezolana-en-argentina-papeles-faltantes-y-regimenes-especiales"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Answer 'Yes' on both dates. The change code is 'not the same' because a cited provision (art. 20) was amended in the window: the residencia precaria was cut from 180 to 90 days and renewal became discretionary. Arts. 22, 23 and 25 were also rewritten. The DNI mandate in arts. 30–33 and Decreto 616/2010 art. 30 is unchanged. DNU 366/2025 has not been rejected by Congress and InfoLEG shows it in force. A later DNU 681/2026, mentioned in search results, falls outside the window and was not examined."
+   },
+   {
+    "question_id": 33,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código Penal de la Nación (Ley 11.179)",
+      "article": "Art. 294",
+      "enacted": "1921",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Art. 294 punishes anyone who 'suprimiere o destruyere, en todo o en parte, un documento de modo que pueda resultar perjuicio', with the penalties of the preceding articles. Art. 292 sets 3 to 8 years where identity documents are involved. The consolidated InfoLEG text carries no amendment note on art. 294, and I found no amendment, new instrument or ruling in the window. I found no practice evidence on prosecutions for destroying migrants' documents in either period, so the starting 'Usually' is carried forward on both dates with low confidence.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the consolidated Penal Code on InfoLEG: art. 294 has no modification note, so it is unchanged since enactment. The Penal Code's list of amending norms was not read, and no practice evidence specific to migrants was found.",
+    "sources_opened": [
+     {
+      "title": "Código Penal de la Nación – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds: art. 294 is a general offence covering any document, including DNI and residence documents. The 'Usually' rating has no stated evidence.",
+    "confidence": "low",
+    "notes": "No change. The Penal Code reform bill discussed in 2025 had not been enacted as of the dates examined (not verified in a primary source)."
+   }
+  ]
+ }
 }
