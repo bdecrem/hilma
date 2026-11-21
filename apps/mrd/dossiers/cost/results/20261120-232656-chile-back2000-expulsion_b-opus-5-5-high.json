@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile expulsion_b claude-opus-5-5 high",
- "pid": 69152,
  "step": "back2000",
  "slug": "chile",
  "chunk": "expulsion_b",
@@ -59,5 +58,1012 @@
   "user": 180
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T08:56:14.879Z",
+ "minutes": 89.3,
+ "meters_after": {
+  "at": "2026-11-21T08:56:14.880Z",
+  "window": {
+   "pct": 52,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 2,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 52,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 2,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 52% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 2% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 54644,
+   "output": 38277,
+   "cache_read": 2238228,
+   "cache_write": 74255,
+   "cost_usd": 1.758,
+   "total": 2405404
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 54590,
+    "output": 4353,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1399,
+    "cost_usd": 0.0376
+   },
+   "claude-opus-5-5": {
+    "input": 54,
+    "output": 33924,
+    "cache_read": 2238228,
+    "cache_write": 74255,
+    "thinking": 5810,
+    "cost_usd": 1.7204
+   }
+  }
+ },
+ "turns": 24,
+ "calls": 39,
+ "duration_ms": 699086,
+ "duration_api_ms": 614269,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-21T07:27:10.086Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 84 | Artículo 89 | Artículo 90 | refugiado | Corte Suprema",
+   "ok": true,
+   "chars": 7619
+  },
+  {
+   "at": "2026-11-21T07:43:36.728Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08",
+   "find": "Art. 84 | Art. 89 | Art. 90 | 24 horas | Corte Suprema | Art. 39",
+   "ok": true,
+   "chars": 2201
+  },
+  {
+   "at": "2026-11-21T07:43:40.371Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=6483",
+   "find": "Artículo 84 | Artículo 89 | 24 horas | Artículo 90",
+   "ok": true,
+   "chars": 395
+  },
+  {
+   "at": "2026-11-21T07:44:12.364Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+   "find": "Artículo 84 | Artículo 89 | 24 horas | Artículo 90",
+   "ok": true,
+   "chars": 7209
+  },
+  {
+   "at": "2026-11-21T07:44:16.483Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1975-07-19",
+   "find": "Artículo 84 | Artículo 89 | Artículo 90 | Artículo 39 | Artículo 34 | Artículo 85",
+   "ok": true,
+   "chars": 13346
+  },
+  {
+   "at": "2026-11-21T07:54:56.438Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+   "find": "Artículo 84 | Artículo 89 | Artículo 90 | Artículo 39 | Artículo 17 | Artículo 63",
+   "ok": true,
+   "chars": 14642
+  },
+  {
+   "at": "2026-11-21T07:55:00.622Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+   "find": "Artículo 4 | Artículo 5 | Artículo 37 | Artículo 38 | Artículo 39 | Artículo 26 | información | tercer país",
+   "ok": true,
+   "chars": 14573
+  },
+  {
+   "at": "2026-11-21T07:55:14.593Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2010-10-14",
+   "find": "frontera | informa | Artículo 36 | Artículo 3 | Artículo 5",
+   "ok": true,
+   "chars": 2113
+  },
+  {
+   "at": "2026-11-21T07:55:17.756Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+   "find": "frontera | informar | expulsión | devolución",
+   "ok": true,
+   "chars": 10495
+  },
+  {
+   "at": "2026-11-21T08:21:29.086Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "expuls | refugee | asylum | due process | collective",
+   "ok": true,
+   "chars": 2559
+  },
+  {
+   "at": "2026-11-21T08:21:30.072Z",
+   "url": "https://digitallibrary.un.org/record/4027590/files/CMW_C_CHL_FCO_2-EN.pdf",
+   "find": "expulsion | collective | refoulement | asylum | appeal",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:26:37.676Z",
+   "url": "https://derecho.uahurtado.cl/web2021/wp-content/uploads/2016/11/LawsonyRodriguez_debidoprocesoenexpulsionmigrantes.pdf",
+   "find": "audiencia | descargos | Corte Suprema | 24 horas | Rol | sin más trámite",
+   "ok": true,
+   "chars": 2367
+  },
+  {
+   "at": "2026-11-21T08:26:51.382Z",
+   "url": "https://revistas.usfq.edu.ec/index.php/iurisdictio/article/download/3406/4254/33484",
+   "find": "debido proceso | audiencia | descargos | 2013 | 2018 | Rol",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:27:11.759Z",
+   "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/",
+   "find": "Rol | desproporcionad | arraigo | Ministerio del Interior",
+   "ok": true,
+   "chars": 2201
+  },
+  {
+   "at": "2026-11-21T08:27:13.058Z",
+   "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/",
+   "find": "Rol | artículo 69 | desproporcion | proceso penal",
+   "ok": true,
+   "chars": 3055
+  },
+  {
+   "at": "2026-11-21T08:27:17.773Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=210676",
+   "find": "Artículo 10 | Artículo 17 | fecha_publicacion",
+   "ok": true,
+   "chars": 6475
+  }
+ ],
+ "searches": [
+  "Decreto 837 2010 reglamento ley 20.430 refugiados frontera \"informar\" solicitud leychile",
+  "CMW/C/CHL/CO/1 concluding observations Chile 2011 expulsion due process",
+  "INDH informe anual expulsiones administrativas migrantes debido proceso Corte Suprema amparo 2013 2014 decreto 1094",
+  "Corte Suprema acoge amparo expulsión extranjero decreto 1094 falta de audiencia previa desproporcionada 2015 OR 2016 OR 2017"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":55,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"DL 1.094 (text as amended by Ley 18.252 of 1983 and Ley 19.476 of 1996) dealt with asylum and refugees in arts. 34-40. Art. 39 barred expelling a refugee or asylee to a country where they were in danger, but no provision required anyone to be told that asylum might be available before expulsion or refusal of entry. There was no rule to apply, so no practice evidence was looked for.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same DL 1.094 refugee provisions (version in force 31-05-2002 to 14-04-2010, read). Ley 19.880 (2003) sets general rights in administrative procedure but has no duty to inform about asylum. No change.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Unchanged until Ley 20.430 entered into force on 15-04-2010, after this date. No duty to inform about asylum.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 20.430 (arts. 3-4: non-refoulement, including no rejection at the border; art. 27: officials who learn of an application must pass it on) and Decreto 837/2010 (art. 6: non-refoulement applies once the person says they intend to apply; art. 38: the applicant is informed of the procedure only after the application is formally lodged). None of these requires telling a person, before expulsion or refusal of entry, that asylum may be available.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"confidence\":\"medium\",\"events\":[{\"date\":\"1996\",\"instrument\":\"Ley 19.476\",\"article\":\"DL 1.094 art. 39\",\"kind\":\"amended\",\"what_changed\":\"Added non-refoulement for refugees, asylees and asylum applicants. It does not create a duty to inform anyone about asylum.\",\"url\":\"https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31\",\"passage\":\"Artículo 39.- Un refugiado o",
+ "output": {
+  "answers": [
+   {
+    "question_id": 55,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 (text as amended by Ley 18.252 of 1983 and Ley 19.476 of 1996) dealt with asylum and refugees in arts. 34-40. Art. 39 barred expelling a refugee or asylee to a country where they were in danger, but no provision required anyone to be told that asylum might be available before expulsion or refusal of entry. There was no rule to apply, so no practice evidence was looked for."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same DL 1.094 refugee provisions (version in force 31-05-2002 to 14-04-2010, read). Ley 19.880 (2003) sets general rights in administrative procedure but has no duty to inform about asylum. No change."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged until Ley 20.430 entered into force on 15-04-2010, after this date. No duty to inform about asylum."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 (arts. 3-4: non-refoulement, including no rejection at the border; art. 27: officials who learn of an application must pass it on) and Decreto 837/2010 (art. 6: non-refoulement applies once the person says they intend to apply; art. 38: the applicant is informed of the procedure only after the application is formally lodged). None of these requires telling a person, before expulsion or refusal of entry, that asylum may be available."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "1996",
+      "instrument": "Ley 19.476",
+      "article": "DL 1.094 art. 39",
+      "kind": "amended",
+      "what_changed": "Added non-refoulement for refugees, asylees and asylum applicants. It does not create a duty to inform anyone about asylum.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+      "passage": "Artículo 39.- Un refugiado o asilado político no podrá ser expulsado hacia el país donde su vida o libertad peligre por causa de su raza, religión, nacionalidad, pertenencia a determinados grupos sociales u opiniones políticas."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "arts. 3, 4, 27; art. 49 (repeal of DL 1.094 refugee provisions)",
+      "kind": "new_instrument",
+      "what_changed": "New refugee law: non-refoulement including no rejection at the border; officials must pass on applications they learn of. It has no duty to advise people that asylum is available. It repealed the DL 1.094 provisions on refugees.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "Artículo 27.- Recepción de la Solicitud. Los funcionarios de la Administración del Estado que tuvieran conocimiento de la presentación de una solicitud para el reconocimiento de la condición de refugiado de un extranjero, deberán ponerla en conocimiento, en el más breve plazo, de la Secretaría Técnica"
+     },
+     {
+      "date": "2011-02-17",
+      "instrument": "Decreto 837 (2010), Reglamento de la Ley Nº 20.430",
+      "article": "arts. 6, 38",
+      "kind": "new_instrument",
+      "what_changed": "Information on the procedure is given only after the application is formally lodged. Non-refoulement applies from the moment the person states an intention to apply. Neither requires advising anyone before expulsion or refusal of entry.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+      "passage": "Artículo 38.- Información del procedimiento. Una vez formalizada la solicitud ante el Departamento de Extranjería y Migración del Ministerio del Interior o las Gobernaciones Provinciales, se le informará al peticionario respecto del procedimiento"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "arts. 34-40 (asylees and refugees)",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2010-04-15",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "arts. 3, 4, 15, 26, 27",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 837 (2010)",
+      "article": "arts. 6, 38",
+      "role": "other_in_force",
+      "in_force": "2011-02-17 to today (amended 2022)",
+      "history_read": "version_history"
+     }
+    ],
+    "repealed_search": "I read the DL 1.094 refugee and asylum articles in the 1975, 2002-2010 and 2011-2022 versions, Ley 20.430 arts. 3-5, 15 and 26-28, and Decreto 837 arts. 5-7 and 38 as originally published. None of them, at any point between 2000 and 2020, required anyone to be advised that asylum was available before expulsion or refusal of entry. No repealed protection found.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the LeyChile versions of DL 1.094 in force 2002-2010 and 2011-2022, plus its 1975 original. LeyChile shows a single version for 1975-2002, so the text in force in 2000 was rebuilt from the Ley 18.252 and Ley 19.476 annotations in the 2002 version. I read Ley 20.430 only in its current text, and Decreto 837 in its 2011 original.",
+    "sources_opened": [
+     {
+      "title": "Decreto Ley 1094 – LeyChile (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1094 version 2002-05-31 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "DL 1094 texto original 1975 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1975-07-19"
+     },
+     {
+      "title": "Ley 20.430 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     },
+     {
+      "title": "Decreto 837 texto original (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17"
+     }
+    ],
+    "starting_answer_concern": null,
+    "notes": "No change across the period. Since 2010, the obligations of border officials are framed as non-refoulement and transmitting applications, not as advising people. The current text of Ley 20.430 includes the 2024 Ley 21.655 amendments, which are outside the period."
+   },
+   {
+    "question_id": 57,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 art. 39 (Ley 19.476, 1996) barred expelling a refugee, asylee or asylum applicant 'hacia el país donde su vida o libertad peligre' (to the country where their life or liberty is in danger). It says nothing about expulsion to a third country that might in turn expel the person."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Art. 39 is unchanged in the version in force 2002-2010 (read). No chain-refoulement ban."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same art. 39. Ley 20.430 entered into force only on 15-04-2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 art. 4 and Decreto 837 art. 6 bar return 'al país donde su vida o libertad personal peligren' and 'hacia las fronteras de un país donde estuviere en peligro la seguridad'. Ley 20.430 art. 5 gives an expelled refugee 30 days to seek admission elsewhere. Neither bans expulsion to a country that would re-expel the person to danger."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "1996",
+      "instrument": "Ley 19.476",
+      "article": "DL 1.094 art. 39",
+      "kind": "amended",
+      "what_changed": "Direct non-refoulement only: no expulsion to the country where life or liberty is in danger. Nothing on chain refoulement.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+      "passage": "Artículo 39.- Un refugiado o asilado político no podrá ser expulsado hacia el país donde su vida o libertad peligre por causa de su raza, religión, nacionalidad, pertenencia a determinados grupos sociales u opiniones políticas."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "arts. 4, 5",
+      "kind": "new_instrument",
+      "what_changed": "Replaced DL 1.094 art. 39 with broader non-refoulement, extended to torture risk, and an exceptional expulsion regime for refugees. There is no explicit bar on indirect (chain) refoulement.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "No procederá la expulsión o cualquier medida que tenga por efecto la devolución, incluyendo la prohibición de ingreso en frontera, de un solicitante de la condición de refugiado o refugiado al país donde su vida o libertad personal peligren."
+     },
+     {
+      "date": "2011-02-17",
+      "instrument": "Decreto 837 (2010)",
+      "article": "arts. 6, 7",
+      "kind": "new_instrument",
+      "what_changed": "The regulation repeats the non-refoulement wording and the 30-day period to seek admission in another country. It has no chain-refoulement ban.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+      "passage": "se le deberá conceder un plazo de treinta días para que gestione su admisión legal en otro país"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "art. 39 (text of Ley 19.476)",
+      "role": "predecessor",
+      "in_force": "1996 to 2010-04-15",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "arts. 4, 5",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 837 (2010)",
+      "article": "arts. 6, 7",
+      "role": "other_in_force",
+      "in_force": "2011-02-17 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "repealed_search": "I read the DL 1.094 1975 text, art. 39 in the 2002-2010 version, Ley 20.430 arts. 4-5 and Decreto 837 arts. 6-7. None bans expulsion to a third country from which the person would be refouled. No repealed or narrowed protection found.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the versions in force for 2005, 2010 and 2015. The 2000 text was rebuilt from the Ley 19.476 annotations in LeyChile's 2002 version, because LeyChile shows one undifferentiated version for 1975-2002.",
+    "sources_opened": [
+     {
+      "title": "DL 1094 version 2002-05-31 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "DL 1094 texto original 1975 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1975-07-19"
+     },
+     {
+      "title": "Ley 20.430 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     },
+     {
+      "title": "Decreto 837 texto original (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17"
+     }
+    ],
+    "starting_answer_concern": null,
+    "notes": "One could argue that the second paragraph of Ley 20.430 art. 4 ('cualquier forma de devolución hacia las fronteras de un país donde estuviere en peligro la seguridad de la persona') reaches indirect return. It does not expressly ban expulsion to a country likely to re-expel the person, so the coder's No is kept. In any case these provisions cover only refugees and asylum seekers."
+   },
+   {
+    "question_id": 59,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "DL 1.094 as amended by Ley 18.252 (1983). Art. 84: expulsion 'será dispuesta por decreto supremo fundado' (ordered by reasoned supreme decree), reserving to the person the administrative and judicial remedies; tourists are expelled by resolution of the Intendente. The grounds are set by law in arts. 15, 17, 63-67, 69 and 87. There is no practice evidence for around 2000, so the 2020 rating is carried over with low confidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Arts. 84, 89 and 90 unchanged in the 2002-2010 version (read); Ley 19.806 (2002) did not touch them. There is no specific practice evidence for around 2005, so the rating is inferred."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. The CMW's 2011 concluding observations asked Chile to ensure that 'the legal framework which regulates expulsion/deportation procedures is adequately implemented', which shows gaps."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions (2011-2022 version, read; Ley 20.507 did not change arts. 84/89/90). From 2010, Ley 20.430 art. 5 also allows refugees to be expelled only exceptionally. In 2013 the Supreme Court struck down expulsion decrees as unreasoned and disproportionate, which shows both judicial correction and administrative lapses."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "1983-10-26",
+      "instrument": "Ley 18.252",
+      "article": "DL 1.094 art. 84",
+      "kind": "amended",
+      "what_changed": "Before 2000, set expulsion by reasoned supreme decree signed by the Interior Minister, reserving remedies, with tourists expelled by Intendente resolution. This is the text in force from 2000 to 2022.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+      "passage": "Artículo 84.- La medida de expulsión de los extranjeros será dispuesta por decreto supremo fundado, suscrito por el Ministro del Interior bajo la fórmula \"Por orden del Presidente de la República\", en el que se reservarán al afectado los recursos administrativos y judiciales legalmente procedentes."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "art. 5",
+      "kind": "new_instrument",
+      "what_changed": "Expulsion of refugees and asylum seekers allowed only exceptionally, on national security or public order grounds, under the legal procedures in force.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "no podrá disponerse sino de manera excepcional, cuando razones de seguridad nacional o de orden público así lo justifiquen. Esta medida deberá adoptarse conforme a los procedimientos legales vigentes."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 (other articles)",
+      "kind": "amended",
+      "what_changed": "New LeyChile version of DL 1.094 (2011-2022). Art. 84 is unchanged and still annotated only with Ley 18.252.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+      "passage": "Artículo 84.- La medida de expulsión de los extranjeros será dispuesta por decreto supremo fundado"
+     },
+     {
+      "date": "2011",
+      "instrument": "CMW Concluding observations CMW/C/CHL/CO/1",
+      "article": "paras. 28-29",
+      "kind": "practice",
+      "what_changed": "The Committee found expulsion appeals insufficiently accessible and asked that the expulsion framework be adequately implemented.",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "passage": "ensure that the procedure of appeal against decisions of expulsion is accessible to migrant workers, including by extending the time limit for lodging appeals against decisions on expulsion, and that the legal framework which regulates expulsion/deportation procedures is adequately implemented."
+     },
+     {
+      "date": "2013-09",
+      "instrument": "Corte Suprema, amparos against expulsion decrees (press report)",
+      "article": "Constitución art. 21; DL 1.094 art. 84",
+      "kind": "practice",
+      "what_changed": "The Supreme Court overturned expulsion decrees as failing reasonableness, proportionality and reasoning. Practice evidence only.",
+      "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/",
+      "passage": "la decisión impugnada no satisface las exigencias de razonabilidad, proporcionalidad y fundamentación propias de una decisión no arbitraria"
+     },
+     {
+      "date": "2019-12",
+      "instrument": "Corte Suprema confirming Corte de Apelaciones amparo (press report)",
+      "article": "DL 1.094 art. 69",
+      "kind": "practice",
+      "what_changed": "An Intendencia expelled a person for clandestine entry without the criminal procedure the law requires; the order was annulled. Practice evidence of unlawful administrative expulsions around 2019.",
+      "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/",
+      "passage": "no puede la recurrida, por sí y ante sí, determinar la concurrencia de un ilícito penal sin un debido proceso legalmente tramitado"
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "arts. 126-136",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "art. 84 (text of Ley 18.252)",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "arts. 15, 17, 63-67, 69, 87 (grounds)",
+      "role": "predecessor",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "art. 5",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CS acoge amparos en contra de orden de expulsión de extranjeros (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CS confirmó fallo que acogió amparo contra Intendencia de Arica (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read DL 1.094 in the 1975, 2002-2010 and 2011-2022 versions. The 2000 text was rebuilt from the Ley 18.252 (1983) annotations, since LeyChile shows one version for 1975-2002. Practice evidence for 2000 and 2005 is missing; the 2013 and 2019 rulings are known only from press reports.",
+    "sources_opened": [
+     {
+      "title": "Decreto Ley 1094 – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1094 version 2011-04-08 (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "DL 1094 version 2011-04-08 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "DL 1094 version 2002-05-31 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "DL 1094 texto original (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1975-07-19"
+     },
+     {
+      "title": "Ley 20.430 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     },
+     {
+      "title": "CMW Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "Diario Constitucional 2013 amparos",
+      "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/"
+     },
+     {
+      "title": "Diario Constitucional 2019 amparo Arica",
+      "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 answer cannot rest on Ley 21.325 arts. 126-136, which took effect on 12-02-2022. On 1 January 2020 it rests on DL 1.094 art. 84 (reasoned supreme decree) and the statutory grounds. That supports Yes, though tourists could be expelled 'sin más trámite' (without further formality) by Intendente resolution.",
+    "notes": "The answer is Yes on every date, resting on DL 1.094 art. 84 as amended in 1983. The Supreme Court amparo rulings were read only through press reports and are used as practice evidence only. Ley 19.806 (2002) and Ley 20.507 (2011) created new LeyChile versions but did not change arts. 84, 89 or 90."
+   },
+   {
+    "question_id": 61,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "DL 1.094 arts. 89-90 (Ley 18.252, 1983) apply to expulsions by supreme decree. The person may lodge a reasoned claim with the Supreme Court within 24 hours, which must rule within 5 days, and 'la interposición del recurso suspenderá la ejecución' (filing suspends enforcement). The order must be notified in writing. There is no administrative hearing and the deadline is very short. There is no practice evidence for around 2000, so the 2020 rating is carried over with low confidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same arts. 89-90 (2002-2010 version, read). From 29-05-2003 Ley 19.880 art. 10 also lets interested parties put forward allegations at any point in an administrative procedure, applying where no special rule governs. There is no specific practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. The CMW (2011) found the expulsion appeal 'insufficiently accessible, as illustrated by the short time limit'."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Arts. 89-90 unchanged (2011-2022 version). From 2010, Ley 20.430 art. 5 gives refugees the right to present exculpatory evidence and to challenge expulsion administratively and judicially. Practice: amparos (constitutional habeas petitions) against expulsions were granted by the Supreme Court (2013), and the 24-hour limit drew criticism."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "confidence": "medium",
+    "events": [
+     {
+      "date": "1983-10-26",
+      "instrument": "Ley 18.252",
+      "article": "DL 1.094 arts. 89, 90",
+      "kind": "amended",
+      "what_changed": "Before 2000, set the 24-hour Supreme Court claim with suspensive effect and written notification of the expulsion order. This is the text in force from 2000 to 2022.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31",
+      "passage": "podrá reclamar judicialmente por sí o por medio de algún miembro de su familia, ante la Corte Suprema dentro del plazo de 24 horas... La interposición del recurso suspenderá la ejecución de la orden de expulsión"
+     },
+     {
+      "date": "2003-05-29",
+      "instrument": "Ley 19.880",
+      "article": "art. 10",
+      "kind": "new_instrument",
+      "what_changed": "General principle that interested parties may put forward allegations and documents at any stage of an administrative procedure. It applies where no special rule governs.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=210676",
+      "passage": "Artículo 10. Principio de contradictoriedad. Los interesados podrán, en cualquier momento del procedimiento, aducir alegaciones y aportar documentos u otros elementos de juicio."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "art. 5",
+      "kind": "new_instrument",
+      "what_changed": "Refugees facing expulsion may present exculpatory evidence and challenge the measure administratively and judicially.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "En cualquier caso, el refugiado tendrá derecho a presentar todo tipo de pruebas exculpatorias y recurrir a la medida por vía administrativa y judicial."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094",
+      "kind": "amended",
+      "what_changed": "New version of DL 1.094. Arts. 89-90 are unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+      "passage": "Artículo 90.- La medida de expulsión deberá ser notificada por escrito al afectado, quien podrá en dicho acto, si ello fuere procedente, manifestar su intención de recurrir en contra de la medida o conformarse con ella."
+     },
+     {
+      "date": "2011",
+      "instrument": "CMW/C/CHL/CO/1",
+      "article": "para. 28",
+      "kind": "practice",
+      "what_changed": "The Committee found the expulsion appeal procedure insufficiently accessible because of the short time limit.",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "passage": "the procedure of appeal against decisions of expulsion is insufficiently accessible, as illustrated by the short time limit for migrant workers to lodge appeals against decisions on their expulsion."
+     }
+    ],
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "arts. 132, 141",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 (1975)",
+      "article": "arts. 89, 90 (text of Ley 18.252)",
+      "role": "predecessor",
+      "in_force": "1983-10-26 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.880",
+      "article": "art. 10",
+      "role": "other_in_force",
+      "in_force": "2003-05-29 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430",
+      "article": "art. 5",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CS acoge amparos en contra de orden de expulsión de extranjeros (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CS confirmó fallo que acogió amparo contra Intendencia de Arica (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Arts. 89-90 were read in the 2002-2010 and 2011-2022 LeyChile versions. The 2000 text was rebuilt from the Ley 18.252 (1983) annotations, the 1975 original having been read for comparison. Practice evidence for 2000 and 2005 is missing; the court material comes from press reports.",
+    "sources_opened": [
+     {
+      "title": "DL 1094 version 2011-04-08 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "DL 1094 version 2002-05-31 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2002-05-31"
+     },
+     {
+      "title": "DL 1094 texto original (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=1975-07-19"
+     },
+     {
+      "title": "Ley 19.880 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=210676"
+     },
+     {
+      "title": "Ley 20.430 (JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     },
+     {
+      "title": "CMW Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "Diario Constitucional 2013",
+      "url": "https://www.diarioconstitucional.cl/2013/09/13/cs-acoge-amparos-en-contra-de-orden-de-expulsion-de-extranjeros/"
+     },
+     {
+      "title": "Diario Constitucional 2019",
+      "url": "https://www.diarioconstitucional.cl/2019/12/24/cs-confirmo-fallo-que-acogio-amparo-en-contra-de-intendencia-de-arica-y-parinacota-por-decreto-que-ordeno-la-expulsion-de-ciudadano-extranjero/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 citation relies on Ley 21.325 arts. 132 and 141 (the 10-day period to answer the charges and judicial review), which only took effect on 12-02-2022. On 1 January 2020 the answer rests on DL 1.094 arts. 89-90. These gave a 24-hour Supreme Court claim with suspensive effect but no prior administrative hearing, and covered only expulsions by supreme decree; tourists expelled by Intendente resolution had to rely on constitutional amparo. Yes is defensible, but the protection was much thinner than the 2022 regime.",
+    "notes": "No change in the law between 2000 and 2020. Ley 19.880 (2003) and Ley 20.430 art. 5 (2010, refugees) added to the protection but did not change the answer. No ruling was relied on as law."
+   }
+  ]
+ }
 }
