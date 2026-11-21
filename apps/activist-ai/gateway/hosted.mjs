@@ -18,16 +18,38 @@
 //   HOSTED_PROVIDER       the provider's name as people read it ("Together AI")
 //   GATEWAY_HOSTED_FILE   the grants file the front desk writes
 //   GATEWAY_HOSTED_PRICES in=,out= dollars per million tokens
+//
+// Picked choices (OLA-337): other outside open models at the same provider, each under its own
+// gateway name, served only to a caller that names it, which happens only when a person picks it
+// ("Try again with" or the choice in the box, in the Mac app). The same key, the same grants, the
+// same monthly record and ceiling as `hosted`, each at its own prices. Never a backup, never the
+// design model, never a batch job's model, never a default: the config refuses a picked model id
+// that GATEWAY_MODELS, GATEWAY_BACKUP_MODELS or HOSTED_MODEL also names (server.mjs).
+//   HOSTED_DEEPSEEK_MODEL   the provider's id for DeepSeek V4 Pro (Together: deepseek-ai/DeepSeek-V4-Pro-0813)
+//   HOSTED_DEEPSEEK_PRICES  in=,out= dollars per million tokens (Together: in=1.32,out=3.96)
 import http from 'node:http'
 import https from 'node:https'
 import { ANY_CALLER, jobKeyOf, readGrants, runnerKeyOk } from './batch.mjs'
 
-export const HOSTED_SETTINGS = ['GATEWAY_HOSTED_FILE', 'GATEWAY_HOSTED_PRICES']
+export const HOSTED_SETTINGS = ['GATEWAY_HOSTED_FILE', 'GATEWAY_HOSTED_PRICES', 'HOSTED_DEEPSEEK_MODEL', 'HOSTED_DEEPSEEK_PRICES']
+/** The picked choices this gateway knows: its name for each, how people read it, its env settings. */
+export const PICKS = {
+  'deepseek-v4-pro': { name: 'DeepSeek V4 Pro', words: 'DeepSeek V4 Pro, an outside open model', model: 'HOSTED_DEEPSEEK_MODEL', prices: 'HOSTED_DEEPSEEK_PRICES' },
+}
+const pricesOf = (text, setting, bad) => {
+  const prices = { in: 2, out: 2 }
+  for (const part of (text || 'in=2,out=2').split(',')) {
+    const [k, v] = part.split('=')
+    if (!['in', 'out'].includes(k) || !(Number(v) >= 0)) bad(`${setting} is in=,out= in dollars per million tokens`)
+    else prices[k] = Number(v)
+  }
+  return prices
+}
 const MONTH = () => new Date().toISOString().slice(0, 7)
 
 export function hostedConfig(env, bad) {
   if (!env.HOSTED_BASE_URL) {
-    for (const k of ['HOSTED_API_KEY', 'HOSTED_MODEL', 'HOSTED_PROVIDER', 'GATEWAY_HOSTED_FILE']) if (env[k]) bad(`${k} is set but HOSTED_BASE_URL is not`)
+    for (const k of ['HOSTED_API_KEY', 'HOSTED_MODEL', 'HOSTED_PROVIDER', 'GATEWAY_HOSTED_FILE', ...Object.values(PICKS).map((p) => p.model)]) if (env[k]) bad(`${k} is set but HOSTED_BASE_URL is not`)
     return null
   }
   let url
@@ -46,13 +68,18 @@ export function hostedConfig(env, bad) {
   const provider = env.HOSTED_PROVIDER || url.hostname
   if (!/^[\p{L}\p{N} .&'’-]{1,40}$/u.test(provider)) bad('HOSTED_PROVIDER is a short name, as people read it')
   if (!env.GATEWAY_HOSTED_FILE) bad('GATEWAY_HOSTED_FILE is not set (the grants file the front desk writes)')
-  const prices = { in: 2, out: 2 }
-  for (const part of (env.GATEWAY_HOSTED_PRICES || 'in=2,out=2').split(',')) {
-    const [k, v] = part.split('=')
-    if (!['in', 'out'].includes(k) || !(Number(v) >= 0)) bad('GATEWAY_HOSTED_PRICES is in=,out= in dollars per million tokens')
-    else prices[k] = Number(v)
+  const prices = pricesOf(env.GATEWAY_HOSTED_PRICES, 'GATEWAY_HOSTED_PRICES', bad)
+  const picks = new Map()
+  for (const [name, p] of Object.entries(PICKS)) {
+    if (!env[p.model]) {
+      if (env[p.prices]) bad(`${p.prices} is set but ${p.model} is not`)
+      continue
+    }
+    if (!/^[A-Za-z0-9._:/-]{1,120}$/.test(env[p.model])) bad(`${p.model} is the provider’s model id`)
+    if (env[p.model] === model) bad(`${p.model} names the same model as HOSTED_MODEL: a picked choice is never the hosted default`)
+    picks.set(name, { name, label: p.name, words: p.words, model: env[p.model], prices: pricesOf(env[p.prices], p.prices, bad) })
   }
-  return { url, key, model, provider, file: env.GATEWAY_HOSTED_FILE, prices }
+  return { url, key, model, provider, file: env.GATEWAY_HOSTED_FILE, prices, picks }
 }
 
 export function makeHosted({ cfg, db }) {
@@ -90,6 +117,10 @@ export function makeHosted({ cfg, db }) {
     target,
     model: cfg.model,
     provider: cfg.provider,
+    /** The picked choices served here (name -> { label, words, model, prices }). */
+    picks: cfg.picks ?? new Map(),
+    /** The choices as a caller is told of them: name and how people read it, never the upstream id. */
+    pickList: () => [...(cfg.picks ?? new Map()).values()].map((p) => ({ id: p.name, name: p.label, words: p.words })),
     monthOf,
     /** Null if the caller may use `hosted` now, else the refusal (status, why for the log, message). */
     refusal(caller, req = null) {
@@ -99,9 +130,11 @@ export function makeHosted({ cfg, db }) {
       if (m.cost_micro_usd >= g.capMicroUsd) return { status: 429, why: 'the monthly hosted ceiling was reached', message: `This project has used its budget for the hosted open model this month ($${(g.capMicroUsd / 1e6).toFixed(2)}). It starts again on the first of next month.`, type: 'insufficient_quota' }
       return null
     },
-    record(caller, tin, tout) {
+    /** A request's tokens on the caller's month; a picked choice at its own prices, on the same record. */
+    record(caller, tin, tout, pick = null) {
       if (!tin && !tout) return 0
-      const cost = Math.round(tin * cfg.prices.in + tout * cfg.prices.out)
+      const prices = pick ? cfg.picks.get(pick).prices : cfg.prices
+      const cost = Math.round(tin * prices.in + tout * prices.out)
       add.run(MONTH(), caller, tin, tout, cost)
       return cost
     },

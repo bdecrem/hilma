@@ -228,6 +228,12 @@ function loadConfig(env) {
   const claude = claudeConfig(env, bad)
   // Fallback to a hosted open model (hosted.mjs): the model name `hosted`, its own upstream and grants.
   const hosted = hostedConfig(env, bad)
+  // A picked choice (OLA-337) is never a rung of the ladder: no everyday name, backup or specialist
+  // may run on its model.
+  for (const p of hosted?.picks?.values() ?? []) {
+    const also = [...[...models].filter(([, id]) => id === p.model).map(([n]) => `GATEWAY_MODELS ${n}`), ...[...backups].filter(([, id]) => id === p.model).map(([n]) => `GATEWAY_BACKUP_MODELS ${n}`), ...Object.values(sp.spec).filter((x) => x.upstreamId === p.model).map((x) => `the specialist ${x.name}`)]
+    if (also.length) bad(`${p.label} (${p.model}) is a picked choice only, and ${also.join(', ')} names it too`)
+  }
   // Web search and downloads (web.mjs): the provider, the grants file, the fetch limits.
   const web = webConfig(env, bad)
   // Batch jobs (batch.mjs): the job grants file the front desk writes, and the lane's limits.
@@ -1046,10 +1052,10 @@ async function handle(req, res, rec, signal) {
 
   if (rec.route === 'usage' && req.method === 'GET') {
     rec.status = 200
-    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name), batch_job: batch.jobOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider, prices: C.hosted.prices } : null, claude_prices: C.claude.prices, web: { provider: C.web.provider } })
+    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name), batch_job: batch.jobOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider, prices: C.hosted.prices, picks: hosted.pickList() } : null, claude_prices: C.claude.prices, web: { provider: C.web.provider } })
     // A caller's own: its month on the hosted open model too, and the provider's name, so Ola on a
     // person's Mac can say whether it may hand a request over and to whom (no prices, no other caller).
-    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who), ...(hosted ? { hosted_month: hosted.monthOf(who), hosted: { provider: hosted.provider } } : {}) })
+    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who), ...(hosted ? { hosted_month: hosted.monthOf(who), hosted: { provider: hosted.provider, picks: hosted.pickList() } } : {}) })
   }
   // Which names served a caller's chat requests since a moment (design.mjs): the usage token for any
   // caller (the front desk, for the record of who made each file), a caller's own token for itself.
@@ -1085,9 +1091,10 @@ async function handle(req, res, rec, signal) {
           ...[...C.models].map(([id, upstream]) => ({ id, object: 'model', kind: C.sp.spec[id].kind, upstream })),
           ...[...C.backups].map(([of, upstream]) => ({ id: `backup:${of}`, object: 'model', kind: 'chat', upstream, backup_of: of })),
           ...(hosted ? [{ id: 'hosted', object: 'model', kind: 'chat', upstream: C.hosted.model, provider: hosted.provider }] : []),
+          // A picked choice (OLA-337) is not listed: the automatic model check never sends it a request.
         ],
       })
-    return send(res, 200, { object: 'list', data: [...[...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola', kind: C.sp.spec[id].kind, images: C.sp.spec[id].images > 0 })), ...(hosted ? [{ id: 'hosted', object: 'model', owned_by: 'ola', kind: 'chat', images: false }] : [])] })
+    return send(res, 200, { object: 'list', data: [...[...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola', kind: C.sp.spec[id].kind, images: C.sp.spec[id].images > 0 })), ...(hosted ? [{ id: 'hosted', object: 'model', owned_by: 'ola', kind: 'chat', images: false }, ...hosted.pickList().map((p) => ({ id: p.id, object: 'model', owned_by: 'outside', kind: 'chat', images: false, picked: true, name: p.name }))] : [])] })
   }
   // The specialists that are not chat: embed, rerank, transcribe, draw (one name per route).
   if (ROUTE_NAME[path]) return specialist(req, res, rec, who, signal, ROUTE_NAME[path], no)
@@ -1125,14 +1132,16 @@ async function handle(req, res, rec, signal) {
     if (!probeBackup) return no(400, 'an unknown model name', 'no backup model by that name', 'invalid_request_error')
     body.model = body.model.slice('backup:'.length)
   }
-  const isHosted = body.model === 'hosted' && hosted !== null
+  // A picked choice (OLA-337): an outside open model at the hosted provider, under its own name.
+  const pick = hosted !== null && typeof body.model === 'string' && hosted.picks.has(body.model) ? body.model : null
+  const isHosted = (body.model === 'hosted' || pick !== null) && hosted !== null
   if (typeof body.model !== 'string' || !(C.models.has(body.model) || isHosted)) {
     // A specialist name that this machine has no server for: one plain sentence, nothing sent.
     if (typeof body.model === 'string' && NOT_SET[body.model] && body.model !== 'hosted') {
       rec.model = body.model
       return no(503, 'no upstream for this name', NOT_SET[body.model], 'not_configured')
     }
-    return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys(), ...(hosted ? ['hosted'] : [])].join(', ')}`, 'invalid_request_error')
+    return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys(), ...(hosted ? ['hosted', ...hosted.picks.keys()] : [])].join(', ')}`, 'invalid_request_error')
   }
   rec.model = body.model
   if (!isHosted && C.sp.spec[body.model].kind !== 'chat') return no(400, 'a name that is not a chat model', `${body.model} is not a chat model; it has its own route`, 'invalid_request_error')
@@ -1149,6 +1158,7 @@ async function handle(req, res, rec, signal) {
   }
   if (served !== body.model) rec.served = served
   const s = isHosted ? { ...C.sp.spec.general, name: 'hosted', pool: 0, perMinute: 0 } : C.sp.spec[served]
+  if (pick) rec.pick = pick
   const cap = bodyCap(s)
   if (raw.length > cap) return no(413, 'the body was over the size cap', `the request is larger than ${cap} bytes`, 'invalid_request_error')
   // The hosted open model: only for a project whose owner turned it on, within its month's budget.
@@ -1157,6 +1167,8 @@ async function handle(req, res, rec, signal) {
     const r = hosted.refusal(who, req)
     if (r) return no(r.status, r.why, r.message, r.type)
   }
+  // A picked choice is a person's pick for one conversation, never a batch job's model.
+  if (pick && laneOf(req)) return no(403, 'a picked choice in the batch lane', `${hosted.picks.get(pick).label} is used only for a request a person picks it for, not for a batch job.`, 'permission_error')
   if (!Array.isArray(body.messages) || !body.messages.length) return no(400, 'no messages', 'messages must be a non-empty list', 'invalid_request_error')
   // Pictures only as data: URLs, only to a name that takes them; nothing but text and pictures.
   const bad = checkChatContent(body.messages, s)
@@ -1218,7 +1230,7 @@ async function handle(req, res, rec, signal) {
     const wantStream = body.stream === true
     const wantUsage = body.stream_options?.include_usage === true
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
-    const upstreamBody = { model: isHosted ? hosted.model : (probeBackup ?? C.models.get(served)), stream: false }
+    const upstreamBody = { model: pick ? hosted.picks.get(pick).model : isHosted ? hosted.model : (probeBackup ?? C.models.get(served)), stream: false }
     if (probeBackup) rec.backup = probeBackup
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
     if (served === 'design') {
@@ -1266,7 +1278,7 @@ async function handle(req, res, rec, signal) {
     rec.estimated = tally.estimated ? 'bytes' : null
     if (tally.tries && lane) batch.record(who, lane, tally.in, tally.out)
     else if (tally.tries) addUsage.run(weekKey(weekStart()), who, rec.design === 'failed' ? 'design' : served, tally.in, tally.out)
-    if (isHosted && tally.tries) rec.cost_micro_usd = hosted.record(who, tally.in, tally.out)
+    if (isHosted && tally.tries) rec.cost_micro_usd = hosted.record(who, tally.in, tally.out, pick)
     if (tally.tries && !isHosted) design.record(who, sessionOf(req), rec.design === 'failed' ? 'design-failed' : served)
   }
 }

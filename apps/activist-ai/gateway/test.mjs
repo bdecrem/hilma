@@ -1042,6 +1042,67 @@ test('the hosted open model: refused unless granted; its own upstream, key and m
   }
 })
 
+test('a picked choice (OLA-337, DeepSeek V4 Pro): served only to a caller that names it, under the hosted grant and month, at its own prices; never a backup, a default, a design model or a batch job’s model', async () => {
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'pick-'))
+  const grants = path.join(dir, 'gateway-hosted')
+  writeGrants(grants, {})
+  const HKEY = `hosted-key-${tok()}`
+  const k = { one: tok(), two: tok() }
+  const hostedEnv = { HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: HKEY, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: grants, GATEWAY_HOSTED_PRICES: 'in=1000,out=1000' }
+  // The config refuses it anywhere but as a picked choice: as the hosted default, an everyday name or a backup.
+  for (const [over, expect] of [
+    [{ HOSTED_DEEPSEEK_MODEL: 'Big/Open-Model-1' }, 'never the hosted default'],
+    [{ HOSTED_DEEPSEEK_MODEL: 'up/general-1' }, 'picked choice only, and GATEWAY_MODELS general'],
+    [{ HOSTED_DEEPSEEK_MODEL: 'Pick/Deep-4', GATEWAY_BACKUP_MODELS: 'general=Pick/Deep-4' }, 'picked choice only, and GATEWAY_BACKUP_MODELS general'],
+    [{ HOSTED_DEEPSEEK_PRICES: 'in=1,out=1' }, 'HOSTED_DEEPSEEK_PRICES is set but HOSTED_DEEPSEEK_MODEL is not'],
+  ]) {
+    const env = { ...baseEnv(up.url), ...hostedEnv, ...over }
+    const bad = run(env)
+    await waitFor(() => bad.code !== undefined, 5000, `exit for ${expect}`)
+    assert.equal(bad.code, 1, expect)
+    assert.match(bad.err, new RegExp(expect.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), bad.err)
+  }
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}`, ...hostedEnv, HOSTED_DEEPSEEK_MODEL: 'Pick/Deep-4', HOSTED_DEEPSEEK_PRICES: 'in=2000,out=3000', GATEWAY_USAGE_TOKEN: T.usage + T.usage }
+  const g = await gateway(env)
+  try {
+    const models = await call(g, k.one, null, { method: 'GET', path: '/v1/models' })
+    const listed = models.json.data.find((m) => m.id === 'deepseek-v4-pro')
+    assert.deepEqual([listed?.picked, listed?.name, listed?.upstream], [true, 'DeepSeek V4 Pro', undefined], 'listed as a picked choice, its upstream id not shown')
+    const off = await call(g, k.one, chat({ tag: 'p0' }, 'deepseek-v4-pro'))
+    assert.equal(off.status, 403, 'without the hosted grant')
+    assert.equal(hostedUp.st.seen.length, 0)
+    writeGrants(grants, { 'ws-one': { cap_micro_usd: 20_000 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"hosted_grants"') && l.includes('"callers":1')), 5000, 'the hosted grants reload')
+    const ok = await call(g, k.one, chat({ tag: 'p1', usage: [2, 1] }, 'deepseek-v4-pro', { tools: [{ type: 'function', function: { name: 'read', parameters: { type: 'object', properties: {} } } }] }))
+    assert.equal(ok.status, 200)
+    assert.equal(ok.json.model, 'deepseek-v4-pro', 'the reply names the picked choice')
+    assert.deepEqual([hostedUp.st.seen.at(-1).model, hostedUp.st.seen.at(-1).auth], ['Pick/Deep-4', `Bearer ${HKEY}`], 'its own model id, at the hosted provider, with its key')
+    assert.equal(up.st.seen.length, 0, 'the everyday model server saw a picked request')
+    // The same month and record as `hosted`, at its own prices: 2 in at $2000 + 1 out at $3000 = 7000.
+    const line = await waitFor(() => g.logs().find((l) => l.model === 'deepseek-v4-pro' && l.status === 200), 3000, 'the log line')
+    assert.deepEqual([line.pick, line.cost_micro_usd], ['deepseek-v4-pro', 7000])
+    const h = await call(g, k.one, chat({ tag: 'p2', usage: [1, 0] }, 'hosted'))
+    assert.equal(h.status, 200)
+    const mine = await call(g, k.one, null, { method: 'GET', path: '/v1/usage' })
+    assert.deepEqual([mine.json.hosted_month.requests, mine.json.hosted_month.cost_micro_usd], [2, 8000], 'one month for both')
+    assert.deepEqual(mine.json.hosted.picks, [{ id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', words: 'DeepSeek V4 Pro, an outside open model' }])
+    // Another project without the grant; the batch lane; Ola's own name never goes to it.
+    assert.equal((await call(g, k.two, chat({ tag: 'p3' }, 'deepseek-v4-pro'))).status, 403)
+    const seenBefore = hostedUp.st.seen.length
+    const lane = await laneCall(g, k.one, chat({ tag: 'p4' }, 'deepseek-v4-pro'), 'a1b2c3d4e5f6')
+    assert.ok(lane.status === 403, `the batch lane: ${lane.status}`)
+    const gen = await call(g, k.one, chat({ tag: 'p5' }))
+    assert.equal(gen.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1')
+    assert.equal(hostedUp.st.seen.length, seenBefore, 'a batch or everyday request reached the picked model')
+    assert.ok(!g.out.includes(HKEY) && !g.err.includes(HKEY), 'the hosted key is in the log')
+  } finally {
+    await g.stop()
+  }
+})
+
 // ---------------------------------------------------------------- web search and downloads (web.mjs)
 
 import { refusedAddress, itemHash, searchItem, fetchItem } from './web.mjs'
