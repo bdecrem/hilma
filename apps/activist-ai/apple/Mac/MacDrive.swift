@@ -58,6 +58,14 @@ enum MacDrive {
     var size: String?
     /// Picks the model this many times more, back and forth with Ola, before the first sentence (OLA-344).
     var pickRounds: Int?
+    /// The window stays on the screen, behind the others, at the size it opens with (OLA-344: the crash
+    /// came in a window on the screen, macOS 27).
+    var visible: Bool?
+    /// The pick made with the mouse in the box's own menu, as a person does, not by the shortcut.
+    /// Caution: the menu's own loop then runs inside the drive's task; on macOS 27 with build 30 that
+    /// ended the app in AppDelegate.keepAppMenuPlain (EXC_BAD_ACCESS in MainActor.assumeIsolated), a
+    /// crash of the drive's making, not Bart's (OLA-344).
+    var menuPick: Bool?
   }
 
   static var script: Script?
@@ -200,9 +208,17 @@ enum MacDrive {
     // Return, the password, Return).
     if whereOla.account?.signedIn != true {
       let fields = try await until(20, "the sign-in screen has no name and password fields") { () -> [NSTextField]? in let f = textFields(in: window); return f.count >= 2 ? f : nil }
-      try click(fields[0], in: window)
-      type(s.handle, in: window)
-      try await settle(window, 0.5)
+      // Typed again when it did not land (OLA-344: on macOS 27 the first keys after the window
+      // opens were sometimes lost, and the sign-in went out with no name).
+      for attempt in 0..<4 {
+        if attempt > 0 { try await settle(window, 1) }
+        try click(fields[0], in: window)
+        type(s.handle, in: window)
+        try await settle(window, 0.5)
+        if fields[0].stringValue == s.handle { break }
+        say("the name did not land in its field (it says \"\(fields[0].stringValue)\"); again")
+        fields[0].stringValue = ""
+      }
       step("typed the name", shot: "signin-name")
       key(.return, in: window)
       try await settle(window, 0.5)
@@ -225,6 +241,14 @@ enum MacDrive {
     record.project = s.where == "cloud" ? (OlaCloud.project(of: store.config) ?? s.project) : nil
     try await settle(window, 1.5)
     step("connected: \(MacRoot.subtitle(store))\(record.project.map { ", project \($0)" } ?? "")", shot: "project-open")
+    // Signed in out of sight (typing reaches a window that is not on the screen); from here on, on the
+    // screen behind the other windows, as a person's window is (OLA-344).
+    if s.visible == true {
+      window.ignoresMouseEvents = false
+      window.setFrame(NSRect(x: 60, y: 60, width: 1280, height: 820), display: true)
+      window.orderBack(nil)
+      try await settle(window, 1)
+    }
 
     // A new conversation: New Session (Command-N, the menu's shortcut), then Return for Start in the
     // sheet (the runtime picked is the last one used, the one this run is in).
@@ -243,7 +267,12 @@ enum MacDrive {
     if let name = s.pick {
       guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name); the choices are \(EngineChoice.all.map(\.name).joined(separator: ", "))") }
       _ = try await until(60, "\(c.name) is not offered here (the box lists \(store.choices.map(\.name).joined(separator: ", ")))") { store.choices.contains(c) ? true : nil }
-      try await viaMenu(["Model", c.name], key: c.digit, modifiers: [.command, .option], in: window) { store.nextChoice == c }
+      if s.menuPick == true {
+        try await pickInTheBox(c, in: window)
+        _ = try await until(5, "the box's menu did not pick \(c.name) (the box says \(store.nextChoice.name))") { store.nextChoice == c ? true : nil }
+      } else {
+        try await viaMenu(["Model", c.name], key: c.digit, modifiers: [.command, .option], in: window) { store.nextChoice == c }
+      }
       // Back and forth with Ola, each time by the shortcut, the window settling between (OLA-344:
       // build 30 crashed on Bart's Mac at the pick, every time, with Ola working on the Mac).
       for r in 0..<(s.pickRounds ?? 0) {
@@ -413,6 +442,37 @@ enum MacDrive {
     say("\(keys) did not reach \(path.joined(separator: " > ")) (its shortcut: \(item.keyEquivalentModifierMask.rawValue) \(item.keyEquivalent.debugDescription), enabled \(item.isEnabled)); choosing the menu item")
     menu.performActionForItem(at: index)
     _ = try await until(5, "\(path.joined(separator: " > ")) did nothing") { done() ? true : nil }
+  }
+
+  /// The box's own menu, with the mouse: a click on the pick beside the box, then its item chosen by
+  /// typing its first letter and Return in the open menu (OLA-344).
+  static func pickInTheBox(_ c: EngineChoice, in w: NSWindow) async throws {
+    let box = try await until(15, "no box to type in") { textFields(in: w).last }
+    guard let frame = w.contentView?.superview ?? w.contentView else { throw Failed(why: "the window has no content") }
+    let r = box.convert(box.bounds, to: nil)
+    // The pick starts one spacing (8 points) after the field, in the same row, its text at the bottom.
+    var point: CGPoint?
+    var what = ""
+    for dx in stride(from: 12.0, through: 40.0, by: 4.0) {
+      let p = CGPoint(x: r.maxX + dx, y: r.minY + 8)
+      guard let hit = frame.hitTest(frame.convert(p, from: nil)), hit !== box, !hit.isDescendant(of: box) else { continue }
+      point = p
+      what = "\(Swift.type(of: hit))"
+      break
+    }
+    guard let p = point else { throw Failed(why: "no menu beside the box (the field reaches \(Int(r.maxX)) of \(Int(frame.bounds.width)))") }
+    say("the box's pick is a \(what); clicking it, then \"\(c.name.prefix(1))\" and Return in its menu")
+    func key(_ ch: String, _ code: UInt16) -> NSEvent? {
+      NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, characters: ch, charactersIgnoringModifiers: ch, isARepeat: false, keyCode: code)
+    }
+    // Queued first: the open menu's own loop takes them (an Escape later closes it if nothing did).
+    if let e = key(String(c.name.prefix(1)).lowercased(), 0) { NSApp.postEvent(e, atStart: false) }
+    if let e = key("\r", 36) { NSApp.postEvent(e, atStart: false) }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3) { if let e = key("\u{1b}", 53) { NSApp.postEvent(e, atStart: false) } }
+    guard let down = NSEvent.mouseEvent(with: .leftMouseDown, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) else { return }
+    w.sendEvent(down)
+    if let up = NSEvent.mouseEvent(with: .leftMouseUp, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 0) { w.sendEvent(up) }
+    RunLoop.main.run(until: Date().addingTimeInterval(0.3))
   }
 
   /// The key codes of 1 to 9 on a US keyboard.
