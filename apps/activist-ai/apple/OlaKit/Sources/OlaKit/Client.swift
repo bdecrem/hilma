@@ -304,6 +304,22 @@ public final class OpenCodeClient: @unchecked Sendable {
     try await send("POST", "/api/session/\(id)/model", body: ["model": ["providerID": .string(model.providerID), "id": .string(model.modelID)]])
   }
 
+  // MARK: the cloud project's fallbacks (OLA-337)
+
+  /// `GET /api/fallback` of a cloud project: its hosted open model, the picked choices, its owner.
+  public func fallbackInfo() async throws -> JSON {
+    guard config.account else { throw OlaError.badReply("only in a cloud project") }
+    return try await json("GET", "/project/api/fallback")
+  }
+
+  /// One request handed to the hosted open model or a picked choice in a cloud project: the front
+  /// desk switches the conversation to it, sends the request, and switches it back when it ends.
+  public func hostedRun(session: String, request: String, model: String, once: Bool) async throws {
+    guard config.account else { throw OlaError.badReply("only in a cloud project") }
+    let body: JSON = ["request": .string(request), "conversation": .string(session), "model": .string(model), "once": .bool(once)]
+    _ = try await json("POST", "/project/api/hosted/run", body: body)
+  }
+
   // MARK: files of the project
 
   public func files(in path: String? = nil) async throws -> [FileEntry] {

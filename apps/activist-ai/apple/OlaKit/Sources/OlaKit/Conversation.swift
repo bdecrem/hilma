@@ -192,6 +192,9 @@ public struct Turn: Identifiable, Equatable, Sendable, Codable {
   public var notice: String?
   public var ended: Date?
   public var engine: Engine = .ola
+  /// The model at the hosted provider, when `engine` is `.hosted`: `hosted`, or a picked choice
+  /// (`deepseek-v4-pro`, OLA-337), from the model each step names.
+  public var model: String?
   /// The files this turn created, changed or deleted, from the project's record (MadeBy), so a
   /// change made by a shell command, or by a turn the app quit during, is shown and told too.
   public var changed: [String]?
@@ -404,7 +407,7 @@ public struct Conversation: Equatable, Sendable {
     case "session.step.started":
       turn.notice = nil
       // Each step names its model: a step by the hosted open model marks the reply as outside Ola.
-      if d["model"]["id"].str == "hosted" { turn.engine = .hosted }
+      if HostedPick.isHosted(d["model"]["id"].string) { turn.engine = .hosted; turn.model = d["model"]["id"].str }
       return true
     case "session.step.failed":
       turn.error = Plain.runProblem(d["error"])
@@ -457,7 +460,7 @@ public struct Conversation: Equatable, Sendable {
       guard !turns.isEmpty else { continue }
       var turn = turns.removeLast()
       if type == "assistant" {
-        if m["model"]["id"].str == "hosted" { turn.engine = .hosted }
+        if HostedPick.isHosted(m["model"]["id"].string) { turn.engine = .hosted; turn.model = m["model"]["id"].str }
         var text = ""
         for part in m["content"].array {
           if part["type"].str == "text" { text += part["text"].str }

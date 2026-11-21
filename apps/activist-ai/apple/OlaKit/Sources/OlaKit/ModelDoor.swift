@@ -85,7 +85,8 @@ public final class ModelDoor: @unchecked Sendable {
           let target = URL(string: base.absoluteString + (req.query.map { "?\($0)" } ?? "")) else {
       return await res.send(404, Self.error("Nothing here."))
     }
-    if rest == "v1/chat/completions", JSON.parse(req.body)?["model"].string == "hosted", !allowHosted() {
+    // The hosted model and its picked choices (OLA-337: DeepSeek V4 Pro) alike, only while handed one.
+    if rest == "v1/chat/completions", HostedPick.isHosted(JSON.parse(req.body)?["model"].string), !allowHosted() {
       return await res.send(403, Self.error("The hosted open model is used only for a request you hand to it."))
     }
     guard let token = token(), !token.isEmpty else {

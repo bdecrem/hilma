@@ -11,6 +11,10 @@ struct TurnView: View {
   var askHosted: (() -> Void)? = nil
   /// The hosted model's provider, for the line under its replies.
   var hostedProvider: String? = nil
+  /// The Mac app (OLA-337): "Try again with" under every finished request, with every model that can
+  /// do it here (Ola, the hosted open model and its picked choices, Claude). Empty: the switches' way.
+  var tryAgain: [EngineChoice] = []
+  var retry: ((EngineChoice) -> Void)? = nil
   /// View on what the run made.
   var view: ((ResultItem) -> Void)?
   /// A file's bytes, for the pictures shown inline.
@@ -27,7 +31,7 @@ struct TurnView: View {
         }
         if !turn.shownAnswer.isEmpty { MarkdownView(text: turn.shownAnswer) }
         if turn.engine == .hosted, !turn.isRunning, !turn.shownAnswer.isEmpty {
-          Text(FallbackWords.hostedAnswered(hostedProvider)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+          Text(FallbackWords.hostedAnswered(hostedProvider, model: turn.model)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
         }
         if !turn.isRunning, let view {
           let items = ResultItem.derive(turn)
@@ -38,12 +42,12 @@ struct TurnView: View {
         }
         // Which engine changed which files, from the project's record (OLA-224): a shell command's
         // changes too, and a turn the app closed during.
-        if !turn.isRunning, let made = MadeByWords.turn(turn.changed ?? [], by: turn.engine) {
+        if !turn.isRunning, let made = MadeByWords.turn(turn.changed ?? [], by: turn.engine, model: turn.model) {
           Text(made).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).fixedSize(horizontal: false, vertical: true)
         }
         if let e = turn.error { ProblemView(problem: e) }
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
-        if turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
+        if retry == nil, turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
           // One small, quiet pull-down (OLA-156), in the style of the one in the box.
           // On the right, under the answer's last line (Bart, 2026-11-18: "move it to the RIGHT side").
           HStack {
@@ -52,6 +56,16 @@ struct TurnView: View {
               if let askHosted { Button("Hosted", action: askHosted) }
               if let askClaude { Button("Claude", action: askClaude) }
             }
+          }
+        }
+      }
+      // Every finished request, whatever came of it and whoever did it (OLA-337): a failed one, the
+      // first of a session, one after a question card, one with files, a thank-you.
+      if let retry, TryAgain.offered(turn, choices: tryAgain) {
+        HStack {
+          Spacer(minLength: 0)
+          QuietMenu(label: "Try again with", help: "Send this request again, to the model you choose") {
+            ForEach(tryAgain) { c in Button(c.name) { retry(c) } }
           }
         }
       }
@@ -87,7 +101,7 @@ struct ClaudeMark: View {
       .foregroundStyle(Ola.blue)
       .padding(.horizontal, 6).padding(.vertical, 1)
       .overlay(Capsule().strokeBorder(Ola.blue.opacity(0.45), lineWidth: 1))
-      .accessibilityLabel(text == "Claude" ? "Answered by Claude" : "Answered by the hosted open model")
+      .accessibilityLabel(text == "Hosted open model" ? "Answered by the hosted open model" : "Answered by \(text)")
   }
 }
 
@@ -103,7 +117,7 @@ struct RequestView: View {
         .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
       Spacer(minLength: Space.s)
       if turn.engine == .claude { ClaudeMark() }
-      if turn.engine == .hosted { ClaudeMark(text: "Hosted open model") }
+      if turn.engine == .hosted { ClaudeMark(text: HostedPick.name(turn.model) ?? "Hosted open model") }
       Text(turn.at.formatted(date: .omitted, time: .shortened)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).monospacedDigit()
     }
     .padding(.bottom, turn.reaction == nil ? Space.m : Space.m + 8)
@@ -555,13 +569,24 @@ struct EngineMenu: View {
   }
 
   var body: some View {
-    QuietMenu(label: Self.name(store.nextEngine), help: "Who works on your next message") {
-      Picker("Who works on this", selection: $store.nextEngine) {
-        Text("Ola").tag(Turn.Engine.ola)
-        if store.hostedOn || store.nextEngine == .hosted { Text("Hosted").tag(Turn.Engine.hosted) }
-        if store.claudeOn || store.nextEngine == .claude { Text("Claude").tag(Turn.Engine.claude) }
+    if store.offersEveryChoice {
+      // Every model that can do a request here, picked before the first request or any other; a
+      // pick sticks for this session, and a new session starts on Ola.
+      QuietMenu(label: store.nextChoice.boxLabel(nextOnly: store.nextOnly), help: "Who does your requests in this session. A new session starts on Ola.") {
+        Picker("Who does this", selection: $store.nextChoice) {
+          ForEach(store.choices.contains(store.nextChoice) ? store.choices : store.choices + [store.nextChoice]) { c in Text(c.name).tag(c) }
+        }
+        .pickerStyle(.inline).labelsHidden()
       }
-      .pickerStyle(.inline).labelsHidden()
+    } else {
+      QuietMenu(label: Self.name(store.nextEngine), help: "Who works on your next message") {
+        Picker("Who works on this", selection: $store.nextEngine) {
+          Text("Ola").tag(Turn.Engine.ola)
+          if store.hostedOn || store.nextEngine == .hosted { Text("Hosted").tag(Turn.Engine.hosted) }
+          if store.claudeOn || store.nextEngine == .claude { Text("Claude").tag(Turn.Engine.claude) }
+        }
+        .pickerStyle(.inline).labelsHidden()
+      }
     }
   }
 }
@@ -582,7 +607,8 @@ struct ConversationPane: View {
             if let convo, !convo.turns.isEmpty {
               ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in
                 TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil,
-                         askHosted: store.hostedOn ? { Task { await store.askHosted(t.request) } } : nil, hostedProvider: store.hosted.provider, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
+                         askHosted: store.hostedOn ? { Task { await store.askHosted(t.request) } } : nil, hostedProvider: store.hosted.provider,
+                         tryAgain: store.offersEveryChoice ? store.choices : [], retry: store.offersEveryChoice ? { c in Task { await store.ask(c, t.request) } } : nil, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
               }
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder, runtime: store.runtime)
@@ -638,7 +664,7 @@ struct ConversationPane: View {
         .padding(.horizontal, sidePadding)
       // While Ola waits on a one-field question, what is typed in the box is the answer (OLA-301).
       Composer(text: $draft, running: answering ? false : (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } },
-               accessory: store.claudeOn || store.hostedOn || store.nextEngine != .ola ? AnyView(EngineMenu(store: store)) : nil)
+               accessory: store.offersEveryChoice || store.claudeOn || store.hostedOn || store.nextEngine != .ola ? AnyView(EngineMenu(store: store)) : nil)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding).padding(.top, Space.s).padding(.bottom, Space.l)
     }

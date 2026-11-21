@@ -282,7 +282,10 @@ public final class LocalServer: @unchecked Sendable {
             "general": { "modelID": "general", "name": "General", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 131072, "output": 16000 } },
             // Fallback to a hosted open model: chosen only for a request handed to it (the app's
             // /hosted and the card, the terminal's /hosted command below), never as the default.
-            "hosted": { "modelID": "hosted", "name": "Hosted open model", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 1000000, "output": 16000 } }
+            "hosted": { "modelID": "hosted", "name": "Hosted open model", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 1000000, "output": 16000 } },
+            // A picked choice (OLA-337): DeepSeek V4 Pro at the same provider, only for a request the
+            // person picks it for in the Mac app (the door lets it through only then).
+            "deepseek-v4-pro": { "modelID": "deepseek-v4-pro", "name": "DeepSeek V4 Pro", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 1000000, "output": 16000 } }
           }
         }
       },

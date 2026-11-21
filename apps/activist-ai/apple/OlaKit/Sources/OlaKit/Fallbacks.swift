@@ -124,8 +124,12 @@ public enum FallbackWords {
     let p = provider ?? "an outside company"
     return "When this is on, you can hand a request to an open model that runs at \(p), an outside company, instead of on Ola\u{2019}s own machine. Your request, and the parts of your files Ola reads to answer it, leave Ola and go to \(p). It is off unless you turn it on. Every use is marked, and you can turn it off at any time."
   }
-  /// The line on a reply the hosted open model wrote.
-  public static func hostedAnswered(_ provider: String?) -> String { "Answered by the hosted open model\(provider.map { " at \($0)" } ?? ""), outside Ola." }
+  /// The line on a reply the hosted open model wrote (or a picked choice: "Answered by DeepSeek V4
+  /// Pro, an outside open model at Together AI, not Ola's own model.").
+  public static func hostedAnswered(_ provider: String?, model: String? = nil) -> String {
+    if let n = HostedPick.name(model) { return "Answered by \(n), an outside open model\(provider.map { " at \($0)" } ?? ""), not Ola\u{2019}s own model." }
+    return "Answered by the hosted open model\(provider.map { " at \($0)" } ?? ""), outside Ola."
+  }
   /// The sentence when a request was handed over without asking.
   public static func handoff(_ reason: StretchReason, to f: Fallback, provider: String?) -> String {
     "\(reason.why) This folder hands such requests to \(f.named(provider: provider)), so it is working on it."
@@ -253,6 +257,94 @@ public struct StretchSuggestion: Equatable, Sendable, Identifiable {
   public enum Answer: String, Sendable { case once, always, notNow }
 }
 
+/// A picked choice (OLA-337): another outside open model at the hosted provider, under its own
+/// name at the gateway (DeepSeek V4 Pro, `deepseek-v4-pro`). Only for a request the person picks it
+/// for, in the Mac app: "Try again with" and the choice in the box. Never a default or a backup.
+public struct HostedPick: Equatable, Hashable, Sendable, Identifiable {
+  /// The gateway's name for it, and opencode's model id.
+  public var id: String
+  /// As people read it: "DeepSeek V4 Pro".
+  public var name: String
+  public init(id: String, name: String) {
+    self.id = id
+    self.name = name
+  }
+
+  /// The ones this app knows by name, so a reply is marked truthfully even before the gateway is asked.
+  public static let known: [String: String] = ["deepseek-v4-pro": "DeepSeek V4 Pro"]
+  /// The model id the plain hosted open model runs under.
+  public static let plain = "hosted"
+  /// Whether a step's model id is an outside open model at the hosted provider (`hosted` or a pick).
+  public static func isHosted(_ model: String?) -> Bool { model == plain || (model.map { known[$0] != nil } ?? false) }
+  /// "DeepSeek V4 Pro" for a pick, nil for the plain hosted model or an unknown one.
+  public static func name(_ model: String?) -> String? { model.flatMap { known[$0] } }
+
+  /// From the gateway's (or the front desk's) list: `[{id, name}]`, only the ones this app knows.
+  public static func list(_ j: JSON) -> [HostedPick] {
+    j.array.compactMap { x in
+      let id = x["id"].str
+      guard let mine = known[id] else { return nil }
+      return HostedPick(id: id, name: x["name"].string ?? mine)
+    }
+  }
+}
+
+/// Who does a request, as the box and "Try again with" list them in the Mac app (OLA-337): Ola's own
+/// model, the hosted open model or one of its picked choices, or Claude.
+public enum EngineChoice: Hashable, Sendable, Identifiable {
+  case ola
+  /// The hosted provider, with the model: `hosted` or a pick's id (`deepseek-v4-pro`).
+  case hosted(String)
+  case claude
+
+  public var id: String {
+    switch self {
+    case .ola: "ola"
+    case .hosted(let m): m
+    case .claude: "claude"
+    }
+  }
+
+  /// As the menus say it: "Ola", "Hosted", "DeepSeek V4 Pro", "Claude".
+  public var name: String {
+    switch self {
+    case .ola: "Ola"
+    case .hosted(let m): HostedPick.name(m) ?? "Hosted"
+    case .claude: "Claude"
+    }
+  }
+
+  public var engine: Turn.Engine {
+    switch self {
+    case .ola: .ola
+    case .hosted: .hosted
+    case .claude: .claude
+    }
+  }
+
+  /// The box's words for the pick: "Ola" by default; a pick says that it sticks for this session.
+  public func boxLabel(nextOnly: Bool) -> String {
+    self == .ola ? "Ola" : nextOnly ? "\(name), next message only" : "\(name), this session"
+  }
+
+  /// The choice a finished turn was made by.
+  public static func of(_ t: Turn) -> EngineChoice {
+    switch t.engine {
+    case .ola: .ola
+    case .hosted: .hosted(t.model ?? HostedPick.plain)
+    case .claude: .claude
+    }
+  }
+}
+
+/// "Try again with" in the Mac app (OLA-337): under every finished request, whatever came of it
+/// (an answer, a failure, a stop, a thank-you) and whoever did it, with every model that can do it here.
+public enum TryAgain {
+  public static func offered(_ t: Turn, choices: [EngineChoice]) -> Bool {
+    !t.isRunning && !choices.isEmpty && !t.request.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+}
+
 /// What the hosted open model looks like from here: set up or not, the provider, and this month.
 public struct HostedStatus: Equatable, Sendable {
   /// nil when a request can be handed over; else one sentence why not.
@@ -260,12 +352,18 @@ public struct HostedStatus: Equatable, Sendable {
   public var provider: String?
   public var usedUSD: Double?
   public var capUSD: Double?
+  /// The picked choices served at the same provider (OLA-337), under the same grant and month.
+  public var picks: [HostedPick] = []
+  /// In a cloud project whose switch is off: the owner hands each request over just this once.
+  public var once = false
 
-  public init(unavailable: String?, provider: String? = nil, usedUSD: Double? = nil, capUSD: Double? = nil) {
+  public init(unavailable: String?, provider: String? = nil, usedUSD: Double? = nil, capUSD: Double? = nil, picks: [HostedPick] = [], once: Bool = false) {
     self.unavailable = unavailable
     self.provider = provider
     self.usedUSD = usedUSD
     self.capUSD = capUSD
+    self.picks = picks
+    self.once = once
   }
 
   public static let notSetUp = "Ola has no hosted open model set up yet."
@@ -279,11 +377,29 @@ public struct HostedStatus: Equatable, Sendable {
     let m = j["hosted_month"]
     let used = m["cost_micro_usd"].double.map { $0 / 1e6 }
     let cap = m["cap_micro_usd"].double.map { $0 / 1e6 }
-    guard m["granted"].bool == true else { return HostedStatus(unavailable: notForYou, provider: provider) }
+    let picks = HostedPick.list(j["hosted"]["picks"])
+    guard m["granted"].bool == true else { return HostedStatus(unavailable: notForYou, provider: provider, picks: picks) }
     if let used, let cap, used >= cap {
-      return HostedStatus(unavailable: "You have used this month\u{2019}s budget for the hosted open model ($\(String(format: "%.2f", cap))). It starts again on the first of next month.", provider: provider, usedUSD: used, capUSD: cap)
+      return HostedStatus(unavailable: "You have used this month\u{2019}s budget for the hosted open model ($\(String(format: "%.2f", cap))). It starts again on the first of next month.", provider: provider, usedUSD: used, capUSD: cap, picks: picks)
     }
-    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap)
+    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks)
+  }
+
+  /// A cloud project's, from the front desk's GET /api/fallback (OLA-337): there when the machine
+  /// has the provider and the project's switch is on, or the person is its owner (just this once).
+  public static func from(fallback j: JSON?) -> HostedStatus {
+    guard let j else { return HostedStatus(unavailable: unknown) }
+    let h = j["hosted"]
+    let provider = h["provider"].string
+    let picks = HostedPick.list(h["picks"])
+    guard h["configured"].bool == true else { return HostedStatus(unavailable: h["unavailable"].string ?? notSetUp, provider: provider) }
+    let used = h["month"]["used"].double
+    let cap = h["month"]["cap"].double
+    let on = h["enabled"].bool == true
+    guard on || h["canChange"].bool == true else {
+      return HostedStatus(unavailable: "The hosted open model is off for this project. Its owner can turn it on in Settings.", provider: provider, picks: picks)
+    }
+    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks, once: !on)
   }
 
   /// "$0.03 of $20.00 this month"

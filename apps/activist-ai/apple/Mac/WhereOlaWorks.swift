@@ -116,6 +116,7 @@ final class WhereOlaWorks {
       store.attach(back, orSaved: false)
       peer.attach(front, orSaved: false)
       configureClaude()
+      Task { await refreshCloudHosted() }
     }
     if let id { store.selectedID = id } else { store.newSession() }
   }
@@ -135,6 +136,9 @@ final class WhereOlaWorks {
   private(set) var route: ModelRoute?
   /// The hosted open model, as the gateway answers for this Mac's caller.
   var hostedStatus = HostedStatus(unavailable: "Checking with Ola\u{2026}")
+  /// The hosted open model and its picked choices in the cloud project on screen (OLA-337), as its
+  /// front desk answers: for "Try again with" and the choice in the box, not for the Settings switch.
+  var cloudHosted = HostedStatus(unavailable: "Checking with Ola\u{2026}")
   /// Each apply gets a number; only the newest may attach a server (2026-11-16: two applies at
   /// once started two servers, the second ended the first as an orphan, and the store kept the
   /// dead one's address).
@@ -565,6 +569,15 @@ extension WhereOlaWorks {
     guard let route else { return }
     hostedStatus = await HostedStatus.check(baseURL: route.baseURL, token: route.token)
     configureClaude()
+    await refreshCloudHosted()
+  }
+
+  /// Asks the cloud project's front desk about its hosted open model and the picked choices.
+  func refreshCloudHosted() async {
+    let cloud = store.config?.account == true ? store : peer.config?.account == true ? peer : nil
+    guard let cloud else { return }
+    cloudHosted = HostedStatus.from(fallback: await cloud.cloudFallback())
+    configureClaude()
   }
 
   /// Saves one runtime's fallbacks and tells both stores.
@@ -587,9 +600,18 @@ extension WhereOlaWorks {
     s.fallbacks = f
     s.claudeUnavailable = reason
     s.claudeOn = reason == nil && f.claude
-    s.hosted = HostedStatus(unavailable: hostedUnavailable(r), provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD)
-    s.hostedOn = f.hosted && s.hosted.unavailable == nil
-    if (!s.claudeOn && s.nextEngine == .claude && !s.nextOnly) || (!s.hostedOn && s.nextEngine == .hosted && !s.nextOnly) { s.nextEngine = .ola }
+    // The Mac app offers every model that can do a request, in the box and under every request (OLA-337).
+    s.offersEveryChoice = true
+    if r == .cloud {
+      // The cloud project's own answer: the Settings switch for it stays on the website.
+      s.hosted = cloudHosted
+      s.hostedOn = false
+    } else {
+      s.hosted = HostedStatus(unavailable: hostedUnavailable(r), provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD, picks: hostedStatus.picks)
+      s.hostedOn = f.hosted && s.hosted.unavailable == nil
+    }
+    // A pick that is no longer offered here goes back to Ola (Claude's launcher is set below).
+    if !s.nextOnly, !(s.nextChoice == .claude && reason == nil), !s.choices.contains(s.nextChoice) { s.nextChoice = .ola }
     s.onFallbacksChanged = { [weak self] f in self?.saveFallbacks(f, for: r) }
     let gate = account?.hostedGate
     s.hostedArm = { on in gate?.set(on) }

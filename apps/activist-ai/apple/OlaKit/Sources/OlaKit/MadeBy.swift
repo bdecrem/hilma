@@ -69,8 +69,13 @@ public enum MadeByWords {
     case .hosted: "The hosted open model"
     }
   }
-  /// For the agent's note: "Claude", "the hosted open model".
-  static func lower(_ e: Turn.Engine) -> String { e == .hosted ? "the hosted open model" : name(e) }
+  /// "DeepSeek V4 Pro" for a picked choice at the hosted provider (OLA-337), else as `name`.
+  public static func name(_ e: Turn.Engine, model: String?) -> String { e == .hosted ? (HostedPick.name(model) ?? name(e)) : name(e) }
+  /// For the agent's note: "Claude", "the hosted open model", "DeepSeek V4 Pro, an outside open model".
+  static func lower(_ e: Turn.Engine, model: String? = nil) -> String {
+    if e == .hosted, let n = HostedPick.name(model) { return "\(n), an outside open model" }
+    return e == .hosted ? "the hosted open model" : name(e)
+  }
 
   /// A step that wrote or changed a file, with its engine: "Claude changed index.html".
   public static func step(_ s: Step, by e: Turn.Engine) -> String? {
@@ -81,7 +86,7 @@ public enum MadeByWords {
   /// "Last changed by Claude, 10:49 pm" (or "Made by Ola, 5:58 pm" when that was its only change).
   public static func file(_ e: MadeByEntry, now: Date = .now) -> String {
     let what = e.how == "created" ? "Made" : e.how == "deleted" ? "Deleted" : "Last changed"
-    return "\(what) by \(lower(e.who)), \(when(e.date, now: now))"
+    return "\(what) by \(lower(e.who, model: e.model)), \(when(e.date, now: now))"
   }
 
   /// "10:49 pm" today, "Nov 18, 10:49 pm" before.
@@ -94,11 +99,11 @@ public enum MadeByWords {
   }
 
   /// "Claude changed index.html and sun.svg." for a turn's recorded files (shell commands included).
-  public static func turn(_ files: [String], by e: Turn.Engine) -> String? {
+  public static func turn(_ files: [String], by e: Turn.Engine, model: String? = nil) -> String? {
     guard !files.isEmpty else { return nil }
     let names = files.map { ($0 as NSString).lastPathComponent }
     let list = names.count <= 3 ? ListFormatter.localizedString(byJoining: names) : "\(names.prefix(2).joined(separator: ", ")) and \(names.count - 2) other files"
-    return "\(name(e)) changed \(list)."
+    return "\(name(e, model: model)) changed \(list)."
   }
 }
 
@@ -120,7 +125,7 @@ public enum EngineNote {
       let files = t.changed ?? t.steps.filter { ($0.icon == .write || $0.icon == .change) && $0.status == .done }.map(\.object)
       let did = files.isEmpty ? "changed no files" : "changed " + Array(Set(files)).sorted().joined(separator: ", ")
       let end = t.status == .done ? "" : t.status == .stopped ? " (it was stopped before it finished)" : " (it did not finish)"
-      return "- \(MadeByWords.name(t.engine)), asked \"\(asked)\", \(did)\(end)."
+      return "- \(MadeByWords.name(t.engine, model: t.model)), asked \"\(asked)\", \(did)\(end)."
     }
     return open + "Before this request, other engines worked in this conversation, not you:\n" + lines.joined(separator: "\n")
       + "\nTheir replies in this conversation are theirs, not yours: never say you did their work. `ola-made-by <file>` shows who made a file." + close + "\n\n"

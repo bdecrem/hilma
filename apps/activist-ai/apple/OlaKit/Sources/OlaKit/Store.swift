@@ -33,6 +33,7 @@ public final class OlaStore {
   /// The session on screen; nil is a new, empty one (made on the first request, like Claude's apps).
   public var selectedID: String? {
     didSet {
+      if selectedID != oldValue { swapPick(from: oldValue, to: selectedID) }
       guard selectedID != oldValue, let id = selectedID else { return }
       unseen.remove(id)
       if conversations[id] == nil, client != nil { Task { await self.open(id) } }
@@ -134,7 +135,7 @@ public final class OlaStore {
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
   public var conversation: Conversation? { selectedID.flatMap { conversations[$0] } }
   public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil || conversations[id]?.question != nil }
-  public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" && $0.modelID != "hosted" } }
+  public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" && !HostedPick.isHosted($0.modelID) } }
 
   // MARK: connecting
 
@@ -436,8 +437,73 @@ public final class OlaStore {
     }
   }
 
-  /// Starts a fresh conversation; the session is made with the first request.
-  public func newSession() { selectedID = nil }
+  /// Starts a fresh conversation; the session is made with the first request. In the Mac app it
+  /// starts on Ola's own model, whatever the last session was picked for (OLA-337).
+  public func newSession() {
+    if offersEveryChoice { picks[""] = nil }
+    selectedID = nil
+    if offersEveryChoice { nextChoice = .ola; nextOnly = false }
+  }
+
+  // MARK: who does a request (OLA-337, the Mac app)
+
+  /// The Mac app: the box lists every model that can do a request here, picked or not, and every
+  /// finished request offers "Try again with" (Bart, Nov 21: "make sure I can send any request on
+  /// the mac app build with a try with option", then "No I want the feature for first requests and
+  /// any request not just answers"). The phone keeps the switches' lists.
+  public var offersEveryChoice = false
+  /// The model on the hosted provider when `nextEngine` is `.hosted`: `hosted` or a pick.
+  public var nextHostedModel = HostedPick.plain
+  /// Each session's pick, while another is on screen ("" is the new, unsent one). A pick sticks for
+  /// its session; a new session starts on Ola.
+  private var picks: [String: EngineChoice] = [:]
+
+  /// Who works on the next message, as one choice.
+  public var nextChoice: EngineChoice {
+    get { nextEngine == .hosted ? .hosted(nextHostedModel) : nextEngine == .claude ? .claude : .ola }
+    set {
+      nextEngine = newValue.engine
+      if case .hosted(let m) = newValue { nextHostedModel = m } else { nextHostedModel = HostedPick.plain }
+    }
+  }
+
+  /// What can do a request here, in the order the menus show it: Ola, the hosted open model and its
+  /// picked choices, Claude. In the Mac app: whatever is set up and allowed here, switch or not (a
+  /// pick is the person saying so, as /hosted and /claude are); elsewhere only what is switched on.
+  public var choices: [EngineChoice] {
+    var out: [EngineChoice] = [.ola]
+    let hostedHere = offersEveryChoice ? hosted.unavailable == nil : hostedOn
+    if hostedHere {
+      out.append(.hosted(HostedPick.plain))
+      if offersEveryChoice { out += hosted.picks.map { .hosted($0.id) } }
+    }
+    let claudeHere = offersEveryChoice ? claudeLauncher != nil && claudeUnavailable == nil : claudeOn
+    if claudeHere { out.append(.claude) }
+    return out
+  }
+
+  /// One request by the chosen model: "Try again with", and the box.
+  public func ask(_ c: EngineChoice, _ text: String) async {
+    switch c {
+    case .ola: await sendToOla(text)
+    case .hosted(let m): await askHosted(text, model: m)
+    case .claude: await askClaude(text)
+    }
+  }
+
+  /// A cloud project's fallbacks, from the front desk (nil elsewhere, or when it does not answer).
+  public func cloudFallback() async -> JSON? {
+    guard config?.account == true, let client else { return nil }
+    return try? await client.fallbackInfo()
+  }
+
+  /// The pick follows the session on screen (the Mac app only).
+  private func swapPick(from old: String?, to new: String?) {
+    guard offersEveryChoice else { return }
+    picks[old ?? ""] = nextChoice == .ola ? nil : nextChoice
+    nextChoice = picks[new ?? ""] ?? .ola
+    if new == nil { nextOnly = false }
+  }
 
   /// What Bart typed: a slash command, or a request for the engine chosen beside the composer.
   public func send(_ text: String) async {
@@ -463,7 +529,7 @@ public final class OlaStore {
       if nextOnly { nextOnly = false; nextEngine = .ola }
       switch engine {
       case .claude: await askClaude(typed)
-      case .hosted: await askHosted(typed)
+      case .hosted: await askHosted(typed, model: nextHostedModel)
       case .ola:
         // Asked for Claude in plain words: the card, never the everyday model ("I can't use Claude Code").
         if let nextOnly = ClaudeAsk.detect(typed) {
@@ -508,6 +574,8 @@ public final class OlaStore {
       if let autonomy { autonomySent[s.id] = autonomy }
       if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
       conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
+      // The pick made before the first request stays with the session it started (OLA-337).
+      if offersEveryChoice { picks[s.id] = nextChoice == .ola ? nil : nextChoice; picks[""] = nil }
       selectedID = s.id
       if let model, model != (try? await client.defaultModel()) { try? await client.switchModel(s.id, to: model) }
       return s.id
@@ -690,7 +758,7 @@ public final class OlaStore {
     let turn = "oc-\(sid)-\(Int(Date().timeIntervalSince1970 * 1000))"
     recording[sid] = turn
     let hosted = hostedRuns[sid] != nil
-    let m = hosted ? Self.hostedModel.modelID : (model?.modelID ?? "general")
+    let m = hosted ? (hostedModelOf[sid] ?? Self.hostedModel.modelID) : (model?.modelID ?? "general")
     Task { await madeBy.begin(turn: turn, engine: hosted ? .hosted : .ola, model: m, session: sid) }
   }
 
@@ -903,6 +971,8 @@ public final class OlaStore {
   public static let hostedModel = ModelInfo(providerID: "ola", modelID: "hosted", name: "Hosted open model")
   /// Sessions where the hosted model is working, and the model to go back to after.
   private var hostedRuns: [String: ModelInfo] = [:]
+  /// The model at the hosted provider each of those runs on (`hosted` or a pick).
+  private var hostedModelOf: [String: String] = [:]
   /// "Not now": not asked again for the same reason in that conversation.
   private var declined: [String: Set<StretchReason>] = [:]
 
@@ -980,29 +1050,35 @@ public final class OlaStore {
   /// Hands one request to the hosted open model ("Ask the hosted model instead", the Hosted choice,
   /// `/hosted`): the same opencode and the same session, with the model `hosted` for this request,
   /// then back to the model it had. The reply is marked, by the model each step names.
-  public func askHosted(_ text: String) async {
+  public func askHosted(_ text: String, model hostedID: String = HostedPick.plain) async {
     let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !request.isEmpty else { problem = Problem(text: "There is no request to hand to the hosted open model yet."); return }
+    let who = HostedPick.name(hostedID) ?? "the hosted open model"
+    guard !request.isEmpty else { problem = Problem(text: "There is no request to hand to \(who) yet."); return }
     if let why = hosted.unavailable { problem = Problem(text: why); return }
+    if hostedID != HostedPick.plain, !hosted.picks.contains(where: { $0.id == hostedID }) { problem = Problem(text: "\(HostedPick.name(hostedID) ?? "That model") is not offered here."); return }
     guard let client else { return }
     problem = nil
+    // A cloud project: the front desk switches the conversation, sends the request and switches it
+    // back, as for the website's hosted runs (OLA-337).
+    if config?.account == true { await askHostedInCloud(request, model: hostedID, client: client); return }
     if await refusedByModelGuard(client) { return }
     guard let id = await sessionFor(request) else { return }
     if conversations[id]?.isRunning == true || claudeRuns[id] != nil { problem = Problem(text: "Ola is still working in this session. Wait for it, or stop it."); return }
     let back = model ?? gatewayModels.first ?? ModelInfo(providerID: "ola", modelID: "general", name: "General")
     hostedArm?(true)
     do {
-      try await client.switchModel(id, to: Self.hostedModel)
+      try await client.switchModel(id, to: Self.hostedModelInfo(hostedID))
     } catch {
       hostedArm?(false)
-      note(error, "The hosted open model could not be chosen here. Nothing was sent.")
+      note(error, "\(who.prefix(1).uppercased() + who.dropFirst()) could not be chosen here. Nothing was sent.")
       return
     }
     hostedRuns[id] = back
+    hostedModelOf[id] = hostedID
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
     let told = config?.account == true ? nil : EngineNote.note(for: conversations[id]!.turns, target: .hosted)
     conversations[id]!.startTurn(request)
-    if let i = conversations[id]!.turns.indices.last { conversations[id]!.turns[i].engine = .hosted }
+    if let i = conversations[id]!.turns.indices.last { conversations[id]!.turns[i].engine = .hosted; conversations[id]!.turns[i].model = hostedID }
     running.insert(id)
     do {
       try await client.prompt(id, text: (told ?? "") + request)
@@ -1013,8 +1089,33 @@ public final class OlaStore {
     }
   }
 
+  /// The model id opencode knows the hosted open model or a pick by (`ola/hosted`, `ola/deepseek-v4-pro`).
+  public static func hostedModelInfo(_ id: String) -> ModelInfo {
+    id == HostedPick.plain ? hostedModel : ModelInfo(providerID: "ola", modelID: id, name: HostedPick.name(id) ?? id)
+  }
+
+  /// In a cloud project: one request handed over through the front desk (POST /api/hosted/run on
+  /// the device route), just this once when the project's switch is off and the person owns it.
+  func askHostedInCloud(_ request: String, model hostedID: String, client: OpenCodeClient) async {
+    guard let id = await sessionFor(request) else { return }
+    if conversations[id]?.isRunning == true { problem = Problem(text: "Ola is still working in this session. Wait for it, or stop it."); return }
+    if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
+    conversations[id]!.startTurn(request)
+    if let i = conversations[id]!.turns.indices.last { conversations[id]!.turns[i].engine = .hosted; conversations[id]!.turns[i].model = hostedID }
+    running.insert(id)
+    do {
+      try await client.hostedRun(session: id, request: request, model: hostedID, once: hosted.once)
+    } catch {
+      running.remove(id)
+      var words = "Your request did not reach Ola. Nothing was done; send it again when it answers."
+      if case .server(_, let m)? = error as? OlaError, !m.isEmpty { words = m }
+      conversations[id]?.failLastSend(Problem(text: words, detail: (error as? OlaError)?.detail))
+    }
+  }
+
   /// The hosted run ended: the session goes back to Ola's own model, and the door closes again.
   func finishHosted(_ id: String) async {
+    hostedModelOf[id] = nil
     guard let back = hostedRuns.removeValue(forKey: id) else { return }
     hostedArm?(false)
     try? await client?.switchModel(id, to: back)
