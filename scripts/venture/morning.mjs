@@ -94,8 +94,12 @@ if (!dry) {
   const code = r.status ?? 3
   if (code === 1 || code === 2) {
     const title = code === 1 ? 'Move Ola\'s opencode to the new release' : 'Ola\'s opencode changes no longer apply to the new release: fix rebrand.mjs first'
-    spawnSync('node', [fileURLToPath(new URL('./issues.mjs', import.meta.url)), 'add', title, '--area', 'apps', '--pri', code === 2 ? 'P0' : 'P1', '--what', line], { encoding: 'utf8' })
-    forkLine = `opencode: ${line} On my plate.`
+    // One open issue per title (OLA-239: the same move was opened four mornings running, OLA-146,
+    // OLA-185, OLA-239, OLA-347, because nothing looked for the one already open).
+    const { data: open, error } = await db.from('venture_issues').select('id').eq('title', title).not('status', 'in', '(done,dropped)').limit(1)
+    if (error) throw new Error(`venture_issues: ${error.message}`)
+    if (!open?.length) spawnSync('node', [fileURLToPath(new URL('./issues.mjs', import.meta.url)), 'add', title, '--area', 'apps', '--pri', code === 2 ? 'P0' : 'P1', '--what', line], { encoding: 'utf8' })
+    forkLine = `opencode: ${line} On my plate${open?.length ? ` (${open[0].id})` : ''}.`
   } else if (code !== 0 && prev.last_code === 3 && prev.date !== today) {
     forkLine = `opencode: the daily update check failed two days running (${line}).`
   }
