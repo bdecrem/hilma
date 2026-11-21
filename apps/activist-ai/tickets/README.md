@@ -36,10 +36,23 @@ Candidates (Nov 21, Together serverless): Kimi K3.1 Pro, DeepSeek V4 Pro, GLM-5.
 Qwen3.7-Max is listed but Together refuses it on the serverless API ("the model server rejected the
 request"), so it is not in the trial.
 
-## Step 2: the hand-off (next)
+## Step 2: the hand-off (`handoff.mjs`)
 
-A ticket marked for Ola becomes a request in a project that holds a copy of the repo at main; Ola
-(the trial's winner, under the ticket lane's own name in the model connection) works there; the
-result comes back as a branch `ola/OLA-n` that Kit reviews, runs the checks on, and merges; the
-ticket's checker checks it as every ticket. The tracker records who built each ticket, and the
-count of tickets closed and built by Ola is shown each day.
+```bash
+node scripts/venture/issues.mjs edit OLA-n --who ola          # Kit marks a ticket for Ola
+node apps/activist-ai/tickets/handoff.mjs list                 # open tickets marked for Ola
+node apps/activist-ai/tickets/handoff.mjs run OLA-n [--model <alias>] [--dry]
+```
+
+`run` makes the ticket and its whole thread the request, exports origin/main into
+`~/ola-trials/handoff/OLA-n-<time>/work` (about 630 MB, removed after the run; it refuses under 12 GB
+free), and runs Ola's opencode on the ticket model (`_ticket_model` in models.json, the trial's
+winner) in the trial's sandbox. Ola's change goes on branch `ola/OLA-n` from the exact main it started
+from, committed by "Ola" with the model, minutes and cost in the message, and pushed (never to main);
+a comment on the ticket names the branch, the files, the cost and Ola's own words. Then the usual
+path: Kit reviews the branch, runs the folder's checks, merges it, marks the ticket ready, and a
+checker checks it. `--dry` does everything but the push and the comment. The sandbox code is shared
+with the trial in `lib.mjs`.
+
+Still to build: who built each ticket on the board, and the day's count (tickets closed, how many Ola
+built).
