@@ -747,21 +747,33 @@ if (cmd === 'overrides') {
   const autoAt = (r, c, cases) => {
     if (!cases) return ''
     if (!cases.value) return `; the automatic run's results could not be read (${cases.error ?? 'no result file'})`
-    const mine = Object.values(cases.value.cases ?? {}).filter((x) => x.ticket === r.id && x.place === c.at)
-    if (!mine.length) return `; no automatic run covers ${c.at} for ${r.id}`
-    const one = (x) => `${x.id} ${x.status}${x.tries ? ` (${x.tries})` : ''}${x.release ? ` on ${x.release}` : ''}${x.at ? `, ${when(x.at)}` : ''}${x.didNotRun ? `, did not run ${when(x.didNotRun.at)} on ${x.didNotRun.release ?? '?'}` : ''}`
-    // OLA-264 checker, Nov 20: the case whose sentence the check itself asks is shown in full, first; the
-    // rest in full when few, as counts with the run's release and time when many.
-    const words = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter((w) => w.length > 2)
-    const doW = new Set(words(c.do))
-    const own = mine.filter((x) => { const w = words(x.say); return w.length && w.filter((y) => doW.has(y)).length / w.length >= 0.7 })
+    const atPlace = Object.values(cases.value.cases ?? {}).filter((x) => x.place === c.at)
+    const one = (x) => `${x.id} ${x.status}${x.tries ? ` (${x.tries})` : ''}${x.release ? ` on ${x.release}` : ''}${x.at ? `, ${when(x.at)}` : ''}${x.didNotRun ? `, did not run ${when(x.didNotRun.at)} on ${x.didNotRun.release ?? '?'}` : ''}${x.ticket && x.ticket !== r.id ? ` [${x.ticket}]` : ''}`
+    // OLA-264 checker, Nov 20: the cases whose sentence the check itself asks are shown in full, first,
+    // whatever ticket they are filed under (OLA-230 #7's "publish it again" and "take it down" are OLA-250's
+    // and STOPPED WORKING); the ticket's other cases there in full when few, as counts when many. A sentence
+    // is the check's when it is one of the check's phrases (quoted, or between "ask:", "then", ";"),
+    // word for word, one word apart (an X), or one holding the other (4 words or more).
+    const norm = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
+    const phrases = [...String(c.do ?? '').matchAll(/["“]([^"”]+)["”]/g)].map((m) => m[1])
+      .concat(String(c.do ?? '').split(/[;:]|\bthen\b|\band later\b|\bask\b|\btype\b/i)).map(norm).filter(Boolean)
+    const same = (a, b) => {
+      if (a === b) return true
+      const A = a.split(' '), B = b.split(' ')
+      if (A.length === B.length && A.length >= 5 && A.filter((w, i) => w !== B[i]).length <= 1) return true
+      return Math.min(A.length, B.length) >= 4 && (a.includes(b) || b.includes(a))
+    }
+    const own = atPlace.filter((x) => phrases.some((p) => same(norm(x.say), p)))
+    const mine = atPlace.filter((x) => x.ticket === r.id)
+    if (!own.length && !mine.length) return `; no automatic run covers ${c.at} for ${r.id} or this check's sentence`
     const rest = mine.filter((x) => !own.includes(x))
     const n = {}
     for (const x of rest) n[x.status] = (n[x.status] ?? 0) + 1
     const rel = [...new Set(rest.map((x) => x.release).filter(Boolean))]
     const at = rest.map((x) => x.at).filter(Boolean).sort().pop()
     const others = rest.length <= 3 ? `${own.length ? 'others: ' : ''}${rest.map(one).join('; ')}` : `${rest.length} ${own.length ? 'other ' : ''}cases: ${Object.entries(n).map(([s, k]) => `${k} ${s}`).join(', ')}${rel.length ? ` (on ${rel.join(', ')}${at ? `, ${when(at)}` : ''})` : ''}`
-    return `; the automatic run at ${c.at}: ${own.length ? `${own.map(one).join('; ')}; ` : (mine.length === 1 ? `its one case there is not this check's sentence; ` : `none of its ${mine.length} cases there is this check's sentence; `)}${others}`
+    if (!rest.length) return `; the automatic run at ${c.at}: ${own.map(one).join('; ')}`
+    return `; the automatic run at ${c.at}: ${own.length ? `${own.map(one).join('; ')}; ` : `no case there is this check's sentence; ${r.id}'s: `}${others}`
   }
   if (cmd === 'say') {
     const id = normId(pos[0])
