@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile personhood claude-opus-5-5 high",
- "pid": 49736,
  "step": "forward",
  "slug": "chile",
  "chunk": "personhood",
@@ -59,5 +58,816 @@
   "user": 110
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T02:57:48.566Z",
+ "minutes": 32.94,
+ "meters_after": {
+  "at": "2026-11-21T02:57:48.566Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 203330,
+   "output": 32215,
+   "cache_read": 2447812,
+   "cache_write": 133793,
+   "cost_usd": 2.0703,
+   "total": 2817150
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 203272,
+    "output": 15102,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4902,
+    "cost_usd": 0.1679
+   },
+   "claude-opus-5-5": {
+    "input": 58,
+    "output": 17113,
+    "cache_read": 2447812,
+    "cache_write": 133793,
+    "thinking": 5570,
+    "cost_usd": 1.9024
+   }
+  }
+ },
+ "turns": 38,
+ "calls": 63,
+ "duration_ms": 580186,
+ "duration_api_ms": 481626,
+ "pages_read": 21,
+ "pages": [
+  {
+   "at": "2026-11-21T02:25:02.532Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 21 | Artículo 43 | Artículo 44 | Artículo 45 | Ley 21655 | Versión",
+   "ok": true,
+   "chars": 6832
+  },
+  {
+   "at": "2026-11-21T02:25:07.446Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 21.- | Artículo 43.- | Artículo 44.- | Artículo 45.- | retener | documentos de identidad",
+   "ok": true,
+   "chars": 3387
+  },
+  {
+   "at": "2026-11-21T02:25:11.984Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 21.- | Artículo 43.- | Artículo 44.- | Artículo 45.-",
+   "ok": true,
+   "chars": 6932
+  },
+  {
+   "at": "2026-11-21T02:25:53.610Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 21.- | Artículo 43.- | Artículo 45.- | Artículo 177",
+   "ok": true,
+   "chars": 8569
+  },
+  {
+   "at": "2026-11-21T02:26:06.008Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2022/02/12/43177/01/2086865.pdf",
+   "find": "Artículo 177 | retención | retener | cédula de identidad para extranjeros",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:26:28.393Z",
+   "url": "https://webarchive.archive.unhcr.org/20220930224625if_/https://www.refworld.org.es/pdfid/6299394d4.pdf",
+   "find": "Artículo 177 | retener | retención de documentos",
+   "ok": true,
+   "chars": 873
+  },
+  {
+   "at": "2026-11-21T02:27:17.841Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1173006",
+   "find": "REGLAMENTO | Artículo 177",
+   "ok": true,
+   "chars": 3381
+  },
+  {
+   "at": "2026-11-21T02:27:32.633Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1172573",
+   "find": "Artículo 177 | Artículo 176 | Artículo 178 | cédula de identidad",
+   "ok": true,
+   "chars": 8502
+  },
+  {
+   "at": "2026-11-21T02:27:35.354Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1172573",
+   "find": "Versión | Última modificación | Texto Original",
+   "ok": true,
+   "chars": 3473
+  },
+  {
+   "at": "2026-11-21T02:27:47.724Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1172573",
+   "find": "bajo relación de subordinación y dependencia",
+   "ok": true,
+   "chars": 2231
+  },
+  {
+   "at": "2026-11-21T02:27:53.333Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "retener | retención | retuviere | destruy | pasaporte",
+   "ok": true,
+   "chars": 6106
+  },
+  {
+   "at": "2026-11-21T02:49:32.043Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=24928",
+   "find": "Art. 29 | Artículo 29 | Art. 28 | Art. 30",
+   "ok": true,
+   "chars": 6441
+  },
+  {
+   "at": "2026-11-21T02:49:33.472Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=24928",
+   "find": "Versión | Última modificación | Intermedio | Desde Hasta",
+   "ok": true,
+   "chars": 4146
+  },
+  {
+   "at": "2026-11-21T02:50:28.599Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=30844",
+   "find": "Versión | Última modificación | Artículo 4 | nacimientos",
+   "ok": true,
+   "chars": 5378
+  },
+  {
+   "at": "2026-11-21T02:51:16.017Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "Art. 242 | Art. 470 | destruyendo o inutilizando | Art. 193 ",
+   "ok": true,
+   "chars": 9358
+  },
+  {
+   "at": "2026-11-21T02:51:36.671Z",
+   "url": "https://www.ecoi.net/en/document/2130540.html",
+   "find": "passport | identity documents | retain | confiscat | withh",
+   "ok": true,
+   "chars": 3343
+  },
+  {
+   "at": "2026-11-21T02:51:37.542Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2026/07/Cuenta-Publica-Participativa-2026.pdf",
+   "find": "185.250 | retrasad | pendientes | rezago",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:52:36.403Z",
+   "url": "https://www.emol.com/noticias/Nacional/2023/02/17/1086984/extranjeros-espera-residencia-migraciones-botella.html",
+   "find": "pendientes | cédula | meses | años",
+   "ok": true,
+   "chars": 3770
+  },
+  {
+   "at": "2026-11-21T02:52:41.608Z",
+   "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de",
+   "find": "305 | rezago | pendientes",
+   "ok": true,
+   "chars": 3936
+  },
+  {
+   "at": "2026-11-21T02:52:44.473Z",
+   "url": "https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal",
+   "find": "Corte | Registro Civil | control | cédula",
+   "ok": true,
+   "chars": 3946
+  },
+  {
+   "at": "2026-11-21T02:52:59.879Z",
+   "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/",
+   "find": "circular | inscri | transeúnte | Defensoría",
+   "ok": true,
+   "chars": 3658
+  }
+ ],
+ "searches": [
+  "Ley 21.325 \"Artículo 21\" \"documentos de identidad\" retener extranjeros",
+  "bcn.cl leychile Decreto 296 2022 reglamento ley 21.325 migración idNorma",
+  "\"Decreto 296\" reglamento migración \"artículo 177\" documentos",
+  "\"APRUEBA REGLAMENTO DE LA LEY Nº 21.325\" leychile navegar idNorma",
+  "\"Decreto 296\" \"Aprueba reglamento de la ley N° 21.325\" bcn.cl",
+  "leychile Ley 4808 sobre Registro Civil idNorma artículo 29 inscripción de nacimiento",
+  "leychile Ley 19477 Ley Orgánica del Servicio de Registro Civil e Identificación navegar idNorma",
+  "Código Penal Chile artículo 242 destruyere documentos | artículo 470 suprimiere documento 2023 Ley 21595 delitos económicos",
+  "Chile Trafficking in Persons Report 2025 employers retained passports identity documents migrant workers Chile",
+  "Servicio Nacional de Migraciones solicitudes pendientes residencia rezago 2025 Contraloría demora cédula extranjeros Registro Civil",
+  "Migraciones rezago solicitudes de residencia 2023 miles pendientes demora meses extranjeros cédula",
+  "inscripción de nacimiento hijos de migrantes en situación irregular Chile Registro Civil 2024 nacionalidad chilena niños",
+  "Sauerbaum Migraciones 185 mil residencias atrasadas solicitudes pendientes 2026",
+  "\"Chile Reconoce\" OR \"Defensoría de la Niñez\" inscripción nacimiento niños hijos de extranjeros 2023 2025 Registro Civil práctica"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":27,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 21\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 296 (2021, publ. 12-02-2022), Reglamento de la Ley 21.325\",\"article\":\"Art. 177\",\"enacted\":\"2022-02-12\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"No source I read documents a pattern of employers or other private parties confiscating migrant workers' identity documents in either period. The 2025 US Trafficking in Persons report on Chile does not mention document retention. A 2025 Court of Appeals case about a migrant whose card was lost during a police check is not a confiscation case. With no evidence of change, the starting 'Usually' is kept for both dates, but it rests on very little.\",\"practice_sources\":[{\"title\":\"2025 Trafficking in Persons Report: Chile (US Department of State, via ecoi.net)\",\"url\":\"https://www.ecoi.net/en/document/2130540.html\",\"year\":2025,\"shows\":\"practice\",\"groups\":[\"all_migrants\"],\"period\":\"2023_2026\"},{\"title\":\"El Desconcierto: Migrante perdió carné en control policial y Registro Civil negó reimpresión (Corte de Apelaciones de Santiago)\",\"url\":\"https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal\",\"year\":2025,\"shows\":\"practice\",\"groups\":[\"regular_migrants\"],\"period\":\"2023_2026\"}],\"past_versions\":\"read_the_version_in_force\",\"sourcing_note\":\"I read Ley 21.325 Art. 21 in both the original (12-02-2022) and current LeyChile texts; they are identical. Decreto 296 is listed on LeyChile as 'Versión: Única - ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 27,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 296 (2021, publ. 12-02-2022), Reglamento de la Ley 21.325",
+      "article": "Art. 177",
+      "enacted": "2022-02-12",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No source I read documents a pattern of employers or other private parties confiscating migrant workers' identity documents in either period. The 2025 US Trafficking in Persons report on Chile does not mention document retention. A 2025 Court of Appeals case about a migrant whose card was lost during a police check is not a confiscation case. With no evidence of change, the starting 'Usually' is kept for both dates, but it rests on very little.",
+    "practice_sources": [
+     {
+      "title": "2025 Trafficking in Persons Report: Chile (US Department of State, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El Desconcierto: Migrante perdió carné en control policial y Registro Civil negó reimpresión (Corte de Apelaciones de Santiago)",
+      "url": "https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Ley 21.325 Art. 21 in both the original (12-02-2022) and current LeyChile texts; they are identical. Decreto 296 is listed on LeyChile as 'Versión: Única - 12-FEB-2022', so it was never amended. Practice evidence is thin and indirect.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (version list)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 current text",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 original version 2022-02-12",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile JSON – Decreto 296",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1172573"
+     },
+     {
+      "title": "LeyChile – Decreto 296 (version info)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1172573"
+     },
+     {
+      "title": "2025 TIP Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     },
+     {
+      "title": "El Desconcierto 2025",
+      "url": "https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal"
+     }
+    ],
+    "starting_answer_concern": "Neither cited provision protects the right. Ley 21.325 Art. 21 is a due-process clause ('El Estado asegurará a los extranjeros la igual protección de los derechos…'). Decreto 296 Art. 177 only lists police control measures (taking a statement, fixing a domicile, periodic reporting). Art. 179 of the same decree requires foreigners to show their documents to the controlling authority. Ley 21.325 contains no words such as 'retener' or 'retención', and I found no rule barring private parties from confiscating documents. The MRD's own wording, 'right implied by existing laws', is a weak basis, and 'No' may be the more accurate answer.",
+    "confidence": "low",
+    "notes": "Ley 21.325 was amended in the window by Leyes 21.590 (07-08-2023), 21.589 (18-08-2023), 21.610 (22-09-2023) and 21.655 (20-02-2024), and an intermediate version dated 01-04-2025 also exists. I did not open these amending acts. Art. 21 is word for word the same in the 2022 and current texts, so they did not change it."
+   },
+   {
+    "question_id": 29,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 4.808 sobre Registro Civil",
+      "article": "Art. 29 (with Art. 28)",
+      "enacted": "1930-02-10",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 19.477 Orgánica del Servicio de Registro Civil e Identificación",
+      "article": "Arts. 3, 4 Nº2",
+      "enacted": "1996-10-19",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Births in Chile are registered whatever the parents' migration status. The documented problem in both periods concerns the nationality entered on the record, not registration itself. The 'hijo de extranjero transeúnte' practice was mostly corrected after 2016, and in April 2026, after the window, Civil Registry Circular N°14 brought it back for children of irregular migrants; the Children's Ombudsman (Defensoría de la Niñez) criticised it. I found no evidence that births went unregistered in 2023–2025, so 'Usually' is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Chilevisión: 'Hijo de extranjero transeúnte': Defensoría de la Niñez advierte riesgos ante circular del Registro Civil",
+      "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile shows Ley 4.808's last modification as 17-05-2004 (Ley 19.947); its text has been consolidated into DFL 1 of 2000. Ley 19.477's last modification is 14-05-2021 (Ley 21.334), with the latest version dated 11-01-2022. Neither changed in the window. I found no direct statistics on birth registration of migrants' children; the Defensoría's 2025 report is a PDF I could not read.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – Ley 4.808",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=24928"
+     },
+     {
+      "title": "LeyChile – Ley 4.808 (version info)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=24928"
+     },
+     {
+      "title": "LeyChile – Ley 19.477",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=30844"
+     },
+     {
+      "title": "Chilevisión 25-04-2026",
+      "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "Art. 28 of Ley 4.808 requires a birth to be registered within sixty days. Art. 29 lists who is obliged to request it (father, nearest relative, doctor or midwife, head of the facility, mother, and others), with no distinction by nationality. Circular N°14 (13-04-2026) falls after 1 January 2026 and concerns nationality status, not registration."
+   },
+   {
+    "question_id": 31,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 43, 44, 45",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 296 (2021), Reglamento de la Ley 21.325",
+      "article": "Art. 49 (identity card for residents)",
+      "enacted": "2022-02-12",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Early 2023 saw large backlogs. SERMIG director Luis Eduardo Thayer said about 300,000 permanent-residence applications were pending in January 2023 (Emol, February 2023; Diario Financiero), though temporary-residence applications were then being decided in two to three months. Under Art. 43 an expired identity card stays valid while a renewal is pending, but in 2025 the Santiago Court of Appeals found the Civil Registry had arbitrarily refused to reprint such a card. Search results summarising SERMIG's public reports point to a reduced backlog in 2025, but I could not read those PDFs. There is no clear evidence of a shift, so the starting rating is carried over to 2026, although the evidence suggests 'Usually' would fit both dates better.",
+    "practice_sources": [
+     {
+      "title": "Emol: Extranjeros denuncian largas esperas para obtener residencia definitiva",
+      "url": "https://www.emol.com/noticias/Nacional/2023/02/17/1086984/extranjeros-espera-residencia-migraciones-botella.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Diario Financiero: Migraciones apuesta por resolver rezago de 305 mil solicitudes",
+      "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "El Desconcierto: Corte considera ilegal negativa del Registro Civil a reimprimir cédula",
+      "url": "https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Arts. 43–45 in both the original 12-02-2022 and current LeyChile texts; they are identical. Decreto 296 has a single version. The SERMIG public reports for 2025 and 2026 are PDFs I could not read.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – Ley 21.325 current",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 version 2022-02-12",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 versions",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile JSON – Decreto 296",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1172573"
+     },
+     {
+      "title": "Emol 17-02-2023",
+      "url": "https://www.emol.com/noticias/Nacional/2023/02/17/1086984/extranjeros-espera-residencia-migraciones-botella.html"
+     },
+     {
+      "title": "Diario Financiero",
+      "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de"
+     },
+     {
+      "title": "El Desconcierto 2025",
+      "url": "https://eldesconcierto.cl/2025/05/22/migrante-perdio-carne-en-control-policial-y-registro-civil-nego-reimpresion-por-estar-vencida-corte-lo-considero-ilegal"
+     }
+    ],
+    "starting_answer_concern": "'Effectively Always' seems too high given the documented backlogs and the 2025 card-reprint case. 'Usually' would fit better. The law itself does support 'Yes': Art. 43 says residents 'deberán solicitar cédula de identidad ante el Servicio de Registro Civil', and Art. 45 says 'la cédula de identidad vigente será suficiente para acreditar su condición de residente regular'.",
+    "confidence": "medium",
+    "notes": "Ley 21.325 was amended in the window (Leyes 21.590, 21.589, 21.610 and 21.655, plus a version dated 01-04-2025), but Arts. 43–45 are unchanged. Art. 44 covers assigning a national ID number (RUN) to foreigners without a residence card."
+   },
+   {
+    "question_id": 33,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Código Penal",
+      "article": "Arts. 242, 470 Nº5 (checked as closest provisions)",
+      "enacted": "1874-11-12",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The starting answer is 'No', so implementation does not apply on either date. Nothing in the window created a migrant-specific ban on destroying documents.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The current Penal Code text on LeyChile shows amendment notes for Art. 242 (Ley 19.450, 1996) and the opening sentence of Art. 470 (Ley 21.121, 2018), and none from 2023–2025 on Nº 5. I did not read the full version list of the Penal Code.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – Código Penal",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984"
+     },
+     {
+      "title": "LeyChile JSON – Ley 21.325 (search for 'destruy')",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "The Penal Code does criminalise destroying documents. Art. 242 punishes an 'empleado público que sustraiga o destruya documentos o papeles que le estuvieren confiados por razón de su cargo'. Art. 470 Nº 5 punishes 'los que cometieren defraudaciones sustrayendo, ocultando, destruyendo o inutilizando en todo o en parte algún… documento u otro papel de cualquiera clase'. The MRD's Argentina and Peru examples code 'Yes' on general provisions of this kind, so Chile's 'No' may be inconsistent with them. Both provisions are narrower (Art. 470 requires a fraud), and this is a disagreement with the first coder, not a change in the law.",
+    "confidence": "medium",
+    "notes": null
+   }
+  ]
+ }
 }

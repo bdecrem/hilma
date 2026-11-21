@@ -41,3 +41,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 17:49 | forward | liberty_b · chile | claude-opus-5-5 | high | 36.62 | 28 | 22,385 | 1,886,302 | 1.57 | 18→25 | 45→45 | 67→67 | 19 | ok | `forward chile liberty_b claude-opus-5-5 high` |
 | 2026-11-20 18:24 | forward | personhood · argentina | claude-opus-5-5 | high | 26.57 | 34 | 31,602 | 1,980,046 | 1.83 | 21→32 | 45→46 | 67→67 | 20 | ok | `forward argentina personhood claude-opus-5-5 high` |
 | 2026-11-20 18:24 | forward | due_process · chile | claude-opus-5-5 | high | 28.18 | 29 | 33,163 | 1,991,214 | 1.95 | 21→35 | 45→46 | 67→67 | 17 | ok | `forward chile due_process claude-opus-5-5 high` |
+| 2026-11-20 18:24 | forward | personhood · chile | claude-opus-5-5 | high | 32.94 | 38 | 32,215 | 2,817,150 | 2.07 | 21→37 | 45→47 | 67→67 | 21 | ok | `forward chile personhood claude-opus-5-5 high` |
