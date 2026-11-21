@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina nationality_a claude-opus-5-5 high",
- "pid": 66112,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "nationality_a",
@@ -59,5 +58,1229 @@
   "user": 184
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T07:57:50.653Z",
+ "minutes": 103.41,
+ "meters_after": {
+  "at": "2026-11-21T07:57:50.653Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 1,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 1,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 1% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 120221,
+   "output": 36508,
+   "cache_read": 2469591,
+   "cache_write": 127995,
+   "cost_usd": 2.1573,
+   "total": 2754315
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 120165,
+    "output": 9384,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3582,
+    "cost_usd": 0.0967
+   },
+   "claude-opus-5-5": {
+    "input": 56,
+    "output": 27124,
+    "cache_read": 2469591,
+    "cache_write": 127995,
+    "thinking": 7916,
+    "cost_usd": 2.0606
+   }
+  }
+ },
+ "turns": 33,
+ "calls": 53,
+ "duration_ms": 705779,
+ "duration_api_ms": 497199,
+ "pages_read": 22,
+ "pages": [
+  {
+   "at": "2026-11-21T06:29:04.565Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 2793
+  },
+  {
+   "at": "2026-11-21T06:29:05.220Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": null,
+   "ok": true,
+   "chars": 12832
+  },
+  {
+   "at": "2026-11-21T06:30:42.566Z",
+   "url": "https://www3.hcdn.gob.ar/dependencias/secparl/dgral_info_parlamentaria/dip/archivos/Ley_346_TA.pdf",
+   "find": null,
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:33:16.899Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "ARTÍCULO 27 | ARTÍCULO 28 | Ley N° 346 | residencia",
+   "ok": true,
+   "chars": 6496
+  },
+  {
+   "at": "2026-11-21T06:33:19.842Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "ARTÍCULO 27.- | Sustitúyese el inciso 1° | Ley de Ciudadanía | DIECIOCHO",
+   "ok": true,
+   "chars": 2367
+  },
+  {
+   "at": "2026-11-21T06:33:22.848Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto",
+   "find": "Art. 2 | Art. 3 | Art. 5 | casado | Art. 11",
+   "ok": true,
+   "chars": 5238
+  },
+  {
+   "at": "2026-11-21T06:34:59.257Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican?page=1",
+   "find": null,
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:59:30.504Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+   "find": "Art. 3 | Art. 4 | Art. 5 | nula | nulidad | condenado | proceso | refugiado | sustituido",
+   "ok": true,
+   "chars": 13426
+  },
+  {
+   "at": "2026-11-21T06:59:35.345Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25463/texto",
+   "find": null,
+   "ok": true,
+   "chars": 2422
+  },
+  {
+   "at": "2026-11-21T06:59:37.859Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25471/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 1046
+  },
+  {
+   "at": "2026-11-21T07:18:52.260Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26165-122609/texto",
+   "find": "naturalización | ciudadanía | ARTICULO 2 | ARTICULO 7",
+   "ok": true,
+   "chars": 5469
+  },
+  {
+   "at": "2026-11-21T07:19:44.078Z",
+   "url": "https://repositorio.mpd.gov.ar/documentos/Ni%20I-Hsing.pdf",
+   "find": "residencia | 23 de junio | Por ello | cuestión de hecho",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:19:48.300Z",
+   "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+   "find": "Ni, I Hsing | Decreto 70/2017 | residencia legal | 2017 | Dirección Nacional de Migraciones | rechaz | Cámara Nacional Electoral",
+   "ok": true,
+   "chars": 12581
+  },
+  {
+   "at": "2026-11-21T07:22:50.113Z",
+   "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+   "find": "I-Hsing | Hsing | jurisprudencia | inconstitucional | cantidad de cartas | solicitudes de naturalización",
+   "ok": true,
+   "chars": 10532
+  },
+  {
+   "at": "2026-11-21T07:25:52.444Z",
+   "url": "https://repositorio.mpd.gov.ar/documentos/Ni I-Hsing.pdf",
+   "find": "residencia | Por ello",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:25:58.167Z",
+   "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+   "find": "Hsing | residencia | Decreto 70 | 138/2021",
+   "ok": true,
+   "chars": 6084
+  },
+  {
+   "at": "2026-11-21T07:26:14.731Z",
+   "url": "https://webarchive.archive.unhcr.org/20240328135204mp_/https://www.refworld.org/docid/42df609b28.html",
+   "find": "loss | lose | naturaliz | revoked | fraud",
+   "ok": true,
+   "chars": 866
+  },
+  {
+   "at": "2026-11-21T07:26:45.640Z",
+   "url": "https://www.ecoi.net/en/document/168981",
+   "find": "loss | lose | naturaliz | revoked | fraud | criminal",
+   "ok": true,
+   "chars": 4182
+  },
+  {
+   "at": "2026-11-21T07:26:52.600Z",
+   "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/",
+   "find": "Corte | idioma | residencia | Hsing | fecha",
+   "ok": true,
+   "chars": 5757
+  },
+  {
+   "at": "2026-11-21T07:26:53.797Z",
+   "url": "https://www.mpf.gob.ar/blog/dictaminaron-que-no-es-requisito-dominar-el-idioma-nacional-para-obtener-la-ciudadania-argentina/",
+   "find": null,
+   "ok": true,
+   "chars": 5484
+  },
+  {
+   "at": "2026-11-21T07:27:00.626Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto",
+   "find": "Artículo 20 | Artículo 75",
+   "ok": true,
+   "chars": 3387
+  },
+  {
+   "at": "2026-11-21T07:43:43.778Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-27097/texto",
+   "find": "ARTICULO 2 | Art. 11 | ciudadanía",
+   "ok": true,
+   "chars": 2788
+  }
+ ],
+ "searches": [
+  "infoleg Ley 346 ciudadanía texto actualizado normas que modifican",
+  "Decreto 3213/84 reglamentación ley 23.059 nacionalidad ciudadanía texto actualizado argentina.gob.ar",
+  "\"Ni, I Hsing\" carta de ciudadanía Corte Suprema 2009 residencia legal naturalización",
+  "Corte Suprema \"Ni I Hsing\" ciudadanía naturalización residencia",
+  "\"Ni, I-Hsing s/ carta de ciudadanía\" fallo texto",
+  "saij Ni I-Hsing carta de ciudadanía 23/06/2009 residencia \"cuestión de hecho\" Fallos 332:1466",
+  "GLOBALCIT Report on Citizenship Law Argentina naturalisation loss of citizenship",
+  "Ley 24.533 ciudadanía modificación artículo 11 ley 346 texto argentina.gob.ar"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":63,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Convictions do not affect citizenship status\",\"implementation\":\"Effectively Always\",\"basis\":\"In force: Ley 346 as restored by Ley 23.059 (1984), and Decreto 3213/84. Neither has a ground for loss of acquired citizenship because of a conviction. Art. 8 Ley 346 only suspends political rights for those under sentence of 'pena infamante o de muerte'. Art. 16 Decreto 3213/84 says this suspension 'no priva de los derechos ni exime de las obligaciones inherentes a la nacionalidad argentina, sea ésta nativa o adquirida'. Annulment is limited to fraud (arts. 10, 15, 18). The loss grounds of Ley de facto 21.795 had been repealed, and the losses under it voided, by Ley 23.059 in 1984. I found no documented case of a naturalised person losing citizenship for a conviction. Practice evidence for this period is thin.\"},{\"date\":\"2005-01-01\",\"answer\":\"Convictions do not affect citizenship status\",\"implementation\":\"Effectively Always\",\"basis\":\"Same texts as in 2000. Decreto 1601/2004 (B.O. 19/11/2004) replaced only art. 2 of Decreto 3213/84 (the option procedure for children of native Argentines) and did not touch arts. 15, 16 or 18. Ley 25.871 (in force from January 2004) governs foreigners, not citizens. I found no practice evidence of conviction-based loss.\"},{\"date\":\"2010-01-01\",\"answer\":\"Convictions do not affect citizenship status\",\"implementation\":\"Effectively Always\",\"basis\":\"No change to Ley 346 arts. 8 and 9 or to Decreto 3213/84 arts. 15, 16 and 18. Decreto 616/2010 (May 2010) regulates migration, not citizenship. I found no documented loss for a conviction.\"},{\"date\":\"2015-01-01\",\"answer\":\"Convictions do not affect citizenship status\",\"implementation\":\"Effectively Always\",\"basis\":\"Ley 26.774 (B.O. 02/11/2012) amended only art. 7 Ley 346 (voting age 16). DNU 70/2017 later amended only art. 2 inc. 1 (acquisition), not loss. The regime stayed fraud-only through 1 January 2020. I found no practice",
+ "output": {
+  "answers": [
+   {
+    "question_id": 63,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Convictions do not affect citizenship status",
+      "implementation": "Effectively Always",
+      "basis": "In force: Ley 346 as restored by Ley 23.059 (1984), and Decreto 3213/84. Neither has a ground for loss of acquired citizenship because of a conviction. Art. 8 Ley 346 only suspends political rights for those under sentence of 'pena infamante o de muerte'. Art. 16 Decreto 3213/84 says this suspension 'no priva de los derechos ni exime de las obligaciones inherentes a la nacionalidad argentina, sea ésta nativa o adquirida'. Annulment is limited to fraud (arts. 10, 15, 18). The loss grounds of Ley de facto 21.795 had been repealed, and the losses under it voided, by Ley 23.059 in 1984. I found no documented case of a naturalised person losing citizenship for a conviction. Practice evidence for this period is thin."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Convictions do not affect citizenship status",
+      "implementation": "Effectively Always",
+      "basis": "Same texts as in 2000. Decreto 1601/2004 (B.O. 19/11/2004) replaced only art. 2 of Decreto 3213/84 (the option procedure for children of native Argentines) and did not touch arts. 15, 16 or 18. Ley 25.871 (in force from January 2004) governs foreigners, not citizens. I found no practice evidence of conviction-based loss."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Convictions do not affect citizenship status",
+      "implementation": "Effectively Always",
+      "basis": "No change to Ley 346 arts. 8 and 9 or to Decreto 3213/84 arts. 15, 16 and 18. Decreto 616/2010 (May 2010) regulates migration, not citizenship. I found no documented loss for a conviction."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Convictions do not affect citizenship status",
+      "implementation": "Effectively Always",
+      "basis": "Ley 26.774 (B.O. 02/11/2012) amended only art. 7 Ley 346 (voting age 16). DNU 70/2017 later amended only art. 2 inc. 1 (acquisition), not loss. The regime stayed fraud-only through 1 January 2020. I found no practice evidence of conviction-based loss."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 8 (suspension of political rights for sentence imposing 'pena infamante o de muerte')",
+      "role": "other_in_force",
+      "in_force": "1869 (restored 1984-04 by Ley 23.059) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 9 (rehabilitation, text of Ley 20.835)",
+      "role": "other_in_force",
+      "in_force": "1984-04 (restored by Ley 23.059) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 3213/84 (reglamentación Ley 23.059)",
+      "article": "Arts. 10, 15, 16, 18 (annulment only for fraud; suspension of political rights does not affect nationality)",
+      "role": "other_in_force",
+      "in_force": "1984-10-19 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 23.059",
+      "article": "Arts. 1-4 (repeal of Ley de facto 21.795; losses voided)",
+      "role": "predecessor",
+      "in_force": "1984-04-10 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley de facto 21.795",
+      "article": "Arts. 7, 8, 11, 12, 13 (loss/cancellation of nationality)",
+      "role": "predecessor",
+      "in_force": "1978 to 1984-04-10",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "1984-04-10",
+      "instrument": "Ley 23.059",
+      "article": "Arts. 1, 3, 4",
+      "kind": "repealed",
+      "what_changed": "Repealed Ley de facto 21.795, including its loss/cancellation provisions, restored Ley 346 and voided losses ordered under 21.795. This is the background to the 2000-2020 regime with no conviction-based loss.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25463/texto",
+      "passage": "ARTICULO 3° - Se declaran inválidas y sin ningún efecto jurídico las pérdidas o cancelaciones de la nacionalidad argentina, así como también las pérdidas o cancelaciones de la ciudadanía argentina dispuestas en cumplimiento de los artículos 7°, 8°, 11, 12, 13 y concordantes de la ley de facto 21.795"
+     },
+     {
+      "date": "1984-10-19",
+      "instrument": "Decreto 3213/84",
+      "article": "Art. 16",
+      "kind": "enacted",
+      "what_changed": "Provides that suspension of political rights under art. 8 Ley 346 (including for convicts) does not deprive a person of nationality, native or acquired. Art. 18 limits annulment to fraud. In force unchanged throughout 2000-2020.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+      "passage": "Art. 16 — La suspensión del ejercicio de los derechos políticos de conformidad a lo establecido en el artículo 8° de la Ley N° 346 ... no priva de los derechos ni exime de las obligaciones inherentes a la nacionalidad argentina, sea ésta nativa o adquirida."
+     },
+     {
+      "date": "2004-11-19",
+      "instrument": "Decreto 1601/2004",
+      "article": "Art. 2 Decreto 3213/84",
+      "kind": "amended",
+      "what_changed": "Replaced the procedure for the option of citizenship by children of native Argentines born abroad. It does not touch loss or convictions.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+      "passage": "(Artículo sustituido por art. 1° del Decreto N° 1601/2004 B.O. 19/11/2004)."
+     },
+     {
+      "date": "2012-11-02",
+      "instrument": "Ley 26.774",
+      "article": "Art. 7 Ley 346",
+      "kind": "amended",
+      "what_changed": "Lowered the age for political rights to 16. It does not touch loss.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Art. 7° Los argentinos que hubiesen cumplido la edad de dieciséis (16) años, gozan de todos los derechos políticos ... (Artículo sustituido por art. 1° de la Ley N° 26.774 B.O. 02/11/2012)"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Obtention and loss of citizenship, Argentina [ARG3532] (IRB Canada)",
+      "url": "https://www.ecoi.net/en/document/168981",
+      "year": 1990,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's texto original and texto actualizado of Ley 346, with its antecedentes, and the texto actualizado of Decreto 3213/84 show no loss-for-conviction ground at any date from 2000 to 2020. Dating is strong. I found no practice source documenting loss, or its absence, for any period.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 texto actualizado (InfoLEG)",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 texto original (InfoLEG)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "Ley 23.059 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25463/texto"
+     },
+     {
+      "title": "Decreto 3213/84 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Decreto 3213/84 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25471/normas-modifican"
+     },
+     {
+      "title": "IRB Obtention and loss of citizenship, Argentina",
+      "url": "https://www.ecoi.net/en/document/168981"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection rests on statutory silence plus Decreto 3213/84 art. 16, which separates the art. 8 suspension of political rights from nationality. Only fraud can annul a naturalisation (outside this indicator). The 'Effectively Always' rating is inferred from the absence of any documented loss, not from affirmative practice reports."
+   },
+   {
+    "question_id": 65,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "In force: Constitution art. 20 ('Obtienen nacionalización residiendo dos años continuos en la Nación') and Ley 346 art. 2 inc. 1 in its 1869 text ('Los estranjeros mayores de 18 años, que residiesen en la República dos años continuos y manifestasen ante los jueces federales de sección su voluntad de serlo'), restored by Ley 23.059. Decreto 3213/84 art. 3 sets the same conditions and the bars (no honest means of support, pending prosecution, a doloso conviction over 3 years). Naturalisation was handled by federal courts. I found no practice evidence for 2000. The rating carries the starting level forward; confidence is low."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same texts. Ley 25.871 replaced Ley 22.439 in January 2004 but does not regulate naturalisation. Courts were split on whether the two years had to be lawful residence; this mainly affects irregular migrants, not regular economic migrants. I found no specific practice data for 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same texts. On 23 June 2009 the CSJN ('Ni, I-Hsing', Fallos 332:1466) held that the art. 20 / Ley 346 residence requirement does not require lawful migration status. It reversed a Córdoba chamber that had denied citizenship. I know this ruling only from secondary sources and treat it as practice evidence: courts mostly grant naturalisation, and the CSJN corrects restrictive lower-court readings."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 346 art. 2 inc. 1 was still in its 1869 text; DNU 70/2017 changed it only from 31 January 2017. Before 1 January 2020 that change narrowed the route to residence 'como residentes permanentes o temporarios' under migration law, which economic migrants with residence permits satisfy. Practice up to 2020: lower courts sometimes added unwritten requirements. In Liu Cairong the La Plata chamber required Spanish; the CSJN reversed on 11 February 2020."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 20",
+      "role": "cited",
+      "in_force": "1853 (text of 1994 reform, Ley 24.430) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 1 (1869 text)",
+      "role": "predecessor",
+      "in_force": "1984-04-10 (restored by Ley 23.059) to 2017-01-31; again 2021-03-05 to 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 1 as replaced by art. 27 DNU 70/2017",
+      "role": "cited",
+      "in_force": "2017-01-31 to 2021-03-05",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 as replaced by art. 37 DNU 366/2025",
+      "role": "cited",
+      "in_force": "2025-05-29 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 3213/84",
+      "article": "Art. 3 (conditions and impediments)",
+      "role": "other_in_force",
+      "in_force": "1984-10-19 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 24.533",
+      "article": "Arts. 1-2 (replacing arts. 10 and 11 Ley 346: gratuity, court reports)",
+      "role": "other_in_force",
+      "in_force": "1995-09-14 to 2025-05-29 (art. 11 repealed by DNU 366/2025)",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "1995-09-14",
+      "instrument": "Ley 24.533",
+      "article": "Arts. 10, 11 Ley 346",
+      "kind": "amended",
+      "what_changed": "Replaced the gratuity and procedure articles (court reports from DNM and police). It added no new substantive requirements. Pre-2000 background.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-27097/texto",
+      "passage": "Los jueces que reciban el pedido de ciudadanía, dentro del término de TRES (3) días solicitarán de oficio todo informe o certificado que consideren conveniente requerir a la Dirección Nacional de Migraciones"
+     },
+     {
+      "date": "2009-06-23",
+      "instrument": "CSJN, 'Ni, I-Hsing s/ carta de ciudadanía' (Fallos 332:1466)",
+      "article": "Ley 346 art. 2 inc. 1 / Const. art. 20",
+      "kind": "ruling",
+      "what_changed": "The CSJN held that the residence needed for naturalisation does not require lawful migration status. I did not read it in full (PDF unreadable), so it is treated as practice evidence.",
+      "url": "https://www.mpf.gob.ar/blog/dictaminaron-que-no-es-requisito-dominar-el-idioma-nacional-para-obtener-la-ciudadania-argentina/",
+      "passage": "en el caso “Ni, I-Hsing” —en el que se impugnó la constitucionalidad del requisito de contar con residencia “legal” para obtener la nacionalidad por naturalización—, la Corte Suprema de la Nación destacó las razones expuestas en el mensaje de elevación"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Art. 27 (replacing art. 2 inc. 1 Ley 346)",
+      "kind": "amended",
+      "what_changed": "Before: two years' continuous residence of any kind. After: two years' continuous residence as a permanent or temporary resident under migration law. Regular economic migrants keep the pathway; irregular residence no longer counts.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "“1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA de acuerdo al marco normativo migratorio vigente, como residentes permanentes o temporarios, en forma continua durante los DOS (2) años anteriores a la solicitud y manifestasen ante los jueces federales su voluntad de serlo.”"
+     },
+     {
+      "date": "2018",
+      "instrument": "Judicial practice (CNACCF 10/7/2018; Cámara Federal de La Plata 24/5/2018)",
+      "article": "Art. 27 DNU 70/2017",
+      "kind": "practice",
+      "what_changed": "Federal chambers declared the DNU change to Ley 346 unconstitutional in individual naturalisation cases. Practice only (inter partes), as reported by Courtis & Penchaszadeh.",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+      "passage": "Nos detendremos, por un lado, en dos sentencias de 2018 (Argentina-CNACCF 10/7/2018; Argentina-CFLP 24/5/2018) para comprender la afectación de derechos y competencias operada por este DNU"
+     },
+     {
+      "date": "2020-02-11",
+      "instrument": "CSJN, 'Liu Cairong s/ solicitud carta de ciudadanía'",
+      "article": "Ley 346 art. 2",
+      "kind": "ruling",
+      "what_changed": "After 1 January 2020. The CSJN reversed a denial based on lack of Spanish, holding that Ley 346 imposes no language requirement. Practice evidence.",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/",
+      "passage": "Corresponde revocar la sentencia apelada y otorgar la ciudadanía argentina a la interesada toda vez que la derogación de la Ley 21.795 y su reemplazo por la Ley 346 comportó la eliminación de los requisitos previstos en la Ley derogada"
+     },
+     {
+      "date": "2021-03-05",
+      "instrument": "Decreto 138/2021",
+      "article": "Art. 2 inc. 1 Ley 346",
+      "kind": "amended",
+      "what_changed": "After the period. Restored the 1869 text of art. 2 inc. 1.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Artículo 2º inciso 1º restituido por art. 2º del Decreto Nº 138/2021 B.O. 5/3/2021."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 2 Ley 346",
+      "kind": "replaced",
+      "what_changed": "After the period. Two years' continuous and lawful residence with no exits abroad, application before DNM, and a new investment route.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Ni, I-Hsing s/ carta de ciudadanía, N.13.XLII, Fallos 332:1466",
+      "date": "2009-06-23",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "Narrowed in effect by DNU 70/2017 art. 27 (2017-01-31), which required lawful permanent or temporary residence. Text restored by Decreto 138/2021. Cited in CSJN Liu Cairong (2020-02-11) and Cámara Federal La Plata, Ndiaye (2023-04-27).",
+      "url": null
+     },
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Liu Cairong s/ solicitud carta de ciudadanía (FLP 40452/2014)",
+      "date": "2020-02-11",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "none found",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Courtis & Penchaszadeh, 'Los poderes del Estado frente a la población extranjera residente en la Argentina: la naturalización como campo de disputa', Postdata 24(2)",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "MPF: Dictaminaron que no es requisito dominar el idioma nacional para obtener la ciudadanía argentina",
+      "url": "https://www.mpf.gob.ar/blog/dictaminaron-que-no-es-requisito-dominar-el-idioma-nacional-para-obtener-la-ciudadania-argentina/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "Microjuris: Liu Cairong (CSJN 11-02-2020)",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The texts are well dated: the 1869 text of art. 2 is on InfoLEG's texto original, the DNU 70/2017 replacement in the DNU's own text, and the restoration and 2025 changes in the antecedentes. Practice evidence covers 2009 and 2017-2020 only, through secondary reports. For 2000-2005 there is none, and Ni I-Hsing could not be read in full.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (Ley 24.430)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto"
+     },
+     {
+      "title": "Ley 346 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "DNU 70/2017 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Decreto 3213/84 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Ley 24.533 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-27097/texto"
+     },
+     {
+      "title": "Ley 23.059",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-25463/texto"
+     },
+     {
+      "title": "Courtis & Penchaszadeh 2019 (Redalyc)",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/"
+     },
+     {
+      "title": "MPF blog on Liu Cairong dictamen",
+      "url": "https://www.mpf.gob.ar/blog/dictaminaron-que-no-es-requisito-dominar-el-idioma-nacional-para-obtener-la-ciudadania-argentina/"
+     },
+     {
+      "title": "Microjuris Liu Cairong",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/"
+     },
+     {
+      "title": "Cámara Federal La Plata, Ndiaye (vLex)",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835"
+     }
+    ],
+    "starting_answer_concern": "The answer holds. However, on 1 January 2020 art. 2 inc. 1 Ley 346 was in its DNU 70/2017 form, requiring permanent or temporary residence, not the plain constitutional formula the MRD quotes. The pathway still existed for regular economic migrants.",
+    "confidence": "medium",
+    "notes": "The 'not the same' change rests on DNU 70/2017 art. 27 (in force 31 January 2017), which narrowed the general route to lawful permanent or temporary residents. The answer is 'Yes' at every date. Rulings are used as practice evidence because I did not read them in full. The 2025 investment route and the move to DNM processing are outside the period."
+   },
+   {
+    "question_id": 67,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Refugees had no specific naturalisation route. They used the general route of Constitution art. 20, Ley 346 art. 2 inc. 1 (two years' residence of any kind, 1869 text) and Decreto 3213/84 art. 3. Refugee status was then governed by CEPARE decrees, which I did not read. I found no practice evidence on refugee naturalisation around 2000; confidence is low."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same general route. Ley 26.165 had not yet been enacted (B.O. 01/12/2006). I found no practice evidence for refugees or asylum seekers in this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 26.165 (2006) incorporates the 1951 Convention (art. 1) but has no naturalisation provision. The general Ley 346 route applied, and the 2009 CSJN Ni I-Hsing ruling held that lawful status was not required. I found no refugee-specific practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Unchanged until DNU 70/2017 (31 January 2017) required permanent or temporary residence. Recognised refugees with residence permits still qualify; asylum seekers holding only a 'residencia precaria' could not count that time. A later case (Ndiaye, La Plata 2023) shows a lower court refusing an asylum seeker whose application began in December 2018. That is thin evidence and about asylum seekers only."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 20",
+      "role": "cited",
+      "in_force": "1853 (1994 text) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 1 (1869 text)",
+      "role": "predecessor",
+      "in_force": "1984-04-10 to 2017-01-31; 2021-03-05 to 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 1 per art. 27 DNU 70/2017",
+      "role": "cited",
+      "in_force": "2017-01-31 to 2021-03-05",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 26.165 General de Reconocimiento y Protección al Refugiado",
+      "article": "Arts. 1-2 (incorporation of 1951 Convention; no naturalisation clause)",
+      "role": "other_in_force",
+      "in_force": "2006-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 3213/84",
+      "article": "Art. 3",
+      "role": "other_in_force",
+      "in_force": "1984-10-19 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2006-12",
+      "instrument": "Ley 26.165",
+      "article": "Art. 1",
+      "kind": "new_instrument",
+      "what_changed": "New refugee law incorporating the 1951 Convention and its 1967 Protocol. It has no naturalisation provision, so refugees keep the general Ley 346 route.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26165-122609/texto",
+      "passage": "ARTICULO 1º — La protección de los refugiados se regirá por las disposiciones del derecho internacional de los derechos humanos aplicable en la República Argentina, la Convención de 1951 sobre el Estatuto de los Refugiados y su Protocolo de 1967"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Art. 27 (art. 2 inc. 1 Ley 346)",
+      "kind": "amended",
+      "what_changed": "Required residence as a permanent or temporary resident. Recognised refugees with residence permits qualify; asylum seekers on precarious residence do not accrue time.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "de acuerdo al marco normativo migratorio vigente, como residentes permanentes o temporarios, en forma continua durante los DOS (2) años anteriores a la solicitud"
+     },
+     {
+      "date": "2021-03-05",
+      "instrument": "Decreto 138/2021",
+      "article": "Art. 2 inc. 1 Ley 346",
+      "kind": "amended",
+      "what_changed": "After the period. Restored the 1869 text.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Artículo 2º inciso 1º restituido por art. 2º del Decreto Nº 138/2021 B.O. 5/3/2021."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Ni, I-Hsing s/ carta de ciudadanía, Fallos 332:1466",
+      "date": "2009-06-23",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "Narrowed in effect by DNU 70/2017 (2017-01-31). Restored context by Decreto 138/2021. Distinguished by the first-instance judge in Ndiaye (reported in Cámara Federal La Plata, 2023-04-27).",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Cámara Federal de La Plata, Sala I, Ndiaye, Serigne Modou s/ solicitud carta de ciudadanía",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "Courtis & Penchaszadeh 2019, Postdata",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 346 versions are well dated. I did not read the pre-2006 refugee decrees (CEPARE, Decreto 464/85) or the residence category for refugees in Ley 25.871. I found almost no refugee-specific naturalisation practice for any date.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.165 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26165-122609/texto"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto"
+     },
+     {
+      "title": "Ley 346 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Decreto 3213/84 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Ndiaye (vLex)",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835"
+     },
+     {
+      "title": "Courtis & Penchaszadeh 2019",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/"
+     }
+    ],
+    "starting_answer_concern": "The answer holds for recognised refugees. Under DNU 70/2017, in force on 1 January 2020, asylum seekers holding only precarious residence could not count that time toward the two years.",
+    "confidence": "low",
+    "notes": "There is no humanitarian-specific naturalisation clause in Argentine law between 2000 and 2020; the pathway is the general one. Art. 34 of the 1951 Convention (facilitate naturalisation) applies through Ley 26.165 art. 1 from 2006; it is not a separate statutory route. The implementation rating carries the starting level forward because refugee-specific evidence is lacking."
+   },
+   {
+    "question_id": 69,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "In force: Constitution art. 20 and Ley 346 art. 2 inc. 1 (two years). Ley 346 art. 2 inc. 2 point 7 gives a route 'cualquiera que sea el tiempo de su residencia' to a man married to an Argentine woman ('Haberse casado con mujer argentina'). Decreto 3213/84 art. 3 reformulates this gender-neutrally: 'f) tener cónyuge o hijo argentino nativo'. I found no practice evidence for 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same texts. Decreto 1601/2004 changed only art. 2 Decreto 3213/84 (option by children of native Argentines), not the family route in art. 3. I found no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same texts. The 2009 CSJN Ni I-Hsing ruling (residence need not be lawful) is general practice context. I found no family-specific practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same texts. DNU 70/2017 (31 January 2017) later narrowed only inc. 1, the general two-year route, to permanent or temporary residents; inc. 2 and Decreto 3213/84 art. 3(f) (Argentine spouse or child, any length of residence) were untouched up to 2020. The practice evidence is general (lower-court extra requirements later corrected by the CSJN), not family-specific."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 20",
+      "role": "cited",
+      "in_force": "1853 (1994 text) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 2 point 7 ('Haberse casado con mujer argentina')",
+      "role": "cited",
+      "in_force": "1869 (restored 1984-04-10) to 2025-05-29 (art. 2 replaced by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 2 inc. 1",
+      "role": "cited",
+      "in_force": "1869 text to 2017-01-31; DNU 70/2017 text 2017-01-31 to 2021-03-05",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 12 (transitional: children of native Argentines and foreigners then exercising citizenship in 1869)",
+      "role": "cited",
+      "in_force": "1869 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 3213/84",
+      "article": "Art. 3 para. 2 (f) 'tener cónyuge o hijo argentino nativo'",
+      "role": "other_in_force",
+      "in_force": "1984-10-19 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "1984-10-19",
+      "instrument": "Decreto 3213/84",
+      "article": "Art. 3",
+      "kind": "enacted",
+      "what_changed": "Lets foreigners with an Argentine spouse or native Argentine child naturalise whatever their length of residence. Unchanged 2000-2020.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+      "passage": "También podrán obtener la naturalización cualquiera sea el tiempo de su residencia los extranjeros que acrediten las siguientes circunstancias: ... f) tener cónyuge o hijo argentino nativo."
+     },
+     {
+      "date": "2004-11-19",
+      "instrument": "Decreto 1601/2004",
+      "article": "Art. 2 Decreto 3213/84",
+      "kind": "amended",
+      "what_changed": "Option procedure for children of native Argentines born abroad (consulate or RENAPER). It does not affect art. 3.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+      "passage": "(Artículo sustituido por art. 1° del Decreto N° 1601/2004 B.O. 19/11/2004)."
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Art. 27 (art. 2 inc. 1 Ley 346)",
+      "kind": "amended",
+      "what_changed": "Narrowed the general two-year route to permanent or temporary residents. The family route in inc. 2 point 7 and Decreto 3213/84 art. 3(f) was left untouched.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "ARTÍCULO 27. — Sustitúyese el inciso 1° del artículo 2° de la Ley N° 346 por el siguiente"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 2 Ley 346",
+      "kind": "replaced",
+      "what_changed": "After the period. Art. 2 replaced; the inc. 2 'services' list, including marriage to an Argentine, no longer appears in the statute.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "(Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Ni, I-Hsing s/ carta de ciudadanía, Fallos 332:1466",
+      "date": "2009-06-23",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "Narrowed in effect by DNU 70/2017 (2017-01-31) for the general route; restored context by Decreto 138/2021.",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Courtis & Penchaszadeh 2019, Postdata",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "Microjuris: Liu Cairong (CSJN 11-02-2020)",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The 1869 text of art. 2 and art. 12 (InfoLEG texto original) and Decreto 3213/84 art. 3 (texto actualizado) were read, and their dating is strong. I found no family-specific practice evidence for any period.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto"
+     },
+     {
+      "title": "Ley 346 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Decreto 3213/84 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Courtis & Penchaszadeh 2019",
+      "url": "https://www.redalyc.org/journal/522/52272691002/html/"
+     },
+     {
+      "title": "Microjuris Liu Cairong",
+      "url": "https://aldiaargentina.microjuris.com/2020/04/15/una-argentina-extranjera-la-corte-dejo-sin-efecto-una-sentencia-que-denego-la-ciudadania-a-una-extranjera-que-no-acredito-tener-conocimiento-del-idioma-castellano/"
+     }
+    ],
+    "starting_answer_concern": "The answer holds, but the MRD's reading of art. 12 Ley 346 is wrong. It is a transitional clause of 1869 about children of native Argentines and foreigners then exercising citizenship, not automatic citizenship for children of citizens. Art. 2 inc. 2 point 7 literally covers men married to Argentine women; Decreto 3213/84 art. 3(f) extends the route to any spouse or native Argentine child.",
+    "confidence": "medium",
+    "notes": "The 'not the same' change reflects DNU 70/2017's narrowing of the general route (inc. 1), which family migrants also use. Their specific route (inc. 2 point 7; Decreto 3213/84 art. 3(f)) did not change between 2000 and 2020. If the reviewer treats only the family-specific route as decisive, 'no change' would be the alternative."
+   }
+  ]
+ }
 }
