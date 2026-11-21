@@ -9,6 +9,7 @@ import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, 
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
+import { composerState, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
@@ -48,6 +49,8 @@ export interface OlaState extends ConversationState {
   said: string | null
   /** /help: the commands, listed in the conversation (never sent to the model). */
   help: boolean
+  /** An answer to Ola's question is on its way (set and cleared by answerQuestion, whatever happens). */
+  answering: boolean
 }
 
 /** What the page does after something typed: keep the text in the composer, or show the files. */
@@ -81,7 +84,20 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return 'go'
     }
   }
-  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false })
+  // The conversation open in this tab, so a reload comes back to it (OLA-311: a question Ola asked
+  // in words waits in a conversation whose run has ended; after a reload the page opened an empty
+  // one and the answer would have gone to a new conversation). Per tab (sessionStorage); a new tab
+  // starts fresh, as before.
+  const openKey = `ola.open.${new URLSearchParams(location.search).get('w') ?? ''}`
+  const remember = (id: string | null) => {
+    try {
+      if (id) sessionStorage.setItem(openKey, id)
+      else sessionStorage.removeItem(openKey)
+    } catch {
+      /* a browser that keeps nothing: a reload opens an empty conversation, as before */
+    }
+  }
+  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false, answering: false })
   let disposed = false
   /** Counts what the person did to the conversation (sent, opened, started one): resumeWorking yields to it. */
   let acted = 0
@@ -196,6 +212,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const p = (pending as any[])[0]
       setState('approval', p ? { id: p.id, sessionID, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null } : null)
       await loadQuestion(sessionID)
+      void settleCut(sessionID)
     } catch {
       /* the stream will retry; the lost banner stays until it does */
     }
@@ -218,6 +235,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     const title = firstRequest.length > 60 ? `${firstRequest.slice(0, 57)}…` : firstRequest
     const session = await client.session.create({ title, metadata: { autonomy: state.autonomy } })
     setState({ sessionID: session.id, directory: session.location?.directory ?? null })
+    remember(session.id)
     return session.id
   }
 
@@ -326,6 +344,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   async function answerQuestion(answer: Record<string, string | string[]>) {
     const q = state.question
     if (!q) return false
+    setState('answering', true)
     try {
       await client.session.form.reply({ sessionID: q.sessionID, formID: q.id, answer } as any)
       if (state.question?.id === q.id) setState('question', null)
@@ -333,6 +352,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     } catch (e) {
       setState('problem', { text: 'Your answer did not reach Ola’s computer. Try again.', detail: String((e as any)?.message ?? e) })
       return false
+    } finally {
+      setState('answering', false)
     }
   }
 
@@ -571,6 +592,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     acted++
     if (state.sessionID) void refreshEarlier()
     setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [], said: null, help: false, autonomy: rememberedAutonomy() })
+    remember(null)
   }
 
   // ------------------------------------------------------------ what the person typed: a request or a slash command
@@ -585,6 +607,28 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     return !!t && (t.status === 'working' || t.status === 'sending')
   }
   const BUSY = 'Ola is still working on your last request. Wait for it to finish, or type /stop.'
+
+  /** The composer's button for this text, from the conversation's state (lib/composer.ts). */
+  const composer = (draft: string): ComposerState => composerState({ draft, working: busy(), question: state.question, answering: state.answering, connection: state.connection })
+  /**
+   * What the composer and the Ask Ola bar send: the answer to Ola's question when it waits for
+   * words, else a request or a command (typed). Text that cannot go now is said, never dropped
+   * in silence. `done` hears whether to keep the text (an answer that did not get through stays).
+   */
+  function submit(text: string, done: (t: Typed) => void = () => {}) {
+    const c = composer(text)
+    if (!c.submits) {
+      if (c.blocked) setState('said', c.blocked)
+      return
+    }
+    if (c.button === 'answer') {
+      const f = state.question!.fields[0]
+      const words = text.trim()
+      void answerQuestion({ [f.key]: f.multiple ? [words] : words }).then((ok) => done({ keep: !ok }))
+      return
+    }
+    done(typed(text))
+  }
   function typed(text: string): Typed {
     const value = text.trim()
     const p = parseCommand(value)
@@ -643,6 +687,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const list = await client.message.list({ sessionID: id, limit: 200 })
       if (!still()) return
       setState({ ...emptyConversation(), suggestion: null, declined: [], sessionID: id, directory: session.location?.directory ?? null, problem: null, autonomy: (session.metadata as any)?.autonomy === 'ask' ? 'ask' : 'go' })
+      remember(id)
       const msgs = (list as any).data ?? []
       const turns = await withClaude(id, turnsFromMessages(msgs, session.location?.directory ?? null))
       setState('turns', turns)
@@ -657,10 +702,81 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const p = pending[0]
       if (p) setState('approval', { id: p.id, sessionID: id, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null })
       await loadQuestion(id)
+      void settleCut(id)
       void refreshEarlier()
     } catch (e) {
       setState('problem', { text: 'That conversation could not be opened.', detail: String((e as any)?.message ?? e) })
     }
+  }
+
+  /** The conversations running on Ola's computer right now (opencode's GET /api/session/active), or null when it did not answer. */
+  async function runningNow(): Promise<Set<string> | null> {
+    try {
+      const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/session/active`, { headers: deskHeaders(), credentials: 'same-origin' })
+      if (!res.ok) return null
+      const data = ((await res.json()) as any)?.data
+      return new Set(data && typeof data === 'object' && !Array.isArray(data) ? Object.keys(data).filter((id) => data[id]?.type === 'running') : [])
+    } catch {
+      return null
+    }
+  }
+  /**
+   * A conversation read from its history whose last request has no end there (a run cut short by a
+   * restart or an update of the server) but is not running on Ola's computer: it ended. Said so, so
+   * the composer is not left on Stop for a run that will never finish (OLA-311).
+   */
+  async function settleCut(sessionID: string) {
+    const last = state.turns[state.turns.length - 1]
+    // Only 'working' (read from the history): a request still 'sending' may not be running yet.
+    if (!last || last.engine === 'claude' || last.status !== 'working') return
+    const notRunning = async () => {
+      const running = await runningNow()
+      return !!running && !running.has(sessionID) && state.sessionID === sessionID && state.turns[state.turns.length - 1]?.id === last.id && state.turns[state.turns.length - 1]?.status === 'working'
+    }
+    // Asked twice, a few seconds apart: a run that ended just as the history was read finishes
+    // through the event stream in that time and is never called cut.
+    if (!(await notRunning())) return
+    await sleep(3000)
+    if (disposed || !(await notRunning())) return
+    setState(
+      produce((s) => {
+        const t = s.turns[s.turns.length - 1]
+        if (!t || t.id !== last.id || t.status !== 'working') return
+        t.status = 'stopped'
+        t.ended = Date.now()
+        t.error = { text: 'This stopped before it finished, when Ola’s computer restarted. Ask again to carry on.', detail: 'not running on Ola’s computer' }
+        for (const st of t.steps) if (st.status !== 'done' && st.status !== 'failed') Object.assign(st, { status: 'failed', error: st.error ?? 'This step did not finish.', ended: Date.now() })
+      }),
+    )
+  }
+
+  /**
+   * The page reloaded in the same tab: the conversation that was open there opens again (with its
+   * question, if Ola waits on one). True when it did. One that is gone is forgotten quietly.
+   */
+  async function resumeOpen(): Promise<boolean> {
+    let id: string | null = null
+    try {
+      id = sessionStorage.getItem(openKey)
+    } catch {
+      return false
+    }
+    if (!id || state.sessionID) return false
+    // Only when this tab was reloaded (or came back with Back): opening the address again is a
+    // fresh start, as it always was.
+    const how = (performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined)?.type
+    if (how !== 'reload' && how !== 'back_forward') return false
+    const at = acted
+    const still = () => acted === at && !state.sessionID
+    try {
+      await client.session.get({ sessionID: id })
+    } catch {
+      remember(null)
+      return false
+    }
+    if (!still()) return false
+    await load(id, still)
+    return state.sessionID === id
   }
 
   /**
@@ -679,10 +795,9 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     try {
       // opencode's own word on what is running now (GET /api/session/active), not the history: a
       // run cut short by a restart has no end marker there and would look like it was still going.
-      const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/session/active`, { headers: deskHeaders(), credentials: 'same-origin' })
-      if (!res.ok) return false
-      const data = ((await res.json()) as any)?.data
-      const active = data && typeof data === 'object' && !Array.isArray(data) ? Object.keys(data).filter((id) => data[id]?.type === 'running') : []
+      const running = await runningNow()
+      if (!running) return false
+      const active = [...running]
       if (!active.length || !still()) return false
       const list = await client.session.list({ limit: 20, order: 'desc' })
       const s = list.data.find((x) => active.includes(x.id))
@@ -699,8 +814,21 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     streamAbort?.abort()
   }
   const onOnline = () => streamAbort?.abort()
+  // A phone puts a page away (another app, the screen off) and its event stream may die without an
+  // error: back in view after more than a few seconds, the stream is opened again and the
+  // conversation read again (a run that ended, a question answered elsewhere), instead of waiting
+  // out the minute of silence.
+  let hiddenAt = 0
+  const onVisible = () => {
+    if (document.visibilityState === 'hidden') hiddenAt = Date.now()
+    else if (hiddenAt && Date.now() - hiddenAt > 5_000) {
+      hiddenAt = 0
+      streamAbort?.abort()
+    }
+  }
   window.addEventListener('offline', onOffline)
   window.addEventListener('online', onOnline)
+  document.addEventListener('visibilitychange', onVisible)
   void loadFallback()
   if (live) void listen()
   else {
@@ -713,6 +841,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     send,
     typed,
     clearSaid: () => state.said && setState('said', null),
+    composer,
+    submit,
     sendClaude,
     askInstead,
     answerSuggestion,
@@ -726,6 +856,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     setAutonomy,
     newConversation,
     open,
+    resumeOpen,
     resumeWorking,
     dispose() {
       disposed = true
@@ -733,6 +864,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       streamAbort?.abort()
       window.removeEventListener('offline', onOffline)
       window.removeEventListener('online', onOnline)
+      document.removeEventListener('visibilitychange', onVisible)
     },
   }
 }

@@ -144,6 +144,17 @@ export function startFakeModel({ hosted = false } = {}) {
       if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command, description: 'Search the web' } } }))
       return send(200, reply({ content: 'I did not search the web, so I worked from your files only.' }))
     }
+    // "ask me in words": Ola asks its question as plain text and its turn ends (no card), after a
+    // second so a check can type while it works and send the moment it ends (OLA-311). The next
+    // message answers it: the reply names the answer, so a check sees it reached the same conversation.
+    const WORDED = 'Which made-up town should the page be about, Springfield or Shelbyville?'
+    if (/ask me in words/i.test(lastUserText(messages))) {
+      await new Promise((r) => setTimeout(r, 1000))
+      return send(200, reply({ content: WORDED }))
+    }
+    const prior = [...messages].reverse().find((m) => m.role === 'assistant')
+    const priorText = typeof prior?.content === 'string' ? prior.content : Array.isArray(prior?.content) ? prior.content.map((p) => p.text ?? '').join(' ') : ''
+    if (priorText.includes(WORDED) && messages[messages.length - 1]?.role === 'user') return send(200, reply({ content: `You answered in words: ${lastUserText(messages).replace(/\s+/g, ' ').slice(0, 200)}` }))
     // "ask me which one": opencode's own `question` tool (a question to the person, with choices),
     // then an answer that names what came back. The page must show the question and send the answer.
     if (/ask me which one/i.test(lastUserText(messages))) {

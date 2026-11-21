@@ -85,7 +85,7 @@ async function newPage(origin, opts = {}) {
 }
 
 // Steps as the person reads them: the sentence in each step row.
-const stepWords = (page) => page.locator('.drawer .turn:last-child .step .step-words').evaluateAll((els) => els.map((e) => e.firstChild ? e.innerText.split(' · ')[0].replace(/\s+waiting for your yes$/, '').replace(/\s+\(did not work\)$/, '').trim() : ''))
+const stepWords = (page) => page.locator('.drawer .turn:last-child .step .step-words').evaluateAll((els) => els.map((e) => e.firstChild ? e.innerText.split(' · ')[0].replace(/\s+waiting for your (yes|answer)$/, '').replace(/\s+\(did not work\)$/, '').trim() : ''))
 
 async function send(page, text) {
   const drawerOpen = await page.locator('.drawer.open').count()
@@ -223,6 +223,122 @@ await check('a question from Ola shows as a card with its choices; a tap answers
   const said2 = await lastTurn(page).locator('.said-ola').innerText()
   assert(/Capital City/.test(said2), `own words did not reach Ola: ${said2.slice(-200)}`)
 })
+
+// OLA-311, Bart on his iPhone, Nov 20: Ola asked him a question on a card while its run waited;
+// the composer under it said "Or write your answer here…", he wrote "Yes", and beside it was Stop
+// (the run counted as working), not send. Safari's engine, 390 px wide, touch, the height a phone
+// has left with the keyboard up. Every way of answering, card and words, each sent on the first
+// tap and carried on by Ola. Before the fix the composer cases fail: no "Send your answer" button.
+{
+  const wk = await webkit.launch()
+  const phone = await wk.newContext({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 })
+  const pp = await phone.newPage()
+  pp.on('request', (r) => {
+    const u = r.url()
+    if (!u.startsWith('data:') && !u.startsWith('blob:') && new URL(u).origin !== dev.origin) foreign.add(u)
+  })
+  const card = pp.locator('.drawer .question-card')
+  const answerButton = pp.locator('.drawer .composer-row button.send-button')
+  const ask = async (text) => {
+    await pp.locator('#ask-input').tap()
+    await pp.locator('#ask-input').fill(text)
+    await pp.locator('#ask-input').press('Enter')
+  }
+  const fresh = async () => {
+    const nc = pp.getByRole('button', { name: 'New conversation' })
+    if (await nc.count()) await nc.tap()
+  }
+  /** Writes the answer in the composer and taps the button beside it, once: it must be "Send your answer", active. */
+  const answerInComposer = async (words) => {
+    await pp.locator('#ask-input').tap()
+    await pp.locator('#ask-input').fill(words)
+    const label = await answerButton.getAttribute('aria-label', { timeout: 3000 }).catch(() => null)
+    assert(label === 'Send your answer', `beside the composer: ${label ?? (await pp.locator('.drawer .composer-row button').first().innerText().catch(() => '?'))}, not "Send your answer"`)
+    assert(await answerButton.isEnabled(), 'Send your answer is inactive with the answer written')
+    await answerButton.tap()
+  }
+  const reply = async () => {
+    await waitDone(pp)
+    const t = lastTurn(pp)
+    const status = await t.getAttribute('data-status')
+    return { status, said: (await t.locator('.said-ola').innerText()).replace(/\s+/g, ' ') }
+  }
+  await check('WebKit 390 px: Ola asks on a card and the run waits; the answer written in the composer goes on the first tap, three times in a row (OLA-311)', async () => {
+    await openConversation(pp, dev.url)
+    for (const words of ['Yes', 'Springfield, please', 'The one by the river']) {
+      await fresh()
+      await ask('Make a page, but ask me which one first')
+      await card.waitFor({ timeout: 30_000 })
+      assert(await pp.locator('#ask-input').getAttribute('placeholder') === 'Or write your answer here…', 'the composer does not invite the answer')
+      await answerInComposer(words)
+      await card.waitFor({ state: 'detached', timeout: 10_000 })
+      const r = await reply()
+      assert(r.status === 'done', `the run ended ${r.status}: ${r.said.slice(-160)}`)
+      assert(r.said.includes(words), `Ola did not get "${words}": ${r.said.slice(-160)}`)
+      assert(await pp.locator('#ask-input').inputValue() === '', 'the answer stayed in the composer')
+    }
+    return '3 of 3'
+  })
+  await check('WebKit 390 px: the card itself, its own words and Answer, then a choice tapped (OLA-311)', async () => {
+    await fresh()
+    await ask('Ask me which one, please')
+    await card.waitFor({ timeout: 30_000 })
+    const own = card.locator('.question-own input')
+    await own.tap()
+    await own.pressSequentially('Yes', { delay: 20 })
+    const ans = card.getByRole('button', { name: 'Answer' })
+    assert(await ans.isEnabled(), 'Answer is inactive with words typed')
+    await ans.tap()
+    let r = await reply()
+    assert(r.status === 'done' && /Yes/.test(r.said), `own words: ${r.status} ${r.said.slice(-120)}`)
+    await fresh()
+    await ask('Ask me which one, please')
+    await card.waitFor({ timeout: 30_000 })
+    await card.getByRole('button', { name: /Shelbyville/ }).tap()
+    r = await reply()
+    assert(r.status === 'done' && /Shelbyville/.test(r.said), `choice: ${r.status} ${r.said.slice(-120)}`)
+  })
+  await check('WebKit 390 px: reloaded while the card waits, the question is back and the composer answers it (OLA-311)', async () => {
+    await fresh()
+    await ask('Ask me which one, please')
+    await card.waitFor({ timeout: 30_000 })
+    await pp.reload()
+    await card.waitFor({ timeout: 30_000 })
+    await answerInComposer('Capital City')
+    const r = await reply()
+    assert(r.status === 'done' && /Capital City/.test(r.said), `after the reload: ${r.status} ${r.said.slice(-120)}`)
+  })
+  await check('WebKit 390 px: Ola asks in words; the answer typed while it works goes the moment its turn ends, three times in a row (OLA-311)', async () => {
+    for (const words of ['Springfield', 'Shelbyville', 'Capital City']) {
+      await fresh()
+      await ask('Make a page, but ask me in words first')
+      await pp.locator('.drawer .turn:last-child[data-status="working"], .drawer .turn:last-child[data-status="sending"]').waitFor({ timeout: 10_000 })
+      await pp.locator('#ask-input').tap()
+      await pp.locator('#ask-input').fill(words)
+      await waitDone(pp)
+      // At once: no wait for anything but the button the person sees.
+      assert(await answerButton.isEnabled({ timeout: 1000 }), 'send is inactive right after the turn ended, with the answer written')
+      await answerButton.tap()
+      await pp.waitForFunction((n) => document.querySelectorAll('.drawer .turn').length === n, 2, { timeout: 10_000 })
+      const r = await reply()
+      assert(r.status === 'done' && r.said.includes(`You answered in words: ${words}`), `${r.status}: ${r.said.slice(-160)}`)
+    }
+    return '3 of 3'
+  })
+  await check('WebKit 390 px: reloaded while a question in words waits, the conversation is still open and the answer reaches it (OLA-311)', async () => {
+    await fresh()
+    await ask('Make a page, but ask me in words first')
+    await waitDone(pp)
+    await pp.reload()
+    await pp.locator('.drawer.open .turn').first().waitFor({ timeout: 30_000 }).catch(() => {})
+    assert((await pp.locator('.drawer .turn').count()) === 1, 'after the reload the conversation with the question is not open')
+    await ask('Springfield')
+    await pp.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2, null, { timeout: 10_000 })
+    const r = await reply()
+    assert(r.status === 'done' && r.said.includes('You answered in words: Springfield'), `${r.status}: ${r.said.slice(-160)}`)
+  })
+  await wk.close()
+}
 
 await check('a lost network is said out loud, and the page recovers', async () => {
   await ctx.setOffline(true)
@@ -1593,8 +1709,8 @@ async function compareChecks(engine, label) {
 // README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
 // and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium
 // and WebKit. A watcher in the page records any text with a raw marker the moment it appears.
-const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts', 'test/publishask.test.mjs'], { cwd: HERE, encoding: 'utf8' })
-ok('the command and reaction parsers, the conversation reducer, the switch rule and the publish question (test/commands.test.ts, test/conversation.test.ts, test/publishask.test.mjs)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts', 'test/publishask.test.mjs', 'test/composer.test.ts'], { cwd: HERE, encoding: 'utf8' })
+ok('the command and reaction parsers, the conversation reducer, the switch rule, the publish question and the composer\'s button per state (test/commands.test.ts, test/conversation.test.ts, test/publishask.test.mjs, test/composer.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
 async function commandChecks(engine, label) {
   const b = await engine.launch()
   const d = await startDev(['--fake-model'])
@@ -1781,9 +1897,9 @@ async function commandChecks(engine, label) {
       await pg.reload()
       await pg.waitForSelector('.thing')
       await pg.getByRole('button', { name: 'Ask Ola' }).click()
-      await pg.locator('details.earlier summary').click()
-      await pg.locator('details.earlier li button').first().click() // the newest conversation (opencode may retitle it)
+      // A reload comes back to the conversation that was open in this tab (OLA-311).
       await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      assert(/Great job/.test(await lastTurn(pg).locator('.request').innerText()), 'after a reload another conversation is open')
       await pg.waitForTimeout(300)
       assert((await reactionOf()) === 'thanks' && (await lastTurn(pg).locator('.said-ola').count()) === 0, `after a reload: ${await reactionOf()}`)
     })

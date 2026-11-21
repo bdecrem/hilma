@@ -131,7 +131,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
     if (ask) {
       setDrawer(true)
       void ola.open(ask)
-    } else void ola.resumeWorking()
+    } else void ola.resumeOpen().then((opened) => opened || ola.resumeWorking())
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && drawer() && !document.querySelector('dialog[open]')) closeDrawer()
     }
@@ -157,9 +157,12 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
     const text = draft().trim()
     openDrawer()
     if (!text) return
-    const r = ola.typed(text)
-    if (!r.keep) setDraft('')
-    if (r.files) showFiles()
+    // The same decision as the drawer's composer (lib/composer.ts): an answer to Ola's question
+    // when it waits for words, else a request or a command.
+    ola.submit(text, (r) => {
+      if (!r.keep) setDraft('')
+      if (r.files) showFiles()
+    })
   }
 
   const p = () => project()?.project

@@ -41,6 +41,13 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     if (n && n !== prev && scroller) queueMicrotask(() => scroller?.querySelector('.turn:last-child')?.scrollIntoView({ block: 'start' }))
     return n
   })
+  // A question from Ola is brought into view when it comes (on a phone it was below the fold, under
+  // the run's steps, while the composer said "Or write your answer here…").
+  createEffect((prev: string | undefined) => {
+    const id = s().question?.id
+    if (id && id !== prev && scroller) queueMicrotask(() => scroller?.querySelector('.question-card')?.scrollIntoView({ block: 'nearest' }))
+    return id
+  })
   // The stretch card, when it appears, is brought into view: it waits for the person.
   createEffect((prev: string | undefined) => {
     const id = s().suggestion?.id
@@ -106,18 +113,15 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   // "Ask … instead" under a finished Ola reply: one for each fallback that is switched on.
   const insteadOf = (): Fallback[] => (['hosted', 'claude'] as Fallback[]).filter((f) => (f === 'claude' ? s().claude?.enabled : s().hosted?.enabled))
 
-  // What was typed goes through ola.typed: a request, or a slash command (lib/commands.ts).
-  const run = (text: string) => {
-    // While Ola waits on a question, what is typed below is the answer (in the person's own words).
-    const q = s().question
-    if (q && q.fields.length === 1 && q.fields[0].custom && !text.trim().startsWith('/')) {
-      void props.ola.answerQuestion({ [q.fields[0].key]: q.fields[0].multiple ? [text.trim()] : text.trim() }).then((ok) => ok && props.setDraft(''))
-      return
-    }
-    const r = props.ola.typed(text)
-    if (!r.keep) props.setDraft('')
-    if (r.files) props.onFiles()
-  }
+  // What was typed goes through ola.submit: the answer to Ola's question when it waits for words,
+  // else a request or a slash command (lib/commands.ts). The button beside the composer is
+  // lib/composer.ts's, from the same state, so what it shows is what Return does.
+  const composer = () => props.ola.composer(props.draft)
+  const run = (text: string) =>
+    props.ola.submit(text, (r) => {
+      if (!r.keep) props.setDraft('')
+      if (r.files) props.onFiles()
+    })
   const submit = (e: Event) => {
     e.preventDefault()
     if (props.draft.trim()) run(props.draft)
@@ -242,8 +246,13 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             </For>
           </ol>
         </Show>
-        <Show when={s().question} keyed>
-          {(q) => <QuestionCard question={q} onAnswer={(a) => props.ola.answerQuestion(a)} />}
+        {/* Keyed by the question's id, not the object: reading the same question again after a
+            reconnect (or an update of the server) keeps what the person had typed on the card. */}
+        <Show when={s().question?.id} keyed>
+          {(_id) => {
+            const q = s().question! // read once per question: the card never sees it turn null
+            return <QuestionCard question={q} onAnswer={(a) => props.ola.answerQuestion(a)} />
+          }}
         </Show>
         <Show when={s().suggestion}>
           <StretchCard ola={props.ola} />
@@ -370,14 +379,19 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             aria-controls={menuOpen() && matches().length ? 'command-list' : undefined}
             aria-activedescendant={menuOpen() && matches().length ? `command-${matches()[Math.min(active(), matches().length - 1)]}` : undefined}
             value={props.draft}
-            placeholder={s().question ? 'Or write your answer here…' : working() ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
+            placeholder={composer().placeholder === 'answer' ? 'Or write your answer here…' : composer().placeholder === 'card' ? 'Answer on the card above.' : composer().placeholder === 'working' ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
             onInput={(e) => props.setDraft(e.currentTarget.value)}
             onKeyDown={onKey}
           />
           <Show
-            when={working()}
+            when={composer().button === 'stop'}
             fallback={
-              <button type="submit" class="send-button" disabled={!props.draft.trim() || s().connection === 'lost'} aria-label={s().engine === 'claude' && s().claude?.enabled ? 'Send to Claude' : s().engine === 'hosted' && s().hosted?.enabled ? 'Send to the hosted open model' : 'Send to Ola'}>
+              <button
+                type="submit"
+                class="send-button"
+                disabled={!composer().enabled}
+                aria-label={composer().button === 'answer' ? 'Send your answer' : s().engine === 'claude' && s().claude?.enabled ? 'Send to Claude' : s().engine === 'hosted' && s().hosted?.enabled ? 'Send to the hosted open model' : 'Send to Ola'}
+              >
                 <Icon name="up" />
               </button>
             }
@@ -605,7 +619,7 @@ function StepRow(props: { step: Step; current: boolean; engine?: Turn['engine'] 
             <strong>{s().object}</strong>
           </Show>
           <Show when={s().status === 'waiting'}>
-            <span class="waiting-tag"> waiting for your yes</span>
+            <span class="waiting-tag">{s().tool === 'question' ? ' waiting for your answer' : ' waiting for your yes'}</span>
           </Show>
           <Show when={s().status === 'failed'}>
             <span class="sr-only"> (did not work)</span>
