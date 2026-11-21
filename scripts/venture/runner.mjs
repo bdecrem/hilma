@@ -167,7 +167,10 @@ function claude(prompt, { readOnly = false, limit = ANSWER_RUN_LIMIT, work = fal
   if (work) {
     // A ticket run builds, checks, commits and pushes: the whole shell, less what is never its call.
     tools = ['Bash', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'Agent', 'WebSearch', 'WebFetch', 'TodoWrite', 'NotebookEdit']
-    denied = ['Bash(node scripts/venture/runner.mjs*)', 'Bash(git push --force*)', 'Bash(git push -f*)', 'Bash(git push origin +*)', 'Bash(sudo *)', 'Bash(node scripts/venture/mail.mjs send*)', 'Bash(vercel env*)', 'Bash(vercel link*)', 'Bash(env)', 'Bash(printenv*)']
+    // Every runner.mjs command but `deploy`, the gate a work run is told to use (OLA-272): denying
+    // runner.mjs* refused it too, so no work run could ever update the test server (OLA-249, Nov 20).
+    // A bare runner.mjs is tick; anything else is a usage error.
+    denied = ['Bash(node scripts/venture/runner.mjs)', ...['tick', 'status', 'probe', 'replay'].map((c) => `Bash(node scripts/venture/runner.mjs ${c}*)`), 'Bash(git push --force*)', 'Bash(git push -f*)', 'Bash(git push origin +*)', 'Bash(sudo *)', 'Bash(node scripts/venture/mail.mjs send*)', 'Bash(vercel env*)', 'Bash(vercel link*)', 'Bash(env)', 'Bash(printenv*)']
   }
   const childEnv = { ...process.env, VENTURE_RUNNER: '1', DISABLE_AUTOUPDATER: '1', PATH: `${homedir()}/.local/bin:/opt/homebrew/bin:/usr/local/bin:${process.env.PATH ?? '/usr/bin:/bin'}` }
   delete childEnv.ANTHROPIC_API_KEY // the machine's own Claude login (the Max plan), never a key
