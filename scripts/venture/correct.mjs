@@ -274,6 +274,14 @@ function timeProblem(said, date = null) {
   return null
 }
 
+// the tracker's ledger lock, across machines (_ledgerlock.mjs); a copy of the notes with the real tracker takes none
+if ((cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+  const L = await import('./_ledgerlock.mjs')
+  const owner = `${(await import('node:os')).hostname()} pid ${process.pid} ${Date.now()}`
+  const why = await L.acquire(owner)
+  if (why) die(`Refused: ${why}.`)
+  process.on('exit', () => { try { execFileSync('node', [fileURLToPath(new URL('./_ledgerlock.mjs', import.meta.url)), 'release', owner], { stdio: 'ignore', env: process.env, timeout: 30e3 }) } catch {} })
+}
 if (cmd === 'add') {
   await fpGate()
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)

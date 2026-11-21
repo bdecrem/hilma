@@ -6,19 +6,37 @@
 // (read only): the open tickets (and any named), the live claims and their checks.
 // Only what issues.mjs uses: select, eq, neq, like, in, is, gte, lt, order, limit, maybeSingle, single,
 // insert, upsert, update, delete.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+
+// each operation is atomic across processes, as on the real database: one at a time under a lock folder,
+// and the file replaced by a rename, so a reader never sees half a file (checkers racing two runs on a copy
+// broke the file or lost a write, Nov 20)
+function locked(file, fn) {
+  const lock = file + '.lock'
+  const t0 = Date.now()
+  for (;;) {
+    try { mkdirSync(lock); break } catch (e) {
+      if (e.code !== 'EEXIST') throw e
+      try { if (Date.now() - statSync(lock).mtimeMs > 10e3) { rmSync(lock, { recursive: true, force: true }); continue } } catch {}
+      if (Date.now() - t0 > 30e3) throw new Error(`the copy of the tracker stays locked (${lock})`)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5)
+    }
+  }
+  try { return fn() } finally { rmSync(lock, { recursive: true, force: true }) }
+}
 
 const KEYS = { venture_issues: 'id', venture_state: 'key', venture_commits: 'sha', venture_issue_activity: 'id' }
 
 export function fakeClient(file) {
   const load = () => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {})
-  const save = (d) => writeFileSync(file, JSON.stringify(d, null, 1))
+  const save = (d) => { const tmp = `${file}.${process.pid}.tmp`; writeFileSync(tmp, JSON.stringify(d, null, 1)); renameSync(tmp, file) }
   return {
     from(table) {
       const q = { filters: [], op: 'select', rows: null, one: null, ord: null, lim: null }
       const like = (pat) => new RegExp('^' + String(pat).split('%').map((x) => x.replace(/[.+?^${}()|[\]\\*]/g, '\\$&')).join('.*') + '$')
       const match = (r) => q.filters.every((f) => f(r))
-      const run = () => {
+      const run = () => locked(file, () => runOnce())
+      const runOnce = () => {
         const d = load()
         const all = d[table] ?? []
         const key = KEYS[table]
