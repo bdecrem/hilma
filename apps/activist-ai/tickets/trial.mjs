@@ -4,7 +4,7 @@
 // "by measuring on our own tickets"; "performance is the only criteria".
 //
 //   node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 [--cases ola-324-clock,...]
-//        --max-usd <ceiling> [--time 1800] [--tokens 4000000] [--concurrency 4]   (gateway.sh <the same models> first)
+//        --max-usd <ceiling> [--run-usd 10] [--time 1800] [--tokens 4000000] [--concurrency 4]   (gateway.sh <the same models> first)
 //   node apps/activist-ai/tickets/trial.mjs --report
 //
 // One run: the repo exported at <commit>^ into ~/ola-trials/runs/<case>-<model>-<stamp>/work (a
@@ -16,7 +16,7 @@
 // never counts), the tests run in the same sandbox, and one line goes to ~/ola-trials/results.jsonl.
 import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, symlinkSync } from 'node:fs'
 import path from 'node:path'
-import { here, repo, root, nmRoot, nmOla, MODELS as LISTED, MIN_FREE_GB, sh, freeGb, runFolders, opencodeConfig, sandboxed, runOpencode, gatewayToken } from './lib.mjs'
+import { here, repo, root, nmRoot, nmOla, MODELS as LISTED, MIN_FREE_GB, sh, freeGb, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken } from './lib.mjs'
 
 const results = path.join(root, 'results.jsonl')
 
@@ -38,11 +38,14 @@ const tokenLimit = Number(args.tokens || 4000000)
 const concurrency = Number(args.concurrency || 4)
 // The worst case is said and capped before anything runs: on Nov 21 a trial of 12 runs at 3M tokens
 // spent about $45 and took the Together account past its credit limit, and Ola's models stopped.
+// Each run also stops itself at --run-usd (default 10, lib.mjs overLimit), so a run's worst case is
+// the smaller of that and its tokens at the dearer of the two prices.
+const runUsd = Number(args['run-usd'] || 10)
 const paid = models.filter((m) => LISTED[m])
-const worst = cases.length * paid.reduce((a, m) => a + tokenLimit * MODELS[m].in / 1e6, 0)
+const worst = cases.length * paid.reduce((a, m) => a + Math.min(runUsd, tokenLimit * Math.max(MODELS[m].in, MODELS[m].out) / 1e6), 0)
 if (paid.length) {
   const cap = Number(args['max-usd'])
-  if (!cap) die(`--max-usd is required: these ${cases.length * paid.length} runs can cost up to $${worst.toFixed(2)} (${tokenLimit.toLocaleString()} tokens each, at the input price)`)
+  if (!cap) die(`--max-usd is required: these ${cases.length * paid.length} runs can cost up to $${worst.toFixed(2)} (each stops at ${tokenLimit.toLocaleString()} tokens or $${runUsd})`)
   if (worst > cap) die(`these runs can cost up to $${worst.toFixed(2)}, over --max-usd ${cap}: fewer models or cases, or a smaller --tokens`)
   console.log(`worst case $${worst.toFixed(2)} of Together use (ceiling $${cap})`)
 }
@@ -80,20 +83,7 @@ async function runTests(run, c) {
   // An edit to a given test never counts: they are put back from the real commit first.
   for (const f of c.give) sh(`git -C ${JSON.stringify(repo)} show ${c.commit}:${f} > ${JSON.stringify(path.join(run.work, f))}`)
   const res = []
-  for (const t of c.tests) {
-    const child = sandboxed(run, ['/bin/sh', '-c', t.cmd])
-    let o = ''
-    child.stdout.on('data', (d) => { o += d }); child.stderr.on('data', (d) => { o += d })
-    const timer = setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL') } catch {} }, 600000)
-    const code = await new Promise((r) => child.on('close', r))
-    clearTimeout(timer)
-    writeFileSync(path.join(run.dir, `test-${t.name}.txt`), o)
-    let pass = null, total = null
-    const nt = o.match(/ℹ tests (\d+)[\s\S]*?ℹ pass (\d+)/)
-    if (nt) { total = +nt[1]; pass = +nt[2] }
-    else { const ok = (o.match(/^ok /gm) || []).length, bad = (o.match(/^(not ok|FAIL|✗)/gm) || []).length; pass = ok; total = ok + bad }
-    res.push({ name: t.name, exit: code, pass, total })
-  }
+  for (const t of c.tests) { const { name, exit, pass, total } = await runTest(run, t.name, t.cmd); res.push({ name, exit, pass, total }) }
   return res
 }
 
@@ -102,7 +92,7 @@ async function one(c, model) {
   const t0 = Date.now()
   console.log(`start ${c.id} on ${model} in ${path.relative(root, run.dir)}`)
   const s = model === 'reference' ? (sh(`git -C ${JSON.stringify(repo)} diff ${c.commit}^ ${c.commit} -- . ${c.give.map((f) => `':!${f}'`).join(' ')} | git apply --whitespace=nowarn`, run.work), { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 })
-    : model === 'empty' ? { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 } : await runOpencode(run, instruction(c), { timeLimit, tokenLimit, token: gwToken })
+    : model === 'empty' ? { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 } : await runOpencode(run, instruction(c), { timeLimit, tokenLimit, usdLimit: runUsd, model, token: gwToken })
   const minutes = +((Date.now() - t0) / 60000).toFixed(1)
   let diff = ''
   try { diff = sh('git add -A >/dev/null 2>&1; git diff --cached --shortstat HEAD~0 2>/dev/null; git diff --shortstat 2>/dev/null; git log --oneline config..HEAD 2>/dev/null | wc -l', run.work) } catch {}

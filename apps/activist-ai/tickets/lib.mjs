@@ -71,10 +71,21 @@ export function sandboxed(run, argv, extra = {}) {
     { cwd: run.work, env: isolatedEnv(run.home, { PATH: `${path.join(run.home, 'bin')}:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin`, ...extra }), stdio: ['ignore', 'pipe', 'pipe'], detached: true })
 }
 
-export async function runOpencode(run, text, { timeLimit, tokenLimit, token }) {
+// The stop on a run's spending (OLA-300, Nov 21): after each model call the run's tokens and dollars
+// so far are added up, and the run is killed once either passes its ceiling. The trial of Nov 21
+// had only a token stop (3M), which at Kimi's prices is $6 to $30 a run, and twelve such runs
+// (about $45) emptied the Together account. Returns null, 'token_limit' or 'usd_limit'.
+export function overLimit(model, s, { tokenLimit = Infinity, usdLimit = Infinity } = {}) {
+  if (s.tokens_in + s.tokens_out > tokenLimit) return 'token_limit'
+  if (usdLimit !== Infinity && cost(model, s) >= usdLimit) return 'usd_limit'
+  return null
+}
+
+export async function runOpencode(run, text, { timeLimit, tokenLimit, usdLimit = Infinity, model, token, bin = opencodeBin }) {
+  if (usdLimit !== Infinity && !MODELS[model]) throw new Error(`a dollar stop needs the model's prices: unknown model ${model}`)
   const s = { requests: 0, tokens_in: 0, tokens_out: 0, end: 'done', final: '', tools: 0, tool_errors: 0 }
   const out = createWriteStream(path.join(run.dir, 'events.jsonl'))
-  const child = sandboxed(run, [opencodeBin, 'run', '--standalone', '--auto', '--format', 'json', '--model', 'box/m', text], { BOX_API_KEY: token })
+  const child = sandboxed(run, [bin, 'run', '--standalone', '--auto', '--format', 'json', '--model', 'box/m', text], { BOX_API_KEY: token })
   const kill = (why) => { if (s.end === 'done') s.end = why; try { process.kill(-child.pid, 'SIGKILL') } catch {} }
   const timer = setTimeout(() => kill('timeout'), timeLimit * 1000)
   let buf = '', err = '', texts = []
@@ -88,7 +99,8 @@ export async function runOpencode(run, text, { timeLimit, tokenLimit, token }) {
       const p = e.part || {}
       if (e.type === 'step_finish') {
         s.requests++; s.tokens_in += p.tokens?.input || 0; s.tokens_out += (p.tokens?.output || 0) + (p.tokens?.reasoning || 0)
-        if (s.tokens_in + s.tokens_out > tokenLimit) kill('token_limit')
+        const over = overLimit(model, s, { tokenLimit, usdLimit })
+        if (over) kill(over)
       } else if (e.type === 'step_start') texts = []
       else if (e.type === 'text' && p.text) texts.push(p.text)
       else if (e.type === 'tool_use') { s.tools++; if (p.state?.status === 'error') s.tool_errors++ }
@@ -101,6 +113,23 @@ export async function runOpencode(run, text, { timeLimit, tokenLimit, token }) {
   writeFileSync(path.join(run.dir, 'stderr.txt'), err)
   if (s.end === 'done' && code !== 0) s.end = s.requests ? 'model_error' : 'harness_error'
   return s
+}
+
+// One test command in the run's sandbox, after the model stopped: its exit code and its pass count
+// (node:test's summary, or TAP ok / not ok lines). Output kept in <run>/test-<name>.txt.
+export async function runTest(run, name, cmd, limitMs = 600000) {
+  const child = sandboxed(run, ['/bin/sh', '-c', cmd])
+  let o = ''
+  child.stdout.on('data', (d) => { o += d }); child.stderr.on('data', (d) => { o += d })
+  const timer = setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL') } catch {} }, limitMs)
+  const code = await new Promise((r) => child.on('close', r))
+  clearTimeout(timer)
+  writeFileSync(path.join(run.dir, `test-${name}.txt`), o)
+  let pass = null, total = null
+  const nt = o.match(/ℹ tests (\d+)[\s\S]*?ℹ pass (\d+)/)
+  if (nt) { total = +nt[1]; pass = +nt[2] }
+  else { const ok = (o.match(/^ok /gm) || []).length, bad = (o.match(/^(not ok|FAIL|✗)/gm) || []).length; pass = ok; total = ok + bad }
+  return { name, cmd, exit: code, pass, total }
 }
 
 export const cost = (model, s) => +((s.tokens_in * MODELS[model].in + s.tokens_out * MODELS[model].out) / 1e6).toFixed(2)

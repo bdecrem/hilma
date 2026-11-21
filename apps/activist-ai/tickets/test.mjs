@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+// The ticket lane's own checks, offline (no model, no gateway, no tracker): a run stops itself at its
+// dollar ceiling and at its token ceiling, a run under both ends on its own, and the trial and the
+// hand-off refuse to start without their ceilings or their tests.
+//   node apps/activist-ai/tickets/test.mjs
+import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import test from 'node:test'
+import { cost, here, overLimit, runFolders, runOpencode, runTest } from './lib.mjs'
+
+// A stand-in for opencode: one model call every 20 ms, each 200,000 tokens in and 1,000 out, until
+// it is killed or has made `steps` calls. At Kimi K3.1 Pro's prices ($2 in, $10 out) a call is $0.41.
+function fakeRun(steps = 1000) {
+  const dir = realpathSync(mkdtempSync(path.join(tmpdir(), 'olt-test-')))
+  const run = runFolders(dir)
+  const bin = path.join(dir, 'fake-opencode.sh')
+  const line = JSON.stringify({ type: 'step_finish', part: { tokens: { input: 200000, output: 1000, reasoning: 0 } } })
+  writeFileSync(bin, `#!/bin/sh\ni=0\nwhile [ $i -lt ${steps} ]; do echo '${line}'; i=$((i+1)); sleep 0.02; done\necho '{"type":"text","part":{"text":"done"}}'\n`, { mode: 0o755 })
+  return { run, bin, dir }
+}
+
+test('overLimit: the dollar and token ceilings', () => {
+  const s = { tokens_in: 1_000_000, tokens_out: 100_000 } // Kimi: $2 + $1 = $3
+  assert.equal(cost('kimi-k3.1-pro', s), 3)
+  assert.equal(overLimit('kimi-k3.1-pro', s, { usdLimit: 3 }), 'usd_limit')
+  assert.equal(overLimit('kimi-k3.1-pro', s, { usdLimit: 3.01 }), null)
+  assert.equal(overLimit('kimi-k3.1-pro', s, { tokenLimit: 1_000_000 }), 'token_limit')
+  assert.equal(overLimit('kimi-k3.1-pro', s, {}), null)
+})
+
+test('a run is killed at its dollar ceiling', async () => {
+  const { run, bin, dir } = fakeRun()
+  const s = await runOpencode(run, 'x', { timeLimit: 60, tokenLimit: 1e12, usdLimit: 2, model: 'kimi-k3.1-pro', token: 't', bin })
+  assert.equal(s.end, 'usd_limit')
+  assert.equal(s.requests, 5) // 4 calls are $1.64, the 5th takes it to $2.05
+  assert.ok(cost('kimi-k3.1-pro', s) >= 2 && cost('kimi-k3.1-pro', s) < 2.5)
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('a run is killed at its token ceiling', async () => {
+  const { run, bin, dir } = fakeRun()
+  const s = await runOpencode(run, 'x', { timeLimit: 60, tokenLimit: 500_000, usdLimit: 100, model: 'kimi-k3.1-pro', token: 't', bin })
+  assert.equal(s.end, 'token_limit')
+  assert.equal(s.requests, 3)
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('a run under both ceilings ends on its own', async () => {
+  const { run, bin, dir } = fakeRun(2)
+  const s = await runOpencode(run, 'x', { timeLimit: 60, tokenLimit: 1e7, usdLimit: 10, model: 'kimi-k3.1-pro', token: 't', bin })
+  assert.equal(s.end, 'done')
+  assert.equal(s.requests, 2)
+  assert.equal(s.final, 'done')
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('a dollar ceiling without the model\'s prices is refused', async () => {
+  const { run, bin, dir } = fakeRun(1)
+  await assert.rejects(runOpencode(run, 'x', { timeLimit: 60, tokenLimit: 1e7, usdLimit: 10, model: 'nope', token: 't', bin }), /unknown model/)
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('runTest: exit code and node:test counts, in the sandbox', async () => {
+  const { run, dir } = fakeRun(1)
+  writeFileSync(path.join(run.work, 't.mjs'), "import test from 'node:test'\ntest('a', () => {})\ntest('b', () => { throw new Error('no') })\n")
+  const r = await runTest(run, 'x', 'node t.mjs')
+  assert.equal(r.exit, 1)
+  assert.equal(r.total, 2)
+  assert.equal(r.pass, 1)
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('the trial refuses runs whose worst case is over --max-usd', () => {
+  // three cases on Kimi, each stopping at $10: a worst case of $30
+  const r = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--max-usd', '29'], { encoding: 'utf8' })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /can cost up to \$30\.00, over --max-usd 29/)
+  const one = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--cases', 'ola-324-clock', '--run-usd', '6'], { encoding: 'utf8' })
+  assert.equal(one.status, 2)
+  assert.match(one.stderr, /--max-usd is required: these 1 runs can cost up to \$6\.00/)
+})
+
+test('the hand-off refuses to start without a test that decides', () => {
+  const r = spawnSync(process.execPath, [path.join(here, 'handoff.mjs'), 'run', 'OLA-1', '--dry'], { encoding: 'utf8' })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /--test "<cmd>" is required/)
+})
