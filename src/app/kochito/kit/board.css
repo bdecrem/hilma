@@ -329,6 +329,9 @@ input.bd-title-edit { border-color: var(--acc); }
 .bd-md table { border-collapse: collapse; font-size: 13px; }
 .bd-md th, .bd-md td { border-bottom: 1px solid var(--line); padding: 5px 10px 5px 0; text-align: left; vertical-align: top; }
 .bd-md th { font-weight: 600; color: var(--ink-2); }
+.bd-md img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; display: block; }
+.bd-md td img { width: 100%; min-width: 150px; }
+.bd-md-table td { width: 50%; }
 .bd-more { margin-top: 8px; }
 .bd-more summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
 
