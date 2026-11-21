@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina vulnerable claude-opus-5-5 high",
- "pid": 62579,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "vulnerable",
@@ -58,5 +57,1188 @@
   "user": 176
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T06:30:43.021Z",
+ "minutes": 81.91,
+ "meters_after": {
+  "at": "2026-11-21T06:30:43.021Z",
+  "window": {
+   "pct": 24,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 52,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 24,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 52,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 24% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 52% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 97399,
+   "output": 30498,
+   "cache_read": 2646266,
+   "cache_write": 139617,
+   "cost_usd": 2.2083,
+   "total": 2913780
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 97345,
+    "output": 6039,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2126,
+    "cost_usd": 0.0728
+   },
+   "claude-opus-5-5": {
+    "input": 54,
+    "output": 24459,
+    "cache_read": 2646266,
+    "cache_write": 139617,
+    "thinking": 7507,
+    "cost_usd": 2.1356
+   }
+  }
+ },
+ "turns": 41,
+ "calls": 66,
+ "duration_ms": 688750,
+ "duration_api_ms": 423262,
+ "pages_read": 31,
+ "pages": [
+  {
+   "at": "2026-11-21T05:09:21.219Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 3º | ARTICULO 10 | ARTICULO 13 | h) Tratamiento médico | ARTICULO 29 | ARTICULO 70 | ARTICULO 124 | ARTICULO 125",
+   "ok": true,
+   "chars": 14708
+  },
+  {
+   "at": "2026-11-21T05:09:22.153Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Legislar y promover medidas de acción positiva | Convención sobre los Derechos del Niño",
+   "ok": true,
+   "chars": 2302
+  },
+  {
+   "at": "2026-11-21T05:09:29.366Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 3º | Tratamiento médico | razones humanitarias | ARTICULO 61 | dispensar | ARTICULO 125 | menores",
+   "ok": true,
+   "chars": 12628
+  },
+  {
+   "at": "2026-11-21T05:09:35.302Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 3 | ARTICULO 7 | ARTICULO 125 | Publicada",
+   "ok": true,
+   "chars": 5506
+  },
+  {
+   "at": "2026-11-21T05:09:44.159Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto",
+   "find": "menor | mujer | incapac | discapac | enferm | deficiencia | familia",
+   "ok": true,
+   "chars": 5893
+  },
+  {
+   "at": "2026-11-21T05:09:45.574Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3284
+  },
+  {
+   "at": "2026-11-21T05:09:58.036Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-12325/texto",
+   "find": "menor | mujer | incapac | discapac | enferm | deficiencia | humanitari | ARTICULO 21",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:15.417Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/12325/norma.htm",
+   "find": "menor | mujer | incapac | discapac | enferm | deficiencia | humanitari | ARTICULO 21",
+   "ok": true,
+   "chars": 661
+  },
+  {
+   "at": "2026-11-21T05:16:54.297Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/norma.htm",
+   "find": "menor | mujer | incapac | discapac | enferm | deficiencia | humanitari | ARTICULO 21",
+   "ok": true,
+   "chars": 671
+  },
+  {
+   "at": "2026-11-21T05:29:43.317Z",
+   "url": "https://webarchive.archive.unhcr.org/20170623205653if_/http://www.refworld.org/pdfid/3e5a2eec4.pdf",
+   "find": "menor | incapac | discapac | enferm | deficiencia | humanitari | Decreto 1023",
+   "ok": true,
+   "chars": 898
+  },
+  {
+   "at": "2026-11-21T05:30:26.604Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "menor | discapac | capacidades diferentes | trata | violencia | mujer | interés superior | Vigencia",
+   "ok": true,
+   "chars": 12626
+  },
+  {
+   "at": "2026-11-21T05:30:34.212Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "m) Razones Humanitarias | h) Pacientes | ARTICULO 70 | ARTICULO 29.-",
+   "ok": true,
+   "chars": 5984
+  },
+  {
+   "at": "2026-11-21T05:30:35.303Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/norma.htm",
+   "find": "ARTICULO 3 | ARTICULO 2 | nacionalidad | ARTICULO 79",
+   "ok": true,
+   "chars": 6517
+  },
+  {
+   "at": "2026-11-21T05:30:42.762Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/249/norma.htm",
+   "find": "ARTICULO 1 | interés superior | Sancionada",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:39:28.408Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm",
+   "find": "menores | no acompañados | mujeres | género | Sancionada",
+   "ok": true,
+   "chars": 5718
+  },
+  {
+   "at": "2026-11-21T05:39:34.372Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm",
+   "find": "Sancionada | ARTICULO 6 | permanecer en el país | niños | Publicada",
+   "ok": true,
+   "chars": 4703
+  },
+  {
+   "at": "2026-11-21T05:39:35.269Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/norma.htm",
+   "find": "Sancionada | ARTICULO 3 | migrante | nacionalidad",
+   "ok": true,
+   "chars": 5513
+  },
+  {
+   "at": "2026-11-21T05:45:22.018Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "children | women | trafficking | disabilit | domestic",
+   "ok": true,
+   "chars": 9394
+  },
+  {
+   "at": "2026-11-21T05:45:22.891Z",
+   "url": "https://digitallibrary.un.org/record/481007/files/CRC_C_15_Add.187-EN.pdf",
+   "find": "migrant | foreign | refugee | asylum | nationality",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:56:27.759Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "family unity | birth | unaccompanied | victims of trafficking | expulsion",
+   "ok": true,
+   "chars": 6429
+  },
+  {
+   "at": "2026-11-21T05:56:28.603Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+   "find": "migrant | refugee | asylum | unaccompanied | foreign",
+   "ok": true,
+   "chars": 7438
+  },
+  {
+   "at": "2026-11-21T05:56:32.612Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+   "find": "Refugee | asylum-seeking | Migrant children | trafficking",
+   "ok": true,
+   "chars": 5397
+  },
+  {
+   "at": "2026-11-21T05:57:40.717Z",
+   "url": "https://webapps.ilo.org/static/spanish/argentina/100voces/recursos/9_investigacion/11.pdf",
+   "find": "expulsión | interés superior | no acompañados | Ley 22.439 | Ley Videla | discapacidad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:57:46.984Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2002.html",
+   "find": "migrant | refugee | asylum | foreign | nationality | disabilit",
+   "ok": true,
+   "chars": 830
+  },
+  {
+   "at": "2026-11-21T05:59:33.091Z",
+   "url": "https://hrlibrary.umn.edu/cedaw/argentina2010.html",
+   "find": "migrant | trafficking | refugee",
+   "ok": true,
+   "chars": 802
+  },
+  {
+   "at": "2026-11-21T06:00:20.989Z",
+   "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina2010.html",
+   "find": "migrant | trafficking | refugee | disabilit",
+   "ok": true,
+   "chars": 6378
+  },
+  {
+   "at": "2026-11-21T06:00:21.965Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2005/12/IA2005-14-A-dos-anos-de-la-nueva-Ley-de-Migraciones.pdf",
+   "find": "niños | menores | mujeres | discapacidad | reglamentación",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:00:28.554Z",
+   "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina.htm",
+   "find": "migrant | trafficking | refugee | Adopted | session",
+   "ok": true,
+   "chars": 3999
+  },
+  {
+   "at": "2026-11-21T06:00:29.607Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2019/09/committee-migrant-workers-raises-concerns-about-expedited",
+   "find": "niños | children | mujeres | women | expulsión | expulsion",
+   "ok": true,
+   "chars": 1853
+  },
+  {
+   "at": "2026-11-21T06:14:15.515Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "children | families | women | expulsion",
+   "ok": true,
+   "chars": 4141
+  },
+  {
+   "at": "2026-11-21T06:14:19.429Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23849-249/texto",
+   "find": "ARTICULO 1 | ARTICULO 2 | interés superior",
+   "ok": true,
+   "chars": 3400
+  }
+ ],
+ "searches": [
+  "infoleg Ley 22.439 Ley General de Migraciones y Fomento de la Inmigración texto",
+  "Decreto 1023/94 Reglamento de Migración texto \"padecer\" impedimentos discapacidad menores infoleg",
+  "\"1023/94\" reglamento migraciones artículo 21 \"anomalías\" OR \"deficiencias\" OR \"enfermedades\" impedimentos admisión extranjeros",
+  "CMW/C/ARG/CO/1 2011 Committee on Migrant Workers concluding observations Argentina children women",
+  "CRC/C/15/Add.187 Argentina 2002 concluding observations Committee on the Rights of the Child migrant children",
+  "CELS UNICEF UNLa \"Niñez y migración\" Argentina 2013 derechos niños migrantes informe expulsión padres",
+  "CEDAW concluding observations Argentina 2010 CEDAW/C/ARG/CO/6 migrant women trafficking",
+  "CELS informe anual 2000 migrantes Ley Videla expulsiones detenciones derechos humanos Argentina"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":3,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Rarely\",\"basis\":\"The Convention on the Rights of the Child had constitutional rank under art. 75(22) of the 1994 Constitution and was approved by Ley 23.849 (1990), so the best-interests principle and child-specific protections applied directly. Ley 22.439 itself has no child-specific rule (its text contains no reference to minors). Practice: I found no readable primary source for this period. CELS's annual chapters for 2000–2002 on arbitrary detention and expulsion under the Ley Videla could not be opened (PDFs), so the rating is inferred.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Rarely\",\"basis\":\"In addition to the CRC (art. 75(22)), Ley 25.871 was in force from late January 2004. It added family reunification with minor children (arts. 3(d) and 10), the humanitarian and family-reunification waiver in art. 29, a higher fine for employing minors (art. 59), and school access regardless of status (art. 7). The law was not yet regulated. I found no readable practice evidence for around 2005, and CELS's 2005 chapter could not be opened.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Rarely\",\"basis\":\"New since 2005: Ley 26.061 (Nov 2005; arts. 1–3 make the CRC binding in every administrative decision), Ley 26.165 art. 53 (Dec 2006, protection of unaccompanied refugee minors), and Ley 26.364 art. 6 (May 2008, special procedures for child trafficking victims). Decreto 616/2010 did not take effect until July 2010. Practice: the CRC's 2010 concluding observations found stigmatisation of children from a migrant background and asked that migrant children be covered by the universal child allowance; CEDAW in 2010 noted gaps for unaccompanied asylum-seeking children.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Rarely\",\"basis\":\"Same framework, plus Decreto 616/2010 in force from July 2010 (art. 22(b) and art. 23(m) humanitarian residence; traff",
+ "output": {
+  "answers": [
+   {
+    "question_id": 3,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "The Convention on the Rights of the Child had constitutional rank under art. 75(22) of the 1994 Constitution and was approved by Ley 23.849 (1990), so the best-interests principle and child-specific protections applied directly. Ley 22.439 itself has no child-specific rule (its text contains no reference to minors). Practice: I found no readable primary source for this period. CELS's annual chapters for 2000–2002 on arbitrary detention and expulsion under the Ley Videla could not be opened (PDFs), so the rating is inferred."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "In addition to the CRC (art. 75(22)), Ley 25.871 was in force from late January 2004. It added family reunification with minor children (arts. 3(d) and 10), the humanitarian and family-reunification waiver in art. 29, a higher fine for employing minors (art. 59), and school access regardless of status (art. 7). The law was not yet regulated. I found no readable practice evidence for around 2005, and CELS's 2005 chapter could not be opened."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "New since 2005: Ley 26.061 (Nov 2005; arts. 1–3 make the CRC binding in every administrative decision), Ley 26.165 art. 53 (Dec 2006, protection of unaccompanied refugee minors), and Ley 26.364 art. 6 (May 2008, special procedures for child trafficking victims). Decreto 616/2010 did not take effect until July 2010. Practice: the CRC's 2010 concluding observations found stigmatisation of children from a migrant background and asked that migrant children be covered by the universal child allowance; CEDAW in 2010 noted gaps for unaccompanied asylum-seeking children."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Same framework, plus Decreto 616/2010 in force from July 2010 (art. 22(b) and art. 23(m) humanitarian residence; trafficking victims). DNU 70/2017 came later. Practice: the CMW in 2011 found discrimination against migrant children at school, and that the DNM did not weigh family circumstances before ordering expulsions. Nothing I read shows a later improvement before DNU 70/2017, so Rarely is kept."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22 (CRC with constitutional rank) and inc. 23 (positive measures for children)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 23.849 (aprueba la Convención sobre los Derechos del Niño)",
+      "article": "Arts. 1-2",
+      "role": "cited",
+      "in_force": "1990-10-22 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.061 de Protección Integral de los Derechos de las Niñas, Niños y Adolescentes",
+      "article": "Arts. 1, 2, 3",
+      "role": "cited",
+      "in_force": "2005-11 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 3(d), 7, 10, 29 (last paragraph), 59",
+      "role": "cited",
+      "in_force": "2004-01 to today (art. 29 substituted by DNU 70/2017, restored by Decreto 138/2021, substituted again by DNU 366/2025)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Whole text (no child-specific provision)",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01 (repealed by art. 124 of Ley 25.871)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.165 General de Reconocimiento y Protección al Refugiado",
+      "article": "Art. 42(f), art. 53",
+      "role": "other_in_force",
+      "in_force": "2006-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.364 de Prevención y Sanción de la Trata de Personas",
+      "article": "Art. 6 (last paragraph, children)",
+      "role": "other_in_force",
+      "in_force": "2008-05 to today (amended by Ley 26.842, 2012)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamentación de la Ley 25.871)",
+      "article": "Arts. 22(b), 23(m)",
+      "role": "other_in_force",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 3(d), 10, 29",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439, which had no child-specific rules. Introduced a guaranteed right to family reunification with minor children and a humanitarian and family-reunification waiver of the bars to entry and residence.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 10. — El Estado garantizará el derecho de reunificación familiar de los inmigrantes con sus padres, cónyuges, hijos solteros menores o hijos mayores con capacidades diferentes."
+     },
+     {
+      "date": "2005-11",
+      "instrument": "Ley 26.061 de Protección Integral de los Derechos de las Niñas, Niños y Adolescentes",
+      "article": "Arts. 1-3",
+      "kind": "new_instrument",
+      "what_changed": "Made the CRC binding in every administrative or judicial decision about anyone under 18 present in the territory, and defined the best-interests principle.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/norma.htm",
+      "passage": "La Convención sobre los Derechos del Niño es de aplicación obligatoria en las condiciones de su vigencia, en todo acto, decisión o medida administrativa, judicial o de cualquier naturaleza que se adopte respecto de las personas hasta los dieciocho años de edad."
+     },
+     {
+      "date": "2006-12",
+      "instrument": "Ley 26.165 General de Reconocimiento y Protección al Refugiado",
+      "article": "Art. 53",
+      "kind": "new_instrument",
+      "what_changed": "Special psychological care for child asylum seekers, especially unaccompanied ones; UNHCR child-protection guidelines to be applied, with referral to child-protection bodies.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm",
+      "passage": "En caso de los menores se tendrá en cuenta las directrices sobre su protección y cuidado dando cuenta a los organismos con responsabilidad primaria en políticas dirigidas a grupos vulnerables"
+     },
+     {
+      "date": "2008-05",
+      "instrument": "Ley 26.364 de Prevención y Sanción de la Trata de Personas y Asistencia a sus Víctimas",
+      "article": "Art. 6",
+      "kind": "new_instrument",
+      "what_changed": "Child trafficking victims receive procedures adapted to their special needs, are not to be deprived of liberty, and family reintegration is to be sought; all victims may remain in the country.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm",
+      "passage": "En el caso de niños, niñas y adolescentes, además de los derechos precedentemente enunciados, se garantizará que los procedimientos reconozcan sus necesidades especiales que implican la condición de ser un sujeto en pleno desarrollo de la personalidad."
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 22(b), 23(m)",
+      "kind": "new_instrument",
+      "what_changed": "First regulation of Ley 25.871, in force 60 days after publication on 6 May 2010. Permanent residence for unmarried children under 18 of permanent residents; humanitarian residence including for trafficking victims.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "b) Ser cónyuge, progenitor, hijo soltero menor de DIECIOCHO (18) años no emancipado o mayor con capacidad diferente, de un residente permanente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "C.D., A. c/ Dirección Nacional de Migraciones",
+      "date": "2022-09-06",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found; it postdates all the task's dates, so no answer rests on it",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "CRC Concluding observations Argentina (CRC/C/ARG/CO/3-4)",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW Concluding observations Argentina (CMW/C/ARG/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CEDAW Concluding observations Argentina (CEDAW/C/ARG/CO/6)",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina2010.html",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS: UN urges Argentina to derogate and suspend decree that violates migrant rights (CMW 2019)",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Strong for the law: the original texts of Ley 25.871 and Decreto 616/2010, the child-protection, refugee and trafficking laws, and Ley 22.439 were all read. Practice evidence for 2000 and 2005 is missing: the CELS annual-report PDFs and the CRC 2002 observations could not be opened (no PDF reader available).",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Ley 26.061 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/norma.htm"
+     },
+     {
+      "title": "Ley 23.849 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23849-249/texto"
+     },
+     {
+      "title": "Ley 26.165 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm"
+     },
+     {
+      "title": "Ley 26.364 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm"
+     },
+     {
+      "title": "CRC CO Argentina 2010",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html"
+     },
+     {
+      "title": "CMW CO Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CEDAW CO Argentina 2010",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina2010.html"
+     },
+     {
+      "title": "CELS on CMW 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 'Yes' on 1 January 2000 rests on the CRC, which has had constitutional rank since 1994 (art. 75(22)) and is treated as directly applicable; Ley 22.439 contained nothing child-specific. Later instruments added protections without removing any. DNU 70/2017 (Feb 2017 – March 2021) narrowed the art. 29 waiver and the expulsion safeguards; that history was not read, and it falls after 2015 in any case. Ley 26.842 (Dec 2012) amended Ley 26.364 but was not read."
+   },
+   {
+    "question_id": 5,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "CEDAW had constitutional rank under art. 75(22), and art. 75(23) mandates positive measures for women; these are the parts of the starting citation that were already in force. Ley 22.439 has no women-specific provision. Practice: I found no migrant-specific source for this period. CEDAW's 1997 observations (read) noted the lack of data on women held in slavery or exploited for prostitution. Rating inferred."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Added since 2000: art. 13 of Ley 25.871 (in force January 2004), which treats sex- or gender-based acts or omissions as discriminatory. No readable practice evidence for around 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Added: Ley 26.165 arts. 42(f) and 53 (2006, specialised care for women asylum seekers who are victims of violence; UNHCR gender guidelines), Ley 26.364 art. 6 (2008, trafficking victims' rights, including to remain in the country), and Ley 26.485 (April 2009). Practice: CEDAW in 2010 recorded the State's own acknowledgment that migrant women's rights are not fully respected, and found gaps in protection for women asylum seekers. The CMW in 2011 found irregular migrant domestic workers exposed to sexual violence and exploitation, with limited access to remedies."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely",
+      "basis": "Added: Decreto 616/2010 art. 23(m)(3) (humanitarian residence for trafficking victims, in force July 2010). I found no documented improvement in practice after the 2010–2011 treaty-body findings; the CEDAW 2016 and CMW 2019 texts were not read."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22 (CEDAW with constitutional rank), inc. 23",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2004-01 to today (not amended)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 26.485 de Protección Integral a las Mujeres",
+      "article": "Art. 3",
+      "role": "cited",
+      "in_force": "2009-04 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Whole text (no women-specific provision)",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Arts. 42(f), 53",
+      "role": "other_in_force",
+      "in_force": "2006-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.364",
+      "article": "Art. 6",
+      "role": "other_in_force",
+      "in_force": "2008-05 to today (amended by Ley 26.842, 2012)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23(m)(3)",
+      "role": "other_in_force",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "New anti-discrimination definition covering sex and gender. Its text is unchanged in the current consolidated version.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "se considerarán discriminatorios todos los actos u omisiones determinados por motivos tales como etnia, religión, nacionalidad, ideología, opinión política o gremial, sexo, género"
+     },
+     {
+      "date": "2006-12",
+      "instrument": "Ley 26.165",
+      "article": "Art. 53",
+      "kind": "new_instrument",
+      "what_changed": "Women asylum seekers who are victims of violence receive specialised psychological care, and UNHCR guidelines on refugee women and gender-based persecution apply.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm",
+      "passage": "La Comisión procurará cuando se tratare de mujeres o menores en especial si no están acompañados, que hubieren sido víctimas de violencia, la atención psicológica especializada de los mismos, y durante el procedimiento, se observará las recomendaciones del ACNUR formuladas en las Guías para la protección de mujeres refugiadas"
+     },
+     {
+      "date": "2008-05",
+      "instrument": "Ley 26.364",
+      "article": "Art. 6(j)",
+      "kind": "new_instrument",
+      "what_changed": "Trafficking victims, mostly women, have the right to remain in the country and receive documentation, and are exempt from migration sanctions (art. 5).",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm",
+      "passage": "j) Permanecer en el país, de conformidad con la legislación vigente, y a recibir la documentación o constancia que acredite tal circunstancia"
+     },
+     {
+      "date": "2009-04",
+      "instrument": "Ley 26.485",
+      "article": "Art. 3",
+      "kind": "new_instrument",
+      "what_changed": "Comprehensive law on violence against women, applying to all women in the territory.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/norma.htm",
+      "passage": "Esta ley garantiza todos los derechos reconocidos por la Convención para la Eliminación de todas las Formas de Discriminación contra la Mujer... a) Una vida sin violencia y sin discriminaciones"
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23(m)(3)",
+      "kind": "new_instrument",
+      "what_changed": "Humanitarian temporary residence to be specially considered for trafficking victims.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "3. Personas que hayan sido víctimas de la trata de personas u otras modalidades de explotación esclava y/o víctimas del tráfico ilícito de migrantes."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CEDAW Concluding observations Argentina (1997 session)",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina.htm",
+      "year": 1997,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CEDAW Concluding observations Argentina (CEDAW/C/ARG/CO/6)",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina2010.html",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW Concluding observations Argentina (CMW/C/ARG/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "All statutes were read in their original texts, so the dating is solid. Practice evidence exists only around 2010–2011. The 1997 CEDAW findings are not specific to migrants, and the CEDAW 2016 and CMW 2019 texts could not be read.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Ley 26.165",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm"
+     },
+     {
+      "title": "Ley 26.364",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm"
+     },
+     {
+      "title": "Ley 26.485",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/150000-154999/152155/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "CEDAW CO 1997",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina.htm"
+     },
+     {
+      "title": "CEDAW CO 2010",
+      "url": "https://hrlibrary.umn.edu/cedaw/cedaw-argentina2010.html"
+     },
+     {
+      "title": "CMW CO 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": "The starting citation rests mainly on general instruments: CEDAW, art. 75(23), a non-discrimination clause (art. 13) and a general law on violence against women. The genuinely migrant-specific protections for women (Ley 26.165 arts. 42(f) and 53; trafficking-victim residence under Ley 26.364 art. 6 and Decreto 616/2010 art. 23(m)(3)) are not cited. Read strictly, the 2000 answer rests only on CEDAW and art. 75(23), which are close to the general principles the instrument says should not produce a Yes.",
+    "confidence": "medium",
+    "notes": "Yes is kept for 2000 and 2005 because the cited CEDAW and art. 75(23) were already in force. A stricter coder could answer No for those dates, since the migration-specific protections arrived only in 2006–2010."
+   },
+   {
+    "question_id": 7,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Under Ley 22.439 there was no disability-specific protection: the text contains no reference to disability, incapacity or illness. Art. 75(23) of the Constitution is only a mandate to legislate. No practice evidence is needed."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 (January 2004) added art. 10 (family reunification with adult children 'con capacidades diferentes') and art. 23(h) (residence extended to companions of disabled patients). The starting coder did not count these as the protection, so the answer stays No."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same provisions as in 2005. Ley 26.378 (2008) approved the CRPD, but I did not read it. Decreto 616/2010 was not yet in force."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Decreto 616/2010 art. 20(c) (in force July 2010) gives migrants with disabilities, of any age, the same residence category as their parents, children or spouses. Like art. 10 and art. 23(h), it was in force on 1 January 2020 when the MRD coded No, so nothing changed between 2015 and 2020."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 23",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23(h)",
+      "role": "cited",
+      "in_force": "2004-01 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 10",
+      "role": "other_in_force",
+      "in_force": "2004-01 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 20(c), art. 22(b)",
+      "role": "other_in_force",
+      "in_force": "2010-07 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Whole text",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "Whole text",
+      "role": "predecessor",
+      "in_force": "1994 to 2010-07 (repealed by art. 2 of Decreto 616/2010)",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23(h)",
+      "kind": "new_instrument",
+      "what_changed": "Temporary residence for medical patients; the authorisation is extended to the relatives, legal representative or guardian of disabled patients.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "En caso de personas menores de edad, discapacitados o enfermos que por la importancia de su patología debieran permanecer con acompañantes, esta autorización se hará extensiva a los familiares directos, representante legal o curador"
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 20(c); art. 2 (repeal of Decreto 1023/94)",
+      "kind": "new_instrument",
+      "what_changed": "Migrants with disabilities, of any age, receive the same residence category as their parents, children or spouses. Decreto 1023/94 was repealed.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "c) Capacidades diferentes: A los extranjeros con capacidades diferentes, cualquiera fuera su edad, les corresponderá igual categoría de residencia que la otorgada a sus padres, hijos o cónyuges."
+     }
+    ],
+    "repealed_search": "I searched the text of Ley 22.439 for 'menor', 'incapac', 'discapac', 'enferm' and 'deficiencia' and found no disability protection. The list of norms amending Ley 22.439 shows only its regulations (Decretos 1434/87 and 1023/94) and fee and procedure acts. I could not open the text of Decreto 1023/94 (InfoLEG returned not found; the Refworld copy was blocked), so any provision it held is unverified. It was repealed by Decreto 616/2010, which replaced it with a more favourable rule (art. 20(c)). I found no protection that was repealed or narrowed before 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 22.439, Ley 25.871 (original text) and Decreto 616/2010 were read. Decreto 1023/94 and Ley 26.378 (CRPD) were not.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 1023/94 (attempt, not found)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/10000-14999/12325/norma.htm"
+     }
+    ],
+    "starting_answer_concern": "The 'No' looks doubtful on its own date. Art. 10 of Ley 25.871 guarantees family reunification with adult children with disabilities, art. 23(h) extends residence to companions of disabled patients, and Decreto 616/2010 art. 20(c) gives disabled migrants of any age their relatives' residence category. These are close to the instrument's Colombia example (beneficiary visa for disabled persons regardless of age), and suggest a Yes from 2004 (art. 10) or July 2010 (art. 20(c)) onward.",
+    "confidence": "medium",
+    "notes": "No is kept on every date because all the provisions that could support a Yes were already in force on 1 January 2020, when the MRD coded No. There is therefore no dated event between 2000 and 2020 that would change the answer within the starting coder's reading."
+   }
+  ]
+ }
 }
