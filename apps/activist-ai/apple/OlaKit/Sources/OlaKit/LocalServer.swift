@@ -202,6 +202,10 @@ public final class LocalServer: @unchecked Sendable {
   public var onForeignModels: (@Sendable ([String]) -> Void)?
   /// How often the running engine's models are read (ModelGuard).
   public var watchEvery: TimeInterval = 2
+  /// OLA-335: how long `stop()` waits for the engine to end after SIGTERM before it kills it. On Nov 21
+  /// the engine (opencode under sandbox-exec, its settings file damaged while it ran) never ended on
+  /// SIGTERM and `stop()` waited for it with no limit: the test sat 30 minutes and held the test machine.
+  public var stopGrace: TimeInterval = 5
   /// Checks only: run between writing the config and starting the engine (a check deletes or
   /// damages the file there), and a program to start opencode through (sandbox-exec, no network).
   var afterPrepare: (() throws -> Void)?
@@ -574,6 +578,10 @@ public final class LocalServer: @unchecked Sendable {
     if p.isRunning { p.terminate() }
     try? lifeline?.fileHandleForWriting.close()
     lifeline = nil
+    // Never wait forever (OLA-335): SIGTERM, then SIGKILL once stopGrace has passed.
+    let deadline = Date().addingTimeInterval(stopGrace)
+    while p.isRunning && Date() < deadline { usleep(50_000) }
+    if p.isRunning { kill(p.processIdentifier, SIGKILL) }
     p.waitUntilExit()
     // Only our own pid: another server of this app may have written the file since.
     if let pidFile, (try? String(contentsOf: pidFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == String(p.processIdentifier) {

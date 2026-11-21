@@ -83,6 +83,7 @@ import { deployable } from './signers.mjs'
 import { unchanged } from './restart.mjs'
 import { changedFiles, lanes, plan } from './select.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
+import { limitMs, outcome, runLimited } from './suite.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -585,6 +586,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['asks', ['--test', 'evals/asks/test.mjs']], // the asks' own checks, and Ola's instructions match abilities.json (OLA-232), seconds, no VM
     ['select', ['--test', 'ops/select-test.mjs']], // which suites an update runs (OLA-283), seconds, no VM
     ['models', ['--test', 'ops/models-test.mjs']], // the model check through the real gateway (OLA-214), seconds, no VM, no model call
+    ['suite', ['--test', 'ops/suite-test.mjs']], // a suite's time limit and a failed suite's rerun (OLA-334, OLA-335), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
@@ -644,9 +646,18 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   const say = (m) => (console.log(m), out.write(`${m}\n`))
   const history = (line) => writeFileSync(path.join(STAGING, check ? 'checks.log' : 'deploys.log'), `${new Date().toISOString()} ${line}\n`, { flag: 'a' })
   const suites = {}
+  // OLA-334: a failed suite's own output, kept in a file of its own beside the update's log
+  const keep = (name, attempt, text) => {
+    const f = path.join(LOGS, `${check ? 'check' : 'deploy'}-${short}-${name}-${attempt === 1 ? 'first' : 'rerun'}.txt`)
+    writeFileSync(f, text)
+    return f
+  }
   const T0 = Date.now()
   let turnWait = 0 // how long this update stood waiting for the turn (another holder's time)
+  let turn = null
+  const flaky = [] // OLA-334: suites that failed once and passed on the rerun
   const refuse = (m) => {
+    turn?.release() // OLA-335: a refused update or check never keeps the machine's turn
     if (check) {
       say(`CHECK FAILED: ${m}`)
       say(`${short} stays in ${rel} for a look. Log: ${logFile}`)
@@ -725,12 +736,21 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   // leaves a half-built image or fails a suite on time.
   // The Mac and iPhone apps' shared code (OlaKit), a check only: no VM, so before the turn.
   if (check && existsSync(path.join(code, 'apple/OlaKit/Package.swift')) && pick.run.includes('apps')) {
-    const t0 = Date.now()
-    say('suite apps: swift test (apple/OlaKit)')
-    const s = await runLogged('/usr/bin/swift', ['test'], { cwd: path.join(code, 'apple/OlaKit'), out })
-    suites.apps = counts(s.tail)
-    say(`suite apps: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites.apps}, ${Math.round((Date.now() - t0) / 1000)} s`)
-    if (s.code !== 0) return refuse(`suite apps failed (${suites.apps})`)
+    // OLA-335: under its time limit; OLA-334: a failure run once more (it runs alone already)
+    const once = async (attempt) => {
+      const t0 = Date.now()
+      say(`suite apps: swift test (apple/OlaKit)${attempt > 1 ? ', the rerun' : ''}, limit ${Math.round(limitMs('apps') / 60000)} min`)
+      let text = ''
+      const s = await runLimited('/usr/bin/swift', ['test'], { cwd: path.join(code, 'apple/OlaKit'), out: { write: (d) => (out.write(d), (text += d)) }, env: { ...process.env, PATH }, limit: limitMs('apps') })
+      const r = { code: s.code, timedOut: s.timedOut, count: counts(s.tail), kept: s.code === 0 ? null : keep('apps', attempt, text) }
+      say(`suite apps: ${s.code === 0 ? 'passed' : s.timedOut ? 'STOPPED at its time limit' : 'FAILED'}, ${r.count}, ${Math.round((Date.now() - t0) / 1000)} s`)
+      return r
+    }
+    const first = await once(1)
+    const o = first.code === 0 || first.timedOut ? outcome('apps', first) : outcome('apps', first, await once(2))
+    suites.apps = o.count
+    if (!o.ok) return refuse(o.line)
+    if (o.flaky) flaky.push(o.line)
   }
   // A check whose commit a deploy already passed (often the deploy it would wait behind) ran every
   // suite but the apps', which this check just ran: it ends with both, before or after the turn.
@@ -748,7 +768,6 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     return recordCheck({ commit, ok: true, suites: all, why: null, by: 'check+deploy', log: logFile })
   }
   // A check builds the image holding the turn, so it never builds beside a deploy.
-  let turn = null
   if (check) {
     const early = await covered(() => turnAbort.abort())
     if (early) return early
@@ -805,16 +824,18 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   if (sh('/bin/cp', ['-c', '-R', path.join(code, 'web/dist'), fdDist]).status !== 0) return refuse('could not copy web/dist for the suites')
   const plannedLanes = lanes(pick.run.filter((n) => n !== 'apps'))
   say(`lanes: ${plannedLanes.map((l) => l.join(' → ')).join(' | ')}`)
-  const failures = []
+  const failures = [] // stops new suites: a suite stopped at its limit, or one that failed its rerun
+  const firstFailed = [] // OLA-334: failed once; run again by itself once the lanes are done
   let yielded = false
   const ts = Date.now()
-  const runOne = async (name) => {
+  const runOne = async (name, attempt = 1) => {
     const args = SUITES.find(([n]) => n === name)[1]
     // A suite this commit does not have yet (a check of an older commit, or a deploy back to one).
     const file = args.find((x) => x.endsWith('.mjs'))
     if (file && !existsSync(path.join(code, file))) return say(`suite ${name}: not in this commit (${file}), skipped`)
     const t0 = Date.now()
-    say(`suite ${name}: node ${args.join(' ')}`)
+    const limit = limitMs(name)
+    say(`suite ${name}: node ${args.join(' ')}${attempt > 1 ? ' (the rerun, by itself)' : ''}, limit ${Math.round(limit / 60000)} min`)
     // Each line stamped with the seconds since the suite started, so the log shows where it waits.
     let text = ''
     let atStart = true
@@ -822,11 +843,17 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
       const at = `[${String(Math.round((Date.now() - t0) / 1000)).padStart(4)} s] `
       for (const piece of String(d).split(/(?<=\n)/)) (text += (atStart ? at : '') + piece), (atStart = piece.endsWith('\n'))
     }
-    const s = await runLogged(NODE, args, { cwd: code, out: { write: stamp }, env: { OLA_TURN_HELD: String(process.pid), ...(name === 'web' ? {} : { OLA_FD_DIST: fdDist }) } })
+    // OLA-335: under its time limit, in its own process group (ops/suite.mjs)
+    const s = await runLimited(NODE, args, { cwd: code, out: { write: stamp }, limit, env: { ...process.env, PATH, OLA_TURN_HELD: String(process.pid), ...(name === 'web' ? {} : { OLA_FD_DIST: fdDist }) } })
     suites[name] = counts(s.tail)
-    out.write(`---- suite ${name} output ----\n${text}${text.endsWith('\n') ? '' : '\n'}---- end of ${name} ----\n`)
-    say(`suite ${name}: ${s.code === 0 ? 'passed' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
-    if (s.code !== 0) failures.push(`suite ${name} failed (${suites[name]})`)
+    out.write(`---- suite ${name} output${attempt > 1 ? ' (rerun)' : ''} ----\n${text}${text.endsWith('\n') ? '' : '\n'}---- end of ${name} ----\n`)
+    say(`suite ${name}: ${s.code === 0 ? 'passed' : s.timedOut ? 'STOPPED at its time limit' : 'FAILED'}, ${suites[name]}, ${Math.round((Date.now() - t0) / 1000)} s`)
+    const r = { code: s.code, timedOut: s.timedOut, count: suites[name], kept: s.code === 0 ? null : keep(name, attempt, text) }
+    if (attempt === 1 && s.code !== 0) {
+      if (s.timedOut) failures.push(outcome(name, r).line)
+      else firstFailed.push({ name, first: r })
+    }
+    return r
   }
   await Promise.all(
     plannedLanes.map(async (lane) => {
@@ -842,6 +869,21 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
       }
     }),
   )
+  // OLA-334: each suite that failed once runs again, by itself, one after the other
+  const rerun = new Set()
+  for (const { name, first } of failures.length || yielded ? [] : firstFailed) {
+    say(`suite ${name} failed once (${first.count}; its output kept in ${first.kept}): run again by itself`)
+    rerun.add(name)
+    const o = outcome(name, first, await runOne(name, 2))
+    if (!o.ok) {
+      failures.push(o.line)
+      break
+    }
+    flaky.push(o.line)
+    say(`suite ${name}: ${o.line}`)
+  }
+  // a refusal names every suite that failed, the ones not rerun (another stopped at its limit) too
+  if (failures.length) for (const { name, first } of firstFailed) if (!rerun.has(name)) failures.push(outcome(name, first).line)
   const took = Math.round((Date.now() - ts) / 1000)
   if (failures.length) return refuse(`${failures.join('; ')}${skipped.length ? `; skipped ${skipped.join(', ')}` : ''}`)
   if (yielded) {
@@ -853,7 +895,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   // For deploys.log and checks.log: which ran, which were skipped, how long the suites took.
   // The whole update so far, without the wait for the turn (another holder's time, not this one's).
   const own = Math.round((Date.now() - T0 - turnWait) / 1000)
-  const picked = `${pick.all ? `all suites (${pick.all})` : `skipped ${skipped.length ? skipped.join(', ') : 'none'} (nothing they use changed${since})`}; suites ${took} s side by side, ${own} s in all without the wait for the turn`
+  const picked = `${pick.all ? `all suites (${pick.all})` : `skipped ${skipped.length ? skipped.join(', ') : 'none'} (nothing they use changed${since})`}; suites ${took} s side by side, ${own} s in all without the wait for the turn${flaky.length ? `; FAILED ONCE, PASSED ON THE RERUN: ${flaky.join('; ')}` : ''}`
   say(`suites: ${Object.keys(suites).length} ran in ${took} s; ${skipped.length ? `skipped ${skipped.join(', ')}` : 'none skipped'}; ${own} s since the update started, not counting ${Math.round(turnWait / 1000)} s waiting for the turn`)
   if (check) {
     history(`passed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}; ${picked}`)
@@ -869,7 +911,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   rmSync(tmp, { force: true })
   symlinkSync(`releases/${short}`, tmp)
   renameSync(tmp, CURRENT)
-  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, skipped: Object.fromEntries(pick.skip.map((x) => [x.name, x.why])), base: baseCommit, skills: { hash: skills.hash, image: skills.image, commit }, previous: before?.commit ?? null }
+  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, skipped: Object.fromEntries(pick.skip.map((x) => [x.name, x.why])), base: baseCommit, skills: { hash: skills.hash, image: skills.image, commit }, previous: before?.commit ?? null, ...(flaky.length ? { flaky } : {}) }
   writeFileSync(DEPLOYED, JSON.stringify(record, null, 2) + '\n')
   if (existsSync(ENV.frontdesk) && existsSync(ENV.gateway)) {
     install({ restart: true })
