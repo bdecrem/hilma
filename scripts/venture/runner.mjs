@@ -67,6 +67,15 @@ const WORK_EVERY = 3 * 60 * MIN // with no ticket to work and nothing new, still
 const BOARD_STALE = 3 * 60 * MIN // the journal older than this, in the day, wakes a refresh
 const BOARD_HOURS = [7, 23] // Pacific
 const REPLAY_HOURS = [2, 8] // Pacific: the nightly replay test starts in this window, once a day
+
+// One tick runs ticket after ticket in one process, so a fix to the runner itself (its tool lists,
+// its gate) waited until the loop ended: the 18:08 fix that lets a work run use `runner.mjs deploy`
+// was not in the tick started at 14:24, and three OLA-231 runs in a row were refused the deploy
+// (Nov 20). The loop compares its own code with what is on disk before every run and stops when it
+// changed; launchd starts a tick on the new code within StartInterval (5 minutes).
+const selfDir = fileURLToPath(new URL('.', import.meta.url))
+const selfCode = () => ['runner.mjs', ...readdirSync(selfDir).filter((f) => /^_.*\.mjs$/.test(f)).sort()].map((f) => { try { return readFileSync(`${selfDir}${f}`, 'utf8') } catch { return '' } }).join('\0')
+const SELF_AT_START = selfCode()
 const REPLAY_LIMIT = 150 * MIN // a replay run (about 70 cases, four calls at a time)
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -522,6 +531,10 @@ if (cmd === 'status') {
   }
   const force = has('--force') ? [optv('--force') || 'a run was asked for by hand'] : null
   for (let n = 0; n < MAX_RUNS_PER_TICK; n++) {
+    if (n > 0 && selfCode() !== SELF_AT_START) {
+      say('the runner\'s own code changed since this tick started: stopping, the next tick (within 5 minutes) runs the new code')
+      break
+    }
     const seen = await look()
     const d = await decide(seen)
     if (d.lim && !force) {
