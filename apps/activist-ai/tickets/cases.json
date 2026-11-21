@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ola-324-clock",
+    "ticket": "OLA-324",
+    "commit": "16ff1553",
+    "level": "medium",
+    "request": "Ticket OLA-324: tools that write a time (LOG.md lines through sync.mjs push, issues.mjs comment and --proof, the handoff notes) refuse a typed time later than the machine clock.\n\nOn Nov 20 two agents typed times ahead of the clock (log lines saying 6:25 pm for work recorded at 6:09 pm). Build it: a shared module scripts/venture/_clock.mjs that finds the times typed in a piece of text and refuses one more than 3 minutes past the machine clock; sync.mjs push refuses LOG.md headings, NOW.md and handoff notes with such a time; issues.mjs refuses a comment or a --proof with one. A time behind the clock, a time in a plan ('at 9 pm tomorrow') and yesterday's times are kept.",
+    "give": ["scripts/venture/clock-test.mjs"],
+    "tests": [{ "name": "clock-test", "cmd": "node scripts/venture/clock-test.mjs", "count": "checks passed" }]
+  },
+  {
+    "id": "ola-283-select",
+    "ticket": "OLA-283",
+    "commit": "b769d39d",
+    "level": "hard",
+    "request": "Ticket OLA-283: an update of the test server runs every suite every time, so each update holds the machine for twenty minutes. Make an update run only the suites a change can affect, side by side.\n\nBuild apps/activist-ai/ops/select.mjs: given the files a change touched (between the live release and the new commit), it says which suites of ops/ola.mjs can be affected (follow each suite's files and what they import), and ops/ola.mjs runs only those, in parallel where they do not share the machine's one test turn. A change that touches something the selection cannot reason about runs every suite.",
+    "give": ["apps/activist-ai/ops/select-test.mjs"],
+    "tests": [{ "name": "select-test", "cmd": "node apps/activist-ai/ops/select-test.mjs", "count": "node-test" }]
+  },
+  {
+    "id": "ola-337-deepseek",
+    "ticket": "OLA-337",
+    "commit": "cd037fd6",
+    "level": "medium",
+    "request": "Ticket OLA-337: the model gateway (apps/activist-ai/gateway) gets DeepSeek V4 Pro as a picked choice under the model name deepseek-v4-pro: served only to a caller that names it, under the hosted grant (the same grant as the hosted fallback), with its month's spending and its record kept at its own prices; refused in the batch lane; never a default, a backup, a specialist or the design model; kept out of the model check (ops/models.mjs).",
+    "give": ["apps/activist-ai/gateway/test.mjs"],
+    "tests": [{ "name": "gateway-test", "cmd": "cd apps/activist-ai/gateway && node test.mjs", "count": "node-test" }]
+  }
+]

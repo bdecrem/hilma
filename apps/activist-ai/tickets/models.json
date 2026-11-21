@@ -1,0 +1,8 @@
+{
+  "_note": "Candidates for the ticket model (OLA-300): the strongest coding models Together serves, picked by the trial alone (Bart, Nov 20: 'performance is the only criteria', Chinese models allowed for this use only). Prices in USD per million tokens, from Together's /v1/models on Nov 21.",
+  "kimi-k3.1-pro": { "id": "moonshotai/Kimi-K3.1-Pro", "in": 2, "out": 10 },
+  "qwen3.7-max": { "id": "Qwen/Qwen3.7-Max", "in": 2.5, "out": 7.5 },
+  "deepseek-v4-pro": { "id": "deepseek-ai/DeepSeek-V4-Pro-0813", "in": 1.32, "out": 3.96 },
+  "glm-5.3": { "id": "zai-org/GLM-5.3", "in": 1.4, "out": 4.4 },
+  "muse-spark": { "id": "meta-models/Muse-Spark-Open-816B-A42B", "in": 1.25, "out": 4.25 }
+}
