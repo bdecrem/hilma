@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina education claude-opus-5-5 high",
- "pid": 60690,
  "step": "forward",
  "slug": "argentina",
  "chunk": "education",
@@ -56,5 +55,414 @@
   "user": 100
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T04:54:45.503Z",
+ "minutes": 23.28,
+ "meters_after": {
+  "at": "2026-11-21T04:54:45.504Z",
+  "window": {
+   "pct": 74,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 50,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 74,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 50,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 74% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 50% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 76135,
+   "output": 14734,
+   "cache_read": 909700,
+   "cache_write": 91495,
+   "cost_usd": 1.1484,
+   "total": 1092064
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 76105,
+    "output": 6046,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2174,
+    "cost_usd": 0.0606
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 8688,
+    "cache_read": 909700,
+    "cache_write": 91495,
+    "thinking": 1649,
+    "cost_usd": 1.0878
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 35,
+ "duration_ms": 254329,
+ "duration_api_ms": 200450,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T04:31:50.954Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 7° | educativo | primario | aranceles",
+   "ok": true,
+   "chars": 8514
+  },
+  {
+   "at": "2026-11-21T04:31:56.090Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "entrará en vigencia | vigencia | Dese cuenta | Ley de Educación Superior N° 24.521",
+   "ok": true,
+   "chars": 5507
+  },
+  {
+   "at": "2026-11-21T04:31:57.901Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92067/texact.htm",
+   "find": "ARTICULO 6° | ARTICULO 7° | Decreto N° 366",
+   "ok": true,
+   "chars": 627
+  },
+  {
+   "at": "2026-11-21T04:34:01.373Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 36 | ARTÍCULO 37 | ARTÍCULO 38 | día de su publicación | Ley de Educación Nacional N° 26.206 y sus modificatorias por el siguiente",
+   "ok": true,
+   "chars": 7565
+  },
+  {
+   "at": "2026-11-21T04:34:02.791Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+   "find": "ARTÍCULO 4° | ARTÍCULO 143 | migrantes",
+   "ok": true,
+   "chars": 2383
+  },
+  {
+   "at": "2026-11-21T04:34:08.839Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+   "find": "ARTICULO 4° | ARTICULO 16 | gratuidad",
+   "ok": true,
+   "chars": 4505
+  },
+  {
+   "at": "2026-11-21T04:34:09.813Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6° | ARTICULO 7° | ARTICULO 8°",
+   "ok": true,
+   "chars": 3468
+  },
+  {
+   "at": "2026-11-21T04:34:15.482Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6° | ARTICULO 7°",
+   "ok": true,
+   "chars": 2560
+  },
+  {
+   "at": "2026-11-21T04:34:28.802Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "escuela | primari | educación | DNI",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:34:30.261Z",
+   "url": "https://observatoriomigobierno.mgob.gba.gob.ar/adjuntos/contenido/09-06-2599Informe Análisis DNU 366 final.pdf",
+   "find": "educación | primario | escuela | artículo 7",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:36:59.817Z",
+   "url": "https://www.oise.utoronto.ca/redcamina/resources/contextualization-based-quantitative-secondary-sources-migration-and-schools",
+   "find": "Argentina | DNI | enrol | attendance",
+   "ok": true,
+   "chars": 1903
+  },
+  {
+   "at": "2026-11-21T04:37:00.651Z",
+   "url": "https://help.unhcr.org/argentina/acceso-a-derechos-en-argentina/educacion/",
+   "find": "DNI | inscrib | gratuita",
+   "ok": true,
+   "chars": 1574
+  },
+  {
+   "at": "2026-11-21T04:37:12.197Z",
+   "url": "https://www.redalyc.org/journal/3869/386971257002/html/",
+   "find": "menor probabilidad | DNI | conclusiones | acceso formal",
+   "ok": true,
+   "chars": 5394
+  },
+  {
+   "at": "2026-11-21T04:37:21.248Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2024/08/01-El-acceso-a-la-educacion-de-ninos-ninas-y-adolescentes-migrantes_24jun-1.pdf",
+   "find": "DNI | barreras | inscripción",
+   "ok": false,
+   "chars": 0
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 artículo 7 Ley 25.871 educación irregularidad migratoria aranceles universidades infoleg",
+  "DNU 366/2025 migraciones rechazo Congreso Senado Diputados vigencia escuelas niños migrantes acceso educación informe CAREF",
+  "niños migrantes escuela Argentina sin DNI acceso educación barreras 2024 informe",
+  "migrant children Argentina school enrolment irregular status access education report 2023 OR 2024 OR 2025",
+  "\"366/2025\" escuelas primarias inscripción alumnos extranjeros irregulares 2025 docentes migrantes educación básica se mantiene"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.71,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.72,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.73,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":125,\"answer_2023\":\"Yes (including irregular migrants)\",\"implementation_2023\":\"Usually; Effectively Always\",\"answer_2026\":\"Yes (including irregular migrants)\",\"implementation_2026\":\"Usually; Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 6\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 7\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Educación Nacional N° 26.206\",\"article\":\"Art. 4\",\"enacted\":\"2006-12-28\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Educación Nacional N° 26.206\",\"article\":\"Art. 11 inc. h (not cited by the MRD; supports free state schooling)\",\"enacted\":\"2006-12-28\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Educación Nacional N° 26.206\",\"article\":\"Art. 143 (not cited by the MRD; access for migrants without DNI)\",\"enacted\":\"2006-12-28\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Art. 14; art. 75 inc. 22 (rank of the ICESCR)\",\"enacted\":\"1853; reformed 1994\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"International Covenant on Economic, Social and Cultural Rights\",\"article\":\"Art. 13\",\"enacted\":\"1966 (constitutional rank in Argentina since 1994)\",\"history_read\":\"not_found\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025, art. 2\",\"article\":\"Ley 25.871, art. 7\",\"kind\":\"replaced\",\"what_changed\":\"Before: irregular status could never prevent admission to any educational establishment, primary through university. After: foreigners have the right to be admitted to initial, primary or secondary schools even if their status i",
+ "output": {
+  "answers": [
+   {
+    "question_id": 125,
+    "answer_2023": "Yes (including irregular migrants)",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes (including irregular migrants)",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 7",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Educación Nacional N° 26.206",
+      "article": "Art. 4",
+      "enacted": "2006-12-28",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Educación Nacional N° 26.206",
+      "article": "Art. 11 inc. h (not cited by the MRD; supports free state schooling)",
+      "enacted": "2006-12-28",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Educación Nacional N° 26.206",
+      "article": "Art. 143 (not cited by the MRD; access for migrants without DNI)",
+      "enacted": "2006-12-28",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14; art. 75 inc. 22 (rank of the ICESCR)",
+      "enacted": "1853; reformed 1994",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "International Covenant on Economic, Social and Cultural Rights",
+      "article": "Art. 13",
+      "enacted": "1966 (constitutional rank in Argentina since 1994)",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 2",
+      "article": "Ley 25.871, art. 7",
+      "kind": "replaced",
+      "what_changed": "Before: irregular status could never prevent admission to any educational establishment, primary through university. After: foreigners have the right to be admitted to initial, primary or secondary schools even if their status is irregular, and their status may not be a ground for discrimination. University is no longer covered. Primary education for irregular migrants is still protected, so the indicator's answer is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 7° — Los extranjeros tendrán derecho, aun cuando su condición migratoria fuera irregular, a ser admitidos como alumnos en un establecimiento educativo inicial, primario o secundario, ya sea público o privado; nacional, provincial o municipal, para lo cual su situación migratoria no podrá ser causa de discriminación alguna. (Artículo sustituido por art. 2º del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 1",
+      "article": "Ley 25.871, art. 6",
+      "kind": "replaced",
+      "what_changed": "Before: equal access for immigrants and their families on the same terms as nationals, including education. After: the same equal-access guarantee now applies 'according to the rights and obligations corresponding to each migratory category'. This qualifies the general equality clause the MRD cites. For primary schooling the specific rule in art. 7 still applies regardless of status.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 6° — El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social. (Artículo sustituido por art. 1º del Decreto Nº 366/2025 B.O. 29/5/2025...)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 36",
+      "article": "Ley 26.206, art. 143",
+      "kind": "replaced",
+      "what_changed": "Art. 143 now requires the Nation, the provinces and Buenos Aires City to guarantee access and continued enrolment at initial, primary and secondary levels for migrants without a DNI, on presentation of documents from their country of origin. This confirms that the primary-level guarantee continues. The earlier text was not read.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+      "passage": "ARTICULO 143. — El ESTADO NACIONAL, las Provincias y la CIUDAD AUTÓNOMA DE BUENOS AIRES deberán garantizar a las personas migrantes sin Documento Nacional de Identidad (D.N.I.), el acceso y las condiciones para la permanencia en los niveles inicial, primario y secundario del sistema educativo, mediante la presentación de documentos emanados de su país de origen... (Artículo sustituido por art. 36 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     }
+    ],
+    "implementation_then_now": "2023: no practice source from around 2023 could be read; CAREF's 2024 PDF report on migrant children's access to education could not be opened. The only practice evidence read is Arévalo (2021, using 2010 census data). It finds that migrant children are somewhat less likely to attend school than native children, and that schools do not formally block migrants' enrolment but limit their full inclusion. The MRD's 'Usually; Effectively Always' is kept. 2026: DNU 366/2025 deliberately kept school access for irregular migrants at initial, primary and secondary levels, and the press coverage seen in search results (not opened) reported basic education as kept. No documented shift in practice was found at primary level; the reported changes concern universities and health care. The rating stays the same, but the evidence is thin and mostly earlier than the period.",
+    "practice_sources": [
+     {
+      "title": "Arévalo Wierna, C. 'Brechas de acceso a la educación contra niños migrantes en la Argentina', Población & Sociedad 28(1), 2021",
+      "url": "https://www.redalyc.org/journal/3869/386971257002/html/",
+      "year": 2021,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "ACNUR Ayuda Argentina – Educación",
+      "url": "https://help.unhcr.org/argentina/acceso-a-derechos-en-argentina/educacion/",
+      "year": null,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Lanzetta & Kleidermacher, 'A Contextualization Based on Quantitative Secondary Sources on Migration and Schools' (abstract)",
+      "url": "https://www.oise.utoronto.ca/redcamina/resources/contextualization-based-quantitative-secondary-sources-migration-and-schools",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Both dates are well sourced. InfoLEG's original text of Ley 25.871 (arts. 6–7, in force on 1 Jan 2023) and its consolidated text with the DNU 366/2025 notes (in force from 29 May 2025) were both read, along with the DNU text itself. For Ley 26.206 only the current text was read; arts. 4 and 11(h) carry no amendment note. Practice evidence is weak: the CAREF/UNICEF 2024 reports and CAREF's 2026 report on the DNU are PDFs that could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Decreto 366/2025 – texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 26.206 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm"
+     },
+     {
+      "title": "InfoLEG wrong ID (file not found)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92067/texact.htm"
+     },
+     {
+      "title": "Arévalo 2021, Población & Sociedad (Redalyc)",
+      "url": "https://www.redalyc.org/journal/3869/386971257002/html/"
+     },
+     {
+      "title": "ACNUR Ayuda Argentina – Educación",
+      "url": "https://help.unhcr.org/argentina/acceso-a-derechos-en-argentina/educacion/"
+     },
+     {
+      "title": "OISE RedCamina abstract",
+      "url": "https://www.oise.utoronto.ca/redcamina/resources/contextualization-based-quantitative-secondary-sources-migration-and-schools"
+     },
+     {
+      "title": "CAREF Informe DNU 366/2025 (PDF, failed to open)",
+      "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf"
+     },
+     {
+      "title": "CAREF El acceso a la educación de NNA migrantes 2024 (PDF, failed to open)",
+      "url": "https://caref.org.ar/wp-content/uploads/2024/08/01-El-acceso-a-la-educacion-de-ninos-ninas-y-adolescentes-migrantes_24jun-1.pdf"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer is 'Yes (including irregular migrants)' on both dates. DNU 366/2025 (in force 29 May 2025) rewrote two of the cited provisions, Ley 25.871 arts. 6 and 7. It narrowed art. 7 to exclude university and qualified art. 6's equality guarantee by migratory category. But it explicitly kept primary-school admission for irregular migrants and added a non-discrimination clause. Free state schooling still rests on Ley 26.206 arts. 4 and 11(h). The change is coded 'not the same' because the cited text changed; for primary education specifically the substance is unchanged. A reviewer could code it as no change. The ICESCR is relied on because art. 75 inc. 22 of the Constitution gives it constitutional rank. Search results mention later court challenges, including a reported Cámara Nacional Electoral ruling of 30 June (apparently 2026) on the citizenship provisions. These were not read, concern other provisions, and seem to fall after 1 January 2026. No ruling affecting art. 7 was found."
+   }
+  ]
+ }
 }

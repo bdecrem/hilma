@@ -62,3 +62,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 19:51 | forward | health_housing · argentina | claude-opus-5-5 | high | 38.18 | 20 | 18,556 | 1,351,694 | 1.31 | 63→70 | 49→49 | 67→67 | 12 | ok | `forward argentina health_housing claude-opus-5-5 high` |
 | 2026-11-20 19:51 | forward | labor_b · argentina | claude-opus-5-5 | high | 39.28 | 32 | 23,510 | 2,298,566 | 1.78 | 63→71 | 49→49 | 67→67 | 22 | ok | `forward argentina labor_b claude-opus-5-5 high` |
 | 2026-11-20 19:51 | forward | labor_c · argentina | claude-opus-5-5 | high | 40 | 30 | 25,696 | 1,808,833 | 1.51 | 63→71 | 49→49 | 67→67 | 20 | ok | `forward argentina labor_c claude-opus-5-5 high` |
+| 2026-11-20 20:31 | forward | education · argentina | claude-opus-5-5 | high | 23.28 | 23 | 14,734 | 1,092,064 | 1.15 | 71→74 | 49→50 | 67→67 | 14 | ok | `forward argentina education claude-opus-5-5 high` |
