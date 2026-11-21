@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile liberty_a claude-opus-5-5 high",
- "pid": 48135,
  "step": "forward",
  "slug": "chile",
  "chunk": "liberty_a",
@@ -58,5 +57,523 @@
   "user": 105
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:48:39.366Z",
+ "minutes": 24.29,
+ "meters_after": {
+  "at": "2026-11-21T01:48:39.367Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 45,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 45,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 45% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 116577,
+   "output": 29037,
+   "cache_read": 1479707,
+   "cache_write": 109674,
+   "cost_usd": 1.6662,
+   "total": 1734995
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 116539,
+    "output": 9215,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2777,
+    "cost_usd": 0.0963
+   },
+   "claude-opus-5-5": {
+    "input": 38,
+    "output": 19822,
+    "cache_read": 1479707,
+    "cache_write": 109674,
+    "thinking": 3953,
+    "cost_usd": 1.5699
+   }
+  }
+ },
+ "turns": 26,
+ "calls": 44,
+ "duration_ms": 294824,
+ "duration_api_ms": 266217,
+ "pages_read": 15,
+ "pages": [
+  {
+   "at": "2026-11-21T01:24:25.976Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 134 | consular | niños, niñas | Artículo 135",
+   "ok": true,
+   "chars": 6385
+  },
+  {
+   "at": "2026-11-21T01:24:40.709Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/08/07/43621/01/2357278.pdf",
+   "find": "artículo 134 | cuarenta y ocho | cinco días | consular",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:24:47.199Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 134 | consular | Artículo 132 bis",
+   "ok": true,
+   "chars": 9758
+  },
+  {
+   "at": "2026-11-21T01:24:51.324Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Contactar a familiares | cinco días | Artículo 135.- ",
+   "ok": true,
+   "chars": 8439
+  },
+  {
+   "at": "2026-11-21T01:24:54.777Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "21590 | 21.590 | 21655 | fechaVersion",
+   "ok": true,
+   "chars": 3348
+  },
+  {
+   "at": "2026-11-21T01:29:33.195Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "cuarenta y ocho horas | cinco días corridos | Artículo único",
+   "ok": true,
+   "chars": 2548
+  },
+  {
+   "at": "2026-11-21T01:29:33.979Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "artículo 131 | cónsul | consular | niños | privación de libertad",
+   "ok": true,
+   "chars": 2156
+  },
+  {
+   "at": "2026-11-21T01:29:54.110Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Tipo Versión | Intermedio | Ley 21590 | Ley 21655 | Última Versión",
+   "ok": true,
+   "chars": 4747
+  },
+  {
+   "at": "2026-11-21T01:30:03.943Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325 | artículo 134 | Publicación",
+   "ok": true,
+   "chars": 3959
+  },
+  {
+   "at": "2026-11-21T01:30:12.824Z",
+   "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+   "find": "consular | niños | garantías | plazo",
+   "ok": true,
+   "chars": 2501
+  },
+  {
+   "at": "2026-11-21T01:32:11.949Z",
+   "url": "https://derecho.uchile.cl/dam/jcr:5fe885ac-b45e-4cd5-a3f8-64d741841eba/CA%20137-2024.pdf",
+   "find": "privación de libertad | consular | niños | reconducción | horas",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:32:19.881Z",
+   "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/chile/",
+   "find": "expul | migrant | consular | detention | children",
+   "ok": true,
+   "chars": 8503
+  },
+  {
+   "at": "2026-11-21T01:35:25.956Z",
+   "url": "https://www.hrw.org/world-report/2025/country-chapters/chile",
+   "find": "migra | expul | Venezuel | children",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:36:27.394Z",
+   "url": "https://www.camara.cl/cms/?p=91177",
+   "find": "migra | expul | consular | niños",
+   "ok": true,
+   "chars": 4079
+  },
+  {
+   "at": "2026-11-21T01:37:08.411Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "al cónsul de su respectivo país | Artículo 131.- | 10 kilómetros",
+   "ok": true,
+   "chars": 4694
+  }
+ ],
+ "searches": [
+  "Ley 21.655 modifica ley 21.325 artículo 134 privación de libertad expulsión",
+  "\"Ley 21.590\" migración expulsión plazo cinco días corridos artículo 134 publicada",
+  "INDH expulsiones administrativas privación de libertad cuartel PDI derechos consular informe 2023 2024",
+  "Comité para la Prevención de la Tortura informe \"privación de libertad de personas migrantes en proceso de expulsión administrativa\" pdf",
+  "CPT Chile informe expulsiones administrativas migrantes cuarteles PDI cónsul información derechos hallazgos 2025",
+  "Defensoría de la Niñez niños migrantes privados de libertad frontera Colchane reconducción 2023 2024 informe",
+  "Corte Suprema amparo expulsión administrativa privación de libertad excede plazo artículo 134 ley 21.325 acoge 2024",
+  "\"Comité para la Prevención de la Tortura\" Chile expulsión administrativa migrantes informe \"cónsul\" OR \"consular\" PDI cuartel Bórquez"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":15,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 134 (inciso 2, N° 4)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-08-07\",\"instrument\":\"Ley N° 21.590, modifica la ley N° 21.325 para ampliar el plazo de privación de libertad para la materialización de las expulsiones administrativas\",\"article\":\"Ley 21.325, art. 134, inciso final\",\"kind\":\"amended\",\"what_changed\":\"Raised the maximum detention to carry out an expulsion from 48 hours to five calendar days. It did not touch the list of detainee rights in inciso 2, including N° 4 (the right to communicate with one's consular representative), so it does not affect this indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21590\",\"passage\":\"Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \\\"cuarenta y ocho horas\\\" por la frase \\\"cinco días corridos\\\".\"}],\"implementation_then_now\":\"The law is the same on both dates. Art. 134 N° 4 has read 'Comunicarse con su representante consular' since the original text of 12 February 2022 and in every later version. On practice: in May 2025 the national torture-prevention mechanism (CPT) reported on its visits to police facilities holding migrants for administrative expulsion between November 2023 and October 2024. According to the press summary, it found 'la falta de garantías procesales básicas' in administrative detention. That suggests the art. 134 safeguards are applied unevenly, but the summary does not single out consular contact. I found no source documenting consular access specifica",
+ "output": {
+  "answers": [
+   {
+    "question_id": 15,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 134 (inciso 2, N° 4)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley N° 21.590, modifica la ley N° 21.325 para ampliar el plazo de privación de libertad para la materialización de las expulsiones administrativas",
+      "article": "Ley 21.325, art. 134, inciso final",
+      "kind": "amended",
+      "what_changed": "Raised the maximum detention to carry out an expulsion from 48 hours to five calendar days. It did not touch the list of detainee rights in inciso 2, including N° 4 (the right to communicate with one's consular representative), so it does not affect this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     }
+    ],
+    "implementation_then_now": "The law is the same on both dates. Art. 134 N° 4 has read 'Comunicarse con su representante consular' since the original text of 12 February 2022 and in every later version. On practice: in May 2025 the national torture-prevention mechanism (CPT) reported on its visits to police facilities holding migrants for administrative expulsion between November 2023 and October 2024. According to the press summary, it found 'la falta de garantías procesales básicas' in administrative detention. That suggests the art. 134 safeguards are applied unevenly, but the summary does not single out consular contact. I found no source documenting consular access specifically for either period. The MRD's starting rating, 'Effectively Always; Rarely', is not an allowed option (the two levels are not neighbours), so I mapped it to the midpoint, 'Sometimes; Usually', for both dates. I found no documented shift.",
+    "practice_sources": [
+     {
+      "title": "Informe de visita del Comité para la Prevención de la Tortura (CPT): 'Privación de libertad de personas migrantes en proceso de expulsión administrativa' (press summary)",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's version list for Ley 21.325 was read. Versions are dated 12-02-2022 (original), 07-08-2023 (Ley 21.590), 18-08-2023 (Ley 21.589), 22-09-2023 (Ley 21.610), 20-02-2024 (Ley 21.655), 01-04-2025 (Ley 21.730) and 02-06-2026 (Ley 21.816). The only one touching art. 134 is Ley 21.590, which amends the final paragraph only. The full CPT report (PDF) could not be opened; only a press summary was read.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, version list)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 consolidated text (XML)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "LeyChile – Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Diario Constitucional – CPT report on migrants deprived of liberty for expulsion",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     },
+     {
+      "title": "US State Dept 2023 Country Report – Chile",
+      "url": "https://www.state.gov/reports/2023-country-reports-on-human-rights-practices/chile/"
+     },
+     {
+      "title": "Cámara de Diputados – CPT annual report presented to the Human Rights Commission",
+      "url": "https://www.camara.cl/cms/?p=91177"
+     }
+    ],
+    "starting_answer_concern": "The MRD's implementation rating 'Effectively Always; Rarely' is not an allowed value, since the two levels are not neighbours. It probably rates two contexts separately. I recorded it as 'Sometimes; Usually'. On the law, the 'Yes' holds, but it is narrow. Art. 134 N° 4 covers only people detained to carry out an expulsion. A separate provision on reconducción in Title VI requires that a person being reconducted be guaranteed the chance to 'Contactar a familiares, a cualquier otra persona cercana o al cónsul de su respectivo país'. The Vienna Convention on Consular Relations, which Chile has ratified, was not separately checked.",
+    "confidence": "medium",
+    "notes": "The answer rests on the statute only (Ley 21.325, art. 134 inciso 2 N° 4, read in the consolidated text). No court ruling was relied on. Ley 21.655 (in force 20-02-2024) amended art. 131 inciso 2 (wider scope for reconducción). It did not amend the consular-contact guarantee for reconducted persons or art. 134."
+   },
+   {
+    "question_id": 17,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 134 inciso 1 ('En ningún caso se aplicará esta medida a niños, niñas o adolescentes')",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 4 inciso 2 (children not subject to migration sanctions)",
+      "enacted": "2021-04-20",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley N° 21.590",
+      "article": "Ley 21.325, art. 134, inciso final",
+      "kind": "amended",
+      "what_changed": "Raised the maximum detention for executing an expulsion from 48 hours to five calendar days. The bar on detaining children in inciso 1 was left untouched, so the indicator is not affected.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N° 21.655, modifica la Ley N° 20.430 ... y la Ley N° 21.325, en relación con la medida de reconducción",
+      "article": "Ley 21.325, art. 131, inciso 2",
+      "kind": "amended",
+      "what_changed": "Extended immediate reconducción to people who have already entered irregularly up to 10 km from the land border or within territorial waters, and raised the provisional entry ban from six months to one year. It does not touch the bar on detaining children in art. 134. It does widen the border procedure in which de facto holding of children has been reported.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325 ... b) Reemplázase la frase \"ya sea por pasos habilitados o no, o valiéndose de documentos falsificados\", por la siguiente: \"ya sea por pasos habilitados o no, o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre ...\" ... d) Reemplázase la expresión \"seis meses\" por \"un año\"."
+     }
+    ],
+    "implementation_then_now": "The law is the same on both dates. Since the original text of 12 February 2022, art. 134 has said that detention to carry out an expulsion 'En ningún caso se aplicará ... a niños, niñas o adolescentes'. On practice: the national torture-prevention mechanism's annual report covers August 2023 to December 2024 and was presented to the Chamber of Deputies in October 2025. It visited border 'containment' sites in the north and said that, although these are not designed as places of detention, 'en la práctica funcionan como tales'. It raised concern for both unaccompanied and accompanied children. That points to de facto holding of children at the border, while I found no report of children held in expulsion detention under art. 134. The evidence is thin and roughly the same across the window, so 'Usually' is kept for both dates and no shift is recorded.",
+    "practice_sources": [
+     {
+      "title": "Comisión de DDHH recibió informe en materia de prevención de la tortura o malos tratos (CPT annual report, Aug 2023–Dec 2024)",
+      "url": "https://www.camara.cl/cms/?p=91177",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's version list was read. None of the amending acts (21.590, 21.589, 21.610, 21.655, 21.730, 21.816) changes art. 134 inciso 1. Only Ley 21.590 touches art. 134, in its final paragraph. The practice evidence is a parliamentary press summary of the CPT report. Defensoría de la Niñez reports were found by search but not opened (they are PDFs).",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, version list)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 consolidated text (XML)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Cámara de Diputados – CPT annual report",
+      "url": "https://www.camara.cl/cms/?p=91177"
+     },
+     {
+      "title": "Diario Constitucional – CPT report on migrants deprived of liberty for expulsion",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' is defensible but narrow. Art. 134 bars only detention to carry out an expulsion, and art. 4 exempts children from migration sanctions. Neither expressly covers holding children during reconducción at the border, where the CPT reports de facto detention.",
+    "confidence": "low",
+    "notes": "The answer rests on the statute only (Ley 21.325, art. 134 inciso 1, read in the consolidated text). No court ruling was relied on."
+   },
+   {
+    "question_id": 19,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 134",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 131 inciso 2 (reconducción)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley N° 21.590, modifica la ley N° 21.325 para ampliar el plazo de privación de libertad para la materialización de las expulsiones administrativas",
+      "article": "Ley 21.325, art. 134, inciso final",
+      "kind": "amended",
+      "what_changed": "The maximum detention to carry out an expulsion went from 48 hours to five calendar days. Detention on the basis of migration status (to enforce expulsion) was already allowed and is now allowed for longer, so the answer stays 'No'.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N° 21.655",
+      "article": "Ley 21.325, art. 131, inciso 2",
+      "kind": "amended",
+      "what_changed": "Widened immediate reconducción to irregular entrants found within 10 km of the land border or in territorial waters, and to people who have already entered. This widens border removal; it creates no prohibition on detention.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\". b) ... \"o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre o dentro del mar territorial ...\""
+     }
+    ],
+    "implementation_then_now": "Does not apply: there is no prohibition on detention based on migration status on either date. On practice, the CPT documented deprivation of liberty of migrants awaiting administrative expulsion in police facilities between November 2023 and October 2024, and border containment sites working in practice as places of detention. This confirms that migration detention is used, and it was extended in law in August 2023.",
+    "practice_sources": [
+     {
+      "title": "Informe de visita del CPT: 'Privación de libertad de personas migrantes en proceso de expulsión administrativa' (press summary)",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Comisión de DDHH recibió informe en materia de prevención de la tortura o malos tratos",
+      "url": "https://www.camara.cl/cms/?p=91177",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The current art. 134 text and the LeyChile version list were read. The original reading ('cuarenta y ocho horas') is reconstructed from the Ley 21.590 amending text. The Ley 21.655 amendment to art. 131 was read in the act itself and in the current consolidated text.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 21.325 (navegar, version list)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.325 consolidated text (XML)",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "LeyChile – Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "LeyChile – Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Diario Constitucional – CPT report",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     },
+     {
+      "title": "Cámara de Diputados – CPT annual report",
+      "url": "https://www.camara.cl/cms/?p=91177"
+     }
+    ],
+    "starting_answer_concern": "The starting citation mentions an 8-hour identity-verification limit. I did not verify it in this session, and no provision for it is cited.",
+    "confidence": "high",
+    "notes": "The answer rests on the statute only. Ley 21.590 lengthened the permitted detention within the window but did not change the answer. A 2026 bill adding an art. 134 bis (police entry into homes to carry out expulsions) was in the legislature in mid-2026 and is outside the window."
+   }
+  ]
+ }
 }
