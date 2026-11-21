@@ -47,6 +47,7 @@
 // either given with the correction or owed and settled later with `fix`.
 import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
 
@@ -228,7 +229,13 @@ if (cmd === 'add') {
     if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
   const text = readFileSync(COR, 'utf8')
-  const n = Math.max(0, ...[...text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1]))) + 1
+  // a number is never used twice: past every number in CORRECTIONS.md, in data/weaknesses.json and in the
+  // tracker's list of owed fixes (thirteenth checker: 106 was in weaknesses.json and the tracker but not in
+  // CORRECTIONS.md, so the next correction was numbered 106 again and took over its owed row)
+  const refNums = JSON.stringify(list).match(/"correction (\d+)"/g) ?? []
+  let heldNums = []
+  try { heldNums = ((await (await trackerDb()).from('venture_state').select('key').like('key', 'owed-fix:%')).data ?? []).map((r) => Number(r.key.slice(9))) } catch {}
+  const n = Math.max(0, ...[...text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1])), ...refNums.map((x) => Number(x.replace(/\D/g, ''))), ...heldNums.filter(Number.isFinite)) + 1
   const date = pacific({ month: 'long', day: 'numeric', year: 'numeric' })
   const said = str('at') ?? str('when')
   if (said && timeProblem(said)) die(timeProblem(said))
@@ -257,7 +264,15 @@ if (cmd === 'add') {
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
   if (owed && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
     const o = w.owed.at(-1)
-    try { await (await trackerDb()).from('venture_state').upsert({ key: `owed-fix:${n}`, value: { ref: o.ref, issue: o.issue, since: o.since, settled: null }, at: new Date().toISOString() }) } catch (e) { console.error(`(the tracker's list of owed fixes was not updated: ${e.message}; correct.mjs audit adds it)`) }
+    try {
+      const tdb = await trackerDb()
+      const had = (await tdb.from('venture_state').select('value').eq('key', `owed-fix:${n}`).maybeSingle()).data
+      if (had && !had.value?.settled) {
+        const { writeOverride } = await import('./_overrides.mjs')
+        await writeOverride(tdb, { ticket: o.issue, what: `correction ${n}'s owed fix replaced another owed fix under the same number in the tracker's list (${had.value?.ref}, ${had.value?.issue}, since ${had.value?.since}): read which fix is owed`, tool: 'correct.mjs' })
+      }
+      await tdb.from('venture_state').upsert({ key: `owed-fix:${n}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
+    } catch (e) { console.error(`(the tracker's list of owed fixes was not updated: ${e.message}; correct.mjs audit adds it)`) }
   }
   console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
   console.log(NEXT)
@@ -345,15 +360,27 @@ if (cmd === 'add') {
       // that leaves the notes' list without correct.mjs settling it in the tracker is a line, once
       const owedNow = owedFixes(weak())
       const held = ((await db.from('venture_state').select('key, value').like('key', 'owed-fix:%')).data ?? [])
+      // a line is keyed by the event (the number and the owed fix's own time), so a later fix under a reused
+      // number, or the same change made again, is a line of its own (thirteenth checker)
+      const ev = (num, v) => `${num}-${String(v?.since ?? '').replace(/[^0-9]/g, '')}`
       for (const o of owedNow) {
         const num = o.ref.replace(/\D/g, '')
-        if (!held.some((h) => h.key === `owed-fix:${num}`)) await db.from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, settled: null }, at: new Date().toISOString() })
+        const h = held.find((x) => x.key === `owed-fix:${num}`)
+        if (!h) await db.from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
+        else if (!h.value?.settled) {
+          // the notes' entry must still say what the tracker recorded: its time (which decides overdue), ticket and kind
+          const diff = ['since', 'issue', 'need'].filter((k) => h.value?.[k] !== undefined && String(h.value[k]) !== String(o[k]))
+          if (diff.length) {
+            const key = `owed-changed-${ev(num, h.value)}-${createHash('sha256').update(diff.map((k) => `${k}=${o[k]}`).join('|')).digest('hex').slice(0, 10)}`
+            if (!(await ownLine(db, key))) await writeOverride(db, { key, ticket: h.value?.issue ?? null, what: `correction ${num}'s owed fix was changed in data/weaknesses.json past correct.mjs (${diff.map((k) => `${k} ${h.value[k]} -> ${o[k]}`).join(', ')}); the tracker keeps ${h.value.since} as when it was owed: read why`, tool: 'correct.mjs' })
+          }
+        }
       }
       for (const h of held) {
         if (h.value?.settled || owedNow.some((o) => o.ref === h.value?.ref)) continue
         const num = h.key.slice('owed-fix:'.length)
-        if (await ownLine(db, `owed-gone-${num}`)) continue
-        await writeOverride(db, { key: `owed-gone-${num}`, ticket: h.value?.issue ?? null, what: `correction ${num}'s owed fix (${h.value?.issue}) is gone from the notes' list of owed fixes, but correct.mjs never settled it (data/weaknesses.json edited by hand, or copied over from a copy): read whether the fix exists`, tool: 'correct.mjs' })
+        if (await ownLine(db, `owed-gone-${ev(num, h.value)}`)) continue
+        await writeOverride(db, { key: `owed-gone-${ev(num, h.value)}`, ticket: h.value?.issue ?? null, what: `correction ${num}'s owed fix (${h.value?.issue}) is gone from the notes' list of owed fixes, but correct.mjs never settled it (data/weaknesses.json edited by hand, or copied over from a copy): read whether the fix exists`, tool: 'correct.mjs' })
       }
       for (const m of text.matchAll(/^## (\d+)\. [^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)) {
         const num = m[1]
