@@ -80,9 +80,9 @@ export function toolShell() {
       // the nearest process whose parent is Claude Code is the shell it started for this command
       if (!p.args.includes('/.claude/shell-snapshots/') || !p.args.includes(" eval '")) return null
       const i = p.args.indexOf(" eval '") + 7
-      let j = p.args.lastIndexOf("' < /dev/null && pwd -P >| ")
-      if (j < i) j = p.args.lastIndexOf("' < /dev/null")
-      return p.args.slice(i, j > i ? j : undefined).replace(/'\\''/g, "'")
+      // Claude Code's own end, anchored at the very end ("< /dev/null" only when the command has no redirect of its own)
+      const end = p.args.match(/'(?: < \/dev\/null)? && pwd -P >\| \S*claude-[0-9a-f]+-cwd$/)
+      return p.args.slice(i, end ? end.index : undefined).replace(/'\\''/g, "'")
     }
     pid = p.ppid
   }
