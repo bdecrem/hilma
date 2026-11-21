@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { engineNote, makeMadeBy, stripEngines, NOTE_OPEN, NOTE_CLOSE } from '../madeby.mjs'
+import { attributeChange, engineNote, makeMadeBy, stripEngines, NOTE_OPEN, NOTE_CLOSE } from '../madeby.mjs'
 
 const OLA_DB = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../workspace/ola-db')
 
@@ -116,7 +116,7 @@ test('a turn the design model served is recorded with it, per conversation; unsu
   p.put('cities.csv', 'city,n\n', Date.now() / 1000 - 10)
   await m.end('fd-y', tg)
   const rec = Object.fromEntries(p.record().map((r) => [r.path, r]))
-  assert.equal(rec['index.html'].model, 'the design model, Inkling-2-Small')
+  assert.equal(rec['index.html'].model, 'design:thinkingmachines/Inkling-2-Small')
   assert.equal(rec['index.html'].engine, 'ola')
   assert.equal(rec['cities.csv'].model, null, 'the other conversation is not the design model’s')
   assert.deepEqual(asked.map((a) => a.session), ['ses_d', 'ses_g'])
@@ -128,5 +128,78 @@ test('a turn the design model served is recorded with it, per conversation; unsu
   // What Ola reads: the design model by name.
   const env = { ...process.env, OLA_WORK: p.work }
   const words = spawnSync('python3', [OLA_DB, 'made-by', 'index.html'], { encoding: 'utf8', env }).stdout
-  assert.match(words, /Ola's own open model \(model the design model, Inkling-2-Small\)/)
+  assert.match(words, /Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola's own model\)/)
+  assert.ok(!/Ola's own open model \(model/.test(words), words)
+})
+
+// OLA-303: the checker found two design changes to index.html recorded as plain "Ola's own open model"
+// (only the creation named the design model), and Ola called Inkling-2-Small "Ola's own open model".
+// Each change is now matched to the gateway step that led to it, per conversation.
+test('a design creation, a later design change and two conversations at once are each recorded with the model that made them (OLA-303)', async () => {
+  const p = project()
+  const steps = []
+  const step = (session, name, at) => steps.push([at, session, name])
+  const served = async (slug, session, since) => ({ names: {}, design_model: 'thinkingmachines/Inkling-2-Small', steps: steps.filter((x) => x[0] >= since) })
+  const m = makeMadeBy({ exec: p.exec, executing: async () => new Set(), served, sweepMs: 0 })
+  const now = Date.now()
+  const rows = () => p.record()
+  const words = (...f) => spawnSync('python3', [OLA_DB, 'made-by', ...f], { encoding: 'utf8', env: { ...process.env, OLA_WORK: p.work } }).stdout
+
+  // 1. A design creation: the first step general (it loads the designer skill), then the design model writes the page.
+  const t1 = await m.begin('fd-z', { engine: 'ola', session: 'ses_c1', request: 'make a page for our block party' })
+  step('ses_c1', 'general', now - 60_000)
+  step('ses_c1', 'design', now - 59_000)
+  p.put('index.html', '<h1>v1</h1>', (now - 58_500) / 1000)
+  step('ses_c1', 'design', now - 58_000)
+  await m.end('fd-z', t1)
+  assert.equal(rows().find((r) => r.path === 'index.html').model, 'design:thinkingmachines/Inkling-2-Small')
+
+  // 2. A design change in a new conversation, while a general conversation runs at the same time
+  // and its turn (begun before the change) ends first: the change is still the design one's.
+  const tg = await m.begin('fd-z', { engine: 'ola', session: 'ses_g', request: 'how many members by city?' })
+  const t2 = await m.begin('fd-z', { engine: 'ola', session: 'ses_c2', request: 'make the page warmer' })
+  step('ses_g', 'general', now - 40_000)
+  step('ses_c2', 'general', now - 39_000)
+  step('ses_c2', 'design', now - 30_000)
+  p.put('index.html', '<h1>v2, warmer</h1>', (now - 29_500) / 1000)
+  step('ses_g', 'general', now - 20_000)
+  p.put('cities.csv', 'city,n\n', (now - 19_500) / 1000)
+  await m.end('fd-z', tg) // the general conversation's turn ends first and sees both changes
+  await m.end('fd-z', t2)
+  const ix = rows().find((r) => r.path === 'index.html')
+  assert.deepEqual([ix.how, ix.model, ix.session], ['changed', 'design:thinkingmachines/Inkling-2-Small', 'ses_c2'], 'the change is the design conversation’s, though another turn recorded it')
+  const cs = rows().find((r) => r.path === 'cities.csv')
+  assert.deepEqual([cs.model, cs.session], [null, 'ses_g'], 'the general conversation’s file is Ola’s own')
+
+  // 3. A design step and a general step of two conversations, both between the change and the
+  // last step before it: not known, and the record says so instead of guessing.
+  const t3 = await m.begin('fd-z', { engine: 'ola', session: 'ses_c3', request: 'redo the header' })
+  const t4 = await m.begin('fd-z', { engine: 'ola', session: 'ses_g2', request: 'add a members table' })
+  step('ses_c3', 'design', now - 10_000)
+  step('ses_g2', 'general', now - 9_000)
+  p.put('header.html', '<h1>h</h1>', (now - 8_500) / 1000)
+  await m.end('fd-z', t3)
+  await m.end('fd-z', t4)
+  assert.equal(rows().find((r) => r.path === 'header.html').model, 'unknown')
+  assert.match(words('header.html'), /which model made this change is not known/)
+
+  // What Ola reads: the outside design model by name, for the creation and the change, never "Ola's own".
+  const w = words('index.html')
+  assert.equal((w.match(/Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola's own model\)/g) ?? []).length, 2, w)
+  assert.ok(!/Ola's own open model/.test(w), w)
+  assert.match(words(), /Never call it Ola's own model/)
+  // The note another engine reads names it the same way.
+  assert.match(m.noteFor('fd-z', 'ses_c2', 'hosted'), /Inkling-2-Small, an outside open model that Ola uses for design work, asked "make the page warmer", changed index\.html/)
+  m.close()
+})
+
+test('attributeChange: the last step before a change decides; steps too close together agree or the model is unknown (OLA-303)', () => {
+  const S = [[1000, 'a', 'general'], [2000, 'a', 'design'], [9000, 'b', 'general'], [11000, 'a', 'design'], [20000, 'b', 'design'], [21000, 'a', 'design']]
+  assert.deepEqual(attributeChange(S, 'a', 2500, 'x/D'), { model: 'design:x/D' })
+  assert.deepEqual(attributeChange(S, 'a', 1500, 'x/D'), { model: 'design:x/D' }, 'a step up to the clock slack after the file still counts')
+  assert.deepEqual(attributeChange(S, 'a', 9500, 'x/D'), { model: null, session: 'b' }, 'the other conversation’s step led to it')
+  assert.equal(attributeChange(S, 'b', 11500, 'x/D').model, 'unknown', 'a general and a design step of two conversations within seconds')
+  assert.deepEqual(attributeChange(S, 'b', 21500, 'x/D'), { model: 'design:x/D' }, 'both close steps were the design model’s')
+  assert.deepEqual(attributeChange([], 'a', 3500, 'x/D'), { model: null }, 'no step: nothing named')
+  assert.deepEqual(attributeChange([[1000, 'a', 'design-failed']], 'a', 1500, 'x/D'), { model: null }, 'a failed design step was done by general')
 })

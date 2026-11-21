@@ -78,6 +78,12 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-56 (OLA-303): who made a file names the design model as what it is. `ola-made-by` prints a
+# change the design model made as "Inkling-2-Small, an outside open model that Ola uses for design
+# work (not Ola's own model)" (it said "Ola's own open model (model the design model, ...)", and Ola
+# answered "Ola's own open model (Inkling-2-Small)"); `ola-db made-by fix` lets the front desk
+# correct a change's model and conversation once it has matched the change to the step that led to
+# it; AGENTS.md says the same. Builds on 2.3.0-55.
 # 2.3.0-55 (OLA-249): only Ola's models, a second guard (the VM has no way out): the system config
 # denies every provider but ola, and opencode's free models and its model-list download are off.
 # Builds on 2.3.0-54.

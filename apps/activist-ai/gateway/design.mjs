@@ -37,6 +37,8 @@ export const DESIGN_DEFAULT = 'thinkingmachines/Inkling-2-Small'
 // The design model writes whole pages: it is never asked with a small output allowance (with 50
 // tokens and its reasoning on, it answered empty three times, Nov 20).
 export const DESIGN_MIN_OUTPUT = 16000
+// The most steps one served query returns (a two-hour turn of a busy project is a few hundred).
+export const STEPS_MAX = 5000
 
 // The sentences the gateway adds for Ola to pass on (fixed text, from this file).
 export const WITHHELD = 'Note from Ola’s gateway: this design work is being done by Ola’s own model on this machine, because this project keeps its work in the office. In your reply, say in one plain sentence that a stronger design model is available if the project’s owner turns on the hosted model in Settings.'
@@ -116,6 +118,9 @@ export function makeDesign({ cfg, db }) {
   const prune = db.prepare('DELETE FROM served WHERE at < ?')
   const bySession = db.prepare('SELECT name, count(*) AS n FROM served WHERE caller = ? AND session = ? AND at >= ? GROUP BY name')
   const byCaller = db.prepare('SELECT name, count(*) AS n, count(DISTINCT coalesce(session, \'\')) AS convs FROM served WHERE caller = ? AND at >= ? GROUP BY name')
+  // The steps themselves, in order (OLA-303): which conversation each chat request was and which name
+  // served it, so the front desk can say which request led to each file change, not just which turn.
+  const steps = db.prepare("SELECT at, session, name FROM served WHERE caller = ? AND at >= ? AND session IS NOT NULL AND name IN ('general', 'design', 'design-failed') ORDER BY at LIMIT ?")
   let added = 0
   return {
     local: cfg.local,
@@ -129,6 +134,8 @@ export function makeDesign({ cfg, db }) {
       const rows = session ? bySession.all(who, session, since) : byCaller.all(who, since)
       return Object.fromEntries(rows.map((r) => [r.name, r.n]))
     },
+    /** Every conversation step since a moment, oldest first: [at ms, session, name], at most STEPS_MAX. */
+    steps: (who, since) => steps.all(who, since, STEPS_MAX).map((r) => [r.at, r.session, r.name]),
     close: () => timer && clearInterval(timer),
   }
 }

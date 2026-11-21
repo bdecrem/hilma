@@ -48,6 +48,26 @@ test('every case is well formed, and its patterns compile', () => {
   assert.ok(cases.some((c) => c.say === 'make a page that says Bart and publish it on ola' && c.places.includes('cloud-web:chat') && c.places.includes('local-mac:chat')))
 })
 
+test('OLA-303: who made the design page: the outside design model by name passes, "Ola’s own" beside Inkling fails', () => {
+  const cases = readCases()
+  for (const id of ['design-who-made-cloud', 'design-change-who-cloud', 'design-who-made-local', 'design-page-cloud']) {
+    const c = cases.find((x) => x.id === id)
+    assert.ok(c, id)
+    const says = c.must.filter((m) => m.startsWith('says:')).map((m) => new RegExp(m.slice(5), 'i'))
+    const ok = (t) => says.every((r) => r.test(t)) && !(c.mustNot ?? []).some((s) => new RegExp(s, 'i').test(t))
+    // What the checker got, 5 of 5 (OLA-303): fails everywhere.
+    assert.ok(!ok('The page was made by Ola’s own open model (Inkling-2-Small), using the designer skill.'), id)
+    assert.ok(!ok('Ola’s own model, Inkling-2-Small, built it.'), id)
+    assert.ok(!ok('Inkling-2-Small, which is Ola’s own design model, made it.'), id)
+    // What the record now says, in Ola's words.
+    assert.ok(ok('Inkling-2-Small, an outside open model Ola uses for design work, made index.html on Nov 20 at 4:27 PM.'), id)
+    assert.ok(ok('It was made by Inkling-2-Small, an outside open model that Ola uses for design work (not Ola’s own model).'), id)
+  }
+  const local = cases.find((x) => x.id === 'design-who-made-local')
+  assert.deepEqual(local.places, ['local-mac:chat'])
+  assert.ok(cases.find((x) => x.id === 'design-change-who-cloud').before.length === 2, 'a creation, then a design change, then the question')
+})
+
 test('who made it: the right answer passes, the false one fails', () => {
   const c = readCases().find((x) => x.id === 'who-made-index')
   const must = new RegExp(c.must[0].slice(5), 'i')

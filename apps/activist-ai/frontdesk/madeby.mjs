@@ -26,20 +26,60 @@ import { randomBytes } from 'node:crypto'
 // Which model served a turn (OLA-168): Ola's turn may run on the design model (gateway/design.mjs)
 // once the designer skill is loaded. The gateway keeps which name served each request, by project and
 // by opencode's conversation id (its X-Session-Id header), and the front desk asks it as the turn
-// ends (GET /v1/served with the usage token). A turn the design model served is recorded with the
-// model `DESIGN_WORDS`, so `ola-made-by` says so. Without a conversation id, or when the gateway
-// cannot be asked, no model is named: the record never claims a model it is not sure of.
-export const designWords = (id) => `the design model, ${String(id ?? '').split('/').pop() || 'Inkling-2-Small'}`
+// ends (GET /v1/served with the usage token). A change the design model made is recorded with the
+// model `design:<its id>`, which `ola-made-by` prints as "Inkling-2-Small, an outside open model that
+// Ola uses for design work (not Ola's own model)" (workspace/ola-db who_words). Without a
+// conversation id, or when the gateway cannot be asked, no model is named.
+//
+// Per change, not per turn (OLA-303): a turn records every file changed in the project between its
+// begin and its end, whoever changed it, so a change can land in another turn's window (two
+// conversations at once, a turn ended early by the sweep). The checker found two design changes to
+// index.html recorded as plain "Ola's own open model". So each change is matched to the step that
+// led to it: the gateway's steps (when each chat request finished, its conversation, the name that
+// served it), and the last step before the file's time (a tool writes right after the step that
+// asked for it). One conversation's step: its name decides and the change is recorded under that
+// conversation. Steps of two conversations within a few seconds of each other: the design model when
+// all were the design model's, Ola's own when none were, and otherwise "unknown" (the record says it
+// is not known), never a guess. Not covered: a command that writes a file long after its step while
+// another conversation steps in between (the change goes to that one).
+export const designModel = (id) => `design:${String(id ?? '').trim() || 'thinkingmachines/Inkling-2-Small'}`
+export const isDesignModel = (m) => typeof m === 'string' && (m.startsWith('design:') || m.startsWith('the design model, '))
+/** The design model's short name for the note ("Inkling-2-Small"). */
+const designName = (m) => String(m).replace(/^design:|^the design model, /, '').split('/').pop() || 'the design model'
+// A file's time is the VM's clock, a step's the gateway's: a step that finished up to this long after
+// the file's time still counts as before it.
+const CLOCK_SLACK_MS = 1000
+// Steps of two conversations this close together are too close to tell which led to a change.
+const TOO_CLOSE_MS = 3000
 
-/** What served one conversation since a moment: { names: { general: n, design: n }, design_model } or null. */
+/**
+ * Who made one change: { model, session } (session only when another conversation made it).
+ * `steps` are [at ms, session, name], oldest first; `mtimeMs` the file's time.
+ */
+export function attributeChange(steps, session, mtimeMs, designId) {
+  const before = steps.filter((s) => s[0] <= mtimeMs + CLOCK_SLACK_MS)
+  if (!before.length) return { model: null }
+  const latest = before[before.length - 1][0]
+  const last = new Map()
+  for (const s of before) last.set(s[1], s)
+  const cands = [...last.values()].filter((s) => s[0] >= latest - TOO_CLOSE_MS)
+  const design = (s) => s[2] === 'design'
+  if (cands.length === 1) return { model: design(cands[0]) ? designModel(designId) : null, ...(cands[0][1] !== session ? { session: cands[0][1] } : {}) }
+  if (cands.every(design)) return { model: designModel(designId) }
+  if (!cands.some(design)) return { model: null }
+  return { model: 'unknown' }
+}
+
+/** What served one conversation since a moment: { names: { general: n, design: n }, design_model, steps } or null. */
 export async function gatewayServed(cc, caller, session, since) {
   if (!cc?.usageToken || !cc.gateway || !SID.test(session ?? '')) return null
   try {
-    const q = new URLSearchParams({ caller, session, since: String(Math.max(0, Math.floor(since))) })
+    const q = new URLSearchParams({ caller, session, since: String(Math.max(0, Math.floor(since))), steps: '1' })
     const r = await fetch(`${cc.gateway}/v1/served?${q}`, { headers: { authorization: `Bearer ${cc.usageToken}` }, signal: AbortSignal.timeout(5000) })
     if (!r.ok) return null
     const j = await r.json()
-    return j && typeof j.names === 'object' ? { names: j.names, design_model: typeof j.design_model === 'string' ? j.design_model : null } : null
+    const steps = Array.isArray(j?.steps) ? j.steps.filter((s) => Array.isArray(s) && Number.isFinite(s[0]) && typeof s[1] === 'string' && typeof s[2] === 'string') : null
+    return j && typeof j.names === 'object' ? { names: j.names, design_model: typeof j.design_model === 'string' ? j.design_model : null, steps } : null
   } catch {
     return null
   }
@@ -52,6 +92,8 @@ const SID = /^[A-Za-z0-9_-]{1,80}$/
 const MAX_SESSIONS = 5000
 const MAX_TURNS = 20
 const MAX_FILES = 8
+// How far back the steps are asked for at a turn's end: a change can come from a step before the turn began.
+const STEPS_BACK_MS = 15 * 60_000
 
 /** The person's text without a leading note (what an app shows, what Compare copies). */
 export function stripEngines(text) {
@@ -95,7 +137,7 @@ export function engineNote(turns, engine) {
     }
   const others = turns.slice(from).filter((t) => t.engine !== engine && ENGINE_NAME[t.engine])
   if (!others.length) return ''
-  const lines = others.map((t) => `${ENGINE_NAME[t.engine]}${t.request ? `, asked "${quote(t.request)}"` : ''}, ${filesWords(t.files)}${t.interrupted ? ' (it did not finish)' : ''}.`)
+  const lines = others.map((t) => `${t.engine === 'ola' && isDesignModel(t.model) ? `${designName(t.model)}, an outside open model that Ola uses for design work` : ENGINE_NAME[t.engine]}${t.request ? `, asked "${quote(t.request)}"` : ''}, ${filesWords(t.files)}${t.interrupted ? ' (it did not finish)' : ''}.`)
   return `${NOTE_OPEN}Before this request, other engines worked in this conversation (not you): ${lines.join(' ')} Never say you did their work; ola-made-by <file> shows who made a file.${NOTE_CLOSE}\n\n`
 }
 
@@ -171,17 +213,55 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
     open.get(slug).delete(turn)
     if (!open.get(slug).size) open.delete(slug)
     try {
-      // Ola's own turn: did the design model serve it? Asked of the gateway, for this conversation only.
-      let model = null
-      if (t.engine === 'ola' && served && SID.test(t.session ?? '')) {
-        const s = await served(slug, t.session, t.at - 5000).catch(() => null)
-        if (s?.names?.design > 0) model = designWords(s.design_model)
-      }
-      t.entry.model = model
-      const r = await exec(slug, ['end', '--turn', turn, ...(model ? ['--model', model] : []), ...(interrupted ? ['--interrupted'] : [])])
-      const files = r.code === 0 ? filesOf(parse(r.out)) : []
-      Object.assign(t.entry, { files, interrupted })
+      // Ola's own turn: which model made each change? Asked of the gateway: its steps since a while
+      // before the turn began (a change can come from a step before it, OLA-303).
+      let s = null
+      if (t.engine === 'ola' && served && SID.test(t.session ?? '')) s = await served(slug, t.session, t.at - STEPS_BACK_MS).catch(() => null)
+      // An older gateway without steps: the turn's conversation as a whole, as before.
+      const whole = s && !s.steps && s.names?.design > 0 ? designModel(s.design_model) : null
+      if (whole) t.entry.model = whole
+      const r = await exec(slug, ['end', '--turn', turn, ...(whole ? ['--model', whole] : []), ...(interrupted ? ['--interrupted'] : [])])
+      const out = r.code === 0 ? parse(r.out) : null
+      const files = filesOf(out)
+      // Changes another conversation's turn found to be this one's are kept beside its own (OLA-303).
+      const earlier = (t.entry.files ?? []).filter((x) => !files.some((f) => f.path === x.path))
+      Object.assign(t.entry, { files: [...earlier, ...files], interrupted })
       if (r.code !== 0) log(`${slug}: a ${t.engine} turn could not be recorded (made-by end exited ${r.code})`)
+      if (s?.steps && Array.isArray(out?.files)) {
+        // Each change matched to its step; rows that need another model or conversation are fixed.
+        const groups = new Map()
+        let design = 0
+        let mine = 0
+        for (const f of out.files) {
+          if (typeof f?.path !== 'string' || f.how === 'deleted' || !Number.isFinite(f.mtime)) continue
+          const a = attributeChange(s.steps, t.session, f.mtime * 1000, s.design_model)
+          if (isDesignModel(a.model)) (design++, a.session || mine++)
+          if (a.session) {
+            // Another conversation's change: the note for that conversation lists it, not this one's.
+            const path = f.path.slice(0, 300)
+            t.entry.files = t.entry.files.filter((x) => x.path !== path)
+            const theirs = convs.get(`${slug}:${a.session}`)?.at(-1)
+            if (theirs) {
+              theirs.files = [...(theirs.files ?? []), { path, how: f.how }]
+              if (isDesignModel(a.model)) theirs.model = a.model
+            }
+          }
+          if (!a.model && !a.session) continue
+          const k = JSON.stringify([a.model, a.session ?? null])
+          if (!groups.has(k)) groups.set(k, [])
+          groups.get(k).push(f.path.slice(0, 300))
+        }
+        for (const [k, paths] of groups) {
+          const [model, session] = JSON.parse(k)
+          for (let i = 0; i < paths.length; i += 20) {
+            const fx = await exec(slug, ['fix', '--turn', turn, ...paths.slice(i, i + 20), ...(model ? ['--model', model] : []), ...(session ? ['--session', session] : [])])
+            if (fx.code !== 0) log(`${slug}: who made ${paths.length} files could not be corrected (made-by fix exited ${fx.code})`)
+          }
+        }
+        if (mine) t.entry.model = designModel(s.design_model)
+        // Names and counts only: how this turn's changes were matched (for the next checker).
+        if (out.files.length) log(`${slug}: an ola turn recorded ${out.files.length} changes, ${design} by the design model; its conversation had ${s.names?.design ?? 0} design and ${s.names?.general ?? 0} general steps`)
+      }
       return files
     } catch (e) {
       t.entry.files = []

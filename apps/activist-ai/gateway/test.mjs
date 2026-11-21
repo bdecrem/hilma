@@ -2078,6 +2078,15 @@ test('design: after the designer skill is loaded in this turn, the design model 
     const mine = await call(g, T.b, null, { method: 'GET', path: `/v1/served?caller=a&since=${since}` })
     assert.deepEqual(mine.json.names, {}, 'a caller reads only its own')
     assert.equal(mine.json.caller, 'b')
+    // steps=1 (OLA-303): each step of the caller's conversations in order, so the record can say which
+    // request led to each file change; names and ids only.
+    const st = await call(g, T.usage, null, { method: 'GET', path: `/v1/served?caller=a&since=${since}&steps=1` })
+    assert.equal(st.status, 200)
+    const mineSteps = st.json.steps.filter((x) => x[1] === 'ses_abc123')
+    assert.deepEqual(mineSteps.map((x) => x[2]).sort(), ['design', 'design', 'general', 'general', 'general'])
+    assert.ok(st.json.steps.every((x, i, a) => Number.isSafeInteger(x[0]) && (i === 0 || a[i - 1][0] <= x[0])), 'in order, with times')
+    assert.equal(sv.json.steps, undefined, 'only when asked')
+    assert.deepEqual((await call(g, T.b, null, { method: 'GET', path: `/v1/served?caller=a&since=${since}&steps=1` })).json.steps.filter((x) => x[1] === 'ses_abc123'), [], 'a caller reads only its own steps')
   } finally {
     await g.stop()
   }

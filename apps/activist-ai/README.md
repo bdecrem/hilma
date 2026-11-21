@@ -2122,9 +2122,16 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   owner turns on the hosted model.
 - **Who made it**: the gateway keeps which name served each request by caller and opencode's
   conversation id (its `X-Session-Id` header), 8 days, ids only. As an Ola turn ends, the front desk
-  asks `GET /v1/served?caller=ws-<slug>&session=<id>&since=<ms>` (usage token) and records the turn
-  with the model "the design model, Inkling-2-Small", which `ola-made-by` prints. With no conversation
-  id, or no answer from the gateway, no model is named. A caller's own token reads its own.
+  asks `GET /v1/served?caller=ws-<slug>&session=<id>&since=<ms>&steps=1` (usage token). Since OLA-303
+  each change is matched to the step that led to it (`steps`: when each chat request finished, its
+  conversation, the name that served it; the last step before the file's time decides), because a
+  turn's window holds every change in the project, and two design changes had been recorded as plain
+  "Ola's own open model" by another turn. The front desk then corrects the row with `ola-db made-by
+  fix` (model `design:<id>`, and the conversation when another one made it; steps of two
+  conversations within 3 s that disagree: model `unknown`, said as not known). `ola-made-by` prints
+  it as "Inkling-2-Small, an outside open model that Ola uses for design work (not Ola's own
+  model)", and AGENTS.md tells Ola to say it in those words. With no conversation id, or no answer
+  from the gateway, no model is named. A caller's own token reads its own.
 - **The card**: design is no longer a reason for the "this may be a stretch" card before a run on
   the website (`web/src/lib/steps.ts`, `designBeforeRun: false`). The Mac and iPhone apps' copy of that
   check (OlaKit `Fallbacks.swift`) and the Mac's record of the design model wait for a new app build

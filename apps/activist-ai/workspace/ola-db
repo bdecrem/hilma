@@ -38,6 +38,8 @@ Which engine made a file (OLA-224), for the agent as `ola-made-by`, for the apps
                                      deleted is recorded with its engine; prints them as JSON
   ola-db made-by end --stale         every turn still open (the app quit mid-turn) ended as interrupted
   ola-db made-by add <file> --engine E [--model M] [--session S] [--turn T] [--how created|changed|deleted]
+  ola-db made-by fix --turn T <file> ... [--model M] [--session S]   what one turn recorded for these files
+                                     is corrected (the front desk, once it knows which request led to each change)
 The record holds file names, engines, models, turns and times, never what is in a file.
 
 The fixed core: `documents` (one row per document), `doc_text` (FTS5, one row per page or part,
@@ -1217,6 +1219,29 @@ def api(argv):
 # only: nothing here reads a file's contents.
 
 ENGINES = {"ola": "Ola's own open model", "hosted": "the hosted open model", "claude": "Claude"}
+# Design work (OLA-168, OLA-303): Ola's turn whose steps the design model served. It is an outside
+# model (Inkling-2-Small, by Thinking Machines, rented on Together), never Ola's own: the front desk
+# records it with the model "design:<its id>" (older rows: "the design model, <name>").
+DESIGN_PREFIXES = ("design:", "the design model, ")
+UNKNOWN_MODEL = "unknown"
+
+
+def design_name(model):
+    """The design model's short name when this row's model is the design model, else None."""
+    for p in DESIGN_PREFIXES:
+        if model and model.startswith(p):
+            return model[len(p):].split("/")[-1].strip() or "the design model"
+    return None
+
+
+def who_words(engine, model):
+    """Who made a change, in the words Ola repeats: the design model is named as an outside model."""
+    d = design_name(model) if engine == "ola" else None
+    if d:
+        return "%s, an outside open model that Ola uses for design work (not Ola's own model)" % d
+    if engine == "ola" and model == UNKNOWN_MODEL:
+        return "Ola, but which model made this change is not known (two conversations were working at the same time)"
+    return ENGINES.get(engine, engine) + (" (model %s)" % model if model else "")
 MADE_SKIP_DIRS = {"node_modules", "__pycache__", "lost+found"}
 MADE_SKIP_FILES = {"project.db", "project.db-wal", "project.db-shm", ".DS_Store"}
 MADE_MAX_FILES = 20000
@@ -1308,7 +1333,7 @@ def made_end(con, row, interrupted):
         if b is None or b[0] != m or b[1] != s:
             how = "created" if b is None else "changed"
             if made_add(con, p, how, row["engine"], row["model"], row["session"], row["turn"], m, interrupted):
-                changed.append({"path": p, "how": how, "at": iso(m)})
+                changed.append({"path": p, "how": how, "at": iso(m), "mtime": m})
     for p in before:
         if p not in after and len(after) < MADE_MAX_FILES:
             if made_add(con, p, "deleted", row["engine"], row["model"], row["session"], row["turn"], None, interrupted):
@@ -1339,6 +1364,22 @@ def made_by_cmd(args, flags):
         out = [made_end(con, r, bool(flags.get("interrupted") or flags.get("stale"))) for r in rows]
         con.commit()
         print(json.dumps(out if flags.get("stale") else (out[0] if out else {"turn": flags["turn"], "files": []})))
+        return
+    if sub == "fix":
+        # The front desk knows which request led to each change only after the turn's end (OLA-303).
+        if not flags.get("turn") or len(args) < 2 or not (flags.get("model") or flags.get("session")):
+            fail("usage: ola-db made-by fix --turn T <file> ... [--model M] [--session S]")
+        con = connect(True, attach=False)
+        made_schema(con)
+        n = 0
+        for a in args[1:]:
+            p = made_rel(a)
+            if flags.get("model"):
+                n += con.execute("UPDATE made_by SET model = ? WHERE turn = ? AND path = ?", (flags["model"][:80], flags["turn"], p)).rowcount
+            if flags.get("session"):
+                con.execute("UPDATE made_by SET session = ? WHERE turn = ? AND path = ?", (flags["session"][:80], flags["turn"], p))
+        con.commit()
+        print(json.dumps({"turn": flags["turn"], "fixed": n}))
         return
     if sub == "add":
         if len(args) != 2 or flags.get("engine") not in ENGINES or flags.get("how", "changed") not in ("created", "changed", "deleted"):
@@ -1385,7 +1426,7 @@ def made_by_cmd(args, flags):
         except ValueError:
             return r["at"]
     def line(r):
-        who = ENGINES.get(r["engine"], r["engine"]) + (" (model %s)" % r["model"] if r["model"] else "")
+        who = who_words(r["engine"], r["model"])
         return "%s %s by %s%s%s" % (when(r), r["how"], who, ", in conversation %s" % r["session"] if r["session"] else "", "; that turn did not finish normally" if r["interrupted"] else "")
     if asked:
         for p in asked:
@@ -1399,6 +1440,8 @@ def made_by_cmd(args, flags):
     else:
         for r in rows:
             print("%s: last %s" % (r["path"], line(r)))
+    if any(r["engine"] == "ola" and design_name(r["model"]) for r in rows):
+        print("Say it in these words: the design model is an outside open model Ola uses for design work. Never call it Ola's own model.")
 
 
 # ------------------------------------------------------------------ the command line

@@ -1018,7 +1018,8 @@ async function handle(req, res, rec, signal) {
     const session = q.get('session')
     if (!caller || !known(caller) || caller === 'usage' || !Number.isSafeInteger(since) || since < 0 || (session !== null && !/^[A-Za-z0-9_-]{1,80}$/.test(session))) return no(400, 'a served query that does not check out', 'served takes caller (usage token only), since (ms) and an optional session', 'invalid_request_error')
     rec.status = 200
-    return send(res, 200, { object: 'served', caller, session, since, names: design.served(caller, session, since), design_model: C.models.get('design') ?? null, everyday_local: design.local })
+    // steps=1: every step of the caller's conversations since then, in order (the front desk's record).
+    return send(res, 200, { object: 'served', caller, session, since, names: design.served(caller, session, since), design_model: C.models.get('design') ?? null, everyday_local: design.local, ...(q.get('steps') === '1' ? { steps: design.steps(caller, since) } : {}) })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
   // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
