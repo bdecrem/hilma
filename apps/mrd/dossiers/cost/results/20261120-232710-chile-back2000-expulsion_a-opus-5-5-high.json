@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile expulsion_a claude-opus-5-5 high",
- "pid": 69391,
  "step": "back2000",
  "slug": "chile",
  "chunk": "expulsion_a",
@@ -59,5 +58,829 @@
   "user": 180
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T09:23:32.357Z",
+ "minutes": 116.36,
+ "meters_after": {
+  "at": "2026-11-21T09:23:32.357Z",
+  "window": {
+   "pct": 54,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 3,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 54,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 3,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 54% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 3% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 59123,
+   "output": 34622,
+   "cache_read": 857264,
+   "cache_write": 65961,
+   "cost_usd": 1.372,
+   "total": 1016970
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 59071,
+    "output": 3368,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1329,
+    "cost_usd": 0.0476
+   },
+   "claude-opus-5-5": {
+    "input": 52,
+    "output": 31254,
+    "cache_read": 857264,
+    "cache_write": 65961,
+    "thinking": 4730,
+    "cost_usd": 1.3244
+   }
+  }
+ },
+ "turns": 30,
+ "calls": 43,
+ "duration_ms": 749924,
+ "duration_api_ms": 590865,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-21T07:43:35.132Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 15 | Artículo 17 | Artículo 63 | Artículo 64 | Artículo 34 | refugiado",
+   "ok": true,
+   "chars": 6588
+  },
+  {
+   "at": "2026-11-21T07:43:38.801Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=6483",
+   "find": "Artículo 15 | Artículo 17. | Artículo 63 | Artículo 64 | Artículo 34 | Artículo 39",
+   "ok": true,
+   "chars": 429
+  },
+  {
+   "at": "2026-11-21T07:44:09.976Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1012435",
+   "find": "Artículo 2 | Artículo 4 | Artículo 5 | Artículo 49",
+   "ok": true,
+   "chars": 910
+  },
+  {
+   "at": "2026-11-21T07:45:59.150Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+   "find": "Artículo 15 | Artículo 17 | Artículo 63 | Artículo 64 | Artículo 34 | Artículo 39",
+   "ok": true,
+   "chars": 13882
+  },
+  {
+   "at": "2026-11-21T07:55:10.273Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+   "find": "a la moral o a las buenas | Artículo 84 | Artículo 49 de la Ley 20430 | Artículo 36",
+   "ok": true,
+   "chars": 9440
+  },
+  {
+   "at": "2026-11-21T07:55:13.117Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435",
+   "find": "Artículo 2 | Artículo 3 | Artículo 4 | Artículo 5 | Artículo 49 | Ley 21655 | Publicación",
+   "ok": true,
+   "chars": 12447
+  },
+  {
+   "at": "2026-11-21T08:18:22.432Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435",
+   "find": "Artículo 49 | Artículo 48 | Disposiciones transitorias | vigencia",
+   "ok": true,
+   "chars": 2433
+  },
+  {
+   "at": "2026-11-21T08:21:29.772Z",
+   "url": "https://derechoshumanos.udp.cl/cms/wp-content/uploads/2020/12/Cap200820Migrantes20y20refugiados.pdf",
+   "find": "no devolución | frontera | expuls | solicitantes de refugio",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:21:33.188Z",
+   "url": "https://derechoshumanos.udp.cl/cms/wp-content/uploads/2020/12/04_Derechos_de_las_personas_migrantes_solicitantes_de_asilo_y_refugiadas-1.pdf",
+   "find": "no devolución | frontera | preadmisib | Chacalluta",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:26:36.097Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 4090
+  },
+  {
+   "at": "2026-11-21T08:26:36.578Z",
+   "url": "https://webarchive.archive.unhcr.org/20230601222024oe_/https://www.refworld.org/docid/441821ab1e.html",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 853
+  },
+  {
+   "at": "2026-11-21T08:27:11.898Z",
+   "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 2532
+  },
+  {
+   "at": "2026-11-21T08:27:12.760Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41752.htm",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 2917
+  },
+  {
+   "at": "2026-11-21T08:27:13.541Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136104.htm",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 2907
+  },
+  {
+   "at": "2026-11-21T08:32:23.439Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 3274
+  },
+  {
+   "at": "2026-11-21T08:32:24.426Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 2683
+  },
+  {
+   "at": "2026-11-21T08:32:25.083Z",
+   "url": "https://www.refworld.org/docid/57161289c.html",
+   "find": "refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 574
+  }
+ ],
+ "searches": [
+  "Chile solicitantes de refugio rechazo en frontera preadmisibilidad informe derechos humanos UDP refugio 2013",
+  "Chile Country Reports on Human Rights Practices 2004 state.gov \"Protection of Refugees\" Chile",
+  "2014 Country Reports on Human Rights Practices Chile refoulement asylum seekers northern border",
+  "state.gov hrrpt 2004 Chile \"Country Reports on Human Rights Practices\" 41751 OR wha Chile 2009 report",
+  "Chile asilo \"rechazo en frontera\" solicitantes refugio Chacalluta Colombianos 2014 2015 informe INDH OR Clínica"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.38,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.02,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":47,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation\":\"Does Not Apply\",\"basis\":\"DL 1.094 art. 64 allowed refusal of applications for persons 'condenados en Chile por crimen o simple delito' (No. 1) and for those who breach the decree's obligations (No. 5). Art. 66 allowed revocation on any art. 64 ground, and arts. 17 and 84 provided for expulsion. These articles were unchanged 2000-2020. Practice evidence is not needed because this is the lowest option.\"},{\"date\":\"2005-01-01\",\"answer\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same DL 1.094 arts. 63-67, 17 and 84, with no relevant amendment between 2000 and 2005.\"},{\"date\":\"2010-01-01\",\"answer\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same regime. Ley 20.430 (April 2010) touched only the refugee provisions, and came after this date.\"},{\"date\":\"2015-01-01\",\"answer\":\"any conviction (even minor administrative offenses) can lead to loss of residence status\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same arts. 64 and 66. Ley 20.507 (in force 2011-04-08) added migrant smuggling and trafficking to art. 15 No. 2, a ground for refusal and revocation under arts. 63 and 65. This widened the grounds.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Arts. 88-90\",\"role\":\"cited\",\"in_force\":\"2022-02-12 to today\",\"history_read\":\"not_found\"},{\"instrument\":\"Decreto Ley 1.094 de 1975\",\"article\":\"Arts. 63-67 (rechazos y revocaciones)\",\"role\":\"predecessor\",\"in_force\":\"1975-07-19 to 2022-02-12\",\"history_read\":\"current_text_only\"},{\"instrument\":\"Decreto Ley 1.094 de 1975\",\"article\":\"Arts. 15, 17, 84\",\"role\":\"o",
+ "output": {
+  "answers": [
+   {
+    "question_id": 47,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 art. 64 allowed refusal of applications for persons 'condenados en Chile por crimen o simple delito' (No. 1) and for those who breach the decree's obligations (No. 5). Art. 66 allowed revocation on any art. 64 ground, and arts. 17 and 84 provided for expulsion. These articles were unchanged 2000-2020. Practice evidence is not needed because this is the lowest option."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+      "implementation": "Does Not Apply",
+      "basis": "Same DL 1.094 arts. 63-67, 17 and 84, with no relevant amendment between 2000 and 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+      "implementation": "Does Not Apply",
+      "basis": "Same regime. Ley 20.430 (April 2010) touched only the refugee provisions, and came after this date."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "any conviction (even minor administrative offenses) can lead to loss of residence status",
+      "implementation": "Does Not Apply",
+      "basis": "Same arts. 64 and 66. Ley 20.507 (in force 2011-04-08) added migrant smuggling and trafficking to art. 15 No. 2, a ground for refusal and revocation under arts. 63 and 65. This widened the grounds."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 88-90",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 63-67 (rechazos y revocaciones)",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 15, 17, 84",
+      "role": "other_in_force",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 art. 15 No. 2",
+      "kind": "amended",
+      "what_changed": "Added migrant smuggling and trafficking in persons to the grounds that bar entry and lead to revocation and expulsion. This widened the conviction-related grounds and did not protect status.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+      "passage": "2.- Los que se dediquen al comercio o tráfico ilícito de drogas o armas, al contrabando, al tráfico ilegal de migrantes Ley 20507Art. TERCERO Nº 1D.O. 08.04.2011y trata de personas"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "DL 1.094 (whole)",
+      "kind": "repealed",
+      "what_changed": "DL 1.094 was repealed and replaced by Ley 21.325 after 2020. This is outside the period and recorded for context only.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+      "passage": "Esta norma ha sido derogada el 12-FEB-2022"
+     }
+    ],
+    "repealed_search": "I checked the consolidated DL 1.094 with its marginal amendment notes for any provision that once protected residence status after a conviction. Arts. 63-66 carry no amendment notes, so they kept their 1975 wording; art. 67 was amended only in 1983 (Ley 18.252). I found no protection that was repealed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the last consolidated text of DL 1.094 on LeyChile, whose margin notes name each amending law. The per-date version pages and Ley 19.806 (2002) were not opened, but arts. 63-66 show no amendment notes.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 LeyChile navegar",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1.094 LeyChile imprimir (last version)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Before 2022 the loss of status rested on DL 1.094 art. 64 No. 1 (conviction for a crimen or simple delito) and No. 5 (breach of the decree's obligations), with revocation under art. 66."
+   },
+   {
+    "question_id": 49,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 art. 39 (Ley 19.476, 1996) barred expelling refugees and asylum seekers only to a country where life or freedom was at risk on the five Convention grounds. It did not mention torture. Chile has ratified the Convention against Torture, but no statute incorporated its art. 3."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same DL 1.094 art. 39, unchanged."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same. Ley 20.430 was published on 2010-04-15, after this date."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 art. 4 inciso 2 (from 2010-04-15) bans return of asylum seekers and refugees where there are grounds to believe they would face torture. The MRD's starting answer treats this as not covering migrants generally, so this date keeps the starting answer."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430, Establece disposiciones sobre protección de refugiados",
+      "article": "Art. 4",
+      "role": "cited",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Art. 39 (text of Ley 19.476)",
+      "role": "predecessor",
+      "in_force": "1996-10 to 2010-04-15",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "Art. 4; art. 49 (repeals DL 1.094's refugee provisions)",
+      "kind": "new_instrument",
+      "what_changed": "Replaced DL 1.094 art. 39 with a broader non-refoulement rule that covers torture and cruel, inhuman or degrading treatment for asylum seekers and refugees.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435",
+      "passage": "cualquier forma de devolución hacia las fronteras de un país donde estuviere en peligro la seguridad de la persona o existieren razones fundadas para creer que podría ser sometida a tortura, a tratos o penas crueles, inhumanos o degradantes."
+     }
+    ],
+    "repealed_search": "I searched DL 1.094 (arts. 34-40 bis) for a torture-based ban that might have been repealed before 2020. Art. 39 covered only the five Convention grounds. No repealed torture protection was found; the 2010 law broadened the protection.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the consolidated texts of DL 1.094 and Ley 20.430. Art. 4 carries no amendment notes. Per-date versions were not opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.430 LeyChile imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435"
+     },
+     {
+      "title": "DL 1.094 LeyChile imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.430 art. 4 inciso 2 expressly bans return to torture or cruel, inhuman or degrading treatment, for asylum seekers as well as recognised refugees. The MRD citation's claim that only recognised refugees are covered is wrong, so from 2010-04-15 a 'Yes' limited to asylum seekers and refugees looks arguable.",
+    "confidence": "medium",
+    "notes": "Before 2010 DL 1.094 had no torture ground, so No is solid for 2000 and 2005 under either reading."
+   },
+   {
+    "question_id": 51,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "DL 1.094 art. 39 (Ley 19.476): a refugee or political asylee may not be expelled to a country where life or freedom is at risk on the five grounds, and nor may asylum seekers while their claim is pending. The US State Department report on 1999 found 'no reports of the forced return of persons to a country where they feared persecution'. Caseloads were very small."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same art. 39. The US State Department report on 2004 says the government 'provided protection against refoulement', with 568 recognised refugees."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same art. 39; Ley 20.430 replaced it on 2010-04-15. The US State Department report on 2009 says the government protected refugees against return on persecution grounds."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 20.430 arts. 3 and 4 ban return of asylum seekers and refugees and expressly ban rejection at the border. The US State Department report on 2014 reports no refoulement. Reports of informal pre-admissibility screening were not read."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430",
+      "article": "Arts. 2(1), 3, 4",
+      "role": "cited",
+      "in_force": "2010-04-15 to today (art. 2 amended 2024-02-20 by Ley 21.655)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 34 bis, 39 (Ley 19.476)",
+      "role": "predecessor",
+      "in_force": "1996-10 to 2010-04-15",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "Arts. 2, 3, 4, 49",
+      "kind": "replaced",
+      "what_changed": "Replaced DL 1.094 art. 39 (no expulsion of refugees or asylum seekers to persecution) with art. 4, which bans any measure of return, including rejection at the border.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435",
+      "passage": "No procederá la expulsión o cualquier medida que tenga por efecto la devolución, incluyendo la prohibición de ingreso en frontera, de un solicitante de la condición de refugiado o refugiado al país donde su vida o libertad personal peligren."
+     },
+     {
+      "date": "1996-10",
+      "instrument": "Ley 19.476",
+      "article": "DL 1.094 art. 39",
+      "kind": "amended",
+      "what_changed": "This 1996 wording was in force throughout 2000-2010.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+      "passage": "Un refugiado o asilado político no podrá ser expulsado hacia el país donde su vida o libertad peligre por causa de su raza, religión, nacionalidad, pertenencia a determinados grupos sociales u opiniones políticas."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "US State Dept Country Report on Human Rights Practices 1999 - Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "US State Dept Country Report 2004 - Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "US State Dept 2009 Human Rights Report - Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "US State Dept Country Report 2014 - Chile (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Law: consolidated texts read, with dates taken from LeyChile's amendment notes. Practice: only the US State Department reports were read. NGO and UDP reports (PDFs) could not be opened, so evidence for 2015 is thin.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "Ley 20.430 imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435"
+     },
+     {
+      "title": "USDOS 1999 Chile",
+      "url": "https://1997-2001.state.gov/global/human_rights/1999_hrp_report/chile.html"
+     },
+     {
+      "title": "USDOS 2004 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "USDOS 2009 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "USDOS 2014 Chile (ecoi)",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection was Yes throughout, but its basis changed in 2010 from DL 1.094 art. 39 to Ley 20.430 art. 4, which adds the border-rejection ban, hence 'not the same'. The fall to 'Sometimes' by 2020 reflects border practice in 2017-2019 that I did not examine here. The 2015 rating could be overstated."
+   },
+   {
+    "question_id": 53,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 art. 39 covered only the five persecution grounds. Nothing barred return on the basis of generalised violence or massive human-rights violations."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same as 2000; no amendment."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same. Ley 20.430 came only on 2010-04-15."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 art. 2(2) (Cartagena-type definition) and art. 4 inciso 3 (massive human-rights violations) cover asylum seekers and refugees only. Following the starting answer, this is No for migrants generally."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 20.430",
+      "article": "Arts. 2(2), 4",
+      "role": "cited",
+      "in_force": "2010-04-15 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Art. 39",
+      "role": "predecessor",
+      "in_force": "1996-10 to 2010-04-15",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "Arts. 2(2), 4",
+      "kind": "new_instrument",
+      "what_changed": "Introduced the Cartagena-type refugee definition, which covers threats to life from generalised violence and massive human-rights violations. Non-refoulement now applies to such cases, but only for asylum seekers and refugees.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435",
+      "passage": "cuya vida, seguridad o libertad han sido amenazadas por la violencia generalizada, la agresión extranjera, los conflictos internos, la violación masiva de los derechos humanos"
+     }
+    ],
+    "repealed_search": "I searched DL 1.094 arts. 34-40 bis and Ley 20.507 (art. 33 bis: no repatriation of trafficking victims at grave risk to their physical or psychological integrity, from 2011-04-08) for any broader protection that was later repealed. None was found. Art. 33 bis covers only trafficking victims and was not repealed before 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Consolidated texts of DL 1.094 and Ley 20.430 were read. Version pages for each date were not opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.430 imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1012435"
+     },
+     {
+      "title": "DL 1.094 imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     }
+    ],
+    "starting_answer_concern": "From 2010, Ley 20.430 arts. 2(2) and 4 protect asylum seekers and refugees against return to massive human-rights violations. A conditional 'Yes' is arguable if the indicator is read as applying to those seeking protection.",
+    "confidence": "medium",
+    "notes": "From 2011, DL 1.094 art. 33 bis (Ley 20.507) also barred repatriating trafficking victims at grave risk. It is narrow and does not change the answer."
+   }
+  ]
+ }
 }

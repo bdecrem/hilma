@@ -82,3 +82,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 23:27 | back2000 | expulsion_b · argentina | claude-opus-5-5 | high | 68.12 | 25 | 34,983 | 2,041,216 | 2.41 | 33→48 | 0→2 | 0→0 | 15 | ok | `back2000 argentina expulsion_b claude-opus-5-5 high` |
 | 2026-11-20 23:26 | back2000 | expulsion_b · chile | claude-opus-5-5 | high | 89.3 | 24 | 38,277 | 2,405,404 | 1.76 | 33→52 | 0→2 | 0→0 | 16 | ok | `back2000 chile expulsion_b claude-opus-5-5 high` |
 | 2026-11-20 22:16 | back2000 | due_process · chile | claude-opus-5-5 | high | 160.01 | 46 | 57,655 | 4,861,100 | 3.24 | 20→52 | 52→2 | 68→0 | 32 | ok | `back2000 chile due_process claude-opus-5-5 high` |
+| 2026-11-20 23:27 | back2000 | expulsion_a · chile | claude-opus-5-5 | high | 116.36 | 30 | 34,622 | 1,016,970 | 1.37 | 33→54 | 0→3 | 0→0 | 17 | ok | `back2000 chile expulsion_a claude-opus-5-5 high` |
