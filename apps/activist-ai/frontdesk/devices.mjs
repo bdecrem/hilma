@@ -201,7 +201,7 @@ export const deviceView = (d) => ({
 
 // ---------------------------------------------------------------- the server's half
 
-export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null }) {
+export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null, onPeople = null }) {
   const key = cfg.key
   const enabled = !!key
   const codes = new Map() // pass id -> { challenge, personId, name, kind, exp }
@@ -221,7 +221,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
   // Devices that expire, and people suspended by hand in the database, leave the file within the hour.
   const tidy = enabled ? setInterval(() => {
     try {
-      syncPeopleFile(db, cfg.peopleFile)
+      sync()
     } catch {}
   }, 3600_000) : null
   tidy?.unref()
@@ -249,7 +249,19 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     const now = Date.now()
     return !!row && row.revoked_at === null && row.expires_at > now && dev.passExp * 1000 > now && mayUseDevices(row)
   }
-  const sync = () => syncPeopleFile(db, cfg.peopleFile)
+  // A person's devices also decide their grant for the hosted open model on their own Macs
+  // (hosted.mjs writeHostedGrants: only while a computer is signed in), so that file follows too
+  // (OLA-337: a Mac signed in after the grants were written was refused the hosted model and its
+  // picks until something else rewrote them).
+  const sync = () => {
+    const out = syncPeopleFile(db, cfg.peopleFile)
+    try {
+      onPeople?.()
+    } catch (e) {
+      log(`the hosted grants could not be written after a device change (${e.code ?? e.name})`)
+    }
+    return out
+  }
 
   // ------------------------------------------------ signed in with a passkey (the page)
 

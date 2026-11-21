@@ -118,6 +118,9 @@ final class WhereOlaWorks {
       configureClaude()
       Task { await refreshCloudHosted() }
     }
+    // A new session asks again what this Mac may use (the hosted model, its picks): a grant or a
+    // new pick at the machine shows without a restart (OLA-337).
+    if id == nil, r == .local { Task { await refreshHosted() } }
     if let id { store.selectedID = id } else { store.newSession() }
   }
 
@@ -568,9 +571,15 @@ extension WhereOlaWorks {
   /// Asks the gateway, as this Mac's caller, whether the hosted open model is there for it (the
   /// local runtime's route, whichever runtime is on screen).
   func refreshHosted() async {
-    guard let route else { return }
-    hostedStatus = await HostedStatus.check(baseURL: route.baseURL, token: route.token)
-    configureClaude()
+    // Asked again for up to half a minute while the answer is "not for you" or no answer: a Mac
+    // that just signed in gets its grant a moment later (OLA-337: asked once, the box kept only Ola).
+    for attempt in 0..<10 {
+      guard let route else { return }
+      if attempt > 0 { try? await Task.sleep(nanoseconds: 3_000_000_000) }
+      hostedStatus = await HostedStatus.check(baseURL: route.baseURL, token: route.token)
+      configureClaude()
+      if hostedStatus.unavailable != HostedStatus.notForYou && hostedStatus.unavailable != HostedStatus.unknown { break }
+    }
     await refreshCloudHosted()
   }
 

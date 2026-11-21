@@ -395,6 +395,7 @@ switch (cmd) {
     if (!revokeDevices(db, { deviceId: id })) fail(`device #${id} was already signed out`)
     admin({ action: 'device_revoked', subject: d.person_id })
     syncPeopleFile(db, cfg.devices.peopleFile)
+    writeHostedGrants(db, cfg.hosted)
     console.log(`device #${id} signed out; its next request is refused, and an open one is cut within a second`)
     break
   }
@@ -408,6 +409,7 @@ switch (cmd) {
     const d = createDevice(db, cfg.devices.key, p.id, name, flags.kind)
     admin({ action: 'device_signed_in', subject: p.id })
     syncPeopleFile(db, cfg.devices.peopleFile)
+    writeHostedGrants(db, cfg.hosted)
     process.stdout.write(`${d.token}\n`)
     console.error(`device #${d.id} for ${p.handle} (${flags.kind}), until ${new Date(d.expiresAt).toISOString().slice(0, 10)}. The token was written to stdout only; put it straight into the app.`)
     break

@@ -265,7 +265,7 @@ export function makeFrontDesk(cfg = config()) {
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })
-  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches })
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, onPeople: () => hosted.writeGrants() })
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so

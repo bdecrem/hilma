@@ -1037,7 +1037,24 @@ await check('devices and the hosted open model: refused until the admin lets the
   await until(async () => (await asDevice('/api/device/gw/v1/usage', gwDevice)).json?.hosted_month?.granted === false, 8000, 'the gateway dropping dina’s hosted grant')
   const again = await ask()
   assert(again.status === 403, `off again: ${again.status}`)
-  return `off 403, p-${pid} ${served}, off again 403`
+  // OLA-337: the grant follows the person's computers. Turned on with no Mac signed in, there is none;
+  // their Mac signing in writes it at once (the Mac app asks right after, and offered only Ola when it
+  // came later); signing out drops it.
+  const bobId = dbRowDevices(`SELECT id FROM people WHERE handle = 'bob'`).id
+  const bobGrant = () => Boolean(JSON.parse(readFileSync(path.join(env.OLA_HOME, 'gateway-hosted'), 'utf8'))[`p-${bobId}`])
+  admin('app-hosted', 'bob', 'on')
+  try {
+    assert(!bobGrant(), 'a hosted grant for bob with no computer signed in')
+    const r = await fetch(`${ORIGIN}/api/device/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ handle: 'bob', password: PW.bob, name: 'Made-up Mac', kind: 'mac' }) })
+    const tb = (await r.json()).token
+    assert(r.status === 200 && tb, `bob's sign-in: ${r.status}`)
+    assert(bobGrant(), 'bob signing in his Mac did not write his hosted grant')
+    await fetch(`${ORIGIN}/api/device/signout`, { method: 'POST', headers: { authorization: `Bearer ${tb}`, 'content-type': 'application/json' }, body: '{}' })
+    assert(!bobGrant(), 'bob signing out kept his hosted grant')
+  } finally {
+    admin('app-hosted', 'bob', 'off')
+  }
+  return `off 403, p-${pid} ${served}, off again 403; a Mac signing in writes its person's grant, signing out drops it`
 })
 
 await check('devices, behind the real TLS front with its gate switched on (https, a site passcode, the PROXY protocol; the gate is off by default) the code and the token pass the door as X-Ola-Pass and nowhere else; a bearer sent straight to the front desk is not read; Chromium and WebKit approve on https and land on http://127.0.0.1', async () => {
