@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina nationality_a claude-opus-5-5 high",
- "pid": 54084,
  "step": "forward",
  "slug": "argentina",
  "chunk": "nationality_a",
@@ -59,5 +58,874 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:27:10.346Z",
+ "minutes": 26.34,
+ "meters_after": {
+  "at": "2026-11-21T03:27:10.347Z",
+  "window": {
+   "pct": 52,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 52,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 52% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 81301,
+   "output": 26774,
+   "cache_read": 1692192,
+   "cache_write": 114423,
+   "cost_usd": 1.72,
+   "total": 1914690
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 81257,
+    "output": 6544,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2044,
+    "cost_usd": 0.0614
+   },
+   "claude-opus-5-5": {
+    "input": 44,
+    "output": 20230,
+    "cache_read": 1692192,
+    "cache_write": 114423,
+    "thinking": 6452,
+    "cost_usd": 1.6586
+   }
+  }
+ },
+ "turns": 26,
+ "calls": 43,
+ "duration_ms": 446743,
+ "duration_api_ms": 385184,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-21T03:00:58.172Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/45000-49999/48444/texact.htm",
+   "find": null,
+   "ok": true,
+   "chars": 519
+  },
+  {
+   "at": "2026-11-21T03:01:53.448Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto",
+   "find": null,
+   "ok": true,
+   "chars": 5634
+  },
+  {
+   "at": "2026-11-21T03:01:58.449Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": null,
+   "ok": true,
+   "chars": 12832
+  },
+  {
+   "at": "2026-11-21T03:02:17.414Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 37 | ARTÍCULO 43 | ciudadanía | nulidad | pérdida | ARTÍCULO 44",
+   "ok": true,
+   "chars": 14812
+  },
+  {
+   "at": "2026-11-21T03:02:22.650Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+   "find": "ARTÍCULO 62 | carta de ciudadanía | revocar | antecedentes penales | ARTÍCULO 47",
+   "ok": true,
+   "chars": 8546
+  },
+  {
+   "at": "2026-11-21T03:03:04.050Z",
+   "url": "https://luxbrumalis.com.ar/wp-content/uploads/2025/10/JFE-Parana-Mondragon-declara-inconstitucional-DNU-3662025.pdf",
+   "find": "RESUELVO | FALLO | inconstitucionalidad | artículo 37 | carta de ciudadanía",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:03:15.201Z",
+   "url": "https://chequeado.com/nota/ciudadania-argentina-por-inversion-de-que-se-trata-el-programa-de-milei-para-extranjeros-y-por-que-la-justicia-lo-cuestiona/",
+   "find": null,
+   "ok": true,
+   "chars": 8536
+  },
+  {
+   "at": "2026-11-21T03:03:16.287Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+   "find": null,
+   "ok": true,
+   "chars": 6568
+  },
+  {
+   "at": "2026-11-21T03:03:53.013Z",
+   "url": "https://ninolegal.com/novedad/inconstitucionalidad-dnu-366-2025-ciudadania-juzgado-esquel",
+   "find": null,
+   "ok": true,
+   "chars": 5403
+  },
+  {
+   "at": "2026-11-21T03:04:00.971Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 2793
+  },
+  {
+   "at": "2026-11-21T03:04:33.895Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+   "find": "ARTICULO 3 | nulidad | pérdida | condena | Decreto Nº 366",
+   "ok": true,
+   "chars": 7624
+  },
+  {
+   "at": "2026-11-21T03:14:55.047Z",
+   "url": "https://www.argentina.gob.ar/sites/default/files/2023/11/caracterizacion_sociodemografica_de_la_poblacion_nacionalizada_argentina_a_partir_de_los_registros_administrativos_del_renaper_2013-2023_0.pdf",
+   "find": "nacionalizaciones | 2022 | total | por año",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:14:59.046Z",
+   "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+   "find": null,
+   "ok": true,
+   "chars": 4305
+  },
+  {
+   "at": "2026-11-21T03:15:03.260Z",
+   "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+   "find": "Ni, I Hsing | revocar | confirmar | RESUELVE | residencia precaria",
+   "ok": true,
+   "chars": 4912
+  },
+  {
+   "at": "2026-11-21T03:15:16.376Z",
+   "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+   "find": "amparo por mora | demora | Migraciones | 2025",
+   "ok": true,
+   "chars": 5443
+  },
+  {
+   "at": "2026-11-21T03:15:24.873Z",
+   "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+   "find": "EL PROBLEMA DE LOS DOS AÑOS | salida | precaria | refugiad",
+   "ok": true,
+   "chars": 2979
+  }
+ ],
+ "searches": [
+  "Ley 346 ciudadanía texto actualizado infoleg DNU 366/2025 modificación artículo 2",
+  "Decreto 366/2025 ciudadanía rechazo Congreso inconstitucional juez naturalización Dirección Nacional de Migraciones reglamentación 2025",
+  "Migraciones trámite ciudadanía naturalización DNU 366 demoras paralizado 2025 solicitudes ciudadanía Dirección Nacional de Migraciones disposición procedimiento",
+  "Migraciones habilitó trámite ciudadanía argentina online octubre 2025 naturalización requisitos sin salir del país",
+  "Decreto 3213/1984 reglamentación ley 23.059 nacionalidad ciudadanía texto \"carta de ciudadanía\" nulidad artículo 3 condenado",
+  "naturalización refugiados Argentina carta de ciudadanía juzgado federal ACNUR CAREF residencia precaria dos años jurisprudencia 2021 2022"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":63,\"answer_2023\":\"Convictions do not affect citizenship status\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Convictions do not affect citizenship status\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley de Ciudadanía N° 346\",\"article\":\"Art. 8 (suspension of political rights only) and arts. 2-6 (naturalization)\",\"enacted\":\"1869-10-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 3213/1984 (reglamentario de la Ley 23.059 / Ley 346)\",\"article\":\"Arts. 10, 15, 16, 18 (nullity only for fraud; suspension of political rights does not remove nationality)\",\"enacted\":\"1984-10-19\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 62 (cancellation of residence; applies to foreigners, not citizens)\",\"enacted\":\"2004-01-21\",\"history_read\":\"amending_acts\",\"status\":\"amended\"}],\"events\":[],\"implementation_then_now\":\"In both 2023 and 2026, no documented case or report shows a naturalised Argentine losing citizenship because of a criminal or other conviction. Under Decreto 3213/84 the only route to annulment is fraud in obtaining the citizenship. A conviction under art. 8 of Ley 346 suspends political rights only, and art. 16 of the decree says this 'no priva de los derechos ni exime de las obligaciones inherentes a la nacionalidad'. DNU 366/2025 tightened the residence and expulsion rules for foreigners (arts. 29 and 62 of Ley 25.871) and the conditions for acquiring citizenship, but it added no ground for losing it. The rating rests on the legal design plus the absence of any documented practice the other way; there is no affirmative practice source.\",\"practice_sources\":[{\"title\":\"Ciudadanía Argentina: El lado B de las tres vías (Javier Segura)\",\"url",
+ "output": {
+  "answers": [
+   {
+    "question_id": 63,
+    "answer_2023": "Convictions do not affect citizenship status",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Convictions do not affect citizenship status",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 8 (suspension of political rights only) and arts. 2-6 (naturalization)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 3213/1984 (reglamentario de la Ley 23.059 / Ley 346)",
+      "article": "Arts. 10, 15, 16, 18 (nullity only for fraud; suspension of political rights does not remove nationality)",
+      "enacted": "1984-10-19",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 62 (cancellation of residence; applies to foreigners, not citizens)",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "In both 2023 and 2026, no documented case or report shows a naturalised Argentine losing citizenship because of a criminal or other conviction. Under Decreto 3213/84 the only route to annulment is fraud in obtaining the citizenship. A conviction under art. 8 of Ley 346 suspends political rights only, and art. 16 of the decree says this 'no priva de los derechos ni exime de las obligaciones inherentes a la nacionalidad'. DNU 366/2025 tightened the residence and expulsion rules for foreigners (arts. 29 and 62 of Ley 25.871) and the conditions for acquiring citizenship, but it added no ground for losing it. The rating rests on the legal design plus the absence of any documented practice the other way; there is no affirmative practice source.",
+    "practice_sources": [
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías (Javier Segura)",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the consolidated Ley 346 on argentina.gob.ar/InfoLEG with its amendment annotations, the full text of DNU 366/2025 and the current Decreto 3213/84. None of them provides for loss of nationality after a conviction. The decree's own amendment history was not checked separately.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Decreto 3213/1984 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139"
+     }
+    ],
+    "starting_answer_concern": "The starting answer holds. A better citation would be Decreto 3213/84, arts. 15-18 (nullity only for fraud) and art. 16 (suspending political rights under art. 8 of Ley 346 does not affect nationality), rather than a bare statement that no provision exists.",
+    "confidence": "medium",
+    "notes": "Criminal records matter only at acquisition. Decreto 3213/84 art. 3 bars naturalisation while criminal proceedings are pending, or after a conviction for an intentional crime carrying more than 3 years until 5 years after the sentence ends. That is not loss. DNU 366/2025 amended art. 62 of Ley 25.871 (residence cancellation), which applies to foreigners only."
+   },
+   {
+    "question_id": 65,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853 (1994 text)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 2",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 6 (authority granting the carta de ciudadanía)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 37",
+      "article": "Ley 346, art. 2",
+      "kind": "replaced",
+      "what_changed": "Before: foreigners over 18 with two continuous years' residence applied before federal judges (inc. 1, as restored by Decreto 138/2021), and a list of 'services' let applicants skip the residence period (inc. 2). After: two years of 'continuous and legal' residence with no trips abroad at all, applied for before the DNM; the services list is gone and a 'relevant investment' route is added. The pathway for economic migrants survives, but on stricter terms.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud y manifiesten su voluntad de serlo ante la DIRECCIÓN NACIONAL DE MIGRACIONES ... sin haber realizado ninguna salida al exterior. (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 39",
+      "article": "Ley 346, art. 6",
+      "kind": "amended",
+      "what_changed": "The carta de naturalización is now granted by the Dirección Nacional de Migraciones instead of the federal judge. Under art. 45 of the DNU, applications already filed stay in court under the old rules.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Art. 6° Los extranjeros que hubiesen cumplido las condiciones dispuestas por los artículos anteriores, obtendrán la carta de naturalización que le será otorgada por la DIRECCIÓN NACIONAL DE MIGRACIONES"
+     },
+     {
+      "date": "2025-10",
+      "instrument": "Dirección Nacional de Migraciones – digital naturalisation procedure",
+      "article": "Ley 346, arts. 2 and 6 (implementation)",
+      "kind": "practice",
+      "what_changed": "The DNM opened its online platform for naturalisation applications only in October 2025. Between May and October 2025 there was no working channel for new applications. Afterwards a backlog built up and there were few decisions.",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "passage": "Sin embargo, Migraciones recién habilitó la plataforma digital para iniciar las solicitudes en octubre de ese año. A partir de allí comenzó otro problema: la acumulación de expedientes. Se presentaron miles de solicitudes y, durante un período prolongado, los interesados tuvieron dificultades para conocer el estado real de sus trámites"
+     }
+    ],
+    "implementation_then_now": "On 1 January 2023, naturalisation went through the federal courts under Ley 346 and Decreto 3213/84. Courts granted cartas de ciudadanía to residents with two years' residence, but practice varied (e.g. Cámara Federal de La Plata, Ndiaye, 2023). I keep the starting rating 'Usually; Effectively Always', though the pre-2023 evidence I read is thin. By 1 January 2026, DNU 366/2025 had moved the procedure to the DNM. The DNM opened its platform only in October 2025, thousands of applications piled up, and the first approvals came only through amparo-por-mora lawsuits. The Cámara Civil y Comercial Federal (June 2026) also noted that the DNM took more than four months to open the procedure and about ten months to publish its instructions. Implementation therefore fell to 'Rarely; Sometimes'.",
+    "practice_sources": [
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Declararon la inconstitucionalidad de los artículos del DNU que trasladaron a Migraciones el trámite de ciudadanía (Volosh, CCCFed Sala III, 18/6/2026)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "NDIAYE, Serigne Modou s/ solicitud carta de ciudadanía, Cámara Federal de La Plata Sala I, 27/4/2023",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The 2023 text comes from the original Ley 346 plus the consolidated text's notes (inc. 1 restored by Decreto 138/2021). The 2026 text was read in the consolidated version and in DNU 366/2025 itself. Practice evidence for 2025 is a practitioner article and a press summary of a court ruling, not official data. The RENAPER naturalisation-statistics PDF could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Decreto 3213/1984 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Chequeado – Ciudadanía argentina por inversión",
+      "url": "https://chequeado.com/nota/ciudadania-argentina-por-inversion-de-que-se-trata-el-programa-de-milei-para-extranjeros-y-por-que-la-justicia-lo-cuestiona/"
+     },
+     {
+      "title": "Palabras del Derecho – Volosh ruling",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-"
+     },
+     {
+      "title": "Nino Legal – Juzgado Federal de Esquel ruling",
+      "url": "https://ninolegal.com/novedad/inconstitucionalidad-dnu-366-2025-ciudadania-juzgado-esquel"
+     },
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139"
+     },
+     {
+      "title": "Ndiaye, CFed La Plata 2023",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Several courts have held arts. 37-43 of DNU 366/2025 unconstitutional or void: a Paraná federal court (reported September 2025), the Juzgado Federal de Esquel (date not established), the Cámara Civil y Comercial Federal Sala III (Volosh, 18/6/2026) and the Cámara Nacional Electoral (Yang Liping, 30/6/2026). I read none of them in full; I relied on press summaries. Each was decided for the parties only, and the government has appealed to the Corte Suprema. None states a general rule, and the two appellate rulings fall after 1 January 2026, so I coded from the DNU's text. I found no evidence that Congress rejected the DNU under Ley 26.122. Decreto 524/2025 (31/7/2025) regulates only the investment route."
+   },
+   {
+    "question_id": 67,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853 (1994 text)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 2",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 20 (residencia precaria)",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 37",
+      "article": "Ley 346, art. 2",
+      "kind": "replaced",
+      "what_changed": "Naturalisation now requires two years of 'continuous and legal' residence with no departures, applied for before the DNM. Before, the requirement was two continuous years before a federal judge, and the courts did not demand regular status (CSJN 'Ni I Hsing'). Humanitarian migrants holding a residence permit keep a pathway, on stricter terms.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "1°. Los extranjeros mayores de DIECIOCHO (18) años que acrediten haber residido en la REPÚBLICA ARGENTINA en forma continua y legal durante los DOS (2) años anteriores a la solicitud ... sin haber realizado ninguna salida al exterior."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 4",
+      "article": "Ley 25.871, art. 20 (residencia precaria)",
+      "kind": "amended",
+      "what_changed": "Time spent on a residencia precaria, the status asylum seekers hold while their claim is pending, no longer counts toward naturalisation. Before, courts could count such time. This narrows the pathway for asylum seekers, not for recognised refugees with a residence permit.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "La extensión y renovación de la ‘residencia precaria’ no genera derecho a una resolución favorable respecto de la admisión solicitada, ni resulta residencia válida a los efectos de acreditar arraigo, necesario para la obtención de la residencia permanente, o para la adquisición de la nacionalidad por naturalización"
+     },
+     {
+      "date": "2025-10",
+      "instrument": "Dirección Nacional de Migraciones – digital naturalisation procedure",
+      "article": "Ley 346, arts. 2 and 6 (implementation)",
+      "kind": "practice",
+      "what_changed": "The DNM platform opened only in October 2025, followed by a backlog and few decisions.",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "passage": "Sin embargo, Migraciones recién habilitó la plataforma digital para iniciar las solicitudes en octubre de ese año. A partir de allí comenzó otro problema: la acumulación de expedientes."
+     }
+    ],
+    "implementation_then_now": "Before 2023, asylum seekers and refugees applied to the federal courts. Results varied: the Cámara Federal de La Plata case (Ndiaye, decided April 2023) concerned a rejected asylum seeker whose application the first-instance judge refused although his time had been on a residencia precaria. I keep the starting rating 'Usually; Effectively Always', but with weak support. By 1 January 2026, time on a residencia precaria no longer counts, and the general DNM bottleneck applies to everyone (platform from October 2025, backlog, approvals only after amparo-por-mora suits). The Esquel federal court set aside the new residence-type rule for one applicant who had held precarious and then temporary residence. I found no refugee-specific data for 2025.",
+    "practice_sources": [
+     {
+      "title": "NDIAYE, Serigne Modou s/ solicitud carta de ciudadanía, CFed La Plata Sala I, 27/4/2023",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Nino Legal – Juzgado Federal de Esquel declaró inconstitucionales arts. 4, 37 y 39 del DNU 366/2025",
+      "url": "https://ninolegal.com/novedad/inconstitucionalidad-dnu-366-2025-ciudadania-juzgado-esquel",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Both the DNU changes (art. 4 and art. 37) were read in the DNU text and in the consolidated Ley 346. I did not read Ley 26.165 to confirm which residence recognised refugees receive. The practice evidence is not refugee-specific, apart from one 2023 case and a summary of the Esquel ruling.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Decreto 3213/1984 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Ndiaye, CFed La Plata 2023",
+      "url": "https://ar.vlex.com/vid/ndiaye-serigne-modou-s-929918835"
+     },
+     {
+      "title": "Nino Legal – Esquel ruling",
+      "url": "https://ninolegal.com/novedad/inconstitucionalidad-dnu-366-2025-ciudadania-juzgado-esquel"
+     },
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139"
+     },
+     {
+      "title": "Palabras del Derecho – Volosh ruling",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-"
+     }
+    ],
+    "starting_answer_concern": "The starting citation names no refugee-specific provision. It is a general pathway that humanitarian migrants can use, which supports 'Yes', but the scope (asylum seekers vs. recognised refugees) was not addressed.",
+    "confidence": "low",
+    "notes": "The court rulings against DNU 366/2025 were decided for the parties only, and the appellate rulings came after 1 January 2026 (see q65). The 2026 answer stays 'Yes' because recognised refugees and holders of humanitarian residence can still count two years of legal residence."
+   },
+   {
+    "question_id": 69,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853 (1994 text)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 2(2)(7) (marriage shortcut)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "repealed"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Arts. 3-4 (children of naturalised citizens)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "repealed"
+     },
+     {
+      "instrument": "Ley de Ciudadanía N° 346",
+      "article": "Art. 12 (transitional)",
+      "enacted": "1869-10-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 3213/1984",
+      "article": "Art. 3 (f) 'tener cónyuge o hijo argentino nativo'",
+      "enacted": "1984-10-19",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 37",
+      "article": "Ley 346, art. 2 (incl. inc. 2, subinc. 7°)",
+      "kind": "replaced",
+      "what_changed": "Before: marriage to an Argentine woman (subinc. 7°; Decreto 3213/84 art. 3(f): an Argentine spouse or child) let applicants naturalise without the two-year residence. After: art. 2 lists only two years of continuous legal residence with no departures, or investment. The family shortcut is gone, and family migrants keep only the general two-year route.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "2°. Los extranjeros que acrediten ante la DIRECCIÓN NACIONAL DE MIGRACIONES, cualquiera sea el tiempo de su residencia, haber realizado una inversión relevante en el país. (Artículo sustituido por art. 37 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 43",
+      "article": "Ley 346, arts. 3, 4, 5 and 11",
+      "kind": "repealed",
+      "what_changed": "Arts. 3 and 4, which let foreign-born children of naturalised citizens obtain the carta de ciudadanía, were repealed along with arts. 5 and 11.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto",
+      "passage": "ARTÍCULO 43.- Deróganse los artículos 3°, 4°, 5° y 11 de la Ley de Ciudadanía N° 346 y sus modificaciones."
+     },
+     {
+      "date": "2025-10",
+      "instrument": "Dirección Nacional de Migraciones – digital naturalisation procedure",
+      "article": "Ley 346, arts. 2 and 6 (implementation)",
+      "kind": "practice",
+      "what_changed": "The DNM platform opened only in October 2025, followed by a backlog and limited approvals. Practitioners note that the earlier routes for applicants with an Argentine spouse or child were substantially changed.",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "passage": "El régimen anterior contemplaba situaciones particulares que podían permitir la naturalización sin esperar necesariamente los dos años de residencia, entre ellas determinados casos de extranjeros con cónyuge o hijo argentino nativo. El nuevo régimen modificó sustancialmente ese escenario."
+     }
+    ],
+    "implementation_then_now": "In 2023, family members used the judicial route, including the shortcut for applicants with an Argentine spouse or child. I keep the starting rating 'Usually; Effectively Always', though I found no pre-2023 family-specific practice evidence. By 1 January 2026 the shortcut had been removed. Family migrants holding residence (now including the family-reunification temporary residence added by art. 6 of the DNU) face the general DNM bottleneck: platform only from October 2025, a backlog, and approvals mostly after amparo-por-mora suits. Rated 'Rarely; Sometimes'.",
+    "practice_sources": [
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Declararon la inconstitucionalidad ... (Volosh, CCCFed Sala III)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The original and consolidated texts of Ley 346 and the DNU text were read, so the dating is firm (in force 29/5/2025). Decreto 3213/84 art. 3(f) is still in the online text, but its statutory basis was replaced; whether it still applies was not established. The practice evidence is not family-specific.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Ley 346 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-413297/texto"
+     },
+     {
+      "title": "Decreto 3213/1984 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Ciudadanía Argentina: El lado B de las tres vías",
+      "url": "https://abogados.com.ar/index.php/ciudadania-argentina-el-lado-b-de-las-tres-vias/40139"
+     },
+     {
+      "title": "Palabras del Derecho – Volosh ruling",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6830/Declararon-la-inconstitucionalidad-de-los-articulos-del-DNU-que-trasladaron-a-Migraciones-el-tramite-de-ciudadania-"
+     }
+    ],
+    "starting_answer_concern": "Art. 12 of Ley 346 is a transitional provision of 1869 covering people already exercising citizenship then; it does not give citizenship to children of citizens. Children born abroad to native Argentines acquire it by option (art. 1(2)), and art. 2(2)(7) originally read 'haberse casado con mujer argentina'. The 'Yes' still holds through the general two-year route.",
+    "confidence": "medium",
+    "notes": "The court rulings against DNU 366/2025 were decided for the parties only, and the appellate ones came after 1 January 2026 (see q65)."
+   }
+  ]
+ }
 }
