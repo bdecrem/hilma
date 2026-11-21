@@ -45,7 +45,8 @@
 // stronger fix existed, so corrections waited unrecorded (Nov 18: 9 written, 27 real). Now `add` always
 // writes the entry and the weakness's `seen` at once; the escalation rule applies to the fix, which is
 // either given with the correction or owed and settled later with `fix`.
-import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
@@ -60,6 +61,27 @@ const opt = {}
 for (let i = 1; i < argv.length; i++) if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[i + 1] === undefined || argv[i + 1].startsWith('--') ? true : argv[++i]
 const str = (k) => (typeof opt[k] === 'string' && opt[k].trim() ? opt[k].trim() : null)
 const die = (m) => (console.error(m), process.exit(1))
+// OLA-251, eighteenth checker: add and fix read both ledger files, wait on the tracker and git, then write them
+// back whole; two runs at once each wrote what they had read and one correction, with its fix, was lost with no
+// line. One run at a time writes the ledger: a lock folder beside data/weaknesses.json, held from before the
+// first read to exit, waited for up to two minutes, taken over when its holder is gone or it is ten minutes old.
+if (cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') {
+  const lock = `${realpathSync(dirname(WEAK))}/.correct.lock`
+  const t0 = Date.now()
+  for (;;) {
+    try { mkdirSync(lock); writeFileSync(`${lock}/pid`, String(process.pid)); break } catch (e) {
+      if (e.code !== 'EEXIST') throw e
+      let pid = 0, age = 0
+      try { pid = Number(readFileSync(`${lock}/pid`, 'utf8')); age = Date.now() - statSync(lock).mtimeMs } catch {}
+      let alive = false
+      if (pid) try { process.kill(pid, 0); alive = true } catch (k) { alive = k.code === 'EPERM' }
+      if ((pid && !alive) || age > 600e3) { rmSync(lock, { recursive: true, force: true }); continue }
+      if (Date.now() - t0 > 120e3) die(`Refused: another correct.mjs run is writing the ledger (lock ${lock}, pid ${pid || '?'}); run this again when it ends.`)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100)
+    }
+  }
+  process.on('exit', () => { try { if (Number(readFileSync(`${lock}/pid`, 'utf8')) === process.pid) rmSync(lock, { recursive: true, force: true }) } catch {} })
+}
 const KINDS = { 1: 'written down', 2: 'shown at the moment', 3: 'refused by code', 4: 'checked by another', 5: 'taken away' }
 export const levelOf = (g) => g.level ?? (g.enforced ? 3 : 1)
 const pacific = (o) => new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', ...o })
