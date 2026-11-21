@@ -124,3 +124,29 @@
 .mrd .cr-sum { font-size: 17px; line-height: 1.6; max-width: 72ch; margin: 14px 0; }
 .mrd .cr-links { margin-top: 12px; display: grid; gap: 8px; font-size: 16px; }
 .mrd .cr .ck-readers { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.mrd .cr-sec { margin-top: 44px; }
+.mrd .cr-lead { font-size: 15px; line-height: 1.5; color: var(--mute); margin-top: 6px; max-width: 72ch; }
+.mrd .cr-note { font-size: 14px; line-height: 1.55; color: var(--mute); margin-top: 14px; max-width: 78ch; }
+.mrd .cr-h3 { font-size: 12px; margin-top: 30px; }
+.mrd .cr-sbs td, .mrd .cr-cost td { white-space: normal; vertical-align: top; }
+.mrd .cr-sbs td { min-width: 150px; }
+.mrd .cr-sbs td:first-child { min-width: 170px; }
+.mrd .cr-sbs td:last-child { min-width: 0; }
+.mrd .cr-sbs td:first-child a { font-family: var(--font-jetbrains-mono), monospace; font-weight: 500; }
+.mrd .cr-name { display: block; font-size: 13px; color: var(--mute); margin-top: 2px; }
+.mrd .cr-a { display: block; font-weight: 600; line-height: 1.35; }
+.mrd .cr-i { display: block; font-size: 13px; color: var(--mute); margin-top: 2px; }
+.mrd .cr-sbs .cr-tag { margin-left: 0; }
+.mrd .cr-cost td:first-child { min-width: 200px; }
+.mrd .cr-cost td:nth-child(n+3) { white-space: nowrap; }
+.mrd .cr-total td { font-weight: 600; border-bottom: 0; border-top: 1px solid var(--ink); }
+.mrd .ck-item .ck-reason { margin-top: 6px; }
+
+/* the Costa Rica hub: /mrd/costa-rica */
+.mrd .cr-hub { display: grid; gap: 14px; margin-top: 36px; max-width: 760px; }
+.mrd .cr-hub a { display: block; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 20px 22px; text-decoration: none; }
+.mrd .cr-hub a:hover { border-color: var(--blue); }
+.mrd .cr-hub b { display: block; font-family: var(--font-source-serif-4), Georgia, serif; font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+.mrd .cr-hub span { display: block; font-size: 15px; line-height: 1.45; color: var(--mute); margin-top: 4px; }
+.mrd .cr-cost td:nth-child(2) { white-space: nowrap; }
+@media (max-width: 600px) { .mrd .cr-cost td:first-child { min-width: 170px; } }

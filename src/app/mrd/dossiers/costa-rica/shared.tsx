@@ -2,6 +2,7 @@ import { select } from '@/lib/mrd/db'
 
 export const COUNTRY = 1004
 export const BASE = '/mrd/dossiers/costa-rica'
+export const HUB = '/mrd/costa-rica'
 
 export type Source = { url: string; quote?: string; article?: string; instrument?: string }
 export type EvSource = { url: string; title?: string; year?: number }
@@ -72,7 +73,7 @@ export function Block({ who, b, tags }: { who: string; b: Brief; tags?: { answer
 export function Top({ here }: { here: string }) {
   return (
     <header className="top">
-      <div className="eyebrow"><span><a href={BASE}>← Costa Rica quality control pass</a> · {here}</span></div>
+      <div className="eyebrow"><span><a href={HUB}>Costa Rica</a> · <a href={BASE}>quality control report</a> · {here}</span></div>
     </header>
   )
 }
