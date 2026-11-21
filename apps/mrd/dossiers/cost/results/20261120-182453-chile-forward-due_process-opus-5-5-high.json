@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile due_process claude-opus-5-5 high",
- "pid": 49734,
  "step": "forward",
  "slug": "chile",
  "chunk": "due_process",
@@ -61,5 +60,937 @@
   "user": 120
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T02:53:04.126Z",
+ "minutes": 28.18,
+ "meters_after": {
+  "at": "2026-11-21T02:53:04.126Z",
+  "window": {
+   "pct": 35,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 46,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 35,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 46,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 35% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 46% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 140456,
+   "output": 33163,
+   "cache_read": 1684768,
+   "cache_write": 132827,
+   "cost_usd": 1.9523,
+   "total": 1991214
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 140418,
+    "output": 11011,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3079,
+    "cost_usd": 0.1095
+   },
+   "claude-opus-5-5": {
+    "input": 38,
+    "output": 22152,
+    "cache_read": 1684768,
+    "cache_write": 132827,
+    "thinking": 6675,
+    "cost_usd": 1.8428
+   }
+  }
+ },
+ "turns": 29,
+ "calls": 48,
+ "duration_ms": 494826,
+ "duration_api_ms": 416877,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-21T02:24:59.886Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 3.- | Artículo 13.- | Artículo 21.- | Artículo 155 | Artículo 112 | Artículo 70 | Artículo 13 bis | Ley 21.655 | versión",
+   "ok": true,
+   "chars": 9788
+  },
+  {
+   "at": "2026-11-21T02:25:20.676Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 21.- | Artículo 9.- Ingreso | Artículo 112 | Artículo 155 | Artículo 70 | Artículo 71 | Artículo 77 | Artículo 131 bis | Artículo 132 BIS",
+   "ok": true,
+   "chars": 15714
+  },
+  {
+   "at": "2026-11-21T02:26:07.987Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "No criminalización | 8. Establecer | Artículo 131 | Artículo 132 bis | Artículo 132 BIS | reconducción | violencia intrafamiliar | tráfico de migrantes | intérprete | Ley 21655 | Ley 21589 | Ley 21590",
+   "ok": true,
+   "chars": 18484
+  },
+  {
+   "at": "2026-11-21T02:26:17.081Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "2025 | Ley 21590 | Ley 21816 | Ley 21655Art. 2º | Artículo 141 | defensa jurídica | Corporación de Asistencia Judicial",
+   "ok": true,
+   "chars": 12598
+  },
+  {
+   "at": "2026-11-21T02:26:33.232Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595",
+   "find": "Artículo 109.- | Artículo 108.- | Artículo 291.- | intérprete | Última modificación",
+   "ok": true,
+   "chars": 8553
+  },
+  {
+   "at": "2026-11-21T02:26:50.794Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595",
+   "find": "f) Impugnar el sobreseimiento | Ley 21694Artículo segundo N° 8 | Artículo 78.- | Artículo 6º.- Protección de la víctima",
+   "ok": true,
+   "chars": 7818
+  },
+  {
+   "at": "2026-11-21T02:27:13.187Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043",
+   "find": "Última modificación | Artículo 10.- | trata | violencia intrafamiliar | tráfico de migrantes | Versión",
+   "ok": true,
+   "chars": 10532
+  },
+  {
+   "at": "2026-11-21T02:48:29.659Z",
+   "url": "https://www.ecoi.net/en/document/2130540.html",
+   "find": "residency | visa | interpret | penaliz | foreign victims | immigration",
+   "ok": true,
+   "chars": 8443
+  },
+  {
+   "at": "2026-11-21T02:48:30.755Z",
+   "url": "https://lyd.org/wp-content/uploads/2024/11/SIL-76v4.pdf",
+   "find": "amparos | acogidos | debido proceso | Corte Suprema | defensa",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:48:33.449Z",
+   "url": "https://www.ecoi.net/en/document/2128432.html",
+   "find": "migrant | expuls | interpret | Venezuelan | asylum | legal aid",
+   "ok": true,
+   "chars": 3382
+  },
+  {
+   "at": "2026-11-21T02:49:11.386Z",
+   "url": "https://www.ecoi.net/de/dokument/2077653.html",
+   "find": "visas | deport | interpret | penaliz",
+   "ok": true,
+   "chars": 5334
+  },
+  {
+   "at": "2026-11-21T02:49:24.202Z",
+   "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+   "find": "defensa | abogado | intérprete | información | Corporación",
+   "ok": true,
+   "chars": 3022
+  },
+  {
+   "at": "2026-11-21T02:49:25.021Z",
+   "url": "https://www.cnnchile.com/pais/migracion-chile-mecanismos-expulsion_20240420/",
+   "find": "amparo | Corte | defensa | reconducción | expulsión",
+   "ok": true,
+   "chars": 5464
+  },
+  {
+   "at": "2026-11-21T02:49:32.979Z",
+   "url": "https://www.hrw.org/world-report/2025/country-chapters/chile",
+   "find": "migra | expel | Venezuel | border | deport",
+   "ok": true,
+   "chars": 1777
+  },
+  {
+   "at": "2026-11-21T02:50:39.969Z",
+   "url": "https://www.diarioconstitucional.cl/2025/11/05/corte-suprema-ratifica-expulsion-de-extranjero-que-ingreso-por-paso-no-habilitado/",
+   "find": "paso no habilitado | infracción | Rol | voto",
+   "ok": true,
+   "chars": 3316
+  },
+  {
+   "at": "2026-11-21T02:50:41.281Z",
+   "url": "https://www.diarioconstitucional.cl/2025/11/23/corte-suprema-revoca-orden-de-expulsion-a-ciudadano-haitiano-y-ordena-reevaluar-su-solicitud-de-residencia/",
+   "find": "defensa | debido proceso | Rol | racional y justo",
+   "ok": true,
+   "chars": 4544
+  },
+  {
+   "at": "2026-11-21T02:50:46.753Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "3º.- La igual protección de la ley | 2º.- La igualdad ante la ley | Última modificación",
+   "ok": true,
+   "chars": 3470
+  }
+ ],
+ "searches": [
+  "Ley 21.655 modifica ley 21.325 reconducción leychile",
+  "ingreso clandestino delito Chile ley publicada Diario Oficial 2025 modifica ley 21.325",
+  "Decreto 177 2022 subcategorías migratorias residencia temporal leychile víctimas trata violencia intrafamiliar",
+  "\"Decreto 177\" \"establece subcategorías migratorias de residencia temporal\" bcn.cl",
+  "Chile 2024 Trafficking in Persons Report temporary residency visas victims Chile",
+  "Defensoría Penal Pública intérpretes imputados extranjeros creole 2023 2024",
+  "INDH informe anual 2023 2024 expulsiones migrantes debido proceso defensa jurídica Corte Suprema amparo",
+  "migrantes expulsión administrativa sin defensa jurídica Chile 2023 2024 Corporación de Asistencia Judicial Clínica Jurídica Servicio Jesuita a Migrantes informe",
+  "Corte Suprema 2025 acoge amparo expulsión migrante falta de defensa Ley 21.325 artículo 21 asesoría jurídica"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":35,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 3\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 13\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 21\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Arts. 1, 19 No. 2 and No. 3\",\"enacted\":\"1980-10-24\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-08-18\",\"instrument\":\"Ley 21.589\",\"article\":\"Ley 21.325 art. 5 (notificación / dirección de estadía)\",\"kind\":\"amended\",\"what_changed\":\"Added a duty for the border authority to ask a newly arrived foreigner for an address or e-mail, and allowed notifications of proceedings to be sent there. This is procedural and does not alter equal protection before courts.\",\"url\":\"https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549\",\"passage\":\"EnLey 21589Art. único N° 1D.O. 18.08.2023 su primer contacto con el extranjero que ha ingresado al país, la autoridad contralora deberá apercibirlo a que indique la dirección de su estadía.\"}],\"implementation_then_now\":\"In both periods the equal-protection guarantee is mostly honoured through the courts. Migrants routinely bring amparo actions against expulsions, and appeal courts and the Supreme Court annul disproportionate or poorly reasoned SERMIG measures. In 2025, for example, the Supreme Court (Rol 44786-2025) annulled an order to leave the country, citing the duty to secure",
+ "output": {
+  "answers": [
+   {
+    "question_id": 35,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 3",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Arts. 1, 19 No. 2 and No. 3",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5 (notificación / dirección de estadía)",
+      "kind": "amended",
+      "what_changed": "Added a duty for the border authority to ask a newly arrived foreigner for an address or e-mail, and allowed notifications of proceedings to be sent there. This is procedural and does not alter equal protection before courts.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "EnLey 21589Art. único N° 1D.O. 18.08.2023 su primer contacto con el extranjero que ha ingresado al país, la autoridad contralora deberá apercibirlo a que indique la dirección de su estadía."
+     }
+    ],
+    "implementation_then_now": "In both periods the equal-protection guarantee is mostly honoured through the courts. Migrants routinely bring amparo actions against expulsions, and appeal courts and the Supreme Court annul disproportionate or poorly reasoned SERMIG measures. In 2025, for example, the Supreme Court (Rol 44786-2025) annulled an order to leave the country, citing the duty to secure a 'procedimiento racional y justo'. There is a known pattern of gaps: the CPT's 2023–2024 monitoring of administrative expulsions found a lack of basic procedural guarantees in administrative detention. No shift between 2023 and 2026 was documented, so the rating stays 'Usually'.",
+    "practice_sources": [
+     {
+      "title": "Corte Suprema revoca orden de expulsión a ciudadano haitiano y ordena reevaluar su solicitud de residencia (Rol 44786-2025)",
+      "url": "https://www.diarioconstitucional.cl/2025/11/23/corte-suprema-revoca-orden-de-expulsion-a-ciudadano-haitiano-y-ordena-reevaluar-su-solicitud-de-residencia/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Informe de visita del CPT: Privación de libertad de personas migrantes en proceso de expulsión administrativa",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile version history of Ley 21.325 (versions dated 2022-02-12, 2023-08-07, 2023-08-18, 2023-09-22, 2024-02-20, 2025-04-01 and 2026-06-02) and the current text. Arts. 3, 13 and 21 carry no amendment marks. I also read the Constitution's art. 19. Practice evidence comes from press summaries of rulings, not the full rulings.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile (texto imprimible)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Constitución Política – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Diario Constitucional – CS Rol 44786-2025",
+      "url": "https://www.diarioconstitucional.cl/2025/11/23/corte-suprema-revoca-orden-de-expulsion-a-ciudadano-haitiano-y-ordena-reevaluar-su-solicitud-de-residencia/"
+     },
+     {
+      "title": "Diario Constitucional – informe CPT",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     }
+    ],
+    "starting_answer_concern": "The quote attributed to art. 3 is a paraphrase. Art. 3 obliges the State to protect the human rights of foreigners regardless of migratory status, and the 'igual protección' wording is in art. 21. The answer itself holds.",
+    "confidence": "medium",
+    "notes": "I relied on statutes and the Constitution. No ruling is used for the protection answer."
+   },
+   {
+    "question_id": 37,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134 (privación de libertad para ejecutar la expulsión)",
+      "kind": "amended",
+      "what_changed": "Changed the maximum period of detention to carry out an expulsion, which is now five calendar days. The detainee rights in the same article are kept: contacting lawyers, and having the contact details of the Corporación de Asistencia Judicial displayed. Art. 21's legal-aid mandate is not touched.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "debiendo en todo caso mantener a la vista de los afectados un listado actualizado de los datos de contacto de la Corporación de Asistencia Judicial correspondiente. ... el afectado podrá ser privado de libertad únicamente para hacer efectiva la expulsión por un plazo máximo de cincLey 21590Art. únicoD.O. 07.08.2023o días corridos."
+     }
+    ],
+    "implementation_then_now": "Art. 21 tells the State to 'arbitrar los medios necesarios para otorgar asesoramiento y defensa jurídica' to foreigners who cannot obtain it themselves. No dedicated public defender exists for migration proceedings: aid comes through the Corporaciones de Asistencia Judicial, university legal clinics and NGOs such as SJM, and amparo litigation is often brought by NGO lawyers. The CPT's monitoring (Nov 2023–Oct 2024) found a lack of basic procedural guarantees for migrants held for administrative expulsion. Academic commentary I saw only as search snippets points to an absence of prior legal defence at the administrative stage. I found no evidence of a change between the two dates, so 'Sometimes' is kept.",
+    "practice_sources": [
+     {
+      "title": "Informe de visita del CPT: Privación de libertad de personas migrantes en proceso de expulsión administrativa",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Crisis migratoria: Radiografía a los mecanismos de expulsión y cómo son ejecutados (CNN Chile)",
+      "url": "https://www.cnnchile.com/pais/migracion-chile-mecanismos-expulsion_20240420/",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 21 carries no amendment marks across the LeyChile version history. The practice evidence is thin and second-hand: I read no legal-aid statistics, and the CPT report itself (a PDF) could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile (texto imprimible)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Diario Constitucional – informe CPT",
+      "url": "https://www.diarioconstitucional.cl/2025/05/23/informe-de-visita-del-comite-para-la-prevencion-de-la-tortura-cpt-titulado-privacion-de-libertad-de-personas-migrantes-en-proceso-de-expulsion-administrativa/"
+     },
+     {
+      "title": "CNN Chile – mecanismos de expulsión",
+      "url": "https://www.cnnchile.com/pais/migracion-chile-mecanismos-expulsion_20240420/"
+     }
+    ],
+    "starting_answer_concern": "Art. 21 is a programmatic mandate to 'arbitrar los medios necesarios' for legal advice and defence. It does not name a body or create an enforceable entitlement to appointed counsel in expulsion proceedings, so the 'Yes' is generous, though defensible.",
+    "confidence": "low",
+    "notes": "The Poder Judicial's report on Boletín 16.815-06 suggests a pending bill would route defence through the CAJ. It was not law in the window."
+   },
+   {
+    "question_id": 39,
+    "answer_2023": "No",
+    "implementation_2023": "Usually",
+    "answer_2026": "No",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 291",
+      "enacted": "2000-10-12",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-09-04",
+      "instrument": "Ley 21.694",
+      "article": "Código Procesal Penal art. 291",
+      "kind": "amended",
+      "what_changed": "Added a final sentence allowing victims to appear by technological means. The interpreter clause for an accused who does not understand Spanish was left untouched, so this does not bear on the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595",
+      "passage": "El acusado sordo o que no pudiere entender el idioma castellano será asistido de un intérprete que le comunicará el contenido de los actos del juicio. Sin Ley 21694Artículo segundo N° 24D.O. 04.09.2024embargo, el tribunal podrá autorizar la comparecencia por medios tecnológicos de las víctimas"
+     }
+    ],
+    "implementation_then_now": "The starting answer says that in practice the Defensoría Penal Pública pays for interpretation out of its own budget. I found no 2023–2026 source on interpretation for foreign defendants that confirms or contradicts this. The only practice evidence covers victims, not defendants: TIP 2022 reports the URAVIT video-interpretation service, including Haitian Creole, and TIP 2025 says URAVIT did not report using it in 2024. The 'Usually' rating is kept for both dates for want of contrary evidence about defendants.",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile consolidated text of art. 291 with its amendment marks. The only change in the window is Ley 21.694, which does not touch the interpreter clause. I found no practice source on interpretation for defendants.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595"
+     },
+     {
+      "title": "2022 TIP Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     },
+     {
+      "title": "2025 TIP Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     }
+    ],
+    "starting_answer_concern": "The 'No' looks wrong. Código Procesal Penal art. 291 (unchanged on this point since 2000) states that those who cannot speak Spanish 'intervendrán por escrito o por medio de intérpretes' and that 'El acusado sordo o que no pudiere entender el idioma castellano será asistido de un intérprete'. That is a statutory right to an interpreter in criminal trials. The statute does not say who pays, but the court- or Defensoría-provided interpreter is not charged to the accused. A fresh coding would likely be 'Yes'.",
+    "confidence": "low",
+    "notes": "The answer is kept at 'No' on both dates, as instructed, because no dated event changed it."
+   },
+   {
+    "question_id": 41,
+    "answer_2023": "Yes",
+    "implementation_2023": "Rarely",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 9 (No criminalización)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 112",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 155",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 131 (reconducción)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Extended immediate administrative return to the border to anyone caught entering irregularly or within 10 km of the land border, with a provisional one-year entry ban. This makes the administrative consequences of unauthorised entry harsher but creates no criminal sanction. Art. 9 still says irregular migration is not a crime.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "Asimismo, el extranjero que sea sorprendido por la autoridad contralora Ley 21655Art. 2º a), b), c) y d)D.O. 20.02.2024intentando ingresar o habiendo ingresado al territorio nacional eludiendo el control migratorio, ya sea por pasos habilitados o no, o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre ... será inmediatamente reembarcado o reconducido a la frontera"
+     }
+    ],
+    "implementation_then_now": "Unauthorised entry has not been prosecuted as a crime since Ley 21.325 entered into force: art. 9 reads 'La migración irregular no es constitutiva de delito', and the bill to recriminalise it was still in the Senate in 2026, according to search results only. Administrative sanctions are applied consistently, however. The Supreme Court in November 2025 upheld the expulsion of a man who entered through an unauthorised crossing, treating it as a 'grave' infraction. Since February 2024 Ley 21.655 has widened immediate reconducción. Measured as exemption from civil or administrative sanctions, practice stays 'Rarely' on both dates; criminal sanctions are in effect never applied.",
+    "practice_sources": [
+     {
+      "title": "Corte Suprema ratifica expulsión de extranjero que ingresó por paso no habilitado",
+      "url": "https://www.diarioconstitucional.cl/2025/11/05/corte-suprema-ratifica-expulsion-de-extranjero-que-ingreso-por-paso-no-habilitado/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Crisis migratoria: Radiografía a los mecanismos de expulsión y cómo son ejecutados (CNN Chile)",
+      "url": "https://www.cnnchile.com/pais/migracion-chile-mecanismos-expulsion_20240420/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile version history. Art. 9 carries no amendment marks, and art. 131 shows the Ley 21.655 mark (D.O. 20.02.2024). I did not open the Diario Oficial PDF of Ley 21.655. The criminalisation bill's status comes from search results only.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile (texto imprimible)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Diario Constitucional – CS ratifica expulsión por paso no habilitado",
+      "url": "https://www.diarioconstitucional.cl/2025/11/05/corte-suprema-ratifica-expulsion-de-extranjero-que-ingreso-por-paso-no-habilitado/"
+     },
+     {
+      "title": "CNN Chile – mecanismos de expulsión",
+      "url": "https://www.cnnchile.com/pais/migracion-chile-mecanismos-expulsion_20240420/"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds, but the citation rests on the wrong articles. The protection is in art. 9 ('La migración irregular no es constitutiva de delito'), not art. 155. Art. 112 fines legal persons and non-official natural persons who facilitate illegal entry; it does not sanction the migrant. The migrant's administrative exposure comes from arts. 32 No. 3, 127 and 131.",
+    "confidence": "medium",
+    "notes": "Boletín 15261-25, to criminalise irregular entry, was not enacted by 1 January 2026; this rests on search results only."
+   },
+   {
+    "question_id": 43,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13, 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Procesal Penal (Ley 19.696)",
+      "article": "Art. 109",
+      "enacted": "2000-10-12",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-11-09",
+      "instrument": "Ley 21.627",
+      "article": "Código Procesal Penal art. 109 letters e)–f)",
+      "kind": "amended",
+      "what_changed": "Amended the list of victims' rights: to be heard before the sobreseimiento or 'otra resolución que pusiere término a la causa', and to challenge sobreseimiento or acquittal. The rights still apply to any 'víctima' regardless of nationality, including the right to file a querella under letter b). This widens the rights without affecting equality between migrants and citizens.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595",
+      "passage": "b) Presentar querella; ... e) Ser oída, si lo solicitare, por el tribunal antes de pronunciarse acerca del sobreseimiento temporal o definitivo u otra resolución que pusiere término a la causaLey 21627Art. 3 Nºs 1 y 2D.O. 09.11.2023. f) Impugnar el sobreseimiento temporal o definitivo o la sentencia absolutoria"
+     }
+    ],
+    "implementation_then_now": "In both periods the US TIP reports say foreign victims received the same services and courtroom accommodations as Chilean victims: teleconference, witness protection and video testimony. That is in TIP 2022 for 2021 and TIP 2025 for 2024. The same reports note difficulties in getting victims to take part in full trials and uneven services, and TIP 2025 records that URAVIT did not report using its interpretation service in 2024. No shift in rating is documented. The evidence covers trafficking victims, among them foreign and irregular migrants, not migrant victims of all crimes.",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile consolidated Código Procesal Penal with its amendment marks; art. 109 was amended by Ley 21.627 (2023) and the text carries no nationality condition. I read Ley 21.325's version history. The practice sources cover trafficking victims only.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=176595"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile (texto imprimible)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "2022 TIP Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     },
+     {
+      "title": "2025 TIP Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Ley 21.694 (D.O. 04.09.2024) also reformed victims' procedural guarantees in the Código Procesal Penal (e.g. arts. 167, 291); I read none of it that discriminates by nationality."
+   },
+   {
+    "question_id": 45,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 70",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 71",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 77",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022), Ministerio del Interior y Seguridad Pública – Establece las subcategorías migratorias de residencia temporal",
+      "article": "Art. 10 letter h)",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024",
+      "instrument": "US Department of State, 2025 Trafficking in Persons Report: Chile (practice data for 2024)",
+      "article": "Ley 21.325 art. 71 / Decreto 177 art. 10 h) §1 (permiso para víctimas de trata)",
+      "kind": "practice",
+      "what_changed": "Visas issued to trafficking victims fell from 18 in 2023 to 3 in 2024, while identified victims rose from 82 to 179, of whom 83 were foreign. The law is unchanged; how often the avenue is used fell sharply.",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "passage": "The government reported issuing visas to three trafficking victims in 2024, compared with issuing 18 victims visas in 2023. Visas permitted victims to work, were valid for up to one year, and could be renewed for up to two additional years if the victim reported the crime to law enforcement. Chilean law expressly prohibited the deportation of identified trafficking victims."
+     }
+    ],
+    "implementation_then_now": "Before and around 2023 the avenue was used regularly though modestly: 16 no-fee visas for trafficking victims in 2021 (TIP 2022) and 18 in 2023 (TIP 2025). In 2024 only 3 visas were issued, against 83 identified foreign victims (TIP 2025). That is a documented drop, and the rating moves from 'Sometimes' to 'Rarely'. The evidence covers trafficking victims only. I found no data on the domestic-violence, gender-violence and smuggling-victim permits (Decreto 177 art. 10 h) §§2–3; Ley 21.325 art. 77).",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Ley 21.325 arts. 13, 70, 71 and 77 carry no amendment marks in the LeyChile consolidated text. LeyChile lists Decreto 177 as 'Versión: Única - 14-MAY-2022', so it was never amended. The practice data are TIP figures for trafficking victims only.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (texto imprimible)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile (navegar, versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Decreto 177 – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1176043"
+     },
+     {
+      "title": "2022 TIP Report: Chile",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     },
+     {
+      "title": "2025 TIP Report: Chile",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     }
+    ],
+    "starting_answer_concern": "The starting rating, 'Effectively Always; Rarely', pairs two non-neighbouring levels and is not an allowed option. On the evidence for 2021–2023 (around 16–18 visas a year), I recoded 1 January 2023 as 'Sometimes', a midpoint. This is a recoding of the starting rating, not a change.",
+    "confidence": "medium",
+    "notes": "Art. 71 gives trafficking victims a right to apply for at least 12 months' temporary residence and bars repatriation where there is grave danger. Art. 13 and art. 77 cover victims of gender and domestic violence and of smuggling. Decreto 177 art. 10 h) creates humanitarian permits: §1 trafficking, §2 domestic/gender violence, §3 smuggling."
+   }
+  ]
+ }
 }
