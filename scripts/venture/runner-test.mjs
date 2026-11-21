@@ -175,18 +175,17 @@ ok('OLA-251, OLA-259: a check passed by a request-test case says what that case 
   assert.deepEqual(releasesIn('on da4380403a13 (and 25734224)'), ['da4380403a13'])
 })
 
-ok('OLA-272: the test server is updated only for a ready ticket, 45 minutes apart (unless a P0 waits), and not under a checker', () => {
+ok('OLA-272 + OLA-338: the test server is updated for a ready ticket, with no spacing, one at a time, and never under a checker', () => {
   const ready = [{ id: 'OLA-5', priority: 'P1' }]
   assert.equal(deployGate({ pending: [], lastAttempt: ago(120), now: NOW }).ok, false, 'nothing ready, no update')
   assert.match(deployGate({ pending: [], now: NOW }).why, /no ticket is ready/)
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(44), now: NOW }).ok, false, 'a clock just under 45 minutes')
-  assert.match(deployGate({ pending: ready, lastAttempt: ago(44), now: NOW }).why, /44 min ago/)
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(44), now: NOW }).nextAllowed, new Date(NOW + 60e3).toISOString())
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(46), now: NOW }).ok, true)
-  assert.equal(deployGate({ pending: [{ id: 'OLA-6', priority: 'P0' }], lastAttempt: ago(10), now: NOW }).ok, true, 'a ready P0 goes before the 45 minutes')
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(10), now: NOW }).ok, false, 'a P0 that is not ready is not in pending, so it does not count')
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(60), checkerAt: [{ id: 'OLA-7', at: ago(14), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, false, 'a checker 14 minutes ago')
-  assert.equal(deployGate({ pending: ready, lastAttempt: ago(60), checkerAt: [{ id: 'OLA-7', at: ago(16), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, true, 'a checker 16 minutes ago')
+  assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), now: NOW }).ok, true, 'one minute after the last update (OLA-338: no 45 minutes)')
+  assert.match(deployGate({ pending: ready, lastAttempt: ago(1), now: NOW }).why, /last attempt 1 min ago/)
+  assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), updating: 'ola.mjs deploy, pid 4242', now: NOW }).ok, false, 'one update at a time')
+  assert.match(deployGate({ pending: ready, updating: 'ola.mjs deploy, pid 4242', now: NOW }).why, /an update is running now \(ola\.mjs deploy, pid 4242\); one at a time/)
+  assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), checkerAt: [{ id: 'OLA-7', at: ago(14), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, false, 'a checker 14 minutes ago')
+  assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), checkerAt: [{ id: 'OLA-7', at: ago(14), what: 'check #2 passed on OLA-7' }], now: NOW }).nextAllowed, new Date(NOW + 60e3).toISOString())
+  assert.equal(deployGate({ pending: ready, lastAttempt: ago(1), checkerAt: [{ id: 'OLA-7', at: ago(16), what: 'check #2 passed on OLA-7' }], now: NOW }).ok, true, 'a checker 16 minutes ago')
   assert.equal(deployGate({ pending: [{ id: 'OLA-6', priority: 'P0' }], lastAttempt: ago(5), checkerAt: [{ id: 'OLA-7', at: ago(3), what: 'a checker claim' }], now: NOW }).ok, false, 'a P0 does not interrupt a checker')
   assert.equal(deployGate({ pending: ready, checkerAt: [], now: NOW }).ok, true, 'no attempt on record')
 })

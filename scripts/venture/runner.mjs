@@ -33,8 +33,9 @@
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
 //   node scripts/venture/runner.mjs replay          the nightly replay test now, as the night runs it (by hand, or to prove it)
 //   node scripts/venture/runner.mjs deploy [--dry]  update the test server, only when allowed (OLA-272): a ticket is ready
-//                                                   with server commits not live, 45 min since the last attempt (or a
-//                                                   P0 waits), no checker in the last 15 min; else one line why, exit 3
+//                                                   with server commits not live, no other update running, no checker on
+//                                                   the live server in the last 15 min (OLA-338: no spacing between updates);
+//                                                   else one line why, exit 3
 //   --dry also takes --fake-session (as if a session's heartbeat were fresh), --fake-claim OLA-n,
 //   --fake-limit (as if the limit were reached until 2 am), to show the choices without changing anything.
 //
@@ -435,6 +436,9 @@ async function deployFacts() {
   const own = (await getState(db, 'runner_deploy'))?.value ?? null
   const fromLog = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/.exec(lastLine)?.[1] ?? null
   const lastAttempt = [fromLog, own?.at].filter(Boolean).sort().at(-1) ?? null
+  // OLA-338: one update at a time (ola.mjs deploy holds ~/ola-staging/deploy.lock with its pid)
+  const lockPid = (mini('p=$(cat ~/ola-staging/deploy.lock 2>/dev/null) && kill -0 "$p" 2>/dev/null && echo "$p"') ?? '').trim()
+  const updating = /^\d+$/.test(lockPid) ? `ola.mjs deploy, pid ${lockPid}` : null
   run('git', ['fetch', '--quiet', 'origin', 'main'])
   const acc = (await db.from('venture_state').select('key, value').like('key', 'accept:%')).data ?? []
   const ids = acc.filter((x) => x.value?.ready).map((x) => x.key.slice('accept:'.length))
@@ -457,7 +461,7 @@ async function deployFacts() {
   const liveTickets = new Set(acc.filter((x) => (x.value?.checks ?? []).some(onLive)).map((x) => x.key.slice(7)))
   for (const x of acc) for (const c of x.value?.checks ?? []) if (onLive(c) && c.checked_at && now - Date.parse(c.checked_at) < CHECKER_QUIET) checkerAt.push({ id: x.key.slice(7), at: c.checked_at, what: `check #${c.n} ${c.result} on ${x.key.slice(7)} by ${c.by}` })
   for (const [id, c] of Object.entries(await claims())) if (liveTickets.has(id) && claimRole(c) === 'checker' && now - Date.parse(c.at) < CHECKER_QUIET) checkerAt.push({ id, at: c.at, what: `${c.who}'s claim on ${id} renewed` })
-  return { live, lastAttempt, lastLine, pending, checkerAt }
+  return { live, lastAttempt, lastLine, pending, checkerAt, updating }
 }
 
 if (cmd === 'status') {
@@ -504,6 +508,9 @@ if (cmd === 'status') {
   // OLA_DEPLOY_VIA: for the gate inside ola.mjs deploy, once the server's code checks it (OLA-279)
   const r = spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit', env: { ...process.env, OLA_DEPLOY_VIA: 'runner.mjs deploy' } })
   await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
+  // OLA-334: the test server's own line for this update (it names a failed suite, its kept output, and any suite that passed only on the rerun)
+  const outcome = (mini('tail -1 ~/ola-staging/deploys.log') ?? '').trim()
+  if (outcome) say(`update of the test server ended (exit ${r.status}): ${outcome.slice(0, 600)}`)
   process.exit(r.status ?? 1)
 } else if (cmd === 'probe') {
   const pulled = run('node', ['scripts/venture/sync.mjs', 'pull'])

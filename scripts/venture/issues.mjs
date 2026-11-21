@@ -25,6 +25,8 @@
 //   node scripts/venture/issues.mjs check <id> edit <n> [--do "…"] [--see "…"] --why "what changed"   (an unchecked check whose facts changed; the old words go on the thread)
 //   node scripts/venture/issues.mjs check <id> skip 'local-*' --why "why this place does not apply"     (a pattern, * allowed)
 //   node scripts/venture/issues.mjs check <id> internal --why "why nothing a person does or sees changes"
+//                                   (the project's own tools: no checker, ever; closed with done --proof
+//                                    "no user path: <why>; lead ran <test>: n of n", the lead running the builder's tests once: OLA-338)
 //   node scripts/venture/issues.mjs check <id> pass <n> --by checker --on "<release or build>" --saw "what happened" --shot <file>
 //                                   [--case <id>@<place>]  refused from the agent or session that built it, claimed it as
 //                                   builder, marked it ready or committed for it (scripts/venture/_who.mjs: who runs the
@@ -452,6 +454,13 @@ function verdict(row, a) {
   }
   return { ok: !why.length, why, works, fails, open, uncovered }
 }
+/** OLA-338: what is wrong with an internal close's "lead ran <test>: n of n" (null when it is there and every test passed). */
+function leadRunMissing(proof) {
+  const runs = [...String(proof).matchAll(/\blead ran ([^:;]+?):\s*(\d+) of (\d+)/gi)]
+  if (!runs.length) return '  (no "lead ran <test>: <n> of <n>" in it: the lead runs the builder\'s tests once and gives the count)'
+  const bad = runs.filter((m) => Number(m[3]) === 0 || m[2] !== m[3])
+  return bad.length ? `  (not every test passed: ${bad.map((m) => m[0]).join('; ')})` : null
+}
 const checkLine = (c) => `  #${c.n} ${(c.result ?? 'not checked').toUpperCase().padEnd(11)} ${String(c.at).padEnd(18)} do: ${c.do}\n${' '.repeat(34)}see: ${c.see}${c.result ? `\n${' '.repeat(34)}${c.result === 'pass' ? 'saw' : 'instead'}: ${c.saw} (${c.by}, ${when(c.checked_at)}${c.on ? `, on ${c.on}` : ''}${c.evidence ? `, ${c.evidence}` : ''})` : ''}`
 function printChecks(row, a) {
   console.log(`${row.id}  ${row.title}`)
@@ -459,7 +468,7 @@ function printChecks(row, a) {
   for (const c of a.checks) console.log(checkLine(c))
   for (const k of a.skips) console.log(`  skipped ${k.pattern}: ${k.why}`)
   const v = verdict(row, a)
-  console.log(v.ok ? (a.internal ? '  can be closed with proof ("walked: …" or "no user path: …")' : '  every check has passed: it can be closed') : v.why.map((w) => `  MISSING: ${w}`).join('\n'))
+  console.log(v.ok ? (a.internal ? '  can be closed with proof ("walked: …", or "no user path: …; lead ran <test>: n of n"); no checker is asked for' : '  every check has passed: it can be closed') : v.why.map((w) => `  MISSING: ${w}`).join('\n'))
 }
 
 // ---- The test server, read over ssh (OLA-264, OLA-259): the release that is live, and the request
@@ -618,7 +627,13 @@ if (cmd === 'overrides') {
     if (a.internal && !/\b(walked|no user path):/i.test(proof)) die(
       'an internal ticket needs proof on the real thing, in the proof text:\n' +
       '  "walked: <what you did on the live server / installed app and what you saw>"\n' +
-      '  or "no user path: <why nothing reaches a person>".')
+      '  or "no user path: <why nothing reaches a person>; lead ran <test>: <n> of <n>".')
+    // OLA-338 (Bart, Nov 21: "Ola-338 yes"): the project's own tools get no second agent; the builder's
+    // tests and the lead running them once are the proof, so a "no user path" close names that run.
+    if (a.internal && /\bno user path:/i.test(proof) && !/\bwalked:/i.test(proof)) {
+      const why = leadRunMissing(proof)
+      if (why) die(`an internal ticket closes on the builder's tests run once by the lead, in the proof text:\n  "no user path: <why nothing reaches a person>; lead ran <test>: <n> of <n>"\n${why}`)
+    }
   }
   const now = new Date().toISOString()
   await patch(id, { status: 'done', proof, finished_at: now, started_at: r.started_at ?? now, day: one('day') ?? pacificDay() })
@@ -822,7 +837,8 @@ if (cmd === 'overrides') {
     const today = pacificDay()
     const waiting = rows.filter((r) => r.status === 'in_progress' && by.get(r.id)?.ready && !verdict(r, by.get(r.id)).ok)
     const bare = rows.filter((r) => r.status === 'in_progress' && !by.get(r.id)?.internal && !(by.get(r.id)?.checks.length))
-    const closedBare = rows.filter((r) => r.status === 'done' && r.day === today && !/^\s*bart:/i.test(r.proof ?? '') && !(by.get(r.id)?.checks.length))
+    // OLA-338: an internal ticket (the project's own tools) has no checker by design, so it is not listed here
+    const closedBare = rows.filter((r) => r.status === 'done' && r.day === today && !/^\s*bart:/i.test(r.proof ?? '') && !(by.get(r.id)?.checks.length) && !by.get(r.id)?.internal)
     console.log(`Ready, waiting for a checker (${waiting.length}):`)
     for (const r of waiting) console.log(`  ${r.id.padEnd(8)} on ${by.get(r.id).ready.on}: ${verdict(r, by.get(r.id)).why.join('; ')}\n           ${r.title}`)
     console.log(`In progress with no checks written (${bare.length}):`)

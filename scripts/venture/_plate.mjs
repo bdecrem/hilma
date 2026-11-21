@@ -327,26 +327,27 @@ export const WAIT_PREFIX = 'wait:'
 export const WAIT_TTL = 3 * MIN
 export const liveWaiters = (waiters = {}, now = Date.now()) => Object.fromEntries(Object.entries(waiters).filter(([, w]) => now - Date.parse(w.at) < WAIT_TTL))
 
-// ------------------------------------------------------------------ updates of the test server (OLA-272, Nov 20)
-// From 10:30 am to 1:02 pm the runner started five updates of the test server (two refused), each
-// holding the mini's one test slot about twenty minutes: a checker waited 24 minutes, two builders
-// about 25 each, and one update changed the version under a checker in the middle of its check.
-// So the runner updates only when all three hold:
+// ------------------------------------------------------------------ updates of the test server (OLA-272, Nov 20; OLA-338, Nov 21)
+// From 10:30 am to 1:02 pm on Nov 20 the runner started five updates of the test server (two refused), each
+// holding the mini's one test slot about twenty minutes, and one update changed the version under a
+// checker in the middle of its check. The 45 minutes between updates added then cost more than they
+// saved (Bart, Nov 21, "Ola-338 yes": a 30-minute button fix took 4 h 46 min, about 45% of it waiting
+// for the mini), so they are gone. The runner updates when all three hold:
 //   (a) a ticket is marked ready (issues.mjs ready) and its newest commit is not in the live version;
-//   (b) the last update attempt (deployed or refused) is at least DEPLOY_GAP old, or a waiting ticket is a P0;
-//   (c) no checker recorded a check, and no checker's claim was renewed, in the last CHECKER_QUIET.
-export const DEPLOY_GAP = 45 * MIN
+//   (b) no other update is running (one at a time: ola.mjs deploy's deploy.lock with a live pid);
+//   (c) no checker recorded a check on the live server, and no such checker's claim was renewed, in the
+//       last CHECKER_QUIET (never while a second agent's check is running on the live server).
 export const CHECKER_QUIET = 15 * MIN
-/** pending: [{ id, priority }] ready tickets whose commits are not live; lastAttempt: ISO or null;
- *  checkerAt: [{ id, at, what }] recent check results and checker claims. Returns { ok, why, nextAllowed }. */
-export function deployGate({ pending = [], lastAttempt = null, checkerAt = [], now = Date.now() } = {}) {
-  const gapLeft = lastAttempt ? Date.parse(lastAttempt) + DEPLOY_GAP - now : -1
-  const p0 = pending.find((t) => t.priority === 'P0')
+/** pending: [{ id, priority }] ready tickets whose commits are not live; lastAttempt: ISO or null (reported only);
+ *  updating: null, or "why" when an update is running now; checkerAt: [{ id, at, what }] recent check results
+ *  and checker claims. Returns { ok, why, nextAllowed }. */
+export function deployGate({ pending = [], lastAttempt = null, updating = null, checkerAt = [], now = Date.now() } = {}) {
   const busy = checkerAt.filter((c) => now - Date.parse(c.at) < CHECKER_QUIET).sort((a, b) => b.at.localeCompare(a.at))[0]
   const quietAt = busy ? Date.parse(busy.at) + CHECKER_QUIET : now
-  const nextAllowed = new Date(Math.max(now, quietAt, p0 ? now : lastAttempt ? Date.parse(lastAttempt) + DEPLOY_GAP : now)).toISOString()
+  const nextAllowed = new Date(Math.max(now, quietAt)).toISOString()
+  const last = lastAttempt ? `last attempt ${Math.round((now - Date.parse(lastAttempt)) / MIN)} min ago` : 'no attempt on record'
   if (!pending.length) return { ok: false, why: 'no ticket is ready with commits that are not in the live version', nextAllowed }
-  if (gapLeft > 0 && !p0) return { ok: false, why: `the last update attempt was ${Math.round((now - Date.parse(lastAttempt)) / MIN)} min ago (at least ${DEPLOY_GAP / MIN} between updates unless a P0 waits; waiting: ${pending.map((t) => `${t.id} ${t.priority}`).join(', ')})`, nextAllowed }
+  if (updating) return { ok: false, why: `an update is running now (${updating}); one at a time`, nextAllowed }
   if (busy) return { ok: false, why: `a checker is at work on the live server: ${busy.what} ${Math.round((now - Date.parse(busy.at)) / MIN)} min ago (an update waits ${CHECKER_QUIET / MIN} min after the last)`, nextAllowed }
-  return { ok: true, why: `${pending.map((t) => `${t.id} ${t.priority}`).join(', ')} ready and not live; ${lastAttempt ? `last attempt ${Math.round((now - Date.parse(lastAttempt)) / MIN)} min ago` : 'no attempt on record'}${p0 && gapLeft > 0 ? ' (a P0 waits, so the 45 minutes do not apply)' : ''}; no checker in the last ${CHECKER_QUIET / MIN} min`, nextAllowed }
+  return { ok: true, why: `${pending.map((t) => `${t.id} ${t.priority}`).join(', ')} ready and not live; ${last}; no other update running; no checker in the last ${CHECKER_QUIET / MIN} min`, nextAllowed }
 }
