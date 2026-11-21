@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile education claude-opus-5-5 high",
- "pid": 67180,
  "step": "forward",
  "slug": "chile",
  "chunk": "education",
@@ -57,5 +56,642 @@
   "user": 102
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T07:27:00.974Z",
+ "minutes": 55.53,
+ "meters_after": {
+  "at": "2026-11-21T07:27:00.974Z",
+  "window": {
+   "pct": 33,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 0,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 33,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 0,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 33% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 0% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 89489,
+   "output": 18636,
+   "cache_read": 1062047,
+   "cache_write": 94809,
+   "cost_usd": 1.287,
+   "total": 1264981
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 89457,
+    "output": 6447,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1560,
+    "cost_usd": 0.0722
+   },
+   "claude-opus-5-5": {
+    "input": 32,
+    "output": 12189,
+    "cache_read": 1062047,
+    "cache_write": 94809,
+    "thinking": 3218,
+    "cost_usd": 1.2148
+   }
+  }
+ },
+ "turns": 25,
+ "calls": 40,
+ "duration_ms": 353309,
+ "duration_api_ms": 208621,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-21T06:31:32.733Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 17 | educación | Versiones",
+   "ok": true,
+   "chars": 6552
+  },
+  {
+   "at": "2026-11-21T06:31:37.822Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 17.- | Acceso a la educación | Artículo 103.-",
+   "ok": true,
+   "chars": 4043
+  },
+  {
+   "at": "2026-11-21T06:31:47.161Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "podrán optar a la gratuidad universitaria | fechaVersion=\"202",
+   "ok": true,
+   "chars": 6425
+  },
+  {
+   "at": "2026-11-21T06:31:50.550Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1118991",
+   "find": "Artículo 103.- | Artículo 1.- | extranjeros con residencia definitiva",
+   "ok": true,
+   "chars": 940
+  },
+  {
+   "at": "2026-11-21T06:35:09.740Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1118991",
+   "find": "Artículo 103 | residencia definitiva | Última modificación",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:59:34.088Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21091",
+   "find": "Artículo 103.- | Última modificación | residencia definitiva",
+   "ok": true,
+   "chars": 2156
+  },
+  {
+   "at": "2026-11-21T06:59:41.657Z",
+   "url": "https://www.unicef.org/chile/historias/ninez-migrante-en-el-norte-de-chile-y-acceso-educacion",
+   "find": "IPE | matrícula | situación migratoria",
+   "ok": true,
+   "chars": 4766
+  },
+  {
+   "at": "2026-11-21T06:59:51.402Z",
+   "url": "https://iura.cl/21091/103",
+   "find": "permanencia definitiva | residencia | nacionalidad",
+   "ok": true,
+   "chars": 1463
+  },
+  {
+   "at": "2026-11-21T06:59:52.283Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2024/06/Acceso-gratuidad-estudiantes-extranjeros.pdf",
+   "find": "gratuidad | residencia temporal | enseñanza media",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:18:49.626Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idLey=21091",
+   "find": "Artículo 103.- | Artículo 1.- El derecho",
+   "ok": true,
+   "chars": 902
+  },
+  {
+   "at": "2026-11-21T07:19:26.434Z",
+   "url": "https://www.chileatiende.gob.cl/fichas/49443-identificador-provisorio-escolar-ipe-e-identificador-provisorio-del-apoderado-ipa-para-personas-extranjeras",
+   "find": "2026 | adultas | 18 años | requisitos",
+   "ok": true,
+   "chars": 4312
+  },
+  {
+   "at": "2026-11-21T07:19:27.499Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2025/07/Guia-8-Acceso-NNA-educacion.pdf",
+   "find": "IPE | situación migratoria | matrícula",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:19:47.438Z",
+   "url": "https://www.latercera.com/nacional/noticia/defensoria-de-la-ninez-alerta-discriminacion-en-proyecto-que-restringe-acceso-a-salud-y-educacion-a-migrantes-irregulares/",
+   "find": "educación | barreras | indicación | Senado",
+   "ok": true,
+   "chars": 4211
+  },
+  {
+   "at": "2026-11-21T07:19:48.576Z",
+   "url": "https://www.mediabanco.com/declaracion-publica-de-la-defensoria-de-la-ninez-sobre-falta-de-cupos-en-el-sistema-educativo-publico/",
+   "find": "cupos | migrante | 3.000",
+   "ok": true,
+   "chars": 4525
+  },
+  {
+   "at": "2026-11-21T07:19:50.605Z",
+   "url": "https://www.latercera.com/nacional/noticia/poblacion-migrante-estudiantil-aumento-un-206-en-siete-anos/BZLMAEKBCVE6RJISFFUBJAWZ7A/",
+   "find": "extranjeros | IPE | matrícula",
+   "ok": true,
+   "chars": 3275
+  },
+  {
+   "at": "2026-11-21T07:25:21.162Z",
+   "url": "https://www.latercera.com/nacional/noticia/matricula-de-estudiantes-extranjeros-en-educacion-superior-crecio-un-19-en-2024/KLUSTNUGPJFPXAJFD2V2ATRCKU/",
+   "find": "extranjeros | gratuidad | residencia",
+   "ok": true,
+   "chars": 3888
+  },
+  {
+   "at": "2026-11-21T07:25:31.456Z",
+   "url": "https://ayudamineduc.cl/ficha/solicitud-de-identificador-provisorio-escolar-ipe-e-identificador-provisorio-de-apoderado-ipa",
+   "find": "2026 | adultos | 18 años | Validación",
+   "ok": true,
+   "chars": 921
+  }
+ ],
+ "searches": [
+  "Ley 21.325 versiones modificaciones Ley 21.655 Ley 21.816 Ley 21.724 migración",
+  "Ley 21.091 artículo 103 gratuidad extranjeros residencia definitiva leychile",
+  "niños migrantes matrícula escolar Chile IPE identificador provisorio escolar 2024 2025 informe barreras acceso educación",
+  "estudiantes extranjeros matriculados sistema escolar Chile 2025 Mineduc cifra estudiantes migrantes",
+  "Defensoría de la Niñez niños migrantes situación irregular sin matrícula escolar barreras 2023 2024",
+  "Mineduc IPE adultos 2026 ya no se entregará identificador provisorio escolar mayores de 18 educación de adultos"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":125,\"answer_2023\":\"Yes (including irregular migrants)\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Yes (including irregular migrants)\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 17\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"2023: the IPE (Identificador Provisorio Escolar) system let foreign children without a RUN enrol whatever their status. Mineduc data reported by La Tercera/IdeaPaís show 267,339 foreign pupils in 2023 (7.4% of enrolment), with growth concentrated in basic education. 2024–2025: foreign enrolment kept rising (about 276,000 in 2024), and ChileAtiende still describes IPE as giving children access to admission, enrolment, textbooks, meals and school insurance while they regularise. Known gaps continue in both periods: UNICEF (2022) found IPE does not unlock all benefits (SEP, JUNAEB) and that some northern comunas lack school places; the Defensoría de la Niñez (March 2024) reported more than 3,000 children without a public-school place nationwide, a figure not broken down by migrant status. No documented shift between the two dates, so the starting rating is carried forward.\",\"practice_sources\":[{\"title\":\"Población migrante estudiantil aumentó un 20,6% en siete años (La Tercera, citing IdeaPaís / CEM-Mineduc data 2017–2023)\",\"url\":\"https://www.latercera.com/nacional/noticia/poblacion-migrante-estudiantil-aumento-un-206-en-siete-anos/BZLMAEKBCVE6RJISFFUBJAWZ7A/\",\"year\":2024,\"shows\":\"practice\",\"groups\":[\"all_migrants\"],\"period\":\"both\"},{\"title\":\"Niñez migrante en el norte de Chile y acceso a la educación (UNICEF Chile)\",\"url\":\"https://www.unicef.org/chile/historias/ninez-migrante-en-el-n",
+ "output": {
+  "answers": [
+   {
+    "question_id": 125,
+    "answer_2023": "Yes (including irregular migrants)",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes (including irregular migrants)",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 17",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the IPE (Identificador Provisorio Escolar) system let foreign children without a RUN enrol whatever their status. Mineduc data reported by La Tercera/IdeaPaís show 267,339 foreign pupils in 2023 (7.4% of enrolment), with growth concentrated in basic education. 2024–2025: foreign enrolment kept rising (about 276,000 in 2024), and ChileAtiende still describes IPE as giving children access to admission, enrolment, textbooks, meals and school insurance while they regularise. Known gaps continue in both periods: UNICEF (2022) found IPE does not unlock all benefits (SEP, JUNAEB) and that some northern comunas lack school places; the Defensoría de la Niñez (March 2024) reported more than 3,000 children without a public-school place nationwide, a figure not broken down by migrant status. No documented shift between the two dates, so the starting rating is carried forward.",
+    "practice_sources": [
+     {
+      "title": "Población migrante estudiantil aumentó un 20,6% en siete años (La Tercera, citing IdeaPaís / CEM-Mineduc data 2017–2023)",
+      "url": "https://www.latercera.com/nacional/noticia/poblacion-migrante-estudiantil-aumento-un-206-en-siete-anos/BZLMAEKBCVE6RJISFFUBJAWZ7A/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Niñez migrante en el norte de Chile y acceso a la educación (UNICEF Chile)",
+      "url": "https://www.unicef.org/chile/historias/ninez-migrante-en-el-norte-de-chile-y-acceso-educacion",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Declaración pública de la Defensoría de la Niñez sobre falta de cupos en el sistema educativo público",
+      "url": "https://www.mediabanco.com/declaracion-publica-de-la-defensoria-de-la-ninez-sobre-falta-de-cupos-en-el-sistema-educativo-publico/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Identificador Provisorio Escolar (IPE) e IPA para personas extranjeras (ChileAtiende / Mineduc)",
+      "url": "https://www.chileatiende.gob.cl/fichas/49443-identificador-provisorio-escolar-ipe-e-identificador-provisorio-del-apoderado-ipa-para-personas-extranjeras",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile consolidated XML of Ley 21.325 (latest version 02-JUN-2026, last modified by Ley 21816). It tags art. 17 fechaVersion=\"2021-04-20\", which means the original wording stayed in force on 1 January 2023 and on 1 January 2026; later amendments (Ley 21.655 of 2024 and others) did not touch it. The practice evidence is mostly press reports of Mineduc data and NHRI/UNICEF statements, not audits.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile navegar",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile consolidated XML (article version dates)",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "UNICEF Chile – Niñez migrante en el norte de Chile y acceso a la educación",
+      "url": "https://www.unicef.org/chile/historias/ninez-migrante-en-el-norte-de-chile-y-acceso-educacion"
+     },
+     {
+      "title": "ChileAtiende – IPE e IPA para personas extranjeras",
+      "url": "https://www.chileatiende.gob.cl/fichas/49443-identificador-provisorio-escolar-ipe-e-identificador-provisorio-del-apoderado-ipa-para-personas-extranjeras"
+     },
+     {
+      "title": "La Tercera – Defensoría de la Niñez alerta discriminación en proyecto que restringe acceso a salud y educación a migrantes irregulares (25 Mar 2026)",
+      "url": "https://www.latercera.com/nacional/noticia/defensoria-de-la-ninez-alerta-discriminacion-en-proyecto-que-restringe-acceso-a-salud-y-educacion-a-migrantes-irregulares/"
+     },
+     {
+      "title": "Mediabanco – Declaración pública Defensoría de la Niñez sobre falta de cupos (14 Mar 2024)",
+      "url": "https://www.mediabanco.com/declaracion-publica-de-la-defensoria-de-la-ninez-sobre-falta-de-cupos-en-el-sistema-educativo-publico/"
+     },
+     {
+      "title": "La Tercera – Población migrante estudiantil aumentó un 20,6% en siete años",
+      "url": "https://www.latercera.com/nacional/noticia/poblacion-migrante-estudiantil-aumento-un-206-en-siete-anos/BZLMAEKBCVE6RJISFFUBJAWZ7A/"
+     },
+     {
+      "title": "SERMIG Guía 8 Acceso NNA a educación (PDF – could not be extracted)",
+      "url": "https://serviciomigraciones.cl/wp-content/uploads/2025/07/Guia-8-Acceso-NNA-educacion.pdf"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds. Art. 17: \"El Estado garantizará el acceso a la enseñanza preescolar, básica y media a los extranjeros menores de edad establecidos en Chile, en las mismas condiciones que los nacionales. Tal derecho no podrá denegarse ni limitarse a causa de su condición migratoria irregular...\" The 'Effectively Always' rating looks generous. There are documented gaps: IPE holders cannot reach SEP/JUNAEB benefits that depend on the Registro Social de Hogares (UNICEF 2022), and there are shortages of school places in northern regions. 'Usually; Effectively Always' would fit the evidence better.",
+    "confidence": "medium",
+    "notes": "Protection rests on statute (Ley 21.325 art. 17), not on case law. A bill amending Ley 21.325 that would give nationals priority over irregular migrants in health and education passed the Cámara and was in its second constitutional stage in March 2026 (La Tercera, 25 Mar 2026). It was not law on either date. In the June 2026 consolidated text art. 17 still carries its 2021 version date. Ley 21.430 (2022, children's rights guarantees) adds non-discrimination by migratory status but predates the window."
+   },
+   {
+    "question_id": 127,
+    "answer_2023": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 17 (inciso tercero)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.091 sobre Educación Superior",
+      "article": "Art. 103 letra a)",
+      "enacted": "2018-05-29",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.091 sobre Educación Superior",
+      "article": "Art. 1",
+      "enacted": "2018-05-29",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: the CNED data reported by La Tercera show 27,854 foreign students in higher education in 2023; IdeaPaís/Mineduc data show substantial foreign enrolment in adult school education. 2024: foreign higher-education enrolment rose 19.2% to 33,203 (CNED, via La Tercera, Sept 2024). This points to continued access for regular migrants, and I found no documented pattern of exclusion for that group. During 2026 Mineduc stopped issuing the IPE to adults (ChileAtiende: \"Desde el 2026 ya no se entregará IPE a personas adultas\"). Adults without a RUN therefore need to enrol with the Registro Civil under art. 44 first. This mainly affects irregular adults, whom the starting answer does not cover, and I could not date it to on or before 1 January 2026. No shift is rated.",
+    "practice_sources": [
+     {
+      "title": "Matrícula de estudiantes extranjeros en educación superior creció un 19% en 2024 (La Tercera, citing CNED)",
+      "url": "https://www.latercera.com/nacional/noticia/matricula-de-estudiantes-extranjeros-en-educacion-superior-crecio-un-19-en-2024/KLUSTNUGPJFPXAJFD2V2ATRCKU/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Población migrante estudiantil aumentó un 20,6% en siete años (La Tercera, IdeaPaís / CEM-Mineduc)",
+      "url": "https://www.latercera.com/nacional/noticia/poblacion-migrante-estudiantil-aumento-un-206-en-siete-anos/BZLMAEKBCVE6RJISFFUBJAWZ7A/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Identificador Provisorio Escolar (IPE) e IPA para personas extranjeras (ChileAtiende / Mineduc)",
+      "url": "https://www.chileatiende.gob.cl/fichas/49443-identificador-provisorio-escolar-ipe-e-identificador-provisorio-del-apoderado-ipa-para-personas-extranjeras",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 17 of Ley 21.325 is dated from the LeyChile XML: its article version date is 2021-04-20 in the June 2026 consolidated text, so it is unchanged across the window. For Ley 21.091 the LeyChile pages would not render article text (the XML service now requires an API key; the 'navegar' page showed only metadata: latest version 01-NOV-2026, last modified by Ley 21850). I read art. 103 only in an unofficial consolidation (iura.cl). It still uses the pre-2021 term 'permanencia definitiva', which suggests it was not amended, but I could not check its version history officially.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile consolidated XML (article version dates)",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile navegar",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.091 – LeyChile navegar (metadata only)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21091"
+     },
+     {
+      "title": "Ley 21.091 – LeyChile XML (blocked, API key notice)",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1118991"
+     },
+     {
+      "title": "Ley 21.091 – LeyChile XML by idLey (blocked, API key notice)",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idLey=21091"
+     },
+     {
+      "title": "Artículo 103 Ley 21.091 (iura.cl)",
+      "url": "https://iura.cl/21091/103"
+     },
+     {
+      "title": "SERMIG – Acceso gratuidad estudiantes extranjeros (PDF – could not be extracted)",
+      "url": "https://serviciomigraciones.cl/wp-content/uploads/2024/06/Acceso-gratuidad-estudiantes-extranjeros.pdf"
+     },
+     {
+      "title": "La Tercera – Matrícula de estudiantes extranjeros en educación superior creció un 19% en 2024",
+      "url": "https://www.latercera.com/nacional/noticia/matricula-de-estudiantes-extranjeros-en-educacion-superior-crecio-un-19-en-2024/KLUSTNUGPJFPXAJFD2V2ATRCKU/"
+     },
+     {
+      "title": "ChileAtiende – IPE e IPA para personas extranjeras",
+      "url": "https://www.chileatiende.gob.cl/fichas/49443-identificador-provisorio-escolar-ipe-e-identificador-provisorio-del-apoderado-ipa-para-personas-extranjeras"
+     },
+     {
+      "title": "Ayuda Mineduc – Solicitud de IPE e IPA (site out of service)",
+      "url": "https://ayudamineduc.cl/ficha/solicitud-de-identificador-provisorio-escolar-ipe-e-identificador-provisorio-de-apoderado-ipa"
+     }
+    ],
+    "starting_answer_concern": "The citation says 'permanent residents', which is too narrow. Art. 17 inciso 3 of Ley 21.325 says \"Los extranjeros podrán acceder a las instituciones de educación superior en igualdad de condiciones que los nacionales\", with no status limit on access. The status condition applies only to free tuition (gratuidad). Under art. 103(a) of Ley 21.091 that covers \"chileno, extranjero con permanencia definitiva, o extranjero con residencia\", the latter only if they completed secondary school in Chile. The 'certain statuses' option still fits, because the free-tuition benefit is conditioned on residence status. The citation should name temporary residents with Chilean secondary schooling as well as permanent residents.",
+    "confidence": "medium",
+    "notes": "Protection rests on statute, not on case law. I found no ruling in the window that changes the rule. The 2026 change to IPE for adults is an administrative practice described by ChileAtiende without a dated instrument, so I did not record it as an event. A reviewer may want to check whether it took effect before 1 January 2026 and whether it affects adult basic and secondary education (EPJA) for irregular migrants."
+   }
+  ]
+ }
 }
