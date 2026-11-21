@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile civil_liberties claude-opus-5-5 high",
- "pid": 75232,
  "step": "back2000",
  "slug": "chile",
  "chunk": "civil_liberties",
@@ -61,5 +60,1719 @@
   "user": 191
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:33:14.947Z",
+ "minutes": 11.92,
+ "meters_after": {
+  "at": "2026-11-21T10:33:14.947Z",
+  "window": {
+   "pct": 28,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 28,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 28% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 141628,
+   "output": 54493,
+   "cache_read": 4950578,
+   "cache_write": 172969,
+   "cost_usd": 3.3472,
+   "total": 5319668
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 141540,
+    "output": 11847,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4427,
+    "cost_usd": 0.1201
+   },
+   "claude-opus-5-5": {
+    "input": 88,
+    "output": 42646,
+    "cache_read": 4950578,
+    "cache_write": 172969,
+    "thinking": 14640,
+    "cost_usd": 3.2271
+   }
+  }
+ },
+ "turns": 55,
+ "calls": 100,
+ "duration_ms": 714756,
+ "duration_api_ms": 501280,
+ "pages_read": 43,
+ "pages": [
+  {
+   "at": "2026-11-21T10:21:55.674Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "2.º- La igualdad ante la ley | 6.º- La libertad de conciencia | 12.º- La libertad de emitir opinión | 13.º- El derecho a reunirse | 15.º- El derecho de asociarse | 19.º- El derecho de sindicarse",
+   "ok": true,
+   "chars": 3483
+  },
+  {
+   "at": "2026-11-21T10:21:59.769Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "no hay persona ni grupo privilegiados | La libertad de conciencia | La libertad de emitir opinión | reunirse pacíficamente | El derecho de asociarse sin permiso | El derecho de sindicarse | exigir la nacionalidad chilena",
+   "ok": true,
+   "chars": 3510
+  },
+  {
+   "at": "2026-11-21T10:22:03.113Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "sindicarse | censura previa | pacíficamente | privilegiados | creencias | asociarse",
+   "ok": true,
+   "chars": 2181
+  },
+  {
+   "at": "2026-11-21T10:22:09.536Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=242302",
+   "find": "sindicarse | censura previa | pacíficamente | privilegiados | creencias | asociarse sin permiso | nacionalidad chilena o límites",
+   "ok": true,
+   "chars": 989
+  },
+  {
+   "at": "2026-11-21T10:22:14.090Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "sindicarse | censura previa | pacíficamente | privilegiados | creencias | asociarse sin permiso | nacionalidad chilena o límites",
+   "ok": true,
+   "chars": 11721
+  },
+  {
+   "at": "2026-11-21T10:22:22.346Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "calificación para la exhibición | El derecho de reunirse | El derecho de asociarse | Para gozar de personalidad jurídica",
+   "ok": true,
+   "chars": 2870
+  },
+  {
+   "at": "2026-11-21T10:22:26.668Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "Una ley orgánica constLey 20414",
+   "ok": true,
+   "chars": 2158
+  },
+  {
+   "at": "2026-11-21T10:22:31.102Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+   "find": "Artículo 15 | Los que propaguen | Artículo 17 | Artículo 63 | asociaciones ilícitas | Artículo 2°",
+   "ok": true,
+   "chars": 12581
+  },
+  {
+   "at": "2026-11-21T10:22:38.073Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436",
+   "find": "Artículo 212 | Para ser elegido director sindical | Artículo 236 | Artículo 215",
+   "ok": true,
+   "chars": 3393
+  },
+  {
+   "at": "2026-11-21T10:22:41.677Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436",
+   "find": "sin autorización previa, las organizaciones sindicales | director sindical se requiere | nacionalidad del trabajador | ochenta y cinco por ciento",
+   "ok": true,
+   "chars": 6054
+  },
+  {
+   "at": "2026-11-21T10:22:44.649Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436",
+   "find": "Para ser director sindical | Art. 236 | Art. 215",
+   "ok": true,
+   "chars": 4432
+  },
+  {
+   "at": "2026-11-21T10:23:00.640Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+   "find": "artículo 236 | 45. | chileno",
+   "ok": true,
+   "chars": 4003
+  },
+  {
+   "at": "2026-11-21T10:23:20.333Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6991",
+   "find": "chileno | Artículo 10",
+   "ok": true,
+   "chars": 4040
+  },
+  {
+   "at": "2026-11-21T10:23:51.041Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19069",
+   "find": "Para ser director sindical | chileno | saber leer y escribir",
+   "ok": true,
+   "chars": 3338
+  },
+  {
+   "at": "2026-11-21T10:24:01.121Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=30418",
+   "find": "director sindical | chileno | leer y escribir",
+   "ok": true,
+   "chars": 2565
+  },
+  {
+   "at": "2026-11-21T10:24:10.263Z",
+   "url": "https://dt.gob.cl/legislacion/1624/w3-article-62116.html",
+   "find": "artículo 236 | chileno | leer y escribir",
+   "ok": true,
+   "chars": 5325
+  },
+  {
+   "at": "2026-11-21T10:24:21.051Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idLey=20500",
+   "find": "Artículo 1° | derecho a asociarse libremente | Publicación",
+   "ok": true,
+   "chars": 700
+  },
+  {
+   "at": "2026-11-21T10:24:49.831Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idLey=20609",
+   "find": "Artículo 2º | nacionalidad | Publicación",
+   "ok": true,
+   "chars": 682
+  },
+  {
+   "at": "2026-11-21T10:25:18.661Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idLey=19638",
+   "find": "Artículo 6 | Artículo 2 | Publicación",
+   "ok": true,
+   "chars": 679
+  },
+  {
+   "at": "2026-11-21T10:25:51.621Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+   "find": "Para los efectos de esta ley, se entiende por discriminación arbitraria | nacionalidad",
+   "ok": true,
+   "chars": 2702
+  },
+  {
+   "at": "2026-11-21T10:25:57.894Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20500",
+   "find": "asociarse libremente | Artículo 1",
+   "ok": true,
+   "chars": 3319
+  },
+  {
+   "at": "2026-11-21T10:25:57.958Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19638",
+   "find": "El Estado garantiza | toda persona | Artículo 6",
+   "ok": true,
+   "chars": 3857
+  },
+  {
+   "at": "2026-11-21T10:26:08.043Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+   "find": "Publicación:",
+   "ok": true,
+   "chars": 2012
+  },
+  {
+   "at": "2026-11-21T10:26:09.249Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19733",
+   "find": "Publicación: | constituyen un derecho fundamental de todas las personas | deberán ser chilenos | Artículo 9 | Artículo 13",
+   "ok": true,
+   "chars": 3901
+  },
+  {
+   "at": "2026-11-21T10:26:15.596Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21325",
+   "find": "Artículo 13.- | Artículo 3.- | Publicación:",
+   "ok": true,
+   "chars": 3974
+  },
+  {
+   "at": "2026-11-21T10:26:24.351Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21325",
+   "find": "Igualdad de derechos | Artículo 13 | gozarán de los derechos",
+   "ok": true,
+   "chars": 3362
+  },
+  {
+   "at": "2026-11-21T10:26:25.128Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=19733",
+   "find": "chilenos | domicilio y residencia en Chile",
+   "ok": true,
+   "chars": 3320
+  },
+  {
+   "at": "2026-11-21T10:26:28.707Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+   "find": "Artículo 13.- | Igualdad de derechos",
+   "ok": true,
+   "chars": 2169
+  },
+  {
+   "at": "2026-11-21T10:26:29.593Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=186049",
+   "find": "chilenos | Artículo 9º",
+   "ok": true,
+   "chars": 3331
+  },
+  {
+   "at": "2026-11-21T10:26:40.292Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=16643",
+   "find": "chileno | director | Publicación:",
+   "ok": true,
+   "chars": 2119
+  },
+  {
+   "at": "2026-11-21T10:27:11.850Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01",
+   "find": "chilenos | Versión:",
+   "ok": true,
+   "chars": 3334
+  },
+  {
+   "at": "2026-11-21T10:27:24.328Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01",
+   "find": "El derecho que garantiza a todos los habitantes | Artículo 6° | Artículo 7°",
+   "ok": true,
+   "chars": 4423
+  },
+  {
+   "at": "2026-11-21T10:27:48.504Z",
+   "url": "https://www.redalyc.org/pdf/1737/173753621018.pdf",
+   "find": "anarquis | artículo 15 | expulsión | 2017",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:28:00.506Z",
+   "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+   "find": "anarquismo | Corte | expulsión",
+   "ok": true,
+   "chars": 3738
+  },
+  {
+   "at": "2026-11-21T10:28:24.369Z",
+   "url": "https://webarchive.archive.unhcr.org/20230526103607oe_/https://www.refworld.org/docid/4b9e53067c.html",
+   "find": "Freedom of Speech | Freedom of Assembly | Freedom of Religion | immigrant | Peruvian | foreign workers | Bolivian",
+   "ok": true,
+   "chars": 940
+  },
+  {
+   "at": "2026-11-21T10:28:58.809Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136104.htm",
+   "find": "Freedom of Speech | Freedom of Assembly | Freedom of Religion | immigrant | Peruvian | foreign workers",
+   "ok": true,
+   "chars": 9535
+  },
+  {
+   "at": "2026-11-21T10:29:01.939Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+   "find": "Freedom of Speech | Freedom of Peaceful Assembly | Freedom of Religion | immigrant | Peruvian | foreign",
+   "ok": true,
+   "chars": 9536
+  },
+  {
+   "at": "2026-11-21T10:29:05.751Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+   "find": "expel | deport | was covering the conflict | Section 7 | discrimination against",
+   "ok": true,
+   "chars": 6511
+  },
+  {
+   "at": "2026-11-21T10:29:16.545Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "Freedom of Speech | Freedom of Peaceful Assembly | Freedom of Religion | immigrant | migrant | Peruvian | foreign workers",
+   "ok": true,
+   "chars": 9527
+  },
+  {
+   "at": "2026-11-21T10:29:20.131Z",
+   "url": "https://www.ecoi.net/en/document/1258703.html",
+   "find": "Freedom of Association and the Right to Collective | foreign | undocumented | nationality",
+   "ok": true,
+   "chars": 6462
+  },
+  {
+   "at": "2026-11-21T10:29:23.719Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41752.htm",
+   "find": "Freedom of Speech | Freedom of Peaceful Assembly | Freedom of Religion | immigrant | Peruvian | foreign",
+   "ok": true,
+   "chars": 8520
+  },
+  {
+   "at": "2026-11-21T10:29:26.246Z",
+   "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+   "find": "Freedom of Speech | Freedom of Peaceful Assembly | Freedom of Religion | immigrant | Peruvian | foreign",
+   "ok": true,
+   "chars": 7636
+  },
+  {
+   "at": "2026-11-21T10:30:07.389Z",
+   "url": "https://www.cnnchile.com/pais/extranjeros-expulsados-detenidos-estallido-social/",
+   "find": "expuls | extranjeros | manifestaciones",
+   "ok": true,
+   "chars": 3062
+  }
+ ],
+ "searches": [
+  "Ley 19.759 artículo 236 \"director sindical\" requisitos \"ser chileno\" código del trabajo antes de la reforma 2001",
+  "\"Para ser elegido director sindical se requiere\" \"ser chileno\" código del trabajo 1994",
+  "Código del Trabajo 1994 artículo 236 requisitos director sindical \"saber leer y escribir\" \"chileno\"",
+  "Ley 16.643 abusos de publicidad artículo 5 \"director\" \"deberá ser chileno\"",
+  "Corte Suprema amparo expulsión extranjero participar manifestaciones artículo 15 N°1 decreto ley 1094 agitadores",
+  "Lovera \"Amparo y anarquismo\" sentencias roles Corte Suprema expulsión",
+  "expulsión extranjeros Chile Araucanía activistas mapuche 2008 2009 2010 \"peligro para el Estado\" decreto ley 1094 extranjero expulsado",
+  "state.gov Chile Country Reports on Human Rights Practices 2009 freedom of assembly association immigrants",
+  "\"Chile\" 2014 Country Reports on Human Rights Practices state.gov humanrightsreport dlid",
+  "2019 estallido social extranjeros detenidos manifestaciones expulsión gobierno Chile INDH migrantes"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":81,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Constitution Art. 19 No. 6 (text of 24.10.1980, never amended) guarantees freedom of conscience, belief and worship to 'todas las personas'. Ley 19.638 (published 14.10.1999) was also in force: under Art. 6, freedom of religion means 'para toda persona' the right to profess, practise and change religion. No practice evidence from around 2000 was read; the rating is carried back from the 2004 State Department report, so it is low confidence.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same provisions as in 2000, unchanged. The State Department's 2004 Chile report says the government 'generally respected' religious freedom and that 'All denominations practiced their faiths without restriction'. It notes some unequal treatment of Protestant churches, but nothing aimed at migrants.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same provisions as before. Ley 20.050 (2005) amended other parts of Art. 19 but not No. 6. The State Department's 2009 report says the constitution provides for freedom of religion and the government generally respected it. It mentions neo-Nazi violence against immigrants, which is societal abuse, not state action on religion.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Usually\",\"basis\":\"Same provisions as before. Ley 20.609 (24.07.2012) added a civil anti-discrimination action that covers 'la religión o creencia' and 'la nacionalidad'. The State Department's 2014 report records no restrictions on religious freedom. No migrant-specific breach was found.\"}],\"change_2000_2020\":\"There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República (Decreto 100/2005, texto refundido; original D.O. 24.10.1980)\",\"article\":\"Art. 19 No. 6\",\"role\":\"cited\"",
+ "output": {
+  "answers": [
+   {
+    "question_id": 81,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Constitution Art. 19 No. 6 (text of 24.10.1980, never amended) guarantees freedom of conscience, belief and worship to 'todas las personas'. Ley 19.638 (published 14.10.1999) was also in force: under Art. 6, freedom of religion means 'para toda persona' the right to profess, practise and change religion. No practice evidence from around 2000 was read; the rating is carried back from the 2004 State Department report, so it is low confidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same provisions as in 2000, unchanged. The State Department's 2004 Chile report says the government 'generally respected' religious freedom and that 'All denominations practiced their faiths without restriction'. It notes some unequal treatment of Protestant churches, but nothing aimed at migrants."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same provisions as before. Ley 20.050 (2005) amended other parts of Art. 19 but not No. 6. The State Department's 2009 report says the constitution provides for freedom of religion and the government generally respected it. It mentions neo-Nazi violence against immigrants, which is societal abuse, not state action on religion."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same provisions as before. Ley 20.609 (24.07.2012) added a civil anti-discrimination action that covers 'la religión o creencia' and 'la nacionalidad'. The State Department's 2014 report records no restrictions on religious freedom. No migrant-specific breach was found."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República (Decreto 100/2005, texto refundido; original D.O. 24.10.1980)",
+      "article": "Art. 19 No. 6",
+      "role": "cited",
+      "in_force": "1980-10-24 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.638, establece normas sobre la constitución jurídica de las iglesias y organizaciones religiosas",
+      "article": "Arts. 1, 2, 6",
+      "role": "other_in_force",
+      "in_force": "1999-10-14 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975 (Ley de Extranjería)",
+      "article": "Arts. 15 No. 1, 17",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.609, establece medidas contra la discriminación",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2012-07-24 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2012-07-24",
+      "instrument": "Ley 20.609",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "Created a judicial action against arbitrary discrimination by state agents or private parties, including on grounds of religion or belief and of nationality. It adds a remedy and does not change the substance of No. 6.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+      "passage": "se entiende por discriminación arbitraria toda distinción, exclusión o restricción que carezca de justificación razonable, efectuada por agentes del Estado o particulares ... en particular cuando se funden en motivos tales como la raza o etnia, la nacionalidad, ... la religión o creencia"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "Equal-rights clause for all foreigners. It took effect after 1 January 2020, so the 2020 answer rests on Constitution Art. 19 No. 6 and Ley 19.638 only.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "Artículo 13.- Igualdad de derechos y obligaciones. El Estado garantizará, respecto de todo extranjero, la igualdad en el ejercicio de los derechos, sin perjuicio de los requisitos y sanciones que la ley establezca para determinados casos."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Country Reports on Human Rights Practices 2004 – Chile (US State Department)",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "Country Reports on Human Rights Practices 2009 – Chile (US State Department)",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile (US State Department, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's annotated consolidated text shows Art. 19 No. 6 with only its 1980 origin note, so it was never amended. Ley 19.638 has a single version (14.10.1999). The practice sources are general State Department reports, not specific to migrants. Nothing was found for around 2000.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política – texto imprimible con notas de modificación (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 19.638 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19638"
+     },
+     {
+      "title": "Ley 20.609 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile, imprimir)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "DL 1.094 (LeyChile, imprimir)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "State Dept 2004 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "State Dept 2009 Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "State Dept 2014 Chile (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     }
+    ],
+    "starting_answer_concern": "The 2020 rating 'Rarely; Sometimes' has no documented practice behind it. No source found shows the state restricting migrants' religious freedom, and the MRD itself rated 2023 'Usually'. The apparent drop from 2015 to 2020 more likely reflects a different coder than a real change in practice.",
+    "confidence": "medium",
+    "notes": "The protection rests on the Constitution ('asegura a todas las personas') and Ley 19.638 Art. 6 ('para toda persona'). No treaty or court ruling was relied on. DL 1.094 Art. 15 No. 1 (exclusion or expulsion of those who propagate doctrines aimed at violent change) does not concern religion."
+   },
+   {
+    "question_id": 83,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Constitution Art. 19 No. 12 (freedom 'de emitir opinión ... sin censura previa') applied to all persons. So did Ley 16.643 Art. 1 (1991–2001 version), which said the right 'que garantiza a todos los habitantes ... incluye el de no ser perseguido a causa de sus opiniones'. DL 1.094 Art. 15 No. 1/Art. 17 allowed foreigners to be excluded or expelled as 'agitadores o activistas' of violent doctrines; this targets acts and propaganda, not holding an opinion. No practice evidence from around 2000; the rating is extrapolated."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Ley 19.733 (in force 04.06.2001) replaced Ley 16.643. Its Art. 1 keeps 'no ser perseguido ni discriminado a causa de las propias opiniones' for 'todas las personas'. Ley 19.742 (25.08.2001) amended the last paragraph of Art. 19 No. 12 (film rating replaced censorship), which does not touch holding opinions. The 2004 State Department report says freedom of speech was generally respected."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "No change to the provisions. The 2009 State Department report says freedom of speech was generally respected, with criticism of laws against insulting state institutions. Nothing in it is specific to migrants."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "No change to the provisions; Ley 20.609 (2012) added 'ideología u opinión política' as a ground of arbitrary discrimination. The 2014 State Department report says speech was generally respected. In 2017 (after this date) foreigners were expelled for 'anarchist' views and 'antisystemic activities' and courts annulled the orders. That points to gaps toward the 2020 period."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 12",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (last paragraph amended by Ley 19.742, 2001-08-25)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 16.643 sobre Abusos de Publicidad",
+      "article": "Art. 1",
+      "role": "predecessor",
+      "in_force": "1967-09-04 to 2001-06-04",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.733 sobre libertades de opinión e información y ejercicio del periodismo",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "2001-06-04 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 15 No. 1, 17",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-06-04",
+      "instrument": "Ley 19.733",
+      "article": "Art. 1 (and Art. 48 repealing Ley 16.643)",
+      "kind": "replaced",
+      "what_changed": "Replaced Ley 16.643 Art. 1. Both texts protect the right not to be persecuted for one's opinions; Ley 16.643 said 'todos los habitantes', Ley 19.733 says 'todas las personas'. The protection carries over.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19733",
+      "passage": "Artículo 1º.- La libertad de emitir opinión y la de informar, sin censura previa, constituyen un derecho fundamental de todas las personas. Su ejercicio incluye no ser perseguido ni discriminado a causa de las propias opiniones"
+     },
+     {
+      "date": "2001-06-04",
+      "instrument": "Ley 16.643 (version 20.02.1991–03.06.2001)",
+      "article": "Art. 1",
+      "kind": "repealed",
+      "what_changed": "The predecessor text in force on 1 January 2000 already guaranteed to all inhabitants the right not to be persecuted for their opinions. It was repealed by Ley 19.733 Art. 48.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01",
+      "passage": "El derecho que garantiza a todos los habitantes de la República el N° 12 del artículo 19° de la Constitución Política del Estado incluye el de no ser perseguido a causa de sus opiniones"
+     },
+     {
+      "date": "2001-08-25",
+      "instrument": "Ley 19.742",
+      "article": "Constitution Art. 19 No. 12, last paragraph",
+      "kind": "amended",
+      "what_changed": "Replaced the film-censorship clause with a rating system. It concerns expression rather than holding opinions.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+      "passage": "LEY N° 19.742 Art. único letra a) D.O. 25.08.2001 ... regulará un sistema de calificación para la exhibición de la producción cinematográfica"
+     },
+     {
+      "date": "2017-04",
+      "instrument": "Corte de Apelaciones de Antofagasta, amparo (three Peruvian nationals); Corte Suprema, amparo for Italian national L. Spairani (March 2017)",
+      "article": "DL 1.094 Arts. 15 No. 1, 17 (expulsion)",
+      "kind": "practice",
+      "what_changed": "The government expelled foreigners on the ground of anarchist literature or 'antisystemic activities', and the courts annulled the orders. This is practice evidence after 2015, read only in a press report.",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+      "passage": "la sentencia unánime indica que la acusación de “anarquismo” es solo un pensamiento filosófico para defender la libertad individual, ya que no se constituyeron actos violentos."
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "Equal-rights clause for foreigners, after the 2020 date. It also repealed and replaced DL 1.094.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "El Estado garantizará, respecto de todo extranjero, la igualdad en el ejercicio de los derechos, sin perjuicio de los requisitos y sanciones que la ley establezca para determinados casos."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte de Apelaciones de Antofagasta",
+      "reference": "Amparo, three Peruvian nationals (case number not read)",
+      "date": "2017-04-19",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Country Reports on Human Rights Practices 2004 – Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "Country Reports on Human Rights Practices 2009 – Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Justicia declara ilegal expulsión de tres jóvenes peruanos acusados de anarquismo (The Clinic/EFE)",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Constitution's notes and the 1991–2001 version of Ley 16.643 were read on LeyChile. Practice evidence is general State Department reporting, plus 2017 press reports on expulsions of foreigners for their views. Nothing was read for around 2000.",
+    "sources_opened": [
+     {
+      "title": "Constitución – imprimir (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 16.643, versión 20.02.1991–03.06.2001",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01"
+     },
+     {
+      "title": "Ley 16.643, versión actual",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643"
+     },
+     {
+      "title": "Ley 19.733 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19733"
+     },
+     {
+      "title": "DL 1.094 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "Ley 21.325 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "The Clinic 2017",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     },
+     {
+      "title": "State Dept 2004",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "State Dept 2009",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "State Dept 2014",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The Yes rests on the Constitution and Ley 16.643/19.733 Art. 1, which cover all persons. DL 1.094 Art. 15 No. 1 is a foreigner-specific ground for exclusion or expulsion tied to propagating violent doctrines. The 2017 expulsions show it was used against foreigners for their beliefs, with the courts correcting it."
+   },
+   {
+    "question_id": 85,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The starting 'No' is kept: nothing between 2000 and 2020 changed the position. On 1 January 2000 the restrictions specific to foreigners were tighter than later. Ley 16.643 Art. 5 required owners of newspapers and concessionaires of radio and TV to be Chilean, and directors were also subject to a nationality requirement. DL 1.094 Arts. 15 No. 1 and 17 allowed expulsion of those who 'propaguen o fomenten de palabra o por escrito' doctrines aimed at violent change."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 19.733 (04.06.2001) replaced Ley 16.643. Art. 1 guarantees expression to 'todas las personas', but Arts. 9–10 still require media legal representatives and directors to be 'chilenos', which narrowed but kept the nationality requirement. DL 1.094 Art. 15 No. 1 was unchanged. Ley 19.742 (2001) replaced film censorship with a rating system for everyone."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No relevant change: Ley 19.733 Arts. 9–10 and DL 1.094 Arts. 15 No. 1 and 17 still applied."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No relevant change. Ley 20.507 (08.04.2011) amended only DL 1.094 Art. 15 No. 2 (smuggling and trafficking), not No. 1. Ley 20.609 (2012) added an anti-discrimination action but did not remove the restrictions on foreigners."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 12",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (amended by Ley 19.742, 2001-08-25)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 16.643 sobre Abusos de Publicidad",
+      "article": "Arts. 1, 5",
+      "role": "predecessor",
+      "in_force": "1967-09-04 to 2001-06-04",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.733 sobre libertades de opinión e información",
+      "article": "Arts. 1, 9, 10",
+      "role": "other_in_force",
+      "in_force": "2001-06-04 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 15 No. 1, 17",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-11 (Art. 15 No. 2 amended by Ley 20.507, 2011-04-08)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-06-04",
+      "instrument": "Ley 19.733",
+      "article": "Arts. 1, 9, 10, 48",
+      "kind": "replaced",
+      "what_changed": "Replaced Ley 16.643. Ley 16.643 Art. 5 had required owners and concessionaires of media to be Chilean; Ley 19.733 keeps a nationality requirement only for directors and for the president, administrators or legal representatives of media companies. It narrows but does not remove a restriction specific to foreigners.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=186049",
+      "passage": "Artículo 10.- Los medios de comunicación social deberán tener un director responsable y, a lo menos, una persona que lo reemplace. El director y quienes lo reemplacen deberán ser chilenos, tener domicilio y residencia en el país"
+     },
+     {
+      "date": "2001-06-04",
+      "instrument": "Ley 16.643 (version 20.02.1991–03.06.2001)",
+      "article": "Art. 5",
+      "kind": "repealed",
+      "what_changed": "The text in force on 1 January 2000 required media owners and concessionaires to be Chilean. It was repealed by Ley 19.733 Art. 48.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01",
+      "passage": "Artículo 5° El propietario de todo diario, revista o escrito periódico cuya dirección editorial se encuentre en Chile, o agencia noticiosa nacional, y el concesionario de toda radiodifusora o estación de televisión, deberán ser chilenos y tener domicilio y residencia en el país."
+     },
+     {
+      "date": "2001-08-25",
+      "instrument": "Ley 19.742",
+      "article": "Constitution Art. 19 No. 12, last paragraph",
+      "kind": "amended",
+      "what_changed": "Replaced prior film censorship with a rating system. It applies to everyone and is neutral as between nationals and migrants.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+      "passage": "LEY N° 19.742 Art. único letra a) D.O. 25.08.2001 ... regulará un sistema de calificación para la exhibición de la producción cinematográfica"
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 Art. 15 No. 2",
+      "kind": "amended",
+      "what_changed": "Added migrant smuggling and trafficking to the grounds for barring entry. Art. 15 No. 1 (propagating doctrines by word or in writing) was untouched.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483",
+      "passage": "1.- Los que propaguen o fomenten de palabra o por escrito o por cualquier otro medio, doctrinas que tiendan a destruir o alterar por la violencia, el orden social del país o su sistema de gobierno, los que estén sindicados o tengan reputación de ser agitadores o activistas de tales doctrinas"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 13 (and repeal of DL 1.094)",
+      "kind": "new_instrument",
+      "what_changed": "Equal-rights clause for foreigners, after the 2020 date. The MRD's 2023 'Yes' rests on it.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "El Estado garantizará, respecto de todo extranjero, la igualdad en el ejercicio de los derechos, sin perjuicio de los requisitos y sanciones que la ley establezca para determinados casos."
+     }
+    ],
+    "repealed_search": "I looked for a broader protection of foreigners' expression that existed between 2000 and 2020 and was later repealed. I read the 1991–2001 version of Ley 16.643 (Arts. 1 and 5), its repeal by Ley 19.733, the current Ley 19.733 Arts. 1, 9 and 10, DL 1.094 Arts. 15 and 17 with their amendments, and the notes on Constitution Art. 19 No. 12. The pre-2001 regime was more restrictive (owners had to be Chilean), and no repealed protection was found.",
+    "rulings": [
+     {
+      "court": "Corte de Apelaciones de Antofagasta",
+      "reference": "Amparo, three Peruvian nationals (number not read)",
+      "date": "2017-04-19",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Justicia declara ilegal expulsión de tres jóvenes peruanos acusados de anarquismo",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The pre-2001 Ley 16.643 version, Ley 19.733 and DL 1.094 were read in their LeyChile versions. The answer stays No throughout, so implementation does not apply.",
+    "sources_opened": [
+     {
+      "title": "Constitución – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 16.643 versión 1991–2001",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643&f=2000-01-01"
+     },
+     {
+      "title": "Ley 16.643 versión actual",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=16643"
+     },
+     {
+      "title": "Ley 19.733 (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19733"
+     },
+     {
+      "title": "Ley 19.733 (imprimir)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=186049"
+     },
+     {
+      "title": "DL 1.094 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "Ley 21.325 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "The Clinic 2017",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'No' does not fit the 'Yes' given for opinion (q83) and religion (q81), which cite the same provisions (Art. 19 No. 12 and Ley 21.325 Art. 13). Constitution Art. 19 No. 12 and Ley 19.733 Art. 1 guarantee expression to 'todas las personas'. The 'No' is defensible only through the restrictions specific to foreigners: nationality requirements for media directors and representatives (Ley 19.733 Arts. 9–10) and the expulsion ground in DL 1.094 Arts. 15 No. 1 and 17. But the nationality requirements still exist under Ley 21.325 and the MRD codes 2023 'Yes', so the 2020 'No' may be a coding inconsistency.",
+    "confidence": "medium",
+    "notes": "No court ruling stating a general rule was relied on. The 2017 expulsion annulments are practice evidence, read in a press report only."
+   },
+   {
+    "question_id": 87,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The starting 'No' (no equal protection for irregular migrants) is kept; no event between 2000 and 2020 changed it. In 2000: Constitution Art. 19 No. 15 (association) and No. 19 (unionisation 'en los casos y forma que señale la ley'); Labour Code Art. 212 (private-sector workers may form unions). Old Labour Code Art. 236 had no nationality requirement for union directors. DL 1.094 Arts. 15 No. 1 and 17 allowed expulsion of foreigners 'sindicados' as agitators."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 19.759 (in force 01.12.2001) replaced Labour Code Art. 236 so that union-director requirements are set by each union's statutes. Neither the old nor the new text has a nationality condition, so the change does not bear on migrants. The other provisions were unchanged."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.414 (04.01.2010) amended Art. 19 No. 15 on political-party primaries only. No change for migrants."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.500 (16.02.2011), Art. 1: 'Todas las personas tienen derecho a asociarse libremente'. This applies to non-profit associations, not unions, and does not address irregular migrants' union membership. Ley 20.609 (2012) covers discrimination based on 'sindicación'. The basis of the starting 'No' is unchanged."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 15",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (amended by Ley 18.825 1989, Ley 20.414 2010-01-04, on political parties)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 19",
+      "role": "other_in_force",
+      "in_force": "1980-10-24 to today (amended by Ley 18.825, 1989)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.500 sobre asociaciones y participación ciudadana en la gestión pública",
+      "article": "Art. 1",
+      "role": "cited",
+      "in_force": "2011-02-16 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código del Trabajo (DFL 1/1994, then DFL 1/2002)",
+      "article": "Art. 212",
+      "role": "other_in_force",
+      "in_force": "1991 (Ley 19.069) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Art. 236 (old text, minimum requirements for union directors)",
+      "role": "predecessor",
+      "in_force": "to 2001-11-30",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto Ley 2.756 (organización sindical) – LeyChile idNorma 6991",
+      "article": "Art. 21 (union directors must be Chilean)",
+      "role": "predecessor",
+      "in_force": "1979 to 1991 (superseded by Ley 19.069; repeal not read)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 15 No. 1, 17",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-12-01",
+      "instrument": "Ley 19.759",
+      "article": "Código del Trabajo Art. 236",
+      "kind": "replaced",
+      "what_changed": "Old Art. 236 set statutory minimum requirements for union directors (age 18, no conviction, literacy, six months' membership), with no nationality condition. The new Art. 236 leaves the requirements to union statutes. It does not touch migrants. The entry-into-force date comes from the Dirección del Trabajo, not from the act's own text.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759",
+      "passage": "45. Reemplázase el artículo 236, por el siguiente: \"Artículo 236.- Para ser elegido o desempeñarse como director sindical o delegado sindical de acuerdo a lo dispuesto en el artículo 229, se requiere cumplir con los requisitos que señalen los respectivos estatutos.\""
+     },
+     {
+      "date": "2001-12-01",
+      "instrument": "Código del Trabajo Art. 236 (text before Ley 19.759), quoted in a Dirección del Trabajo dictamen",
+      "article": "Art. 236",
+      "kind": "replaced",
+      "what_changed": "Shows that the text in force on 1 January 2000 had no nationality requirement for union leaders.",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-62116.html",
+      "passage": "Para ser director sindical se requiere cumplir con los requisitos que señalen los respectivos estatutos, los que deberán contemplar, en todo caso, los siguientes: 1. - Ser mayor de 18 años de edad: 2. - No haber sido condenado ni hallarse procesado por crimen o simple delito ... 3. - Saber leer y escribir: y 4. - Tener una antigüedad mínima de seis meses como socio del sindicato"
+     },
+     {
+      "date": "2010-01-04",
+      "instrument": "Ley 20.414",
+      "article": "Constitution Art. 19 No. 15",
+      "kind": "amended",
+      "what_changed": "Added political-party primaries. It does not bear on migrants' association or union rights.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+      "passage": "Ley 20414 Art. UNICO Nº 2 D.O. 04.01.2010 ... establecerá un sistema de elecciones primarias que podrá ser utilizado por dichos partidos para la nominación de candidatos a cargos de elección popular"
+     },
+     {
+      "date": "2011-02-16",
+      "instrument": "Ley 20.500",
+      "article": "Art. 1",
+      "kind": "new_instrument",
+      "what_changed": "A general statutory right of association for all persons (non-profit associations). It does not address union membership of irregular migrants.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20500",
+      "passage": "Artículo 1º. Todas las personas tienen derecho a asociarse libremente para la consecución de fines lícitos. Este derecho comprende la facultad de crear asociaciones que expresen la diversidad de intereses sociales e identidades culturales."
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "Equal-rights clause for foreigners, after 2020. The MRD still codes 2023 'No'.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "El Estado garantizará, respecto de todo extranjero, la igualdad en el ejercicio de los derechos, sin perjuicio de los requisitos y sanciones que la ley establezca para determinados casos."
+     }
+    ],
+    "repealed_search": "I looked for a union or association protection for migrants between 2000 and 2020 that was later repealed or narrowed. I read the Labour Code Arts. 212–216 and 236 with their notes, Ley 19.759 No. 45, the pre-2001 Art. 236 as quoted by the Dirección del Trabajo, the earlier union decree-law (idNorma 6991), Constitution Art. 19 Nos. 15 and 19 with their notes, Ley 20.500 and DL 1.094 Arts. 15 and 17. Nothing was found that was narrowed in that period. The only nationality condition on union leaders (the decree-law's Art. 21, 'Ser chileno') predates 2000, and the 2000 text of Art. 236 had none.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The current Labour Code and Ley 19.759 were read on LeyChile. The pre-2001 Art. 236 was read as quoted in a Dirección del Trabajo dictamen, not in a LeyChile historical version. The 1 December 2001 entry into force of Ley 19.759 was not read in the act itself.",
+    "sources_opened": [
+     {
+      "title": "Código del Trabajo – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=207436"
+     },
+     {
+      "title": "Ley 19.759 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19759"
+     },
+     {
+      "title": "Ley 19.069 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=19069"
+     },
+     {
+      "title": "DL sobre organización sindical (idNorma 6991)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6991"
+     },
+     {
+      "title": "Dictamen Dirección del Trabajo citing old Art. 236",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-62116.html"
+     },
+     {
+      "title": "Constitución – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 20.500",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20500"
+     },
+     {
+      "title": "DL 1.094 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "Ley 21.325 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "State Dept 2014",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     }
+    ],
+    "starting_answer_concern": "The 'No' rests on the claim that irregular migrants 'cannot join trade unions'. No provision read says so: Labour Code Art. 212 grants the right to 'los trabajadores' without any status condition, and Art. 236 has no nationality requirement. The barrier, if any, is practical (no work authorisation or formal contract) or comes from DL 1.094's expulsion grounds, not an express statutory exclusion. The starting answer may be too strict, but it is kept.",
+    "confidence": "medium",
+    "notes": "Implementation does not apply because the answer is No throughout. No court ruling was relied on."
+   },
+   {
+    "question_id": 89,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Constitution Art. 19 No. 13 (unchanged since 1980) guarantees all persons the right 'a reunirse pacíficamente sin permiso previo y sin armas'. Meetings in public places are subject to general police rules. DL 1.094 Arts. 15 No. 1 and 17 allowed expulsion of foreign 'agitadores o activistas'. No practice evidence from around 2000; the rating is extrapolated from 2004."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "No change to the provisions. The 2004 State Department report says freedom of assembly was 'generally respected'. It is not specific to migrants."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "No change to the provisions. The 2009 State Department report says assembly was generally respected. No migrant-specific restriction is documented."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "No change to the provisions. The 2014 State Department report says assembly was generally respected. The drop in the 2020 rating follows later practice: the 2017 expulsions of foreigners for 'antisystemic activities', which courts annulled, and the late-2019 government policy of expelling foreigners arrested during the social unrest."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 13",
+      "role": "cited",
+      "in_force": "1980-10-24 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 15 No. 1, 17",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2017-04",
+      "instrument": "Corte de Apelaciones de Antofagasta (amparo) and Corte Suprema (amparo, L. Spairani, March 2017)",
+      "article": "DL 1.094 Arts. 15 No. 1, 17",
+      "kind": "practice",
+      "what_changed": "An Italian national was expelled for 'participando activamente en diversas actividades antisistémicas', and three Peruvian nationals for anarchist literature and university activities. The courts annulled the expulsions. This is practice evidence after 2015.",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+      "passage": "El hombre fue expulsado de Chile el 4 de febrero pasado bajo el argumento de “encontrarse participando activamente en diversas actividades antisistémicas, alterando el orden social del país y constituyendo de esta manera un peligro para el Estado”."
+     },
+     {
+      "date": "2019-12",
+      "instrument": "Ministerio del Interior, expulsion decrees after 18 October 2019",
+      "article": "DL 1.094 (expulsion)",
+      "kind": "practice",
+      "what_changed": "The government announced the expulsion of foreigners arrested during the unrest, mainly for looting and all of them irregular. This practice explains the low 2020 implementation rating.",
+      "url": "https://www.cnnchile.com/pais/extranjeros-expulsados-detenidos-estallido-social/",
+      "passage": "El gobierno deportará a extranjeros detenidos en el país durante el estallido social. Hasta este miércoles, ya se han firmado 34 decretos de expulsión, 12 continúan en trámite y siete están en el Departamento de Extranjería y Migración (DEM)."
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 13",
+      "kind": "new_instrument",
+      "what_changed": "Equal-rights clause for foreigners, after the 2020 date.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549",
+      "passage": "El Estado garantizará, respecto de todo extranjero, la igualdad en el ejercicio de los derechos, sin perjuicio de los requisitos y sanciones que la ley establezca para determinados casos."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte de Apelaciones de Antofagasta",
+      "reference": "Amparo, three Peruvian nationals (number not read)",
+      "date": "2017-04-19",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Country Reports on Human Rights Practices 2004 – Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "Country Reports on Human Rights Practices 2009 – Chile",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Justicia declara ilegal expulsión de tres jóvenes peruanos acusados de anarquismo",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     },
+     {
+      "title": "53 extranjeros serán expulsados tras ser detenidos durante el 18-O (CNN Chile)",
+      "url": "https://www.cnnchile.com/pais/extranjeros-expulsados-detenidos-estallido-social/",
+      "year": 2020,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's notes show Art. 19 No. 13 was never amended. Practice evidence for 2005–2015 is general State Department reporting, not specific to migrants, and there is none for around 2000. The 2017 and 2019 items are press reports.",
+    "sources_opened": [
+     {
+      "title": "Constitución – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "DL 1.094 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "Ley 21.325 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "State Dept 2004",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2004/41753.htm"
+     },
+     {
+      "title": "State Dept 2009",
+      "url": "https://2009-2017.state.gov/j/drl/rls/hrrpt/2009/wha/136105.htm"
+     },
+     {
+      "title": "State Dept 2014",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     },
+     {
+      "title": "The Clinic 2017",
+      "url": "https://www.theclinic.cl/2017/04/20/justicia-declara-ilegal-expulsion-tres-jovenes-peruano-acusados-anarquismo/"
+     },
+     {
+      "title": "CNN Chile – expulsions after 18-O",
+      "url": "https://www.cnnchile.com/pais/extranjeros-expulsados-detenidos-estallido-social/"
+     }
+    ],
+    "starting_answer_concern": "The 2020 rating 'Effectively Never; Sometimes' is not one of the instrument's options, since the two levels are not neighbours. The 2019 expulsions mostly concerned irregular migrants arrested for looting rather than for peaceful assembly. 'Sometimes' alone would fit the evidence better.",
+    "confidence": "low",
+    "notes": "The protection rests on Constitution Art. 19 No. 13 ('asegura a todas las personas'). Implementation before 2015 is inferred from general reports that do not single out migrants."
+   },
+   {
+    "question_id": 131,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Constitution Art. 19 No. 2 only bars 'diferencias arbitrarias'. Art. 19 No. 16 expressly lets the law require Chilean nationality in employment. DL 1.094 had no non-discrimination clause, and no statute named migrant status as a protected ground."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.050 (26.08.2005, after this date) amended Art. 19 Nos. 4 and 16 on matters unrelated to migrants and kept the nationality clause in No. 16."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change to the relevant provisions."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.609 (24.07.2012) prohibits arbitrary discrimination on grounds including 'la nacionalidad', but not migratory status. The starting answer reads this as falling short of a ban on discrimination for being a migrant, and no later event changes that before 2020."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 2",
+      "role": "cited",
+      "in_force": "1980-10-24 to today (amended by Ley 19.611, 1999-06-16)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 19 No. 16 (inciso tercero)",
+      "role": "other_in_force",
+      "in_force": "1980-10-24 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.609, establece medidas contra la discriminación",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2012-07-24 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 3, 13",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "whole act (no non-discrimination clause)",
+      "role": "predecessor",
+      "in_force": "1975 to 2022-02-11",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley 20.050",
+      "article": "Constitution Art. 19 No. 16",
+      "kind": "amended",
+      "what_changed": "Amended the professional-associations paragraph of No. 16. The clause allowing the law to require Chilean nationality was left untouched, and the amendment does not bear on migrants.",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+      "passage": "Se prohíbe cualquiera discriminación que no se base en la capacidad o idoneidad personal, sin perjuicio de que la ley pueda exigir la nacionalidad chilena o límites de edad para determinados casos."
+     },
+     {
+      "date": "2012-07-24",
+      "instrument": "Ley 20.609",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "A general ban on arbitrary discrimination with a court remedy. Its grounds include nationality, race and ethnicity, but not migratory status.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609",
+      "passage": "se entiende por discriminación arbitraria toda distinción, exclusión o restricción que carezca de justificación razonable, efectuada por agentes del Estado o particulares ... en particular cuando se funden en motivos tales como la raza o etnia, la nacionalidad, la situación socioeconómica, el idioma"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Arts. 3, 13",
+      "kind": "new_instrument",
+      "what_changed": "Requires the state to protect foreigners' human rights 'sin importar su condición migratoria' and to promote protection against discrimination. This explains the MRD's change from 'No' in 2020 to 'Yes' in 2023.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21325",
+      "passage": "Artículo 3.- Promoción, respeto y garantía de derechos. El Estado deberá proteger y respetar los derechos humanos de las personas extranjeras que se encuentren en Chile, sin importar su condición migratoria, incluidos los afectos a la ley Nº 20.430."
+     }
+    ],
+    "repealed_search": "I looked for a ban on discrimination based on migrant status between 2000 and 2020 that was later repealed. I read the notes on Constitution Art. 19 Nos. 2 and 16 (Ley 19.611 of 1999 and Ley 20.050 of 2005), DL 1.094 (Arts. 1–17 and 62–64, the latter on grounds for rejecting permits) and Ley 20.609. No such protection was found to have existed and been repealed.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Country Report on Human Rights Practices 2014 – Chile",
+      "url": "https://www.ecoi.net/en/document/1258703.html",
+      "year": 2015,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The constitutional notes and Ley 20.609 were read on LeyChile. Implementation does not apply. The 2014 State Department report (citing the INDH's 2013 report) documents de facto discrimination against Latin American immigrants in health and education.",
+    "sources_opened": [
+     {
+      "title": "Constitución – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 20.609",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20609"
+     },
+     {
+      "title": "Ley 21.325 (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21325"
+     },
+     {
+      "title": "Ley 21.325 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549"
+     },
+     {
+      "title": "DL 1.094 – imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=6483"
+     },
+     {
+      "title": "State Dept 2014",
+      "url": "https://www.ecoi.net/en/document/1258703.html"
+     }
+    ],
+    "starting_answer_concern": "There is a borderline point. From 24.07.2012, Ley 20.609 Art. 2 bans arbitrary discrimination by state agents and private parties based on 'la nacionalidad', which arguably reaches discrimination against foreigners as such. A coder could read 2015 and 2020 as 'Yes'. Migratory status is not a listed ground, though, and the list is illustrative ('tales como'), so the starting 'No' is defensible.",
+    "confidence": "medium",
+    "notes": "No ruling was relied on. If Ley 20.609 were read as covering migrant status, the answer would change from 2012-07-24 onward (2015 'Yes'); I did not make that change because the starting answer is kept."
+   }
+  ]
+ }
 }

@@ -1,0 +1,64 @@
+{
+ "status": "started",
+ "job_id": "back2000 argentina labor_a claude-opus-5-5 high",
+ "pid": 77970,
+ "step": "back2000",
+ "slug": "argentina",
+ "chunk": "labor_a",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2020 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  95,
+  97,
+  99,
+  103,
+  135
+ ],
+ "started_at": "2026-11-21T10:30:52.711Z",
+ "meters_before": {
+  "at": "2026-11-21T10:30:48.257Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "prompt_chars": {
+  "system": 35696,
+  "user": 191
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high"
+}
