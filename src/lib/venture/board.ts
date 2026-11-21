@@ -111,6 +111,7 @@ export type BoardData = {
   learnNote: { slug: string; title: string; lede: string } | null // the note on the two learning loops: its title and first paragraph, shown at the top of Learning
   apiUse: Record<string, Record<string, { calls: number; in: number; write: number; read: number; out: number }>> | null // venture_state "api_use" (the meter in talk.ts), by day and kind
   lead: Lead // who is working right now (the runner on the mini, or a session's claim), or idle since when
+  claims: Record<string, Claim> // the live claims (venture_state "claim:OLA-n", renewed in the last 45 minutes), by ticket
 }
 /** Who is working (OLA-211), the line `runner.mjs status` prints: the runner's record (venture_state
  *  "runner"), the live claims ("claim:OLA-n", 45 minutes) and the usage-limit pause ("runner_limit").
@@ -123,7 +124,7 @@ export type Lead = {
   paused: { kind: 'limit' | 'error'; until: string; text: string } | null
 }
 export type RunnerState = { running?: boolean; ticket?: string | null; started?: string; ended?: string; why?: string[] }
-export type Claim = { who: string; since?: string; at: string }
+export type Claim = { who: string; role?: string; since?: string; at: string }
 /** venture_state "learning" (Bart, Nov 18: "a widget / section that tracks Agent Learning"): Kit,
  *  the share of Bart's corrections that were new, not repeats; Ola, its own model's score on the
  *  test tasks as a share of Claude's. Missing or older than a day: the board says so. */
@@ -193,7 +194,7 @@ export type Sweep = {
   openIssues?: { n: number; yesterday: number }
   /** Since Nov 21 (OLA-213): Bart's requests that day, each matched to a ticket by requests.mjs; the
    *  tickets opened for the requests that had none. sweep.mjs post copies it from the tracker's state. */
-  requests?: { n: number; matched: number; opened: string[]; at: string }
+  requests?: { n?: number; matched?: number; done?: number; answered?: number; opened: string[]; at: string; failed?: string; why?: string }
   /** Since Nov 20 (OLA-251): what the review removed, merged or corrected in the notes that day,
    *  checked against what really happened. The review cleans the notes instead of adding rules. */
   cleaned?: { did: 'removed' | 'merged' | 'corrected'; what: string; where: string }[]
@@ -372,6 +373,7 @@ export async function loadBoard(): Promise<BoardData> {
     sweeps: (st('sweeps')?.value ?? null) as Sweeps | null,
     learnNote: learnRow ? { slug: LEARN_SLUG, title: learnRow.title, lede: firstParagraph(learnRow.body ?? '') } : null,
     apiUse: ((st('api_use')?.value as { days?: BoardData['apiUse'] } | undefined)?.days ?? null) as BoardData['apiUse'],
+    claims: Object.fromEntries((claimsR.data ?? []).filter((r) => Date.now() - Date.parse(r.at as string) < CLAIM_TTL).map((r) => [String(r.key).slice('claim:'.length), { ...(r.value as Omit<Claim, 'at'>), at: r.at as string }])),
     lead: leadFrom(
       issues ?? [],
       (st('runner')?.value ?? null) as RunnerState | null,

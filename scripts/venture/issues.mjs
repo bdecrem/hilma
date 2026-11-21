@@ -39,7 +39,7 @@
 //   node scripts/venture/issues.mjs unchecked                                     tickets waiting for a checker; closed today without checks
 //   node scripts/venture/issues.mjs wait <id> [--what "what Bart has to do"]      waiting on Bart
 //   node scripts/venture/issues.mjs open <id>                                    back to open (next up)
-//   node scripts/venture/issues.mjs drop <id> [--why "…"]
+//   node scripts/venture/issues.mjs drop <id> [--why "…"]   a ticket named as a review's daily idea needs --why "Bart: <his words>" (OLA-331)
 //   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--who …] [--week …] [--proof …] [--lane <lane> --why …]
 //   node scripts/venture/issues.mjs commit <id> <hash>…                          attach commits by hand
 //   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
@@ -73,7 +73,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { createClient } from '@supabase/supabase-js'
-import { sweepDue } from './_state.mjs'
+import { getState, sweepDue } from './_state.mjs'
 import { tmpdir } from 'node:os'
 import { CLAIM_PREFIX, CLAIM_TTL, LANES, WAIT_PREFIX, caseKey, caseState, claimRole, isServerFile, laneHolder, laneOf, laneSentence, liveWaiters, releasesIn } from './_plate.mjs'
 import { CALLERS, LANE_ROLES, ROLES, caller, committers, roleOf } from './_who.mjs'
@@ -855,6 +855,10 @@ if (cmd === 'overrides') {
 } else if (cmd === 'drop') {
   const id = normId(pos[0])
   const r = await get(id)
+  // OLA-331 (Bart, Nov 20: "They should always be built"): a daily idea is dropped only with his words
+  const idea = ((await getState(db, 'sweeps'))?.value?.days ?? []).find((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(id))
+  const why = typeof one('why') === 'string' ? one('why') : ''
+  if (idea && !/^\s*bart:\s*\S/i.test(why)) die(`Refused: ${id} is the daily idea of the ${idea.day} review, and every idea is built; only Bart drops one. Drop it with his words: issues.mjs drop ${id} --why "Bart: <his words>".`)
   await patch(id, { status: 'dropped', finished_at: new Date().toISOString(), day: pacificDay(), ...(one('why') ? { proof: `dropped: ${one('why')}` } : {}), what: r.what })
   await releaseNoting(id, 'dropped')
 } else if (cmd === 'edit') {

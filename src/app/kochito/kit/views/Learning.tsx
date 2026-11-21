@@ -1,4 +1,4 @@
-import { openCounts, type BoardData, type Issue, type Learning, type Replay, type ReplayAttempt, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
+import { openCounts, type BoardData, type Claim, type Issue, type Learning, type Replay, type ReplayAttempt, type Sweep, type SweepChange, type SweepIdea, type Sweeps, type Switches, type Weakness } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { inline } from '../inline'
 import { at, clock, dayLong, dayShort, pday, shiftDay } from '../time'
@@ -318,22 +318,26 @@ function Changes({ name, what, items, base, weak }: { name: string; what: string
 }
 
 // OLA-331 (Bart, Nov 20: "They should always be built duh!! So they are immediately implemented"):
-// every idea is built at once, so its line says where the build stands, read from the tracker only.
-// No tracker read: nothing is shown, never a remembered word.
-export function ideaState(t: Pick<Issue, 'status' | 'finished_at' | 'day'> | undefined): string | null {
+// every idea is built at once, so its line says where the build stands, read from the tracker only:
+// "being built" only while a builder holds the ticket (a live claim) or it has commits; otherwise
+// "not started". No tracker read: nothing is shown, never a remembered word.
+const HOLDS = ['builder', 'runner']
+const isBuilder = (c: Claim | undefined) => !!c && (c.role ? HOLDS.includes(c.role) : !/^(lead|kit|bart|checker|investigator|hold)$/i.test(c.who.trim()))
+export function ideaState(t: Pick<Issue, 'status' | 'finished_at' | 'day' | 'commits'> | undefined, claim?: Claim): string | null {
   if (!t) return null
   const on = t.day ?? (t.finished_at ? pday(t.finished_at) : null)
   const d = on ? dayShort(on).replace(/^[A-Za-z]+, /, '') : null
   if (t.status === 'done') return d ? `built ${d}` : 'built'
   if (t.status === 'dropped') return d ? `dropped ${d}` : 'dropped'
-  if (t.status === 'waiting') return 'being built, waiting on Bart'
-  return 'being built'
+  const building = isBuilder(claim) || (t.commits?.length ?? 0) > 0
+  if (t.status === 'waiting') return building ? 'being built, waiting on Bart' : 'not started, waiting on Bart'
+  return building ? 'being built' : 'not started'
 }
 
-function Idea({ who, i, base, issues }: { who: string; i: SweepIdea; base: string; issues: Issue[] | null }) {
+function Idea({ who, i, base, issues, claims }: { who: string; i: SweepIdea; base: string; issues: Issue[] | null; claims: Record<string, Claim> }) {
   const t = i.issue ? issues?.find((x) => x.id === i.issue) : undefined
   const st = t?.status
-  const word = ideaState(t)
+  const word = ideaState(t, i.issue ? claims[i.issue] : undefined)
   return (
     <div className="idea">
       <span className="who">{who}</span>
@@ -349,12 +353,12 @@ function Idea({ who, i, base, issues }: { who: string; i: SweepIdea; base: strin
   )
 }
 
-function Ideas({ days, base, issues }: { days: Sweep[]; base: string; issues: Issue[] | null }) {
+function Ideas({ days, base, issues, claims }: { days: Sweep[]; base: string; issues: Issue[] | null; claims: Record<string, Claim> }) {
   const row = (s: Sweep) => (
     <li key={s.day} id={`i-${s.day}`}>
       <span className="day">{dayShort(s.day)}</span>
-      <Idea who="Kit" i={s.ideas!.kit} base={base} issues={issues} />
-      <Idea who="Ola" i={s.ideas!.ola} base={base} issues={issues} />
+      <Idea who="Kit" i={s.ideas!.kit} base={base} issues={issues} claims={claims} />
+      <Idea who="Ola" i={s.ideas!.ola} base={base} issues={issues} claims={claims} />
     </li>
   )
   const SHOWN = 7 // a week is shown, older days fold
@@ -390,9 +394,14 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
       <p className="bd-sweep-count">
         Open issues: <b>{open.n}</b> <span className="faint">(yesterday: {open.yesterday})</span>
       </p>
-      {s.requests && (
+      {s.requests?.failed && (
         <p className="bd-sweep-count">
-          Requests from Bart: <b>{s.requests.n}</b>, each matched to a ticket <span className="faint">({s.requests.matched} had one{s.requests.opened.length ? `, ${s.requests.opened.length} opened that night: ` : ', none opened'}</span>
+          Requests from Bart: <b>not matched</b> <span className="faint">(the matching failed: {s.requests.failed}; posted anyway because {s.requests.why})</span>
+        </p>
+      )}
+      {s.requests && !s.requests.failed && (
+        <p className="bd-sweep-count">
+          Requests from Bart: <b>{s.requests.n}</b>, each accounted for <span className="faint">({s.requests.matched} had one{s.requests.done ? `, ${s.requests.done} done the same day` : ''}{s.requests.answered ? `, ${s.requests.answered} answered` : ''}{s.requests.opened.length ? `, ${s.requests.opened.length} opened that night: ` : ', none opened'}</span>
           {s.requests.opened.map((id, k) => (
             <span key={id} className="faint">
               {k > 0 && ', '}
@@ -551,7 +560,7 @@ export default function LearningPage({ d, base }: { d: BoardData; base: string }
         <p className="bd-p" style={{ margin: '0 0 8px' }}>
           Each daily sweep ends with two ideas: one for Kit, about how the project is run, and one for Ola, about the code engine (its agents, skills and orchestration). Each idea states the evidence it comes from and how it would be measured, and gets its own ticket. Bart receives the two ideas by text on the day they are written.
         </p>
-        {ideaDays.length ? <Ideas days={ideaDays} base={base} issues={d.issues} /> : <p className="bd-empty">No ideas recorded yet.</p>}
+        {ideaDays.length ? <Ideas days={ideaDays} base={base} issues={d.issues} claims={d.claims ?? {}} /> : <p className="bd-empty">No ideas recorded yet.</p>}
       </section>
 
       <section className="bd-sec" aria-labelledby="weak-h">

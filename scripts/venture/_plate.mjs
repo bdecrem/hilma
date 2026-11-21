@@ -84,22 +84,49 @@ export function ideaTickets(days = [], last = IDEA_DAYS) {
   const recent = [...days].filter((d) => d?.day).sort((a, b) => b.day.localeCompare(a.day)).slice(0, last).reverse()
   return [...new Set(recent.flatMap((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue]).filter((x) => /^OLA-\d+$/.test(x ?? '')))]
 }
-/** The ideas of reviews before `day` whose ticket is neither done nor dropped: [{ id, day, side, status, title }].
- *  A ticket the tracker does not hold counts as not built. */
-export function unbuiltIdeas(days = [], issues = [], day) {
+/** Was this ticket dropped with Bart's words? Its proof reads "dropped: Bart: ..." (issues.mjs drop
+ *  refuses any other drop of an idea ticket), or he dropped it on the board (bartDrops: ids). */
+export const droppedByBart = (i, bartDrops = new Set()) => i?.status === 'dropped' && (/^dropped:\s*bart:\s*\S/i.test(i.proof ?? '') || bartDrops.has(i.id))
+/** The ideas of reviews before `day` that are not built: [{ id, day, side, status, title }]. Built is done,
+ *  or dropped by Bart. An idea with no ticket, a ticket the tracker does not hold, and a drop without his
+ *  words all count as not built. */
+export function unbuiltIdeas(days = [], issues = [], day, bartDrops = new Set()) {
   const byId = new Map(issues.map((i) => [i.id, i]))
   const out = []
   for (const d of [...days].sort((a, b) => a.day.localeCompare(b.day))) {
-    if (!d?.day || d.day >= day) continue
+    if (!d?.day || d.day >= day || !d.ideas) continue
     for (const side of ['kit', 'ola']) {
-      const id = d.ideas?.[side]?.issue
-      if (!id || out.some((o) => o.id === id)) continue
+      const id = d.ideas[side]?.issue
+      if (!/^OLA-\d+$/.test(id ?? '')) { out.push({ id: null, day: d.day, side, status: 'no ticket', title: String(d.ideas[side]?.text ?? '(no idea written)').slice(0, 90) }); continue }
+      if (out.some((o) => o.id === id)) continue
       const i = byId.get(id)
-      if (i && ['done', 'dropped'].includes(i.status)) continue
-      out.push({ id, day: d.day, side, status: i?.status ?? 'not in the tracker', title: i?.title ?? '' })
+      if (i?.status === 'done' || droppedByBart(i, bartDrops)) continue
+      out.push({ id, day: d.day, side, status: !i ? 'not in the tracker' : i.status === 'dropped' ? "dropped without Bart's words" : i.status, title: i?.title ?? '' })
     }
   }
   return out
+}
+/** What is wrong with the tickets an entry names as its ideas (OLA-331), [] when nothing: each ticket was
+ *  opened on or after the review's day, and was not finished before the review was first posted (now,
+ *  for a first post); a repost that names another ticket for an idea is refused unless the old one is
+ *  done or dropped by Bart. entry: the entry; prev: the stored entry of that day or null. */
+export function ideaTicketProblems(entry, prev, issues = [], { now = Date.now(), bartDrops = new Set() } = {}) {
+  const byId = new Map(issues.map((i) => [i.id, i]))
+  const firstAt = prev ? Date.parse(prev.firstAt ?? prev.at) : now
+  const bad = []
+  for (const side of ['kit', 'ola']) {
+    const id = entry.ideas?.[side]?.issue
+    const t = byId.get(id)
+    if (!t) continue // a missing ticket is named by the other checks
+    if (t.opened_at && pacificDay(Date.parse(t.opened_at)) < entry.day) bad.push(`${id} was opened on ${pacificDay(Date.parse(t.opened_at))}, before the review of ${entry.day}: an idea is a new ticket, opened that day`)
+    if (['done', 'dropped'].includes(t.status) && t.finished_at && Date.parse(t.finished_at) < firstAt) bad.push(`${id} was already ${t.status} (${t.finished_at.slice(0, 16)}Z) before this review was ${prev ? 'first posted' : 'posted'}: an idea is work still to do`)
+    const was = prev?.ideas?.[side]?.issue
+    if (prev && was && was !== id) {
+      const o = byId.get(was)
+      if (!(o?.status === 'done' || droppedByBart(o, bartDrops))) bad.push(`the ${side === 'kit' ? 'Kit' : 'Ola'} idea of ${entry.day} named ${was} when it was posted, and this repost names ${id}: ${was} is ${o ? o.status : 'not in the tracker'}, so it stays the idea until it is done or Bart drops it`)
+    }
+  }
+  return bad
 }
 
 /** After a run: what to record for the ticket. made: commits naming it landed on main during the run. */

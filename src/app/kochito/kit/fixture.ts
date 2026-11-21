@@ -113,6 +113,7 @@ export function fixture(): BoardData {
     },
     learnNote: { slug: 'how-we-learn', title: 'A made-up note on the two learning loops', lede: 'A made-up first paragraph: two learning loops run in this project. One covers the agent system that builds the product, the other covers the product itself. This sentence stands where the note\'s first paragraph would be.' },
     lead: { working: { id: 'OLA-210', since: T('2026-11-18', 10, 52), who: 'runner' }, idle: false, lastActive: T('2026-11-18', 10, 52), paused: null },
+    claims: {},
     apiUse: { '2026-11-18': { text: { calls: 6, in: 900, write: 1500000, read: 750000, out: 2400 }, voice: { calls: 21, in: 4000, write: 375000, read: 7500000, out: 9000 } } },
     sweeps: {
       at: T('2026-11-17', 21, 10),

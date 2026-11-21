@@ -216,11 +216,15 @@ ok('unbuilt ideas of earlier reviews: neither done nor dropped, the day itself e
     { day: '2026-11-19', ideas: { kit: { issue: 'OLA-213' }, ola: { issue: 'OLA-214' } } },
     { day: '2026-11-20', ideas: { kit: { issue: 'OLA-324' }, ola: { issue: 'OLA-325' } } },
   ]
-  const issues = [I(213, 'P1', 'done'), I(214, 'P1', 'dropped'), I(324, 'P1', 'in_progress'), I(325, 'P1', 'waiting')]
+  const issues = [I(213, 'P1', 'done'), I(214, 'P1', 'dropped', { proof: 'dropped: Bart: not needed' }), I(324, 'P1', 'in_progress'), I(325, 'P1', 'waiting')]
   assert.deepEqual(unbuiltIdeas(days, issues, '2026-11-21').map((x) => x.id), ['OLA-324', 'OLA-325'])
   assert.deepEqual(unbuiltIdeas(days, issues, '2026-11-20').map((x) => x.id), [], 'a repost of the same day is not held by its own ideas')
   assert.equal(unbuiltIdeas(days, [], '2026-11-21')[0].status, 'not in the tracker')
   assert.deepEqual(unbuiltIdeas(days, issues.map((i) => ({ ...i, status: 'done' })), '2026-11-21'), [])
+  assert.equal(unbuiltIdeas(days, issues.map((i) => ({ ...i, status: 'dropped', proof: 'dropped: x' })), '2026-11-21').length, 4, "a drop without Bart's words is not built")
+  assert.deepEqual(unbuiltIdeas(days, issues.map((i) => ({ ...i, status: 'dropped', proof: '' })), '2026-11-21', new Set(['OLA-213', 'OLA-214', 'OLA-324', 'OLA-325'])), [], 'dropped by Bart on the board')
+  const none = unbuiltIdeas([{ day: '2026-11-20', ideas: { kit: { text: 'x' }, ola: { text: 'y', issue: 'OLA-325' } } }], [I(325, 'P1', 'done')], '2026-11-21')
+  assert.deepEqual(none.map((x) => [x.id, x.status]), [[null, 'no ticket']], 'an idea with no ticket is not built')
 })
 
 console.log(`${n} checks passed`)

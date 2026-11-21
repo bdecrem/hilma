@@ -197,13 +197,20 @@ are immediately implemented"; OLA-331). An idea is work, not a proposal he can d
    builds, tests, pushes, `issues.mjs ready`). With no session open, the mini's agent takes them:
    its pick puts the latest reviews' idea tickets right after P0 (`_plate.mjs`, `ideaTickets`),
    before any other work.
-3. `sweep.mjs post` refuses the next review while an idea of an earlier review is neither done nor
-   dropped, and names each one; `sweep.mjs ideas` lists them beforehand. Only Bart drops an idea.
+3. `sweep.mjs post` refuses the next review while an idea of an earlier review is not built, and
+   names each one; `sweep.mjs ideas` lists them beforehand. Built is done, or dropped by Bart: an
+   idea with no ticket, or dropped without his words, is not built. Only Bart drops an idea:
+   `issues.mjs drop <id> --why "Bart: <his words>"`, any other drop of an idea ticket is refused.
+4. An idea's ticket is new: opened on or after the review's day, and not finished before the
+   review was first posted. A repost may not point an idea at another ticket while the first one
+   is unbuilt. A stored review changed outside `sweep.mjs post` is named, and the next post waits
+   until it is reposted or accepted (`sweep.mjs accept-review <day> --why "..."`, a line in the
+   overrides).
 
 The first post of the day texts Bart the two ideas and that both are being built (`sweep.mjs post`
 does it and records it; a repost sends nothing); no other text about them. The Learning page lists
 them by day under "Daily ideas", each with where its build stands in the tracker: built on a date,
-being built, or dropped on a date.
+being built (a builder holds the ticket, or it has commits), not started, or dropped on a date.
 
 ### One improvement to the learning system, every day until Nov 25
 
@@ -243,13 +250,18 @@ of the day, run
 
     node scripts/venture/requests.mjs --day 2026-11-18
 
-It reads what he typed, texted and said that day (the same messages the grader reads), matches
-each request to the ticket that carries it, and opens a P1 ticket for each request that has none,
-with his words in it; one question to Claude Opus on the machine's Max login, never the API key.
+It reads what he typed, texted and said that day (the same messages the grader reads), and gives
+each request one outcome with its reason: on a ticket (an existing ticket carries it), done the
+same day, answered (a question answered that day), or new (still wanted at the end of the day and
+no ticket carries it). Only a new one becomes a P1 ticket, with his words in it. It is one question
+to Claude Opus on the machine's Max login, never the API key; `--dry` writes nothing anywhere.
 `gather` prints the result; `sweep.mjs post` refuses a day that was not matched and stores the
-counts with the entry, which the Learning page shows ("Requests from Bart: N, each matched to a
-ticket"). A rerun opens nothing twice. Read the opened tickets: one that is not a request is
-dropped with the reason, one that is gets its checks.
+counts with the entry, which the Learning page shows ("Requests from Bart: N, each accounted
+for"). A rerun opens nothing twice. When the tool itself fails (the collector, the model call, a
+crash), the failure is stored and `post` says so with the two ways on: fix the cause and rerun it,
+or post with `--requests-failed "<why the review goes ahead without it>"`, and the entry says the
+requests were not matched. Read the opened tickets: one that is not a request is dropped with the
+reason, one that is gets its checks.
 
 ### What to look at for Kit (how the project is run)
 

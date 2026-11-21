@@ -7,7 +7,7 @@
 //   node scripts/venture/steers.mjs --backfill 2026-11-13 2026-11-16
 //   node scripts/venture/steers.mjs --dry [--day …]      grade and print, store nothing
 //   node scripts/venture/steers.mjs --collect [--day …]  print what he wrote, no model call (--full: whole messages;
-//                                                        --json: one day's messages as JSON, for requests.mjs)
+//                                                        --json --out <file>: one day as JSON in a file, for requests.mjs)
 //   node scripts/venture/steers.mjs --export              store what he typed on THIS machine today and
 //                                                        yesterday (venture_state "typed_<host>"), so the
 //                                                        count on another machine includes it
@@ -387,14 +387,23 @@ if (flag('--export')) {
   process.exit(0)
 }
 if (collectOnly) {
-  // --json: the day's messages as one JSON line, for requests.mjs (OLA-213)
-  if (flag('--json')) (console.log(JSON.stringify(await collect(days[0]))), process.exit(0))
+  // --json --out <file>: the day's messages as JSON in a file, for requests.mjs (OLA-213). A file, not
+  // stdout: process.exit right after a large write to a pipe cut the output at 64 KB (Nov 20 is 166 KB).
+  if (flag('--json')) {
+    if (!flag('--out')) (console.error('--json needs --out <file>'), process.exit(1))
+    writeFileSync(after('--out'), JSON.stringify(await collect(days[0])))
+    process.exit(0)
+  }
+  const lines = []
   for (const day of days) {
     const msgs = await collect(day)
-    console.log(`\n=== ${day}: ${msgs.length} messages`)
-    for (const m of msgs) console.log(`#${m.id} ${hhmm(m.at)} ${m.source} (${m.where}): ${(flag('--full') ? m.text : m.text.slice(0, 160)).replace(/\n/g, ' ')}`)
+    lines.push(`\n=== ${day}: ${msgs.length} messages`)
+    for (const m of msgs) lines.push(`#${m.id} ${hhmm(m.at)} ${m.source} (${m.where}): ${(flag('--full') ? m.text : m.text.slice(0, 160)).replace(/\n/g, ' ')}`)
   }
-  process.exit(0)
+  // exit only once the pipe has taken all of it (sweep.mjs gather reads this; an exit right after a
+  // large write cut it at 64 KB)
+  process.stdout.write(lines.join('\n') + '\n', () => process.exit(0))
+  await new Promise(() => {})
 }
 
 const stored = (await getState(db, 'steers'))?.value ?? { days: {} }

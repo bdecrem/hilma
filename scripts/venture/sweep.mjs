@@ -25,12 +25,13 @@
 // apps/venture/private/data/sweeps/<day>.json (private, backed up by sync.mjs).
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
-import { openCounts, unbuiltIdeas } from './_plate.mjs'
-import { overridesOf } from './_overrides.mjs'
+import { ideaTicketProblems, openCounts, unbuiltIdeas } from './_plate.mjs'
+import { overridesOf, writeOverride } from './_overrides.mjs'
 import { fakeClient } from './_fakedb.mjs'
 import { CASE_DIR, UNTESTABLE, uncoveredCorrections } from './_replay.mjs'
 
@@ -86,8 +87,9 @@ async function facts() {
     // OLA-213: every request of the day matched to a ticket, the missing ones opened (requests.mjs)
     const d = (await getState(db, 'requests'))?.value?.days?.[day]
     if (!d) return add("Bart's requests matched to tickets (requests.mjs)", [`not matched yet: run node scripts/venture/requests.mjs --day ${day} before posting (post refuses the day until it is)`])
+    if (d.failed) return add("Bart's requests matched to tickets (requests.mjs)", [`FAILED at ${d.failed.at}: ${d.failed.error}. Rerun it once the cause is fixed, or post with --requests-failed "<why the review goes ahead without it>"`])
     count(d.counts.requests, `requests from you, ${d.counts.opened} without a ticket until tonight`)
-    add(`Bart's requests matched to tickets (requests.mjs, ${d.at}; rerun it after his last message)`, d.requests.map((r) => `${r.time} ${r.source} ${r.ticket}${r.opened ? ' (opened tonight)' : ''}: ${r.request}`))
+    add(`Bart's requests matched to tickets (requests.mjs, ${d.at}; rerun it after his last message)`, d.requests.map((r) => `${r.time} ${r.source} ${r.outcome ?? 'ticket'} ${r.ticket ?? ''}${r.opened ? ' (opened tonight)' : ''}: ${r.request} [${r.why}]`))
   })
 
   await tryIt('Steers', async () => {
@@ -294,14 +296,32 @@ function checkEntry(e) {
 
 // OLA-331 (Bart, Nov 20, 11 pm: "They should always be built duh!! So they are immediately
 // implemented"): a daily idea is work. The review after it cannot be posted while it is unbuilt.
+/** The idea tickets with what is needed to judge them: rows, and the ids Bart dropped on the board. */
+async function ideaRows(ids) {
+  if (!ids.length) return { rows: [], bartDrops: new Set() }
+  const r = await db.from('venture_issues').select('id, title, status, priority, proof, opened_at, finished_at').in('id', ids)
+  if (r.error) die(`venture_issues: ${r.error.message}`)
+  const a = await db.from('venture_issue_activity').select('issue_id, via, field, new_value').in('issue_id', ids).eq('via', 'board')
+  const bartDrops = new Set((a.data ?? []).filter((x) => x.field === 'status' && x.new_value === 'dropped').map((x) => x.issue_id))
+  return { rows: r.data, bartDrops }
+}
 async function unbuilt(d) {
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
-  const ids = old.days.flatMap((x) => [x.ideas?.kit?.issue, x.ideas?.ola?.issue]).filter(Boolean)
-  const r = ids.length ? await db.from('venture_issues').select('id, title, status').in('id', ids) : { data: [] }
-  if (r.error) die(`venture_issues: ${r.error.message}`)
-  return unbuiltIdeas(old.days, r.data, d)
+  const { rows, bartDrops } = await ideaRows(old.days.flatMap((x) => [x.ideas?.kit?.issue, x.ideas?.ola?.issue]).filter(Boolean))
+  return unbuiltIdeas(old.days, rows, d, bartDrops)
 }
-const unbuiltLine = (u) => `${u.id} (the ${u.side === 'kit' ? 'Kit' : 'Ola'} idea of ${u.day}, ${u.status})${u.title ? `: ${u.title.slice(0, 90)}` : ''}`
+const unbuiltLine = (u) => `${u.id ?? 'no ticket'} (the ${u.side === 'kit' ? 'Kit' : 'Ola'} idea of ${u.day}, ${u.status})${u.title ? `: ${u.title.slice(0, 90)}` : ''}`
+// OLA-331: each stored review keeps a fingerprint (venture_state "sweeps_fp", by day) of what post stored;
+// one that no longer matches was changed outside this tool. `told` is left out: post sets it after the text.
+// keys sorted at every level: the database (jsonb) gives an object back with its keys in its own order
+const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => [k, canon(v[k])])) : v)
+const fpOf = (d) => createHash('sha256').update(JSON.stringify(canon({ ...d, ideas: d.ideas ? { ...d.ideas, told: undefined } : undefined }))).digest('hex').slice(0, 16)
+async function changedReviews() {
+  const days = (await getState(db, 'sweeps'))?.value?.days ?? []
+  const fps = (await getState(db, 'sweeps_fp'))?.value ?? {}
+  return { days, fps, changed: days.filter((d) => fps[d.day] && fps[d.day] !== fpOf(d)).map((d) => d.day) }
+}
+const changedLine = (days) => `the stored review of ${days.join(', ')} was changed outside sweep.mjs post since it was posted (its fingerprint differs). Read what changed (sweep.mjs show --day <day>), then repost that day's file with sweep.mjs post, or accept it as it is with sweep.mjs accept-review <day> --why "<what changed and why>" (a line in issues.mjs overrides)`
 
 if (cmd === '--wait') {
   for (;;) {
@@ -334,15 +354,20 @@ if (cmd === '--wait') {
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   {
+    const ch = (await changedReviews()).changed.filter((d) => d !== e.day)
+    if (ch.length) die(`the entry was not stored: ${changedLine(ch)} (OLA-331).`)
     const u = await unbuilt(e.day)
-    if (u.length) die(`the entry was not stored: ${u.length} daily idea(s) of an earlier review ${u.length === 1 ? 'is' : 'are'} neither done nor dropped, and every idea is built before the next review is posted (OLA-331):\n- ${u.map(unbuiltLine).join('\n- ')}\nBuild each now (an Opus builder per part of the code, SWEEP.md "One idea for each side, every day"); only Bart drops one.`)
+    if (u.length) die(`the entry was not stored: ${u.length} daily idea(s) of an earlier review ${u.length === 1 ? 'is' : 'are'} neither done nor dropped by Bart, and every idea is built before the next review is posted (OLA-331):\n- ${u.map(unbuiltLine).join('\n- ')}\nBuild each now (an Opus builder per part of the code, SWEEP.md "One idea for each side, every day"); only Bart drops one.`)
     // the day's own two ideas are work: a P1 (or P0) ticket with its checks written, ready for a builder tonight
     const own = ['kit', 'ola'].map((s) => e.ideas?.[s]?.issue).filter((x) => /^OLA-\d+$/.test(x ?? ''))
-    if (own.length) {
-      const r = await db.from('venture_issues').select('id, priority, status').in('id', own)
+    const prev = ((await getState(db, 'sweeps'))?.value?.days ?? []).find((d) => d.day === e.day) ?? null
+    const wereIdeas = [prev?.ideas?.kit?.issue, prev?.ideas?.ola?.issue].filter(Boolean)
+    if (own.length || wereIdeas.length) {
+      const { rows, bartDrops } = await ideaRows([...new Set([...own, ...wereIdeas])])
+      const r = { data: rows }
       const acc = await db.from('venture_state').select('key, value').in('key', own.map((x) => `accept:${x}`))
-      if (r.error || acc.error) die(`venture_issues: ${(r.error ?? acc.error).message}`)
-      const no = []
+      if (acc.error) die(`venture_state: ${acc.error.message}`)
+      const no = ideaTicketProblems(e, prev, rows, { bartDrops })
       for (const id of own) {
         const t = r.data.find((x) => x.id === id)
         const a = acc.data.find((x) => x.key === `accept:${id}`)?.value
@@ -352,12 +377,15 @@ if (cmd === '--wait') {
           if (!a?.checks?.length && !a?.internal) no.push(`${id} has no checks: write them (issues.mjs check ${id} add --at ... --do ... --see ...) or, when nothing a person does or sees changes, issues.mjs check ${id} internal --why "..." naming the test`)
         }
       }
-      if (no.length) die(`the entry was not stored: the day's ideas are built tonight, so each is a P1 ticket with its checks (OLA-331):\n- ${no.join('\n- ')}`)
+      if (no.length) die(`the entry was not stored: the day's ideas are new work built tonight, each a P1 ticket with its checks (OLA-331):\n- ${no.join('\n- ')}`)
     }
   }
   // OLA-213: the day's requests are matched to tickets before the entry is posted; the counts are the tracker's
   const req = (await getState(db, 'requests'))?.value?.days?.[e.day]
   if (!req) die(`the entry was not stored: Bart's requests of ${e.day} are not matched to tickets yet. Run node scripts/venture/requests.mjs --day ${e.day} (it opens a ticket for each request that has none; OLA-213), then post again.`)
+  // a failure of requests.mjs itself is said plainly, with the two ways on; it never blocks the review silently
+  const goOn = opt('--requests-failed')
+  if (req.failed && !(goOn && goOn.trim().length >= 10)) die(`the entry was not stored: requests.mjs failed for ${e.day} at ${req.failed.at}: ${req.failed.error}\nEither fix the cause and rerun it (node scripts/venture/requests.mjs --day ${e.day}), or post with --requests-failed "<why the review goes ahead without it>" (10 characters or more): the entry then says the day's requests were not matched, and why.`)
   const bad = checkEntry(e)
   // OLA-251, tenth pass: a fix settled in the ledger past correct.mjs becomes a line before the day's lines are counted
   spawnSync('node', [root + 'scripts/venture/correct.mjs', 'audit'], { encoding: 'utf8', stdio: ['ignore', 'ignore', 'inherit'] })
@@ -397,7 +425,7 @@ if (cmd === '--wait') {
     const late = owedFixes(loadWeaknesses(rootUrl)).filter((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3)
     if (late.length) bad.push(`fixes owed for more than ${OWED_DAYS} days: ${late.map((o) => `${o.ref} (${o.name}, ${o.issue}, ${o.days} days)`).join('; ')}. Build each and settle it: correct.mjs fix <n> --fix … --level … --where … (correct.mjs owed lists them)`)
   }
-  const requests = { n: req.counts.requests, matched: req.counts.matched, opened: req.opened, at: req.at }
+  const requests = req.failed ? { failed: req.failed.error, why: goOn.trim(), opened: req.opened ?? [], at: req.failed.at } : { n: req.counts.requests, matched: req.counts.matched, done: req.counts.done ?? 0, answered: req.counts.answered ?? 0, opened: req.opened, at: req.at }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
   // an idea is new: its ticket was not the idea of another day
   for (const side of ['kit', 'ola']) {
@@ -417,6 +445,8 @@ if (cmd === '--wait') {
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
   const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), overrides, models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
   entry.requests = requests
+  // the first post's time stays: an idea must not be finished before the review was first posted (OLA-331)
+  { const prev = old.days.find((d) => d.day === e.day); entry.firstAt = prev ? prev.firstAt ?? prev.at : entry.at }
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.
@@ -428,6 +458,11 @@ if (cmd === '--wait') {
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
   await setState(db, 'sweeps', value)
+  // fingerprints: this entry's new one, the others kept (a day with none yet gets its present one)
+  {
+    const fps = (await getState(db, 'sweeps_fp'))?.value ?? {}
+    await setState(db, 'sweeps_fp', Object.fromEntries(days.map((d) => [d.day, d.day === entry.day ? fpOf(entry) : fps[d.day] ?? fpOf(d)])))
+  }
   const all = days.flatMap((d) => [...d.kit, ...d.ola])
   console.log(`stored ${entry.day}: ${entry.kit.length} for Kit, ${entry.ola.length} for Ola, ${entry.open.length} open`)
   console.log(`so far: ${all.length} changes from ${days.filter((d) => !d.quiet).length} day(s) swept, ${all.filter((c) => c.enforced).length} enforced by the system`)
@@ -451,10 +486,24 @@ if (cmd === '--wait') {
     }
   }
   console.log('https://app.kochitolabs.com/learning')
+} else if (cmd === 'accept-review') {
+  // a stored review changed outside post, accepted as it is now, with the reason in the overrides (OLA-331)
+  const d = args[1]
+  const why = opt('--why')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d ?? '') || !why || why.trim().length < 15) die('usage: sweep.mjs accept-review <day> --why "what was changed and why" (15 characters or more)')
+  const { days, fps } = await changedReviews()
+  const x = days.find((y) => y.day === d)
+  if (!x) die(`no stored review for ${d}`)
+  if (fps[d] === fpOf(x)) die(`the review of ${d} has not changed since it was posted`)
+  await writeOverride(db, { key: `sweep-accepted-${d}-${fpOf(x)}`, what: `the review of ${d} was changed outside sweep.mjs post and accepted as it is (${why.trim()})`, tool: 'sweep.mjs' })
+  await setState(db, 'sweeps_fp', { ...fps, [d]: fpOf(x) })
+  console.log(`accepted the review of ${d} as it is; a line is in issues.mjs overrides`)
 } else if (cmd === 'ideas') {
+  const ch = (await changedReviews()).changed
+  if (ch.length) console.log(changedLine(ch))
   const u = await unbuilt(day)
-  if (!u.length) console.log(`every idea of the reviews before ${day} is done or dropped`)
-  else (console.log(`${u.length} daily idea(s) of the reviews before ${day} not built yet (sweep.mjs post refuses until each is done or dropped):\n${u.map(unbuiltLine).join('\n')}`), process.exit(1))
+  if (!u.length) { console.log(`every idea of the reviews before ${day} is done or dropped`); if (ch.length) process.exit(1) }
+  else (console.log(`${u.length} daily idea(s) of the reviews before ${day} not built yet (sweep.mjs post refuses until each is done or dropped by Bart):\n${u.map(unbuiltLine).join('\n')}`), process.exit(1))
 } else if (cmd === 'weaknesses') {
   console.log(ledgerLines().join('\n'))
 } else if (cmd === 'show') {
