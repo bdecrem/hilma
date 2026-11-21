@@ -407,6 +407,9 @@ if (cmd === 'add') {
   }
   // an escape (he met it broken after being told it worked) is the agent's own claim; filed under a weakness of
   // Ola's side, the agent's fix is skipped: a line
+  // twenty-sixth checker: the same, when his words say he was told it worked and --escape was left out
+  const soundsEscape = /\b(you said|you told|told me|said (it|this|that) (was|is)|was (fixed|working|done)|is (fixed|working|done)|works now|still (does not|doesn't|refuses|fails|broken)|it'?s not|not fixed)\b/i.test(`${words_ ?? ''}`)
+  if (!newWeakLine && !opt.escape && soundsEscape && w.side === 'ola') newWeakLine = `his words read as an escape (he was told it worked: "${String(words_).slice(0, 120)}"), filed under ${w.id}, a weakness of Ola's, without --escape, so the agent's own claim is owed no fix: read whether it belongs under unchecked or not-your-path`
   if (!newWeakLine && opt.escape && w.side === 'ola') newWeakLine = `an escape (he met it broken after being told it worked) filed under ${w.id}, a weakness of Ola's, so the agent's own claim is owed no fix of its own: read whether it belongs under unchecked or not-your-path`
   const given = owed ? need : cannot ? null : level
   if (given !== null && given <= 3 && !newWeakLine) {
