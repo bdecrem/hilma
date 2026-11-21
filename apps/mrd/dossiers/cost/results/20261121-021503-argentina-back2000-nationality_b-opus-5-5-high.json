@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina nationality_b claude-opus-5-5 high",
- "pid": 73866,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "nationality_b",
@@ -58,5 +57,1180 @@
   "user": 181
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:30:12.667Z",
+ "minutes": 15.15,
+ "meters_after": {
+  "at": "2026-11-21T10:30:12.667Z",
+  "window": {
+   "pct": 23,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 5,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 23,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 5,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 23% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 5% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 261090,
+   "output": 67396,
+   "cache_read": 4127289,
+   "cache_write": 176652,
+   "cost_usd": 3.4025,
+   "total": 4632427
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 261018,
+    "output": 19510,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 6505,
+    "cost_usd": 0.2059
+   },
+   "claude-opus-5-5": {
+    "input": 72,
+    "output": 47886,
+    "cache_read": 4127289,
+    "cache_write": 176652,
+    "thinking": 12528,
+    "cost_usd": 3.1967
+   }
+  }
+ },
+ "turns": 55,
+ "calls": 89,
+ "duration_ms": 908016,
+ "duration_api_ms": 591486,
+ "pages_read": 34,
+ "pages": [
+  {
+   "at": "2026-11-21T10:15:36.353Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/45000-49999/48487/texact.htm",
+   "find": "Artículo 1 | Art. 1 | Art. 2 | Art. 8 | renuncia",
+   "ok": true,
+   "chars": 635
+  },
+  {
+   "at": "2026-11-21T10:16:31.570Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto",
+   "find": "ARTICULO 1 | ARTICULO 2 | ARTICULO 8 | renunci | Decreto 70/2017",
+   "ok": true,
+   "chars": 3414
+  },
+  {
+   "at": "2026-11-21T10:16:32.243Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 2793
+  },
+  {
+   "at": "2026-11-21T10:16:36.529Z",
+   "url": "https://www3.hcdn.gob.ar/dependencias/secparl/dgral_info_parlamentaria/dip/archivos/Ley_346_TA.pdf",
+   "find": "Art. 2 | Art. 5 | Art. 8 | 70/2017 | Art. 1",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:18:41.548Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+   "find": "Art. 2 | Art. 5 | Art. 8 | 70/2017 | ARTICULO 2",
+   "ok": true,
+   "chars": 8970
+  },
+  {
+   "at": "2026-11-21T10:18:42.424Z",
+   "url": "https://www.refworld.org/sites/default/files/2024-05/14234.pdf",
+   "find": "Art. 2 | Art. 8 | 70/2017 | renun",
+   "ok": true,
+   "chars": 629
+  },
+  {
+   "at": "2026-11-21T10:19:23.939Z",
+   "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina",
+   "find": "renunciar | nacionalidad de origen | fallo",
+   "ok": true,
+   "chars": 3934
+  },
+  {
+   "at": "2026-11-21T10:19:44.223Z",
+   "url": "https://www.diariojudicial.com/news-18792-zaffaroni-argentino-de-ley",
+   "find": "naturalizarse | nacionalidad de origen | perfectamente admisible | Padilla",
+   "ok": true,
+   "chars": 5258
+  },
+  {
+   "at": "2026-11-21T10:19:45.207Z",
+   "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086",
+   "find": "renuncia | Padilla | formulario | 2010",
+   "ok": true,
+   "chars": 4900
+  },
+  {
+   "at": "2026-11-21T10:20:02.299Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+   "find": "renuncia | nacionalidad de origen | Art. 3 | apátrida | Art. 14",
+   "ok": true,
+   "chars": 4064
+  },
+  {
+   "at": "2026-11-21T10:20:20.630Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ilegal | regularizar | Art. 15 | Art. 37 | Art. 38 | conminar",
+   "ok": true,
+   "chars": 4670
+  },
+  {
+   "at": "2026-11-21T10:20:21.315Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3284
+  },
+  {
+   "at": "2026-11-21T10:20:28.726Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 14 | ARTICULO 15 | ARTICULO 16 | cambio de categoría | excepción",
+   "ok": true,
+   "chars": 8488
+  },
+  {
+   "at": "2026-11-21T10:20:37.176Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/92016/texact/htm",
+   "find": "ARTICULO 17 | ARTICULO 61 | Antecedentes | Decreto N° 70/2017",
+   "ok": true,
+   "chars": 12599
+  },
+  {
+   "at": "2026-11-21T10:20:47.798Z",
+   "url": "https://www.argentina.gob.ar/normativa/recurso/92016/texact/htm",
+   "find": "Artículo 61 | Antecedentes Normativos | Artículo 17",
+   "ok": true,
+   "chars": 8514
+  },
+  {
+   "at": "2026-11-21T10:20:48.640Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto",
+   "find": "ARTICULO 61 | ARTICULO 17 | ARTICULO 124 | ARTICULO 125",
+   "ok": true,
+   "chars": 6455
+  },
+  {
+   "at": "2026-11-21T10:20:54.088Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "artículo 61 | artículo 17 | Sustitúyese el artículo | Ley N° 346",
+   "ok": true,
+   "chars": 8529
+  },
+  {
+   "at": "2026-11-21T10:20:55.025Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto",
+   "find": "ARTICULO 17 | ARTICULO 61",
+   "ok": true,
+   "chars": 5881
+  },
+  {
+   "at": "2026-11-21T10:21:16.471Z",
+   "url": "https://www4.hcdn.gob.ar/dependencias/dcomisiones/periodo-122/122-1544.pdf",
+   "find": "25.098 | regularizar | situación migratoria irregular | plazo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:23:28.583Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-1169-2004-98547/texto",
+   "find": "Artículo 1 | 30 de junio de 2004 | regularizar",
+   "ok": true,
+   "chars": 4434
+  },
+  {
+   "at": "2026-11-21T10:23:35.182Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto",
+   "find": "ARTICULO 1 | ARTICULO 2 | residencia temporaria | residencia precaria",
+   "ok": true,
+   "chars": 5427
+  },
+  {
+   "at": "2026-11-21T10:23:36.403Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2016/06/IA2007-10-Derechos-de-las-personas-migrantes-luego-de-la-sancion-de-la-nueva-Ley-de-Migraciones.pdf",
+   "find": "Patria Grande | regulariz | 1023 | radicaciones",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:24:00.981Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "regulari | Patria Grande | irregular | stateless | apatrid",
+   "ok": true,
+   "chars": 7413
+  },
+  {
+   "at": "2026-11-21T10:24:01.908Z",
+   "url": "https://www.iom.int/news/how-argentina-used-mercosur-decision-regularize-over-million-migrants-migration-notebook",
+   "find": "Patria Grande | million | 2004 | regulariz",
+   "ok": true,
+   "chars": 4335
+  },
+  {
+   "at": "2026-11-21T10:24:30.603Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828",
+   "find": "ARTÍCULO 1 | ARTÍCULO 17 | ARTÍCULO 59 | naturaliza | nacido | vigencia",
+   "ok": true,
+   "chars": 9441
+  },
+  {
+   "at": "2026-11-21T10:24:31.416Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-19510-218099/texto",
+   "find": "Apruébase | apátridas | ARTICULO 1",
+   "ok": true,
+   "chars": 3417
+  },
+  {
+   "at": "2026-11-21T10:24:46.158Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828",
+   "find": "Artículo 17 | Artículo 59 | ley 346 | inscripción de nacimiento | Dada en la Sala",
+   "ok": true,
+   "chars": 6126
+  },
+  {
+   "at": "2026-11-21T10:24:54.054Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto",
+   "find": "Artículo 20 | Convención Americana sobre Derechos Humanos | jerarquía constitucional",
+   "ok": true,
+   "chars": 5267
+  },
+  {
+   "at": "2026-11-21T10:24:54.991Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23054-28152/texto",
+   "find": "Derecho a la Nacionalidad | Artículo 20 | en cuyo territorio nació",
+   "ok": true,
+   "chars": 3436
+  },
+  {
+   "at": "2026-11-21T10:25:13.896Z",
+   "url": "https://eoirs.cancilleria.gob.ar/userfiles/63%20CP%20ACNUR%20-%20Apatridia%20-%20junio%202015.pdf",
+   "find": "apatridia | 1961 | ius soli | naturaliza",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:25:29.524Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+   "find": "birth registration | registration | nationality | stateless | migrant",
+   "ok": true,
+   "chars": 6455
+  },
+  {
+   "at": "2026-11-21T10:25:32.257Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+   "find": "Birth registration | Name and nationality | registered at birth | Decree 90/2009 | undocumented",
+   "ok": true,
+   "chars": 4329
+  },
+  {
+   "at": "2026-11-21T10:25:41.871Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26091-2006-115887/texto",
+   "find": "Convenio de Migración | regularizar | 2 de agosto | Protocolo Adicional",
+   "ok": true,
+   "chars": 4223
+  },
+  {
+   "at": "2026-11-21T10:26:03.076Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-229407/texto",
+   "find": "regulariz | Artículo 1 | senegal | dominican",
+   "ok": true,
+   "chars": 4385
+  }
+ ],
+ "searches": [
+  "infoleg Ley 346 ciudadanía texto actualizado",
+  "\"Padilla, Miguel M.\" Corte Suprema 2007 doble nacionalidad fallo",
+  "Decreto 3213/84 reglamentación Ley 23.059 nacionalidad ciudadanía texto renuncia",
+  "\"Zunino\" plenario Cámara Nacional Civil y Comercial Federal 2010 renuncia nacionalidad de origen formulario ciudadanía",
+  "\"Padilla, Miguel\" \"P. 1571. XL\" Corte Suprema 10 de abril de 2007 sentencia texto",
+  "Padilla Miguel s/ presentación Zaffaroni pasaporte italiano Corte Suprema conjueces Fallos 330 nacionalidad \"sin perder la de origen\"",
+  "Ley 22.439 ley general de migraciones y fomento de la inmigración texto infoleg \"regularizar\" artículo 15 37",
+  "Decreto 1023/94 reglamento de migración texto \"ilegal\" regularización infoleg",
+  "Ley 25.098 convenio de migración Argentina Bolivia 1998 regularización nacionales situación irregular texto",
+  "Decreto 578/2005 Programa Nacional de Normalización Documentaria Migratoria Patria Grande Disposición 53253/2005 texto",
+  "Patria Grande regularización resultados 423.697 radicaciones inmigrantes Argentina informe",
+  "Comité de Trabajadores Migratorios observaciones finales Argentina 2011 CMW/C/ARG/CO/1 regularización Patria Grande",
+  "Ley 27.512 reconocimiento y protección de las personas apátridas infoleg publicada Boletín Oficial 2019",
+  "Ley 26.305 Convención para reducir los casos de apatridia aprobación Argentina adhesión 2014",
+  "ACNUR Argentina apatridia ius soli nacimientos no registrados personas apátridas antes de la ley 27.512 naturalización informe",
+  "hrlibrary.umn.edu crc Argentina 2010 concluding observations birth registration CRC/C/ARG/CO/3-4",
+  "Argentina 2014 2015 regularización migratoria radicaciones otorgadas Dirección Nacional de Migraciones Abordaje Territorial obstáculos CELS informe"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.2,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":71,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Usually\",\"basis\":\"Ley 346 (restored by Ley 23.059 of 1984, as amended by Leyes 24.533 and 24.951) and its regulation, Decreto 3213/84, set naturalization conditions (age 18, two years' continuous residence, a declaration before a federal judge) and nowhere require renouncing the nationality of origin. In practice the federal courts' citizenship application form contained a 'renuncia a la nacionalidad de origen' clause until the July 2010 plenary removed it. That practice is documented only in 2010 reports; there is no source from around 2000.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Usually\",\"basis\":\"The statutory position was unchanged: Decreto 1601/2004 replaced only art. 2 of Decreto 3213/84, on the option for children of native Argentines. The renunciation clause in the judicial form was still in use. Its effect on the nationality of origin depended on that country's law. No practice source specific to 2005.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Usually\",\"basis\":\"The law was unchanged. CSJN 'Padilla, Miguel' (10 April 2007) stated that one may naturalize as an Argentine without losing the nationality of origin; the ruling was not read in full here, only quoted in reports. On 1 January 2010 the form still carried the renunciation clause; the Cámara Nacional en lo Civil y Comercial Federal en pleno ordered it removed in 'Zunino, Ignacio s/ petición' on 1 July 2010.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes, all migrants can obtain dual nationality by retaining their nationality of origin\",\"implementation\":\"Effectively Always\",\"basis\":\"Ley 346 and Decreto 3213/84 still had no renunciation req",
+ "output": {
+  "answers": [
+   {
+    "question_id": 71,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Usually",
+      "basis": "Ley 346 (restored by Ley 23.059 of 1984, as amended by Leyes 24.533 and 24.951) and its regulation, Decreto 3213/84, set naturalization conditions (age 18, two years' continuous residence, a declaration before a federal judge) and nowhere require renouncing the nationality of origin. In practice the federal courts' citizenship application form contained a 'renuncia a la nacionalidad de origen' clause until the July 2010 plenary removed it. That practice is documented only in 2010 reports; there is no source from around 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Usually",
+      "basis": "The statutory position was unchanged: Decreto 1601/2004 replaced only art. 2 of Decreto 3213/84, on the option for children of native Argentines. The renunciation clause in the judicial form was still in use. Its effect on the nationality of origin depended on that country's law. No practice source specific to 2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Usually",
+      "basis": "The law was unchanged. CSJN 'Padilla, Miguel' (10 April 2007) stated that one may naturalize as an Argentine without losing the nationality of origin; the ruling was not read in full here, only quoted in reports. On 1 January 2010 the form still carried the renunciation clause; the Cámara Nacional en lo Civil y Comercial Federal en pleno ordered it removed in 'Zunino, Ignacio s/ petición' on 1 July 2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, all migrants can obtain dual nationality by retaining their nationality of origin",
+      "implementation": "Effectively Always",
+      "basis": "Ley 346 and Decreto 3213/84 still had no renunciation requirement. Ley 26.774 (2012) changed only art. 7 (voting age). The 2010 plenary had removed the renunciation clause from the form. No documented pattern of breach was found for this period."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 346 de Ciudadanía (1869), restored by Ley 23.059",
+      "article": "Arts. 1-2 (naturalization conditions; no renunciation requirement)",
+      "role": "other_in_force",
+      "in_force": "1984 (restoration by Ley 23.059) to today; art. 2 inc. 1 replaced 2017-01-31 by DNU 70/2017, restored 2021-03-05 by Decreto 138/2021, replaced 2025-05-29 by DNU 366/2025",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 346",
+      "article": "Art. 8 (suspension of political rights of those naturalized abroad; not loss of nationality)",
+      "role": "other_in_force",
+      "in_force": "1869 (restored 1984) to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 3213/84, reglamentario de la Ley 23.059",
+      "article": "Art. 3 (naturalization conditions: 18 years, two years' continuous residence, declaration before federal judges; no renunciation)",
+      "role": "other_in_force",
+      "in_force": "1984-10-19 to today (art. 2 replaced by Decreto 1601/2004)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "CSJN, 'Padilla, Miguel s/ presentación' (P.1571.XL)",
+      "article": "ruling of 10 April 2007 (the MRD's cited source)",
+      "role": "cited",
+      "in_force": "2007-04-10 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-11-19",
+      "instrument": "Decreto 1601/2004",
+      "article": "Decreto 3213/84 art. 2",
+      "kind": "amended",
+      "what_changed": "Replaced the procedure by which children of native Argentines born abroad opt for Argentine nationality. It does not touch naturalization or dual nationality.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm",
+      "passage": "(Artículo sustituido por art. 1° del Decreto N° 1601/2004 B.O. 19/11/2004)"
+     },
+     {
+      "date": "2007-04-10",
+      "instrument": "Corte Suprema de Justicia de la Nación, 'Padilla, Miguel s/ presentación'",
+      "article": "Ley 346; Ley 20.588 (Argentina–Italy nationality agreement)",
+      "kind": "ruling",
+      "what_changed": "The Court (sitting as conjueces) rejected a request to strike Justice Zaffaroni from the electoral roll for holding Italian nationality. As reported, it stated that acquiring a nationality other than that of origin is admissible and that one may naturalize as an Argentine without losing the nationality of origin. Read only through press reports.",
+      "url": "https://www.diariojudicial.com/news-18792-zaffaroni-argentino-de-ley",
+      "passage": "La Corte, compuesta por conjueces, le recordó que la nacionalidad no se pierde por la adquisición de una nueva"
+     },
+     {
+      "date": "2010-07-01",
+      "instrument": "Cámara Nacional de Apelaciones en lo Civil y Comercial Federal en pleno, 'Zunino, Ignacio s/ petición'",
+      "article": "Citizenship application form (Ley 346 procedure)",
+      "kind": "ruling",
+      "what_changed": "Ordered the removal of the 'renuncia a la nacionalidad de origen' requirement, and of the religion item, from the form that opens the judicial naturalization procedure, applying the 'Padilla' rule. Before this, applicants signed a renunciation; after it, they did not.",
+      "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086",
+      "passage": "la Cámara Nacional en lo Civil y Comercial Federal en pleno decidió modificar el formulario que da inicio al proceso judicial para solicitar la nacionalidad argentina, suprimiendo el requisito que exigía al peticionante renunciar a su nacionalidad de origen."
+     },
+     {
+      "date": "2012-11-02",
+      "instrument": "Ley 26.774",
+      "article": "Ley 346 art. 7",
+      "kind": "amended",
+      "what_changed": "Political rights from age 16. Does not touch dual nationality.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "(Artículo sustituido por art. 1° de la Ley N° 26.774 B.O. 02/11/2012)"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Ley 346 art. 2 inc. 1",
+      "kind": "amended",
+      "what_changed": "Required two years of continuous legal residence before naturalization. It added no renunciation requirement and does not affect retention of the nationality of origin.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Artículo 2°, inciso 1° sustituido por art. 27 del Decreto N° 70/2017 B.O. 30/01/2017. Vigencia: a partir del día siguiente al de su publicación en el Boletín Oficial."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación (conjueces)",
+      "reference": "Padilla, Miguel s/ presentación (P.1571.XL)",
+      "date": "2007-04-10",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "Applied and extended to the naturalization form by the C. Nac. Civ. y Com. Fed. en pleno, 'Zunino' (2010-07-01). No overruling found.",
+      "url": "https://www.diariojudicial.com/news-18792-zaffaroni-argentino-de-ley"
+     },
+     {
+      "court": "Cámara Nacional de Apelaciones en lo Civil y Comercial Federal (en pleno)",
+      "reference": "Zunino, Ignacio s/ petición",
+      "date": "2010-07-01",
+      "read_in_full": false,
+      "general_rule": true,
+      "later": "Cited in later citizenship cases (e.g. a 2018 'Zhao Tiencheng' decision seen only in search results). No reversal found.",
+      "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "No es necesario renunciar a la nacionalidad de origen para acceder a la ciudadanía argentina (Diario Judicial)",
+      "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Ratifican en Pleno que No se Puede Renunciar a la Nacionalidad de Origen (abogados.com.ar)",
+      "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The InfoLEG consolidated text of Ley 346 lists every amendment with its date. Together with the Decreto 3213/84 consolidated text, it shows that no renunciation requirement existed at any date between 2000 and 2020. Neither 'Padilla' nor 'Zunino' could be read in full (CSJN text not located; HCDN and Refworld PDFs timed out or were blocked), so both rulings are known only through press reports, and the renunciation-form practice is dated only by the 2010 plenary.",
+    "sources_opened": [
+     {
+      "title": "Ley 346 – texto original (argentina.gob.ar/InfoLEG)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 – normas que la modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48854/normas-modifican"
+     },
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Decreto 3213/84 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "Diario Judicial – No es necesario renunciar a la nacionalidad de origen (2010)",
+      "url": "https://www.diariojudicial.com/news-26050-no-es-necesario-renunciar-a-la-nacionalidad-de-origen-para-acceder-a-la-ciudadania-argentina"
+     },
+     {
+      "title": "Diario Judicial – Zaffaroni argentino de ley",
+      "url": "https://www.diariojudicial.com/news-18792-zaffaroni-argentino-de-ley"
+     },
+     {
+      "title": "abogados.com.ar – Ratifican en Pleno que No se Puede Renunciar a la Nacionalidad de Origen",
+      "url": "https://abogados.com.ar/ratifican-en-pleno-que-no-se-puede-renunciar-a-la-nacionalidad-de-origen/6086"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds, but it rests on the statute rather than on 'Padilla'. Padilla concerned an Argentine-born national holding Italian nationality, so its dictum on naturalization is obiter, and the ruling was not read in full. What carries the answer is that Ley 346 and Decreto 3213/84 impose no renunciation. Whether the nationality of origin is actually retained also depends on the law of the country of origin, which Argentine law cannot guarantee.",
+    "confidence": "medium",
+    "notes": "Implementation drops to 'Usually' for 2000–2010 because the courts' application form required a formal renunciation of the nationality of origin until the 'Zunino' plenary of 1 July 2010. That renunciation had no basis in Argentine law, and its effect depended on the law of the country of origin. The 1969 Argentina–Spain and 1971 Argentina–Italy dual-nationality agreements also applied throughout the period."
+   },
+   {
+    "question_id": 133,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Rarely; Sometimes",
+      "basis": "Ley 22.439 (Ley Videla) art. 21 gave a revocable 'residencia precaria' to foreigners 'que gestionen la regularización de su permanencia'. Under art. 37, however, the authority faced with an illegal stay could only order departure or expulsion, and art. 30 barred irregular migrants from working. Beyond that, regularization came through one-off amnesties and the 1998 Argentina–Bolivia migration agreement (amended in 2000), which opened time-limited windows for nationals in an irregular situation. IOM (2012) reports 156,000 regularizations through amnesty decrees in 1992–2003, while restrictive rules produced thousands of new irregular migrants each year."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 (B.O. 21 January 2004) had replaced Ley 22.439. Art. 17 obliges the State to adopt measures to regularize migrants, and art. 61 says the DNM 'deberá conminarlo a regularizar su situación' before ordering expulsion. Decreto 836/2004 created the Programa Nacional de Normalización Documentaria Migratoria, and Decreto 1169/2004 (B.O. 13 September 2004) regularized non-MERCOSUR nationals resident by 30 June 2004 (more than 12,000 people). Patria Grande (Disposición 53.253/2005) did not start until December 2005. IOM reports more than 400,000 regularized in 2003–2006."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 arts. 17 and 61 were in force but not yet regulated (Decreto 616/2010 came only in May 2010). The Patria Grande programme was under way. The UN Committee on Migrant Workers (2011) found that more than half of 423,711 MERCOSUR applicants received residence, but it was concerned that the DNM did not consider personal circumstances before expulsion, and it recommended wider access to regularization."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, there is an opportunity to regularize after certain conditions are met",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 arts. 17 and 61 were now regulated by Decreto 616/2010. Its art. 61 requires the DNM to give the irregular migrant 30 days, extendable by 30 more, to regularize, and its art. 17 allows simplified procedures and special programmes, such as Disposición 979/2014 for Korean nationals. Practice evidence for this period is thin: CELS reports on territorial outreach and its end in late 2015 were seen only in search results."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 17 (State to adopt regularization measures)",
+      "role": "cited",
+      "in_force": "2004-01 to today (unamended)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 61 (order to regularize before expulsion)",
+      "role": "cited",
+      "in_force": "2004-01 to today; original wording ('deberá conminarlo') in force until replaced by DNU 366/2025 art. 15 on 2025-05-29 ('podrá intimarlo')",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamento de la Ley 25.871)",
+      "article": "Arts. 17 and 61",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 21, 30, 37",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01 (repealed by Ley 25.871 art. 124)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 1023/94 (Reglamento de Migración)",
+      "article": "Regularization / change-of-category rules",
+      "role": "predecessor",
+      "in_force": "1994 to 2004-2010 (repealed by Ley 25.871 art. 124, effective once the new regulation took effect)",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Convenio de Migración Argentina–Bolivia (1998, Ley 25.098) and Additional Protocols (2000; 2003, Ley 26.091)",
+      "article": "Art. 2 b) (regularization window for nationals in an irregular situation)",
+      "role": "other_in_force",
+      "in_force": "1999 to around 2004 (time-limited windows)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 1169/2004",
+      "article": "Arts. 1 ff. (regularization of non-MERCOSUR nationals)",
+      "role": "other_in_force",
+      "in_force": "2004-09-13 to its expiry (time-limited)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Disposición DNM 53.253/2005 (Patria Grande)",
+      "article": "Arts. 1-4",
+      "role": "other_in_force",
+      "in_force": "2005-12-15 to its closure (around 2009-2010)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-11",
+      "instrument": "Protocolo Adicional al Convenio de Migración Argentina–Bolivia (signed 6 November 2000)",
+      "article": "Convenio art. 2 b), art. 4",
+      "kind": "amended",
+      "what_changed": "Amended the 1998 agreement so that Bolivian nationals in an irregular situation could apply for regularization within a 365-day window. Date given is the signature date; the date of entry into force was not established.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26091-2006-115887/texto",
+      "passage": "Teniendo en cuenta que el plazo de 365 días previsto en el Artículo 2 inciso b) del Convenio de Migración de 1998, modificado por el Protocolo Adicional de 2000, para que los nacionales de una Parte que se encontraren en situación migratoria irregular en el territorio de la otra, presenten su solicitud de regularización"
+     },
+     {
+      "date": "2003-12-12",
+      "instrument": "Segundo Protocolo Adicional al Convenio de Migración Argentina–Bolivia (approved by Ley 26.091, B.O. 27/04/2006)",
+      "article": "Convenio art. 2 b)",
+      "kind": "amended",
+      "what_changed": "Extended the regularization window by 365 days from 2 August 2003 for nationals in an irregular situation seeking formal work.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26091-2006-115887/texto",
+      "passage": "presenten dentro de los 365 días a contar desde el 2 de agosto de 2003 ante los correspondientes servicios de migración, su solicitud de regularización"
+     },
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871 de Migraciones (B.O. 21/01/2004)",
+      "article": "Arts. 17, 61, 124",
+      "kind": "replaced",
+      "what_changed": "Replaced Ley 22.439, whose art. 37 allowed only an order to leave or expulsion. The new art. 17 creates a State duty to regularize, and art. 61 requires the DNM to order regularization before any expulsion. Art. 124 repealed Ley 22.439 and Decreto 1023/94.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto",
+      "passage": "la Dirección Nacional de Migraciones deberá conminarlo a regularizar su situación en el plazo perentorio que fije para tal efecto, bajo apercibimiento de decretar su expulsión."
+     },
+     {
+      "date": "2004-09-13",
+      "instrument": "Decreto 1169/2004",
+      "article": "Arts. 1 ff.",
+      "kind": "new_instrument",
+      "what_changed": "Regularization programme for nationals of non-MERCOSUR countries residing de facto in Argentina at 30 June 2004, adopted under Ley 25.871 art. 17.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-1169-2004-98547/texto",
+      "passage": "Regularización de la situación migratoria de ciudadanos nativos de países fuera de la órbita del MERCOSUR, que al 30 de junio de 2004 residan de hecho en el territorio nacional."
+     },
+     {
+      "date": "2005-12-15",
+      "instrument": "Disposición DNM 53.253/2005 (Programa Patria Grande), implementing Decreto 578/2005",
+      "article": "Arts. 1-4",
+      "kind": "new_instrument",
+      "what_changed": "Regularization programme for nationals of MERCOSUR and associated states who had entered Argentina before the disposición took effect.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto",
+      "passage": "Podrán acogerse al Programa mencionado en el artículo anterior los extranjeros nativos de los Estados Parte del MERCADO COMUN DEL SUR (MERCOSUR) y sus Estados Asociados que hubieren ingresado al territorio de la REPUBLICA ARGENTINA hasta la fecha de entrada en vigencia de la presente Disposición."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "Reglamento arts. 17, 61",
+      "kind": "new_instrument",
+      "what_changed": "Regulated art. 61: 30 days to regularize, extendable by 30, with written notice of the consequences. Regulated art. 17: simplified procedures, agreements and special programmes.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto",
+      "passage": "la DIRECCION NACIONAL DE MIGRACIONES lo intimará a fin de que, en un plazo que no exceda de TREINTA (30) días, se presente a regularizar su situación migratoria"
+     },
+     {
+      "date": "2011-09",
+      "instrument": "UN Committee on Migrant Workers, Concluding observations on Argentina (CMW/C/ARG/CO/1)",
+      "article": "paras. 6(a), 22(c), 23",
+      "kind": "practice",
+      "what_changed": "Found that Patria Grande gave permanent or temporary residence to more than half of 423,711 MERCOSUR applicants and that about 13,000 non-MERCOSUR migrants were regularized. It recommended wider access to regularization.",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "passage": "allowed the granting of permanent or temporary residence permits to more than half of the 423,711 applicants from MERCOSUR and associated countries who had previously lived in an irregular situation in the State party"
+     },
+     {
+      "date": "2014-04-30",
+      "instrument": "Disposición DNM 979/2014",
+      "article": "Art. 1 and Annex I",
+      "kind": "new_instrument",
+      "what_changed": "Special regularization regime for Korean nationals, adopted under Ley 25.871 art. 17 and Decreto 616/2010 art. 17.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-229407/texto",
+      "passage": "Apruébase el “REGIMEN ESPECIAL DE REGULARIZACION DE EXTRANJEROS DE NACIONALIDAD COREANA”"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Ley 25.871 arts. 20, 20 bis, 29, 54, 62 and the summary procedure (not arts. 17 or 61)",
+      "kind": "amended",
+      "what_changed": "Tightened impediments, cancellation and expulsion rules and created a summary expulsion procedure. It left the texts of arts. 17 and 61 untouched but narrowed regularization in practice. Repealed by Decreto 138/2021 in March 2021.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "ARTÍCULO 2° — Sustitúyese el artículo 20 de la Ley N° 25.871 y su modificatoria por el siguiente"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "IOM – How Argentina Used a MERCOSUR Decision to Regularize Over a Million Migrants: Migration Notebook",
+      "url": "https://www.iom.int/news/how-argentina-used-mercosur-decision-regularize-over-million-migrants-migration-notebook",
+      "year": 2012,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "several"
+     },
+     {
+      "title": "UN CMW Concluding observations on Argentina, CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Disposición DNM 53.253/2005 (considerandos report more than 12,000 regularized under Decreto 1169/2004)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto",
+      "year": 2005,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2005"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The original and current texts of Ley 25.871, the texts of Ley 22.439, DNU 70/2017, Decreto 616/2010 and the regularization instruments were all read on InfoLEG. Decreto 1023/94 and the 1998 Bolivia agreement itself (Ley 25.098) could not be read. The CELS PDFs on practice around 2015 could not be opened, so the 2015 rating rests on thin evidence.",
+    "sources_opened": [
+     {
+      "title": "Ley 22.439 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 – normas que la modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Ley 25.871 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/92016/texact/htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "DNU 70/2017 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Decreto 616/2010 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto"
+     },
+     {
+      "title": "Decreto 1169/2004 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-1169-2004-98547/texto"
+     },
+     {
+      "title": "Disposición DNM 53.253/2005 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-112185/texto"
+     },
+     {
+      "title": "Ley 26.091 – Segundo Protocolo Adicional Convenio de Migración Argentina–Bolivia",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26091-2006-115887/texto"
+     },
+     {
+      "title": "Disposición DNM 979/2014 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-229407/texto"
+     },
+     {
+      "title": "CMW Concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "IOM Migration Notebook news 2012",
+      "url": "https://www.iom.int/news/how-argentina-used-mercosur-decision-regularize-over-million-migrants-migration-notebook"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds. The 2020 implementation rating 'Usually; Rarely' joins two levels that are not neighbours, so it is not a valid rating on the scale. It probably reflects the gap between ordinary regularization and the narrowing under DNU 70/2017 (summary expulsions, the end of territorial outreach). The 2023 citation quotes the 2025 wording of art. 61 ('podrá intimarlo'), which did not exist in 2020; on 1 January 2020 art. 61 read 'deberá conminarlo', which is stronger.",
+    "confidence": "medium",
+    "notes": "For 2000 the 'Yes' is weaker: Ley 22.439 art. 21 recognized regularization requests (residencia precaria), but art. 37 provided only departure or expulsion. Actual routes were one-off amnesties and bilateral windows for Bolivian (and Peruvian) nationals. The change is coded 'not the same' because the 2004 law turned an ad hoc possibility into a statutory duty to regularize before expulsion (arts. 17 and 61), and implementation also rose."
+   },
+   {
+    "question_id": 137,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 346 art. 1 inc. 1 makes Argentine everyone born in the territory 'sea cual fuere la nacionalidad de sus padres'. The American Convention art. 20(2) (the right to the nationality of the state of birth if the person has no other) has constitutional rank under art. 75 inc. 22. Constitution art. 20 and Ley 346 art. 2 allow naturalization after two years' residence, and Ley 19.510 made Argentina party to the 1954 Statelessness Convention. No practice evidence specific to 2000 was found; the rating is carried over from the starting level."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Unchanged: ius soli under Ley 346 art. 1, plus the constitutional-rank American Convention art. 20(2) and general naturalization under Ley 346 art. 2 and Decreto 3213/84 art. 3. There was no statelessness-determination procedure. No practice evidence for this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Law unchanged. The UN Committee on the Rights of the Child (June 2010) welcomed free, universal birth registration but found insufficient provincial implementation, leaving many children born outside health facilities or in remote areas without registration. That gap affects access in practice to ius soli nationality."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Law unchanged: ius soli and general naturalization, with no stateless-specific procedure until Ley 27.512 (B.O. 28 August 2019). No practice source for around 2015 could be read."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20 (naturalization after two years' residence)",
+      "role": "cited",
+      "in_force": "1853 (1994 text) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22 (constitutional rank of the American Convention on Human Rights, art. 20, and the CRC)",
+      "role": "other_in_force",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 23.054 (American Convention on Human Rights)",
+      "article": "Art. 20 (Derecho a la Nacionalidad)",
+      "role": "other_in_force",
+      "in_force": "1984 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 346 de Ciudadanía",
+      "article": "Art. 1 inc. 1 (ius soli); art. 2 (naturalization)",
+      "role": "cited",
+      "in_force": "1869 (restored 1984 by Ley 23.059) to today; art. 2 inc. 1 replaced 2017-01-31 by DNU 70/2017, restored 2021 by Decreto 138/2021, replaced 2025 by DNU 366/2025",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 27.512 General de Reconocimiento y Protección de las Personas Apátridas",
+      "article": "Arts. 17, 56-59",
+      "role": "cited",
+      "in_force": "2019-09 (published B.O. 28/08/2019; no special vigencia clause) to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 19.510 (accession to the 1954 Convention relating to the Status of Stateless Persons)",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "1972-04-10 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-06",
+      "instrument": "UN Committee on the Rights of the Child, Concluding observations CRC/C/ARG/CO/3-4",
+      "article": "paras. 39-40 (birth registration)",
+      "kind": "practice",
+      "what_changed": "Welcomed free, universal, ex officio birth registration but found insufficient provincial implementation leaving many children unregistered. This is practice evidence on access to nationality by birth.",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+      "passage": "The Committee welcomes the new legislation that guarantees free, universal and “ex officio” birth registration. It however expresses concern at insufficient implementation at provincial level, which leaves many children without adequate access to birth registration."
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "Ley 346 art. 2 inc. 1",
+      "kind": "amended",
+      "what_changed": "Naturalization now required two years of continuous legal (permanent or temporary) residence. This narrowed access for stateless migrants without residence until Decreto 138/2021 restored the earlier text.",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm",
+      "passage": "Artículo 2°, inciso 1° sustituido por art. 27 del Decreto N° 70/2017 B.O. 30/01/2017. Vigencia: a partir del día siguiente al de su publicación en el Boletín Oficial."
+     },
+     {
+      "date": "2019-09",
+      "instrument": "Ley 27.512 General de Reconocimiento y Protección de las Personas Apátridas",
+      "article": "Arts. 1, 17, 56-59",
+      "kind": "new_instrument",
+      "what_changed": "Created a statelessness-determination procedure (CONARE), a right of stateless persons to naturalize under Ley 346 with facilitations, priority processing and fee and document exemptions, and naturalization applications for unaccompanied stateless children.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828",
+      "passage": "Artículo 17.— Toda persona apátrida tiene derecho a naturalizarse, de conformidad con la ley 346, sus normas reglamentarias y complementarias, y las facilidades otorgadas en la presente ley."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "UN CRC Concluding observations on Argentina, CRC/C/ARG/CO/3-4",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The ius soli rule (Ley 346 art. 1) and the American Convention art. 20 are unchanged throughout and were read in the InfoLEG texts, and the Ley 27.512 dates were read in the Boletín Oficial. Practice evidence is thin: the CRC 2010 observations concern children generally rather than stateless migrants specifically, and UNHCR and Cancillería PDFs could not be opened. The law approving the 1961 Convention on the Reduction of Statelessness could not be verified.",
+    "sources_opened": [
+     {
+      "title": "Ley 27.512 – Boletín Oficial 28/08/2019",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/214533/20190828"
+     },
+     {
+      "title": "Constitución Nacional (Ley 24.430) – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-24430-804/texto"
+     },
+     {
+      "title": "Ley 23.054 – Convención Americana sobre Derechos Humanos",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23054-28152/texto"
+     },
+     {
+      "title": "Ley 19.510 – Convención sobre el Estatuto de los Apátridas",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-19510-218099/texto"
+     },
+     {
+      "title": "Ley 346 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-346-48854/texto"
+     },
+     {
+      "title": "Ley 346 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/48854/texact/htm"
+     },
+     {
+      "title": "Decreto 3213/84 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/recurso/25471/texact/htm"
+     },
+     {
+      "title": "CRC Concluding observations Argentina 2010",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'Yes' holds: Ley 27.512 was published on 28 August 2019 and in force by 1 January 2020. The guarantee for children rests mainly on ius soli (Ley 346 art. 1 inc. 1) and the constitutional-rank American Convention art. 20(2). For stateless adult migrants the law gives a right to naturalize rather than an automatic grant, and on 1 January 2020 DNU 70/2017 still required two years of legal residence.",
+    "confidence": "low",
+    "notes": "The 'Yes' for 2000–2015 rests on unconditional ius soli and the constitutional-rank American Convention art. 20(2), both in force throughout. Ley 27.512 (2019) added a stateless-specific naturalization right, so the protection changed in content although the answer did not. Implementation is kept at the starting level 'Sometimes; Usually' for lack of contrary evidence; the only practice source read (CRC 2010) documents gaps in birth registration."
+   }
+  ]
+ }
 }
