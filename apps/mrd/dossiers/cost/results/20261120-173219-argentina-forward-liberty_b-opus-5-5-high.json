@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina liberty_b claude-opus-5-5 high",
- "pid": 48445,
  "step": "forward",
  "slug": "argentina",
  "chunk": "liberty_b",
@@ -58,5 +57,594 @@
   "user": 109
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:50:08.541Z",
+ "minutes": 17.82,
+ "meters_after": {
+  "at": "2026-11-21T01:50:08.541Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 45,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 45,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 45% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 87780,
+   "output": 20604,
+   "cache_read": 475757,
+   "cache_write": 50517,
+   "cost_usd": 0.859,
+   "total": 634658
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 87754,
+    "output": 6218,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1691,
+    "cost_usd": 0.0719
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 14386,
+    "cache_read": 475757,
+    "cache_write": 50517,
+    "thinking": 3936,
+    "cost_usd": 0.7871
+   }
+  }
+ },
+ "turns": 24,
+ "calls": 35,
+ "duration_ms": 189406,
+ "duration_api_ms": 135809,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-21T01:35:26.546Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 66 | ARTICULO 70 | ARTICULO 5 | retención | Decreto 366",
+   "ok": true,
+   "chars": 15678
+  },
+  {
+   "at": "2026-11-21T01:36:47.188Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "recuperará en forma inmediata su libertad | QUINCE (15) días | ARTICULO 71 | ARTICULO 72 | Defensor",
+   "ok": true,
+   "chars": 8328
+  },
+  {
+   "at": "2026-11-21T01:36:50.823Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "evaluación favorable de la dispensa",
+   "ok": true,
+   "chars": 2258
+  },
+  {
+   "at": "2026-11-21T01:37:08.416Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 70 | ARTICULO 66 | ARTICULO 5°",
+   "ok": true,
+   "chars": 5106
+  },
+  {
+   "at": "2026-11-21T01:37:18.495Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "constatar la existencia del vínculo alegado | ARTICULO 71 | ARTICULO 72",
+   "ok": true,
+   "chars": 2660
+  },
+  {
+   "at": "2026-11-21T01:37:23.815Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 70 | ARTICULO 66 | ARTICULO 72",
+   "ok": true,
+   "chars": 630
+  },
+  {
+   "at": "2026-11-21T01:37:24.917Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/17880/texact.htm",
+   "find": "Art. 3 | agravación ilegítima",
+   "ok": true,
+   "chars": 613
+  },
+  {
+   "at": "2026-11-21T01:40:51.141Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "retención | detención | expulsiones | artículo 70",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:48:00.519Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto",
+   "find": "ARTICULO 70 | ARTICULO 72 | Decreto 366",
+   "ok": true,
+   "chars": 4069
+  },
+  {
+   "at": "2026-11-21T01:48:02.313Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48612/texto",
+   "find": "Art. 3 | agravación",
+   "ok": true,
+   "chars": 3001
+  },
+  {
+   "at": "2026-11-21T01:48:03.977Z",
+   "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+   "find": "retención | detention | 2025 | habeas",
+   "ok": true,
+   "chars": 6074
+  },
+  {
+   "at": "2026-11-21T01:48:13.819Z",
+   "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/",
+   "find": "retention | detention | habeas | judge | days",
+   "ok": true,
+   "chars": 5594
+  },
+  {
+   "at": "2026-11-21T01:48:25.587Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2025/11/Informe-sombra-Modificacion-a-la-Ley-de-Refugiados-ONU-Tortura.pdf",
+   "find": "retención | detención | malos tratos | DNU 366",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T01:48:36.901Z",
+   "url": "https://www.hrw.org/world-report/2023/country-chapters/argentina",
+   "find": "torture | prison | police | migrant",
+   "ok": true,
+   "chars": 5401
+  },
+  {
+   "at": "2026-11-21T01:48:55.139Z",
+   "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/",
+   "find": "migra | torture | detention | prison | police",
+   "ok": true,
+   "chars": 5327
+  },
+  {
+   "at": "2026-11-21T01:48:55.844Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+   "find": "migra | expulsión | retención | extranjer",
+   "ok": true,
+   "chars": 5413
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 Ley 25.871 infoleg retención artículo 70 modificación",
+  "DNU 366/2025 migraciones rechazo Congreso Senado Diputados inconstitucionalidad fallo retención",
+  "infoleg Decreto 616/2010 reglamentación ley 25.871 texto actualizado",
+  "infoleg Ley 23.098 hábeas corpus texto",
+  "CAREF CELS informe 2025 retención migrantes expulsiones aumento DNU 366 detención Migraciones",
+  "Comité contra la Tortura observaciones finales Argentina 2025 migrantes"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":21,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Art. 43\",\"enacted\":\"1994-08-24\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 23.098 de Procedimiento de Hábeas Corpus\",\"article\":\"Art. 3\",\"enacted\":\"1984-10-25\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 70\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Decreto 616/2010 (reglamentario de la Ley 25.871)\",\"article\":\"Art. 70\",\"enacted\":\"2010-05-06\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia Nº 366/2025 (DNU-2025-366-APN-PTE), art. 19\",\"article\":\"Ley 25.871, art. 70\",\"kind\":\"amended\",\"what_changed\":\"Art. 70 was replaced. Before: retention once expulsion is final, exceptionally earlier, for no longer than 'estrictamente indispensable', and the DNM 'deberá suspender' expulsion if a family tie is claimed. After: retention by a reasoned judicial order, also before the expulsion is final on public-security, defence or health grounds; DNM 'podrá suspender'; maximum 30 calendar days, extendable once. Judicial review of detention (habeas corpus, Constitution art. 43, Ley 23.098 art. 3) is untouched, so the indicator's answer does not change.\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm\",\"passage\":\"En todos los casos, el tiempo de retención no podrá exceder el estrictamente indispensable y razonable para hacer efectiva la expulsión del extranjero. El plazo máximo será de TREINTA (30) días corridos, prorrogable una única vez por ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 21,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 43",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 23.098 de Procedimiento de Hábeas Corpus",
+      "article": "Art. 3",
+      "enacted": "1984-10-25",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010 (reglamentario de la Ley 25.871)",
+      "article": "Art. 70",
+      "enacted": "2010-05-06",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025 (DNU-2025-366-APN-PTE), art. 19",
+      "article": "Ley 25.871, art. 70",
+      "kind": "amended",
+      "what_changed": "Art. 70 was replaced. Before: retention once expulsion is final, exceptionally earlier, for no longer than 'estrictamente indispensable', and the DNM 'deberá suspender' expulsion if a family tie is claimed. After: retention by a reasoned judicial order, also before the expulsion is final on public-security, defence or health grounds; DNM 'podrá suspender'; maximum 30 calendar days, extendable once. Judicial review of detention (habeas corpus, Constitution art. 43, Ley 23.098 art. 3) is untouched, so the indicator's answer does not change.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "En todos los casos, el tiempo de retención no podrá exceder el estrictamente indispensable y razonable para hacer efectiva la expulsión del extranjero. El plazo máximo será de TREINTA (30) días corridos, prorrogable una única vez por idéntico término. ... (Artículo sustituido por art. 19 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025, art. 25",
+      "article": "Ley 25.871, art. 78",
+      "kind": "amended",
+      "what_changed": "While a judicial appeal against expulsion is pending, the DNM may now ask the court for retention at any stage of the proceedings. This widens detention but leaves habeas review in place.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "la DIRECCIÓN NACIONAL DE MIGRACIONES, en cualquier instancia del proceso, podrá solicitar al tribunal interviniente la retención prevista por el artículo 70 de la presente. (Artículo sustituido por art. 25 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     }
+    ],
+    "implementation_then_now": "2023: migration detention ('retención') was rare and ordered by judges; habeas corpus was available, but no practice source for that period on migrants' habeas use was read, so the 'Usually' rating rests on the starting answer. 2025: the Global Detention Project reports more detentions after DNU 366/2025 and says the government does not publish detention figures. Presentes documents a detained trans migrant whose detention was ordered by a federal judge, who had a public defender from the Defensoría's migrant commission, and who complained about her conditions (no hormones, no hygiene products). Nothing documents habeas being denied, so the rating stays 'Usually'.",
+    "practice_sources": [
+     {
+      "title": "Argentina's Migration Shift: From Rights to Security (Immigration Detention Monitor)",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "They are trans and at risk of deportation: effects of the new migrant decree in Argentina",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's consolidated text gives the substitution of art. 70 by DNU 366/2025 (in force from 29/5/2025). The 2004 text, restored by Decreto 138/2021 and therefore in force on 1/1/2023, was read in InfoLEG's 'texto original'. The Constitution was not reopened; it has not been reformed since 1994. Ley 23.098 art. 3 was read on argentina.gob.ar.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto"
+     },
+     {
+      "title": "Ley 23.098 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48612/texto"
+     },
+     {
+      "title": "Global Detention Project – Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     },
+     {
+      "title": "Agencia Presentes, June 2025",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/"
+     }
+    ],
+    "starting_answer_concern": "The art. 70 passage quoted in the starting citation (a two-day suspension where the person is the parent of a native Argentine minor or disabled person) is not the wording of the text in force on 1/1/2023. That text, restored in 2021, set 48 working hours for parents, children or spouses of native Argentines. The quoted wording appears to come from the DNU 70/2017 version, which was repealed in 2021. In any case, art. 70 is not an appeal provision; the 'Yes' rests on Constitution art. 43 and Ley 23.098 art. 3, which do cover legality and 'agravación ilegítima de la forma y condiciones'. Length is reviewable only as part of legality.",
+    "confidence": "medium",
+    "notes": "Rulings in 2026 (Cámara Nacional Electoral, 30/6/2026; CNCCFed Sala III, 'Volosh', 18/6/2026) declared parts of DNU 366/2025 unconstitutional or null. They fall after the window and seem to concern the citizenship provisions; they were not read. The Decreto 616/2010 art. 70 (15-day retention) was not amended and now sits beside the law's 30+30-day cap. Treaties (ICRMW art. 22, ACHR) were not relied on beyond the starting answer."
+   },
+   {
+    "question_id": 23,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 66",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)",
+      "article": "Arts. 16, 22",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Convención Americana sobre Derechos Humanos",
+      "article": "Art. 22.9",
+      "enacted": "1984",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025, art. 19",
+      "article": "Ley 25.871, art. 70",
+      "kind": "amended",
+      "what_changed": "Retention still needs a reasoned judicial order ('mediante resolución fundada') for each person, so the decision stays individual. But exceptional retention before the expulsion is final is now tied to public-security, defence or health grounds (before: 'cuando las características del caso lo justificare'). Retention is also mandatory to request for foreigners finishing a sentence without a judicial extrañamiento, and capped at 30+30 days. The decision rule changed but is still individualized.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Cuando se encuentre firme la expulsión de un extranjero y no habiendo orden de retención dictada de oficio por la justicia, la DIRECCIÓN NACIONAL DE MIGRACIONES solicitará a la autoridad judicial competente que ordene la retención, mediante resolución fundada. La medida tendrá como único objetivo cumplir con la expulsión. Excepcionalmente, cuando mediaren razones de seguridad pública, defensa nacional o salud pública..."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia Nº 366/2025, art. 25",
+      "article": "Ley 25.871, art. 78",
+      "kind": "amended",
+      "what_changed": "Retention may now be requested at any stage of the judicial appeal against expulsion, without a separate retention case. The court decides each request.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "No será necesario iniciar expediente judicial de retención por fuera del proceso recursivo judicial que se establece en el presente régimen. (Artículo sustituido por art. 25 del Decreto Nº 366/2025 B.O. 29/5/2025.)"
+     }
+    ],
+    "implementation_then_now": "2023: no practice source for that period was read, so the starting 'Effectively Always' is carried forward. Detention required a judicial order on a DNM request for a named person (Decreto 616/2010 art. 70 asks for 'una identificación precisa de la persona'). 2025: in the Presentes case a federal judge ordered retention 'for the sole purpose of finalizing her expulsion', which is individual. The Global Detention Project reports more detentions and no published data, and calls retention during appeal 'preventive detention' without justifying requirements. That is criticism of the law, not documented non-individualized detention, so the rating is kept, with low confidence about any shift.",
+    "practice_sources": [
+     {
+      "title": "Argentina's Migration Shift: From Rights to Security (Immigration Detention Monitor)",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "They are trans and at risk of deportation: effects of the new migrant decree in Argentina",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 66 has the same wording in InfoLEG's texto original and texto actualizado, with no amendment note. The art. 70 history (DNU 70/2017, repealed by Decreto 138/2021, then replaced by DNU 366/2025) was read in InfoLEG's notes and antecedentes. The treaty texts were not reopened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/texto"
+     },
+     {
+      "title": "Global Detention Project – Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     },
+     {
+      "title": "Agencia Presentes, June 2025",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/"
+     }
+    ],
+    "starting_answer_concern": "Art. 66 is about individualized expulsion, not detention. The stronger basis for an individualized detention decision is art. 70 (a reasoned judicial order per person) together with Decreto 616/2010 art. 70. The 'Effectively Always' implementation rating had no evidence behind it and looks generous given the lack of published detention data.",
+    "confidence": "low",
+    "notes": "The protection answer is 'Yes' on both dates; the change code reflects that art. 70 was rewritten by DNU 366/2025, which is still in force. Court rulings against DNU 366 from 2026 fall outside the window."
+   },
+   {
+    "question_id": 25,
+    "answer_2023": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Convención contra la Tortura y otros Tratos o Penas Crueles, Inhumanos o Degradantes",
+      "article": "whole (constitutional rank)",
+      "enacted": "1994",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75 inc. 22",
+      "enacted": "1994-08-24",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 5",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "2023: HRW World Report 2023 (covering 2022) reports police abuse and poor prison conditions, with 233 alleged torture or ill-treatment cases in federal prisons in 2021 per the Procuración Penitenciaria. It is general, not about migrants. 2025: the CELS shadow reports to the CAT (83rd session, Nov 2025) describe worsening prison overcrowding, systematic violence by prison staff and a paralysed National Committee for the Prevention of Torture. On refugees they address non-refoulement, not ill-treatment. Presentes documents degrading conditions for a detained trans migrant (no hormones, no hygiene products). None of this shows migrants treated worse than nationals, and there is no clear shift between the dates, so 'Usually' is kept at low confidence.",
+    "practice_sources": [
+     {
+      "title": "World Report 2023: Argentina",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/argentina",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Argentina before the Committee against Torture: Policies that Deepen Suffering and Exclusion",
+      "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Examen de l'Argentine au CAT (UN Geneva meeting summary)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "They are trans and at risk of deportation: effects of the new migrant decree in Argentina",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 5 of Ley 25.871 has the same wording in the texto original and texto actualizado, with no amendment note; DNU 366/2025 replaced art. 6 but not art. 5. The Constitution and the CAT have not changed. HRW and CELS cover the general population, not migrants specifically.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "HRW World Report 2023 Argentina",
+      "url": "https://www.hrw.org/world-report/2023/country-chapters/argentina"
+     },
+     {
+      "title": "CELS – Argentina before the CAT",
+      "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/"
+     },
+     {
+      "title": "UN Geneva – Examen de l'Argentine au CAT",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est"
+     },
+     {
+      "title": "Agencia Presentes, June 2025",
+      "url": "https://agenciapresentes.org/en/2025/06/24/son-trans-y-esperan-la-deportacion-en-la-carcel-efectos-del-nuevo-dnu-migrante-en-argentina/"
+     }
+    ],
+    "starting_answer_concern": "The partial answer looks wrong. The Convention against Torture, which the starting citation itself relies on, has constitutional rank under art. 75 inc. 22 and covers cruel, inhuman or degrading treatment (art. 16). The ACHR art. 5.2 and the ICCPR art. 7, also of constitutional rank, prohibit both. Constitution art. 18 bans 'toda especie de tormento y los azotes'. The full 'Yes' looks correct; this is a disagreement with the first coder, not a change.",
+    "confidence": "low",
+    "notes": "There was no event in the window. The CAT concluding observations (CAT/C/ARG/CO/7, Nov 2025) were not read."
+   }
+  ]
+ }
 }
