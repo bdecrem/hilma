@@ -172,17 +172,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   /// No icons in the Ola menu (Bart, 2026-11-18, the third time: "get rid of that icon", the gear
   /// beside Settings). This macOS puts a symbol on every standard item of the application menu;
   /// they are taken off whenever the menu is built, changed or about to open.
-  func plainAppMenu() {
-    guard let menu = NSApp.mainMenu?.items.first?.submenu else { return }
-    for i in menu.items where i.image != nil { i.image = nil }
-  }
-  private var menuWatch: [NSObjectProtocol] = []
+  func plainAppMenu() { Self.plainAppMenuOnMain() }
+  /// Watched by selector, not by a block (OLA-345): the block called MainActor.assumeIsolated on
+  /// every pass of the run loop (didUpdate), and on macOS 27 that check itself crashed
+  /// (EXC_BAD_ACCESS in SerialExecutor.isMainExecutor) while a menu was open with the mouse. AppKit
+  /// posts these on the main thread; a post from any other thread is sent there.
   func keepAppMenuPlain() {
     let c = NotificationCenter.default
     for n in [NSMenu.didAddItemNotification, NSMenu.didChangeItemNotification, NSMenu.didBeginTrackingNotification, NSApplication.didBecomeActiveNotification, NSApplication.didUpdateNotification] {
-      menuWatch.append(c.addObserver(forName: n, object: nil, queue: .main) { [weak self] _ in MainActor.assumeIsolated { self?.plainAppMenu() } })
+      c.addObserver(self, selector: #selector(menuMayHaveIcons(_:)), name: n, object: nil)
     }
     plainAppMenu()
+  }
+  @objc nonisolated func menuMayHaveIcons(_ n: Notification) {
+    guard Thread.isMainThread else {
+      DispatchQueue.main.async { [weak self] in self?.menuMayHaveIcons(n) }
+      return
+    }
+    Self.plainAppMenuOnMain()
+  }
+  /// plainAppMenu without an actor check, for the notifications above (always on the main thread).
+  nonisolated static func plainAppMenuOnMain() {
+    guard let menu = NSApplication.shared.mainMenu?.items.first?.submenu else { return }
+    for i in menu.items where i.image != nil { i.image = nil }
   }
 
   func applicationWillFinishLaunching(_ notification: Notification) {
