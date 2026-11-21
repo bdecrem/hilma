@@ -246,6 +246,7 @@ struct ProblemView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: Space.xs) {
       Label(problem.text, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText)
+        .accessibilityIdentifier("ola-problem")   // the phone driver fails a run on it (OLA-237)
       if let d = problem.detail, !d.isEmpty {
         Button(details ? "Hide details" : "Show details") { details.toggle() }.buttonStyle(LinkButton(color: Ola.ink3, weight: .regular))
         if details { Text(d).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink2).textSelection(.enabled) }

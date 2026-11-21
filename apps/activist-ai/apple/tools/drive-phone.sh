@@ -1,6 +1,8 @@
 #!/bin/bash
 # The iPhone half of tools/drive.sh (OLA-237); drive.sh calls it, after the made-up account is ready:
-#   tools/drive-phone.sh <out> <run-dir> <password-file> <cloud|local> <card> <wait> <says-json>
+#   tools/drive-phone.sh <out> <run-dir> <password-file> <cloud|local> <card> <wait> <says-json> [<pair-code-file>]
+# local: the phone through the Mac; drive.sh has started the Mac copy, which writes the pairing code
+# into <pair-code-file>, and the phone types it on its Pair with your Mac screen.
 #
 # 1. The app, built from the live release's commit (~/ola-staging/current), once per commit, into
 #    ~/ola-drive/phone/<commit>: its own copy of the release, its own Xcode project and build folder.
@@ -10,7 +12,8 @@
 # 4. The simulator is shut down again (OLA_KEEP=1 leaves it booted).
 set -uo pipefail
 export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-OUT="$1"; RUN="$2"; PW="$3"; WHERE="$4"; CARD="$5"; WAIT="$6"; SAYS_JSON="$7"
+OUT="$1"; RUN="$2"; PW="$3"; WHERE="$4"; CARD="$5"; WAIT="$6"; SAYS_JSON="$7"; PAIR="${8:-}"
+mkdir -p "$OUT"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 APPLE="$(cd "$HERE/.." && pwd)"
 STATE="$HOME/ola-drive"
@@ -18,7 +21,7 @@ LIVE="$HOME/ola-staging/current/apps/activist-ai"
 fail() { echo "DRIVE FAIL  $*"; exit 1; }
 XCODEGEN="$(command -v xcodegen || echo "$STATE/xcodegen/bin/xcodegen")"
 [ -x "$XCODEGEN" ] || fail "no xcodegen on this Mac (brew install xcodegen, or a copy at $STATE/xcodegen/bin/xcodegen)"
-[ "$WHERE" = cloud ] || fail "the phone drives the cloud for now; local (the phone through the Mac app) is not built yet (README, \"Using the apps as a checker\")"
+[ "$WHERE" = cloud ] || [ -n "$PAIR" ] || fail "local on the phone is through the Mac app: run it as tools/drive.sh phone --where local"
 
 # 1. The app at the live release's commit.
 COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:12])' "$HOME/ola-staging/deployed.json")" || fail "no deployed.json: which release is live is not known"
@@ -63,10 +66,12 @@ DRV="$STATE/drive-build"
 mkdir -p "$DRV"
 rsync -a --delete --exclude '*.xcodeproj' "$APPLE/drive/" "$DRV/src/"
 (cd "$DRV/src" && "$XCODEGEN" generate >/dev/null) || fail "xcodegen failed on drive/project.yml"
-python3 - "$RUN/phone-script.json" "$OUT" "$PW" "$WHERE" "$CARD" "$WAIT" "$SAYS_JSON" <<'PY'
+python3 - "$RUN/phone-script.json" "$OUT" "$PW" "$WHERE" "$CARD" "$WAIT" "$SAYS_JSON" "$PAIR" <<'PY'
 import json, sys
-f, out, pw, where, card, wait, says = sys.argv[1:]
-json.dump({"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "card": card, "waitSeconds": float(wait), "says": json.loads(says)}, open(f, "w"))
+f, out, pw, where, card, wait, says, pair = sys.argv[1:]
+s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "card": card, "waitSeconds": float(wait), "says": json.loads(says)}
+if pair: s["pairCodeFile"] = pair
+json.dump(s, open(f, "w"))
 PY
 echo "  driving the iPhone app $VERSION ($BUILD) from the live release $COMMIT in the simulator \"$NAME\" ($UDID), $WHERE"
 LIMIT=$(( $(python3 -c 'import json,sys; print(len(json.loads(sys.argv[1])))' "$SAYS_JSON") * ${WAIT%.*} + 600 ))

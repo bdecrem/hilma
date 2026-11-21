@@ -65,6 +65,13 @@ final class PhoneLink {
 
   var enabled: Bool { LocalSettings.defaults.bool(forKey: "ola.phone.enabled") }
 
+  /// Only for a driven copy (MacDrive, the phone through this Mac in the simulator on the same Mac):
+  /// listen here and put this in the code instead of the Tailscale address and name. A listener bound
+  /// to the Tailscale address accepts a connection from the same Mac but never completes it (measured
+  /// on the mini Nov 21 with a bare NWListener: accepted, the client timed out), so a simulator on
+  /// that Mac cannot use the real route. Nil in the app as people run it.
+  nonisolated(unsafe) static var driveHost: String?
+
   private var generation = 0
 
   /// Safe to call at once from several places (the toggle and launch): only the newest runs.
@@ -75,11 +82,11 @@ final class PhoneLink {
     listening = false
     watcher?.invalidate()
     guard enabled else { status = "Off"; return }
-    guard let host = Tailnet.address() else {
+    guard let host = Self.driveHost ?? Tailnet.address() else {
       status = "Tailscale is off on this Mac, so your phone cannot reach it. Turn Tailscale on, then Try Again."
       return
     }
-    let name = await Task.detached { Tailnet.dnsName() }.value
+    let name = Self.driveHost != nil ? Self.driveHost : await Task.detached { Tailnet.dnsName() }.value
     guard mine == generation else { return }
     tailnetName = name
     do {

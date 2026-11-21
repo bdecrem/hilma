@@ -17,6 +17,9 @@ final class PhoneDrive: XCTestCase {
     var says: [String]
     var card: String?
     var waitSeconds: Double?
+    /// The phone through the Mac (check 4): the file the Mac copy writes the pairing code into, typed
+    /// on the phone's Pair with your Mac screen as a person types it from the Mac's Pair a Phone sheet.
+    var pairCodeFile: String?
   }
   struct Entry: Encodable { var at: Double; var step: String; var shot: String? }
   struct Said: Encodable {
@@ -95,9 +98,38 @@ final class PhoneDrive: XCTestCase {
     sleep(2)
     step("the app opened", shot: "open")
 
-    // Signed out: the first screen offers "Sign in to Ola"; then the name, the password, Sign In.
     let newSession = app.buttons["New session"]
-    if !newSession.waitForExistence(timeout: 4) {
+    // Through the Mac: the first screen's Pair with your Mac, the code typed, Pair.
+    if let f = s.pairCodeFile {
+      let end = Date().addingTimeInterval(300)
+      var code = ""
+      while code.isEmpty {
+        if Date() > end { throw Failed(why: "the Mac gave no pairing code in 300 s") }
+        code = (try? String(contentsOfFile: f, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if code.isEmpty { sleep(1) }
+      }
+      if !newSession.waitForExistence(timeout: 4) {
+        let choice = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Pair with your Mac'")).firstMatch
+        if choice.waitForExistence(timeout: 10) { try tap(choice, "Pair with your Mac") }
+        let p = NSPredicate(format: "placeholderValue BEGINSWITH 'imac-m1' OR label BEGINSWITH 'imac-m1'")
+        let tv = app.textViews.matching(p).firstMatch
+        let field = tv.waitForExistence(timeout: 10) ? tv : app.textFields.matching(p).firstMatch
+        try tap(field, "the field for the pairing code")
+        field.typeText(code)
+        step("typed the Mac's pairing code (the secret not recorded)", shot: "pair-typed")
+        try tap(app.buttons["Pair"], "Pair")
+        let done = Date().addingTimeInterval(60)
+        while !newSession.exists {
+          if Date() > done { throw Failed(why: "the pairing did not finish in 60 s (\(visibleProblem() ?? "no message on the screen"))") }
+          if let p = visibleProblem() { throw Failed(why: "the pairing was refused: \(p)") }
+          sleep(1)
+        }
+        sleep(2)
+        step("paired with the Mac", shot: "paired")
+      }
+    }
+    // Signed out: the first screen offers "Sign in to Ola"; then the name, the password, Sign In.
+    if s.pairCodeFile == nil, !newSession.waitForExistence(timeout: 4) {
       let choice = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Sign in to Ola'")).firstMatch
       if choice.waitForExistence(timeout: 10) { try tap(choice, "Sign in to Ola") }
       let name = app.textFields["Name"]
@@ -118,10 +150,17 @@ final class PhoneDrive: XCTestCase {
       sleep(2)
       step("signed in", shot: "signed-in")
     }
-    // The sessions list, with the cloud's section.
-    let cloudHeader = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Cloud sessions'")).firstMatch
+    // The sessions list, with the section of the place this run works in.
+    let cloudHeader = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", s.where == "local" ? "Local sessions" : "Cloud sessions")).firstMatch
     _ = cloudHeader.waitForExistence(timeout: 20)
     step("the sessions list", shot: "sessions")
+    // The app's own "Get a notification when Ola is done…?" card (after pairing): Not now, as a person
+    // who wants nothing on the lock screen taps it.
+    let notNow = app.buttons["Not now"]
+    if notNow.waitForExistence(timeout: 3) {
+      try tap(notNow, "Not now (the notification question)")
+      step("answered the notification question: Not now", shot: "notifications-not-now")
+    }
 
     // New session, then the runtime in the sheet.
     try tap(newSession, "New session")
@@ -184,8 +223,15 @@ final class PhoneDrive: XCTestCase {
       let answer = after.filter { $0.split(separator: " ").count >= 3 }
       said.answerOnScreen = answer.joined(separator: "\n")
       step("answer \(n) on the screen", shot: "say\(n)-answer")
+      try? app.debugDescription.write(to: out.appendingPathComponent("tree-say\(n).txt"), atomically: true, encoding: .utf8)
       if answer.isEmpty { said.status = "no answer"; throw Failed(why: "no answer in words on the screen after sentence \(n)") }
       if let failed = after.first(where: { $0.contains("did not finish") || $0.contains("stopped before it finished") }) { said.status = "failed"; throw Failed(why: "the screen says: \(failed)") }
+      // The turn's error line (ProblemView): marked "ola-problem" in builds after Nov 21, and known by
+      // its words in the ones before (OlaKit Steps.runProblem). On Nov 21 a run passed on "The model
+      // could not take this request." while the model's account had no credit.
+      if app.descendants(matching: .any)["ola-problem"].exists { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(app.descendants(matching: .any)["ola-problem"].label)") }
+      let problemStarts = ["The model could not take this request", "Ola's model did not accept", "Ola\u{2019}s model did not accept", "The model is busy or did not answer", "The model server had a problem", "It stopped:", "It stopped before it finished", "This project's", "Your weekly allowance"]
+      if let p = after.first(where: { t in problemStarts.contains { t.hasPrefix($0) } }) { said.status = "error"; throw Failed(why: "the app shows an error, not an answer: \(p)") }
       said.status = "answered"
     }
   }
@@ -210,7 +256,7 @@ final class PhoneDrive: XCTestCase {
 
   /// A refusal or error line the app shows in words, if any.
   func visibleProblem() -> String? {
-    let p = NSPredicate(format: "label CONTAINS[c] 'didn’t match' OR label CONTAINS[c] 'isn’t answering' OR label CONTAINS[c] 'not reachable' OR label CONTAINS[c] 'went wrong' OR label CONTAINS[c] 'signed out' OR label CONTAINS[c] 'couldn’t' OR label CONTAINS[c] 'Try again.'")
+    let p = NSPredicate(format: "label CONTAINS[c] 'didn’t match' OR label CONTAINS[c] 'isn’t answering' OR label CONTAINS[c] 'not reachable' OR label CONTAINS[c] 'went wrong' OR label CONTAINS[c] 'signed out' OR label CONTAINS[c] 'couldn’t' OR label CONTAINS[c] 'Try again.' OR label CONTAINS[c] 'did not accept this code' OR label BEGINSWITH 'That is not a pairing code'")
     let e = app.staticTexts.matching(p).firstMatch
     return e.exists ? e.label : nil
   }

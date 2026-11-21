@@ -169,10 +169,25 @@ phone's size. The mini has no Homebrew xcodegen; the driver uses a private copy 
 The simulator build is signed ad hoc (`CODE_SIGN_IDENTITY=-`): an unsigned one has no Keychain, and the
 app then says "This phone couldn't keep the sign-in".
 
-**Not built yet:** check 4 (the phone through the Mac app, Ola working on the Mac). The Mac app's relay
-listens only on the Mac's Tailscale address, and a Mac cannot reach its own Tailscale address (the
-phone-pairing section below), so a simulator on the mini cannot reach a Mac copy on the mini without a
-change to where the relay listens. `drive.sh phone --where local` says so and fails.
+**The phone through the Mac app** (check 4, built Nov 21): `tools/drive.sh phone --where local --say
+'make a page that says Hello' --file index.html [--app <Mac build>] --out <dir>`. The Mac copy (the
+download, or `--app`) signs in, turns on Let my phone connect on port 4338 and makes a code as Pair a
+Phone does (written to a file, mode 600); the phone, fresh in its simulator, taps Pair with your Mac,
+types the code, taps Pair, answers the app's notification question with Not now, starts a Local
+session and types the sentence; afterwards the Mac copy opens the newest sessions and the run passes
+only when the phone's sentence and a finished answer are in the Mac's window too (pictures of the Mac in
+`<dir>/mac`). The Mac copy listens on 127.0.0.1 for this, not on the Tailscale address: a Network
+framework listener bound to the Tailscale address accepts a connection from the same Mac but never
+completes it (measured on the mini with a bare `NWListener`; the same symptom as "a Mac cannot reach its
+own Tailscale address" below, which is the listener, not Tailscale: a node listener on that address
+answers). So the Tailscale leg is the one part of a real phone's path this does not use
+(`PhoneLink.driveHost`, set only by the drive).
+
+Two things the first runs found (Nov 21): the Mac copy hung for minutes writing its pictures under
+`~/Library/Logs` and LaunchServices refused a log file there (-10810), so both apps now write into the
+run's folder and drive.sh copies to `<dir>`; and the phone driver passed a run whose screen showed "The
+model could not take this request" (the model account was out of credit, a 402): it now fails on the
+error line (`ola-problem` in builds after Nov 21, and the error sentences of `Steps.runProblem` before).
 
 **Measured 2026-11-20 on the mini** (pictures under `~/ola-b237/runs/`): Mac cloud, the publish card
 answered, 3 of 3 passed (`cloud-mac-1..3`); iPhone cloud 2 of 2 after the signing fix (`cloud-phone-2,3`);

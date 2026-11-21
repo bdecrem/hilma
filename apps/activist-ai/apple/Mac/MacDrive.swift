@@ -66,6 +66,20 @@ enum MacDrive {
     /// ended the app in AppDelegate.keepAppMenuPlain (EXC_BAD_ACCESS in MainActor.assumeIsolated), a
     /// crash of the drive's making, not Bart's (OLA-344).
     var menuPick: Bool?
+    /// The phone through this Mac (OLA-237 check 4): the copy lets a phone connect (Settings, Phone,
+    /// Let my phone connect, on `port`), pairs one as Pair a Phone does, writes the code a person
+    /// would type into `codeFile` (mode 600), and types nothing itself. When `doneFile` appears (the
+    /// phone's run ended), it opens the newest session and the run passes only when the phone's
+    /// sentences and an answer to each show in this Mac's window.
+    var phone: PhoneServe?
+  }
+  struct PhoneServe: Decodable {
+    var codeFile: String
+    var doneFile: String
+    var port: Int?
+    /// Where the copy listens and what the code names: 127.0.0.1 for a simulator on this Mac
+    /// (PhoneLink.driveHost says why); absent, the Tailscale address as for a person.
+    var host: String?
   }
 
   static var script: Script?
@@ -98,8 +112,10 @@ enum MacDrive {
     LocalSettings.shown = s.where == "local" ? .local : .cloud
     if let f = s.folder { LocalSettings.defaults.set(f, forKey: LocalSettings.folderKey) }
     if let pr = s.project { OlaCloud.defaults.set(pr, forKey: OlaCloud.projectKey) }
-    // The phone link stays off: this copy never opens a port.
-    UserDefaults.standard.set(false, forKey: "ola.phone.enabled")
+    // The phone link stays off: this copy never opens a port, unless the run is the phone through
+    // this Mac; then on a port of its own (never 4330, an Ola a person runs here may have that one).
+    UserDefaults.standard.set(s.phone != nil, forKey: "ola.phone.enabled")
+    if let p = s.phone { UserDefaults.standard.set(p.port ?? 4338, forKey: "ola.phone.port"); PhoneLink.driveHost = p.host }
     MainActor.assumeIsolated { script = s }
   }
 
@@ -261,6 +277,11 @@ enum MacDrive {
       window.setFrame(NSRect(x: 60, y: 60, width: 1280, height: 820), display: true)
       window.orderBack(nil)
       try await settle(window, 1)
+    }
+
+    if let p = s.phone {
+      try await servePhone(p, s, delegate: delegate, window: window, wait: wait)
+      return
     }
 
     // A new conversation: New Session (Command-N, the menu's shortcut), then Return for Start in the
@@ -427,6 +448,67 @@ enum MacDrive {
     }
   }
 
+  /// The phone through this Mac: pair, wait for the phone's run, then find its conversation here.
+  static func servePhone(_ p: PhoneServe, _ s: Script, delegate: AppDelegate, window: NSWindow, wait: Double) async throws {
+    let link = try await until(20, "the app opened without its phone link") { delegate.phoneLink }
+    _ = try await until(30, "Let my phone connect did not start: \(link.status)") { link.listening ? true : nil }
+    step("Let my phone connect is on: \(link.status)", shot: "phone-on")
+    guard let code = link.newPairing() else { throw Failed(why: "Pair a Phone gave no code: \(link.pairProblem ?? "no reason shown")") }
+    // The pairing sheet opens in a window of its own: its picture, then out of sight with the rest.
+    try await Task.sleep(nanoseconds: 1_000_000_000)
+    for w in NSApp.windows where w != window && w.isVisible && w.attachedSheet == nil && w.sheetParent == nil {
+      _ = shot("phone-pairing-code", of: w)
+      hide(w)
+    }
+    step("Pair a Phone: the code for \(code.host):\(code.port) (the secret not recorded)")
+    let file = URL(fileURLWithPath: (p.codeFile as NSString).expandingTildeInPath)
+    FileManager.default.createFile(atPath: file.path, contents: Data("\(code.host):\(code.port) \(code.secret)\n".utf8), attributes: [.posixPermissions: 0o600])
+    // The phone's run: its sentences, each up to `wait`, its sign-in and simulator on top.
+    let done = (p.doneFile as NSString).expandingTildeInPath
+    _ = try await until(Double(s.says.count) * wait + 900, "the phone's run never ended") { FileManager.default.fileExists(atPath: done) ? true : nil }
+    step("the phone's run ended; looking for its conversation on this Mac")
+    // The newest session that holds the phone's first sentence, opened as a person clicks it.
+    let first = s.says[0].trimmingCharacters(in: .whitespacesAndNewlines)
+    let mine = { (t: Turn) in t.request.trimmingCharacters(in: .whitespacesAndNewlines) == first }
+    guard let store = Self.store else { throw Failed(why: "no store") }
+    var found: String?
+    let end = Date().addingTimeInterval(60)
+    while found == nil, Date() < end {
+      await store.refresh()
+      for info in store.sessions.prefix(5) {
+        store.selectedID = info.id
+        if (try? await until(10, "") { store.conversation.map { _ in true } }) != nil, store.conversation?.turns.contains(where: mine) == true { found = info.id; break }
+      }
+      if found == nil { try await Task.sleep(nanoseconds: 2_000_000_000) }
+    }
+    guard found != nil else { throw Failed(why: "the phone's conversation is not in this Mac's sessions (the newest \(min(5, store.sessions.count)) opened)") }
+    try await settle(window, 2.5)
+    for (i, sentence) in s.says.enumerated() {
+      var said = Said(sentence: sentence, status: "on the phone")
+      defer { record.said.append(said) }
+      let n = i + 1
+      guard let t = store.conversation?.turns.last(where: { $0.request.trimmingCharacters(in: .whitespacesAndNewlines) == sentence.trimmingCharacters(in: .whitespacesAndNewlines) }) else {
+        said.status = "not on the Mac"; throw Failed(why: "sentence \(n) from the phone is not in the conversation on this Mac")
+      }
+      said.answerInApp = t.answer
+      said.steps = t.steps.map { "\($0.verb) \($0.object) [\($0.status.rawValue)]" }
+      said.by = MadeByWords.name(t.engine, model: t.model)
+      guard t.status == .done, !words(t.answer).isEmpty else { said.status = t.status.rawValue; throw Failed(why: "sentence \(n) from the phone shows on this Mac without a finished answer (\(t.status.rawValue))") }
+      said.status = "answered, on the Mac too"
+    }
+    // The last answer as this Mac's window shows it.
+    let shotFile = shot("mac-shows-the-phone-session")
+    record.steps.append(Entry(at: now, step: "the phone's conversation on this Mac", shot: shotFile))
+    let lines = shotFile.flatMap { readText(out.appendingPathComponent($0)) } ?? []
+    record.screenText = lines
+    let last = record.said.last?.answerInApp ?? ""
+    let (seen, of, shown) = onScreen(last, lines: lines)
+    if !record.said.isEmpty { record.said[record.said.count - 1].answerOnScreen = shown; record.said[record.said.count - 1].wordsOnScreen = "\(seen) of the answer's last \(of) words" }
+    say("on this Mac: \(seen) of the last \(of) words of the phone's last answer are on the screen")
+    guard of > 0, Double(seen) / Double(of) >= 0.6 else { throw Failed(why: "the phone's last answer is not on this Mac's screen (\(seen) of its last \(of) words read there)") }
+    if let id = link.phones.first?.id { link.remove(id) }
+  }
+
   /// "Try again with" under the latest request: there, and all of it in view above the box.
   static func checkTryAgain(_ said: inout Said, _ n: Int) async throws {
     let inView = LastTryAgainFrame.allInView
@@ -544,8 +626,8 @@ enum MacDrive {
 
   /// The window (and a sheet on it, beside it) as it draws itself, into the run's folder.
   @discardableResult
-  static func shot(_ name: String) -> String? {
-    guard let w = mainWindow(), out != nil else { return nil }
+  static func shot(_ name: String, of window: NSWindow? = nil) -> String? {
+    guard let w = window ?? mainWindow(), out != nil else { return nil }
     shotN += 1
     let file = String(format: "%02d-%@.png", shotN, name)
     // The window as the window server composited it (an app may read its own windows with no
