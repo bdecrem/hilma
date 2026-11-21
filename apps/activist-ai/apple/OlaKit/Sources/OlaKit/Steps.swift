@@ -260,6 +260,36 @@ public enum Plain {
     return (t, files)
   }
 
+  /// The Mac's form of `ola-publish publish` (../bart/ola-publish): the folder and the site's name.
+  public static func localPublish(_ cmd: String) -> (folder: String, name: String)? {
+    guard let w = WebAsk.shellWords(cmd.trimmingCharacters(in: .whitespaces)), w.count == 7,
+          (w[0] as NSString).lastPathComponent == "ola-publish", w[1] == "publish" else { return nil }
+    var folder: String? = nil, name: String? = nil, fp: String? = nil
+    var i = 2
+    while i < w.count {
+      if w[i] == "--name", i + 1 < w.count { name = w[i + 1]; i += 2 }
+      else if w[i] == "--fingerprint", i + 1 < w.count { fp = w[i + 1]; i += 2 }
+      else if w[i].hasPrefix("-") || folder != nil { return nil }
+      else { folder = w[i]; i += 1 }
+    }
+    guard let f = folder, let n = name, fp != nil, !n.isEmpty else { return nil }
+    return (f, n)
+  }
+
+  /// The files ola-publish sends from a folder, as it lists them: hidden parts, node_modules and
+  /// __pycache__ are skipped (ola-publish names them only), sorted.
+  static func listFolder(_ path: String) -> [String] {
+    guard let e = FileManager.default.enumerator(atPath: path) else { return [] }
+    var out: [String] = []
+    while let rel = e.nextObject() as? String {
+      let parts = rel.split(separator: "/").map(String.init)
+      if parts.contains(where: { $0.hasPrefix(".") || $0 == "node_modules" || $0 == "__pycache__" }) { continue }
+      var isDir: ObjCBool = false
+      if FileManager.default.fileExists(atPath: (path as NSString).appendingPathComponent(rel), isDirectory: &isDir), !isDir.boolValue { out.append(rel) }
+    }
+    return out.sorted()
+  }
+
   /// A permission request as a question Bart can answer.
   public static func describeApproval(action: String, resources: [String], metadata: JSON, dir: String?) -> (title: String, items: [ApprovalItem]) {
     let files = metadata["files"].array
@@ -277,9 +307,21 @@ public enum Plain {
     if action == "shell" || action == "bash", resources.count == 1, ["ola-publish unpublish", "/opt/ola/bin/ola-publish unpublish"].contains(resources[0].trimmingCharacters(in: .whitespaces)) {
       return ("Ola wants to take this project\u{2019}s pages off the web", [ApprovalItem(label: "Take down what is published at sites.ola.cx", detail: resources[0], isCommand: true)])
     }
+    // The card shows what goes public and where, never the command (OLA-267: the web's sheet shows none).
     if action == "shell" || action == "bash", resources.count == 1, let p = cloudPublish(resources[0]) {
       return ("Ola wants to publish \(p.files.count == 1 ? "this file" : "these \(p.files.count) files") on the web, at sites.ola.cx",
-              p.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) } + [ApprovalItem(label: "Publish from \(p.target)", detail: resources[0], isCommand: true)])
+              p.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
+    }
+    // The Mac's own `ola-publish publish <folder> --name <n> --fingerprint <f>` (local runtime, OLA-267):
+    // the same question, the files read from the folder on this Mac, the address from the name.
+    if action == "shell" || action == "bash", resources.count == 1, let p = localPublish(resources[0]) {
+      let files = dir.map { listFolder(p.folder.hasPrefix("/") ? p.folder : ($0 as NSString).appendingPathComponent(p.folder)) } ?? []
+      let at = "sites.ola.cx/\(p.name)/"
+      if files.isEmpty {
+        return ("Ola wants to publish the folder \(p.folder) on the web, at \(at)", [ApprovalItem(label: "Everything in \(p.folder)", detail: nil, isCommand: false)])
+      }
+      return ("Ola wants to publish \(files.count == 1 ? "this file" : "these \(files.count) files") on the web, at \(at)",
+              files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
     }
     if action == "shell" || action == "bash" {
       return ("Ola wants to run a command", resources.map { cmd in

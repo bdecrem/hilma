@@ -88,10 +88,19 @@ final class CommandsTests: XCTestCase {
   func testCloudPublishQuestion() {
     let a = Plain.describeApproval(action: "shell", resources: ["ola-publish site --files index.html,style.css"], metadata: .null, dir: nil)
     XCTAssertEqual(a.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx")
-    XCTAssertEqual(a.items.map(\.label), ["index.html", "style.css", "Publish from site"])
-    XCTAssertEqual(a.items.last?.detail, "ola-publish site --files index.html,style.css")
-    // The Mac's own ola-publish (local runtime) and anything else stay commands.
-    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish publish site --name x --fingerprint abc"], metadata: .null, dir: nil).title, "Ola wants to run a command")
+    XCTAssertEqual(a.items.map(\.label), ["index.html", "style.css"])
+    XCTAssertTrue(a.items.allSatisfy { !$0.isCommand && $0.detail == nil })  // never the command (OLA-267)
+    // The Mac's own ola-publish (local runtime): the files from the folder and the address (OLA-267).
+    let d = NSTemporaryDirectory() + "olapub-\(UUID().uuidString)"
+    try? FileManager.default.createDirectory(atPath: d + "/site/img", withIntermediateDirectories: true)
+    for f in ["site/index.html", "site/img/a.png", "site/.ola-source.json"] { FileManager.default.createFile(atPath: d + "/" + f, contents: Data("x".utf8)) }
+    let l = Plain.describeApproval(action: "shell", resources: ["\"/Users/x/Library/Application Support/Ola/web-tools/ola-publish\" publish site --name oak --fingerprint abc"], metadata: .null, dir: d)
+    XCTAssertEqual(l.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx/oak/")
+    XCTAssertEqual(l.items.map(\.label), ["img/a.png", "index.html"])
+    XCTAssertTrue(l.items.allSatisfy { !$0.isCommand && $0.detail == nil })
+    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish publish site --name oak --fingerprint abc"], metadata: .null, dir: nil).title, "Ola wants to publish the folder site on the web, at sites.ola.cx/oak/")
+    XCTAssertNil(Plain.localPublish("ola-publish publish site --name oak --fingerprint abc && rm -rf x"))
+    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish preview site --name x"], metadata: .null, dir: nil).title, "Ola wants to run a command")
     XCTAssertNil(Plain.cloudPublish("ola-publish site --files a | cat"))
     XCTAssertNil(Plain.cloudPublish("ola-publish status"))
   }
