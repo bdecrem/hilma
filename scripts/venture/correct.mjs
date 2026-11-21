@@ -382,14 +382,23 @@ if (cmd === 'add') {
   // and that is the agent's own pick (the same correction refused under my-reading at kind 1 was taken under
   // ola-places). No script can say where a correction belongs, so a fix of kind 1 or 2 given where the
   // weakness closest in words to the correction would need more is a line naming that weakness
-  if (!owed && !cannot && level <= 2 && !newWeakLine) {
-    const words = (x) => new Set(String(x).toLowerCase().match(/[a-z]{4,}/g) ?? [])
-    const mineW = words(`${title} ${words_ ?? ''} ${did} ${cause}`)
-    const rank = list.filter((x) => x.id !== w.id).map((x) => ({ x, k: [...words(`${x.name} ${x.what ?? ''}`)].filter((t) => mineW.has(t)).length })).sort((a, b) => b.k - a.k)
-    const near = rank[0]?.k > 0 ? rank[0].x : null
-    if (near) {
-      const r2 = required(near)
-      if (r2.need > level) newWeakLine = `filed under ${w.id} with a kind-${level} fix; by its words it is closest to ${near.id} ("${near.name}"), whose next fix must be kind ${r2.need}: read where the correction belongs`
+  // twenty-third checker: also when the fix is owed (an owed fix under a lower-bar weakness owed less), and
+  // words most weaknesses share say nothing: each shared word counts by how rare it is among the weaknesses
+  // (log N/df), the chosen weakness is ranked too, and a line is written only when another one is clearly closer
+  const given = owed ? need : cannot ? null : level
+  if (given !== null && given <= 3 && !newWeakLine) {
+    const toks = (x) => new Set(String(x).toLowerCase().match(/[a-z]{4,}/g) ?? [])
+    const docs = list.map((x) => ({ x, t: toks(`${x.id.replace(/-/g, ' ')} ${x.name} ${x.what ?? ''}`) }))
+    const df = new Map()
+    for (const d of docs) for (const t of d.t) df.set(t, (df.get(t) ?? 0) + 1)
+    const mineW = toks(`${title} ${words_ ?? ''} ${did} ${cause}`)
+    const score = (d) => [...d.t].filter((t) => mineW.has(t)).reduce((s, t) => s + Math.log(docs.length / df.get(t)), 0)
+    const rank = docs.map((d) => ({ x: d.x, s: score(d) })).sort((a, b) => b.s - a.s)
+    const top = rank[0]
+    const chosen = rank.find((r) => r.x.id === w.id)?.s ?? 0
+    if (top && top.x.id !== w.id && top.s >= 2.5 && top.s >= chosen * 1.5) {
+      const r2 = required(top.x)
+      if (r2.need > given) newWeakLine = `filed under ${w.id} with ${owed ? `a fix owed at kind ${given}` : `a kind-${given} fix`}; by its words it is closest to ${top.x.id} ("${top.x.name}"), whose next fix must be kind ${r2.need}: read where the correction belongs`
     }
   }
   if (newWeakLine && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
