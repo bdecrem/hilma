@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile political claude-opus-5-5 high",
- "pid": 75025,
  "step": "back2000",
  "slug": "chile",
  "chunk": "political",
@@ -57,5 +56,639 @@
   "user": 170
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:25:01.461Z",
+ "minutes": 4.07,
+ "meters_after": {
+  "at": "2026-11-21T10:25:01.461Z",
+  "window": {
+   "pct": 17,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 4,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 17,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 4,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 17% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 4% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 76035,
+   "output": 21198,
+   "cache_read": 1036287,
+   "cache_write": 99238,
+   "cost_usd": 1.3536,
+   "total": 1232758
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 76005,
+    "output": 6630,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2414,
+    "cost_usd": 0.0609
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 14568,
+    "cache_read": 1036287,
+    "cache_write": 99238,
+    "thinking": 4474,
+    "cost_usd": 1.2926
+   }
+  }
+ },
+ "turns": 25,
+ "calls": 41,
+ "duration_ms": 243203,
+ "duration_api_ms": 185367,
+ "pages_read": 18,
+ "pages": [
+  {
+   "at": "2026-11-21T10:21:16.547Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Artículo 14 | Artículo 13 | avecindados",
+   "ok": true,
+   "chars": 6394
+  },
+  {
+   "at": "2026-11-21T10:21:22.834Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "derecho de sufragio en los casos | Son ciudadanos los chilenos | opción a cargos públicos de elección popular",
+   "ok": true,
+   "chars": 3395
+  },
+  {
+   "at": "2026-11-21T10:21:28.486Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=242302",
+   "find": "Artículo 14 | Artículo 13.- | avecindados",
+   "ok": true,
+   "chars": 898
+  },
+  {
+   "at": "2026-11-21T10:21:41.204Z",
+   "url": "https://es.wikisource.org/wiki/Constituci%C3%B3n_Pol%C3%ADtica_de_la_Rep%C3%BAblica_de_Chile_de_1980_%28texto_original%29",
+   "find": "Artículo 13 | Artículo 14",
+   "ok": true,
+   "chars": 2736
+  },
+  {
+   "at": "2026-11-21T10:21:41.942Z",
+   "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile05.html",
+   "find": "Artículo 13 | Artículo 14",
+   "ok": true,
+   "chars": 2166
+  },
+  {
+   "at": "2026-11-21T10:21:47.344Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+   "find": "artículo 14 | nacionalizados",
+   "ok": true,
+   "chars": 2128
+  },
+  {
+   "at": "2026-11-21T10:21:48.086Z",
+   "url": "https://www.camara.cl/camara/doc/leyes_normas/constitucion_politica.pdf",
+   "find": "Artículo 14 | avecindados",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:22:22.427Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+   "find": "Fecha Publicación | Promulgación | Publicación",
+   "ok": true,
+   "chars": 2355
+  },
+  {
+   "at": "2026-11-21T10:22:33.192Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20568",
+   "find": "extranjeros | Artículo 6 | avecindamiento | vigencia",
+   "ok": true,
+   "chars": 6313
+  },
+  {
+   "at": "2026-11-21T10:22:42.696Z",
+   "url": "https://www.bcn.cl/leychile/navegar?f=2000-01-01&i=29951",
+   "find": "extranjeros | avecindamiento | Artículo 37",
+   "ok": true,
+   "chars": 3947
+  },
+  {
+   "at": "2026-11-21T10:23:02.417Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=251693",
+   "find": "Artículo 73 | ciudadano con derecho a sufragio | Artículo 57",
+   "ok": true,
+   "chars": 4248
+  },
+  {
+   "at": "2026-11-21T10:23:14.037Z",
+   "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile05.html",
+   "find": "Para ser elegido diputado | Para ser elegido Presidente | Para ser elegido senador",
+   "ok": true,
+   "chars": 3430
+  },
+  {
+   "at": "2026-11-21T10:23:17.639Z",
+   "url": "https://pdba.georgetown.edu/Decen/Chile/loc_mun.html",
+   "find": "Para ser elegido | ciudadano con derecho a sufragio",
+   "ok": true,
+   "chars": 4072
+  },
+  {
+   "at": "2026-11-21T10:23:18.265Z",
+   "url": "https://iura.cl/18695/73",
+   "find": "ciudadano con derecho a sufragio",
+   "ok": true,
+   "chars": 1229
+  },
+  {
+   "at": "2026-11-21T10:23:36.784Z",
+   "url": "https://www.emol.com/noticias/Nacional/2017/06/12/862305/Inmigrantes-acusan-criterios-dispares-en-requisitos-para-ser-parte-del-Registro-Electoral-chileno.html",
+   "find": "certificado | Servel | extranjeros",
+   "ok": true,
+   "chars": 3583
+  },
+  {
+   "at": "2026-11-21T10:23:46.502Z",
+   "url": "https://www.elmostrador.cl/ahora/2012/06/26/piden-al-servel-facilitar-inscripcion-de-extranjeros-al-padron-electoral/",
+   "find": "extranjeros | inscrip",
+   "ok": true,
+   "chars": 3483
+  },
+  {
+   "at": "2026-11-21T10:23:53.600Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2025/10/07/44268/01/2709766.pdf",
+   "find": "artículo 14 | avecindados",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:24:01.484Z",
+   "url": "https://pdba.georgetown.edu/Constitutions/Chile/vigente.html",
+   "find": "Artículo 14 | avecindados en Chile por más de cinco",
+   "ok": true,
+   "chars": 2234
+  }
+ ],
+ "searches": [
+  "Constitución 1980 texto original artículo 14 \"extranjeros avecindados en Chile por más de cinco años\"",
+  "Ley 20.568 inscripción automática extranjeros avecindados artículo \"certificado de avecindamiento\" leychile",
+  "DFL 2 2017 texto refundido ley 18.700 votaciones populares escrutinios leychile idNorma",
+  "\"Para ser elegido concejal se requiere\" \"Ser ciudadano con derecho a sufragio\" ley 18.695",
+  "extranjeros habilitados para votar Chile Servel padrón electoral extranjeros 2017 2013 cifras votaron"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.04,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":91,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"The starting answer is kept. Constitution Art. 14 (original 1980 text) was in force: \\\"Los extranjeros avecindados en Chile por más de cinco años... podrán ejercer el derecho de sufragio en los casos y formas que determine la ley\\\". Voters had to register voluntarily under Ley 18.556 Art. 2 (version in force 11-08-1989 to 30-05-2002). Nothing changed between 2000 and 2020 that would set this date apart from the 2020 answer. I found no practice evidence for c.2000.\"},{\"date\":\"2005-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"The provisions were the same as in 2000: Art. 14 sole paragraph, unchanged since 1980, with voluntary registration under Ley 18.556. Ley 20.050 (published 26-08-2005) added Art. 14 para. 2 later that year. That paragraph covers only naturalised Chileans, not foreigners. No practice evidence found for this period.\"},{\"date\":\"2010-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"Art. 14 para. 1 was unchanged. Para. 2, added by Ley 20.050 in 2005, concerns naturalised citizens' eligibility for office, not foreigners voting. Registration was still voluntary under Ley 18.556. Ley 20.568 (automatic registration) came only in 2012. No practice evidence found for c.2010.\"},{\"date\":\"2015-01-01\",\"answer\":\"No right to vote in any election\",\"implementation\":\"Does Not Apply\",\"basis\":\"Art. 14 para. 1 was unchanged. Ley 20.568 (published 31-01-2012) rewrote Ley 18.556. New Art. 3 puts foreigners who meet Art. 14 on the Electoral Register, and new Art. 6 registers them automatically once Extranjería/PDI certify 5 years of avecindamiento. The way of voting changed, but foreigners' eligibility did not, so the answer stays as coded. Practice: press in 2012 reported that foreigners entitled to vote were left off the aut",
+ "output": {
+  "answers": [
+   {
+    "question_id": 91,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "The starting answer is kept. Constitution Art. 14 (original 1980 text) was in force: \"Los extranjeros avecindados en Chile por más de cinco años... podrán ejercer el derecho de sufragio en los casos y formas que determine la ley\". Voters had to register voluntarily under Ley 18.556 Art. 2 (version in force 11-08-1989 to 30-05-2002). Nothing changed between 2000 and 2020 that would set this date apart from the 2020 answer. I found no practice evidence for c.2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "The provisions were the same as in 2000: Art. 14 sole paragraph, unchanged since 1980, with voluntary registration under Ley 18.556. Ley 20.050 (published 26-08-2005) added Art. 14 para. 2 later that year. That paragraph covers only naturalised Chileans, not foreigners. No practice evidence found for this period."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Art. 14 para. 1 was unchanged. Para. 2, added by Ley 20.050 in 2005, concerns naturalised citizens' eligibility for office, not foreigners voting. Registration was still voluntary under Ley 18.556. Ley 20.568 (automatic registration) came only in 2012. No practice evidence found for c.2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No right to vote in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Art. 14 para. 1 was unchanged. Ley 20.568 (published 31-01-2012) rewrote Ley 18.556. New Art. 3 puts foreigners who meet Art. 14 on the Electoral Register, and new Art. 6 registers them automatically once Extranjería/PDI certify 5 years of avecindamiento. The way of voting changed, but foreigners' eligibility did not, so the answer stays as coded. Practice: press in 2012 reported that foreigners entitled to vote were left off the automatic register and that some Servel offices wrongly demanded proof of permanent residence."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República (Decreto 1150 de 1980; texto refundido Decreto 100 de 2005)",
+      "article": "Art. 14, inciso 1",
+      "role": "cited",
+      "in_force": "1981-03-11 to today (replaced by a 2025 reform; not read)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 13 (inciso 1 incorporated by Art. 14)",
+      "role": "cited",
+      "in_force": "1981-03-11 to today (inciso 3 added by Ley 20.050, 2005-08-26)",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 18.556, Orgánica Constitucional sobre Sistema de Inscripciones Electorales y Servicio Electoral",
+      "article": "Art. 2 (registration requirement for 'extranjeros con derecho a sufragio')",
+      "role": "predecessor",
+      "in_force": "1986-10-01 to 2012-01-31",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.568 (regula la inscripción automática), Artículo primero, replacing Ley 18.556 Arts. 3, 5, 6",
+      "article": "Ley 18.556 Arts. 3 and 6 as replaced",
+      "role": "cited",
+      "in_force": "2012-01-31 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "DFL 2 de 2017 (texto refundido Ley 18.700, Votaciones Populares y Escrutinios)",
+      "article": "Art. 66",
+      "role": "cited",
+      "in_force": "2017 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley N° 20.050, Reforma constitucional que introduce diversas modificaciones a la Constitución Política de la República",
+      "article": "Constitución Art. 14 (new inciso 2); Art. 13 (new inciso 3)",
+      "kind": "amended",
+      "what_changed": "Added a second paragraph to Art. 14: naturalised persons may run for elective office only 5 years after naturalisation. Para. 1, on foreigners voting after 5 years' avecindamiento, was not touched. This does not change the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "7. Agrégase el siguiente inciso segundo en el artículo 14: \"Los nacionalizados en conformidad al Nº 4º del artículo 10, tendrán opción a cargos públicos de elección popular sólo después de cinco años de estar en posesión de sus cartas de nacionalización.\""
+     },
+     {
+      "date": "2012-01-31",
+      "instrument": "Ley N° 20.568, Regula la inscripción automática, modifica el Servicio Electoral y moderniza el sistema de votaciones",
+      "article": "Ley 18.556 Arts. 3, 5, 6 (replaced)",
+      "kind": "replaced",
+      "what_changed": "Voluntary registration was replaced by an Electoral Register that includes foreigners meeting Art. 14. Foreigners are registered automatically once their avecindamiento is certified, or on their own application. This changes procedure only, not eligibility.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20568",
+      "passage": "Artículo 6°.- Los chilenos comprendidos en los números 2° y 4° del artículo 10 y los extranjeros señalados en el artículo 14, ambos de la Constitución Política de la República, serán inscritos en el Registro Electoral desde que se acredite que cumplen los requisitos de edad y avecindamiento exigido..."
+     },
+     {
+      "date": "2012-06",
+      "instrument": "Press report (UPI/El Mostrador)",
+      "article": "Ley 18.556 Art. 6 in practice",
+      "kind": "practice",
+      "what_changed": "Many eligible foreigners were not registered automatically, and some Servel offices required a permanent-residence certificate.",
+      "url": "https://www.elmostrador.cl/ahora/2012/06/26/piden-al-servel-facilitar-inscripcion-de-extranjeros-al-padron-electoral/",
+      "passage": "«El problema es que muchos no quedaron automáticamente inscritos, a pesar de cumplir con la antigüedad requerida...»"
+     },
+     {
+      "date": "2017-06",
+      "instrument": "Press report (Emol / El Mercurio)",
+      "article": "Avecindamiento criterion in practice",
+      "kind": "practice",
+      "what_changed": "The head of the DEM said 'avecindamiento' means 5 years of any lawful residence, whether a visa or permanent residence. Migrant organisations reported that offices applied the criterion inconsistently.",
+      "url": "https://www.emol.com/noticias/Nacional/2017/06/12/862305/Inmigrantes-acusan-criterios-dispares-en-requisitos-para-ser-parte-del-Registro-Electoral-chileno.html",
+      "passage": "\"Ese tiempo de cinco años no significa un estatuto específico de residencia, sino que se refiere a cualquier tipo de residencia legal\", aclara."
+     }
+    ],
+    "repealed_search": "I checked the original 1980 text of Art. 14 (Wikisource), the 2005 consolidated text (Georgetown PDBA), the current text (PDBA vigente), Ley 20.050 and Ley 20.568. Foreigners' voting rights were not repealed or narrowed between 2000 and 2020. The only changes were the 2005 paragraph on naturalised persons and the 2012 move to automatic registration, which made voting easier.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Piden al Servel facilitar inscripción de extranjeros al padrón electoral",
+      "url": "https://www.elmostrador.cl/ahora/2012/06/26/piden-al-servel-facilitar-inscripcion-de-extranjeros-al-padron-electoral/",
+      "year": 2012,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Inmigrantes acusan criterios dispares en requisitos para ser parte del Registro Electoral chileno",
+      "url": "https://www.emol.com/noticias/Nacional/2017/06/12/862305/Inmigrantes-acusan-criterios-dispares-en-requisitos-para-ser-parte-del-Registro-Electoral-chileno.html",
+      "year": 2017,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read Art. 14 as it stood in 1980, 2005 and later via Wikisource and Georgetown PDBA, plus the LeyChile texts of Ley 20.050 and Ley 20.568 and the LeyChile 1989-2002 version of Ley 18.556. LeyChile's Constitution page showed only its index, and I could not open DFL 2/2017 Art. 66. Practice evidence is press only (2012, 2017); I found nothing for 2000 or 2005.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Decreto 100 (Constitución Política, texto refundido)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "LeyChile API notice",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=242302"
+     },
+     {
+      "title": "Constitución Política de 1980 (texto original) – Wikisource",
+      "url": "https://es.wikisource.org/wiki/Constituci%C3%B3n_Pol%C3%ADtica_de_la_Rep%C3%BAblica_de_Chile_de_1980_%28texto_original%29"
+     },
+     {
+      "title": "Constitución de Chile 2005 – PDBA Georgetown",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile05.html"
+     },
+     {
+      "title": "Constitución de Chile vigente – PDBA Georgetown",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/vigente.html"
+     },
+     {
+      "title": "LeyChile – Ley 20.050",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "LeyChile – Ley 20.568",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20568"
+     },
+     {
+      "title": "LeyChile – Ley 18.556 version in force 2000-01-01",
+      "url": "https://www.bcn.cl/leychile/navegar?f=2000-01-01&i=29951"
+     },
+     {
+      "title": "El Mostrador 2012 – inscripción de extranjeros",
+      "url": "https://www.elmostrador.cl/ahora/2012/06/26/piden-al-servel-facilitar-inscripcion-de-extranjeros-al-padron-electoral/"
+     },
+     {
+      "title": "Emol 2017 – criterios dispares Registro Electoral",
+      "url": "https://www.emol.com/noticias/Nacional/2017/06/12/862305/Inmigrantes-acusan-criterios-dispares-en-requisitos-para-ser-parte-del-Registro-Electoral-chileno.html"
+     }
+    ],
+    "starting_answer_concern": "The 'No' looks wrong. Art. 14 has given foreigners with more than 5 years' avecindamiento (aged 18+, no afflictive sentence) the vote 'en los casos y formas que determine la ley' throughout 2000-2020. It is not limited to local elections: foreigners vote in presidential, parliamentary, municipal and regional elections and in plebiscites. The administration reads avecindamiento as 5 years of lawful residence of any kind (DEM, 2017), so the right flows from lawful presence. The MRD's own citation describes this right and still codes 'No'. Under the rule to pick the option that reflects conditions, the correct answer would be 'Right to vote in national elections', with implementation around 'Usually' given the documented registration gaps in 2012 and 2017.",
+    "confidence": "medium",
+    "notes": "The answers are kept equal to the starting answer on every date because no dated event changes foreigners' voting rights between 2000 and 2020. The 2005 and 2012 changes do not alter eligibility. A 2025 constitutional reform replaced Art. 14 para. 1 (reported in a Diario Oficial publication of 07-10-2025 that I could not open). It falls outside the 2000-2020 window. No treaty or ruling was relied on."
+   },
+   {
+    "question_id": 93,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Constitution Art. 13 para. 2 (1980): citizenship, which is reserved to Chileans, 'otorga los derechos de sufragio, de optar a cargos de elección popular'. Art. 14 gave foreigners the vote only. Deputies had to be 'ciudadano con derecho a sufragio' (Art. 44, pre-2005 numbering), and so did concejales under Ley 18.695 Art. 73(a). There was no change before 2020 and no practice to rate."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Same as 2000. Ley 20.050 (26-08-2005) later added Art. 14 para. 2. It limits naturalised Chileans' eligibility and gives foreigners nothing. No practice to rate."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Art. 13 para. 2 was unchanged. Art. 25 requires Chilean nationality for President, and deputies, senators, mayors and concejales must be citizens (Ley 18.695 Art. 73(a)). Foreigners had no eligibility. No practice to rate."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No right to run for public office in any election",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged. Ley 20.568 (2012) dealt only with voter registration. Eligibility for every elective office still required citizenship (Constitution Arts. 13, 25, 48; Ley 18.695 Art. 73(a))."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 13, inciso 2 (citizenship confers the right to stand for elective office)",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 14 (voting only for foreigners; inciso 2 on naturalised persons from 2005)",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 25 (President: Chilean nationality) and Art. 44 / Art. 48 after 2005 (deputies: ciudadano con derecho a sufragio)",
+      "role": "other_in_force",
+      "in_force": "1981-03-11 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 18.695, Orgánica Constitucional de Municipalidades (texto refundido DFL 1/2006)",
+      "article": "Art. 73(a) (concejal must be 'ciudadano con derecho a sufragio')",
+      "role": "other_in_force",
+      "in_force": "before 2000 to today (letter b amended; letter a unchanged)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2005-08-26",
+      "instrument": "Ley N° 20.050, Reforma constitucional",
+      "article": "Constitución Art. 14 inciso 2; Art. 25",
+      "kind": "amended",
+      "what_changed": "Added a 5-year waiting period before naturalised Chileans may run for elective office, and redrafted the presidential requirements. Foreigners remained ineligible for every elective office, so this does not change the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331",
+      "passage": "7. Agrégase el siguiente inciso segundo en el artículo 14: \"Los nacionalizados en conformidad al Nº 4º del artículo 10, tendrán opción a cargos públicos de elección popular sólo después de cinco años de estar en posesión de sus cartas de nacionalización.\""
+     }
+    ],
+    "repealed_search": "I read the original 1980 Arts. 13-14, the 2005 consolidated text (Arts. 13, 14, 25, 44) and the current text. I also read Ley 18.695 Art. 73 in an older version (PDBA) and the current one (iura.cl). At no point between 2000 and 2020 could foreigners stand for any office. Every elective office required citizenship (Chilean nationality) throughout. Nothing was repealed.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the constitutional texts for 1980, 2005 and later via Wikisource and PDBA, and Ley 20.050 on LeyChile. For Ley 18.695 Art. 73 I read an older PDBA version (with the 'saber leer y escribir' requirement) and the current text. LeyChile article bodies did not load. No practice is needed because the answer is the lowest option.",
+    "sources_opened": [
+     {
+      "title": "Constitución Política de 1980 (texto original) – Wikisource",
+      "url": "https://es.wikisource.org/wiki/Constituci%C3%B3n_Pol%C3%ADtica_de_la_Rep%C3%BAblica_de_Chile_de_1980_%28texto_original%29"
+     },
+     {
+      "title": "Constitución de Chile 2005 – PDBA Georgetown",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/chile05.html"
+     },
+     {
+      "title": "Constitución de Chile vigente – PDBA Georgetown",
+      "url": "https://pdba.georgetown.edu/Constitutions/Chile/vigente.html"
+     },
+     {
+      "title": "LeyChile – Ley 20.050",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=241331"
+     },
+     {
+      "title": "LeyChile – DFL 1/2006 Ley 18.695",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=251693"
+     },
+     {
+      "title": "Ley Orgánica de Municipalidades (older text) – PDBA Georgetown",
+      "url": "https://pdba.georgetown.edu/Decen/Chile/loc_mun.html"
+     },
+     {
+      "title": "Artículo 73 Ley 18.695 – iura.cl",
+      "url": "https://iura.cl/18695/73"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "No change from 2000 to 2020. Foreigners, whether lawfully resident or not, could vote under Art. 14 but could never stand. Only citizens, meaning Chilean nationals including naturalised ones, could run for office. The Decreto 100 consolidated text of 2005 renumbered Art. 44 as Art. 48; I did not record this as an event because I could not read its date on LeyChile. No ruling or treaty was relied on."
+   }
+  ]
+ }
 }
