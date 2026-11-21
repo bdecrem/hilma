@@ -126,8 +126,13 @@ test('add-case takes the sentence from the stored conversation, word for word, w
   for (const f of ['add-case.mjs', 'lib.mjs']) copyFileSync(path.join(HERE, f), path.join(dir, f))
   const file = path.join(dir, 'cases.json')
   writeFileSync(file, JSON.stringify({ cases: [] }))
-  const at1 = Date.parse('2026-11-20T13:47:32Z') // 5:47 am Pacific
-  const at2 = Date.parse('2026-11-20T16:17:49Z') // 8:17 am Pacific
+  // Yesterday, Pacific: the tool reads only the last 2 days and takes a bare "5:47 am" as today's, so
+  // fixed dates failed from midnight on (Nov 21, 12:35 am: an update of the test server was refused).
+  const yday = new Date(Date.now() - 86400e3).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  const pacific = (hms) => ['-08:00', '-07:00'].map((o) => Date.parse(`${yday}T${hms}${o}`))
+    .find((t) => new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit' }).format(t) === hms.slice(0, 5))
+  const at1 = pacific('05:47:32')
+  const at2 = pacific('08:17:49')
   writeFileSync(path.join(dir, 'log.json'), JSON.stringify({
     rows: [
       { at: at2, request: 'build me a gorgeous simple web page that is a bio of bart decrem - me, i have a wikipedia page, and then publish it on the web', source: 'kept', runtime: 'cloud', place: 'cloud-mac:chat' },
@@ -143,9 +148,9 @@ test('add-case takes the sentence from the stored conversation, word for word, w
   let r = run('--from-log', 'gorgeous wikipedia', '--places', 'cloud-web:chat')
   assert.equal(r.status, 0, r.stderr)
   assert.equal(cases()[0].say, 'build me a gorgeous simple web page that is a bio of bart decrem - me, i have a wikipedia page, and then publish it on the web')
-  assert.deepEqual([cases()[0].from.words, cases()[0].from.at, cases()[0].from.where, cases()[0].from.handle], ['log', '2026-11-20T16:17:49.000Z', 'cloud-mac:chat', 'bart'])
+  assert.deepEqual([cases()[0].from.words, cases()[0].from.at, cases()[0].from.where, cases()[0].from.handle], ['log', new Date(at2).toISOString(), 'cloud-mac:chat', 'bart'])
   // by time, Pacific
-  r = run('--from-log', '5:47 am', '--places', 'local-mac:chat')
+  r = run('--from-log', `${yday} 5:47 am`, '--places', 'local-mac:chat')
   assert.equal(r.status, 0, r.stderr)
   assert.equal(cases()[1].say, 'Publish this page to sites.ola.cx')
   // several match: it lists them and writes nothing until --pick
