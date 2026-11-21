@@ -1,0 +1,625 @@
+{
+ "status": "ok",
+ "job_id": "back2000 argentina education claude-opus-5-5 high",
+ "step": "back2000",
+ "slug": "argentina",
+ "chunk": "education",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2020 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  125
+ ],
+ "started_at": "2026-11-21T10:16:01.472Z",
+ "meters_before": {
+  "at": "2026-11-21T10:15:56.988Z",
+  "window": {
+   "pct": 6,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 3,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 6,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 3,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 6% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 3% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "prompt_chars": {
+  "system": 17062,
+  "user": 170
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:19:59.851Z",
+ "minutes": 3.97,
+ "meters_after": {
+  "at": "2026-11-21T10:19:59.852Z",
+  "window": {
+   "pct": 10,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 4,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 10,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 4,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 10% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 4% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 120959,
+   "output": 27642,
+   "cache_read": 1364343,
+   "cache_write": 115954,
+   "cost_usd": 1.6733,
+   "total": 1628898
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 120925,
+    "output": 8836,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3016,
+    "cost_usd": 0.0965
+   },
+   "claude-opus-5-5": {
+    "input": 34,
+    "output": 18806,
+    "cache_read": 1364343,
+    "cache_write": 115954,
+    "thinking": 4568,
+    "cost_usd": 1.5768
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 48,
+ "duration_ms": 237602,
+ "duration_api_ms": 236842,
+ "pages_read": 21,
+ "pages": [
+  {
+   "at": "2026-11-21T10:16:15.035Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6 | ARTICULO 7 | Disposiciones finales | ARTICULO 125 | vigencia",
+   "ok": true,
+   "chars": 8564
+  },
+  {
+   "at": "2026-11-21T10:16:25.894Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6° | ARTICULO 7° | ARTICULO 124 | ARTICULO 125",
+   "ok": true,
+   "chars": 4302
+  },
+  {
+   "at": "2026-11-21T10:16:26.629Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 102 | ARTICULO 103 | ARTICULO 104 | enseñanza",
+   "ok": true,
+   "chars": 3172
+  },
+  {
+   "at": "2026-11-21T10:16:38.866Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+   "find": "ARTICULO 4º | ARTICULO 143 | ARTICULO 11 | ARTICULO 16 | Derógase la Ley",
+   "ok": true,
+   "chars": 7529
+  },
+  {
+   "at": "2026-11-21T10:16:39.853Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 7° | ARTICULO 6° | Ministerio de Educación",
+   "ok": true,
+   "chars": 2282
+  },
+  {
+   "at": "2026-11-21T10:16:43.970Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+   "find": "migrantes sin | Documento Nacional de Identidad | 24.195 | Sancionada",
+   "ok": true,
+   "chars": 5555
+  },
+  {
+   "at": "2026-11-21T10:16:45.141Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/17009/norma.htm",
+   "find": "ARTICULO 1º | ARTICULO 3º | ARTICULO 10 | habitantes | gratuidad",
+   "ok": true,
+   "chars": 5476
+  },
+  {
+   "at": "2026-11-21T10:16:51.705Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm",
+   "find": "migrantes | ARTICULO 142 | ARTICULO 145",
+   "ok": true,
+   "chars": 3163
+  },
+  {
+   "at": "2026-11-21T10:17:04.081Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/norma.htm",
+   "find": "ARTICULO 143",
+   "ok": true,
+   "chars": 3421
+  },
+  {
+   "at": "2026-11-21T10:17:05.790Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2002/06/IA2002.-Hechos-2001-12-Migrantes-ley-inconstitucional-y-practica-arbitraria.pdf",
+   "find": "educación | escuela | alumnos | 102",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:17:06.938Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2005/12/IA2005-14-A-dos-anos-de-la-nueva-Ley-de-Migraciones.pdf",
+   "find": "educación | escuela | artículo 7",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:17:13.490Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/norma.htm",
+   "find": "migrantes | Comuníquese | Educ.ar",
+   "ok": true,
+   "chars": 3459
+  },
+  {
+   "at": "2026-11-21T10:17:28.259Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26206-123542/actualizacion",
+   "find": "143 | Ley 26.206 | Modifica",
+   "ok": true,
+   "chars": 5451
+  },
+  {
+   "at": "2026-11-21T10:17:31.670Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/norma.htm",
+   "find": "ARTICULO 140 | REGISTRADA BAJO",
+   "ok": true,
+   "chars": 3503
+  },
+  {
+   "at": "2026-11-21T10:17:48.558Z",
+   "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+   "find": "escuela | educativos | indocumentados",
+   "ok": true,
+   "chars": 4412
+  },
+  {
+   "at": "2026-11-21T10:17:49.558Z",
+   "url": "https://www.lanacion.com.ar/sociedad/podran-estudiar-los-chicos-sin-dni-nid142569",
+   "find": "DNI | escuela | indocumentados",
+   "ok": true,
+   "chars": 4257
+  },
+  {
+   "at": "2026-11-21T10:17:50.983Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "education | school | children",
+   "ok": true,
+   "chars": 5367
+  },
+  {
+   "at": "2026-11-21T10:18:06.453Z",
+   "url": "https://www.lexivox.org/norms/BO-L-1859.html",
+   "find": "escuelas | educación | hijos",
+   "ok": true,
+   "chars": 3307
+  },
+  {
+   "at": "2026-11-21T10:18:12.231Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14.- | Artículo 20.- | Convención sobre los Derechos del Niño",
+   "ok": true,
+   "chars": 4493
+  },
+  {
+   "at": "2026-11-21T10:18:21.493Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+   "find": "migrant | education | school | birth registration",
+   "ok": true,
+   "chars": 5360
+  },
+  {
+   "at": "2026-11-21T10:18:22.066Z",
+   "url": "https://hrlibrary.umn.edu/crc/argentina2002.html",
+   "find": "migrant | education | school | foreign",
+   "ok": true,
+   "chars": 804
+  }
+ ],
+ "searches": [
+  "Ley 22.439 artículo 102 \"institutos de enseñanza\" extranjeros admitir alumnos residentes",
+  "niños migrantes indocumentados escuela inscripción DNI Argentina CELS informe 2000 Ley 22.439 educación discriminación",
+  "\"Ley 26.206\" \"artículo 143\" migrantes sin Documento Nacional de Identidad texto original \"todos los niveles del sistema educativo\"",
+  "Committee on Migrant Workers concluding observations Argentina 2011 education migrant children irregular refworld",
+  "\"Ley Videla\" escuelas niños indocumentados \"certificado\" \"inscripción\" primaria 1999 OR 2000 OR 2001 migrantes bolivianos paraguayos denuncia",
+  "Convenio de Migración Argentina Bolivia 1998 ley aprobatoria \"escuelas públicas\" \"situación irregular\" hijos infoleg",
+  "Committee on the Rights of the Child concluding observations Argentina 2010 CRC/C/ARG/CO/3-4 migrant children education documentation",
+  "CMW/C/ARG/CO/2 2019 Argentina concluding observations migrant children education access schools DNI"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.03,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":125,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Rarely; Sometimes\",\"basis\":\"In force: Constitution art. 14 (every inhabitant may 'enseñar y aprender') and art. 75 inc. 22, which gives the CRC and ICESCR constitutional rank; and Ley 24.195 art. 3, which guarantees access to education 'a toda la población'. Ley 22.439 art. 102 barred irregular foreigners only from secondary and higher schools ('enseñanza media o superior'), not from primary. Practice: art. 104 obliged public bodies to report irregular residents, and press accounts (La Nación 1999; Página/12 2003, citing CELS) document schools reporting families and children losing school years over their parents' irregular status.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 25.871 took effect on publication (21 Jan 2004). Its art. 7 provides that 'en ningún caso la irregularidad migratoria' prevents admission as a pupil at any level, and art. 124 repealed Ley 22.439 together with its art. 102/104 reporting regime. The law was still unregulated. I could not open any practice source for c. 2005 (the CELS 2005 report PDF failed to load), so this rating is inferred.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Usually\",\"basis\":\"Ley 25.871 arts. 6-7 were unchanged. From January 2007 two further provisions applied: Ley 26.206 art. 4 (free education for all inhabitants) and its final migrants clause (now art. 143), which guarantees access, continued attendance and completion for migrants without a DNI on the strength of documents from their country of origin. Practice: the CMW (2011) credits the law but notes 'discrimination against migrant children at school', and the CRC (2010) records rising enrolment. Decreto 616/2010 came only in May 2010.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes (including irregular migrants)\",\"implementation\":\"Us",
+ "output": {
+  "answers": [
+   {
+    "question_id": 125,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Rarely; Sometimes",
+      "basis": "In force: Constitution art. 14 (every inhabitant may 'enseñar y aprender') and art. 75 inc. 22, which gives the CRC and ICESCR constitutional rank; and Ley 24.195 art. 3, which guarantees access to education 'a toda la población'. Ley 22.439 art. 102 barred irregular foreigners only from secondary and higher schools ('enseñanza media o superior'), not from primary. Practice: art. 104 obliged public bodies to report irregular residents, and press accounts (La Nación 1999; Página/12 2003, citing CELS) document schools reporting families and children losing school years over their parents' irregular status."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 took effect on publication (21 Jan 2004). Its art. 7 provides that 'en ningún caso la irregularidad migratoria' prevents admission as a pupil at any level, and art. 124 repealed Ley 22.439 together with its art. 102/104 reporting regime. The law was still unregulated. I could not open any practice source for c. 2005 (the CELS 2005 report PDF failed to load), so this rating is inferred."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Usually",
+      "basis": "Ley 25.871 arts. 6-7 were unchanged. From January 2007 two further provisions applied: Ley 26.206 art. 4 (free education for all inhabitants) and its final migrants clause (now art. 143), which guarantees access, continued attendance and completion for migrants without a DNI on the strength of documents from their country of origin. Practice: the CMW (2011) credits the law but notes 'discrimination against migrant children at school', and the CRC (2010) records rising enrolment. Decreto 616/2010 came only in May 2010."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes (including irregular migrants)",
+      "implementation": "Usually",
+      "basis": "Same provisions, plus Decreto 616/2010 art. 7 (May 2010), which tells the Ministry of Education to guarantee access for foreigners 'aún en situación de irregularidad migratoria'. DNU 70/2017 did not touch arts. 6-7, so nothing changed before 2020. Practice evidence for c. 2015 is thin: the CMW 2011 findings point to discrimination with access generally honoured. This matches the starting rating of 2020."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14; art. 75 inc. 22 (CRC art. 28, ICESCR art. 13 with constitutional rank)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 6 and 7",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (substituted by DNU 366/2025 on 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 26.206 de Educación Nacional",
+      "article": "Art. 4; art. 143 (printed as a second 'art. 141' in the original text)",
+      "role": "cited",
+      "in_force": "2007-01 to today (art. 143 substituted by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 7",
+      "role": "other_in_force",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 102, 104",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 24.195 Federal de Educación",
+      "article": "Art. 3",
+      "role": "predecessor",
+      "in_force": "1993-04 to 2007-01",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 7 and art. 124",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439, which barred irregular foreigners only from secondary and higher schools and obliged public bodies to report them. The new art. 7 says irregular status can never prevent admission at any level, primary included.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 7° — En ningún caso la irregularidad migratoria de un extranjero impedirá su admisión como alumno en un establecimiento educativo, ya sea este público o privado; nacional, provincial o municipal; primario, secundario, terciario o universitario."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "Art. 124 (repeal of Ley 22.439 arts. 102, 104)",
+      "kind": "repealed",
+      "what_changed": "Repealed Ley 22.439, ending the enrolment restriction for secondary and higher education and the duty of officials to report irregular residents.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 102. – Los institutos de enseñanza media o superior, ya sean públicos o privados, nacionales, provinciales o municipales, solamente podrán admitir como alumnos, a aquellos extranjeros que acrediten, para cada curso lectivo, su calidad de 'residentes permanentes' o 'residentes temporarios'"
+     },
+     {
+      "date": "2007-01",
+      "instrument": "Ley 26.206 de Educación Nacional",
+      "article": "Art. 4; final migrants article (art. 143); art. 132 repealing Ley 24.195",
+      "kind": "new_instrument",
+      "what_changed": "Free education for all inhabitants, and a specific guarantee of access, continued attendance and completion at all levels for migrants without a DNI. Replaced Ley 24.195.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/norma.htm",
+      "passage": "El Estado nacional, las provincias y la Ciudad Autónoma de Buenos Aires deberán garantizar a las personas migrantes sin Documento Nacional de Identidad (DNI), el acceso y las condiciones para la permanencia y el egreso de todos los niveles del sistema educativo, mediante la presentación de documentos emanados de su país de origen"
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 7",
+      "kind": "enacted",
+      "what_changed": "Regulation of Ley 25.871 art. 7: the Ministry of Education must ensure that irregular foreigners have access to every level of education.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "ARTICULO 7º.- El MINISTERIO DE EDUCACION dictará las normas y dispondrá las medidas necesarias para garantizar a los extranjeros, aún en situación de irregularidad migratoria, el acceso a los distintos niveles educativos con el alcance previsto en la Ley Nº 26.206."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto DNU 366/2025",
+      "article": "Ley 25.871 arts. 6-7; Ley 26.206 art. 143",
+      "kind": "amended",
+      "what_changed": "After 2020 and outside the period: art. 7 now covers initial, primary and secondary schooling only, and art. 6 is tied to each migratory category. Primary schooling for irregular migrants remains protected.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Los extranjeros tendrán derecho, aun cuando su condición migratoria fuera irregular, a ser admitidos como alumnos en un establecimiento educativo inicial, primario o secundario"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Podrán estudiar los chicos sin DNI (La Nación)",
+      "url": "https://www.lanacion.com.ar/sociedad/podran-estudiar-los-chicos-sin-dni-nid142569",
+      "year": 1999,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "Un final para el fantasma de Videla (Página/12)",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+      "year": 2003,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CRC concluding observations Argentina CRC/C/ARG/CO/3-4",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW concluding observations Argentina CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original texts of Ley 25.871, Ley 26.206 and Decreto 616/2010 and the texts of Ley 22.439 and Ley 24.195 on InfoLEG and argentina.gob.ar, so the dating of the law is strong. Practice evidence for 2005 and 2015 is thin: the CELS annual reports and the CAREF study are PDFs that could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 26.206 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/texact.htm"
+     },
+     {
+      "title": "Ley 26.206 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/123542/norma.htm"
+     },
+     {
+      "title": "Ley 26.206 actualización",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26206-123542/actualizacion"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Ley 24.195",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/17009/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Bolivia Ley 1859",
+      "url": "https://www.lexivox.org/norms/BO-L-1859.html"
+     },
+     {
+      "title": "La Nación 1999",
+      "url": "https://www.lanacion.com.ar/sociedad/podran-estudiar-los-chicos-sin-dni-nid142569"
+     },
+     {
+      "title": "Página/12 2003",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CRC 2010",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2010.html"
+     },
+     {
+      "title": "CRC 2002 (404)",
+      "url": "https://hrlibrary.umn.edu/crc/argentina2002.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2000 answer rests on the CRC and ICESCR, which have constitutional rank under art. 75 inc. 22 and are directly applicable, together with Ley 24.195. Ley 22.439 restricted only secondary and higher education. The Ley Videla reporting duty and the documented exclusions bear on implementation, not on the protection answer. No rulings were relied on. Buenos Aires City Ley 203 (1999) is subnational and was not counted."
+   }
+  ]
+ }
+}
