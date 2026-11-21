@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina expulsion_a claude-opus-5-5 high",
- "pid": 49738,
  "step": "forward",
  "slug": "argentina",
  "chunk": "expulsion_a",
@@ -59,5 +58,1104 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:02:13.413Z",
+ "minutes": 37.34,
+ "meters_after": {
+  "at": "2026-11-21T03:02:13.414Z",
+  "window": {
+   "pct": 42,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 42,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 42% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 116780,
+   "output": 46365,
+   "cache_read": 2237551,
+   "cache_write": 148963,
+   "cost_usd": 2.46,
+   "total": 2549659
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 116738,
+    "output": 10172,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3184,
+    "cost_usd": 0.0968
+   },
+   "claude-opus-5-5": {
+    "input": 42,
+    "output": 36193,
+    "cache_read": 2237551,
+    "cache_write": 148963,
+    "thinking": 6779,
+    "cost_usd": 2.3632
+   }
+  }
+ },
+ "turns": 36,
+ "calls": 56,
+ "duration_ms": 730142,
+ "duration_api_ms": 590542,
+ "pages_read": 25,
+ "pages": [
+  {
+   "at": "2026-11-21T02:25:03.018Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 29 | ARTICULO 62 | ARTICULO 61 | humanitarias | 366/2025",
+   "ok": true,
+   "chars": 17107
+  },
+  {
+   "at": "2026-11-21T02:25:16.357Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "por delito que merezca | ARTICULO 62. | Vigencia: a partir del día siguiente | ARTICULO 61. | ARTICULO 64 | ARTICULO 70",
+   "ok": true,
+   "chars": 18212
+  },
+  {
+   "at": "2026-11-21T02:25:21.205Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "por deli | c) hubiese sido condenado, en la REP | e) hubiese | Artículo 29 sustituido | Artículo 62 sustituido",
+   "ok": true,
+   "chars": 8899
+  },
+  {
+   "at": "2026-11-21T02:26:17.113Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "en el territorio nacional; | f) hubiese | grupo familiar. La | art. 9º del Decreto Nº 366 | art. 16 del Decreto Nº 366",
+   "ok": true,
+   "chars": 9941
+  },
+  {
+   "at": "2026-11-21T02:26:34.813Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 29 | ARTICULO 62 | razones humanitarias",
+   "ok": true,
+   "chars": 10438
+  },
+  {
+   "at": "2026-11-21T02:26:47.210Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/texact.htm",
+   "find": "ARTICULO 2 | ARTICULO 7 | ARTICULO 39 | Decreto | sustituido",
+   "ok": true,
+   "chars": 10574
+  },
+  {
+   "at": "2026-11-21T02:26:48.716Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 23 | No Devolución | sustituido por | Decreto Nº",
+   "ok": true,
+   "chars": 649
+  },
+  {
+   "at": "2026-11-21T02:26:55.578Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/texact.htm",
+   "find": "ARTICULO 8º | ARTICULO 9 | Decreto N° 942/2024 | ARTICULO 39",
+   "ok": true,
+   "chars": 9547
+  },
+  {
+   "at": "2026-11-21T02:26:56.412Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 23 | No Devolución | violaciones a los derechos humanos",
+   "ok": true,
+   "chars": 6085
+  },
+  {
+   "at": "2026-11-21T02:27:00.676Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/actualizacion",
+   "find": "Decreto | 2024 | 2025",
+   "ok": true,
+   "chars": 1906
+  },
+  {
+   "at": "2026-11-21T02:27:38.611Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+   "find": "366/2025 | 942/2024 | 681/2026 | 2025",
+   "ok": true,
+   "chars": 6443
+  },
+  {
+   "at": "2026-11-21T02:27:43.924Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "26.165 | no devolución | refugi | 616/10 | ARTÍCULO 8° | ARTÍCULO 16",
+   "ok": true,
+   "chars": 7871
+  },
+  {
+   "at": "2026-11-21T02:48:29.688Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican",
+   "find": "Decreto | Disposición | 2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 2953
+  },
+  {
+   "at": "2026-11-21T02:49:32.138Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm",
+   "find": "ARTICULO 9º | grave delito común",
+   "ok": true,
+   "chars": 2624
+  },
+  {
+   "at": "2026-11-21T02:50:09.387Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2025/11/Informe-sombra-Modificacion-a-la-Ley-de-Refugiados-ONU-Tortura.pdf",
+   "find": "no devolución | devolución | expuls | extradi | rechazo en frontera | casos",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:50:10.901Z",
+   "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+   "find": "expulsiones | 2023 | 2024 | 2025 | cancelación",
+   "ok": true,
+   "chars": 5025
+  },
+  {
+   "at": "2026-11-21T02:50:11.811Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+   "find": "ARTÍCULO 4 | ARTÍCULO 5 | artículo 50 | Vigencia | ARTÍCULO 1°",
+   "ok": true,
+   "chars": 6484
+  },
+  {
+   "at": "2026-11-21T02:51:28.593Z",
+   "url": "https://www.cels.org.ar/web/en/2025/03/iachr-hearing-state-fails-to-address-refugee-and-asylum-issues/",
+   "find": "refoulement | border | expel | decree | UNHCR",
+   "ok": true,
+   "chars": 2348
+  },
+  {
+   "at": "2026-11-21T02:51:41.431Z",
+   "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+   "find": "refoulement | réfugi | migrant | expuls | 942",
+   "ok": true,
+   "chars": 4272
+  },
+  {
+   "at": "2026-11-21T02:51:49.288Z",
+   "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/",
+   "find": "refugee | refoulement | migrant | expulsion | 366",
+   "ok": true,
+   "chars": 2888
+  },
+  {
+   "at": "2026-11-21T02:52:12.057Z",
+   "url": "https://reporting.unhcr.org/sites/default/files/2024-06/AME%20-%20Argentina%20MCO%20ARR%202023.pdf",
+   "find": "refoulement",
+   "ok": true,
+   "chars": 892
+  },
+  {
+   "at": "2026-11-21T02:52:56.141Z",
+   "url": "https://www.unhcr.org/us/sites/en-us/files/2025-06/argentina_mco_arr_2024_50.pdf",
+   "find": "refoulement | 942",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:53:25.950Z",
+   "url": "https://www.ecoi.net/en/document/2128424.html",
+   "find": "refoulement | Refoulement | asylum | refugee",
+   "ok": true,
+   "chars": 3080
+  },
+  {
+   "at": "2026-11-21T02:56:37.866Z",
+   "url": "https://www.ecoi.net/en/document/2107604.html",
+   "find": "refoulement | Protection of Refugees | asylum | Provision of First Asylum",
+   "ok": true,
+   "chars": 3902
+  },
+  {
+   "at": "2026-11-21T02:56:44.166Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/6196/La-justicia-declaro-la-inconstitucionalidad-del-DNU-366/2025-que-modifica-la-normativa-migratoria",
+   "find": "inconstitucionalidad | juzgado | artículo 62 | expulsión | caso",
+   "ok": true,
+   "chars": 4819
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 migraciones Boletín Oficial texto artículo 29 62 Ley 25.871 sustitúyese",
+  "DNU 366/2025 migraciones inconstitucionalidad fallo juez suspende artículos expulsión 2025",
+  "\"Decreto 616/2010\" modificación 2025 reglamentación ley de migraciones decreto modifica anexo I",
+  "Argentina expulsiones migrantes 2025 aumento Dirección Nacional de Migraciones antecedentes penales cifras CELS CAREF",
+  "Argentina non-refoulement 2024 2025 asylum seekers refugees CONARE UNHCR concerns Decree 942/2024 exclusion",
+  "Committee against Torture concluding observations Argentina 2025 non-refoulement refugees Decree 942/2024",
+  "state.gov 2023 Country Reports on Human Rights Practices Argentina refugees \"refoulement\"",
+  "DNU 366/2025 Congreso rechazo Diputados Senado Bicameral votación migraciones vigente"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":47,\"answer_2023\":\"only major convictions (e.g., criminal offenses) can lead to loss of residence status\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"only major convictions (e.g., criminal offenses) can lead to loss of residence status\",\"implementation_2026\":\"Sometimes\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 29\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 62\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 63\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025, art. 16\",\"article\":\"Ley 25.871, art. 62\",\"kind\":\"replaced\",\"what_changed\":\"Before: a residence was cancelled only after a conviction in Argentina for an intentional crime punishable by more than 5 years, or for repeat offending. There was a 2-year wait after the sentence, and a mandatory waiver for a parent, child or spouse of an Argentine. After: any conviction, in Argentina or abroad, for an intentional crime punishable by imprisonment, however served, leads to cancellation and expulsion. The waiver is discretionary, read restrictively, and barred for crimes against life, sexual integrity or the constitutional order. The protection is narrower, but the trigger is still a criminal conviction.\",\"url\":\"https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm\",\"passage\":\"b) hubiese sido condenado, en la REPÚBLICA ARGENTINA o en el exterior, por delito doloso que merezca pena privativa de libertad, cualquiera fuese la modalidad de cumplimiento; ... (Artículo sustituido por art. 16 del Decreto Nº 366/2025 B.O. 29/5/",
+ "output": {
+  "answers": [
+   {
+    "question_id": 47,
+    "answer_2023": "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 29",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 62",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 63",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 16",
+      "article": "Ley 25.871, art. 62",
+      "kind": "replaced",
+      "what_changed": "Before: a residence was cancelled only after a conviction in Argentina for an intentional crime punishable by more than 5 years, or for repeat offending. There was a 2-year wait after the sentence, and a mandatory waiver for a parent, child or spouse of an Argentine. After: any conviction, in Argentina or abroad, for an intentional crime punishable by imprisonment, however served, leads to cancellation and expulsion. The waiver is discretionary, read restrictively, and barred for crimes against life, sexual integrity or the constitutional order. The protection is narrower, but the trigger is still a criminal conviction.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "b) hubiese sido condenado, en la REPÚBLICA ARGENTINA o en el exterior, por delito doloso que merezca pena privativa de libertad, cualquiera fuese la modalidad de cumplimiento; ... (Artículo sustituido por art. 16 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 8",
+      "article": "Ley 25.871, art. 29",
+      "kind": "replaced",
+      "what_changed": "Before: entry and stay were barred for convictions or criminal records for named trafficking and money-laundering crimes, or crimes punishable by 3 years or more. A humanitarian or family-reunification exception was open. After: the bar also covers convictions for crimes punishable by less than 3 years, and being caught in flagrante for an offence eligible for probation. 'Condena' now includes a sentence that is not yet final, and 'antecedente' includes an indictment. The humanitarian exception is restrictive and excluded for crimes against life, sexual integrity or the constitutional order.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "d) haber sido condenado, en la REPÚBLICA ARGENTINA o en el exterior, por delitos que para la legislación argentina merezcan pena privativa de la libertad menor a TRES (3) años, cualquiera fuese la modalidad de cumplimiento; e) haber sido sorprendido en flagrancia por delito de acción pública que pudiera dar lugar a la suspensión del juicio a prueba"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 17",
+      "article": "Ley 25.871, art. 63",
+      "kind": "replaced",
+      "what_changed": "Cancellation of a residence on the criminal grounds of art. 62 now always carries expulsion. Expulsion based on an intentional crime carries a permanent re-entry ban; before, the ban was graduated. This aggravates the consequences of a conviction.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "a) la cancelación de la residencia fundada en un supuesto previsto por los incisos a), b), c), d), y g) del artículo 62 de la presente ley conlleva la expulsión del territorio nacional; ... d) la expulsión del territorio nacional lleva implícita, en los casos en que se sustente en la participación o en la comisión de un delito doloso, una prohibición de reingreso permanente"
+     }
+    ],
+    "implementation_then_now": "2023: DNM figures obtained by Chequeado show about 1.2 expulsions a day of convicted foreigners ('extrañamiento de condenados'). That was a stable, moderate level under the 2004 thresholds, with the mandatory family waiver in force. I found no evidence of the rate of residence cancellations. 2025: expulsions rose to 620 in 2024 and to a record pace in early 2025. After DNU 366/2025 the government publicly promoted fast expulsions, before a final conviction, as 'extranjero que delinque se va'. The waiver is now restrictive. I rate the protection of residence status lower in 2026. The evidence counts expelled convicts; it does not directly measure cancellations of residence.",
+    "practice_sources": [
+     {
+      "title": "Reforma migratoria de Javier Milei: qué muestran los datos sobre expulsiones de extranjeros que delinquen (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The 2023 text is the original text of Ley 25.871 (norma.htm). Decreto 138/2021 restored it after repealing DNU 70/2017, as the InfoLEG 'antecedentes normativos' list confirms. The 2026 text and its 29/5/2025 entry into force come from the InfoLEG consolidated text and the DNU itself. Practice evidence is one press data analysis based on DNM access-to-information data.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Chequeado: datos sobre expulsiones",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/"
+     },
+     {
+      "title": "Palabras del Derecho: inconstitucionalidad DNU 366/2025 (Juzgado Federal Paraná)",
+      "url": "https://www.palabrasdelderecho.com.ar/articulo/6196/La-justicia-declaro-la-inconstitucionalidad-del-DNU-366/2025-que-modifica-la-normativa-migratoria"
+     }
+    ],
+    "starting_answer_concern": "The starting citation attributes the trafficking and money-laundering list to art. 62(b). In the 2023 text that list is in art. 29(c), the bar on entry and stay. Art. 62(b) required a conviction for an intentional crime punishable by more than 5 years, or repeat offending. The family waiver for a parent, child or spouse of an Argentine was mandatory, not optional. The answer option itself holds.",
+    "confidence": "medium",
+    "notes": "For 2026 I keep the 50 option, but only just: since DNU 366/2025, any intentional crime punishable by imprisonment ends a residence, including minor ones and suspended sentences. Non-final convictions and indictments count for art. 29. Administrative or contravention offences still do not. I found no record that Congress rejected DNU 366/2025 under Ley 26.122, and InfoLEG shows it in force. The court rulings against it I saw (Juzgado Federal Paraná, Aug 2025; Cámara Nacional Electoral, 2026) concern Title III on citizenship, bind only the parties, and do not reach arts. 29 and 62. Decreto 681/2026 (B.O. 30/7/2026) later added hate-speech grounds to arts. 29 and 62. That is outside the window but matters for the November 2026 dossier."
+   },
+   {
+    "question_id": 49,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 26.165 General de Reconocimiento y Protección al Refugiado",
+      "article": "Arts. 2, 7, 39",
+      "enacted": "2006-12",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Art. 9 (exclusion; bears on who benefits from art. 7)",
+      "enacted": "2006-12",
+      "history_read": "amending_acts",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 29 (humanitarian exception)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Annex I, art. 23(m)(1)-(2)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 75(22) (CAT art. 3; CADH art. 22.8)",
+      "enacted": "1994-08-24",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-10-23",
+      "instrument": "Decreto de Necesidad y Urgencia N° 942/2024, art. 1",
+      "article": "Ley 26.165, art. 9",
+      "kind": "replaced",
+      "what_changed": "Before: exclusion mirrored Refugee Convention art. 1F, including a serious non-political crime committed outside the country. After: anyone charged and/or convicted abroad of a 'delito grave' is excluded, and the decree defines that term broadly. Art. 7's non-refoulement guarantee, which covers torture, is unchanged in wording, but it reaches fewer people, since excluded persons are not refugees. The absolute ban in CAT art. 3 still applies through art. 75(22).",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+      "passage": "ARTÍCULO 1°.- Sustitúyese el artículo 9° de la Ley Nº 26.165 por el siguiente: \"ARTÍCULO 9°.- No será reconocida la condición de refugiado ... 2. Relacionadas con Delitos Graves cometidos antes de la Solicitud de Refugio: cuando, antes de ser admitidas como refugiadas en la REPÚBLICA ARGENTINA, hayan sido imputadas y/o condenadas fuera del país por un delito grave."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 8",
+      "article": "Ley 25.871, art. 29",
+      "kind": "replaced",
+      "what_changed": "The humanitarian exception cited in the starting answer is kept but narrowed. It now needs 'motivos acreditados y fundados', must be read restrictively, and can never benefit people convicted or charged for crimes against life, sexual integrity or the constitutional order. Decreto 616/2010 art. 23(m) is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Excepcionalmente, por motivos acreditados y fundados en razones humanitarias, de reunificación familiar o cuando se vieran afectados gravemente derechos de menores de edad, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá admitir en el país a los extranjeros comprendidos en los impedimentos previstos en el presente artículo. La autoridad migratoria no podrá, en ningún caso, admitir"
+     }
+    ],
+    "implementation_then_now": "2023: the US State Department's 2023 report says the government cooperated with UNHCR and had a working protection system. A search snippet attributes to UNHCR's 2023 report the finding of no confirmed refoulement, but I could not open that report. 2024-2025: the State Department's 2024 report repeats the same. CELS/CAREF (IACHR hearing, March 2025; shadow report to the UN Committee against Torture, Nov 2025) and Committee members at the November 2025 review raised concerns that DNU 942/2024 and the move of migration to the Ministry of Security put non-refoulement at risk. Members cited fewer appeal routes and the loss of suspensive effect. No documented case of refoulement to torture was found for either period, so I keep the rating unchanged at the starting 'Sometimes'.",
+    "practice_sources": [
+     {
+      "title": "2023 Country Report on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2107604.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2128424.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "IACHR Hearing: State fails to address refugee and asylum issues (CELS)",
+      "url": "https://www.cels.org.ar/web/en/2025/03/iachr-hearing-state-fails-to-address-refugee-and-asylum-issues/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Examen de l'Argentine au CAT (UN Geneva meeting summary)",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Argentina before the Committee against Torture (CELS)",
+      "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG shows the version history of Ley 26.165: arts. 2, 7 and 39 are unmodified, and arts. 9, 11 and 12 were replaced by DNU 942/2024, which I read. The original art. 9 was read from norma.htm. The amending list on argentina.gob.ar shows no change to Decreto 616/2010 art. 23(m) in the window. The practice evidence is thin. I could not open the UNHCR annual reports or the CELS shadow report PDF, nor the Committee against Torture's concluding observations (CAT/C/ARG/CO/7).",
+    "sources_opened": [
+     {
+      "title": "Ley 26.165 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/texact.htm"
+     },
+     {
+      "title": "Ley 26.165 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm"
+     },
+     {
+      "title": "Decreto DNU 942/2024 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto"
+     },
+     {
+      "title": "Decreto 616/2010 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "USDOS 2023 Argentina",
+      "url": "https://www.ecoi.net/en/document/2107604.html"
+     },
+     {
+      "title": "USDOS 2024 Argentina",
+      "url": "https://www.ecoi.net/en/document/2128424.html"
+     },
+     {
+      "title": "CELS IACHR hearing",
+      "url": "https://www.cels.org.ar/web/en/2025/03/iachr-hearing-state-fails-to-address-refugee-and-asylum-issues/"
+     },
+     {
+      "title": "UN Geneva CAT review of Argentina",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est"
+     },
+     {
+      "title": "CELS before CAT",
+      "url": "https://www.cels.org.ar/web/en/2025/11/argentina-before-the-committee-against-torture-policies-that-deepen-suffering-and-exclusion/"
+     }
+    ],
+    "starting_answer_concern": "The strongest statutory basis is Ley 26.165 art. 7. It expressly bars the expulsion, return or extradition of refugees and asylum seekers where there is a risk of torture or cruel, inhuman or degrading treatment. The starting citation lists it but quotes only Ley 25.871 art. 29 and Decreto 616/2010. With no documented refoulement in 2023, 'Usually' may fit the 2023 practice better than 'Sometimes'.",
+    "confidence": "medium",
+    "notes": "The answer stays 'Yes' on both dates: art. 7 of Ley 26.165, Decreto 616/2010 art. 23(m) and the constitutional treaties are unchanged. I chose 'not the same' rather than 'no change' because one cited provision (Ley 25.871 art. 29) was replaced, and DNU 942/2024 narrowed who counts as a refugee under art. 7. DNU 942/2024 also cut the appeal deadline to 5 working days (art. 50). I found no congressional rejection of either DNU."
+   },
+   {
+    "question_id": 51,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 75(22) (CADH art. 22.8)",
+      "enacted": "1994-08-24",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Arts. 2, 7, 39",
+      "enacted": "2006-12",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Art. 9 (exclusion)",
+      "enacted": "2006-12",
+      "history_read": "amending_acts",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 29",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Annex I, art. 23(m)(1)-(2)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-10-23",
+      "instrument": "Decreto de Necesidad y Urgencia N° 942/2024, art. 1",
+      "article": "Ley 26.165, art. 9",
+      "kind": "replaced",
+      "what_changed": "The old exclusion clause followed Refugee Convention art. 1F. The new one excludes anyone merely charged or convicted abroad of a broadly defined 'delito grave'. The ban on return to persecution in arts. 2 and 7 is unchanged, but it now covers fewer people.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+      "passage": "2. Relacionadas con Delitos Graves cometidos antes de la Solicitud de Refugio: cuando, antes de ser admitidas como refugiadas en la REPÚBLICA ARGENTINA, hayan sido imputadas y/o condenadas fuera del país por un delito grave."
+     },
+     {
+      "date": "2024-10-23",
+      "instrument": "Decreto de Necesidad y Urgencia N° 942/2024, art. 4",
+      "article": "Ley 26.165, art. 50",
+      "kind": "replaced",
+      "what_changed": "Appeals against a CONARE denial, cessation or cancellation now go directly to court within 5 working days, and the administrative appeal is gone. This is procedural and weakens the safeguards around the non-refoulement guarantee.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+      "passage": "Si la resolución deniega, cesa o cancela el estatuto de refugiado, el solicitante podrá interponer un recurso judicial directo en un plazo de CINCO (5) días h"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 8",
+      "article": "Ley 25.871, art. 29",
+      "kind": "replaced",
+      "what_changed": "The cited humanitarian exception in art. 29 is now restrictive and excludes certain offenders. Decreto 616/2010 art. 23(m) is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "La concesión de la dispensa excepcional deberá estar debidamente motivada sobre la base de una interpretación restrictiva de las razones que la habilitan. (Artículo sustituido por art. 8º del Decreto Nº 366/2025 B.O. 29/5/2025."
+     }
+    ],
+    "implementation_then_now": "2023: the State Department's 2023 report found a functioning protection system and cooperation with UNHCR, and no documented refoulement. 2025: the State Department's 2024 report says the same. CELS/CAREF at the IACHR (March 2025), and CAT members at the November 2025 review, criticised DNU 942/2024 as weakening protection against refoulement: wider exclusion, shorter appeals, and the Ministry of Security's role in CONARE. These are concerns about the law and institutions, not documented returns. I keep 'Sometimes' unchanged.",
+    "practice_sources": [
+     {
+      "title": "2023 Country Report on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2107604.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2128424.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "IACHR Hearing: State fails to address refugee and asylum issues (CELS)",
+      "url": "https://www.cels.org.ar/web/en/2025/03/iachr-hearing-state-fails-to-address-refugee-and-asylum-issues/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Examen de l'Argentine au CAT (UN Geneva)",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's version history and the texts of DNU 942/2024 and DNU 366/2025 were read. Arts. 2, 7 and 39 of Ley 26.165 show no amendment notes. Practice evidence is thin and covers refugees and asylum seekers only. UNHCR reports and the concluding observations of the UN Committee against Torture could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.165 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/texact.htm"
+     },
+     {
+      "title": "Ley 26.165 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm"
+     },
+     {
+      "title": "Decreto DNU 942/2024 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto"
+     },
+     {
+      "title": "Decreto 616/2010 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "USDOS 2023 Argentina",
+      "url": "https://www.ecoi.net/en/document/2107604.html"
+     },
+     {
+      "title": "USDOS 2024 Argentina",
+      "url": "https://www.ecoi.net/en/document/2128424.html"
+     },
+     {
+      "title": "CELS IACHR hearing",
+      "url": "https://www.cels.org.ar/web/en/2025/03/iachr-hearing-state-fails-to-address-refugee-and-asylum-issues/"
+     },
+     {
+      "title": "UN Geneva CAT review",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est"
+     }
+    ],
+    "starting_answer_concern": "Ley 26.165 arts. 2 and 7 give explicit statutory non-refoulement, including no rejection at the border, for refugees and asylum seekers. They are the core provision but are not quoted in the starting citation. Otherwise the answer holds.",
+    "confidence": "medium",
+    "notes": "The answer is 'Yes' on both dates. The change classification reflects DNU 942/2024, which narrowed refugee status and appeals, and the replacement of the cited art. 29 by DNU 366/2025. The ban on refoulement itself was not repealed. The absolute ban in CADH art. 22.8, which has constitutional rank, is unaffected."
+   },
+   {
+    "question_id": 53,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 29",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Annex I, art. 23(m)(1)-(2)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Arts. 2-3, 7",
+      "enacted": "2006-12",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Art. 9 (exclusion)",
+      "enacted": "2006-12",
+      "history_read": "amending_acts",
+      "status": "replaced"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-10-23",
+      "instrument": "Decreto de Necesidad y Urgencia N° 942/2024, art. 1",
+      "article": "Ley 26.165, art. 9",
+      "kind": "replaced",
+      "what_changed": "Exclusion was widened to people charged or convicted abroad of a broadly defined serious crime. Art. 7 still bars return where life, liberty or security is at risk, but it now covers fewer people.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+      "passage": "2. Relacionadas con Delitos Graves cometidos antes de la Solicitud de Refugio: cuando, antes de ser admitidas como refugiadas en la REPÚBLICA ARGENTINA, hayan sido imputadas y/o condenadas fuera del país por un delito grave."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 8",
+      "article": "Ley 25.871, art. 29",
+      "kind": "replaced",
+      "what_changed": "The cited humanitarian exception in art. 29 is now restrictive and unavailable for some offenders. Decreto 616/2010 art. 23(m)(2), on persons facing violations of constitutionally ranked human rights on return, is unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "La autoridad migratoria no podrá, en ningún caso, admitir en el país a un extranjero que hubiese sido condenado o tenga antecedentes por la comisión de un delito doloso contra la vida, la integridad sexual o los poderes públicos y el orden constitucional."
+     }
+    ],
+    "implementation_then_now": "2023: no documented refoulement. The State Department's 2023 report found a functioning protection system. 2025: the State Department's 2024 report says the same. Civil society (CELS/CAREF) and UN Committee against Torture members raised concerns about the risk of refoulement from the 2024-2025 decrees. I found no evidence of how 'razones humanitarias' are applied to non-refugee migrants facing serious rights deprivations in either period. The rating stays 'Sometimes'.",
+    "practice_sources": [
+     {
+      "title": "2023 Country Report on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2107604.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Argentina (USDOS)",
+      "url": "https://www.ecoi.net/en/document/2128424.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Examen de l'Argentine au CAT (UN Geneva)",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "refugees_asylum_seekers",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Legal history is well sourced from the InfoLEG version histories and the two DNUs. Practice evidence covers only refugees and asylum seekers. Nothing was found on non-refugee migrants protected through Decreto 616/2010 art. 23(m).",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Ley 26.165 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/texact.htm"
+     },
+     {
+      "title": "Decreto DNU 942/2024 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto"
+     },
+     {
+      "title": "USDOS 2023 Argentina",
+      "url": "https://www.ecoi.net/en/document/2107604.html"
+     },
+     {
+      "title": "USDOS 2024 Argentina",
+      "url": "https://www.ecoi.net/en/document/2128424.html"
+     },
+     {
+      "title": "UN Geneva CAT review",
+      "url": "https://www.ungeneva.org/en/news-media/meeting-summary/2025/11/examen-de-largentine-au-cat-la-situation-carcerale-est"
+     }
+    ],
+    "starting_answer_concern": "The starting citation cites Ley 26.165 'Article 29', which concerns CONARE's functions. The relevant provision is art. 7, which protects life, liberty and security of the person. Ley 25.871 art. 29 itself does not mention humanitarian assistance in expulsion. Its humanitarian clause is an exception allowing admission despite the bars.",
+    "confidence": "low",
+    "notes": "The answer is 'Yes' on both dates. The change classification is driven by the replacement of the cited art. 29 by DNU 366/2025 and by DNU 942/2024's narrower exclusion clause. Decreto 616/2010 art. 23(m), the core basis for non-refugees, did not change."
+   }
+  ]
+ }
 }
