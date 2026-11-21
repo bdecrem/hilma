@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile civil_liberties claude-opus-5-5 high",
- "pid": 55349,
  "step": "forward",
  "slug": "chile",
  "chunk": "civil_liberties",
@@ -61,5 +60,1365 @@
   "user": 121
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:42:31.743Z",
+ "minutes": 27.77,
+ "meters_after": {
+  "at": "2026-11-21T03:42:31.743Z",
+  "window": {
+   "pct": 63,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 49,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 63,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 49,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 63% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 49% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 73340,
+   "output": 32599,
+   "cache_read": 2669818,
+   "cache_write": 129732,
+   "cost_usd": 2.1758,
+   "total": 2905489
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 73278,
+    "output": 5413,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1612,
+    "cost_usd": 0.06
+   },
+   "claude-opus-5-5": {
+    "input": 62,
+    "output": 27186,
+    "cache_read": 2669818,
+    "cache_write": 129732,
+    "thinking": 5811,
+    "cost_usd": 2.1158
+   }
+  }
+ },
+ "turns": 45,
+ "calls": 73,
+ "duration_ms": 492908,
+ "duration_api_ms": 332013,
+ "pages_read": 36,
+ "pages": [
+  {
+   "at": "2026-11-21T03:14:49.522Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 3 | Artículo 13 | Versión | Ley 21.655",
+   "ok": true,
+   "chars": 8109
+  },
+  {
+   "at": "2026-11-21T03:14:54.588Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 3.- | Artículo 13.- | Igualdad y no discriminación",
+   "ok": true,
+   "chars": 2157
+  },
+  {
+   "at": "2026-11-21T03:14:58.341Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 3.- | Artículo 13.- | Artículo 14.- | Artículo 16.-",
+   "ok": true,
+   "chars": 6775
+  },
+  {
+   "at": "2026-11-21T03:15:02.087Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "21655 | 21.655 | 21590 | 21589 | 21610 | 21816 | 21.816",
+   "ok": true,
+   "chars": 3369
+  },
+  {
+   "at": "2026-11-21T03:15:16.414Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2024/02/20/43781/01/2456402.pdf",
+   "find": "Artículo 2 | ley N° 21.325 | Introdúcense | Modifícase",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:28.393Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/08/07/43621/01/2357278.pdf",
+   "find": "Artículo único | 21.325",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:39.687Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2023/09/22/43658/01/2380372.pdf",
+   "find": "21.325 | artículo 100",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:15:48.236Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idLey=21655",
+   "find": "21.325 | Introdúcense | Artículo 2",
+   "ok": true,
+   "chars": 376
+  },
+  {
+   "at": "2026-11-21T03:16:32.919Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idLey=21589",
+   "find": "21.325",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:21:20.914Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idLey=21816",
+   "find": "21.325",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:21:25.727Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "21.325 | Introdúcense | Artículo 2",
+   "ok": true,
+   "chars": 6351
+  },
+  {
+   "at": "2026-11-21T03:21:28.106Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "Artículo 2º.- | artículo 131 | artículo 3 | artículo 13",
+   "ok": true,
+   "chars": 5378
+  },
+  {
+   "at": "2026-11-21T03:21:30.280Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "Migración y Extranjería: | artículo 131 | reconducción",
+   "ok": true,
+   "chars": 4357
+  },
+  {
+   "at": "2026-11-21T03:21:33.334Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "21.325 | Artículo",
+   "ok": true,
+   "chars": 2936
+  },
+  {
+   "at": "2026-11-21T03:21:34.078Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "21.325 | Artículo único",
+   "ok": true,
+   "chars": 2410
+  },
+  {
+   "at": "2026-11-21T03:21:34.718Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325",
+   "ok": true,
+   "chars": 3098
+  },
+  {
+   "at": "2026-11-21T03:21:55.987Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2022-02-12",
+   "find": "Discriminación arbitraria: | Artículo 13.- | Artículo 3.-",
+   "ok": true,
+   "chars": 958
+  },
+  {
+   "at": "2026-11-21T03:21:56.091Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+   "find": "Versión | Última modificación",
+   "ok": true,
+   "chars": 3371
+  },
+  {
+   "at": "2026-11-21T03:22:06.184Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325",
+   "ok": true,
+   "chars": 2074
+  },
+  {
+   "at": "2026-11-21T03:25:36.144Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "Migración | migratori | extranjer",
+   "ok": true,
+   "chars": 3312
+  },
+  {
+   "at": "2026-11-21T03:25:44.908Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=242302",
+   "find": "2º.- La igualdad ante la ley | 6º.- La libertad de conciencia | 12º.- La libertad de emitir opinión | 13º.- El derecho a reunirse | 15º.- El derecho de asociarse | 19º.- El derecho de sindicarse",
+   "ok": true,
+   "chars": 1054
+  },
+  {
+   "at": "2026-11-21T03:26:52.852Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Versión: | Última modificación | Artículo 19.-",
+   "ok": true,
+   "chars": 2187
+  },
+  {
+   "at": "2026-11-21T03:26:56.162Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "La Constitución asegura a todas las personas | La igualdad ante la ley | La libertad de conciencia | La libertad de emitir opinión | El derecho a reunirse | El derecho de asociarse sin permiso",
+   "ok": true,
+   "chars": 3481
+  },
+  {
+   "at": "2026-11-21T03:26:58.864Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "asegura a todas las personas | libertad de conciencia | emitir opinión | reunirse pacíficamente | asociarse sin permiso | sindicarse",
+   "ok": true,
+   "chars": 3421
+  },
+  {
+   "at": "2026-11-21T03:27:15.014Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Artículo 19 | conciencia | opinión | reunirse | asociarse",
+   "ok": true,
+   "chars": 5597
+  },
+  {
+   "at": "2026-11-21T03:27:22.614Z",
+   "url": "https://www.constituteproject.org/constitution/Chile_2023?lang=es",
+   "find": "La Constitución asegura a todas las personas | libertad de conciencia | emitir opinión | reunirse pacíficamente | asociarse sin permiso | sindicarse",
+   "ok": true,
+   "chars": 615
+  },
+  {
+   "at": "2026-11-21T03:38:42.100Z",
+   "url": "https://iura.cl/cpr/19",
+   "find": "asegura a todas las personas | La igualdad ante la ley | libertad de conciencia | emitir opinión | reunirse pacíficamente | asociarse sin permiso | sindicarse | libertad de trabajo",
+   "ok": true,
+   "chars": 4063
+  },
+  {
+   "at": "2026-11-21T03:38:44.381Z",
+   "url": "https://iura.cl/cpr/19",
+   "find": "todas las personas | 2º.- | 6º.- | 12º.-",
+   "ok": true,
+   "chars": 8374
+  },
+  {
+   "at": "2026-11-21T03:38:50.703Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=20500",
+   "find": "Artículo 1º.- | Versión: | Última modificación",
+   "ok": true,
+   "chars": 2130
+  },
+  {
+   "at": "2026-11-21T03:39:07.471Z",
+   "url": "https://www.hrw.org/world-report/2025/country-chapters/chile",
+   "find": "migrant | Venezuela | protest | expel",
+   "ok": true,
+   "chars": 1771
+  },
+  {
+   "at": "2026-11-21T03:39:43.977Z",
+   "url": "https://irb-cisr.gc.ca/en/country-information/rir/Pages/index.aspx?doc=458763",
+   "find": "CERD | racial profiling | hate speech | xenophob | INDH",
+   "ok": true,
+   "chars": 7474
+  },
+  {
+   "at": "2026-11-21T03:39:55.096Z",
+   "url": "https://www.ecoi.net/en/document/2111842.html",
+   "find": "migrant | Venezuela | Haiti | foreign | constitution provides",
+   "ok": true,
+   "chars": 5399
+  },
+  {
+   "at": "2026-11-21T03:39:56.891Z",
+   "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+   "find": "migrant | Venezuela | expel | xenophob",
+   "ok": true,
+   "chars": 5390
+  },
+  {
+   "at": "2026-11-21T03:39:59.313Z",
+   "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+   "find": "Migrants’ and Asylum Seekers’ Rights | discrimin | protest by migrants",
+   "ok": true,
+   "chars": 4436
+  },
+  {
+   "at": "2026-11-21T03:40:11.305Z",
+   "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/",
+   "find": "migrantes | refugiadas | xenofob | discrimin | protesta",
+   "ok": true,
+   "chars": 5024
+  },
+  {
+   "at": "2026-11-21T03:40:12.217Z",
+   "url": "https://eldesconcierto.cl/2025/04/29/amnistia-alza-la-voz-por-los-migrantes-y-emplaza-al-congreso",
+   "find": "racismo | xenofobia | discriminación | Bosch",
+   "ok": true,
+   "chars": 3488
+  }
+ ],
+ "searches": [
+  "Ley 21.655 modifica ley 21.325 artículos reconducción leychile",
+  "Ley 21.589 Ley 21.590 Ley 21.610 modifica ley 21.325 migración 2023",
+  "\"artículo 19\" Constitución Chile texto \"libertad de conciencia\" \"derecho a reunirse pacíficamente sin permiso previo y sin armas\"",
+  "Chile 2023 Report on International Religious Freedom migrants state.gov",
+  "CERD concluding observations Chile 2022 migrants racial discrimination hate speech CERD/C/CHL/CO/22-23",
+  "Amnistía Internacional Chile 2024 informe migrantes discriminación xenofobia expulsiones"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.58,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":81,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución Política de la República de Chile\",\"article\":\"Art. 19 No. 12 (as cited; freedom of conscience is in fact Art. 19 No. 6)\",\"enacted\":\"1980\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 13\",\"enacted\":\"2021-04-20\",\"history_read\":\"amending_acts\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-08-07\",\"instrument\":\"Ley 21.590\",\"article\":\"Ley 21.325 art. 134\",\"kind\":\"amended\",\"what_changed\":\"Extended the detention period for carrying out administrative expulsions from 48 hours to five calendar days. Does not touch art. 13 or this indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21590\",\"passage\":\"Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \\\"cuarenta y ocho horas\\\" por la frase \\\"cinco días corridos\\\".\"},{\"date\":\"2023-08-18\",\"instrument\":\"Ley 21.589\",\"article\":\"Ley 21.325 art. 5\",\"kind\":\"amended\",\"what_changed\":\"Added alternative ways of notifying foreigners that expulsion proceedings have started. Does not touch this indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21589\",\"passage\":\"Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería: 1. Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno\"},{\"date\":\"2023-09-22\",\"instrument\":\"Ley 21.610\",\"article\":\"Ley 21.325 art. 100\",\"kind\":\"amended\",\"what_changed\":\"Extended carriers' passenger-list duties to domestic transport. Does not touch this indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21610\",\"pas",
+ "output": {
+  "answers": [
+   {
+    "question_id": 81,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 No. 12 (as cited; freedom of conscience is in fact Art. 19 No. 6)",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Extended the detention period for carrying out administrative expulsions from 48 hours to five calendar days. Does not touch art. 13 or this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Added alternative ways of notifying foreigners that expulsion proceedings have started. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería: 1. Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Extended carriers' passenger-list duties to domestic transport. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Artículo 2.- Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened 'reconducción' (immediate return of people entering irregularly). Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería, del siguiente modo: a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\"."
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730 (crea el Ministerio de Seguridad Pública)",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry-creation law that produced a new version of Ley 21.325 in force from 1 April 2025. Its text cut off before the provisions amending 21.325, so the affected articles could not be read. Art. 13 as read today is unchanged.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "For both dates there is no documented pattern of state interference with migrants' religious practice. The US State Department's 2023 religious-freedom report on Chile describes constitutional and legal protection, with incidents involving non-state actors (church arsons, antisemitic statements) but no restrictions aimed at migrants. Nothing indicates a shift between 2023 and 2026, so 'Usually' is kept for both dates. The evidence is about the general population, not migrants specifically.",
+    "practice_sources": [
+     {
+      "title": "2023 Report on International Religious Freedom: Chile (USDOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2111842.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Today's text of Ley 21.325 art. 13 was read on LeyChile. The 2023 text is rebuilt from four amending acts that were read; the provisions of Ley 21.730 touching 21.325 could not be seen. Constitution art. 19 was read on a secondary mirror (iura.cl) because the LeyChile article text did not load.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile, current version and version list)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 01-04-2025",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Constitución (LeyChile, Decreto 100)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+     },
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     },
+     {
+      "title": "USDOS 2023 IRF report Chile",
+      "url": "https://www.ecoi.net/en/document/2111842.html"
+     }
+    ],
+    "starting_answer_concern": "The citation points to Art. 19 No. 12 (expression). Freedom of conscience, belief and worship is in Art. 19 No. 6: 'La libertad de conciencia, la manifestación de todas las creencias y el ejercicio libre de todos los cultos...'. The answer 'Yes' holds, but on No. 6, read with Ley 21.325 art. 13 and art. 1(7), which names 'la religión o creencia' as a ground of arbitrary discrimination.",
+    "confidence": "medium",
+    "notes": "Art. 19 opens 'La Constitución asegura a todas las personas', which covers all migrants regardless of status. No court ruling was relied on."
+   },
+   {
+    "question_id": 83,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 No. 12",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Extended detention for expulsion from 48 hours to five days. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Added notification rules for expulsion proceedings. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Added passenger-list duties for domestic transport. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened reconducción at the border. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry of Public Security law produced a new version of 21.325; the affected articles could not be read. Art. 13 is unchanged today.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "No source was found documenting interference with migrants' freedom to hold opinions, either before 2023 or in 2023-2025. The broader reports read (HRW World Report 2024, Amnesty 2025) record hostile discourse against migrants and bills to criminalise them, but no sanctions for holding opinions. The rating 'Usually' is kept for both dates on thin evidence.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch World Report 2024: Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Amnistía Internacional, Informe Chile (2025)",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Art. 19 No. 12 was read on iura.cl (mirror) and Ley 21.325 art. 13 on LeyChile. The 2023 text is rebuilt from the amending acts; Ley 21.730's provisions on 21.325 were not visible.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     },
+     {
+      "title": "Amnesty report Chile",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "Art. 19 No. 12 protects 'La libertad de emitir opinión y la de informar, sin censura previa' for all persons. Art. 1(7) of Ley 21.325 lists 'la ideología u opinión política' as a ground of arbitrary discrimination."
+   },
+   {
+    "question_id": 85,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 No. 12",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Detention for expulsion extended. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Notification rules for expulsion proceedings. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists for domestic transport. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened reconducción. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry of Public Security law; the affected articles of 21.325 could not be read. Art. 13 is unchanged today.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "In both periods migrants speak and protest publicly. HRW's World Report 2024 documents a May 2023 migrant protest at the Arica border, and Amnesty (2025) documents civil-society advocacy by migrant organisations. No censorship or punishment of migrants for their expression is documented. Hostile political discourse grew in 2025, but that is not state restriction of migrants' expression. 'Usually' is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch World Report 2024: Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Amnistía Internacional, Informe Chile (2025)",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Same dating as q83: amending acts read, Ley 21.730's provisions not visible, Constitution read on a mirror.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     },
+     {
+      "title": "Amnesty report Chile",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection rests on the Constitution's 'asegura a todas las personas', which covers all migrants regardless of status."
+   },
+   {
+    "question_id": 87,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 No. 15 (and No. 19 on unions)",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 20.500 sobre asociaciones y participación ciudadana en la gestión pública",
+      "article": "Art. 1",
+      "enacted": "2011-02-16",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Detention for expulsion extended. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Notification rules. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened reconducción. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry of Public Security law; the affected articles of 21.325 could not be read. Arts. 13-14 are unchanged today.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Because the starting protection answer is 'No', implementation is 'Does Not Apply' on both dates. No event in the window changed union or association rules for migrants: Ley 20.500 has a single version (2011), and none of the 21.325 amendments read touch arts. 13-14.",
+    "practice_sources": [],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Ley 20.500's LeyChile page shows 'Versión: Única - 16-FEB-2011', so it is unchanged. Constitution art. 19 Nos. 15 and 19 were read on a mirror. The Código del Trabajo was not read.",
+    "sources_opened": [
+     {
+      "title": "Ley 20.500 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=20500"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     }
+    ],
+    "starting_answer_concern": "The 'No' rests on the claim that irregular migrants cannot join trade unions. I found no provision saying so. Ley 21.325 art. 14 provides 'Los extranjeros gozarán de los mismos derechos en materia laboral que los chilenos' and obliges employers to meet labour obligations 'sin perjuicio de la condición migratoria irregular del extranjero contratado'. Art. 1(7) lists 'la sindicación o participación en organizaciones gremiales' as a ground of arbitrary discrimination. Constitution art. 19 Nos. 15 and 19 protect 'todas las personas'. A 'Yes' may be warranted. The Código del Trabajo was not read, so the original coder's reason is not disproved.",
+    "confidence": "medium",
+    "notes": "The starting answer is kept on both dates as instructed; the disagreement above is not a change in the law."
+   },
+   {
+    "question_id": 89,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 (No. 13)",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 13",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Detention for expulsion extended. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Notification rules. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened reconducción. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry of Public Security law; the affected articles could not be read. Art. 13 is unchanged today.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Migrants assemble publicly in both periods. HRW's World Report 2024 records a May 2023 protest by stranded migrants at the Chile-Peru border near Arica, where police detained a man for blocking the highway. HRW also documents ongoing excessive force and weak oversight of the Carabineros in protest policing generally. Amnesty (2025) notes long states of emergency restricting assembly in the south, which mainly affects Indigenous people, not migrants specifically. No shift specific to migrants is documented, so 'Sometimes; Usually' is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Human Rights Watch World Report 2024: Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "refugees_asylum_seekers",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Amnistía Internacional, Informe Chile (2025)",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Art. 19 No. 13 ('El derecho a reunirse pacíficamente sin permiso previo y sin armas') was read on a mirror. The 2023 text of Ley 21.325 is rebuilt from the amending acts; Ley 21.730's provisions were not visible.",
+    "sources_opened": [
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     },
+     {
+      "title": "Amnesty report Chile",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The MRD's own rating, 'Usually; Sometimes', is entered in canonical order as 'Sometimes; Usually'."
+   },
+   {
+    "question_id": 131,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 3, 13 (and art. 1 No. 7)",
+      "enacted": "2021-04-20",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República de Chile",
+      "article": "Art. 19 No. 2",
+      "enacted": "1980",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Detention for expulsion extended from 48 hours to five days. Does not touch arts. 1, 3 or 13.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión \"cuarenta y ocho horas\" por la frase \"cinco días corridos\"."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley 21.589",
+      "article": "Ley 21.325 art. 5",
+      "kind": "amended",
+      "what_changed": "Notification rules for expulsion proceedings. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists. Does not touch this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Widened reconducción of people who entered irregularly. Does not alter the non-discrimination provisions.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Modifícase el inciso segundo del artículo 131 de la ley Nº 21.325, de Migración y Extranjería, del siguiente modo: a) Reemplázase la expresión \"intentando ingresar\" por \"intentando ingresar o habiendo ingresado\"."
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley 21.730",
+      "article": "Ley 21.325 (provisions not identified)",
+      "kind": "amended",
+      "what_changed": "Ministry of Public Security law produced a new version of 21.325; the affected articles could not be read. Arts. 1(7), 3 and 13 as read today are unchanged.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Before 2023, CERD (Sept 2022, read through the Canadian IRB summary) found rising hate speech, xenophobic violence, excessive police force against migrants, and regular racial profiling of migrant and Afro-descendant communities by police. In 2023-2025, HRW (2024) documents obstacles to regularisation and the militarised northern border. Amnesty (2025) documents deepening hostile discourse and bills to criminalise migrants and to restrict social benefits for irregular migrants; none had become law by 1 January 2026. The pattern is the law honoured in the main with documented gaps, unchanged across the window. 'Usually' is kept for both dates, at the lower edge.",
+    "practice_sources": [
+     {
+      "title": "IRB Canada RIR on Chile (summarising CERD/C/CHL/CO/22-23, 2022)",
+      "url": "https://irb-cisr.gc.ca/en/country-information/rir/Pages/index.aspx?doc=458763",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Human Rights Watch World Report 2024: Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Amnistía Internacional, Informe Chile (2025)",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Today's text of arts. 1(7), 3 and 13 was read on LeyChile. The 2023 text is rebuilt from the amending acts (21.590, 21.589, 21.610, 21.655 read; 21.730's provisions on 21.325 not visible). The CERD findings were read second-hand through the IRB summary.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML text",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 01-04-2025",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-04-01"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Artículo 19 CPR (iura.cl)",
+      "url": "https://iura.cl/cpr/19"
+     },
+     {
+      "title": "IRB Canada RIR Chile",
+      "url": "https://irb-cisr.gc.ca/en/country-information/rir/Pages/index.aspx?doc=458763"
+     },
+     {
+      "title": "HRW World Report 2024 Chile",
+      "url": "https://www.hrw.org/world-report/2024/country-chapters/chile"
+     },
+     {
+      "title": "Amnesty report Chile",
+      "url": "https://www.amnesty.org/es/location/americas/south-america/chile/report-chile/"
+     },
+     {
+      "title": "El Desconcierto, Amnistía informe 2024/2025",
+      "url": "https://eldesconcierto.cl/2025/04/29/amnistia-alza-la-voz-por-los-migrantes-y-emplaza-al-congreso"
+     }
+    ],
+    "starting_answer_concern": "The citation relies on arts. 3 and 13 but leaves out the clearest basis: Ley 21.325 art. 1 No. 7 defines arbitrary discrimination to include distinctions 'cuando se funden en motivos como la raza o etnia, la nacionalidad, situación migratoria...'. Art. 13 lets foreigners affected by 'una discriminación arbitraria' bring 'las acciones que correspondan'. The 'Yes' holds.",
+    "confidence": "medium",
+    "notes": "Art. 3: 'El Estado deberá proteger y respetar los derechos humanos de las personas extranjeras que se encuentren en Chile, sin importar su condición migratoria'. The migration-law reform bill (boletín 16.072) that Amnesty criticised did not appear in the LeyChile version history before 1 January 2026."
+   }
+  ]
+ }
 }
