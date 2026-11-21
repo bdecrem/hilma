@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina health_housing claude-opus-5-5 high",
- "pid": 79913,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "health_housing",
@@ -57,5 +56,701 @@
   "user": 176
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:44:19.922Z",
+ "minutes": 5.35,
+ "meters_after": {
+  "at": "2026-11-21T10:44:19.922Z",
+  "window": {
+   "pct": 40,
+   "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 40,
+    "resets": "Nov 21 at 6:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 40% used · resets Nov 21 at 6:59am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 198137,
+   "output": 43025,
+   "cache_read": 1728214,
+   "cache_write": 131370,
+   "cost_usd": 2.1071,
+   "total": 2100746
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 198097,
+    "output": 15382,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 5295,
+    "cost_usd": 0.1575
+   },
+   "claude-opus-5-5": {
+    "input": 40,
+    "output": 27643,
+    "cache_read": 1728214,
+    "cache_write": 131370,
+    "thinking": 6162,
+    "cost_usd": 1.9496
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 49,
+ "duration_ms": 320281,
+ "duration_api_ms": 334163,
+ "pages_read": 16,
+ "pages": [
+  {
+   "at": "2026-11-21T10:39:06.974Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6° | ARTICULO 8° | ARTICULO 125 | ARTICULO 126 | ARTICULO 128",
+   "ok": true,
+   "chars": 5594
+  },
+  {
+   "at": "2026-11-21T10:39:17.885Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6° | ARTICULO 8° | ARTICULO 122",
+   "ok": true,
+   "chars": 4865
+  },
+  {
+   "at": "2026-11-21T10:39:19.048Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm",
+   "find": "ARTICULO 102 | ARTICULO 103 | asistencia | hospitalari | sanitari",
+   "ok": true,
+   "chars": 6673
+  },
+  {
+   "at": "2026-11-21T10:39:40.333Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm",
+   "find": "ARTICULO 33 | ARTICULO 35 | ARTICULO 34 | Modificaciones | sustituido",
+   "ok": true,
+   "chars": 5534
+  },
+  {
+   "at": "2026-11-21T10:39:55.176Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16331/texact.htm",
+   "find": "ARTICULO 1 | ARTICULO 12 | ARTICULO 16 | extranjer | nacionalidad | residen | sustituido | incorporado",
+   "ok": true,
+   "chars": 7563
+  },
+  {
+   "at": "2026-11-21T10:40:03.601Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 6° | ARTICULO 8° | ARTICULO 7°",
+   "ok": true,
+   "chars": 3449
+  },
+  {
+   "at": "2026-11-21T10:40:07.622Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 6º | ARTICULO 8º | MINISTERIO DE SALUD | Artículo 8",
+   "ok": true,
+   "chars": 5515
+  },
+  {
+   "at": "2026-11-21T10:40:23.348Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2002/06/IA2002.-Hechos-2001-12-Migrantes-ley-inconstitucional-y-practica-arbitraria.pdf",
+   "find": "hospital | salud | 103 | vivienda | alojamiento",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:40:24.614Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "health | housing | medical",
+   "ok": true,
+   "chars": 5380
+  },
+  {
+   "at": "2026-11-21T10:40:40.887Z",
+   "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+   "find": "25871 | 22439 | migra | health",
+   "ok": true,
+   "chars": 4231
+  },
+  {
+   "at": "2026-11-21T10:40:41.618Z",
+   "url": "https://hrlibrary.umn.edu/esc/argentina2011.html",
+   "find": "migra | housing | health",
+   "ok": true,
+   "chars": 6364
+  },
+  {
+   "at": "2026-11-21T10:40:59.531Z",
+   "url": "https://www.ippdh.mercosur.int/wp-content/uploads/2014/08/Informe-acceso-a-derechos-de-migrantes-en-la-PBA1.pdf",
+   "find": "vivienda | salud | hospital",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:41:26.078Z",
+   "url": "https://www.diariojudicial.com/news-23461-la-salud-no-reconoce-nacionalidades",
+   "find": "25.871 | extranjer | hospital | DNI",
+   "ok": true,
+   "chars": 3999
+  },
+  {
+   "at": "2026-11-21T10:41:26.954Z",
+   "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/215402",
+   "find": "senegal | INADI | DNI | 25.871",
+   "ok": true,
+   "chars": 4404
+  },
+  {
+   "at": "2026-11-21T10:41:43.785Z",
+   "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+   "find": "asistenciales | hospital | salud | denunciar | Videla",
+   "ok": true,
+   "chars": 3552
+  },
+  {
+   "at": "2026-11-21T10:41:57.473Z",
+   "url": "https://www.diariodecuyo.com.ar/noticias/requisitos-y-pasos-519728.html",
+   "find": "residencia permanente | nacionalidad | Procrear",
+   "ok": true,
+   "chars": 2604
+  }
+ ],
+ "searches": [
+  "Ley 22.439 infoleg texto \"instituciones hospitalarias\" extranjeros residencia artículo 103",
+  "infoleg Ley 24.464 Sistema Federal de la Vivienda texto adjudicatarios requisitos",
+  "Decreto 616/2010 reglamentación ley 25.871 artículo 8 \"Ministerio de Salud\" infoleg",
+  "CMW/C/ARG/CO/1 concluding observations Argentina 2011 migrant workers health housing",
+  "CELS informe migrantes hospitales denuncia artículo 103 ley 22.439 atención salud irregulares 2000",
+  "hrlibrary.umn.edu concluding observations Argentina CERD 2001 OR 2004 migrants health Bolivian Paraguayan",
+  "CMW/C/ARG/CO/2 2019 concluding observations Argentina health access migrants housing",
+  "migrantes acceso vivienda social requisitos residencia permanente DNI Argentina programas habitacionales exclusión informe CELS CAREF",
+  "\"Q. C., S. Y.\" Corte Suprema 2012 vivienda Quisberth Castro boliviana texto fallo",
+  "migrantes negaron atención hospital falta de DNI Argentina 2014 OR 2015 OR 2016 denuncia INADI Defensoría",
+  "Instituto de Vivienda de la Ciudad requisito DNI argentino extranjeros residencia permanente programa vivienda migrantes excluidos Ley 341",
+  "2001 Argentina Ley Videla hospitales obligados denunciar inmigrantes ilegales atención médica bolivianos paraguayos práctica",
+  "Procrear requisitos \"residencia permanente\" extranjeros argentinos nativos naturalizados argentina.gob.ar"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.06,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":119,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)\",\"implementation\":\"Usually\",\"basis\":\"The regime was Ley 22.439 (Ley Videla). Art. 103 required public and private hospitals and care institutions to demand proof of 'permanencia legal' from foreigners and, where they had none, to report their personal details and address to the migration authority within 24 hours, 'sin perjuicio de su asistencia o prestación'. Equal access therefore held only for lawful residents (Const. art. 20 and ICESCR art. 12, which has constitutional rank under art. 75 inc. 22). Página/12 (2003), quoting a CELS lawyer, reports that these hospital and school reports went to the DNM and led to deportations. I found no practice source on lawful residents for this period, so the rating is low-confidence.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes, for all visa types (including irregular migrants)\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Ley 25.871 entered into force on publication (B.O. 21/1/2004) and repealed Ley 22.439 (art. 124). Original art. 8: access to health and health care 'no podrá negársele o restringírsele en ningún caso … cualquiera sea su situación migratoria'; art. 6 gives equal access to health. In August 2004 CERD welcomed the law but noted that 'enacting measures still need to be adopted'. The law was not regulated until 2010. Practice evidence specific to 2005 is thin.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes, for all visa types (including irregular migrants)\",\"implementation\":\"Usually\",\"basis\":\"Arts. 6 and 8 of Ley 25.871 were unchanged. Decreto 616/2010 (May 2010, after this date) art. 8 later told the Ministry of Health to guarantee free access even to irregular migrants and allowed identity to be shown with foreign documents. Practice: the CABA Ombudsman (July 2010) told the Lagleyze hospital to stop making care depend on ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 119,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Usually",
+      "basis": "The regime was Ley 22.439 (Ley Videla). Art. 103 required public and private hospitals and care institutions to demand proof of 'permanencia legal' from foreigners and, where they had none, to report their personal details and address to the migration authority within 24 hours, 'sin perjuicio de su asistencia o prestación'. Equal access therefore held only for lawful residents (Const. art. 20 and ICESCR art. 12, which has constitutional rank under art. 75 inc. 22). Página/12 (2003), quoting a CELS lawyer, reports that these hospital and school reports went to the DNM and led to deportations. I found no practice source on lawful residents for this period, so the rating is low-confidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, for all visa types (including irregular migrants)",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 entered into force on publication (B.O. 21/1/2004) and repealed Ley 22.439 (art. 124). Original art. 8: access to health and health care 'no podrá negársele o restringírsele en ningún caso … cualquiera sea su situación migratoria'; art. 6 gives equal access to health. In August 2004 CERD welcomed the law but noted that 'enacting measures still need to be adopted'. The law was not regulated until 2010. Practice evidence specific to 2005 is thin."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, for all visa types (including irregular migrants)",
+      "implementation": "Usually",
+      "basis": "Arts. 6 and 8 of Ley 25.871 were unchanged. Decreto 616/2010 (May 2010, after this date) art. 8 later told the Ministry of Health to guarantee free access even to irregular migrants and allowed identity to be shown with foreign documents. Practice: the CABA Ombudsman (July 2010) told the Lagleyze hospital to stop making care depend on documentation. CMW (2011) was concerned that migrants are denied access to health facilities if they lack a DNI. Care is generally available, with documented ID-based gaps."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, for all visa types (including irregular migrants)",
+      "implementation": "Usually",
+      "basis": "Arts. 6 and 8 of Ley 25.871 and art. 8 of Decreto 616/2010 were in force and unamended. DNU 70/2017 (2017) did not touch arts. 6 or 8. Practice: CABA Health Ministry Resolución 194/2013 records two Senegalese nationals whom Hospital Rocca denied disability certificates for lacking a DNI (an INADI complaint and an appeal), and changes the documentation rules to remedy this. CESCR (2011) and CMW (2011) describe the law as protecting all migrants while noting DNI barriers."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 8 (original text)",
+      "role": "cited",
+      "in_force": "2004-01-21 to 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6 (original text)",
+      "role": "cited",
+      "in_force": "2004-01-21 to 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Art. 103",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamentación de la Ley 25.871)",
+      "article": "Arts. 6 and 8",
+      "role": "other_in_force",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina / Pacto Internacional de Derechos Económicos, Sociales y Culturales",
+      "article": "Art. 75 inc. 22 / PIDESC art. 12",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 8",
+      "kind": "new_instrument",
+      "what_changed": "This replaced the Ley 22.439 regime, under which hospitals had to demand proof of legal stay and report irregular patients. The new rule says health care cannot be denied or restricted to any foreigner, whatever their migration status.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 8° — No podrá negársele o restringírsele en ningún caso, el acceso al derecho a la salud, la asistencia social o atención sanitaria a todos los extranjeros que lo requieran, cualquiera sea su situación migratoria."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 124 (repeal of Ley 22.439 incl. art. 103); art. 122 (entry into force on publication)",
+      "kind": "repealed",
+      "what_changed": "Ley 22.439 and its Decreto 1023/94 were repealed, including the art. 103 hospital duty to check legal stay and report irregular patients.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/94 y toda otra norma contraria a la presente ley"
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 8",
+      "kind": "enacted",
+      "what_changed": "Regulation of art. 8: the Ministry of Health must guarantee free access to health and social assistance even for irregular migrants, and identity may be shown with documents from the country of origin. This reinforces the 2004 protection.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "ARTICULO 8º.- El MINISTERIO DE SALUD dictará las normas y dispondrá las medidas necesarias para garantizar a los extranjeros, aún en situación de irregularidad migratoria, el libre acceso a la asistencia sanitaria y social."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto Nº 366/2025",
+      "article": "Art. 8 and art. 6 of Ley 25.871",
+      "kind": "replaced",
+      "what_changed": "This falls after the 2000-2020 window, noted for completeness. Art. 8 now limits access regardless of status to emergencies, gives equality to permanent residents, and otherwise requires insurance or payment in national establishments. Art. 6 now adds 'de acuerdo con … cada categoría migratoria'.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 8° — En casos de emergencia, no podrá negársele ni restringírsele el acceso a la asistencia social o a la atención sanitaria a todos los extranjeros que lo requieran, cualquiera sea su situación migratoria. Los extranjeros residentes permanentes podrán acceder al sistema de salud público en igualdad de condiciones"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Un final para el fantasma de Videla (Página/12, 19.12.2003)",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1",
+      "year": 2003,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations: Argentina (CERD/C/65/CO/1), 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "La salud no reconoce nacionalidades (Diario Judicial, 16 July 2010) – CABA Ombudsman recommendation to Hospital Lagleyze",
+      "url": "https://www.diariojudicial.com/news-23461-la-salud-no-reconoce-nacionalidades",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CESCR Concluding observations: Argentina (E/C.12/ARG/CO/3), 2011",
+      "url": "https://hrlibrary.umn.edu/esc/argentina2011.html",
+      "year": 2011,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Resolución 194/2013 Ministerio de Salud GCBA (Senegalese nationals denied disability certificates at Hospital Rocca for lacking a DNI)",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/215402",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The original 2004 text of Ley 25.871 (InfoLEG 'texto original') and the consolidated Ley 22.439 that was in force until 2004 were both read, so the dating is solid. PDF reports could not be opened in this session (CELS annual reports 2002–2012, the IPPDH 2014 report), so practice for 2000 and 2005 rests on one press report and treaty-body statements.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "CMW concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CERD concluding observations Argentina 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CESCR concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/esc/argentina2011.html"
+     },
+     {
+      "title": "Diario Judicial – La salud no reconoce nacionalidades",
+      "url": "https://www.diariojudicial.com/news-23461-la-salud-no-reconoce-nacionalidades"
+     },
+     {
+      "title": "Resolución 194/2013 MS GCBA",
+      "url": "https://boletinoficial.buenosaires.gob.ar/normativaba/norma/215402"
+     },
+     {
+      "title": "Página/12 – Un final para el fantasma de Videla",
+      "url": "https://www.pagina12.com.ar/diario/sociedad/3-29470-2003-12-19.html?mobile=1"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer rests on statutes only; no court ruling is relied on. The 2000 answer uses the treaty route that the MRD itself cites (ICESCR art. 12, constitutional rank under art. 75 inc. 22, directly applicable), together with Const. art. 20, to treat lawful residents as covered. Ley 22.439 art. 103 conditioned irregular migrants' care on being reported, which falls short of equality with citizens. DNU 70/2017 (Feb 2017 – Mar 2021) did not amend arts. 6 or 8. Decreto 366/2025 narrowed art. 8 in May 2025; this is outside the window but relevant to the current (2026) coding."
+   },
+   {
+    "question_id": 123,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Rarely",
+      "basis": "In force: Const. art. 14 bis (access to decent housing), ICESCR art. 11 (constitutional rank) and Ley 24.464 (1995 Sistema Federal de la Vivienda, for 'la población de recursos insuficientes', with no nationality or residence criterion in national law). Ley 22.439 art. 32 barred anyone from providing paid lodging to irregular foreigners and required free lodging to be reported to the DNM, and art. 35 required reporting of property transactions with irregular migrants. The protection therefore reached regular migrants at most. I found no practice evidence for c. 2000; the rating carries the starting rating back."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Rarely",
+      "basis": "From 21 January 2004, Ley 25.871 art. 6 (original text) guarantees immigrants 'acceso igualitario … en las mismas condiciones … de los que gozan los nacionales' to social services and public goods, and Ley 22.439 (including art. 32) was repealed. Housing programmes remained provincial and municipal under Ley 24.464, with eligibility set locally. The category stays the same as in the starting answer. No practice evidence specific to 2005 was found."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Rarely",
+      "basis": "The provisions were unchanged. Decreto 616/2010 art. 6 (May 2010) has the DNM cooperate with programmes guaranteeing access to social services and public goods 'en igualdad de condiciones con los nacionales'. CESCR (2011) noted a persistent housing deficit and DNI and residence barriers for migrants in social programmes. Neither source gives migrant-specific housing practice."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+      "implementation": "Rarely",
+      "basis": "The provisions were unchanged apart from Ley 24.464 funding articles (arts. 6–7, replaced by Ley 27.467 in December 2018), which do not touch eligibility. Practice: the national Procrear housing-credit programme (relaunch reported by Diario de Cuyo, undated, c. 2016) admitted only Argentines, naturalised citizens or foreigners with permanent residence, so temporary and irregular migrants were excluded. This is consistent with the starting answer's account of programmes requiring citizenship or permanent residence."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "role": "cited",
+      "in_force": "1957 (text retained in 1994 reform) to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6 (original text)",
+      "role": "cited",
+      "in_force": "2004-01-21 to 2025-05-29",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 24.464 Sistema Federal de la Vivienda",
+      "article": "Arts. 1, 6, 7, 12",
+      "role": "cited",
+      "in_force": "1995-04-04 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 32, 35",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 6",
+      "role": "other_in_force",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "kind": "new_instrument",
+      "what_changed": "This is a new statutory guarantee of equal access for immigrants and their families to social services and public goods on the same terms as nationals. It is not housing-specific, and the original text sets no status condition.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 6° — El Estado en todas sus jurisdicciones, asegurará el acceso igualitario a los inmigrantes y sus familias en las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, en particular lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 124 (repeal of Ley 22.439, incl. arts. 32 and 35)",
+      "kind": "repealed",
+      "what_changed": "This removed the ban on providing paid lodging to irregular foreigners and the duty to report free lodging and property transactions with them.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm",
+      "passage": "ARTICULO 32. – No podrá proporcionarse alojamiento a título oneroso, a los extranjeros que se encuentren residiendo ilegalmente en el país. Cuando se proporcione a título gratuito o benéfico, deberá comunicarse fehacientemente a la autoridad migratoria."
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 6",
+      "kind": "enacted",
+      "what_changed": "Regulation of art. 6: the DNM is to cooperate with national, provincial and municipal programmes guaranteeing migrants' access to social services and public goods on equal terms with nationals. Housing is not named.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "a garantizar su acceso a los servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social, en igualdad de condiciones con los nacionales."
+     },
+     {
+      "date": "2018-12-04",
+      "instrument": "Ley N° 27.467",
+      "article": "Ley 24.464 arts. 6 and 7",
+      "kind": "amended",
+      "what_changed": "Replaced the articles on how FONAVI funds may be used (housing purchase and construction, infrastructure, with a 30% cap). Eligibility and nationality are not affected.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16331/texact.htm",
+      "passage": "(Artículo sustituido por art. 119 de la Ley N° 27.467 B.O. 4/12/2018)"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Justicia de la Nación",
+      "reference": "Q. C., S. Y. c/ Gobierno de la Ciudad de Buenos Aires s/ amparo",
+      "date": "2012-04-24",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "not searched",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "CESCR Concluding observations: Argentina (E/C.12/ARG/CO/3), 2011",
+      "url": "https://hrlibrary.umn.edu/esc/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Requisitos y pasos (Diario de Cuyo, Procrear relaunch requirements, undated c. 2016)",
+      "url": "https://www.diariodecuyo.com.ar/noticias/requisitos-y-pasos-519728.html",
+      "year": null,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The original 2004 text of Ley 25.871, the consolidated Ley 22.439 and Ley 24.464 with its amendment notes were all read. Ley 24.464 sets no nationality criterion, and I did not read its amending acts themselves. Practice evidence on migrants' access to housing is very thin for every period: the CELS, IPPDH and UNRN PDF reports could not be opened, and nothing was found for 2000 or 2005.",
+    "sources_opened": [
+     {
+      "title": "Ley 24.464 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16331/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16176/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "CESCR concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/esc/argentina2011.html"
+     },
+     {
+      "title": "Diario de Cuyo – Requisitos y pasos (Procrear)",
+      "url": "https://www.diariodecuyo.com.ar/noticias/requisitos-y-pasos-519728.html"
+     }
+    ],
+    "starting_answer_concern": "From 2004 to 2025 the original art. 6 of Ley 25.871 guaranteed equal access to social services and public goods to immigrants without any status condition, so a 'Yes (including irregular migrants)' reading was arguable. The starting answer's 50 rests on local programme restrictions, which are practice or sub-national law rather than national law. It is kept as given.",
+    "confidence": "low",
+    "notes": "The option stays at 50 on every date. The legal basis changed, however: Ley 22.439 art. 32, which excluded irregular migrants from paid lodging, was repealed in 2004, and Ley 25.871 art. 6 was added. That is why the change scale reads 'not the same' and not 'no change'. Q.C. (CSJN 2012; per secondary sources the claimant was a Bolivian national) is a general right-to-housing case decided without regard to migration status. I did not read it in full and do not rely on it. The 5% disability quota in Ley 24.464 art. 12(e) (reportedly added by Ley 26.182) does not bear on this indicator."
+   }
+  ]
+ }
 }
