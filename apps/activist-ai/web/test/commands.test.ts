@@ -111,3 +111,14 @@ test('the standing instruction is word for word the README’s, in AGENTS.md and
   assert.ok(readFileSync(new URL('../../workspace/AGENTS.md', import.meta.url), 'utf8').includes(REACTION_INSTRUCTION), 'workspace/AGENTS.md')
   assert.ok(readFileSync(new URL('../../frontdesk/claude.mjs', import.meta.url), 'utf8').includes(REACTION_INSTRUCTION.replaceAll('`', '\\`')), 'frontdesk/claude.mjs')
 })
+
+// OLA-322: the open model also writes the short form, and markers of ours that are not reactions.
+test('the short form of a reaction is read, and no marker of ours is ever shown', () => {
+  assert.deepEqual(splitReaction('[[ola:done]]\nThe page is built.'), { reaction: 'done', text: 'The page is built.' })
+  assert.deepEqual(splitReaction('[[ola:thanks]]'), { reaction: 'thanks', text: '' })
+  assert.deepEqual(splitReaction('[[ola:react thanks]]'), { reaction: 'thanks', text: '' })
+  assert.deepEqual(splitReaction('Done. [[ola:done]] See the page.'), { reaction: null, text: 'Done.  See the page.' })
+  assert.equal(splitReaction('[[ola:wave]]\nHello').text, 'Hello')
+  assert.equal(splitReaction('[[ola:do', true).text, '')
+  assert.equal(splitReaction('Built it. [[ola:th', true).text, 'Built it.')
+})

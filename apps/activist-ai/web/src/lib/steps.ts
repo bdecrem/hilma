@@ -5,7 +5,8 @@
 // Ran, Checked, Searched.
 import { webRequestOf } from '../../server/webask.mjs'
 import { publishAskOf, publishRequestOf } from '../../server/publishask.mjs'
-import type { Problem, StepIcon, StretchReason } from './types.ts'
+import { publishCard } from '../../server/cards.mjs'
+import type { Problem, PublishCard, StepIcon, StretchReason } from './types.ts'
 
 export interface Words {
   icon: StepIcon
@@ -239,12 +240,15 @@ const hostOf = (u: string) => {
 }
 
 /** A permission request as a question the person can answer. */
-export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null; publish?: { sel: { folder: string } | { page: string }; files: string[] } | null } {
+export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null; publish?: { sel: { folder: string } | { page: string }; files: string[] } | null; card?: PublishCard | null } {
   const files = Array.isArray(metadata?.files) ? (metadata.files as { file?: string; patch?: string; status?: string }[]) : []
   // Publishing from the conversation (OLA-230): the sheet shows the list that would go public.
+  // The card's words come from server/cards.mjs (OLA-325), the same in the Mac and iPhone apps; never the command.
+  const card = publishCard(action, resources)
+  if (card?.kind === 'unpublish') return { title: card.title, items: [], publish: null, card }
+  if (card?.kind === 'publish') return { title: card.title, items: card.files.map((f) => ({ label: f, detail: null })), publish: card.sel ? { sel: card.sel, files: card.files } : null, card }
   const pub = publishAskOf(action, resources)
-  if (pub?.unpublish) return { title: 'Ola wants to take this project’s pages off the web', items: resources.map((cmd) => ({ label: 'Take down what is published at sites.ola.cx', detail: cmd })), publish: null }
-  if (pub && !pub.status) return { title: 'Ola wants to publish this on the web', items: resources.map((cmd) => ({ label: pub.sel ? `Publish ${pub.files.length === 1 ? 'one file' : `${pub.files.length} files`} from ${'folder' in pub.sel ? pub.sel.folder : pub.sel.page}` : 'Publish', detail: cmd })), publish: pub.sel ? { sel: pub.sel, files: pub.files } : null }
+  if (pub && !pub.status) return { title: 'Ola wants to publish this on the web', items: resources.map((cmd) => ({ label: 'Publish', detail: cmd })), publish: null }
   // A web search or download: the question says exactly what would leave the machine.
   const webs = action === 'shell' || action === 'bash' ? resources.map((r) => webRequestOf(r)).filter((x) => !!x) : []
   if (webs.length && webs.length === resources.length) {

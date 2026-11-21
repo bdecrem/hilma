@@ -62,8 +62,11 @@ If the message is only thanks or a compliment, reply with the marker line alone 
 
 Drawings. When asked for a drawing, diagram or illustration, draw it in code as an SVG file (clean shapes, a viewBox, no outside fonts or images) and save it in the project; say its file name. Use a chart library only for charts of data.`
 
-const MARKER = /\[\[ola:react\s+([A-Za-z]+)\s*\]\]/g
-const WHOLE = /^\[\[ola:react\s+([A-Za-z]+)\s*\]\]$/
+// Any marker of ours is taken out of what is shown (OLA-322: the open model also writes the short
+// form, [[ola:done]] and [[ola:thanks]], and a lone [[ola:react thanks]] showed in the Mac app).
+const MARKER = /\[\[ola:[^\]\n]*\]\]/g
+// The reaction on the first line: [[ola:react NAME]], or the short form [[ola:NAME]].
+const WHOLE = /^\[\[ola:(?:react\s+)?([A-Za-z]+)\s*\]\]$/
 const isName = (s: string): s is ReactionName => Object.prototype.hasOwnProperty.call(REACTIONS, s)
 
 /**
@@ -82,12 +85,12 @@ export function splitReaction(reply: string, streaming = false): { reaction: Rea
     const name = m[1].toLowerCase()
     if (isName(name)) reaction = name
     lines.shift()
-  } else if (streaming && lines.length === 1 && first && ('[[ola:react '.startsWith(first) || /^\[\[ola:react\s+[A-Za-z]*\s*\]?$/.test(first))) {
+  } else if (streaming && lines.length === 1 && first && ('[[ola:'.startsWith(first) || /^\[\[ola:[A-Za-z ]*\]?$/.test(first))) {
     return { reaction: null, text: '' }
   }
   let text = lines.join('\n').replace(MARKER, '')
   // A marker still arriving at the very end of a streaming reply ("… [[ola:rea") is held back too.
-  if (streaming) text = text.replace(/\[(\[(o(l(a(:(r(e(a(c(t[^\]]*\]?)?)?)?)?)?)?)?)?)?)?$/, '')
+  if (streaming) text = text.replace(/\[(\[(o(l(a(:[^\]\n]*\]?)?)?)?)?)?$/, '')
   return { reaction, text: text.trim() }
 }
 

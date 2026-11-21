@@ -63,6 +63,9 @@ public struct Approval: Identifiable, Equatable, Sendable {
   public var stepID: String?
   /// One line under the question (a web search: what leaves the machine).
   public var note: String?
+  /// A publish or a take-down: the card as cards.mjs describes it (OLA-325); the panel draws its
+  /// words and its two buttons (the yes is for this list, once).
+  public var card: PublishCard?
   public init(id: String, sessionID: String, action: String, title: String, items: [ApprovalItem], stepID: String?) {
     self.id = id
     self.sessionID = sessionID
@@ -76,11 +79,13 @@ public struct Approval: Identifiable, Equatable, Sendable {
     let words = Plain.describeApproval(action: d["action"].str, resources: d["resources"].array.map(\.str), metadata: d["metadata"], dir: dir, cloudProject: cloudProject)
     self.init(id: d["id"].str, sessionID: d["sessionID"].str, action: d["action"].str, title: words.title, items: words.items, stepID: d["source"]["id"].string)
     note = Plain.webNote(action: d["action"].str, resources: d["resources"].array.map(\.str))
+    card = Plain.publishCard(action: d["action"].str, resources: d["resources"].array.map(\.str), dir: dir, cloudProject: cloudProject)
   }
 }
 
 /// A question Ola asks and waits on (OLA-301): opencode's `question` tool raises a form, with
-/// choices and room for the person's own words. A port of web/src/lib/conversation.ts questionOf.
+/// choices and room for the person's own words. Described by the web app's own cards.mjs
+/// (`Cards.question`, OLA-325): every sentence on the card comes from there, as on the website.
 public struct Question: Identifiable, Equatable, Sendable {
   public struct Option: Equatable, Sendable, Hashable {
     public var value: String
@@ -101,14 +106,17 @@ public struct Question: Identifiable, Equatable, Sendable {
     /// Whether the person may answer in their own words (opencode's default).
     public var custom: Bool
     public var multiple: Bool
+    /// The own-words field's placeholder on the card.
+    public var placeholder: String
     public var id: String { key }
-    public init(key: String, title: String, text: String, options: [Option], custom: Bool = true, multiple: Bool = false) {
+    public init(key: String, title: String, text: String, options: [Option], custom: Bool = true, multiple: Bool = false, placeholder: String? = nil) {
       self.key = key
       self.title = title
       self.text = text
       self.options = options
       self.custom = custom
       self.multiple = multiple
+      self.placeholder = placeholder ?? (options.isEmpty ? "Your answer" : "Or say it in your own words")
     }
   }
 
@@ -117,31 +125,49 @@ public struct Question: Identifiable, Equatable, Sendable {
   public var fields: [Field]
   /// The step it belongs to (the `question` tool call), if known.
   public var stepID: String?
+  /// The card's words, from cards.mjs: the line over it, the line that says the box answers it,
+  /// the Send button (nil when a tap on a choice is the answer), and the line once it is sent.
+  public var kicker: String
+  public var boxNote: String
+  public var sendLabel: String?
+  public var sent: String
+  /// The description as cards.mjs made it (for `answer(words:)` and `Cards.lines`).
+  public var card: JSON
 
+  /// A question made in code (fixtures, tests): its words from cards.mjs, as for a form.
   public init(id: String, sessionID: String, fields: [Field], stepID: String? = nil) {
+    let form: JSON = .object(["id": .string(id), "sessionID": .string(sessionID), "fields": .array(fields.map { f in
+      .object(["key": .string(f.key), "type": .string(f.multiple ? "multiselect" : "string"), "title": .string(f.title), "description": .string(f.text), "custom": .bool(f.custom),
+               "options": .array(f.options.map { o in .object(["value": .string(o.value), "label": .string(o.label), "description": o.description.map { .string($0) } ?? .null]) })])
+    })])
+    self.init(card: Cards.question(form), id: id, sessionID: sessionID, fields: fields, stepID: stepID)
+  }
+
+  init(card: JSON, id: String, sessionID: String, fields: [Field], stepID: String?) {
     self.id = id
     self.sessionID = sessionID
     self.fields = fields
     self.stepID = stepID
+    self.card = card
+    kicker = card["kicker"].str
+    boxNote = card["boxNote"].str
+    sendLabel = card["send"].string
+    sent = card["sent"].str
   }
 
   /// One field, one choice: a tap on an option is the whole answer.
-  public var single: Bool { fields.count == 1 && !fields[0].multiple }
+  public var single: Bool { card["tapAnswers"].bool ?? (fields.count == 1 && !fields[0].multiple) }
 
   /// A form from opencode as the question the app shows, or nil when it is not one we can show.
   public init?(form f: JSON) {
-    guard let id = f["id"].string, case .array(let raw) = f["fields"] else { return nil }
-    let fields: [Field] = raw.compactMap { x in
-      guard let key = x["key"].string, x["type"].str == "string" || x["type"].str == "multiselect" else { return nil }
-      let title = x["title"].string ?? ""
-      let options = x["options"].array.compactMap { o -> Option? in
-        guard let v = o["value"].string else { return nil }
-        return Option(value: v, label: o["label"].string ?? v, description: o["description"].string.flatMap { $0.isEmpty ? nil : $0 })
-      }
-      return Field(key: key, title: title, text: x["description"].string ?? title, options: options, custom: x["custom"].bool != false, multiple: x["type"].str == "multiselect")
+    let c = Cards.question(f)
+    guard c["kind"].str == "question" else { return nil }
+    let fields: [Field] = c["fields"].array.map { x in
+      Field(key: x["key"].str, title: x["title"].str, text: x["text"].str,
+            options: x["options"].array.map { o in Option(value: o["value"].str, label: o["label"].str, description: o["description"].string.flatMap { $0.isEmpty ? nil : $0 }) },
+            custom: x["custom"].bool != false, multiple: x["multiple"].bool == true, placeholder: x["placeholder"].string)
     }
-    guard !fields.isEmpty else { return nil }
-    self.init(id: id, sessionID: f["sessionID"].str, fields: fields, stepID: f["metadata"]["tool"]["id"].string)
+    self.init(card: c, id: c["id"].str, sessionID: c["sessionID"].str, fields: fields, stepID: c["stepID"].string)
   }
 
   /// The answer opencode takes (`{ answer: { key: value } }`): for each field the typed words
@@ -165,13 +191,10 @@ public struct Question: Identifiable, Equatable, Sendable {
     }
   }
 
-  /// Words typed in the conversation's box as the answer: for the first field (the others, if any,
-  /// cannot be answered that way, so the box answers only a one-field question).
-  public func answer(words: String) -> [String: JSON]? {
-    let t = words.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard fields.count == 1, let f = fields.first, !t.isEmpty else { return nil }
-    return [f.key: f.multiple ? .array([.string(t)]) : .string(t)]
-  }
+  /// Words typed in the conversation's box as the answer to the whole card, however many
+  /// questions it has (OLA-320; the website's rule since OLA-311, from cards.mjs): every question
+  /// gets them. Nil when there are no words.
+  public func answer(words: String) -> [String: JSON]? { Cards.answer(card, words: words) }
 }
 
 public struct Turn: Identifiable, Equatable, Sendable, Codable {

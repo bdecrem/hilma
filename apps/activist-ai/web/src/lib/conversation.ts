@@ -4,6 +4,7 @@
 // events (test/fixtures/*.jsonl). The event shapes are opencode 2.3.0's V2 events.
 import type { Approval, Problem, Question, Step, Turn } from './types.ts'
 import { shown } from './commands.ts'
+import { questionCard } from '../../server/cards.mjs'
 import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
 
 export interface ConversationState {
@@ -497,19 +498,7 @@ export function runSummary(turn: Turn, now = Date.now()): string {
   return parts.join(' · ')
 }
 
-/** A form from opencode as the question the page shows, or null when it is not one we can show. */
-export function questionOf(form: any): Question | null {
-  if (!form || typeof form.id !== 'string' || !Array.isArray(form.fields)) return null
-  const fields = form.fields
-    .filter((f: any) => f && typeof f.key === 'string' && (f.type === 'string' || f.type === 'multiselect'))
-    .map((f: any) => ({
-      key: f.key,
-      title: String(f.title ?? ''),
-      text: String(f.description ?? f.title ?? ''),
-      options: (Array.isArray(f.options) ? f.options : []).filter((o: any) => o && typeof o.value === 'string').map((o: any) => ({ value: o.value, label: String(o.label ?? o.value), description: o.description ? String(o.description) : null })),
-      custom: f.custom !== false,
-      multiple: f.type === 'multiselect',
-    }))
-  if (!fields.length) return null
-  return { id: form.id, sessionID: String(form.sessionID ?? ''), fields, stepID: form.metadata?.tool?.id ?? null }
+/** A form from opencode as the question the page shows, or null when it is not one we can show: the card described once (server/cards.mjs, OLA-325). */
+export function questionOf(form: unknown): Question | null {
+  return questionCard(form)
 }

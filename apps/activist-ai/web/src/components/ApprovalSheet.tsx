@@ -10,9 +10,10 @@
 import { createEffect, createSignal, For, Show } from 'solid-js'
 import { DeskError, site, type SitePreview } from '../lib/api.ts'
 import { bytes, count } from '../lib/format.ts'
-import type { Approval, Problem } from '../lib/types.ts'
+import type { Approval, Problem, PublishCard } from '../lib/types.ts'
 import type { Ola } from '../lib/ola.ts'
 import { ProblemBox } from './Drawer.tsx'
+import { publishYes } from '../../server/cards.mjs'
 
 export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
   let dialog: HTMLDialogElement | undefined
@@ -55,6 +56,7 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
         {(ap) => (
           <div class="sheet-inner">
             <Show when={!ap().publish} fallback={<PublishAsk approval={ap()} />}>
+            <Show when={ap().card?.kind !== 'unpublish'} fallback={<TakeDownAsk card={ap().card!} busy={busy()} reply={reply} first={(b) => (first = b)} />}>
             <Show
               when={ap().web}
               fallback={
@@ -117,6 +119,7 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
               )}
             </Show>
             </Show>
+            </Show>
           </div>
         )}
       </Show>
@@ -149,6 +152,28 @@ function ApprovalItem(props: { label: string; detail: string | null; action: str
         </Show>
       </Show>
     </li>
+  )
+}
+
+/** Ola asks to take the project's pages down (OLA-230): the card's words from server/cards.mjs (OLA-325), never the command. */
+function TakeDownAsk(props: { card: PublishCard; busy: boolean; reply: (d: 'once' | 'reject') => void; first: (b: HTMLButtonElement) => void }) {
+  return (
+    <>
+      <h2 id="approval-title" class="sheet-title">
+        {props.card.title}
+      </h2>
+      <p id="approval-why" class="sheet-lede">
+        {props.card.lede}
+      </p>
+      <div class="sheet-actions">
+        <button type="button" class="primary-button" ref={props.first} disabled={props.busy} onClick={() => props.reply('once')}>
+          {props.card.yes}
+        </button>
+        <button type="button" class="ghost-button on-paper danger" disabled={props.busy} onClick={() => props.reply('reject')}>
+          {props.card.no}
+        </button>
+      </div>
+    </>
   )
 }
 
@@ -186,10 +211,10 @@ function PublishAsk(props: { approval: Approval }) {
   return (
     <>
       <h2 id="approval-title" class="sheet-title">
-        Ola wants to publish this on the web
+        {props.approval.card?.title ?? 'Ola wants to publish this on the web'}
       </h2>
       <p id="approval-why" class="sheet-lede">
-        These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.
+        {props.approval.card?.lede}
       </p>
       <Show when={!plan() && !problem()}>
         <p class="publish-status" role="status">
@@ -230,11 +255,11 @@ function PublishAsk(props: { approval: Approval }) {
       <div class="sheet-actions">
         <Show when={plan()}>
           <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => send({ decision: 'once', fingerprint: plan()!.fingerprint })}>
-            {busy() ? 'Publishing…' : plan()!.published ? `Publish these ${count(plan()!.items.length, 'file')} again` : `Publish these ${count(plan()!.items.length, 'file')}`}
+            {busy() ? 'Publishing…' : publishYes(plan()!.items.length, !!plan()!.published)}
           </button>
         </Show>
         <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => send({ decision: 'reject', ...(problem() ? { message: `Not published: ${problem()!.text}` } : { message: 'The person said not now. Nothing was published.' }) })}>
-          Not now
+          {props.approval.card?.no ?? 'Not now'}
         </button>
       </div>
     </>

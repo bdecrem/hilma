@@ -74,7 +74,8 @@ final class QuestionTests: XCTestCase {
     let a = multi.answer(picked: ["a": ["red", "blue"], "b": ["x"]], typed: [:])
     XCTAssertEqual(a, ["a": .array([.string("red"), .string("blue")]), "b": .string("x")])
     XCTAssertTrue(Question.complete(a))
-    XCTAssertNil(multi.answer(words: "red"), "the box answers only a one-field question")
+    // The box answers the whole card, however many questions (OLA-320, the website's rule).
+    XCTAssertEqual(multi.answer(words: "red"), ["a": .array([.string("red")]), "b": .string("red")])
   }
 
   func testAQuestionWaitingWhenTheSessionOpensIsShown() throws {

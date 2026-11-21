@@ -246,7 +246,7 @@ enum Notifier {
     store.onRunEnded = { s, t in
       let body: String
       switch t.status {
-      case .done: body = t.answer.isEmpty ? t.summary() : String(t.answer.prefix(160))
+      case .done: body = t.shownAnswer.isEmpty ? t.summary() : String(t.shownAnswer.prefix(160))
       case .failed: body = t.error?.text ?? "It stopped before it finished."
       default: body = "Stopped."
       }

@@ -1,6 +1,7 @@
 // The shapes the page works with. The front desk (dev.mjs today, the real one on the Studio
 // later) serves ProjectPayload and FileEntry; opencode's events are mapped to Turn and Step in
 // conversation.ts. Nothing here imports opencode's types, so an upgrade changes one module.
+import type { PublishCardDesc, QuestionCardDesc } from '../../server/cards.mjs'
 
 export type MadeBy = 'bart' | 'ola' | 'you' | 'group'
 
@@ -285,14 +286,14 @@ export interface ClaudeInfo {
   running: { run: string; conversation: string | null } | null
 }
 
-/** A question Ola asks the person (opencode's `question` tool raises a form): choices, and its own words. */
-export interface Question {
-  id: string
-  sessionID: string
-  fields: { key: string; title: string; text: string; options: { value: string; label: string; description: string | null }[]; custom: boolean; multiple: boolean }[]
-  /** The step it belongs to (the `question` tool call), if known. */
-  stepID: string | null
-}
+/**
+ * A question Ola asks the person (opencode's `question` tool raises a form): choices, and its own
+ * words. The card's description, made once for the web app and the Mac and iPhone apps by
+ * server/cards.mjs questionCard (OLA-325): every sentence on it comes from there.
+ */
+export type Question = QuestionCardDesc
+/** The publish (or take-down) yes, described once by server/cards.mjs publishCard (OLA-325). */
+export type PublishCard = PublishCardDesc
 
 export interface Approval {
   id: string
@@ -311,6 +312,8 @@ export interface Approval {
   web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null
   /** A publish from the conversation (OLA-230): what the command asks to put on the web. */
   publish?: { sel: { folder: string } | { page: string }; files: string[] } | null
+  /** A publish or a take-down: the card's words, the same in every client (OLA-325). */
+  card?: PublishCard | null
 }
 
 /** The project's settings (GET /api/settings). */

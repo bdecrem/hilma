@@ -8,8 +8,8 @@ import { test } from 'node:test'
 import { answerFromWords, composerState, type ComposerInput } from '../src/lib/composer.ts'
 import type { Question } from '../src/lib/types.ts'
 
-const field = (o: Partial<Question['fields'][number]> = {}): Question['fields'][number] => ({ key: 'q0', title: 'Live data?', text: 'Should I fetch live data?', options: [{ value: 'Yes, fetch live data', label: 'Yes, fetch live data', description: null }], custom: true, multiple: false, ...o })
-const card = (fields = [field()]): Question => ({ id: 'frm_1', sessionID: 'ses_1', fields, stepID: 'call_1' })
+const field = (o: Partial<Question['fields'][number]> = {}): Question['fields'][number] => ({ key: 'q0', title: 'Live data?', text: 'Should I fetch live data?', options: [{ value: 'Yes, fetch live data', label: 'Yes, fetch live data', description: null }], custom: true, multiple: false, placeholder: 'Or say it in your own words', ...o })
+const card = (fields = [field()]): Question => ({ kind: 'question', id: 'frm_1', sessionID: 'ses_1', fields, stepID: 'call_1', kicker: '', tapAnswers: fields.length === 1 && !fields[0].multiple, send: null, boxNote: '', sent: '' })
 const base: ComposerInput = { draft: '', working: false, question: null, answering: false, connection: 'open' }
 const st = (o: Partial<ComposerInput>) => composerState({ ...base, ...o })
 

@@ -286,11 +286,12 @@ enum MacDrive {
           step("answered the card: Yes, this once", shot: "say\(n)-card\(said.cards.count)-answered")
         }
         // Ola's question (OLA-301): its first choice by its shortcut, Command-1, as a person could
-        // press it; a question with no choices gets "Yes, go ahead." typed in the box and Return.
+        // press it; any other card (no choices, two questions, pick several) gets "Yes, go ahead."
+        // typed in the box and Return, which answers the whole card (OLA-320).
         if store.conversation?.approval == nil, let q = store.conversation?.question, q.id != lastCard {
           lastCard = q.id
           let f = q.fields.first
-          said.questions.append((f?.text ?? "") + " [" + (f?.options.map(\.label).joined(separator: " | ") ?? "") + "]")
+          said.questions.append(q.fields.map { $0.text + " [" + $0.options.map(\.label).joined(separator: " | ") + "]" }.joined(separator: " / "))
           try await settle(window, 0.8)
           step("question: \(f?.text ?? "")", shot: "say\(n)-question\(said.questions.count)")
           if let first = f?.options.first, q.single {

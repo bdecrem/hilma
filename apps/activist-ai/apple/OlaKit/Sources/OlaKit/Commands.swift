@@ -75,7 +75,11 @@ public enum Reaction: String, CaseIterable, Codable, Sendable {
   If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
   """
 
-  static let marker = try! NSRegularExpression(pattern: #"\[\[ola:react\s+([A-Za-z]+)\s*\]\]"#)
+  /// The reaction on the first line: `[[ola:react NAME]]`, or the short form `[[ola:NAME]]` the
+  /// open model also writes (OLA-322, the same rule as web/src/lib/commands.ts).
+  static let marker = try! NSRegularExpression(pattern: #"\[\[ola:(?:react\s+)?([A-Za-z]+)\s*\]\]"#)
+  /// Any marker of ours, taken out of what is shown wherever it is.
+  static let anyMarker = try! NSRegularExpression(pattern: #"\[\[ola:[^\]\n]*\]\]"#)
 
   /// A reply's reaction and the text to show: the marker counts only as the whole first line;
   /// every marker anywhere is removed from what is shown.
@@ -90,12 +94,12 @@ public enum Reaction: String, CaseIterable, Codable, Sendable {
       reaction = Reaction(rawValue: first[r].lowercased())
       lines.removeFirst()
     }
-    // A marker still streaming in ("[[ola:rea") is not shown as text.
-    if reaction == nil, lines.count == 1, let f = lines.first?.trimmingCharacters(in: .whitespaces), f.hasPrefix("[["), "[[ola:react ".hasPrefix(f) || f.hasPrefix("[[ola:react") {
+    // A marker still streaming in ("[[ola:rea", "[[ola:do") is not shown as text.
+    if reaction == nil, lines.count == 1, let f = lines.first?.trimmingCharacters(in: .whitespaces), f.hasPrefix("[["), "[[ola:".hasPrefix(f) || (f.hasPrefix("[[ola:") && !f.contains("]]")) {
       return (nil, "")
     }
     var text = lines.joined(separator: "\n")
-    text = marker.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "")
+    text = anyMarker.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "")
     return (reaction, text.trimmingCharacters(in: .whitespacesAndNewlines))
   }
 }
@@ -104,10 +108,20 @@ extension Turn {
   /// The reply as shown, without the reaction marker.
   public var shownAnswer: String { Reaction.split(answer).text }
 
+  /// The texts of the turn as shown (its notes, then the answer), no marker in any (OLA-322).
+  public var shownNotes: [String] { notes.map { Reaction.split($0).text }.filter { !$0.isEmpty } }
+
+  /// The reply's own reaction: on the first line of the turn's first text, a note or the answer
+  /// (as web/src/lib/commands.ts ownReaction).
+  public var ownReaction: Reaction? {
+    guard let first = (notes + [answer]).first(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else { return nil }
+    return Reaction.split(first).reaction
+  }
+
   /// The reaction on Bart's message: the reply's own; else 👀 while it runs, ✅ when it ended
   /// well, none otherwise (README, "Slash commands and reactions").
   public var reaction: Reaction? {
-    if let r = Reaction.split(answer).reaction { return r }
+    if let r = ownReaction { return r }
     switch status {
     case .sending: return nil
     case .working: return .eyes
@@ -128,7 +142,7 @@ extension Turn {
 
   /// Only a reaction, no reply to show (a thank-you): no answer, no run line.
   public var reactionOnly: Bool {
-    status == .done && shownAnswer.isEmpty && Reaction.split(answer).reaction != nil && steps.isEmpty
+    status == .done && shownAnswer.isEmpty && shownNotes.isEmpty && ownReaction != nil && steps.isEmpty
   }
 }
 

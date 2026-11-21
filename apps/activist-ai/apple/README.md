@@ -1054,6 +1054,21 @@ refused; the page's own JavaScript runs.
 The apps talk to Bart's own opencode, not the front desk, so they have no Claude runs today; port
 these when they do.
 
+## Ola's cards, described once (OLA-325, 2026-11-21)
+
+The question card and the publish (or take-down) yes are not ported: `web/server/cards.mjs`
+describes them (every sentence, the choices, the buttons, and what words typed in the box do), the
+web app imports it, and OlaKit runs the same file in JavaScriptCore (`Cards.swift`; the script is
+`CardsJS.swift`, generated). After changing `cards.mjs`, `webask.mjs` or `publishask.mjs`, run
+`node apple/tools/cards-js.mjs`: `swift test` (CardsTests) and the web check both refuse a stale
+copy. The fixtures `web/test/cards.fixtures.json` hold every card kind with the lines it must show;
+the web check draws each with the web app's own components in Chromium and WebKit, and CardsTests
+checks the fields `QuestionPanel` and `ApprovalPanel` draw, in their order (the SwiftUI views
+themselves are not rendered by a test). Typed words answer any question card
+(two questions, pick several) in every client; a publish yes lists the files and the address,
+never the command, also with Ola working on the Mac (the files read from the folder here).
+Still ported, not described once: the other approvals (commands, file changes, web searches).
+
 **Dark styles** (OLA-221, 2026-11-19): Settings, Appearance (on the Mac, General) offers a Dark
 style while the app is dark: Standard (as before), Graphite (a near-black frame, the page lifted two
 steps above it to read on, hairlines only) and Ink (the ola.cx letter page: its blue as the page, its

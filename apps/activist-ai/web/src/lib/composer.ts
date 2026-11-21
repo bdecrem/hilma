@@ -10,6 +10,7 @@
 // is going on. Words typed in the box answer the whole card: every question on it gets them
 // (answerFromWords), and the card says so. The first fix left a two-question card on Stop.
 import type { Connection, Question } from './types.ts'
+import { answerFromWords as wordsAnswer } from '../../server/cards.mjs'
 
 export interface ComposerInput {
   /** What is in the composer. */
@@ -37,10 +38,9 @@ export interface ComposerState {
   placeholder: 'answer' | 'working' | 'request'
 }
 
-/** Words typed in the box as the answer to the whole card: each question gets them (a list for a pick-several one). */
-export function answerFromWords(q: Question, words: string): Record<string, string | string[]> {
-  const w = words.trim()
-  return Object.fromEntries(q.fields.map((f) => [f.key, f.multiple ? [w] : w]))
+/** Words typed in the box as the answer to the whole card: each question gets them (a list for a pick-several one). The same rule in the apps: server/cards.mjs (OLA-325). */
+export function answerFromWords(q: Pick<Question, 'fields'>, words: string): Record<string, string | string[]> {
+  return wordsAnswer(q, words) ?? {}
 }
 
 export function composerState(i: ComposerInput): ComposerState {

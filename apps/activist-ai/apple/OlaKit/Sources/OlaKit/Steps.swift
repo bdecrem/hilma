@@ -244,36 +244,17 @@ public enum Plain {
     return WebAsk.leaves(w.first)
   }
 
-  /// The cloud form of `ola-publish` (web/server/publishask.mjs): the folder or page, and the list.
-  public static func cloudPublish(_ cmd: String) -> (target: String, files: [String])? {
-    guard let w = WebAsk.shellWords(cmd.trimmingCharacters(in: .whitespaces)), w.count == 4,
-          w[0] == "ola-publish" || w[0] == "/opt/ola/bin/ola-publish", !["preview", "publish", "unpublish", "status"].contains(w[1]) else { return nil }
-    var target: String? = nil
-    var files: [String] = []
-    var i = 1
-    while i < w.count {
-      if w[i] == "--files", i + 1 < w.count { files = w[i + 1].split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }; i += 2 }
-      else if w[i].hasPrefix("-") || target != nil { return nil }
-      else { target = w[i]; i += 1 }
+  /// The publish (or take-down) yes for a permission request, described by cards.mjs (OLA-325),
+  /// or nil for any other request. For the Mac's own command (Ola working on the Mac) the files
+  /// are read from the folder here; in a cloud project the command names them.
+  public static func publishCard(action: String, resources: [String], dir: String?, cloudProject: String? = nil) -> PublishCard? {
+    guard action == "shell" || action == "bash", resources.count == 1, resources[0].contains("ola-publish") else { return nil }
+    var files: [String]? = nil
+    if let p = Cards.localPublish(resources[0]) {
+      let folder = p.folder.hasPrefix("/") ? p.folder : dir.map { ($0 as NSString).appendingPathComponent(p.folder) }
+      files = folder.map(listFolder) ?? []
     }
-    guard let t = target, !files.isEmpty else { return nil }
-    return (t, files)
-  }
-
-  /// The Mac's form of `ola-publish publish` (../bart/ola-publish): the folder and the site's name.
-  public static func localPublish(_ cmd: String) -> (folder: String, name: String)? {
-    guard let w = WebAsk.shellWords(cmd.trimmingCharacters(in: .whitespaces)), w.count == 7,
-          (w[0] as NSString).lastPathComponent == "ola-publish", w[1] == "publish" else { return nil }
-    var folder: String? = nil, name: String? = nil, fp: String? = nil
-    var i = 2
-    while i < w.count {
-      if w[i] == "--name", i + 1 < w.count { name = w[i + 1]; i += 2 }
-      else if w[i] == "--fingerprint", i + 1 < w.count { fp = w[i + 1]; i += 2 }
-      else if w[i].hasPrefix("-") || folder != nil { return nil }
-      else { folder = w[i]; i += 1 }
-    }
-    guard let f = folder, let n = name, fp != nil, !n.isEmpty else { return nil }
-    return (f, n)
+    return Cards.publish(action: action, resources: resources, address: cloudProject.map { "sites.ola.cx/\($0)/" }, files: files)
   }
 
   /// The files ola-publish sends from a folder, as it lists them: hidden parts, node_modules and
@@ -301,29 +282,11 @@ public enum Plain {
         ApprovalItem(label: WebAsk.label(r), detail: r.item == nil || w.extra ? resources.joined(separator: "\n") : nil, isCommand: r.item == nil)
       })
     }
-    // Publish from a cloud project's conversation (OLA-230): `ola-publish <folder> --files a,b`. The
-    // question names every file that goes public (the yes is for exactly that list); the command
-    // stays under it. The Mac's own `ola-publish preview|publish` (local runtime) is a command as before.
-    if action == "shell" || action == "bash", resources.count == 1, ["ola-publish unpublish", "/opt/ola/bin/ola-publish unpublish"].contains(resources[0].trimmingCharacters(in: .whitespaces)) {
-      return ("Ola wants to take this project\u{2019}s pages off the web", [ApprovalItem(label: "Take down what is published at sites.ola.cx", detail: resources[0], isCommand: true)])
-    }
-    // The card shows what goes public and where, never the command (OLA-267: the web's sheet shows none).
-    if action == "shell" || action == "bash", resources.count == 1, let p = cloudPublish(resources[0]) {
-      // The address as the website's sheet says it (OLA-267 check #8): sites.ola.cx/<project>/.
-      let at = cloudProject.map { "sites.ola.cx/\($0)/" } ?? "sites.ola.cx"
-      return ("Ola wants to publish \(p.files.count == 1 ? "this file" : "these \(p.files.count) files") on the web, at \(at)",
-              p.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
-    }
-    // The Mac's own `ola-publish publish <folder> --name <n> --fingerprint <f>` (local runtime, OLA-267):
-    // the same question, the files read from the folder on this Mac, the address from the name.
-    if action == "shell" || action == "bash", resources.count == 1, let p = localPublish(resources[0]) {
-      let files = dir.map { listFolder(p.folder.hasPrefix("/") ? p.folder : ($0 as NSString).appendingPathComponent(p.folder)) } ?? []
-      let at = "sites.ola.cx/\(p.name)/"
-      if files.isEmpty {
-        return ("Ola wants to publish the folder \(p.folder) on the web, at \(at)", [ApprovalItem(label: "Everything in \(p.folder)", detail: nil, isCommand: false)])
-      }
-      return ("Ola wants to publish \(files.count == 1 ? "this file" : "these \(files.count) files") on the web, at \(at)",
-              files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
+    // Publishing, or taking pages down (OLA-230, OLA-267): the card's words from cards.mjs, the
+    // same as the website's; the files that go public and the address (the cloud project's,
+    // sites.ola.cx/<project>/, when known: OLA-267 #8), never the command (OLA-325).
+    if let c = publishCard(action: action, resources: resources, dir: dir, cloudProject: cloudProject) {
+      return (c.title, c.files.map { ApprovalItem(label: $0, detail: nil, isCommand: false) })
     }
     if action == "shell" || action == "bash" {
       return ("Ola wants to run a command", resources.map { cmd in

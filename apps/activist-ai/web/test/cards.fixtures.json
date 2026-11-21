@@ -1,0 +1,91 @@
+{
+  "about": "Ola's cards (OLA-325): each input as opencode sends it, and every line the card must show, in order. web/server/cards.mjs makes the description; web/test/cards.test.mjs, the web check (check.mjs, the cards page in Chromium and WebKit) and OlaKit's CardsTests all read this file. Made-up content only.",
+  "cards": [
+    {
+      "name": "one question with choices",
+      "form": { "id": "frm_one", "sessionID": "ses_1", "metadata": { "tool": { "id": "call_1" } }, "fields": [{ "key": "q0", "type": "string", "title": "Town", "description": "Which made-up town should the page be about?", "options": [{ "value": "Springfield", "label": "Springfield" }, { "value": "Shelbyville", "label": "Shelbyville", "description": "The one across the river" }] }] },
+      "lines": ["Ola is asking you, and waits for your answer", "Which made-up town should the page be about?", "Springfield", "Shelbyville", "The one across the river", "Or write your own answer in the box below."],
+      "tapAnswers": true,
+      "words": "The one by the lake",
+      "answer": { "q0": "The one by the lake" }
+    },
+    {
+      "name": "one question without choices",
+      "form": { "id": "frm_open", "sessionID": "ses_1", "fields": [{ "key": "q0", "type": "string", "title": "Title", "description": "What should the page's title be?" }] },
+      "lines": ["Ola is asking you, and waits for your answer", "What should the page's title be?", "Write your answer in the box below."],
+      "tapAnswers": true,
+      "words": "Block party",
+      "answer": { "q0": "Block party" }
+    },
+    {
+      "name": "two questions (OLA-320)",
+      "form": { "id": "frm_two", "sessionID": "ses_1", "fields": [{ "key": "q0", "type": "string", "title": "Day", "description": "Which day is the block party?", "options": [{ "value": "Saturday", "label": "Saturday" }, { "value": "Sunday", "label": "Sunday" }] }, { "key": "q1", "type": "string", "title": "First", "description": "What should the page show first?", "options": [{ "value": "The time", "label": "The time" }, { "value": "The food", "label": "The food" }] }] },
+      "lines": ["Ola is asking you, and waits for your answer", "Which day is the block party?", "Saturday", "Sunday", "What should the page show first?", "The time", "The food", "Or write one answer in the box below. Ola gets your words as your answer to both questions.", "Send my answers"],
+      "tapAnswers": false,
+      "words": "Saturday at noon, show the time first",
+      "answer": { "q0": "Saturday at noon, show the time first", "q1": "Saturday at noon, show the time first" }
+    },
+    {
+      "name": "pick several",
+      "form": { "id": "frm_many", "sessionID": "ses_1", "fields": [{ "key": "q0", "type": "multiselect", "title": "Parts", "description": "Which parts should the list have?", "options": [{ "value": "Games", "label": "Games" }, { "value": "Music", "label": "Music" }, { "value": "Food", "label": "Food" }] }] },
+      "lines": ["Ola is asking you, and waits for your answer", "Which parts should the list have?", "Games", "Music", "Food", "Or write your own answer in the box below.", "Send my answers"],
+      "tapAnswers": false,
+      "words": "Games and music",
+      "answer": { "q0": ["Games and music"] }
+    },
+    {
+      "name": "three questions, one of them without choices",
+      "form": { "id": "frm_three", "sessionID": "ses_1", "fields": [{ "key": "a", "type": "string", "title": "Color", "description": "Which color?", "options": [{ "value": "Green", "label": "Green" }] }, { "key": "b", "type": "string", "title": "Size", "description": "How big?", "custom": false, "options": [{ "value": "Small", "label": "Small" }, { "value": "Large", "label": "Large" }] }, { "key": "c", "type": "string", "title": "Who signs it?" }] },
+      "lines": ["Ola is asking you, and waits for your answer", "Which color?", "Green", "How big?", "Small", "Large", "Who signs it?", "Or write one answer in the box below. Ola gets your words as your answer to all three questions.", "Send my answers"],
+      "tapAnswers": false,
+      "words": "Green, small, the committee",
+      "answer": { "a": "Green, small, the committee", "b": "Green, small, the committee", "c": "Green, small, the committee" }
+    },
+    {
+      "name": "publish from a cloud project",
+      "permission": { "action": "shell", "resources": ["ola-publish site --files index.html,style.css,photo.jpg"] },
+      "ctx": { "address": "sites.ola.cx/demo-test/" },
+      "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.", "The address: sites.ola.cx/demo-test/", "three files will be public", "index.html", "style.css", "photo.jpg", "Publish these three files", "Not now"]
+    },
+    {
+      "name": "publish one page from a cloud project, with 2>&1 (OLA-267)",
+      "permission": { "action": "bash", "resources": ["/opt/ola/bin/ola-publish flyer.html --files flyer.html 2>&1"] },
+      "ctx": { "address": "sites.ola.cx/demo-test/" },
+      "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.", "The address: sites.ola.cx/demo-test/", "one file will be public", "flyer.html", "Publish this file", "Not now"]
+    },
+    {
+      "name": "take a cloud project's pages down",
+      "permission": { "action": "shell", "resources": ["ola-publish unpublish"] },
+      "ctx": { "address": "sites.ola.cx/demo-test/" },
+      "lines": ["Ola wants to take this project’s pages off the web", "Nothing will be at this project’s address on the web any more. The files stay in the project.", "Yes, take it down", "Not now"]
+    },
+    {
+      "name": "publish with Ola working on the Mac (OLA-230 check 4)",
+      "permission": { "action": "shell", "resources": ["ola-publish publish site --name lantern --fingerprint 3f9a0c"] },
+      "ctx": { "files": ["index.html", "lantern.svg"] },
+      "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else on this Mac goes with them.", "The address: sites.ola.cx/lantern/", "two files will be public", "index.html", "lantern.svg", "Publish these two files", "Not now"]
+    },
+    {
+      "name": "publish on the Mac after cd, with 2>&1",
+      "permission": { "action": "shell", "resources": ["cd /Users/someone/Pages && ola-publish publish site --name pebble --fingerprint 77aa --json 2>&1"] },
+      "ctx": { "files": ["index.html"] },
+      "folder": "/Users/someone/Pages/site",
+      "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else on this Mac goes with them.", "The address: sites.ola.cx/pebble/", "one file will be public", "index.html", "Publish this file", "Not now"]
+    },
+    {
+      "name": "take a Mac's site down",
+      "permission": { "action": "shell", "resources": ["ola-publish unpublish --name lantern"] },
+      "lines": ["Ola wants to take sites.ola.cx/lantern/ off the web", "Nothing will be at sites.ola.cx/lantern/ any more. The files stay on this Mac.", "Yes, take it down", "Not now"]
+    },
+    {
+      "name": "any other command is not a publish card",
+      "permission": { "action": "shell", "resources": ["python3 make.py"] },
+      "lines": []
+    },
+    {
+      "name": "the publish status is not a card",
+      "permission": { "action": "shell", "resources": ["ola-publish status"] },
+      "lines": []
+    }
+  ]
+}

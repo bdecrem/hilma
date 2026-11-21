@@ -19,6 +19,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit } from 'playwright'
+import { publishCard } from './server/cards.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const LIVE = !process.argv.includes('--no-live')
@@ -1730,6 +1731,63 @@ async function compareChecks(engine, label) {
 // and WebKit. A watcher in the page records any text with a raw marker the moment it appears.
 const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts', 'test/conversation.test.ts', 'test/publishask.test.mjs', 'test/composer.test.ts'], { cwd: HERE, encoding: 'utf8' })
 ok('the command and reaction parsers, the conversation reducer, the switch rule, the publish question and the composer\'s button per state (test/commands.test.ts, test/conversation.test.ts, test/publishask.test.mjs, test/composer.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+
+// ---------------------------------------------------------------- the cards, described once (OLA-325)
+// server/cards.mjs describes every question card and publish yes once; the Mac and iPhone apps run
+// the same file (OlaKit CardsTests renders the same fixtures). Here: the description's lines per
+// fixture (test/cards.test.mjs), then the web app's own card components draw every fixture on one
+// page (test/cards/), in Chromium and WebKit, and each card must show every line, in order, with no
+// command and no marker. The Mac's own publish (Ola working on the Mac) is not a web card.
+{
+  const cardUnit = spawnSync(process.execPath, ['--test', 'test/cards.test.mjs'], { cwd: HERE, encoding: 'utf8' })
+  ok('the cards’ description: every fixture’s lines, typed words answer every question card (test/cards.test.mjs)', cardUnit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(cardUnit.stdout)?.[1] ?? '?') + ' tests' + (cardUnit.status === 0 ? '' : `: ${cardUnit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+  const appsCopy = spawnSync(process.execPath, [path.join(HERE, '../apple/tools/cards-js.mjs'), '--check'], { encoding: 'utf8' })
+  ok('the Mac and iPhone apps carry this very module (apple/tools/cards-js.mjs --check: OlaKit CardsJS.swift is what cards.mjs makes)', appsCopy.status === 0, (appsCopy.stdout || appsCopy.stderr).trim())
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'ola-cards-'))
+  const b = spawnSync(path.join(HERE, 'node_modules/.bin/vite'), ['build', 'test/cards', '--config', 'vite.config.ts', '--outDir', out, '--emptyOutDir', '--logLevel', 'error'], { cwd: HERE, encoding: 'utf8' })
+  const { cards } = JSON.parse(fs.readFileSync(path.join(HERE, 'test/cards.fixtures.json'), 'utf8'))
+  for (const [engine, label] of [[chromium, 'Chromium'], [webkit, 'WebKit']]) {
+    await check(`${label}: every card fixture drawn by the web app shows the description’s lines in order, no command, no marker (OLA-325)`, async () => {
+      assert(b.status === 0, `the cards page did not build: ${(b.stderr || b.stdout).slice(0, 200)}`)
+      const br = await engine.launch()
+      try {
+        const pg = await (await br.newContext({ viewport: { width: 390, height: 844 } })).newPage()
+        await pg.route('http://cards.test/**', (r) => {
+          const pathname = new URL(r.request().url()).pathname
+          if (pathname === '/cards.fixtures.json') return r.fulfill({ status: 200, body: fs.readFileSync(path.join(HERE, 'test/cards.fixtures.json')), contentType: 'application/json' })
+          const p = path.join(out, pathname.replace(/^\/$/, '/index.html'))
+          if (!p.startsWith(out) || !fs.existsSync(p)) return r.fulfill({ status: 404, body: '' })
+          r.fulfill({ status: 200, body: fs.readFileSync(p), contentType: p.endsWith('.js') ? 'text/javascript' : p.endsWith('.css') ? 'text/css' : 'text/html' })
+        })
+        await pg.goto('http://cards.test/')
+        await pg.locator('section.fixture').first().waitFor({ timeout: 15_000 })
+        let drawn = 0
+        for (const c of cards) {
+          if (c.permission && publishCard(c.permission.action, c.permission.resources, c.ctx ?? {})?.runtime === 'local') continue
+          const sec = pg.locator(`section.fixture[data-card="${c.name.replace(/"/g, '\\"')}"]`)
+          if (/^publish/.test(c.name)) await sec.locator('.publish-files li').first().waitFor({ timeout: 10_000 })
+          const text = (await sec.innerText()).replace(/\s+/g, ' ').trim()
+          if (!c.lines.length) {
+            assert(text === '', `${c.name}: a card was drawn: ${text.slice(0, 80)}`)
+            continue
+          }
+          let at = 0
+          for (const l of c.lines) {
+            const i = text.indexOf(l.replace(/\s+/g, ' '), at)
+            assert(i >= 0, `${c.name}: "${l}" is not on the card after "${text.slice(Math.max(0, at - 40), at)}"`)
+            at = i + l.length
+          }
+          assert(!/ola-publish|--files|\[\[ola/.test(text), `${c.name}: a command or a marker on the card: ${text.slice(0, 120)}`)
+          drawn++
+        }
+        return `${drawn} cards`
+      } finally {
+        await br.close()
+      }
+    })
+  }
+  fs.rmSync(out, { recursive: true, force: true })
+}
 async function commandChecks(engine, label) {
   const b = await engine.launch()
   const d = await startDev(['--fake-model'])

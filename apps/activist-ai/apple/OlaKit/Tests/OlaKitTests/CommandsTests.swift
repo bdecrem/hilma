@@ -86,29 +86,49 @@ final class CommandsTests: XCTestCase {
     XCTAssertEqual(t.reaction, .eyes)
   }
 
-  /// Publish from a cloud project's conversation (OLA-230): the question names every file.
+  /// Publish from a cloud project's conversation (OLA-230): the question names every file, in the
+  /// card's words from cards.mjs (OLA-325; CardsTests has every fixture).
   func testCloudPublishQuestion() {
     let a = Plain.describeApproval(action: "shell", resources: ["ola-publish site --files index.html,style.css"], metadata: .null, dir: nil)
-    XCTAssertEqual(a.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx")
+    XCTAssertEqual(a.title, "Ola wants to publish this on the web")
     XCTAssertEqual(a.items.map(\.label), ["index.html", "style.css"])
     XCTAssertTrue(a.items.allSatisfy { !$0.isCommand && $0.detail == nil })  // never the command (OLA-267)
     // In the apps the cloud project is known: the card names its address, as the website does (OLA-267 #8).
-    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish site --files index.html"], metadata: .null, dir: nil, cloudProject: "appdriver").title, "Ola wants to publish this file on the web, at sites.ola.cx/appdriver/")
+    let named = Plain.publishCard(action: "shell", resources: ["ola-publish site --files index.html"], dir: nil, cloudProject: "appdriver")
+    XCTAssertEqual(named?.addressLine, "The address: sites.ola.cx/appdriver/")
+    XCTAssertEqual(named?.yes, "Publish this file")
     XCTAssertEqual(ServerConfig(url: URL(string: "https://app.ola.cx/api/device/w/appdriver/oc")!, password: "", account: true).cloudProject, "appdriver")
     XCTAssertNil(ServerConfig(url: URL(string: "http://mini:4310")!, password: "").cloudProject)
-    // The Mac's own ola-publish (local runtime): the files from the folder and the address (OLA-267).
+    // The Mac's own ola-publish (local runtime): the files from the folder (OLA-267).
     let d = NSTemporaryDirectory() + "olapub-\(UUID().uuidString)"
     try? FileManager.default.createDirectory(atPath: d + "/site/img", withIntermediateDirectories: true)
     for f in ["site/index.html", "site/img/a.png", "site/.ola-source.json"] { FileManager.default.createFile(atPath: d + "/" + f, contents: Data("x".utf8)) }
     let l = Plain.describeApproval(action: "shell", resources: ["\"/Users/x/Library/Application Support/Ola/web-tools/ola-publish\" publish site --name oak --fingerprint abc"], metadata: .null, dir: d)
-    XCTAssertEqual(l.title, "Ola wants to publish these 2 files on the web, at sites.ola.cx/oak/")
+    XCTAssertEqual(l.title, "Ola wants to publish this on the web")
     XCTAssertEqual(l.items.map(\.label), ["img/a.png", "index.html"])
     XCTAssertTrue(l.items.allSatisfy { !$0.isCommand && $0.detail == nil })
-    XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish publish site --name oak --fingerprint abc"], metadata: .null, dir: nil).title, "Ola wants to publish the folder site on the web, at sites.ola.cx/oak/")
-    XCTAssertNil(Plain.localPublish("ola-publish publish site --name oak --fingerprint abc && rm -rf x"))
+    XCTAssertEqual(Plain.publishCard(action: "shell", resources: ["ola-publish publish site --name oak --fingerprint abc"], dir: nil)?.heading, "Everything in site will be public")
     XCTAssertEqual(Plain.describeApproval(action: "shell", resources: ["ola-publish preview site --name x"], metadata: .null, dir: nil).title, "Ola wants to run a command")
-    XCTAssertNil(Plain.cloudPublish("ola-publish site --files a | cat"))
-    XCTAssertNil(Plain.cloudPublish("ola-publish status"))
+  }
+
+  /// Markers of ours never show (OLA-322): the short form is a reaction too, and any other marker
+  /// anywhere is taken out; a reaction in the turn's first note counts.
+  func testNoMarkerShows() {
+    XCTAssertEqual(Reaction.split("[[ola:done]]\nThe page is built.").reaction, .done)
+    XCTAssertEqual(Reaction.split("[[ola:done]]\nThe page is built.").text, "The page is built.")
+    XCTAssertEqual(Reaction.split("[[ola:thanks]]").reaction, .thanks)
+    XCTAssertEqual(Reaction.split("[[ola:thanks]]").text, "")
+    XCTAssertEqual(Reaction.split("Done. [[ola:done]] See the page.").text, "Done.  See the page.")
+    XCTAssertEqual(Reaction.split("[[ola:do").text, "")
+    var t = Turn(id: "t", request: "thanks!", at: .now, status: .done, steps: [], answer: "")
+    t.notes = ["[[ola:react thanks]]"]
+    XCTAssertEqual(t.reaction, .thanks)
+    XCTAssertTrue(t.shownNotes.isEmpty)
+    XCTAssertTrue(t.reactionOnly)
+    t.notes = ["[[ola:done]]\nLet me look first."]
+    t.answer = "It is built."
+    XCTAssertEqual(t.shownNotes, ["Let me look first."])
+    XCTAssertEqual(t.reaction, .done)
   }
 
   /// Ola's web commands ask the web app's question, not "run a command".

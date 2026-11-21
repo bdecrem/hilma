@@ -25,7 +25,7 @@ struct TurnView: View {
       RequestView(turn: turn)
       // A thank-you gets only its reaction: no run line, no reply.
       if !turn.reactionOnly {
-        if !turn.steps.isEmpty || !turn.notes.isEmpty || turn.isRunning { RunView(turn: turn, isLast: isLast) }
+        if !turn.steps.isEmpty || !turn.shownNotes.isEmpty || turn.isRunning { RunView(turn: turn, isLast: isLast) }
         if let notice = turn.notice {
           Label(notice, systemImage: "arrow.clockwise").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
         }
@@ -167,8 +167,8 @@ struct RunView: View {
       .help(isOpen ? "Hide the steps" : "Show every step")
       let shown = isOpen ? turn.steps : turn.steps.filter { $0.status == .failed || $0.status == .waiting }
       ForEach(shown) { StepRow(step: $0, engine: turn.engine).transition(.opacity.combined(with: .move(edge: .top))) }
-      if isOpen, !turn.notes.isEmpty {
-        ForEach(Array(turn.notes.enumerated()), id: \.offset) { _, n in
+      if isOpen, !turn.shownNotes.isEmpty {
+        ForEach(Array(turn.shownNotes.enumerated()), id: \.offset) { _, n in
           Text(n).font(OlaFont.serif(Metrics.ui, .italic)).foregroundStyle(Ola.ink2).lineSpacing(2)
             .padding(.leading, Metrics.youColumn + Space.s).padding(.vertical, Space.xs)
             .fixedSize(horizontal: false, vertical: true)
@@ -269,8 +269,13 @@ struct ApprovalPanel: View {
           Text("Ola asks").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
         }
         Text(approval.title).font(OlaFont.sans(Metrics.heading, .semibold)).foregroundStyle(Ola.ink)
-        if let note = approval.note {
+        if let note = approval.card?.lede ?? approval.note {
           Text(note).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
+        }
+        // A publish (OLA-325): the address and how many files, the website's lines, from cards.mjs.
+        if let c = approval.card, c.kind == .publish {
+          Text(c.addressLine).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink).textSelection(.enabled)
+          if let h = c.heading { Text(h).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2) }
         }
       }
       VStack(alignment: .leading, spacing: Space.s) {
@@ -332,14 +337,17 @@ struct ApprovalPanel: View {
 
   @ViewBuilder func yesButtons(stacked: Bool) -> some View {
     let w: CGFloat? = stacked ? .infinity : nil
-    Button { reply(.once) } label: { Text("Yes, this once").frame(maxWidth: w) }
+    // A publish or a take-down is one yes for this list, once (cards.mjs: "Publish these two files").
+    Button { reply(.once) } label: { Text(approval.card?.yes ?? "Yes, this once").frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-    Button { reply(.always) } label: { Text("Yes, for the rest of this session").frame(maxWidth: w) }
-      .buttonStyle(OlaButton(kind: .ghost))
+    if approval.card == nil {
+      Button { reply(.always) } label: { Text("Yes, for the rest of this session").frame(maxWidth: w) }
+        .buttonStyle(OlaButton(kind: .ghost))
+    }
   }
 
   func noButton(stacked: Bool) -> some View {
-    Button { reply(.reject) } label: { Text("No, don\u{2019}t").frame(maxWidth: stacked ? .infinity : nil) }
+    Button { reply(.reject) } label: { Text(approval.card?.no ?? "No, don\u{2019}t").frame(maxWidth: stacked ? .infinity : nil) }
       .buttonStyle(OlaButton(kind: .danger)).keyboardShortcut(.cancelAction)
   }
 
@@ -365,7 +373,7 @@ struct QuestionPanel: View {
     VStack(alignment: .leading, spacing: Space.m) {
       HStack(spacing: 6) {
         Circle().fill(Ola.vermilion).frame(width: 6, height: 6)
-        Text("Ola asks, and waits for your answer").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
+        Text(question.kicker).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
       }
       ForEach(Array(question.fields.enumerated()), id: \.element.key) { fi, f in
         VStack(alignment: .leading, spacing: Space.s) {
@@ -375,21 +383,20 @@ struct QuestionPanel: View {
             option(f, o, number: fi == 0 ? oi + 1 : nil)
           }
           if f.custom, !question.single {
-            TextField(f.options.isEmpty ? "Your answer" : "Or say it in your own words", text: Binding(get: { typed[f.key] ?? "" }, set: { typed[f.key] = $0 }))
+            TextField(f.placeholder, text: Binding(get: { typed[f.key] ?? "" }, set: { typed[f.key] = $0 }))
               .textFieldStyle(.roundedBorder).font(OlaFont.sans(Metrics.ui))
           }
         }
       }
-      if question.single, question.fields.first?.custom == true {
-        Text(question.fields.first?.options.isEmpty == true ? "Type your answer in the box below and press Return." : "Or type your own answer in the box below and press Return.")
-          .font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2)
-      }
-      if !question.single {
-        Button { Task { await send(question.answer(picked: picked, typed: typed)) } } label: { Text("Send my answers") }
+      // The box under the card answers it too, whatever its shape (OLA-320): said in the words
+      // every client shows (cards.mjs).
+      Text(question.boxNote).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
+      if let label = question.sendLabel {
+        Button { Task { await send(question.answer(picked: picked, typed: typed)) } } label: { Text(label) }
           .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
           .disabled(!Question.complete(question.answer(picked: picked, typed: typed)))
       }
-      if busy { Text("Sent. Ola carries on.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2) }
+      if busy { Text(question.sent).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2) }
     }
     .disabled(busy)
     .padding(Space.l)
@@ -678,7 +685,8 @@ struct ConversationPane: View {
       SlashMenu(draft: $draft, picks: store.offersEveryChoice)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding)
-      // While Ola waits on a one-field question, what is typed in the box is the answer (OLA-301).
+      // While Ola waits on a question, what is typed in the box is the answer, whatever the card's
+      // shape (OLA-301, OLA-320: a two-question card ignored it; the website's rule since OLA-311).
       Composer(text: $draft, running: answering ? false : (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } },
                accessory: store.offersEveryChoice || store.claudeOn || store.hostedOn || store.nextEngine != .ola ? AnyView(EngineMenu(store: store)) : nil)
         .frame(maxWidth: columnWidth)
@@ -687,15 +695,16 @@ struct ConversationPane: View {
     .background(Ola.paper)
   }
 
-  /// A one-field question waits and an approval does not: the box answers it.
+  /// A question waits and an approval does not: the box answers it (any card, cards.mjs answerFromWords).
   var answering: Bool {
-    guard let c = store.conversation, c.approval == nil, let q = c.question else { return false }
-    return q.fields.count == 1 && q.fields[0].custom
+    guard let c = store.conversation, c.approval == nil else { return false }
+    return c.question != nil
   }
 
   func send() {
     let t = draft
-    if answering, let q = store.conversation?.question, let a = q.answer(words: t) {
+    // A slash command still goes as a command (as on the website); any other words answer the card.
+    if answering, !t.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("/"), let q = store.conversation?.question, let a = q.answer(words: t) {
       Task { if await store.answerQuestion(a) { draft = "" } }
       return
     }
