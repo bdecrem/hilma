@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile labor_b claude-opus-5-5 high",
- "pid": 62860,
  "step": "forward",
  "slug": "chile",
  "chunk": "labor_b",
@@ -59,5 +58,1162 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T06:30:42.900Z",
+ "minutes": 81.81,
+ "meters_after": {
+  "at": "2026-11-21T06:30:42.900Z",
+  "window": {
+   "pct": 24,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 52,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 24,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 52,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 24% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 52% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 181292,
+   "output": 49501,
+   "cache_read": 4408592,
+   "cache_write": 153431,
+   "cost_usd": 2.9837,
+   "total": 4792816
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 181204,
+    "output": 13025,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4371,
+    "cost_usd": 0.1446
+   },
+   "claude-opus-5-5": {
+    "input": 88,
+    "output": 36476,
+    "cache_read": 4408592,
+    "cache_write": 153431,
+    "thinking": 8326,
+    "cost_usd": 2.839
+   }
+  }
+ },
+ "turns": 57,
+ "calls": 92,
+ "duration_ms": 684272,
+ "duration_api_ms": 518491,
+ "pages_read": 38,
+ "pages": [
+  {
+   "at": "2026-11-21T05:08:58.658Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 72 | Artículo 55 | Artículo 78 | Artículo 79 | Artículo 13 | Artículo 14",
+   "ok": true,
+   "chars": 4349
+  },
+  {
+   "at": "2026-11-21T05:09:03.317Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 72.- | Artículo 55.- | Artículo 78.- | Artículo 79.- | Artículo 13.- | Artículo 14.- | Artículo 70.- | Artículo 71.-",
+   "ok": true,
+   "chars": 12846
+  },
+  {
+   "at": "2026-11-21T05:09:20.280Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "fechaVersion | 21655 | 21.655 | 21.724 | Trabajadores de temporada | situaciones: | NOTA",
+   "ok": true,
+   "chars": 10001
+  },
+  {
+   "at": "2026-11-21T05:09:31.688Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "132 bis | 132 BIS | Ley 21.6 | Ley Nº 21 | Artículo 88.- | Artículo 92.-",
+   "ok": true,
+   "chars": 8175
+  },
+  {
+   "at": "2026-11-21T05:09:36.558Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": null,
+   "ok": true,
+   "chars": 3295
+  },
+  {
+   "at": "2026-11-21T05:09:40.935Z",
+   "url": "https://www.diariooficial.interior.gob.cl/publicaciones/2024/02/20/43781/01/2456402.pdf",
+   "find": "Artículo primero | artículo 72 | artículo 79 | artículo 14 | artículo 70",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:09:55.964Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "Artículo 2 | 21.325 | artículo 131",
+   "ok": true,
+   "chars": 8381
+  },
+  {
+   "at": "2026-11-21T05:10:00.899Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Última modificación | Versión: | Ley 21",
+   "ok": true,
+   "chars": 3535
+  },
+  {
+   "at": "2026-11-21T05:11:25.215Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2025-12-31",
+   "find": "Artículo 72.- | Artículo 79.- | Artículo 14.- | Ley 21816 | 21.816",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:46.111Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31",
+   "find": "Versión: | Última modificación | Artículo 72.-",
+   "ok": true,
+   "chars": 2243
+  },
+  {
+   "at": "2026-11-21T05:16:59.482Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-12-31",
+   "find": "Versión: | Última modificación",
+   "ok": true,
+   "chars": 2164
+  },
+  {
+   "at": "2026-11-21T05:29:44.585Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2023-08-10",
+   "find": "Versión: | Última modificación",
+   "ok": true,
+   "chars": 2212
+  },
+  {
+   "at": "2026-11-21T05:29:55.304Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-01-31",
+   "find": "Versión: | Última modificación",
+   "ok": true,
+   "chars": 2212
+  },
+  {
+   "at": "2026-11-21T05:30:12.480Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2023-09-01",
+   "find": "Versión: | Última modificación",
+   "ok": true,
+   "chars": 2212
+  },
+  {
+   "at": "2026-11-21T05:30:27.123Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "21.325 | Artículo único",
+   "ok": true,
+   "chars": 2528
+  },
+  {
+   "at": "2026-11-21T05:30:27.924Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+   "find": "21.325 | Artículo único",
+   "ok": true,
+   "chars": 2410
+  },
+  {
+   "at": "2026-11-21T05:30:28.678Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+   "find": "21.325 | Artículo 2",
+   "ok": true,
+   "chars": 3305
+  },
+  {
+   "at": "2026-11-21T05:30:32.337Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+   "find": "2. | 3. | Incorpórase | Y por cuanto",
+   "ok": true,
+   "chars": 5297
+  },
+  {
+   "at": "2026-11-21T05:30:33.017Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325 | Migración y Extranjería",
+   "ok": true,
+   "chars": 2115
+  },
+  {
+   "at": "2026-11-21T05:30:37.542Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idLey=21730",
+   "find": "21.325",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:39:41.870Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "Encabezado | Artículo 2 | Artículo 3 | Artículo 4 | Artículo 5 | migración",
+   "ok": true,
+   "chars": 4408
+  },
+  {
+   "at": "2026-11-21T05:45:30.477Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176019",
+   "find": "Versión: | Artículo 21 | residencia definitiva",
+   "ok": true,
+   "chars": 1812
+  },
+  {
+   "at": "2026-11-21T05:45:46.232Z",
+   "url": "https://www.prieto.cl/subcategorias-migratorias-de-residencia-temporal/",
+   "find": "residencia definitiva | término | contrato",
+   "ok": true,
+   "chars": 4385
+  },
+  {
+   "at": "2026-11-21T05:56:26.859Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1176043",
+   "find": "Artículo 21 | Artículo 20 | residencia definitiva | cambio de empleador | término de la relación laboral",
+   "ok": true,
+   "chars": 965
+  },
+  {
+   "at": "2026-11-21T05:58:46.182Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043",
+   "find": "Versión: | Artículo 21 | residencia definitiva | empleador",
+   "ok": true,
+   "chars": 4855
+  },
+  {
+   "at": "2026-11-21T05:58:50.142Z",
+   "url": "https://www.refworld.org/es/node/133983",
+   "find": "Artículo 21 | Artículo 19 | residencia definitiva",
+   "ok": true,
+   "chars": 575
+  },
+  {
+   "at": "2026-11-21T05:59:48.982Z",
+   "url": "https://serviciomigraciones.cl/residencia-temporal/subcategorias/",
+   "find": "residencia definitiva | empleador | postular",
+   "ok": true,
+   "chars": 5752
+  },
+  {
+   "at": "2026-11-21T06:00:04.328Z",
+   "url": "https://serviciomigraciones.cl/residencia-temporal/subcategorias/actividades-remuneradas/",
+   "find": "empleador | término | definitiva | contrato",
+   "ok": true,
+   "chars": 5444
+  },
+  {
+   "at": "2026-11-21T06:00:05.535Z",
+   "url": "https://eldesconcierto.cl/2023/03/17/siete-mil-denuncias-a-la-dt-realizaron-extranjeros-por-malas-practicas-laborales",
+   "find": "denuncias | extranjeros | 2022",
+   "ok": true,
+   "chars": 3404
+  },
+  {
+   "at": "2026-11-21T06:00:06.784Z",
+   "url": "https://dt.gob.cl/portal/1627/w3-article-122186.html",
+   "find": "mismos derechos | extranjeros | denuncia",
+   "ok": true,
+   "chars": 2085
+  },
+  {
+   "at": "2026-11-21T06:00:10.833Z",
+   "url": "https://dt.gob.cl/portal/1627/w3-article-122186.html",
+   "find": "criterio operativo | empleador | contrato | residencia",
+   "ok": true,
+   "chars": 3342
+  },
+  {
+   "at": "2026-11-21T06:00:14.648Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=207436",
+   "find": "Artículo 1°.- | Versión: | Última modificación",
+   "ok": true,
+   "chars": 2205
+  },
+  {
+   "at": "2026-11-21T06:00:24.537Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=207436",
+   "find": "Art. 1° | Las relaciones laborales entre los empleadores y los trabajadores | Art. 19",
+   "ok": true,
+   "chars": 3371
+  },
+  {
+   "at": "2026-11-21T06:00:31.013Z",
+   "url": "https://serviciomigraciones.cl/avances-gestion-migratoria/",
+   "find": "residencia definitiva | rezago | días | pendientes",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:14:09.094Z",
+   "url": "https://www.latercera.com/nacional/noticia/la-cifra-mas-alta-en-20-anos-migraciones-entrego-mas-de-94-mil-residencias-definitivas-en-2022-pero-expertos-apuntan-a-otras-dificultades-sin-resolver/FD4FHXKQVBCVDGYXES6SGRFERQ/",
+   "find": "94 mil | residencias definitivas | demora | pendientes",
+   "ok": true,
+   "chars": 3727
+  },
+  {
+   "at": "2026-11-21T06:14:13.847Z",
+   "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de",
+   "find": "rezago | definitiva | 2025 | 2024",
+   "ok": true,
+   "chars": 3494
+  },
+  {
+   "at": "2026-11-21T06:14:25.716Z",
+   "url": "https://serviciomigraciones.cl/director-realizo-cuenta-publica/",
+   "find": "Rezago | 429 | definitivas",
+   "ok": true,
+   "chars": 2434
+  },
+  {
+   "at": "2026-11-21T06:14:29.884Z",
+   "url": "https://dt.gob.cl/portal/1629/w3-propertyvalue-191852.html",
+   "find": "extranjer | denuncias | 2024 | 2025",
+   "ok": true,
+   "chars": 3371
+  }
+ ],
+ "searches": [
+  "\"modifica la ley N° 21.325\" ley 2024 2025 migración extranjería artículos modificados",
+  "leychile Ley 21655 modifica ley 21.325 reconducción idNorma",
+  "Ley 21816 migración modifica ley 21.325",
+  "\"Ley 21.610\" OR \"ley 21610\" modifica ley 21.325 migración",
+  "Ley 21730 Ministerio de Seguridad Pública modifica ley 21.325 migración artículo",
+  "Ley 21.590 2023 modifica ley 21.325 migración artículo",
+  "ley 21.730 \"ley N° 21.325\" \"artículo\" Ministerio de Seguridad Pública modificaciones migración Policía de Investigaciones",
+  "Decreto 177 2022 subcategorías migratorias residencia temporal leychile idNorma",
+  "bcn.cl leychile \"Decreto 177\" \"subcategorías migratorias de residencia temporal\" Ministerio del Interior 2022",
+  "serviciomigraciones.cl residencia temporal actividades lícitas remuneradas término contrato cambio de empleador no pierde residencia",
+  "Servicio Nacional de Migraciones demora residencia definitiva solicitudes pendientes 2024 Contraloría informe",
+  "trabajadores migrantes Chile Dirección del Trabajo denuncias vulneraciones laborales informe 2024 OIT migrantes acceso justicia laboral",
+  "Sermig 2025 residencias definitivas otorgadas tiempos de tramitación rezago resuelto noticia"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":101,\"answer_2023\":\"Loss of employment does not affect immigration status\",\"implementation_2023\":\"Usually; Effectively Always\",\"answer_2026\":\"Loss of employment does not affect immigration status\",\"implementation_2026\":\"Usually; Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 72\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 177 (2022), Ministerio del Interior y Seguridad Pública, subcategorías migratorias de residencia temporal\",\"article\":\"Art. 21\",\"enacted\":\"2022-05-14\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-08-07\",\"instrument\":\"Ley N° 21.590\",\"article\":\"Ley 21.325 art. 134\",\"kind\":\"amended\",\"what_changed\":\"Expulsion detention period raised from 48 hours to five days. Does not touch the indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21590\",\"passage\":\"Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión cuarenta y ocho horas por la frase cinco días corridos.\"},{\"date\":\"2023-08-18\",\"instrument\":\"Ley N° 21.589\",\"article\":\"Ley 21.325 arts. 5, 132, 132 bis, 147, 166\",\"kind\":\"amended\",\"what_changed\":\"Alternative notification of expulsion proceedings. Does not touch the indicator.\",\"url\":\"https://www.bcn.cl/leychile/navegar?idLey=21589\",\"passage\":\"Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería: 1. Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno\"},{\"date\":\"2023-09-22\",\"instrument\":\"Ley N° 21.610\",\"article\":\"Ley 21.325 art. 100\",\"kind\":\"amended\",\"what_changed\":\"Passenger lists extended to domestic transport. Does not touch the indicator.\",\"",
+ "output": {
+  "answers": [
+   {
+    "question_id": 101,
+    "answer_2023": "Loss of employment does not affect immigration status",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Loss of employment does not affect immigration status",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 72",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022), Ministerio del Interior y Seguridad Pública, subcategorías migratorias de residencia temporal",
+      "article": "Art. 21",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley N° 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Expulsion detention period raised from 48 hours to five days. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325, de Migración y Extranjería, la expresión cuarenta y ocho horas por la frase cinco días corridos."
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley N° 21.589",
+      "article": "Ley 21.325 arts. 5, 132, 132 bis, 147, 166",
+      "kind": "amended",
+      "what_changed": "Alternative notification of expulsion proceedings. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería: 1. Agréganse, en el artículo 5, los siguientes incisos quinto, sexto, séptimo, octavo y noveno"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley N° 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists extended to domestic transport. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Artículo 2.- Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N° 21.655",
+      "article": "Ley 21.325 art. 131 (reconducción); Ley 20.430",
+      "kind": "amended",
+      "what_changed": "Changed reconducción of irregular entrants and the refugee procedure. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de l"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley N° 21.730 (crea el Ministerio de Seguridad Pública)",
+      "article": "Ley 21.325 (provision not identified; institutional references)",
+      "kind": "amended",
+      "what_changed": "Opened a new version of Ley 21.325 in force 01-APR-2025. The amending clause could not be read. The current text of arts. 13, 14, 70, 72, 78 and 79 still reads as in 2021, so these articles were not affected in substance.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "There is no direct practice evidence on revocation after job loss in either period. Both law firm commentary (2022) and SERMIG's own guidance describe the Decreto 177 permit as no longer tied to an employment contract, and no documented pattern of revocation for job loss was found. The rating stays the same for 2023 and 2026, with low confidence.",
+    "practice_sources": [
+     {
+      "title": "Subcategorías migratorias de residencia temporal (Prieto Abogados)",
+      "url": "https://www.prieto.cl/subcategorias-migratorias-de-residencia-temporal/",
+      "year": 2022,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "SERMIG: Extranjeros que desarrollan actividades lícitas remuneradas",
+      "url": "https://serviciomigraciones.cl/residencia-temporal/subcategorias/actividades-remuneradas/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The LeyChile version metadata was read for 2022-12-31 (original text, 12-FEB-2022 to 06-AGO-2023) and for 2025-12-31 (intermediate version, 01-APR-2025 to 01-JUN-2026). The amending acts 21.589, 21.590, 21.610 and 21.655 were read; the clause of 21.730 touching Ley 21.325 was not. Decreto 177 shows a single version ('Única - 14-MAY-2022'), but the text of its Art. 21 could not be rendered.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 XML",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 2022-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-12-31"
+     },
+     {
+      "title": "Ley 21.325 version 2025-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31"
+     },
+     {
+      "title": "Decreto 177",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     },
+     {
+      "title": "Ley 21.589",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589"
+     },
+     {
+      "title": "Ley 21.590",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590"
+     },
+     {
+      "title": "Ley 21.610",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610"
+     },
+     {
+      "title": "Ley 21.655",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.730",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Prieto: subcategorías",
+      "url": "https://www.prieto.cl/subcategorias-migratorias-de-residencia-temporal/"
+     },
+     {
+      "title": "SERMIG actividades remuneradas",
+      "url": "https://serviciomigraciones.cl/residencia-temporal/subcategorias/actividades-remuneradas/"
+     }
+    ],
+    "starting_answer_concern": "Art. 72 of Ley 21.325 only sets the validity of the permit and does not itself protect status after job loss; the protection comes from Decreto 177. Extending a work-based permit reportedly requires proof of continued remunerated activity (about 60% of the permit period), so job loss can affect renewal. The MRD's rating 'Effectively Always; Sometimes' is not an allowed option and has been mapped to 'Usually; Effectively Always'.",
+    "confidence": "low",
+    "notes": "Ley 21.816 (02-JUN-2026) amended Ley 21.325 after the window and is not considered here."
+   },
+   {
+    "question_id": 113,
+    "answer_2023": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 55",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 70 (incl. final paragraph on admissibility for residencia definitiva)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 75, 76",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 78, 79",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-07",
+      "instrument": "Ley N° 21.590",
+      "article": "Ley 21.325 art. 134",
+      "kind": "amended",
+      "what_changed": "Expulsion detention period. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21590",
+      "passage": "Artículo único.- Sustitúyese en el inciso final del artículo 134 de la ley N° 21.325"
+     },
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley N° 21.589",
+      "article": "Ley 21.325 arts. 5, 132, 132 bis, 147, 166",
+      "kind": "amended",
+      "what_changed": "Notification of expulsion proceedings. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2023-09-22",
+      "instrument": "Ley N° 21.610",
+      "article": "Ley 21.325 art. 100",
+      "kind": "amended",
+      "what_changed": "Passenger lists. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21610",
+      "passage": "Artículo 2.- Introdúcense las siguientes modificaciones en el inciso primero del artículo 100 de la ley Nº 21.325"
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N° 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Reconducción. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de l"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley N° 21.730",
+      "article": "Ley 21.325 (provision not identified)",
+      "kind": "amended",
+      "what_changed": "New version from 01-APR-2025 (Ministerio de Seguridad Pública). Arts. 70, 78 and 79 still read as originally enacted.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Around 2023 the pathway worked, but with a large backlog. SERMIG granted 93,989 residencias definitivas in 2022, the highest figure in 20 years, while about 305,000 applications were pending and some had waited for years (La Tercera, May 2023; DF, 2023). By July 2025 SERMIG reported that the Rezago programme had resolved 99.4% of the inherited backlog and that more than 429,000 temporary and permanent applications were decided in 2024 to Q1 2025. Delays in 2023 were real, but the route was being used at scale in both periods. 'Usually' is kept for both dates; access improved but not enough to change the level.",
+    "practice_sources": [
+     {
+      "title": "La cifra más alta en 20 años: Migraciones entregó más de 94 mil residencias definitivas en 2022",
+      "url": "https://www.latercera.com/nacional/noticia/la-cifra-mas-alta-en-20-anos-migraciones-entrego-mas-de-94-mil-residencias-definitivas-en-2022-pero-expertos-apuntan-a-otras-dificultades-sin-resolver/FD4FHXKQVBCVDGYXES6SGRFERQ/",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Migraciones apuesta por resolver rezago de 305 mil solicitudes de residencias",
+      "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Director Nacional de Migraciones realizó Cuenta Pública (2025)",
+      "url": "https://serviciomigraciones.cl/director-realizo-cuenta-publica/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Version metadata for both dates and the amending acts were read; the Ley 21.730 clause was not. Arts. 70, 72, 78 and 79 were read in the current consolidated text, which matches the 2021 enactment. The practice data come from SERMIG statements and press reports, not from independent audits.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 XML",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 2022-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-12-31"
+     },
+     {
+      "title": "Ley 21.325 version 2025-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31"
+     },
+     {
+      "title": "Ley 21.325 version 2025-01-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-01-31"
+     },
+     {
+      "title": "La Tercera 2023",
+      "url": "https://www.latercera.com/nacional/noticia/la-cifra-mas-alta-en-20-anos-migraciones-entrego-mas-de-94-mil-residencias-definitivas-en-2022-pero-expertos-apuntan-a-otras-dificultades-sin-resolver/FD4FHXKQVBCVDGYXES6SGRFERQ/"
+     },
+     {
+      "title": "DF rezago",
+      "url": "https://www.df.cl/economia-y-politica/pais/migraciones-apuesta-por-resolver-rezago-de-305-mil-solicitudes-de"
+     },
+     {
+      "title": "SERMIG Cuenta Pública 2025",
+      "url": "https://serviciomigraciones.cl/director-realizo-cuenta-publica/"
+     }
+    ],
+    "starting_answer_concern": "Art. 55 of Ley 21.325 concerns the border-zone document and is not relevant. The operative provisions are Art. 70's final paragraph, under which residencia definitiva is 'siempre admisible' for numerals 1, 2, 3, 5, 8, 9, 10 and 12 (numeral 2 covers paid work), and Arts. 78-79 (24 months of temporary residence). Given the 2022-23 backlog, 'Sometimes; Usually' would also be defensible for 2023.",
+    "confidence": "medium",
+    "notes": "Search results mention 185,250 overdue temporary and permanent applications as of March 2026; this was not read and falls after the window."
+   },
+   {
+    "question_id": 115,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Art. 70 (final paragraph), Art. 78 inciso 2",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 177 (2022)",
+      "article": "Subcategory provisions on admissibility",
+      "enacted": "2022-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley N° 21.655",
+      "article": "Ley 21.325 art. 131",
+      "kind": "amended",
+      "what_changed": "Reconducción. Does not touch the indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "Artículo 2º.- Modifícase el inciso segundo del artículo 131 de l"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley N° 21.730",
+      "article": "Ley 21.325 (provision not identified)",
+      "kind": "amended",
+      "what_changed": "New version from 01-APR-2025. Art. 70's admissibility paragraph and Art. 78 still read as originally enacted.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Does not apply: in both periods, access to residencia definitiva depends on the subcategory. Art. 78 allows it only for a temporary permit 'que expresamente admita postular a ella'. Art. 70 guarantees admissibility only for listed subcategories, and seasonal workers (numeral 4) are not among them.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The current text of Art. 70 and Art. 78 was read, and the version metadata for both dates confirms no amendment. Ley 21.589, 21.590 and 21.610 also amended Ley 21.325 in 2023 but touched only arts. 5, 100, 132, 134, 147 and 166.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 XML",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 2022-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-12-31"
+     },
+     {
+      "title": "Ley 21.325 version 2025-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31"
+     },
+     {
+      "title": "Decreto 177",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1176043"
+     }
+    ],
+    "starting_answer_concern": "The starting citation says the 'temporary migrant workers' visa' does not allow an application for permanent status. That is inaccurate for the paid-work subcategory (Art. 70 No. 2), which is always admissible. The 'No' answer still holds because of seasonal workers (No. 4) and other subcategories.",
+    "confidence": "medium",
+    "notes": "Arts. 70 and 78 are quoted from the current consolidated text."
+   },
+   {
+    "question_id": 117,
+    "answer_2023": "Yes, same as citizens",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes, same as citizens",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 13, 14",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código del Trabajo (DFL 1, 2002)",
+      "article": "Art. 1",
+      "enacted": "2003-01-16",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-08-18",
+      "instrument": "Ley N° 21.589",
+      "article": "Ley 21.325 arts. 5, 132, 132 bis, 147, 166",
+      "kind": "amended",
+      "what_changed": "Notification of expulsion proceedings. Arts. 13 and 14 untouched.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21589",
+      "passage": "Artículo único.- Incorpóranse las siguientes modificaciones en la ley Nº 21.325, de Migración y Extranjería"
+     },
+     {
+      "date": "2025-04-01",
+      "instrument": "Ley N° 21.730",
+      "article": "Ley 21.325 (provision not identified)",
+      "kind": "amended",
+      "what_changed": "New version from 01-APR-2025. Arts. 13 and 14 still read as originally enacted.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31",
+      "passage": "Versión: Intermedio - de 01-ABR-2025 a 01-JUN-2026 Última modificación: 05-FEB-2025 - Ley 21730"
+     }
+    ],
+    "implementation_then_now": "Migrant workers use the Dirección del Trabajo (DT) redress channel at scale. In 2022, foreign workers filed 7,264 complaints and 22,304 claims, leading to more than 5,000 inspections and 2,449 sanctions. 15.2% of the sanctions were for breaches of contract provisions (El Desconcierto, citing a DT report, March 2023). The DT's stated inspection criterion is to enforce labour rights regardless of residence status (DT, May 2022). For 2025 the DT published a dedicated annual report on complaints and claims by foreign workers, showing the channel still operating; its PDF could not be read. There is no evidence of a shift.",
+    "practice_sources": [
+     {
+      "title": "Siete mil denuncias a la DT realizaron extranjeros por malas prácticas laborales",
+      "url": "https://eldesconcierto.cl/2023/03/17/siete-mil-denuncias-a-la-dt-realizaron-extranjeros-por-malas-practicas-laborales",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "DT colaborará en el objetivo país de empleo decente y residencia legal de los trabajadores migrantes",
+      "url": "https://dt.gob.cl/portal/1627/w3-article-122186.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "DT Estudios y estadísticas 2025: Informe 2025 denuncias, reclamos y trámites de personas extranjeras",
+      "url": "https://dt.gob.cl/portal/1629/w3-propertyvalue-191852.html",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Arts. 13 and 14 of Ley 21.325 were read in the current text ('Los extranjeros gozarán de los mismos derechos en materia laboral que los chilenos'), with version metadata for both dates. The text and version history of Código del Trabajo Art. 1 could not be rendered. The practice evidence for 2023-2026 is thinner: only the listing of the DT 2025 report was seen.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 XML",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 version 2025-12-31",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2025-12-31"
+     },
+     {
+      "title": "Código del Trabajo (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+     },
+     {
+      "title": "El Desconcierto 2023",
+      "url": "https://eldesconcierto.cl/2023/03/17/siete-mil-denuncias-a-la-dt-realizaron-extranjeros-por-malas-practicas-laborales"
+     },
+     {
+      "title": "DT news 2022",
+      "url": "https://dt.gob.cl/portal/1627/w3-article-122186.html"
+     },
+     {
+      "title": "DT publications 2025",
+      "url": "https://dt.gob.cl/portal/1629/w3-propertyvalue-191852.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Art. 14(2) of Ley 21.325 obliges employers to meet labour obligations even when the worker's status is irregular, so redress reaches irregular workers as well."
+   }
+  ]
+ }
 }
