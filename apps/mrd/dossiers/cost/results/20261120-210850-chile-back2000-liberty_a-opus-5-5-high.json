@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile liberty_a claude-opus-5-5 high",
- "pid": 62575,
  "step": "back2000",
  "slug": "chile",
  "chunk": "liberty_a",
@@ -58,5 +57,899 @@
   "user": 175
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T06:16:01.760Z",
+ "minutes": 67.19,
+ "meters_after": {
+  "at": "2026-11-21T06:16:01.760Z",
+  "window": {
+   "pct": 20,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 52,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 20,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 52,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 20% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 52% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 121671,
+   "output": 31382,
+   "cache_read": 2428236,
+   "cache_write": 120680,
+   "cost_usd": 1.9865,
+   "total": 2701969
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 121611,
+    "output": 9470,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3537,
+    "cost_usd": 0.0969
+   },
+   "claude-opus-5-5": {
+    "input": 60,
+    "output": 21912,
+    "cache_read": 2428236,
+    "cache_write": 120680,
+    "thinking": 5334,
+    "cost_usd": 1.8896
+   }
+  }
+ },
+ "turns": 36,
+ "calls": 63,
+ "duration_ms": 526094,
+ "duration_api_ms": 396840,
+ "pages_read": 23,
+ "pages": [
+  {
+   "at": "2026-11-21T05:08:57.194Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 84 | Artículo 64 | cónsul | menores | Artículo 81 | Artículo 89",
+   "ok": true,
+   "chars": 4550
+  },
+  {
+   "at": "2026-11-21T05:09:22.157Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08",
+   "find": "cinco días | Art. 84 | Artículo 84 | Art. 64 | Art. 81 | Art. 89",
+   "ok": true,
+   "chars": 2199
+  },
+  {
+   "at": "2026-11-21T05:09:32.644Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=6483&idVersion=2011-04-08",
+   "find": "Artículo 84 | cinco días | Artículo 64 | Artículo 81 | Artículo 89",
+   "ok": true,
+   "chars": 454
+  },
+  {
+   "at": "2026-11-21T05:16:26.393Z",
+   "url": "https://www.interior.gob.cl/transparencia/doc/MarcoNormativoAplicable/200/7962164.pdf",
+   "find": "Artículo 84 | cinco días | Artículo 64 | Artículo 81 | Artículo 89 | 24 horas",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:42.779Z",
+   "url": "https://www.oas.org/dil/Migrants/Chile/Decreto-Ley%20N%C2%B0%201.094,%20estableciendo%20normas%20sobre%20extranjeros%20en%20Chile%20-%201975.pdf",
+   "find": "Artículo 84 | cinco días | Artículo 64 | Artículo 81 | Artículo 89 | 24 horas",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:23:25.520Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=6483",
+   "find": "cinco días | Art. 84 | Art. 64 | Art. 81 | Art. 89",
+   "ok": true,
+   "chars": 3328
+  },
+  {
+   "at": "2026-11-21T05:23:36.080Z",
+   "url": "https://sela.org/wp-content/uploads/2023/07/decreto-ley-1094-migracion-chile.pdf",
+   "find": "Artículo 84 | cinco días | Artículo 81 | Artículo 89",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:29:44.707Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+   "find": "cinco días | Art. 84 | Art. 64 | Art. 81 | Art. 89 | Artículo 84",
+   "ok": true,
+   "chars": 5952
+  },
+  {
+   "at": "2026-11-21T05:29:49.650Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+   "find": "con el objeto de poner | Artículo 81.- | Artículo 89 | Artículo 90 | Artículo 85 | Artículo 86 | Artículo 87",
+   "ok": true,
+   "chars": 9116
+  },
+  {
+   "at": "2026-11-21T05:30:09.684Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+   "find": "Artículo 82.- | consular | menor de edad | menores de edad",
+   "ok": true,
+   "chars": 8413
+  },
+  {
+   "at": "2026-11-21T05:30:09.756Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "cinco días | privado de su libertad | detenido | consular | Cónsul | menores de edad",
+   "ok": true,
+   "chars": 12650
+  },
+  {
+   "at": "2026-11-21T05:30:19.480Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=123162",
+   "find": "consular | cónsul | extranjeros | diplomátic",
+   "ok": true,
+   "chars": 2336
+  },
+  {
+   "at": "2026-11-21T05:30:30.564Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=123280",
+   "find": "consular | cónsul | extranjero | diplomátic",
+   "ok": true,
+   "chars": 4043
+  },
+  {
+   "at": "2026-11-21T05:45:23.120Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=10453",
+   "find": "709 | Relaciones Consulares",
+   "ok": true,
+   "chars": 4423
+  },
+  {
+   "at": "2026-11-21T05:45:48.785Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "detention | detained | consular | expulsion | children",
+   "ok": true,
+   "chars": 5839
+  },
+  {
+   "at": "2026-11-21T05:45:49.987Z",
+   "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/",
+   "find": "amparo | Borgoño | Suprema | días",
+   "ok": true,
+   "chars": 4892
+  },
+  {
+   "at": "2026-11-21T05:45:50.769Z",
+   "url": "https://www.globaldetentionproject.org/countries/americas/chile",
+   "find": "children | consular | Borgoño | Article 89 | Decree | detention",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:56:28.625Z",
+   "url": "https://www.globaldetentionproject.org/countries/americas/chile/detention-centres/1852/cuartel-independencia-santiago",
+   "find": "children | consular | Borgoño | 2013 | detention",
+   "ok": true,
+   "chars": 2400
+  },
+  {
+   "at": "2026-11-21T05:56:34.722Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+   "find": "No sanción | ingreso clandestino | menores no acompañados | Artículo 8 | Artículo 9",
+   "ok": true,
+   "chars": 6516
+  },
+  {
+   "at": "2026-11-21T05:59:40.754Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "vigencias_version_norma | fecha_publicacion | derogado",
+   "ok": true,
+   "chars": 5454
+  },
+  {
+   "at": "2026-11-21T05:59:41.568Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+   "find": "vigencias_version_norma",
+   "ok": true,
+   "chars": 2223
+  },
+  {
+   "at": "2026-11-21T05:59:45.422Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "\"tipo_version_s\":\"Texto Original\" | Última Versión",
+   "ok": true,
+   "chars": 3550
+  },
+  {
+   "at": "2026-11-21T05:59:49.707Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-05-23",
+   "find": "Artículo 176° | Artículo 174°",
+   "ok": true,
+   "chars": 3411
+  }
+ ],
+ "searches": [
+  "Decreto Ley 1094 \"artículo 84\" \"hasta por cinco días\" texto pdf",
+  "\"Decreto Ley 1094\" extranjeros Chile \"podrá disponer\" \"cinco días\" expulsión detención texto",
+  "\"Decreto Ley 1094\" artículo 84 \"el afectado\" \"fuere necesario\" \"medida de expulsión\" plazo \"cinco días\" Ministerio Interior",
+  "leyes-cl.com establece normas sobre extranjeros en chile artículo 84",
+  "bcn.cl leychile Decreto 518 1998 Reglamento de Establecimientos Penitenciarios internos extranjeros cónsul",
+  "bcn.cl leychile Convención de Viena sobre Relaciones Consulares decreto 709 1968 promulga",
+  "Chile \"Convención de Viena sobre Relaciones Consulares\" \"Decreto 709\" Relaciones Exteriores 1968",
+  "CMW/C/CHL/CO/1 concluding observations Chile 2011 migrant workers detention consular",
+  "INDH cuartel Borgoño migrantes privados de libertad expulsión informe 2013 condiciones"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.03,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":15,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"DL 1.094 (1975) and its reglamento DS 597 (1984), as they stood in the 1996-10-22 and 1998-05-18 versions, give detained or expellable foreigners no right to communicate with their consul. The only consular mention in the expulsion chapter is DL 1.094 art. 85: the consular representative may arrange the exit of deserting crew members. The VCCR, promulgated by Decreto RR.EE. 709 of 28 Nov 1967, was in force but was not counted by the 2020 coder. There is no practice evidence for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same texts. The 2002-05-31 amendment of DL 1.094 (Ley 19.806, art. 35) touched only art. 94, on courts and Gendarmeria reporting rulings on foreigners, not consular contact. There is no practice evidence.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"No change. The DS 597 version of 2000-05-23 and the DL 1.094 version of 2002-05-31 were in force; neither contains a consular-communication rule. There is no practice evidence.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 20.430 (2010) and Ley 20.507 (2011) amended DL 1.094 (refugee provisions; art. 33 bis residence for trafficking victims) but added no consular-access rule. The CMW 2011 Concluding Observations mention consuls only in recommending that Chilean consular officials be informed of migrants' Convention rights. The consular rule the 2023 coding relies on (Ley 21.325 art. 134) only came into force in February 2022.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migracion y Extranjeria\",\"article\":\"Art. 134\",\"role\":\"cited\",\"in_force\":\"2022-02-12 to today\",\"history_read\":\"not_found\"},{\"instrument\":\"Decreto Ley 1.094 de 1975, Establece normas sobre extranjeros en Chile\"",
+ "output": {
+  "answers": [
+   {
+    "question_id": 15,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 (1975) and its reglamento DS 597 (1984), as they stood in the 1996-10-22 and 1998-05-18 versions, give detained or expellable foreigners no right to communicate with their consul. The only consular mention in the expulsion chapter is DL 1.094 art. 85: the consular representative may arrange the exit of deserting crew members. The VCCR, promulgated by Decreto RR.EE. 709 of 28 Nov 1967, was in force but was not counted by the 2020 coder. There is no practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same texts. The 2002-05-31 amendment of DL 1.094 (Ley 19.806, art. 35) touched only art. 94, on courts and Gendarmeria reporting rulings on foreigners, not consular contact. There is no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. The DS 597 version of 2000-05-23 and the DL 1.094 version of 2002-05-31 were in force; neither contains a consular-communication rule. There is no practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 (2010) and Ley 20.507 (2011) amended DL 1.094 (refugee provisions; art. 33 bis residence for trafficking victims) but added no consular-access rule. The CMW 2011 Concluding Observations mention consuls only in recommending that Chilean consular officials be informed of migrants' Convention rights. The consular rule the 2023 coding relies on (Ley 21.325 art. 134) only came into force in February 2022."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Art. 134",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975, Establece normas sobre extranjeros en Chile",
+      "article": "Arts. 81-90 (Parrafo 3: medidas de control, traslado y expulsion), incl. art. 85",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984, Reglamento de Extranjeria",
+      "article": "Arts. 167-176 (expulsion)",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Convencion de Viena sobre Relaciones Consulares (1963), promulgada por Decreto RR.EE. 709 de 28-11-1967",
+      "article": "Art. 36",
+      "role": "other_in_force",
+      "in_force": "1967 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2002-05-31",
+      "instrument": "Ley 19.806 (normas adecuatorias del sistema legal chileno a la reforma procesal penal)",
+      "article": "DL 1.094 art. 94",
+      "kind": "amended",
+      "what_changed": "Art. 94 now requires criminal courts to tell Registro Civil and PDI, within five days, of exit bans and convictions concerning foreigners, and requires Gendarmeria to report the dates sentences end. Nothing on consular communication.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+      "passage": "Artículo 94. Los tribunales con competencia en lo criminal y losLEY 19806 Art. 35 D.O. 31.05.2002 tribunales militares, en su caso, deberán comunicar al Servicio de Registro Civil e Identificación y a la Policía de Investigaciones de Chile, dentro del plazo máximo de cinco días"
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 art. 33 bis",
+      "kind": "amended",
+      "what_changed": "Adds a temporary residence permit for victims of trafficking. Nothing on consular communication.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+      "passage": "Artículo 33 bis.-Ley 20507 Art. TERCERO Nº 2 D.O. 08.04.2011 Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal"
+     }
+    ],
+    "repealed_search": "Searched the DL 1.094 versions (1996-10-22, 2002-05-31, 2010-04-15, 2011-04-08) and the DS 597 versions (2000-05-23 and the last version) for 'consular' and 'consul'. The only consular references concern visas, the Arancel Consular, official residents and crew members (DL art. 85). DS 518/1998 (penitentiary regulation) has no consular provision either. No consular-communication protection existed and was repealed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on the initial report of Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile JSON for DL 1.094 (the version in force 2011-2022 plus its version list) and for DS 597 (the 2000-05-23 version and the last version). Their amendment notes show no change to the expulsion articles after 1983 (DL) or 1997 (DS). I could not open the Decreto 709/1967 text itself; I saw it only cited in the Reglamento Consular's recitals. PDFs could not be read in this session.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - DL 1.094 (HTML index and versions)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "LeyChile JSON - DL 1.094 version 2011-04-08",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 Reglamento de Extranjeria (last version)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 version 2000-05-23",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-05-23"
+     },
+     {
+      "title": "LeyChile JSON - Decreto 518/1998 Reglamento de Establecimientos Penitenciarios",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=123280"
+     },
+     {
+      "title": "LeyChile JSON - Decreto 172/1977 Reglamento Consular",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=10453"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": "Chile promulgated the VCCR by Decreto RR.EE. 709 of 28 November 1967 (cited in the recitals of the Reglamento Consular, Decreto 172/1977), and promulgated treaties apply in Chile's legal order. The MRD's own Argentina and Colombia examples code 'Yes' on VCCR ratification alone. On that basis Chile's 2020 answer (and the answers back to 2000) could arguably have been 'Yes'. The 2020 'No' against the 2023 'Yes' reflects the coder's reliance on Ley 21.325 art. 134 (in force February 2022), not a change in the treaty position.",
+    "confidence": "medium",
+    "notes": "The answer rests on statutes and regulations only; no ruling was relied on. The VCCR was not counted, consistent with the 2020 starting answer (see concern). There is no practice evidence specific to consular access in 2000-2015."
+   },
+   {
+    "question_id": 17,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 arts. 81-90 and DS 597 arts. 167-176 allow control measures and detention of 'el afectado' / 'el extranjero' pending expulsion, with no exception for minors. Neither text contains 'menores de edad' in this context. There is no practice evidence on child detention for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged. The 2002 amendment of DL 1.094 (art. 94) does not concern minors or detention. There is no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged. Ley 20.430 (published and in force 15-04-2010) postdates this date. There is no practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 (2010) gives asylum-seeking children family-unity and non-sanction protections but no prohibition on detaining migrant children; DL 1.094 and DS 597 are unchanged on detention. The CMW 2011 Concluding Observations raise detention generally (lack of data on length and conditions) without a finding on children."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Art. 134",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 81, 82, 84, 89, 90",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984, Reglamento de Extranjeria",
+      "article": "Arts. 174, 176",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.430 (proteccion de refugiados)",
+      "article": "Arts. 3, 6, 9",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today (amended by Ley 21.655, 2024)",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley 20.430",
+      "article": "Arts. 3, 6 (non-sanction for irregular entry of refugees)",
+      "kind": "new_instrument",
+      "what_changed": "Sets up the refugee regime, including a principle of non-sanction for irregular entry. It contains no prohibition on detaining children. The quoted text is the current one, amended by Ley 21.655 (2024).",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435",
+      "passage": "No se impondrán a los refugiados sanciones penales ni administrativas con motivo de su ingreso o residencia irregular, siempre que se presenten, dentro de los diez días siguientes a la infracción"
+     }
+    ],
+    "repealed_search": "Searched DL 1.094 (versions 1996-2011) and DS 597 (versions 2000-05-23 and last) for 'menor de edad' and 'menores de edad' and for any exception to detention or expulsion for children; none found. Ley 20.430 mentions minors only in family unity. No protection existed and was repealed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on the initial report of Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DL 1.094 and DS 597 were read from LeyChile JSON with version metadata; the DS 597 art. 174/176 text in the 2000-05-23 version is identical to the last version. Ley 20.430 was read only in its current text. There is no practice evidence on detention of migrant children for 2000-2015.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON - DL 1.094 version 2011-04-08",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 (last version)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 version 2000-05-23",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-05-23"
+     },
+     {
+      "title": "LeyChile JSON - Ley 20.430",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer rests on statutes and regulations; no ruling relied on. The CRC (promulgated 1990) was not counted, consistent with the starting answer."
+   },
+   {
+    "question_id": 19,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 art. 81 subjects foreigners who entered irregularly or overstayed to 'control inmediato', and art. 84 provides for their transfer. Art. 89 (text from Ley 18.252, 1983) says that while an expulsion appeal is pending 'el extranjero afectado permanecerá privado de su libertad en un establecimiento carcelario'. DS 597 arts. 174 and 176 add 'restricciones y privaciones de su libertad que sean estrictamente necesarias'. There is no practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged. The only DL 1.094 amendment in 2000-2005 (Ley 19.806, 2002) concerned art. 94. There is no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged detention provisions. There is no practice evidence for this date."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Detention provisions unchanged by Ley 20.430 (2010) or Ley 20.507 (2011). Practice confirms detention: the CMW in 2011 noted migrants held in 'administrative custody' with no information on length or conditions. In March 2013 the Corte Suprema upheld an amparo freeing 17 migrants held over 15 days at the PDI Borgoño station pending expulsion (press report)."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migracion y Extranjeria",
+      "article": "Art. 134",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 81, 82, 84, 89, 90",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-11",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984, Reglamento de Extranjeria",
+      "article": "Arts. 174, 175, 176",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-11",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "DS 597 version beginning 2000-05-23 (amending decree not identified)",
+      "article": "DS 597 arts. 174, 176",
+      "kind": "amended",
+      "what_changed": "A new DS 597 version starts on this date, but arts. 174 and 176 are identical to the last version: detention during an expulsion appeal, and deprivation of liberty 'estrictamente necesaria' to execute expulsion. The detention rule did not change.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-05-23",
+      "passage": "Artículo 176°.- Para hacer efectivas las medidas contempladas en el presente Título, se podrá someter al afectado a las restricciones y privaciones de su libertad que sean estrictamente necesarias para dar adecuado cumplimiento de aquéllas."
+     },
+     {
+      "date": "2002-05-31",
+      "instrument": "Ley 19.806",
+      "article": "DL 1.094 art. 94",
+      "kind": "amended",
+      "what_changed": "Reporting duties of courts and Gendarmeria regarding foreigners. Arts. 81-90 untouched.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08",
+      "passage": "Artículo 94. Los tribunales con competencia en lo criminal y losLEY 19806 Art. 35 D.O. 31.05.2002 tribunales militares, en su caso, deberán comunicar"
+     },
+     {
+      "date": "2013-03",
+      "instrument": "Corte Suprema, amparo confirming Corte de Apelaciones de Santiago judgment of 9 March 2013 (17 migrants, Cuartel Borgoño)",
+      "article": "DL 1.094 arts. 84, 89 (application)",
+      "kind": "practice",
+      "what_changed": "Practice evidence: the court ordered the release of migrants held over 15 days pending expulsion and referred the facts to prosecutors. The decision is confined to its facts, and I read only a press report of it.",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/",
+      "passage": "La Corte Suprema ratificó el fallo de la Corte de Apelaciones de Santiago que acogió un recurso de amparo presentado en favor de 17 inmigrantes que se encontraban detenidos en el cuartel Borgoño de la Policía de Investigaciones (PDI) en precarias condiciones."
+     }
+    ],
+    "repealed_search": "Searched the DL 1.094 versions (1996-10-22, 2002-05-31, 2010-04-15, 2011-04-08; arts. 81-90 carry only Ley 18.252/1983 annotations) and the DS 597 versions (2000-05-23, 2015-03-07, last; arts. 174/176 unchanged) for any prohibition or limit on immigration detention. None found; both texts expressly authorise detention pending expulsion. Ley 20.430's non-sanction rule covers refugees only and is not a ban on detention.",
+    "rulings": [
+     {
+      "court": "Corte Suprema de Chile (confirming Corte de Apelaciones de Santiago)",
+      "reference": "Amparo in favour of 17 migrants held at Cuartel Borgoño (rol not identified)",
+      "date": "2013-03",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "none found",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/"
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on the initial report of Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Suprema ordena a fiscalia investigar a la PDI por retencion ilegal de inmigrantes (The Clinic)",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/",
+      "year": 2013,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "Global Detention Project - Cuartel Independencia Santiago",
+      "url": "https://www.globaldetentionproject.org/countries/americas/chile/detention-centres/1852/cuartel-independencia-santiago",
+      "year": null,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DL 1.094 and DS 597 were read on LeyChile with version metadata, and the DS 597 2000-05-23 version was read directly; the DL 1.094 1996 and 2002 versions were not opened separately, but the article annotations show no post-1983 change to arts. 81-90. The 2013 Borgoño ruling was known only from a press report. There is no practice evidence for 2000 and 2005.",
+    "sources_opened": [
+     {
+      "title": "LeyChile - DL 1.094 (HTML)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "LeyChile - DL 1.094 version 2011-04-08 (HTML)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "LeyChile JSON - DL 1.094 version 2011-04-08",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483&idVersion=2011-04-08"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 (last version)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "LeyChile JSON - DS 597 version 2000-05-23",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=2000-05-23"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     },
+     {
+      "title": "The Clinic 26-03-2013",
+      "url": "https://www.theclinic.cl/2013/03/26/suprema-ordena-a-fiscalia-investigar-a-la-pdi-por-retencion-ilegal-de-inmigrantes/"
+     },
+     {
+      "title": "Global Detention Project - Cuartel Independencia",
+      "url": "https://www.globaldetentionproject.org/countries/americas/chile/detention-centres/1852/cuartel-independencia-santiago"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Throughout 2000-2020 the statute and regulation expressly authorised detention pending expulsion (DL 1.094 art. 89; DS 597 arts. 174, 176). The 2013 ruling is practice evidence only."
+   }
+  ]
+ }
 }
