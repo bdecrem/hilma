@@ -177,7 +177,7 @@
       "id": "claude",
       "what": "Hand a request to Claude",
       "cloud": {
-        "tell": "do not do the request yourself and never say you cannot hand it over: tell them to type /claude followed by the request (the project's owner turns on Fallback to Claude in Settings)"
+        "tell": "a request that names Claude comes with a note saying whether Claude can take it in this project: follow it. When it is on, or off but the owner can hand this one over, do not do the request yourself and tell them to type /claude followed by the request; when Claude cannot take requests here, say so in one plain sentence with the note's reason, never send them to /claude, and offer to do it yourself"
       },
       "local": {
         "tell": "do not do the request yourself and never say you cannot hand it over: tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings)"

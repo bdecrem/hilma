@@ -174,9 +174,28 @@ export async function gatewayUsage(cc) {
 }
 
 const NOT_SET_UP = {
-  oauth: 'Claude is not set up on this machine yet: there is no subscription to use. Bart can set it up.',
-  api_key: 'Claude is not set up on this machine yet: there is no Anthropic account to use. Bart can set it up.',
+  oauth: 'Claude is not set up for this project yet: Ola’s computer has no Claude subscription to use. Bart can set it up.',
+  api_key: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Bart can set it up.',
   unknown: 'Claude cannot be turned on just now: this machine could not check that Claude is set up. Bart can look into it.',
+}
+
+// Whether Claude can take a request in this project, told to Ola before a request that names Claude
+// (OLA-232). The checker asked "can you have Claude do this one", Ola said type /claude (its
+// instructions), and /claude was then refused: no Claude account was set up for that project. Ola
+// in the VM cannot see the project's setting, so the front desk puts the fact in front of the
+// request, between the same marks as the engines note (the apps strip it from what they show).
+// Only a request that asks Claude to do something ("have Claude do this", "ask Claude to", "can Claude
+// build"); "was this built by Claude?" is a question about who made a file, not a hand-over.
+export const NAMES_CLAUDE = /\b(?:have|ask|let|get|use|try|want|need|prefer|switch to|hand (?:it |this |that )?(?:over )?to|send (?:it |this |that )?to|give (?:it |this |that )?to)\s+claude\b|\bclaude(?: code)?,?\s+(?:(?:can|could|should|would|will|to|please)\s+)?(?:do|handle|take|build|make|write|fix|try|finish)\b/i
+/** The fact for a request that names Claude, from info(ws), without the marks; '' when it cannot be said. */
+export function claudeNote(i) {
+  if (!i) return ''
+  const fact = !i.configured
+    ? `${i.unavailable} So Claude cannot take requests in this project, and typing /claude will not work here. Say that in one plain sentence with the reason, never tell them to type /claude, and offer to do the request yourself.`
+    : i.enabled
+      ? 'Fallback to Claude is on in this project: tell them to type /claude followed by the request, and do not do it yourself.'
+      : 'Fallback to Claude is off in this project. The project’s owner can type /claude followed by the request to hand over just this one, or turn Fallback to Claude on in Settings; anyone else asks the owner. Tell them that, and do not do it yourself.'
+  return `About Claude in this project (from the app, true now): ${fact}`
 }
 
 /** Plain words for one tool kind, for "always for this conversation". */
@@ -546,6 +565,11 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log, m
     },
     follow,
     turns,
+    /** The note about Claude for a request in this project that names Claude (claudeNote). */
+    async noteFor(ws, text) {
+      if (!NAMES_CLAUDE.test(text ?? '')) return ''
+      try { return claudeNote(await info(ws)) } catch { return '' }
+    },
     writeGrants: () => writeGrants(db, cc),
     active: (slug) => bySlug.has(slug),
     close() {

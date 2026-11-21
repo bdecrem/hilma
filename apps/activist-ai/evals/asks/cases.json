@@ -463,7 +463,7 @@
       "ability": "claude",
       "say": "have claude code do this one: write a file called hello.txt that says hi",
       "must": [
-        "says:/claude"
+        "says:/claude|not set up for this project|claude cannot take requests"
       ],
       "from": {
         "date": "2026-11-20",

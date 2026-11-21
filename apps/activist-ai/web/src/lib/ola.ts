@@ -666,7 +666,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     const info = f === 'claude' ? state.claude : state.hosted
     if (!info) return say('Ola’s computer has not said yet whether this is available here. Try again in a moment.')
     if (!info.configured)
-      return say(f === 'claude' ? 'Claude Code is not set up on this machine, so this request cannot go to Claude.' : 'The hosted open model is not set up on this machine, so this request cannot go to it.')
+      // The server's own sentence for why (claude.mjs / hosted.mjs NOT_SET_UP): the reason for this project, not a guess (OLA-232).
+      return say(info.unavailable ?? (f === 'claude' ? 'Claude is not set up for this project, so this request cannot go to Claude.' : 'The hosted open model is not set up for this project, so this request cannot go to it.'))
     const on = isOn(f)
     if (!on && !state.owner) return say(f === 'claude' ? 'Claude is off for this project. The project’s owner can turn it on in Settings.' : 'The hosted open model is off for this project. The project’s owner can turn it on in Settings.')
     setState({ suggestion: null, help: false })

@@ -181,3 +181,20 @@ test('a job the agent set going before anyone said yes is still a proposal (firs
   assert.equal(unapproved({ ...vmSays, progress: { done: 3 } }, undefined).state, 'paused')
   assert.equal(unapproved(null, undefined), null)
 })
+
+// OLA-232: a request asking Claude to do something gets the fact of whether Claude can take it in
+// this project (the checker was told to type /claude, and /claude was then refused).
+test('a request that asks for Claude gets whether Claude can take it here', async () => {
+  const { NAMES_CLAUDE, claudeNote } = await import('../claude.mjs')
+  for (const t of ['have claude code do this one: write a file called hello.txt', 'can you have Claude do this one', 'ask claude to fix it', 'Claude, please do this'])
+    assert.ok(NAMES_CLAUDE.test(t), t)
+  for (const t of ['pls confirm whether that was built by claude code or our hosted open models', 'was index.html made by Claude?', 'who is claude'])
+    assert.ok(!NAMES_CLAUDE.test(t), t)
+  const off = claudeNote({ configured: false, enabled: false, unavailable: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Bart can set it up.' })
+  assert.match(off, /no Anthropic account/)
+  assert.match(off, /never tell them to type \/claude/)
+  assert.match(claudeNote({ configured: true, enabled: true }), /is on in this project: tell them to type \/claude/)
+  assert.match(claudeNote({ configured: true, enabled: false }), /is off in this project\. The project’s owner can type \/claude/)
+  assert.equal(claudeNote(null), '')
+  assert.ok(!/[<>]/.test(off), 'the fact carries no marks of its own')
+})

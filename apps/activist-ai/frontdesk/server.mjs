@@ -31,14 +31,14 @@ import { addressKey, makeAuth, parseCookie } from './auth.mjs'
 import { minLength } from './passwords.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { makeViews } from './views.mjs'
-import { claudeConfig, makeClaude } from './claude.mjs'
+import { NAMES_CLAUDE, claudeConfig, makeClaude } from './claude.mjs'
 import { CONTAINER, HOME as WS_HOME } from '../workspace/ws.mjs'
 import { makeWeb } from './web.mjs'
 import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
-import { gatewayServed, makeMadeBy } from './madeby.mjs'
+import { NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
@@ -243,10 +243,15 @@ export function makeFrontDesk(cfg = config()) {
   // conversation since Ola's last turn; its run's end records what it changed.
   let madeBy = null
   const onPrompt = async (slug, sessionID, text) => {
-    if (!madeBy) return text
+    // A request that names Claude gets the fact of whether Claude can take it here (claude.mjs claudeNote, OLA-232).
+    const wsRow = NAMES_CLAUDE.test(text ?? '') ? db.prepare('SELECT id, slug FROM workspaces WHERE slug = ?').get(slug) : null
+    const about = wsRow && claude ? await claude.noteFor({ ...wsRow, role: null }, text) : ''
+    // One note in front of the request (the apps strip one): the engines note with the fact added to it.
+    const join = (note) => (!about ? note : note ? note.replace(NOTE_CLOSE, ` ${about}${NOTE_CLOSE}`) : `${NOTE_OPEN}${about}${NOTE_CLOSE}\n\n`)
+    if (!madeBy) return join('') + text
     const note = madeBy.noteFor(slug, sessionID, 'ola')
     await madeBy.begin(slug, { engine: 'ola', session: sessionID, request: text })
-    return note + text
+    return join(note) + text
   }
   // A publish ask that would not publish (OLA-267) is answered for the person, with the reason for
   // Ola: a command in a form the front desk does not act on, or a folder whose check refuses it
