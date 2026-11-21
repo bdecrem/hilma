@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina labor_a claude-opus-5-5 high",
- "pid": 56720,
  "step": "forward",
  "slug": "argentina",
  "chunk": "labor_a",
@@ -60,5 +59,893 @@
   "user": 121
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:42:31.728Z",
+ "minutes": 15.17,
+ "meters_after": {
+  "at": "2026-11-21T03:42:31.728Z",
+  "window": {
+   "pct": 63,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 49,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 63,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 49,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 63% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 49% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 76847,
+   "output": 28015,
+   "cache_read": 765854,
+   "cache_write": 115491,
+   "cost_usd": 1.5659,
+   "total": 986207
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 76827,
+    "output": 6627,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1985,
+    "cost_usd": 0.061
+   },
+   "claude-opus-5-5": {
+    "input": 20,
+    "output": 21388,
+    "cache_read": 765854,
+    "cache_write": 115491,
+    "thinking": 6621,
+    "cost_usd": 1.5049
+   }
+  }
+ },
+ "turns": 22,
+ "calls": 31,
+ "duration_ms": 260777,
+ "duration_api_ms": 263797,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T03:27:30.160Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6 | ARTICULO 9 | ARTICULO 13 | ARTICULO 16 | ARTICULO 23 | ARTICULO 56 | ARTICULO 5",
+   "ok": true,
+   "chars": 19293
+  },
+  {
+   "at": "2026-11-21T03:28:08.314Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6º | ARTICULO 6° | ARTICULO 53 | ARTICULO 22",
+   "ok": true,
+   "chars": 5946
+  },
+  {
+   "at": "2026-11-21T03:28:09.495Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+   "find": "ARTÍCULO 1° | ARTÍCULO 6° | inciso ñ | ARTÍCULO 53 | ARTÍCULO 22 | trabajador",
+   "ok": true,
+   "chars": 11863
+  },
+  {
+   "at": "2026-11-21T03:29:06.270Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 23 | cónyuge | ARTICULO 51 | ARTICULO 6º | ARTICULO 56",
+   "ok": true,
+   "chars": 656
+  },
+  {
+   "at": "2026-11-21T03:29:06.392Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+   "find": "Art. 17. | Art. 81. | Art. 172 | nacionalidad",
+   "ok": true,
+   "chars": 6527
+  },
+  {
+   "at": "2026-11-21T03:38:59.447Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 5364
+  },
+  {
+   "at": "2026-11-21T03:39:00.270Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+   "find": "ARTICULO 23.- | Inciso a) | cónyuge | ARTICULO 51",
+   "ok": true,
+   "chars": 9515
+  },
+  {
+   "at": "2026-11-21T03:39:43.845Z",
+   "url": "https://www.argentina.gob.ar/sites/default/files/observaciones_finales_cerd_-_abril_2023.pdf",
+   "find": "migrantes | INADI | perfil racial | trabajo",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:39:45.018Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto",
+   "find": "ARTÍCULO 1° | disuélvese | Disuélvese",
+   "ok": true,
+   "chars": 3399
+  },
+  {
+   "at": "2026-11-21T03:39:55.844Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "artículo 6 | categoría migratoria | trabajo | reunificación familiar | artículo 53",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:40:00.466Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+   "find": "migrants | migrantes | profilage | INADI",
+   "ok": true,
+   "chars": 6570
+  },
+  {
+   "at": "2026-11-21T03:40:02.632Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "decree | work | discrimination | appeal",
+   "ok": true,
+   "chars": 3782
+  },
+  {
+   "at": "2026-11-21T03:40:02.733Z",
+   "url": "https://www.palabrasdelderecho.com.ar/articulo/6021/Rechazaron-un-amparo-colectivo-contra-el-DNU-que-modifico-la-Ley-de-Migraciones-y-el-regimen-de-refugio",
+   "find": "rechaz | CAREF | fecha | juez",
+   "ok": true,
+   "chars": 4583
+  },
+  {
+   "at": "2026-11-21T03:40:11.305Z",
+   "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+   "find": "migrant | textile | labor inspect | Bolivia",
+   "ok": true,
+   "chars": 5517
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 migraciones texto boletín oficial modifica artículos ley 25.871",
+  "DNU 366/2025 migraciones amparo inconstitucionalidad juez suspende CELS vigencia",
+  "infoleg Decreto 616/2010 reglamentación ley de migraciones texto actualizado",
+  "Comité para la Eliminación de la Discriminación Racial observaciones finales Argentina migrantes 2023 OR 2024 OR 2025",
+  "Decreto 696/2024 disolución INADI boletín oficial",
+  "trabajadores migrantes Argentina informalidad laboral brecha salarial OIT OIM informe 2023 2024"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.56,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.58,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":95,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Sometimes; Usually\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Sometimes; Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Art. 14 bis\",\"enacted\":\"1957\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones 25.871\",\"article\":\"Art. 5\",\"enacted\":\"2004-01-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones 25.871\",\"article\":\"Art. 6\",\"enacted\":\"2004-01-20\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Ley de Migraciones 25.871\",\"article\":\"Art. 16\",\"enacted\":\"2004-01-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones 25.871\",\"article\":\"Art. 56\",\"enacted\":\"2004-01-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Contrato de Trabajo 20.744\",\"article\":\"Arts. 17, 81\",\"enacted\":\"1974\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)\",\"article\":\"Art. 25(1)\",\"enacted\":\"2007\",\"history_read\":\"not_found\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025\",\"article\":\"Ley 25.871, art. 6 (substituted by art. 1 DNU)\",\"kind\":\"amended\",\"what_changed\":\"Art. 6 used to guarantee immigrants and their families equal access to the same protection and rights as nationals, including work and employment, with no qualifier. The new text drops 'y sus familias' and adds 'according to the rights and obligations of each migratory category'. Equal treatment in work now depends on the migrant's category. For migrants authorised to work, equal pay still rests on CN 14 bis and LCT arts. 17/81, which did not change.\",\"url\":\"https://www.boletin",
+ "output": {
+  "answers": [
+   {
+    "question_id": 95,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "enacted": "1957",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 5",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 6",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 16",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 56",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Contrato de Trabajo 20.744",
+      "article": "Arts. 17, 81",
+      "enacted": "1974",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)",
+      "article": "Art. 25(1)",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6 (substituted by art. 1 DNU)",
+      "kind": "amended",
+      "what_changed": "Art. 6 used to guarantee immigrants and their families equal access to the same protection and rights as nationals, including work and employment, with no qualifier. The new text drops 'y sus familias' and adds 'according to the rights and obligations of each migratory category'. Equal treatment in work now depends on the migrant's category. For migrants authorised to work, equal pay still rests on CN 14 bis and LCT arts. 17/81, which did not change.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "ARTÍCULO 1°.- Sustitúyese el artículo 6° de la Ley de Migraciones N° 25.871 y sus modificaciones por el siguiente: “ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria,"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 53 (substituted by art. 12 DNU)",
+      "kind": "amended",
+      "what_changed": "The old art. 53 barred only irregular residents from working. The new text also bars regular residents who are 'not authorised by the migration authority'. This touches who may lawfully work. It does not touch equal pay for those who do work, and art. 56 (labour obligations owed whatever the worker's status) is unchanged.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ARTÍCULO 53.- El extranjero que resida irregularmente en el país, o resida regularmente pero no se encuentre habilitado por la autoridad migratoria, no podrá trabajar o realizar tareas remuneradas o lucrativas, ya sea por cuenta propia o ajena, en relación de dependencia o en forma independiente."
+     }
+    ],
+    "implementation_then_now": "2023: the MRD rated this 'Sometimes; Usually'. The law gives equal pay, but the sources describe heavy informality and labour exploitation of migrants from the region. The 2025 US TIP report, covering 2023–2024, records forced labour of Bolivian, Paraguayan and Peruvian workers in garment work, agriculture and brick-making, and 1,185 labour-trafficking victims identified in 2023. 2026: I found nothing showing that equal-pay enforcement for migrant workers changed. The 2024 TIP data (865 labour-trafficking victims, fewer inspection referrals) and the reports on DNU 366/2025 show more exclusion, but they do not measure wage equality. I kept the rating.",
+    "practice_sources": [
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina (US Department of State)",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "For Ley 25.871 I read both the InfoLEG original text and the updated text with its amendment notes, and the DNU 366/2025 text in the Boletín Oficial. The 1 January 2023 version is the original art. 6, which Decreto 138/2021 had restored. In the LCT updated text, arts. 17 and 81 carry no amendment notes; Ley 27.802 (B.O. 6/3/2026) is after the window and does not touch them. I did not open the Constitution.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Boletín Oficial 29/05/2025 – Decreto 366/2025",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Ley 20.744 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "2025 TIP Report: Argentina",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The ratified convention is approved by Ley 26.202, not Ley 26.602 as cited under q97. LCT art. 81 lists sex, religion and race but not nationality; nationality appears in LCT art. 17, which should be cited alongside it.",
+    "confidence": "medium",
+    "notes": "The answer option stays 'Yes'. I chose 'not the same' because a cited provision (art. 6) was narrowed by the category qualifier, effective 29 May 2025. Several federal courts declared parts of DNU 366/2025 unconstitutional in individual cases (Esquel, Paraná, Cámara Nacional Electoral on citizenship), but none did so with general effect, and the DNU remained in force on 1 January 2026."
+   },
+   {
+    "question_id": 97,
+    "answer_2023": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+    "implementation_2023": "Usually",
+    "answer_2026": "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 26.202 (Convención Trabajadores Migratorios)",
+      "article": "Art. 52(1)",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 6",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Arts. 16, 19",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 23(a), 23(l)",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 23(ñ) (new), art. 53",
+      "enacted": "2025-05-29",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23(a)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley Marco de Regulación de Empleo Público Nacional 25.164",
+      "article": "Art. 4",
+      "enacted": "1999",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 53 (substituted by art. 12 DNU)",
+      "kind": "amended",
+      "what_changed": "The new art. 53 bars regular residents 'not authorised' by the migration authority from working. It also makes a migrant irregular if, within the authorised stay, they carry out activities their category does not permit. This ties lawful work more tightly to the category and authorisation granted, which bears on free choice of employment. Art. 23(a) on the temporary migrant worker is unchanged.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "d) hubiere desnaturalizado las condiciones que motivaron el otorgamiento de su residencia, o, encontrándose dentro del plazo de permanencia autorizado, desempeñare actividades para las cuales no estuviera habilitado de acuerdo con su categoría migratoria;"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6 (substituted by art. 1 DNU)",
+      "kind": "amended",
+      "what_changed": "Equal access to work and employment is now 'according to the rights and obligations of each migratory category'. Before, it was unqualified.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria,"
+     }
+    ],
+    "implementation_then_now": "In both years most labour migrants hold Mercosur-nationality residence (art. 23(l)), which carries open work rights. Only the art. 23(a) temporary worker is tied to the employer named in the application. I found no practice source on how employer changes are actually processed in either period. The documented shift in 2025 is tougher control: new DNM inspection powers (art. 53 bis) and more expulsions (Hivos, 157 in Q1 2025). That shows more enforcement but not denied employer changes. I kept 'Usually' for both dates, with low support.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "For Ley 25.871 I read the original and updated texts and the DNU itself. For Decreto 616/2010 I read the list of amending norms on argentina.gob.ar (only DNM dispositions, none on art. 23(a)) and the current text. I did not read Ley 25.164.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Boletín Oficial 29/05/2025 – Decreto 366/2025",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Decreto 616/2010 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Decreto 616/2010 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The starting answer cites Act N° 26.602 for the convention; the approving law is Ley 26.202, as Decreto 616/2010 art. 23(a) itself says. The citation's account of a 'new work permit' after a change of employer is not in the text of art. 23(a) or of the regulation. It reflects DNM procedure, which I did not verify.",
+    "confidence": "low",
+    "notes": "The option is unchanged. I chose 'not the same' because arts. 6 and 53 now tie work more closely to the migratory category, effective 29 May 2025."
+   },
+   {
+    "question_id": 99,
+    "answer_2023": "Yes, unrestricted right to work",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes, unrestricted right to work",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "enacted": "1957",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 9",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 23(a)",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 23(ñ)",
+      "enacted": "2025-05-29",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 22",
+      "enacted": "2004-01-20",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 51",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23 (final paragraph on family members)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 23 inciso ñ (incorporated by art. 6 DNU)",
+      "kind": "amended",
+      "what_changed": "Before, the spouse of a temporary resident got temporary residence under the last paragraph of Decreto 616/2010 art. 23; the spouse of a permanent resident got permanent residence under regulation art. 22(b). The DNU creates a statutory 'family reunification' temporary residence for spouses of permanent and temporary residents, for up to 3 years or the principal's term. Art. 51, under which temporary residents may do any paid work during their authorised stay, is unchanged, so the spouse can still work without a separate permit.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ñ) Reunificación familiar: ser cónyuge, progenitor o hijo de argentino nativo, naturalizado o por opción; o ser cónyuge, progenitor o hijo soltero menor a DIECIOCHO (18) años no emancipado o mayor con capacidades diferentes, de un residente permanente o temporario, con autorización para permanecer en el país por un máximo de TRES (3) años"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 22 (substituted by art. 5 DNU)",
+      "kind": "amended",
+      "what_changed": "Spouses, children and parents of Argentine citizens are no longer automatically 'residentes permanentes'. Permanent residence now requires proof of means and no criminal record. This affects the spouses of Argentines more than the spouses of migrant principals.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ARTÍCULO 22.- Se considerará ‘residente permanente’ a todo extranjero que, con el propósito de establecerse definitivamente en el país, obtenga de la DIRECCIÓN NACIONAL DE MIGRACIONES una admisión en tal carácter. Al tramitar el pedido de residencia, el interesado deberá acreditar que cuenta con los medios económicos suficientes"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 53 (substituted by art. 12 DNU)",
+      "kind": "amended",
+      "what_changed": "Regular residents 'not authorised by the migration authority' may not work. Art. 51 still authorises all temporary residents to work, so a spouse holding a family-reunification residence keeps work rights. The new wording does, however, add an authorisation condition.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ARTÍCULO 53.- El extranjero que resida irregularmente en el país, o resida regularmente pero no se encuentre habilitado por la autoridad migratoria, no podrá trabajar o realizar tareas remuneradas o lucrativas, ya sea por cuenta propia o ajena, en relación de dependencia o en forma independiente."
+     }
+    ],
+    "implementation_then_now": "In both periods a spouse admitted as a temporary or permanent resident receives a DNI and residence that carry work rights under art. 51. I found no report of spouses being refused work authorisation. The 2025 reports document harsher residence requirements and family separations through expulsion (Hivos, including an Afro-Uruguayan worker deported after more than 10 years). Those concern access to residence and removal, not the work rights of resident spouses. I kept the rating, with thin evidence.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "I read the original and updated texts of Ley 25.871 and the DNU 366/2025 text. I read the current text of Decreto 616/2010 and its list of amending norms (no amendment to art. 22/23). There is no direct practice evidence on spouses' work rights.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Boletín Oficial 29/05/2025 – Decreto 366/2025",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Decreto 616/2010 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "Decreto 616/2010 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The starting citation does not name the provision that actually gives the spouse residence: Decreto 616/2010 art. 23, last paragraph, and art. 22(b). Nor does it name the work right in Ley 25.871 art. 51. The spouse must still obtain the derived residence; work rights follow from that residence, not from a separate permit.",
+    "confidence": "medium",
+    "notes": "The option is unchanged. The legal basis for the spouse's residence moved into the statute (art. 23 ñ). Art. 22 and art. 53 changed on 29 May 2025."
+   },
+   {
+    "question_id": 103,
+    "answer_2023": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes, migrants have a right to the same employment conditions and protections",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14 bis, 75(22)",
+      "enacted": "1957/1994",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 5",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 6",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 56",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 5, 6, 56",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Contrato de Trabajo 20.744",
+      "article": "Art. 17",
+      "enacted": "1974",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6 (substituted by art. 1 DNU)",
+      "kind": "amended",
+      "what_changed": "The guarantee of the same protection as nationals in 'trabajo, empleo y seguridad social' now applies 'according to the rights and obligations of each migratory category' and no longer names families. For migrants holding a valid work permit, the labour-law equality in CN 14 bis, LCT art. 17 and Ley 25.871 art. 56 is unchanged.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "ARTÍCULO 1°.- Sustitúyese el artículo 6° de la Ley de Migraciones N° 25.871 y sus modificaciones por el siguiente: “ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria,"
+     }
+    ],
+    "implementation_then_now": "2023: the MRD rated this 'Sometimes'. The sources document widespread informality and forced-labour conditions among Bolivian, Paraguayan and Peruvian workers in garment work, agriculture, brick-making and domestic work (TIP 2025; 1,185 labour-trafficking victims identified in 2023). 2026: TIP 2025 records 865 labour-trafficking victims in 2024 and fewer labour-inspection trafficking reports (29 against 54 in 2023), plus staffing cuts to the hotline. That suggests weaker enforcement capacity, but not clearly a different level for migrant workers, so I kept 'Sometimes'. The general labour reform (Ley 27.802) came in March 2026, after the window.",
+    "practice_sources": [
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina (US Department of State)",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "For Ley 25.871 I read the original and updated texts and the DNU. The LCT updated text shows no amendment to art. 17 in the window; Ley 27.802 amendments (B.O. 6/3/2026) fall after 1 January 2026. I did not open DNU 70/2023 or Ley 27.742, but the LCT notes show no change to arts. 17 or 81.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Boletín Oficial 29/05/2025 – Decreto 366/2025",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Ley 20.744 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+     },
+     {
+      "title": "2025 TIP Report: Argentina",
+      "url": "https://www.state.gov/reports/2025-trafficking-in-persons-report/argentina/"
+     }
+    ],
+    "starting_answer_concern": "The citation should name LCT art. 17, which bans discrimination between workers on grounds of nationality; it is the most direct labour-law basis. Decreto 616/2010 arts. 5, 6 and 56 are not substantive provisions on this point.",
+    "confidence": "medium",
+    "notes": "The option is unchanged. I chose 'not the same' because art. 6, a cited reinforcing provision, gained a category qualifier on 29 May 2025."
+   },
+   {
+    "question_id": 135,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Yes",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones 25.871",
+      "article": "Art. 13",
+      "enacted": "2004-01-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 75(22)",
+      "enacted": "1994",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-08-06",
+      "instrument": "Decreto N° 696/2024",
+      "article": "Art. 1 (dissolution of INADI)",
+      "kind": "practice",
+      "what_changed": "The government dissolved the national anti-discrimination, xenophobia and racism institute (INADI), which handled complaints and promotion work against discrimination, including against migrants. The ban itself (Ley 25.871 art. 13) is unchanged; this affects enforcement, not the protection answer.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto",
+      "passage": "ARTÍCULO 1°.- Disuélvese el INSTITUTO NACIONAL CONTRA LA DISCRIMINACIÓN, LA XENOFOBIA Y EL RACISMO (INADI), organismo descentralizado actuante en el ámbito del MINISTERIO DE JUSTICIA."
+     }
+    ],
+    "implementation_then_now": "2023: at Argentina's April 2023 review, CERD members raised persistent structural discrimination against migrants and continued racial profiling of migrants by police. INADI was then active and led the delegation, so 'Sometimes' fits. 2026: INADI was dissolved by Decreto 696/2024, leaving complaints to the courts. Civil-society reporting on DNU 366/2025 (Hivos/EU SEE, August 2025) documents official rhetoric linking migration to crime and a record pace of expulsions in early 2025 (157 in Q1). It also notes a disproportionate impact on trans people, sex workers and Afro-descendant migrants. I lower the rating to 'Rarely; Sometimes' on the strength of this institutional and practice shift.",
+    "practice_sources": [
+     {
+      "title": "Examen de l'Argentine – CERD meeting summary (UN Geneva, 18 April 2023)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Decreto 696/2024 (dissolution of INADI)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 13 reads the same in the InfoLEG original and updated texts, with no amendment note, so it is unchanged through the window. I could not open the CERD concluding observations PDF (CERD/C/ARG/CO/24-26) and relied on the UN Geneva meeting summary instead.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto 696/2024 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto"
+     },
+     {
+      "title": "UN Geneva – CERD review of Argentina (April 2023)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "Art. 13 defines discrimination 'for the purposes of this law' rather than creating a free-standing ban. The general anti-discrimination statute Ley 23.592 and LCT art. 17 (race, nationality) would strengthen the citation. The answer 'Yes' holds.",
+    "confidence": "medium",
+    "notes": "The law is unchanged. The change I code is in implementation: INADI's dissolution (6 August 2024) plus the 2025 practice evidence. The evidence that enforcement got worse is partly institutional and comes from civil society, not from a treaty body for 2025."
+   }
+  ]
+ }
 }
