@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile personhood claude-opus-5-5 high",
- "pid": 65473,
  "step": "back2000",
  "slug": "chile",
  "chunk": "personhood",
@@ -59,5 +58,877 @@
   "user": 180
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T07:19:55.147Z",
+ "minutes": 80.36,
+ "meters_after": {
+  "at": "2026-11-21T07:19:55.148Z",
+  "window": null,
+  "week": null,
+  "fable": null,
+  "subscription": false,
+  "bars": {},
+  "text": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.\n"
+ },
+ "tokens": {
+  "totals": {
+   "input": 76620,
+   "output": 23892,
+   "cache_read": 1923115,
+   "cache_write": 129758,
+   "cost_usd": 1.8321,
+   "total": 2153385
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 76576,
+    "output": 6476,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2219,
+    "cost_usd": 0.0609
+   },
+   "claude-opus-5-5": {
+    "input": 44,
+    "output": 17416,
+    "cache_read": 1923115,
+    "cache_write": 129758,
+    "thinking": 5248,
+    "cost_usd": 1.7712
+   }
+  }
+ },
+ "turns": 27,
+ "calls": 43,
+ "duration_ms": 554954,
+ "duration_api_ms": 516581,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-21T05:59:57.003Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 21 | Artículo 43 | Artículo 44 | Artículo 45 | retener",
+   "ok": true,
+   "chars": 2351
+  },
+  {
+   "at": "2026-11-21T05:59:57.841Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "cédula de identidad | Artículo 64 | Artículo 65 | Artículo 66 | Registro",
+   "ok": true,
+   "chars": 3757
+  },
+  {
+   "at": "2026-11-21T06:00:03.058Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=6483",
+   "find": "Cédula de Identidad y del Registro | Artículo 52 | Artículo 53 | Artículo 23 | Artículo 24",
+   "ok": true,
+   "chars": 957
+  },
+  {
+   "at": "2026-11-21T06:01:18.321Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 52 | Artículo 53 | cédula de identidad",
+   "ok": true,
+   "chars": 5592
+  },
+  {
+   "at": "2026-11-21T06:01:22.963Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "LEY 20 | LEY 19 | LEY 21 | pasaporte | Artículo 33 BIS | documentos",
+   "ok": true,
+   "chars": 15564
+  },
+  {
+   "at": "2026-11-21T06:14:12.301Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "cédula de identidad | estamp | Registro | autorización para trabajar | permiso para trabajar | retener",
+   "ok": true,
+   "chars": 14638
+  },
+  {
+   "at": "2026-11-21T06:14:13.278Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 21.- | Artículo 43.- | Artículo 44.- | Artículo 45.- | retención | retener",
+   "ok": true,
+   "chars": 6970
+  },
+  {
+   "at": "2026-11-21T06:14:18.032Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "Artículo 104° | Artículo 105° | Artículo 106° | Artículo 107° | Artículo 108° | Decreto 1930",
+   "ok": true,
+   "chars": 10856
+  },
+  {
+   "at": "2026-11-21T06:14:33.601Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=24928",
+   "find": "Art. 28 | Art. 29 | Art. 30 | Art. 31 | nacimiento | extranjero",
+   "ok": true,
+   "chars": 10429
+  },
+  {
+   "at": "2026-11-21T06:14:46.605Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=30844",
+   "find": "Artículo 3 | Artículo 4 | nacimientos | cédula de identidad | extranjeros",
+   "ok": true,
+   "chars": 8500
+  },
+  {
+   "at": "2026-11-21T06:29:08.706Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "Art. 242 | Art. 193 | Art. 194 | destruyere | ocultare | Art. 411 quáter | Art. 487",
+   "ok": true,
+   "chars": 14630
+  },
+  {
+   "at": "2026-11-21T06:30:50.292Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1067957",
+   "find": "transeúnte | inscripción | nacimiento",
+   "ok": true,
+   "chars": 5218
+  },
+  {
+   "at": "2026-11-21T06:30:51.225Z",
+   "url": "https://www.theclinic.cl/2014/12/01/ninos-y-ninas-apatridas-en-chile-el-abandono-por-parte-del-estado/",
+   "find": "2.841 | inscritos | Registro Civil | 3207",
+   "ok": true,
+   "chars": 5477
+  },
+  {
+   "at": "2026-11-21T06:31:32.912Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "birth | registration | identity documents | passport | confiscat | retention",
+   "ok": true,
+   "chars": 4428
+  },
+  {
+   "at": "2026-11-21T06:31:32.984Z",
+   "url": "https://www.icj.org/wp-content/uploads/2007/04/Concluding-Observations-CRC-Chile-2007-eng.pdf",
+   "find": "birth registration | registration | migrant | nationality",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T06:31:40.107Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "Infractor | retendrá | retención | retirará",
+   "ok": true,
+   "chars": 6487
+  },
+  {
+   "at": "2026-11-21T06:31:40.912Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "infractor | retendr | retención | Artículo 68 | Artículo 76",
+   "ok": true,
+   "chars": 8501
+  }
+ ],
+ "searches": [
+  "leychile \"Decreto 597\" 1984 reglamento de extranjería idNorma",
+  "bcn.cl leychile Ley 4808 sobre Registro Civil idNorma",
+  "\"Ley 19477\" \"Ley Orgánica del Servicio de Registro Civil e Identificación\" leychile navegar idNorma",
+  "\"hijo de extranjero transeúnte\" inscripción nacimiento Registro Civil Corte Suprema 2014 INDH informe niños apátridas Chile",
+  "Comité de los Derechos del Niño observaciones finales Chile 2007 CRC/C/CHL/CO/3 inscripción nacimientos hijos de migrantes",
+  "Chile empleador retención pasaporte trabajador extranjero prohibición ley Código del Trabajo Dirección del Trabajo dictamen"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.16,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.17,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.18,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.19,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.22,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":27,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"In force: DL 1.094 (1975) and DS 597 (1984). Neither stops private persons such as employers from keeping a migrant's identity documents. The only retention clauses (DS 597 arts. 7 and 70) let the maritime and border authorities hold travel documents. The Código del Trabajo has no such rule either. No practice evidence for this period.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same regime as in 2000. No relevant amendment to DL 1.094 or DS 597, and no practice evidence.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Same regime. Ley 20.430 (April 2010) came after this date and does not deal with private retention. The CMW's 2011 Concluding Observations describe the authorities taking documents under the Alien Act (replaced by an 'Alien Offender Card'). That is state retention, not a protection.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 20.507 (8 April 2011) created the trafficking offence and added art. 33 bis to DL 1.094 (temporary residence for victims). It did not ban the retention of documents by private persons. Nothing else changed before 2020.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 21 (Debido proceso)\",\"role\":\"cited\",\"in_force\":\"2022-02-12 to today\",\"history_read\":\"current_text_only\"},{\"instrument\":\"Decreto Ley 1.094 de 1975\",\"article\":\"Arts. 5, 8, 52, 53 (visa stamped in passport; cédula)\",\"role\":\"predecessor\",\"in_force\":\"1975 (arts. 52-53 as amended by Ley 18.252, 1983) to 2022-02-12\",\"history_read\":\"version_history\"},{\"instrument\":\"Decreto Supremo 597 de 1984 (Reglamento de Extranjería)\",\"article\":\"Arts. 7, 70 (retention of travel documents by authorities)\",\"role\":\"other_in_force\",\"in_forc",
+ "output": {
+  "answers": [
+   {
+    "question_id": 27,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "In force: DL 1.094 (1975) and DS 597 (1984). Neither stops private persons such as employers from keeping a migrant's identity documents. The only retention clauses (DS 597 arts. 7 and 70) let the maritime and border authorities hold travel documents. The Código del Trabajo has no such rule either. No practice evidence for this period."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same regime as in 2000. No relevant amendment to DL 1.094 or DS 597, and no practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same regime. Ley 20.430 (April 2010) came after this date and does not deal with private retention. The CMW's 2011 Concluding Observations describe the authorities taking documents under the Alien Act (replaced by an 'Alien Offender Card'). That is state retention, not a protection."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.507 (8 April 2011) created the trafficking offence and added art. 33 bis to DL 1.094 (temporary residence for victims). It did not ban the retention of documents by private persons. Nothing else changed before 2020."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21 (Debido proceso)",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 5, 8, 52, 53 (visa stamped in passport; cédula)",
+      "role": "predecessor",
+      "in_force": "1975 (arts. 52-53 as amended by Ley 18.252, 1983) to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Arts. 7, 70 (retention of travel documents by authorities)",
+      "role": "other_in_force",
+      "in_force": "1984 (art. 70 amended by DTO 421, 1998) to 2022",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 20.507 (tráfico de migrantes y trata de personas)",
+      "article": "Art. tercero (adds art. 33 bis to DL 1.094)",
+      "role": "other_in_force",
+      "in_force": "2011-04-08 to today",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley 20.507",
+      "article": "DL 1.094 art. 33 bis",
+      "kind": "amended",
+      "what_changed": "Added a temporary-residence right for trafficking victims. It does not ban anyone from confiscating identity documents, so the indicator is unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Artículo 33 bis.-Ley 20507 Art. TERCERO Nº 2 D.O. 08.04.2011 Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal"
+     },
+     {
+      "date": "2011",
+      "instrument": "CMW Concluding Observations on Chile (CMW/C/CHL/CO/1)",
+      "article": "paras. 20-21",
+      "kind": "practice",
+      "what_changed": "The Committee reports that the authorities confiscate the identity documents of migrants who break migration law. This is state retention, not a protection against confiscation by private persons.",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "passage": "if a migrant worker violates migration laws, his or her identity documents are confiscated and replaced by an Alien Offender Card until the Ministry of the Interior rules on the offence."
+     }
+    ],
+    "repealed_search": "Searched the consolidated DL 1.094 and DS 597 on LeyChile for 'retención', 'retener', 'retendr' and 'infractor'. The only retention clauses found allow authorities to hold travel documents (DS 597 arts. 7 and 70). A web search for any Código del Trabajo rule or Dirección del Trabajo dictamen against employers keeping passports found none. Ley 20.507 contains no such ban. No earlier protection was found that had been repealed or narrowed.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Chile (2011)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile gives the final consolidated DL 1.094 and DS 597 with notes on each amending norm; the articles involved carry no amendment notes for 2000-2020. Point-in-time versions were not opened separately.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "DL 1.094 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 Reglamento de Extranjería (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": "The 2020 'No' holds. The citation the MRD wrote for 2023 does not support its 2023 'Yes': art. 21 of Ley 21.325 is a due-process clause ('Debido proceso. El Estado asegurará a los extranjeros la igual protección...') and says nothing about confiscating documents.",
+    "confidence": "medium",
+    "notes": "Decreto 296/2022 art. 177 was not read. It dates from after 2020 and does not affect the past answers."
+   },
+   {
+    "question_id": 29,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 4.808 art. 3 No. 1 requires registration of 'los nacimientos que ocurran en el territorio de cada comuna'. Art. 28 sets a 60-day deadline and art. 29 lists who must request registration, with no reference to nationality or status. Ley 19.477 art. 4 No. 2 makes registering births a function of the Registro Civil. No practice source for 2000 itself. Registry data from 2001 on show children of irregular migrants were registered, though annotated 'hijo de extranjero transeúnte'."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "The same provisions apply, unchanged. Registry figures (2,841 children registered as 'hijo de extranjero transeúnte', 2001-2014) show registration took place. The annotation concerned nationality, not registration itself."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Unchanged law. The CMW (2011) notes that children of parents in an irregular situation 'are recorded in the official register', annotated as children of foreigners in transit."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Unchanged law. SRCeI Resolución Exenta 3207 (August 2014) and Resolución 3509 (October 2014) limited the 'transeúnte' annotation to children of tourists or crew. This changed the nationality recorded, not the duty to register."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 4.808 sobre Registro Civil",
+      "article": "Arts. 3, 28, 29",
+      "role": "cited",
+      "in_force": "1930 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.477 Orgánica del Servicio de Registro Civil e Identificación",
+      "article": "Arts. 3, 4 No. 2 and No. 4",
+      "role": "cited",
+      "in_force": "1996-10-19 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Resolución Exenta 3207 de 2014, Servicio de Registro Civil e Identificación (Instruye sobre anotación que indica)",
+      "article": "Resolutivo 1-2",
+      "role": "other_in_force",
+      "in_force": "2014-08 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2014-08",
+      "instrument": "Resolución Exenta 3207 (SRCeI), complemented by Resolución Exenta 3509 (D.O. 08.10.2014)",
+      "article": "Resolutivo 1",
+      "kind": "new_instrument",
+      "what_changed": "Registrars may no longer add the 'Hijo Extranjero Transeúnte' annotation unless the parents are tourists or crew. Registration was already required before; this only affects the nationality annotation.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1067957",
+      "passage": "Los Oficiales Civiles no procederán a practicar la anotación \"Hijo Extranjero Transeúnte Art. 10 Nº 1 de la Constitución Política\", en la respectiva inscripción de nacimiento, si uno o ambos padres no tienen la calidad de turistas o tripulantes."
+     },
+     {
+      "date": "2011",
+      "instrument": "CMW Concluding Observations on Chile",
+      "article": "para. 32",
+      "kind": "practice",
+      "what_changed": "Confirms that children of irregular migrants are registered, although annotated as children of foreigners in transit.",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "passage": "children of parents in an irregular situation are recorded in the official register as “children of foreign nationals in transit”"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Chile (2011)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Niños y niñas apátridas en Chile: el abandono por parte del Estado (The Clinic), citing Registro Civil transparency data",
+      "url": "https://www.theclinic.cl/2014/12/01/ninos-y-ninas-apatridas-en-chile-el-abandono-por-parte-del-estado/",
+      "year": 2014,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "In the consolidated Ley 4.808 on LeyChile, arts. 3 No. 1, 28 and 29 carry no amendment notes after 2000. The Ley 19.477 art. 4 amendments shown (Ley 20.711 of 2014, Ley 21.334 of 2021) concern apostilles, not birth registration. Practice evidence for 2000-2005 is indirect: registry data for 2001-2014 published in 2014.",
+    "sources_opened": [
+     {
+      "title": "Ley 4.808 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=24928"
+     },
+     {
+      "title": "Ley 19.477 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=30844"
+     },
+     {
+      "title": "Resolución Exenta 3207/2014 SRCeI (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1067957"
+     },
+     {
+      "title": "The Clinic 2014",
+      "url": "https://www.theclinic.cl/2014/12/01/ninos-y-ninas-apatridas-en-chile-el-abandono-por-parte-del-estado/"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 'transeúnte' annotation (in use until 2014, and the subject of Corte Suprema nationality claims) goes to the right to nationality, not to registration. The Supreme Court rulings were not read, and none is relied on."
+   },
+   {
+    "question_id": 31,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "DL 1.094 art. 5 defines the visa as a permit stamped in the passport. Art. 8 requires it to record 'la clase de visa'. Art. 53 requires a cédula de identidad valid for the length of the visa. DS 597 arts. 10, 11, 103 and 108 implement these rules. Work authorisation follows from the visa class (DL 1.094 art. 74). No practice evidence for this period; the rating carries forward the 2020 level."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Same provisions. DTO 2910 (D.O. 23.05.2000) amended DS 597 arts. 40 and 86 on renewing work-contract visas and on permanent residence, without changing the duty to issue documents. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions; Ley 20.430 came after this date. The CMW (2011) reports border officials arbitrarily refusing to stamp passports on entry, which later hampered regularisation. That is a documented gap in issuing status documents."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions. Decreto 1930 (D.O. 07.03.2015) came after this date and only changed the registration procedure. Ley 20.430 (2010) gives refugees a residence visa. The rating rests on the CMW 2011 findings; no later practice source was read."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 43, 44, 45",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 5, 8, 52, 53, 74",
+      "role": "predecessor",
+      "in_force": "1975 (arts. 52-53 as amended by Ley 18.252, 1983) to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Arts. 10, 11, 103, 104, 106, 108",
+      "role": "predecessor",
+      "in_force": "1984 to 2022 (arts. 104 and 106 amended 2015-03-07)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 19.477",
+      "article": "Art. 4 No. 4",
+      "role": "other_in_force",
+      "in_force": "1996-10-19 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910, Interior",
+      "article": "DS 597 arts. 40, 86",
+      "kind": "amended",
+      "what_changed": "Changed the documents required to renew a work-contract visa and the control of permanent residence. Issuing status documents is unaffected.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+      "passage": "DTO 2910, INTERIOR Art. Unico, N° 3 D.O. 23.05.2000 residente sujeto a contrato, el extranjero deberá acompañar a su petición el respectivo contrato de trabajo"
+     },
+     {
+      "date": "2011",
+      "instrument": "CMW Concluding Observations on Chile",
+      "article": "para. 22",
+      "kind": "practice",
+      "what_changed": "Documents border officials failing to stamp passports, a gap in issuing status documents.",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "passage": "some border officials arbitrarily refuse to stamp passports upon entry into the State party, often resulting in problems with regularizing the immigration status later on."
+     },
+     {
+      "date": "2015-03-07",
+      "instrument": "Decreto 1930, Interior",
+      "article": "DS 597 arts. 104, 106",
+      "kind": "amended",
+      "what_changed": "Registration of foreigners who receive renewals, changes of status or permanent residence moved to the DEM or the Gobernación. The duty to issue the registration certificate and the cédula is unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+      "passage": "Practicada la inscripción, se otorgará al interesado el correspondiente certificado de registro"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 43",
+      "kind": "replaced",
+      "what_changed": "Replaced the DL 1.094 cédula rules; the Registro Civil issues the cédula to temporary and permanent residents. This is after the period covered.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "Artículo 43.- Cédula de identidad. Los residentes temporales y definitivos deberán solicitar cédula de identidad ante el Servicio de Registro Civil e Identificación"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Chile (2011)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The amendment notes for DL 1.094 and DS 597 were read on LeyChile, but no point-in-time versions were opened. Practice evidence is thin: none for 2000 and 2005, and only the CMW 2011 findings for 2010 and 2015.",
+    "sources_opened": [
+     {
+      "title": "DL 1.094 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 19.477 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=30844"
+     },
+     {
+      "title": "CMW Concluding observations Chile 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds. The 2020 'Effectively Always' rating looks generous given the documented passport-stamping problems (2011) and the widely reported processing delays at the DEM in 2018-2019; I did not read a source on the delays.",
+    "confidence": "medium",
+    "notes": "Documents covered only migrants holding a visa or permit; irregular migrants had none until regularised. The 2010 and 2015 ratings differ from 2000 because of documented practice, not because of any change in law."
+   },
+   {
+    "question_id": 33,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Neither DL 1.094 nor DS 597 makes it an offence to destroy a migrant's documents. Código Penal art. 242 punishes only public employees who destroy documents entrusted to them. Art. 194, read with art. 193 No. 8, punishes a private person who hides an official document to the harm of another, but not destruction as such. Kept as 'No' per the starting answer. No practice evidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change to Código Penal arts. 193, 194 or 242, or to the migration rules. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.430 (April 2010) creates no such offence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 20.507 (2011) creates no offence of destroying documents."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Código Penal",
+      "article": "Arts. 193 (No. 8), 194",
+      "role": "other_in_force",
+      "in_force": "1874 to today (no amendment notes 2000-2020)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 242",
+      "role": "other_in_force",
+      "in_force": "1874 to today (fines updated by Ley 19.450, 1996)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 68-77 (infractions)",
+      "role": "other_in_force",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "Art. 44",
+      "kind": "new_instrument",
+      "what_changed": "Applies Código Penal arts. 193-194 to falsehood in obtaining a Rol Único Nacional. It does not ban destroying documents, and it is after the period covered.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "El que cometiere falsedad en la solicitud, tramitación y/u otorgamiento del Rol Único Nacional en los términos previstos en los artículos 193 y 194 del Código Penal será castigado con las penas previstas en dichas normas"
+     }
+    ],
+    "repealed_search": "Read Código Penal arts. 193, 194 and 242 and their amendment notes, and the infraction articles of DL 1.094 (arts. 68-77) and DS 597. No provision against destroying migrants' documents was found to have existed and then been repealed between 2000 and 2020. The relevant Código Penal articles carry no amendment notes for 2000-2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Código Penal amendment notes were read on LeyChile. No practice evidence was found for any date.",
+    "sources_opened": [
+     {
+      "title": "Código Penal (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984"
+     },
+     {
+      "title": "DL 1.094 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "The 'No' is questionable. Código Penal art. 194 ('El particular que cometiere en documento público o auténtico alguna de las falsedades designadas en el artículo anterior'), read with art. 193 No. 8 ('Ocultando en perjuicio del Estado o de un particular cualquier documento oficial'), and art. 242 (public employees who 'sustraiga o destruya documentos') are of the same kind as the Argentine and Peruvian provisions the instrument codes 'Yes'. They applied unchanged throughout 2000-2020. A recoder might code 'Yes' for every date; I did not change the answer, because nothing changed in the period.",
+    "confidence": "medium",
+    "notes": "The general criminal-damage provisions were not read and are not cited."
+   }
+  ]
+ }
 }
