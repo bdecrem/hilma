@@ -79,6 +79,48 @@ export function required(w, { recorded = false } = {}) {
 
 const weak = () => JSON.parse(readFileSync(WEAK, 'utf8'))
 
+// OLA-251, fifteenth checker: data/weaknesses.json decides how strong the next fix must be (its guards and
+// counts), and it is a file anyone can edit. The tracker keeps the fingerprint of every version correct.mjs
+// wrote (venture_state weaknesses-fp; the replay results steer-replay.mjs adds are left out), and the audit
+// writes a line, each day, while the file matches none of them: an edit past correct.mjs is read by a person.
+const fpOf = (w) => createHash('sha256').update(JSON.stringify((({ replay, ...rest }) => rest)(w))).digest('hex').slice(0, 16)
+const fpList = (list) => createHash('sha256').update(list.map(fpOf).join('|')).digest('hex').slice(0, 16)
+// a weaknesses.json that matches no version correct.mjs wrote is a line (each day); run by audit, and by add
+// and fix before they read the file, so an edit cannot be made known by the next write
+async function checkFp(db, writeOverride, ownLine) {
+  const fpRow = (await db.from('venture_state').select('value').eq('key', 'weaknesses-fp').maybeSingle()).data?.value
+  const cur = weak()
+  if (!fpRow) return recordFp(cur)
+  if ((fpRow.known ?? []).includes(fpList(cur))) return
+  const ids = cur.filter((w) => fpRow.last?.[w.id] !== fpOf(w)).map((w) => w.id)
+  const gone = Object.keys(fpRow.last ?? {}).filter((id) => !cur.some((w) => w.id === id))
+  const dayNow = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  const key = `weak-changed-${fpList(cur)}-${dayNow}`
+  if (!(await ownLine(db, key))) await writeOverride(db, { key, what: `data/weaknesses.json matches no version correct.mjs wrote (changed past it: ${[...ids, ...gone.map((g) => g + ' removed')].join(', ') || 'order'}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
+}
+async function fpGate() {
+  if (onCopy && !process.env.VENTURE_TRACKER_FAKE) return
+  try {
+    const { writeOverride } = await import('./_overrides.mjs')
+    const db = await trackerDb()
+    const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' }
+    await checkFp(db, writeOverride, ownLine)
+  } catch (e) {
+    console.error(`(the check of data/weaknesses.json against the tracker did not run: ${e.message})`)
+  }
+}
+async function recordFp(list) {
+  if (onCopy && !process.env.VENTURE_TRACKER_FAKE) return
+  try {
+    const db = await trackerDb()
+    const had = (await db.from('venture_state').select('value').eq('key', 'weaknesses-fp').maybeSingle()).data?.value ?? { known: [] }
+    const known = [...(had.known ?? []).filter((x) => x !== fpList(list)), fpList(list)].slice(-300)
+    await db.from('venture_state').upsert({ key: 'weaknesses-fp', value: { known, last: Object.fromEntries(list.map((w) => [w.id, fpOf(w)])), at: new Date().toISOString() }, at: new Date().toISOString() })
+  } catch (e) {
+    console.error(`(the fingerprint of data/weaknesses.json was not stored: ${e.message})`)
+  }
+}
+
 /** Why a fix of `level` is refused for weakness w (null when it is accepted). */
 function fixProblem(w, level, { prev, cameBack, need }, { whyLast = str('why-last') } = {}) {
   if (prev && !whyLast) return `"${w.name}" had a fix before (strongest so far: ${prev}, ${KINDS[prev]}) and it came back.\nSay why that fix did not hold: --why-last "…". The new fix has to answer that, not repeat it.`
@@ -199,6 +241,7 @@ function timeProblem(said, date = null) {
 }
 
 if (cmd === 'add') {
+  await fpGate()
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
   if (!title || !words || !did || !cause) die('add needs --title, --words (his words), --did (what the agent had done) and --cause (the real cause)')
   const list = weak()
@@ -262,6 +305,7 @@ if (cmd === 'add') {
     delete w.stuck
   }
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
+  await recordFp(list)
   if (owed && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
     const o = w.owed.at(-1)
     try {
@@ -277,6 +321,7 @@ if (cmd === 'add') {
   console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
   console.log(NEXT)
 } else if (cmd === 'fix') {
+  await fpGate()
   // Settles an owed fix. The escalation rule is the same as for a fix given with the correction.
   const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
   if (!num) die('usage: correct.mjs fix <correction number> --fix "<what changed>" --level 1..5 --where "<file, command or ticket>" [--why-last "…"]')
@@ -311,6 +356,7 @@ if (cmd === 'add') {
   const line = `Fix settled ${pacific({ month: 'long', day: 'numeric' })} (kind ${level}, ${KINDS[level]}${str('where') ? `; ${str('where')}` : ''}${settledBy ? `, changed by ${settledBy} [${o.issue}]` : ''}): ${fix}`
   writeFileSync(COR, text.slice(0, at) + block + '\n' + line + '\n' + (next < 0 ? '' : '\n' + text.slice(endAt).replace(/^\n+/, '')))
   writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
+  await recordFp(list)
   console.log(`correction ${num}: owed fix settled under "${w.name}", kind ${level} (${KINDS[level]})`)
   // OLA-251, fifth pass: whether the file or ticket really carries the fix (not a comment committed under
   // the ticket's tag, not an unrelated closed ticket) is a judgment no script makes, so every settle is a
@@ -357,7 +403,7 @@ if (cmd === 'add') {
       const { writeOverride } = await import('./_overrides.mjs')
       const db = await trackerDb()
       // written once: only a line this audit wrote itself counts (a line someone else put under the key does not)
-      const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' && /^correction \d+'s owed fix /.test(String(x.data?.value?.what ?? '')) }
+      const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' && /^(correction \d+'s owed fix |data\/weaknesses\.json matches no version)/.test(String(x.data?.value?.what ?? '')) }
       const r = await db.from('venture_state').select('value').like('key', 'override:%')
       const lines = (r.data ?? []).map((x) => String(x.value?.what ?? '')).filter((w) => !w.startsWith('(on a copy')) // a settle on a copy does not account for one in the real ledger
       const text = readFileSync(COR, 'utf8')
@@ -365,6 +411,7 @@ if (cmd === 'add') {
       // list of owed fixes (venture_state owed-fix:<n>): each owed fix the notes list is copied there, and one
       // that leaves the notes' list without correct.mjs settling it in the tracker is a line, once
       const owedNow = owedFixes(weak())
+      await checkFp(db, writeOverride, ownLine)
       const held = ((await db.from('venture_state').select('key, value').like('key', 'owed-fix:%')).data ?? [])
       // a line is keyed by the event (the number and the owed fix's own time), so a later fix under a reused
       // number, or the same change made again, is a line of its own (thirteenth checker)

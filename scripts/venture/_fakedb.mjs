@@ -86,7 +86,7 @@ if (import.meta.url === `file://${process.argv[1]}` && process.argv[2] === 'copy
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   const named = process.argv.slice(4)
   const issues = (await db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting)${named.length ? `,id.in.(${named.join(',')})` : ''}`)).data ?? []
-  const state = (await db.from('venture_state').select('*').or('key.like.claim:*,key.like.accept:*,key.like.wait:*,key.like.owed-fix:*,key.eq.ola_status')).data ?? []
+  const state = (await db.from('venture_state').select('*').or('key.like.claim:*,key.like.accept:*,key.like.wait:*,key.like.owed-fix:*,key.eq.weaknesses-fp,key.eq.ola_status')).data ?? []
   writeFileSync(out, JSON.stringify({ venture_issues: issues, venture_state: state, venture_issue_activity: [], venture_commits: [] }, null, 1))
   console.log(`${out}: ${issues.length} tickets, ${state.length} state rows (a copy; nothing in the real tracker changed)`)
 }
