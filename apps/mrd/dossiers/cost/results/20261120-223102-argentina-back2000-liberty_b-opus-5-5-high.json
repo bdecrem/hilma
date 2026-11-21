@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina liberty_b claude-opus-5-5 high",
- "pid": 67076,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "liberty_b",
@@ -58,5 +57,1142 @@
   "user": 179
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T07:45:37.524Z",
+ "minutes": 74.58,
+ "meters_after": {
+  "at": "2026-11-21T07:45:37.524Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 1,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 1,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 1% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 228787,
+   "output": 40873,
+   "cache_read": 2343899,
+   "cache_write": 141659,
+   "cost_usd": 2.2583,
+   "total": 2755218
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 228741,
+    "output": 17655,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 5489,
+    "cost_usd": 0.1917
+   },
+   "claude-opus-5-5": {
+    "input": 46,
+    "output": 23218,
+    "cache_read": 2343899,
+    "cache_write": 141659,
+    "thinking": 6013,
+    "cost_usd": 2.0666
+   }
+  }
+ },
+ "turns": 43,
+ "calls": 63,
+ "duration_ms": 430173,
+ "duration_api_ms": 395262,
+ "pages_read": 25,
+ "pages": [
+  {
+   "at": "2026-11-21T06:31:36.012Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 5° | ARTICULO 66 | ARTICULO 70 | ARTICULO 72 | ARTICULO 79",
+   "ok": true,
+   "chars": 12638
+  },
+  {
+   "at": "2026-11-21T06:31:37.108Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 66 | ARTICULO 70 | ARTICULO 5 | ARTICULO 125",
+   "ok": true,
+   "chars": 9143
+  },
+  {
+   "at": "2026-11-21T06:31:49.115Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "ARTÍCULO 70 | retención preventiva | ARTÍCULO 69 bis | TREINTA (30) días | dos (2) días hábiles",
+   "ok": true,
+   "chars": 10518
+  },
+  {
+   "at": "2026-11-21T06:31:51.064Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "detención | ARTICULO 40 | ARTICULO 37 | habeas | ARTICULO 41",
+   "ok": true,
+   "chars": 3937
+  },
+  {
+   "at": "2026-11-21T06:31:59.459Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "El tiempo de retención no podrá exceder | hecho nuevo | ARTÍCULO 22",
+   "ok": true,
+   "chars": 5487
+  },
+  {
+   "at": "2026-11-21T06:31:59.977Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3284
+  },
+  {
+   "at": "2026-11-21T06:32:00.430Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "constatar la existencia del vínculo | ARTICULO 71 | ARTICULO 72",
+   "ok": true,
+   "chars": 2652
+  },
+  {
+   "at": "2026-11-21T06:33:19.020Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "toda especie de tormento | hábeas corpus | Contra la Tortura | Artículo 20",
+   "ok": true,
+   "chars": 4107
+  },
+  {
+   "at": "2026-11-21T06:33:24.492Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 70 | ARTICULO 66 | ARTICULO 72",
+   "ok": true,
+   "chars": 4901
+  },
+  {
+   "at": "2026-11-21T06:59:26.830Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48612/texto",
+   "find": "ARTICULO 3 | ARTICULO 1",
+   "ok": true,
+   "chars": 4393
+  },
+  {
+   "at": "2026-11-21T06:59:27.986Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+   "find": "padre | discapacitado",
+   "ok": true,
+   "chars": 3396
+  },
+  {
+   "at": "2026-11-21T06:59:38.159Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48612/texto",
+   "find": "Art. 3 | Art. 4",
+   "ok": true,
+   "chars": 3369
+  },
+  {
+   "at": "2026-11-21T06:59:51.943Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2002/06/IA2002.-Hechos-2001-12-Migrantes-ley-inconstitucional-y-practica-arbitraria.pdf",
+   "find": "detención | hábeas corpus | sin orden judicial | malos tratos | comisaría",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:18:49.399Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2001/05/IA2001hechos2000-8-Inmigrantes-Senales-de-alerta-e-inaccion.pdf",
+   "find": "detención | hábeas corpus | orden judicial | malos tratos | policía",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:18:52.663Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2005/12/IA2005-14-A-dos-anos-de-la-nueva-Ley-de-Migraciones.pdf",
+   "find": "retención | detención | hábeas corpus | orden judicial | malos tratos",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T07:19:04.911Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "detention | detained | ill-treatment | expulsion | habeas",
+   "ok": true,
+   "chars": 3856
+  },
+  {
+   "at": "2026-11-21T07:19:14.165Z",
+   "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html",
+   "find": "torture | migrant | foreigners | overcrowding | police",
+   "ok": true,
+   "chars": 7443
+  },
+  {
+   "at": "2026-11-21T07:19:38.259Z",
+   "url": "https://webarchive.archive.unhcr.org/20230606195725oe_/https://www.refworld.org/docid/3ae6aa660.html",
+   "find": "immigra | foreign | habeas | torture | prison conditions",
+   "ok": true,
+   "chars": 879
+  },
+  {
+   "at": "2026-11-21T07:22:57.507Z",
+   "url": "https://www.hrw.org/legacy/spanish/inf_anual/2000/americas/argentina.html",
+   "find": "inmigrantes | extranjeros | tortura | policía",
+   "ok": true,
+   "chars": 5436
+  },
+  {
+   "at": "2026-11-21T07:23:49.269Z",
+   "url": "https://www.hrw.org/wr2k1/americas/argentina.html",
+   "find": "immigra | foreign | Bolivian | Peruvian | torture",
+   "ok": true,
+   "chars": 5203
+  },
+  {
+   "at": "2026-11-21T07:25:29.638Z",
+   "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm",
+   "find": "detenía | inmigrantes | Migraciones | detención | juez",
+   "ok": true,
+   "chars": 5368
+  },
+  {
+   "at": "2026-11-21T07:25:49.520Z",
+   "url": "https://www.ecoi.net/de/dokument/1262380.html",
+   "find": "migra | immigra | habeas | Torture and Other Cruel | Arbitrary Arrest",
+   "ok": true,
+   "chars": 8466
+  },
+  {
+   "at": "2026-11-21T07:26:00.409Z",
+   "url": "https://www.ecoi.net/en/document/217739",
+   "find": "migra | refugee | Torture and Other Cruel | prompt determination",
+   "ok": true,
+   "chars": 6416
+  },
+  {
+   "at": "2026-11-21T07:26:20.473Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "detention | detain | decree | Committee",
+   "ok": true,
+   "chars": 4239
+  },
+  {
+   "at": "2026-11-21T07:26:26.657Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Tortura | jerarquía constitucional",
+   "ok": true,
+   "chars": 2928
+  }
+ ],
+ "searches": [
+  "Ley 22.439 infoleg texto \"detención\" \"Dirección Nacional de Migraciones\" expulsión artículo 40",
+  "Ley 23.098 hábeas corpus infoleg texto \"agravación ilegítima de la forma y condiciones\"",
+  "Código Penal artículo 144 tercero tortura Ley 23.097 infoleg texto \"severidades, vejaciones o apremios\"",
+  "CELS informe migrantes detención Ley Videla hábeas corpus 2000 2001 detenidos migraciones comisarías",
+  "Committee on Migrant Workers concluding observations Argentina 2011 detention migrants CMW/C/ARG/CO/1",
+  "Committee against Torture conclusions recommendations Argentina 2004 CAT/C/CR/33/1 hrlibrary umn",
+  "CAT concluding observations Argentina 2017 CAT/C/ARG/CO/5-6 migrants detention torture police",
+  "State Department 1999 Country Reports on Human Rights Practices Argentina immigrants detained police \"illegal immigrants\"",
+  "CELS Hotel de Inmigrantes detenidos migrantes ley 22.439 detención sin orden judicial hábeas corpus 1999 informe html",
+  "Argentina 1999 inmigrantes bolivianos peruanos razzias detenidos policía federal Ley de Migraciones Ruckauf extranjeros delincuencia CELS",
+  "2009-2017.state.gov Argentina 2015 Country Reports Human Rights Practices torture prison conditions migrants",
+  "Argentina migrantes retención Ley 25.871 hábeas corpus jurisprudencia \"retención\" plazo excesivo Cámara Federal 2008 2012 migrante detenido",
+  "ecoi.net Country Report on Human Rights Practices 2009 Argentina State Department",
+  "CMW/C/ARG/CO/2 2019 observaciones finales Argentina retención migrantes Decreto 70/2017 detención",
+  "Ley 26.202 Convención Internacional Protección Derechos Trabajadores Migratorios aprobación infoleg"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.52,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":21,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Rarely; Sometimes\",\"basis\":\"Constitution art. 43 (1994) gives habeas corpus against restrictions of physical liberty and against 'agravamiento ilegítimo en la forma o condiciones de detención'. Ley 23.098 art. 3 (1984) covers detention without a written order and illegitimate aggravation of conditions. Ley 22.439 art. 40 capped detention at the 'estrictamente indispensable' period, so excess length could be challenged as illegal. In practice the DNM itself ordered detention without a judge, and CELS (reported by Página/12, 2000) documented raids in 1999 detaining about 60 migrants a day in Once; there is no evidence on how habeas corpus actually worked for migrants.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Same constitutional and habeas corpus guarantees. From 21 Jan 2004 Ley 25.871 art. 70 required a judicial order for 'retención' and limited it to the 'estrictamente indispensable' period, with immediate notice to the court; art. 71 required provisional release to be reported to the federal judge. CAT 2004 welcomed the judicial-order rule but criticised holding immigrants under expulsion orders together with convicted and remand prisoners. The law was still unregulated.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Ley 25.871 arts. 70-72, Constitution art. 43 and Ley 23.098 art. 3 unchanged. Decreto 616/2010 (published 6 May 2010) came only after this date; it added the 15-day retention limit and the rule that detainees be held in adequate places separate from criminal detainees. CMW 2011 noted automatic judicial review of expulsion orders; USDOS 2011 reported a right to prompt review of legality with some delays (general detainees, not migrants specifically).\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Ley 25.871 art. 70 as regulated by Decreto 616/2",
+ "output": {
+  "answers": [
+   {
+    "question_id": 21,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely; Sometimes",
+      "basis": "Constitution art. 43 (1994) gives habeas corpus against restrictions of physical liberty and against 'agravamiento ilegítimo en la forma o condiciones de detención'. Ley 23.098 art. 3 (1984) covers detention without a written order and illegitimate aggravation of conditions. Ley 22.439 art. 40 capped detention at the 'estrictamente indispensable' period, so excess length could be challenged as illegal. In practice the DNM itself ordered detention without a judge, and CELS (reported by Página/12, 2000) documented raids in 1999 detaining about 60 migrants a day in Once; there is no evidence on how habeas corpus actually worked for migrants."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Same constitutional and habeas corpus guarantees. From 21 Jan 2004 Ley 25.871 art. 70 required a judicial order for 'retención' and limited it to the 'estrictamente indispensable' period, with immediate notice to the court; art. 71 required provisional release to be reported to the federal judge. CAT 2004 welcomed the judicial-order rule but criticised holding immigrants under expulsion orders together with convicted and remand prisoners. The law was still unregulated."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 arts. 70-72, Constitution art. 43 and Ley 23.098 art. 3 unchanged. Decreto 616/2010 (published 6 May 2010) came only after this date; it added the 15-day retention limit and the rule that detainees be held in adequate places separate from criminal detainees. CMW 2011 noted automatic judicial review of expulsion orders; USDOS 2011 reported a right to prompt review of legality with some delays (general detainees, not migrants specifically)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 art. 70 as regulated by Decreto 616/2010 art. 70 (retention up to 15 days, extendable by a judge) and art. 72 (conditions). Constitution art. 43 and Ley 23.098 art. 3 unchanged. DNU 70/2017 (in force 31 Jan 2017) later replaced art. 70 with 30-day retention extendable for 30 more and suspended the count during appeals. USDOS 2015 found detainees could complain to judges, with delays (general population, not migrants specifically)."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 43 (hábeas corpus paragraph)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 23.098 de Hábeas Corpus",
+      "article": "Art. 3",
+      "role": "cited",
+      "in_force": "1984-10 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70 (texto original)",
+      "role": "cited",
+      "in_force": "2004-01-21 to 2017-01-30; restored 2021-03-05 to 2025-05-28",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto DNU 70/2017",
+      "article": "Art. 21 (substituted art. 70 Ley 25.871); arts. 69 bis-69 octies",
+      "role": "other_in_force",
+      "in_force": "2017-01-31 to 2021-03-04",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamentación Ley 25.871)",
+      "article": "Arts. 70, 72",
+      "role": "cited",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 40-42",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 71-72",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today (art. 71 replaced by DNU 366/2025)",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 70, 124",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. Detention ('retención') now needs a judicial order and may not exceed the strictly indispensable period. Under the old law the DNM or the Interior Ministry ordered detention itself. This strengthens the legality and length components.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Firme y consentida la expulsión de un extranjero, el Ministerio del Interior o la Dirección Nacional de Migraciones, solicitarán a la autoridad judicial competente que ordene su retención, mediante resolución fundada, al solo y único efecto de cumplir aquélla. ... En todos los casos el tiempo de retención no podrá exceder el estrictamente indispensable"
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 124 (repeal of Ley 22.439 art. 40)",
+      "kind": "repealed",
+      "what_changed": "Repealed Ley 22.439, including art. 40 on administrative detention by 'resolución fundada' of the Ministry or the DNM.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 40. – Decretada la expulsión de un extranjero, el Ministerio del Interior o la Dirección Nacional de Migraciones, podrán ordenar su detención mediante resolución fundada, al solo y único efecto de cumplir aquélla. En ningún caso el tiempo de detención será mayor del estrictamente indispensable"
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Arts. 70, 72",
+      "kind": "enacted",
+      "what_changed": "Regulated retention: limited to 15 calendar days, extendable by a judge, and required detainees to be held in adequate places separate from criminal detainees. This adds rules on length and conditions.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "La retención podrá solicitarse por un plazo de hasta QUINCE (15) días corridos. ... El alojamiento de los extranjeros retenidos deberá hacerse en ámbitos adecuados, separados de los detenidos por causas penales"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto DNU 70/2017",
+      "article": "Art. 21 (replacing art. 70 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Allowed preventive retention before the expulsion order is final; set 30 days extendable by 30 for final orders; suspended the count while appeals are pending. Judicial control and the 'indispensable' limit remained.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "Ante medidas expulsivas firmes, el plazo de retención para materializar la expulsión será de TREINTA (30) días corridos, prorrogables por disposición judicial por idéntico término. ... Las acciones o procesos recursivos suspenderán el cómputo del plazo de retención hasta su resolución definitiva."
+     },
+     {
+      "date": "2021-03-05",
+      "instrument": "Decreto 138/2021",
+      "article": "Art. 70 Ley 25.871 (restored)",
+      "kind": "repealed",
+      "what_changed": "Repealed DNU 70/2017 and restored the original art. 70. This is after 2020 and recorded for context only.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "Artículo 70 restituido por art. 2º del Decreto Nº 138/2021 B.O. 5/3/2021. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Cámara Nacional de Apelaciones en lo Contencioso Administrativo Federal, Sala V",
+      "reference": "CELS y otros c/ EN-DNM s/ amparo ley 16.986 (declared DNU 70/2017 unconstitutional)",
+      "date": "2018-03-22",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "Appeal to the CSJN was pending in 2019 (per CELS); the issue became moot when Decreto 138/2021 repealed the DNU. The DNM kept applying the DNU (CMW 2019).",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Página/12, 'Inmigrantes' (report on the CELS Informe Anual 2000)",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CAT Conclusions and recommendations: Argentina, CAT/C/CR/33/1",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations Argentina CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "USDOS Country Report on Human Rights Practices 2011 - Argentina",
+      "url": "https://www.ecoi.net/en/document/217739",
+      "year": 2012,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "USDOS Country Report on Human Rights Practices 2015 - Argentina",
+      "url": "https://www.ecoi.net/de/dokument/1262380.html",
+      "year": 2016,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CELS, UN urges Argentina to derogate and suspend decree that violates migrant rights",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original and current texts of Ley 25.871, the DNU 70/2017 text, the Ley 22.439 text and the Decreto 616/2010 text. CELS annual-report PDFs and the UN PDFs (CAT 2017, CMW 2019) could not be opened; practice for 2000 rests on a press summary of CELS. The USDOS sources cover detainees generally, not migrants.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Decreto DNU 70/2017 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 23.098 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-48612/texto"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Página/12 2000 CELS inmigrantes",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm"
+     },
+     {
+      "title": "CAT 2004 Argentina",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011 Argentina",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "USDOS 2011 Argentina",
+      "url": "https://www.ecoi.net/en/document/217739"
+     },
+     {
+      "title": "USDOS 2015 Argentina",
+      "url": "https://www.ecoi.net/de/dokument/1262380.html"
+     },
+     {
+      "title": "CELS 2019 CMW",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The 2020 citation quotes an art. 70 text ('as a new fact... parent of a native Argentine minor or disabled person... suspend for two business days') that matches neither the original art. 70 nor the parts of the DNU 70/2017 version I read. The art. 70 actually in force on 1 Jan 2020 was the DNU 70/2017 version. The 'Yes' answer still holds through Constitution art. 43 and Ley 23.098 art. 3.",
+    "confidence": "medium",
+    "notes": "The protection answer rests on statutes and the Constitution, not on court rulings. On every date habeas corpus covers legality and conditions. Length is covered because the detention statutes ('estrictamente indispensable'; 15 days under Decreto 616/2010; 30+30 days under DNU 70/2017) make excess duration illegal and therefore open to habeas corpus. The Migrant Workers Convention (ratified 2007 via Ley 26.202, per secondary sources) is not counted for earlier dates; I did not open its text."
+   },
+   {
+    "question_id": 23,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Rarely; Sometimes",
+      "basis": "Ley 22.439 art. 40 allowed detention only after expulsion was decreed for a specific foreigner, by 'resolución fundada'. ACHR art. 22.9 (constitutional rank since 1994, Const. art. 75 inc. 22) prohibits collective expulsion. Practice: CELS (via Página/12) documented 1999 police raids detaining about 60 migrants a day 'por portación de cara', and DNM detentions without a judicial order."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 (in force 21 Jan 2004) art. 66 requires each expulsion to be examined and decided individually. Art. 70 requires a reasoned judicial order for each retention. CAT 2004 welcomed the judicial-order rule. There is little practice evidence for 2004-05."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 arts. 66 and 70 unchanged. Decreto 616/2010 (May 2010, after this date) required each petition to identify the person precisely. CMW 2011 found the DNM did not weigh personal, family and professional circumstances or length of stay when ordering expulsions based on art. 29, though automatic judicial review existed."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 25.871 arts. 66 and 70 and Decreto 616/2010 art. 70 unchanged. I found no migrant-specific practice source for 2015, so this rating carries forward the CMW 2011 findings. DNU 70/2017 (from 31 Jan 2017) kept the judicial order and added 'circunstancias particulares de hecho y de derecho en el caso concreto' for preventive retention."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 66",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (replaced 2017-01-31 by DNU 70/2017, restored 2021-03-05, replaced 2025-05-29 by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto DNU 70/2017",
+      "article": "Art. 21 (art. 70 Ley 25.871)",
+      "role": "other_in_force",
+      "in_force": "2017-01-31 to 2021-03-04",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 70",
+      "role": "other_in_force",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Art. 40",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Nacional / Convención Americana sobre Derechos Humanos",
+      "article": "Art. 75 inc. 22 / ACHR art. 22.9",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 66",
+      "kind": "new_instrument",
+      "what_changed": "Introduced an express statutory ban on collective expulsion and a duty of individual examination; Ley 22.439 had no such clause.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Los extranjeros y sus familiares no podrán ser objeto de medidas de expulsión colectiva. Cada caso de expulsión será examinado y decidido individualmente."
+     },
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 70; art. 124 repeal of Ley 22.439 art. 40",
+      "kind": "replaced",
+      "what_changed": "Detention moved from an administrative 'resolución fundada' (22.439 art. 40) to a reasoned request to a judge, who orders the retention of the individual.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "Decretada la expulsión de un extranjero, el Ministerio del Interior o la Dirección Nacional de Migraciones, podrán ordenar su detención mediante resolución fundada, al solo y único efecto de cumplir aquélla."
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 70",
+      "kind": "enacted",
+      "what_changed": "Required each retention petition to precisely identify the person and to attach a certified copy of the expulsion resolution.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "La petición deberá contener una identificación precisa de la persona respecto de quien se solicita la medida, e ir acompañada con copia certificada de la resolución de expulsión"
+     },
+     {
+      "date": "2017-01-31",
+      "instrument": "Decreto DNU 70/2017",
+      "article": "Art. 21 (art. 70 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Extended preventive retention to non-final orders, 'en virtud de las circunstancias particulares de hecho y de derecho en el caso concreto'. The individual judicial decision was kept.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto",
+      "passage": "la DIRECCIÓN NACIONAL DE MIGRACIONES podrá solicitar a la autoridad judicial la retención preventiva del extranjero aun cuando la orden de expulsión no se encuentre firme, en virtud de las circunstancias particulares de hecho y de derecho en el caso concreto."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [
+     {
+      "court": "Cámara Nacional de Apelaciones en lo Contencioso Administrativo Federal, Sala V",
+      "reference": "CELS y otros c/ EN-DNM s/ amparo (DNU 70/2017)",
+      "date": "2018-03-22",
+      "read_in_full": false,
+      "general_rule": false,
+      "later": "CSJN appeal pending in 2019; moot after Decreto 138/2021.",
+      "url": null
+     }
+    ],
+    "practice_sources": [
+     {
+      "title": "Página/12 2000 (CELS Informe 2000, inmigrantes)",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CAT/C/CR/33/1",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html",
+      "year": 2004,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW/C/ARG/CO/1",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS on CMW 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Every version of the statutes was read. Practice evidence is thin for 2005 and 2015; the CELS and UN PDFs could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-70-2017-271245/texto"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Página/12 2000",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm"
+     },
+     {
+      "title": "CAT 2004",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The 2020 implementation rating 'Usually; Effectively Always' looks high. On 1 Jan 2020 DNU 70/2017 was in force, and CMW 2019 (via CELS) criticised expulsions and retentions that ignored family unity and called for detention only as a last resort. That points to 'Sometimes; Usually'.",
+    "confidence": "low",
+    "notes": "The 2000 'Yes' is arguable. It rests on Ley 22.439 art. 40 (a reasoned resolution for an individual foreigner) and on ACHR art. 22.9, which has constitutional rank and has been directly applicable since 1994. Neither expressly requires an individualized assessment of the need to detain. A stricter coder could give 'No' for 2000, which would make the change 'no protection in 2000, protection now'."
+   },
+   {
+    "question_id": 25,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+      "implementation": "Sometimes",
+      "basis": "The CAT has had constitutional rank since 1994 (Const. art. 75 inc. 22); Const. art. 18 abolishes 'toda especie de tormento'; art. 20 gives foreigners all civil rights of citizens. The starting answer is carried back because nothing changed. HRW 2000/2001 reported widespread police torture; CELS (via Página/12) documented xenophobic police raids on migrants in 1999."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+      "implementation": "Sometimes",
+      "basis": "Same constitutional basis, plus Ley 25.871 art. 5 (equal treatment, from Jan 2004). CAT 2004 found torture and ill-treatment by security forces 'widespread and habitual', and found immigrants under expulsion orders held with prisoners."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+      "implementation": "Sometimes; Usually",
+      "basis": "No legal change. USDOS 2011 reported that some police and prison guards continued brutality, with few convictions (general population)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+      "implementation": "Sometimes; Usually",
+      "basis": "No legal change. USDOS 2015 listed torture by federal and provincial police among the principal problems (general population). No migrant-specific source was found for 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Art. 75 inc. 22 (CAT constitutional rank)",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Nacional",
+      "article": "Arts. 18, 20",
+      "role": "other_in_force",
+      "in_force": "1853/1994 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 5",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 5",
+      "kind": "enacted",
+      "what_changed": "Added a statutory guarantee of equal treatment for foreigners, conditioned on meeting entry and stay requirements. It is supporting, not decisive, for this indicator; art. 5 has not been amended since.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "El Estado asegurará las condiciones que garanticen una efectiva igualdad de trato a fin de que los extranjeros puedan gozar de sus derechos y cumplir con sus obligaciones, siempre que satisfagan las condiciones establecidas para su ingreso y permanencia"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "HRW Informe Anual 2000 - Argentina",
+      "url": "https://www.hrw.org/legacy/spanish/inf_anual/2000/americas/argentina.html",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "HRW World Report 2001 - Argentina",
+      "url": "https://www.hrw.org/wr2k1/americas/argentina.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "Página/12 2000 (CELS)",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm",
+      "year": 2000,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CAT/C/CR/33/1",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "USDOS 2011 Argentina",
+      "url": "https://www.ecoi.net/en/document/217739",
+      "year": 2012,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "USDOS 2015 Argentina",
+      "url": "https://www.ecoi.net/de/dokument/1262380.html",
+      "year": 2016,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     },
+     {
+      "title": "CELS on CMW 2019 (police violence against Senegalese/Haitian vendors)",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The constitutional text has not changed since 1994, and Ley 25.871 art. 5 has never been amended. Practice sources mostly cover the general population, not migrants; Penal Code art. 144 ter was not read.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "HRW 2000",
+      "url": "https://www.hrw.org/legacy/spanish/inf_anual/2000/americas/argentina.html"
+     },
+     {
+      "title": "HRW 2001",
+      "url": "https://www.hrw.org/wr2k1/americas/argentina.html"
+     },
+     {
+      "title": "Página/12 2000",
+      "url": "https://www.pagina12.com.ar/2000/00-04/00-04-16/pag14.htm"
+     },
+     {
+      "title": "CAT 2004",
+      "url": "https://hrlibrary.umn.edu/cat/observations/argentina2004.html"
+     },
+     {
+      "title": "USDOS 2011",
+      "url": "https://www.ecoi.net/en/document/217739"
+     },
+     {
+      "title": "USDOS 2015",
+      "url": "https://www.ecoi.net/de/dokument/1262380.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": "The answer should be 'Yes'. The CAT itself, which has constitutional rank under art. 75 inc. 22, covers cruel, inhuman and degrading treatment. The same is true of ACHR art. 5.2 and ICCPR art. 7, both also of constitutional rank, and Const. art. 18 bars 'toda especie de tormento'. The 'torture only' answer contradicts the MRD's own citation.",
+    "confidence": "medium",
+    "notes": "The answer relies on treaties with constitutional rank that apply directly to everyone in the territory, foreigners included (Const. art. 20). The protection answer is kept the same on every date, as the starting answer requires; only the implementation rating moves, based on reports of police torture."
+   }
+  ]
+ }
 }
