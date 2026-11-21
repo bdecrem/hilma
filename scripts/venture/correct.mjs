@@ -330,7 +330,13 @@ if (cmd === 'add') {
     if (problem && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
       // twenty-fourth checker: a correction refused under one weakness and then recorded under another with a
       // lower bar skipped the fix it was due; the refusal is remembered for a day so the later add is a line
-      try { await (await trackerDb()).from('venture_state').upsert({ key: `add-refused:${refusalKey(title, words)}`, value: { weakness: w.id, need, at: new Date().toISOString() }, at: new Date().toISOString() }) } catch {}
+      // keyed by his words alone (Kit's title can be changed), and the day's highest bar is kept, not the last (twenty-fifth checker)
+      try {
+        const tdb = await trackerDb()
+        const key = `add-refused:${refusalKey('', words)}`
+        const had = (await tdb.from('venture_state').select('value').eq('key', key).maybeSingle()).data?.value
+        if (!had || Date.now() - Date.parse(had.at) > 86400e3 || need > had.need) await tdb.from('venture_state').upsert({ key, value: { weakness: w.id, need, at: new Date().toISOString() }, at: new Date().toISOString() })
+      } catch {}
     }
     if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
@@ -394,7 +400,7 @@ if (cmd === 'add') {
   // the same correction refused earlier under another weakness whose fix had to be stronger: a line
   if (!newWeakLine && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
     try {
-      const was = (await (await trackerDb()).from('venture_state').select('value').eq('key', `add-refused:${refusalKey(title, words)}`).maybeSingle()).data?.value
+      const was = (await (await trackerDb()).from('venture_state').select('value').eq('key', `add-refused:${refusalKey('', words)}`).maybeSingle()).data?.value
       const now = owed ? need : cannot ? 0 : level
       if (was && was.weakness !== w.id && Date.now() - Date.parse(was.at) < 86400e3 && was.need > now) newWeakLine = `refused under ${was.weakness} (its fix had to be kind ${was.need}) at ${was.at}, then filed under ${w.id} with ${owed ? `a fix owed at kind ${need}` : cannot ? 'no stronger fix' : `a kind-${level} fix`}: read where the correction belongs`
     } catch {}
