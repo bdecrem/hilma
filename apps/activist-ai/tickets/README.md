@@ -32,6 +32,14 @@ test never helps), the tests run in the same sandbox, and one line goes to `~/ol
 
 Self-test (Nov 21): the real commits pass all three cases (4/4, 8/8, 54/54); no change fails all three.
 
+**Result, Nov 21 (incomplete):** Kimi K3.1 Pro passed 2 of 3 (OLA-324 4/4, OLA-337 54/54; OLA-283
+2/8 when it reached the 3M-token cap), $17.90 for the three. Muse Spark Open 1 of 3. GLM-5.3 and
+DeepSeek V4 Pro 0 of 3, but at about 9:08 am the Together account hit its credit limit (this trial,
+about $45, pushed it over; OLA-346) and five of their six runs ended on Together's 402, so they are
+not measured yet. Kimi K3.1 Pro is the ticket model (`_ticket_model`) until those runs are redone:
+`--models glm-5.3,deepseek-v4-pro,muse-spark --max-usd 30`. The hard case (OLA-283) beat every model
+at 3M tokens; the next round gives it 6M.
+
 Candidates (Nov 21, Together serverless): Kimi K3.1 Pro, DeepSeek V4 Pro, GLM-5.3, Muse Spark Open.
 Qwen3.7-Max is listed but Together refuses it on the serverless API ("the model server rejected the
 request"), so it is not in the trial.

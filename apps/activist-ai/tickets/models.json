@@ -1,8 +1,30 @@
 {
   "_note": "Candidates for the ticket model (OLA-300): the strongest coding models Together serves, picked by the trial alone (Bart, Nov 20: 'performance is the only criteria', Chinese models allowed for this use only). Prices in USD per million tokens, from Together's /v1/models on Nov 21.",
-  "kimi-k3.1-pro": { "id": "moonshotai/Kimi-K3.1-Pro", "in": 2, "out": 10 },
-  "qwen3.7-max": { "id": "Qwen/Qwen3.7-Max", "in": 2.5, "out": 7.5 },
-  "deepseek-v4-pro": { "id": "deepseek-ai/DeepSeek-V4-Pro-0813", "in": 1.32, "out": 3.96 },
-  "glm-5.3": { "id": "zai-org/GLM-5.3", "in": 1.4, "out": 4.4 },
-  "muse-spark": { "id": "meta-models/Muse-Spark-Open-816B-A42B", "in": 1.25, "out": 4.25 }
+  "_ticket_model": "kimi-k3.1-pro",
+  "_trial": "Nov 21 trial (results in ~/ola-trials/results.jsonl on the mini): Kimi K3.1 Pro 2 of 3 (clock 4/4, gateway 54/54, select 2/8 at the 3M-token cap), all three runs ended before Together's credit ran out at about 9:08 am. Muse Spark 1 of 3 (clock 4/4; select cut by the token cap; gateway by the 402). GLM-5.3 and DeepSeek V4 Pro: 0 of 3, but five of their six runs were cut off by the 402 'credit limit exceeded', so they are not measured yet. Kimi is the ticket model until the cut runs are redone (OLA-346).",
+  "kimi-k3.1-pro": {
+    "id": "moonshotai/Kimi-K3.1-Pro",
+    "in": 2,
+    "out": 10
+  },
+  "qwen3.7-max": {
+    "id": "Qwen/Qwen3.7-Max",
+    "in": 2.5,
+    "out": 7.5
+  },
+  "deepseek-v4-pro": {
+    "id": "deepseek-ai/DeepSeek-V4-Pro-0813",
+    "in": 1.32,
+    "out": 3.96
+  },
+  "glm-5.3": {
+    "id": "zai-org/GLM-5.3",
+    "in": 1.4,
+    "out": 4.4
+  },
+  "muse-spark": {
+    "id": "meta-models/Muse-Spark-Open-816B-A42B",
+    "in": 1.25,
+    "out": 4.25
+  }
 }
