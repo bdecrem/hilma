@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina labor_c claude-opus-5-5 high",
- "pid": 58563,
  "step": "forward",
  "slug": "argentina",
  "chunk": "labor_c",
@@ -57,5 +56,652 @@
   "user": 106
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T04:31:53.925Z",
+ "minutes": 40,
+ "meters_after": {
+  "at": "2026-11-21T04:31:53.926Z",
+  "window": {
+   "pct": 71,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 49,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 71,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 49,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 71% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 49% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 121174,
+   "output": 25696,
+   "cache_read": 1564473,
+   "cache_write": 97490,
+   "cost_usd": 1.5057,
+   "total": 1808833
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 121134,
+    "output": 9913,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2409,
+    "cost_usd": 0.0971
+   },
+   "claude-opus-5-5": {
+    "input": 40,
+    "output": 15783,
+    "cache_read": 1564473,
+    "cache_write": 97490,
+    "thinking": 5505,
+    "cost_usd": 1.4086
+   }
+  }
+ },
+ "turns": 30,
+ "calls": 48,
+ "duration_ms": 383320,
+ "duration_api_ms": 341810,
+ "pages_read": 20,
+ "pages": [
+  {
+   "at": "2026-11-21T03:52:04.297Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 6 | ARTICULO 5 | ARTICULO 7 | 366/2025",
+   "ok": true,
+   "chars": 8527
+  },
+  {
+   "at": "2026-11-21T03:52:05.123Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/325968/20250529",
+   "find": "Sustitúyese el artículo 6° | artículo 6° | seguridad social | entrará en vigencia",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:02:03.870Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6 | seguridad social",
+   "ok": true,
+   "chars": 3443
+  },
+  {
+   "at": "2026-11-21T04:02:04.947Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm",
+   "find": "ARTICULO 111 | ARTICULO 112 | ARTICULO 113 | ARTICULO 114 | ARTICULO 117",
+   "ok": true,
+   "chars": 8502
+  },
+  {
+   "at": "2026-11-21T04:05:16.756Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm",
+   "find": "ARTICULO 19 | ARTICULO 2 | extranjeros",
+   "ok": true,
+   "chars": 6509
+  },
+  {
+   "at": "2026-11-21T04:05:30.120Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-404361/texto",
+   "find": "extranjeros | residencia | Derógase | 7/23",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:09:43.446Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm",
+   "find": "Artículo 19 | Prestación básica universal. Requisitos | treinta (30) años de servicios",
+   "ok": true,
+   "chars": 4499
+  },
+  {
+   "at": "2026-11-21T04:09:47.026Z",
+   "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000843_2024_09_20",
+   "find": "extranjeros | residencia | Derógan | Deróganse",
+   "ok": true,
+   "chars": 1801
+  },
+  {
+   "at": "2026-11-21T04:09:52.430Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/314387/20240923?anexos=1",
+   "find": "extranjeros | residencia mínima | DIEZ (10)",
+   "ok": true,
+   "chars": 3418
+  },
+  {
+   "at": "2026-11-21T04:17:16.104Z",
+   "url": "https://www.boletinoficial.gob.ar/pdf/aviso/primera/314387/20240923",
+   "find": "extranjeros | residencia | años",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:20:54.747Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-377863/texto",
+   "find": "extranjeros | residencia | vigencia",
+   "ok": true,
+   "chars": 5432
+  },
+  {
+   "at": "2026-11-21T04:20:57.202Z",
+   "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000007_2023_01_05",
+   "find": "extranjeros | residencia | vigencia | Boletín",
+   "ok": true,
+   "chars": 5423
+  },
+  {
+   "at": "2026-11-21T04:22:30.282Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-43325/texto",
+   "find": "extranjeros | residencia mínima",
+   "ok": true,
+   "chars": 3828
+  },
+  {
+   "at": "2026-11-21T04:22:33.186Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-432-1997-43325/actualizacion",
+   "find": "extranjeros | residencia mínima",
+   "ok": true,
+   "chars": 4444
+  },
+  {
+   "at": "2026-11-21T04:29:14.915Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-377863/texto",
+   "find": "ARTÍCULO 3 | ARTÍCULO 4 | entrará en vigencia",
+   "ok": true,
+   "chars": 2027
+  },
+  {
+   "at": "2026-11-21T04:29:36.757Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "seguridad social | artículo 6 | ANSES | pensión | categoría migratoria",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:29:53.554Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "social security | court | unconstitutional | health",
+   "ok": true,
+   "chars": 2838
+  },
+  {
+   "at": "2026-11-21T04:29:54.278Z",
+   "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+   "find": "seguridad social | trabajo | informal | pensión",
+   "ok": true,
+   "chars": 2597
+  },
+  {
+   "at": "2026-11-21T04:30:09.765Z",
+   "url": "https://rimap.unhcr.org/node/69733",
+   "find": "seguridad social | social security | DNU | pensión | ANSES",
+   "ok": true,
+   "chars": 1183
+  },
+  {
+   "at": "2026-11-21T04:31:05.686Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14 bis | seguridad social",
+   "ok": true,
+   "chars": 2927
+  }
+ ],
+ "searches": [
+  "Decreto 843/2024 pensiones no contributivas invalidez extranjeros residencia requisitos Decreto 432/97 modificación",
+  "Decreto 7/2023 pensiones no contributivas invalidez extranjeros residencia \"veinte (20) años\" OR \"diez (10) años\" Decreto 432/97 punto 1",
+  "infoleg Decreto 432/1997 pensiones no contributivas reglamentación artículo 9 Ley 13.478 texto",
+  "DNU 366/2025 migraciones Congreso rechazo comisión bicameral judicial suspensión artículo 6 seguridad social categoría migratoria",
+  "OIT trabajadores migrantes Argentina acceso seguridad social informalidad aportes informe 2023 OR 2024",
+  "CELS DNU 366/2025 migrantes derechos sociales seguridad social informe análisis",
+  "Encuesta Nacional Migrante ENMA 2023 Argentina aportes jubilatorios trabajo registrado migrantes resultados",
+  "CIDH comunicado Argentina DNU 366/2025 preocupación migrantes salud educación seguridad social"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.63,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.64,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.66,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.67,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.68,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.69,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.7,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.71,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.49,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":109,\"answer_2023\":\"Equal access to all types of social security protections after some period of time\",\"implementation_2023\":\"Sometimes\",\"answer_2026\":\"Equal access to all types of social security protections after some period of time\",\"implementation_2026\":\"Sometimes\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Art. 14 bis\",\"enacted\":\"1957\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 6\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Ley 24.241 Sistema Integrado de Jubilaciones y Pensiones\",\"article\":\"Art. 19\",\"enacted\":\"1993-10-18\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 432/1997 (reglamentación art. 9 Ley 13.478), Anexo I, Cap. I, punto 1, inc. e (pensiones no contributivas por invalidez)\",\"article\":\"Anexo I, Cap. I, punto 1, inc. e\",\"enacted\":\"1997-05-15\",\"history_read\":\"amending_acts\",\"status\":\"amended\"}],\"events\":[{\"date\":\"2023-01-06\",\"instrument\":\"Decreto 7/2023 (DCTO-2023-7-APN-PTE)\",\"article\":\"Decreto 432/97, Anexo I, Cap. I, punto 1, inc. e\",\"kind\":\"amended\",\"what_changed\":\"Before: foreigners had to show 20 years' continuous residence to get a non-contributory disability pension. After: 10 years. In force on publication, 6 Jan 2023, so after the 1 Jan 2023 cut-off. It shortens a residence period but keeps one, so the option code does not change.\",\"url\":\"https://www.argentina.gob.ar/normativa/nacional/norma-377863/texto\",\"passage\":\"e. Las personas extranjeras deberán acreditar una residencia mínima continuada en el país de DIEZ (10) años. ... ARTÍCULO 4°.- La presente medida entrará en vigencia el día de su publicación en el BOLETÍN OFICIAL\"},{\"date\":\"2024-09-23\",\"instrument\":\"Decreto 843/2024 (DECTO-2024-843-APN-PTE)\",\"article\":\"Decreto 432/97, An",
+ "output": {
+  "answers": [
+   {
+    "question_id": 109,
+    "answer_2023": "Equal access to all types of social security protections after some period of time",
+    "implementation_2023": "Sometimes",
+    "answer_2026": "Equal access to all types of social security protections after some period of time",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "enacted": "1957",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 24.241 Sistema Integrado de Jubilaciones y Pensiones",
+      "article": "Art. 19",
+      "enacted": "1993-10-18",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 432/1997 (reglamentación art. 9 Ley 13.478), Anexo I, Cap. I, punto 1, inc. e (pensiones no contributivas por invalidez)",
+      "article": "Anexo I, Cap. I, punto 1, inc. e",
+      "enacted": "1997-05-15",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-01-06",
+      "instrument": "Decreto 7/2023 (DCTO-2023-7-APN-PTE)",
+      "article": "Decreto 432/97, Anexo I, Cap. I, punto 1, inc. e",
+      "kind": "amended",
+      "what_changed": "Before: foreigners had to show 20 years' continuous residence to get a non-contributory disability pension. After: 10 years. In force on publication, 6 Jan 2023, so after the 1 Jan 2023 cut-off. It shortens a residence period but keeps one, so the option code does not change.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-377863/texto",
+      "passage": "e. Las personas extranjeras deberán acreditar una residencia mínima continuada en el país de DIEZ (10) años. ... ARTÍCULO 4°.- La presente medida entrará en vigencia el día de su publicación en el BOLETÍN OFICIAL"
+     },
+     {
+      "date": "2024-09-23",
+      "instrument": "Decreto 843/2024 (DECTO-2024-843-APN-PTE)",
+      "article": "Decreto 432/97, Anexo I (Pensiones No Contributivas por Invalidez), inc. e; art. 4 repeals Decretos 7/2023 and 566/2023",
+      "kind": "replaced",
+      "what_changed": "Replaced the disability-pension part of Annex I and repealed Decrees 7/2023 and 566/2023. It keeps the 10-year residence period for foreigners and tightens the disability criteria for everyone.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-432-1997-43325/actualizacion",
+      "passage": "e) Las personas extranjeras deberán acreditar una residencia mínima continuada en el país de DIEZ (10) años."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Ley 25.871, art. 6 (sustituido por art. 1°)",
+      "kind": "amended",
+      "what_changed": "Before: the State guaranteed immigrants 'and their families' equal access, on the same terms as nationals, to social services, health, work, employment and social security. After: the same list, but only 'according to the rights and obligations corresponding to each migratory category', so equality now depends on the type of residence. In force on publication.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 6° — El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social. (Artículo sustituido por art. 1º del Decreto Nº 366/2025 B.O. 29/5/2025...)"
+     }
+    ],
+    "implementation_then_now": "2023: I found no practice source from around 2023 on whether formally employed, permit-holding migrants actually receive contributory SIPA/ANSES benefits. The starting rating 'Sometimes' (high informality, residence periods for non-contributory pensions) is kept. 2026: what I found from 2025 (the Hivos/EU SEE alert of August 2025, and El Salto citing the IACHR's October 2025 concern) says DNU 366/2025 restricts access to rights, social security among them. These sources describe the law and general enforcement (expulsions), not documented denials of contributory benefits. I found no evidence of a shift in how ANSES treats migrants who pay contributions, so the rating stays 'Sometimes'.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El endurecimiento de las políticas migratorias en Argentina (El Salto, citing IACHR statement)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The dating is strong. InfoLEG has the original and updated texts of Ley 25.871 art. 6 and the updated Ley 24.241 (art. 19 has no amendment note). The 1997 original, Decreto 7/2023 and the consolidated Decreto 432/97 were read on argentina.gob.ar. The Boletín Oficial annex PDFs and the CAREF 2026 report could not be opened because PDF extraction failed. Practice evidence specific to social security is missing.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 24.241 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Decreto 432/1997 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-43325/texto"
+     },
+     {
+      "title": "Decreto 432/1997 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-432-1997-43325/actualizacion"
+     },
+     {
+      "title": "Decreto 7/2023 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-377863/texto"
+     },
+     {
+      "title": "Decreto 7/2023 (AFIP Biblioteca)",
+      "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000007_2023_01_05"
+     },
+     {
+      "title": "Decreto 843/2024 (AFIP Biblioteca)",
+      "url": "https://biblioteca.afip.gob.ar/dcp/DEC_C_000843_2024_09_20"
+     },
+     {
+      "title": "Decreto 843/2024 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/314387/20240923?anexos=1"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "El Salto: endurecimiento políticas migratorias Argentina",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     },
+     {
+      "title": "UNHCR RiMAP: Decree 366/25",
+      "url": "https://rimap.unhcr.org/node/69733"
+     }
+    ],
+    "starting_answer_concern": "The 'after some period of time' rationale rests on Ley 24.241 art. 19's 30 years of contributions. That is a contribution requirement that applies equally to nationals, not a residence period for migrants. The real migrant-specific waiting periods are in the non-contributory pensions (Decreto 432/97: 20, later 10, years for disability; 40 years for old age), which are not benefits tied to a work permit. Since DNU 366/2025, art. 6 also ties equality to migratory category, which could support the 'depending on visa type' option (50). The starting answer is kept as coded.",
+    "confidence": "low",
+    "notes": "No court ruling was relied on. CSJN 'Reyes Aguilera' (2007) predates the window. Court rulings against DNU 366/2025 found in search (Cámara Nacional Electoral 'Yang, Liping'; Cámara Federal Sala III) concern the naturalisation articles, not art. 6, and some date from 2026. They were not read. Art. 6 as amended stood on 1 Jan 2026 and still stands on InfoLEG. The PUAM (Ley 27.260) residence rule for foreigners was not checked."
+   },
+   {
+    "question_id": 111,
+    "answer_2023": "Equal access to all types of unemployment benefits after a duration of stay",
+    "implementation_2023": "Rarely; Sometimes",
+    "answer_2026": "Equal access to all types of unemployment benefits after a duration of stay",
+    "implementation_2026": "Rarely; Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 14 bis",
+      "enacted": "1957",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 24.013 Ley Nacional de Empleo",
+      "article": "Arts. 111-117 (Título IV, prestaciones por desempleo)",
+      "enacted": "1991-11-13",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.202 (aprueba Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios), Convention art. 54",
+      "article": "Art. 54",
+      "enacted": "2006-12-13",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-06-01",
+      "instrument": "Decreto 90/2023",
+      "article": "Ley 24.013, art. 112 (first paragraph) and art. 114",
+      "kind": "amended",
+      "what_changed": "The unemployment-benefit system now also covers domestic workers under Ley 26.844. Published 24/2/2023, in force from the first day of the fourth month after publication, i.e. 1 June 2023. It draws no line by nationality; contribution rules (art. 113) are unchanged.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm",
+      "passage": "y a los trabajadores y las trabajadoras del Régimen Especial de Contrato de Trabajo para el Personal de Casas Particulares comprendidos y comprendidas en la Ley Nº 26.844. ... (Párrafo sustituido por art. 1° del Decreto N° 90/2023 B.O. 24/2/2023. Vigencia: a partir del primer día del cuarto mes posterior a su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Ley 25.871, art. 6 (sustituido por art. 1°)",
+      "kind": "amended",
+      "what_changed": "Equal access to work, employment and social security is now granted 'according to the rights and obligations corresponding to each migratory category'. Before, the guarantee was unqualified and also covered families.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     }
+    ],
+    "implementation_then_now": "I found no practice source, for either period, on migrant workers' actual access to the unemployment insurance under Ley 24.013 (ANSES). The starting rating 'Rarely; Sometimes' reflects that the benefit requires registered employment, and many migrants work informally. The 2025 sources (Hivos alert, El Salto citing the IACHR) cover DNU 366/2025 in law and general enforcement only. With no documented shift, the rating is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (EU SEE / Hivos alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El endurecimiento de las políticas migratorias en Argentina (El Salto, citing IACHR statement)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's updated text of Ley 24.013 carries amendment notes: arts. 112 and 114 were changed by Decreto 90/2023, art. 113 inc. c and art. 117 by Decreto 267/2006, with no later notes. Ley 25.871 art. 6 was read in its original and amended versions. I did not open Ley 26.202 or the Convention text. Practice evidence specific to unemployment benefits is missing.",
+    "sources_opened": [
+     {
+      "title": "Ley 24.013 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "El Salto: endurecimiento políticas migratorias Argentina",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     }
+    ],
+    "starting_answer_concern": "Ley 24.013 arts. 113 and 117 set no residence period. Entitlement depends on 6 months of contributions in the last 3 years, and benefit length on contribution time, on the same terms as nationals. So 'after a duration of stay' does not fit what the statute says. 'Yes, immediate equal access' fits the 2023 text better. After DNU 366/2025's category qualifier in art. 6, a case could also be made for the 50 option. The citation also mislabels Ley 24.013 as the 'Work Contract Act'; the Ley de Contrato de Trabajo is Ley 20.744.",
+    "confidence": "low",
+    "notes": "The Migrant Workers Convention, approved by Ley 26.202, has constitutional-level primacy over statutes under art. 75 inc. 22 as a treaty, but it does not have constitutional rank. It was not re-read. The domestic-worker extension (Decreto 90/2023) widens coverage for everyone, including the many migrant women in domestic work, but it is not a migrant-specific rule. No court ruling was relied on."
+   }
+  ]
+ }
 }
