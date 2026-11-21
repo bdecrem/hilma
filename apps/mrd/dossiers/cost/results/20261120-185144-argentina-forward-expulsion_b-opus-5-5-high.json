@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina expulsion_b claude-opus-5-5 high",
- "pid": 52659,
  "step": "forward",
  "slug": "argentina",
  "chunk": "expulsion_b",
@@ -59,5 +58,978 @@
   "user": 114
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:03:45.534Z",
+ "minutes": 12.01,
+ "meters_after": {
+  "at": "2026-11-21T03:03:45.535Z",
+  "window": {
+   "pct": 44,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 44,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 44% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 104799,
+   "output": 32719,
+   "cache_read": 2215799,
+   "cache_write": 156137,
+   "cost_usd": 2.2546,
+   "total": 2509454
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 104759,
+    "output": 8856,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2395,
+    "cost_usd": 0.0849
+   },
+   "claude-opus-5-5": {
+    "input": 40,
+    "output": 23863,
+    "cache_read": 2215799,
+    "cache_write": 156137,
+    "thinking": 6794,
+    "cost_usd": 2.1697
+   }
+  }
+ },
+ "turns": 32,
+ "calls": 51,
+ "duration_ms": 358204,
+ "duration_api_ms": 348742,
+ "pages_read": 23,
+ "pages": [
+  {
+   "at": "2026-11-21T02:52:00.868Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 61 | ARTICULO 62 | ARTICULO 69 | ARTICULO 74 | ARTICULO 89 | refugi",
+   "ok": true,
+   "chars": 16730
+  },
+  {
+   "at": "2026-11-21T02:52:24.172Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 75 | ARTICULO 76 | ARTICULO 77 | ARTICULO 78 | ARTICULO 82 | ARTICULO 84 | ARTICULO 86 | ARTICULO 89 | ARTICULO 70",
+   "ok": true,
+   "chars": 17500
+  },
+  {
+   "at": "2026-11-21T02:52:24.272Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 61 | ARTICULO 69 | ARTICULO 74 | ARTICULO 75 | ARTICULO 82 | ARTICULO 86 | ARTICULO 89",
+   "ok": true,
+   "chars": 12247
+  },
+  {
+   "at": "2026-11-21T02:52:36.929Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 29 | ARTICULO 35 | ARTICULO 37 | ARTICULO 66 | sumarísimo | asilo | refugio",
+   "ok": true,
+   "chars": 16642
+  },
+  {
+   "at": "2026-11-21T02:52:45.339Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 35 | ARTICULO 37 | ARTICULO 42",
+   "ok": true,
+   "chars": 5918
+  },
+  {
+   "at": "2026-11-21T02:52:55.377Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto",
+   "find": "ARTICULO 7 | ARTICULO 8 | ARTICULO 9 | ARTICULO 40 | ARTICULO 41 | informa",
+   "ok": true,
+   "chars": 11411
+  },
+  {
+   "at": "2026-11-21T02:52:57.766Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/122609/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3457
+  },
+  {
+   "at": "2026-11-21T02:53:03.572Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/122609/actualizacion",
+   "find": "ARTICULO 7 | ARTICULO 8 | ARTICULO 9 | Decreto",
+   "ok": true,
+   "chars": 11864
+  },
+  {
+   "at": "2026-11-21T02:53:05.074Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto",
+   "find": "ARTÍCULO 1 | ARTÍCULO 2 | ARTÍCULO 3 | artículo 8 | artículo 7",
+   "ok": true,
+   "chars": 10451
+  },
+  {
+   "at": "2026-11-21T02:53:10.977Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+   "find": "ARTÍCULO 39 | ARTÍCULO 7° | ARTÍCULO 8° | frontera | inform | ARTÍCULO 3°",
+   "ok": true,
+   "chars": 14556
+  },
+  {
+   "at": "2026-11-21T02:53:17.528Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+   "find": "39.- | 41.- | vigencia | vigor | Derógase | ARTÍCULO 1°.- Apruébase",
+   "ok": true,
+   "chars": 10564
+  },
+  {
+   "at": "2026-11-21T02:53:21.196Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+   "find": "deberá ser acompañada de la docume | 2. | in limine” de solicitudes",
+   "ok": true,
+   "chars": 6488
+  },
+  {
+   "at": "2026-11-21T02:53:25.490Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+   "find": "derecho a solicitar | La comunicación que se efectúe | ARTÍCULO 41.- A los efectos",
+   "ok": true,
+   "chars": 4114
+  },
+  {
+   "at": "2026-11-21T02:56:37.986Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+   "find": "ARTÍCULO 10 | ARTÍCULO 11 | ARTÍCULO 15 | ARTÍCULO 21 | ARTÍCULO 22 | ARTÍCULO 34 | vigencia",
+   "ok": true,
+   "chars": 12559
+  },
+  {
+   "at": "2026-11-21T02:56:58.195Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "expulsi | rechazo en frontera | flagrancia | recurso | defensa | refugio",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:56:59.503Z",
+   "url": "https://repositorio.mpd.gov.ar/jspui/bitstream/123456789/5874/3/El%20Decreto%20366%20y%20el%20Desaf%c3%ado%20a%20la%20Tutela%20Judicial%20Efectiva%20de%20los%20Migrantes%20en%20Argentina..pdf",
+   "find": "expulsi | plazo | defensa | recurso jerárquico | casos | práctica",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:57:26.784Z",
+   "url": "https://buenosairesherald.com/politics/milei-administration-expels-first-immigrant-under-draconian-new-policy",
+   "find": "CELS | appeal | detained | lawyer | court",
+   "ok": true,
+   "chars": 4070
+  },
+  {
+   "at": "2026-11-21T02:57:29.733Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": "expul | unconstitutional | court | appeal",
+   "ok": true,
+   "chars": 3156
+  },
+  {
+   "at": "2026-11-21T02:57:29.802Z",
+   "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+   "find": "expulsiones | recurso | 2023 | 2024 | 2025",
+   "ok": true,
+   "chars": 5021
+  },
+  {
+   "at": "2026-11-21T02:58:09.561Z",
+   "url": "https://www.ecoi.net/de/dokument/2089254.html",
+   "find": "refoulement | asylum | Refugees | expel | deport",
+   "ok": true,
+   "chars": 2581
+  },
+  {
+   "at": "2026-11-21T02:58:10.455Z",
+   "url": "https://www.ecoi.net/en/document/2128424.html",
+   "find": "refoulement | asylum | Refugees | expel | deport",
+   "ok": true,
+   "chars": 3085
+  },
+  {
+   "at": "2026-11-21T02:58:11.504Z",
+   "url": "https://pensamientopenal.com.ar/fallos/90420-csjn-derecho-defensa-proceso-expulsion-migrantes-disidencia-del-juez-carlos",
+   "find": "expulsión | defensa | asistencia letrada | 86",
+   "ok": true,
+   "chars": 5515
+  },
+  {
+   "at": "2026-11-21T02:58:16.378Z",
+   "url": "https://rimap.unhcr.org/node/42718",
+   "find": "942 | border | expulsion | refoulement | safeguards",
+   "ok": true,
+   "chars": 1841
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 Ley de Migraciones Boletín Oficial texto artículo 69 expulsión recurso",
+  "infoleg Ley 26.165 reconocimiento protección refugiado texto actualizado",
+  "DNU 366/2025 migraciones inconstitucionalidad fallo expulsión rechazo en frontera flagrancia CELS informe 2025",
+  "CELS expulsiones migrantes DNU 366 2025 debido proceso defensa práctica Dirección Nacional de Migraciones",
+  "Argentina expulsiones migrantes 2022 Defensoría General de la Nación Comisión del Migrante expulsión asistencia jurídica práctica",
+  "cels.org.ar expulsión migrante 2022 Dirección Nacional de Migraciones \"expulsión\" derecho de defensa caso",
+  "Argentina 2023 Country Reports on Human Rights Practices refugees \"refoulement\" asylum access border"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":55,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley General de Reconocimiento y Protección al Refugiado N° 26.165\",\"article\":\"Arts. 7, 39, 41\",\"enacted\":\"2006-12-01\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 35 (rechazo en frontera)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"replaced\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 37 (ingreso irregular / flagrancia)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Ley de Migraciones N° 25.871\",\"article\":\"Art. 42 (obligación de transportistas ante solicitantes de refugio)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Decreto 646/2025 (Reglamentación de la Ley 26.165)\",\"article\":\"Anexo I, arts. 7.3, 39, 41\",\"enacted\":\"2025-09-12\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025\",\"article\":\"Art. 10 (sustituye art. 35 Ley 25.871) and art. 11 (sustituye art. 37)\",\"kind\":\"amended\",\"what_changed\":\"Border rejection widened: DNM must immediately reject at the border anyone whose irregular entry is detected at the time or just after (flagrancia), and rejections can be appealed only from abroad. Nothing in the new text requires officials to tell the person that asylum may be available, so the answer stays No. Removals become faster, which makes the missing safeguard matter more.\",\"url\":\"https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529\",\"passage\":\"“ARTÍCULO 35.- La DIRECCIÓN NACIONAL DE MIGRACIONES procederá al inmediato rechazo en frontera e impedirá el ingreso al territorio nacional a todo extranjer",
+ "output": {
+  "answers": [
+   {
+    "question_id": 55,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley General de Reconocimiento y Protección al Refugiado N° 26.165",
+      "article": "Arts. 7, 39, 41",
+      "enacted": "2006-12-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 35 (rechazo en frontera)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 37 (ingreso irregular / flagrancia)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 42 (obligación de transportistas ante solicitantes de refugio)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 646/2025 (Reglamentación de la Ley 26.165)",
+      "article": "Anexo I, arts. 7.3, 39, 41",
+      "enacted": "2025-09-12",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 10 (sustituye art. 35 Ley 25.871) and art. 11 (sustituye art. 37)",
+      "kind": "amended",
+      "what_changed": "Border rejection widened: DNM must immediately reject at the border anyone whose irregular entry is detected at the time or just after (flagrancia), and rejections can be appealed only from abroad. Nothing in the new text requires officials to tell the person that asylum may be available, so the answer stays No. Removals become faster, which makes the missing safeguard matter more.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "“ARTÍCULO 35.- La DIRECCIÓN NACIONAL DE MIGRACIONES procederá al inmediato rechazo en frontera e impedirá el ingreso al territorio nacional a todo extranjero: ... d) cuyo ingreso irregular sea advertido al momento de realizarse o inmediatamente después; ... Las decisiones adoptadas en virtud del rechazo del ingreso al país de todo extranjero serán recurribles exclusivamente desde el exterior"
+     },
+     {
+      "date": "2025-09-12",
+      "instrument": "Decreto N° 646/2025 – Reglamentación de la Ley General de Reconocimiento y Protección al Refugiado N° 26.165",
+      "article": "Anexo I, art. 39 (remisión de solicitudes; solicitud previa a rechazo en frontera) and art. 41",
+      "kind": "new_instrument",
+      "what_changed": "New implementing regulation of the refugee law. Any authority that receives an asylum request must refer it to CONARE within 48 hours. Requests made just before a border rejection that look unfounded go to CONARE for an expedited check. Information duties (art. 41) apply only to people who have already applied. There is no duty to tell people facing expulsion or rejection that asylum may be available, so the indicator is not met.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+      "passage": "Cualquier autoridad que conociere de una solicitud de reconocimiento de la condición de persona refugiada o identificare la necesidad de protección internacional de una persona extranjera ... deberá remitir el caso a la Secretaría Ejecutiva de la COMISIÓN NACIONAL PARA LOS REFUGIADOS (CONARE) en forma confidencial e inmediata dentro del plazo máximo e improrrogable de CUARENTA Y OCHO (48) horas."
+     }
+    ],
+    "implementation_then_now": "The protection answer is No on both dates, so implementation is Does Not Apply. For context: the US State Department reports for 2022 and 2024 describe a working asylum system with UNHCR cooperation and report no refoulement. The 2025 changes (flagrancy rejection under DNU 366/2025, expedited CONARE screening under Decreto 646/2025) speed up removals, but no source found documents a practice of telling people at the border about asylum.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina (USDOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Argentina (USDOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128424.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG / argentina.gob.ar consolidated texts and the texto original of both laws were read. Arts. 39 and 41 of Ley 26.165 are identical in the original and current texts. The DNU 366/2025 changes to arts. 35 and 37 were read in the Boletín Oficial. Dating is strong.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 26.165 – texto original (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto"
+     },
+     {
+      "title": "Ley 26.165 – texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/actualizacion"
+     },
+     {
+      "title": "Ley 26.165 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/normas-modifican"
+     },
+     {
+      "title": "Decreto 646/2025 – Reglamentación Ley 26.165",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto"
+     },
+     {
+      "title": "DNU 366/2025 – Boletín Oficial",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "USDOS 2022 Human Rights Report Argentina (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html"
+     },
+     {
+      "title": "USDOS 2024 Human Rights Report Argentina (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128424.html"
+     },
+     {
+      "title": "UNHCR RIMAP – Ley 26.165",
+      "url": "https://rimap.unhcr.org/node/42718"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Art. 39 of Ley 26.165 makes officials who learn that a person wants asylum responsible for non-refoulement and for notifying CONARE. That is a referral duty, not a duty to inform the person. Art. 42 of Ley 25.871 (carriers) is unchanged."
+   },
+   {
+    "question_id": 57,
+    "answer_2023": "Yes",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "Yes",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley General de Reconocimiento y Protección al Refugiado N° 26.165",
+      "article": "Art. 8",
+      "enacted": "2006-12-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Reconocimiento y Protección al Refugiado N° 26.165",
+      "article": "Art. 7",
+      "enacted": "2006-12-01",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley General de Reconocimiento y Protección al Refugiado N° 26.165",
+      "article": "Art. 9 (exclusion; refers to art. 8)",
+      "enacted": "2006-12-01",
+      "history_read": "version_history",
+      "status": "replaced"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-10-23",
+      "instrument": "Decreto de Necesidad y Urgencia N° 942/2024",
+      "article": "Art. 1 (sustituye art. 9 Ley 26.165); also arts. 11 and 12",
+      "kind": "amended",
+      "what_changed": "Broadened the grounds for excluding people from refugee status (art. 9) and rewrote cessation (arts. 11-12). Art. 8 itself, which allows expulsion only to a State that protects the refugee from onward expulsion or return, was not touched. This does not change the answer, though it may shrink the group of people recognised as refugees.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/actualizacion",
+      "passage": "(Artículo sustituido por art. 1° del Decreto N° 942/2024 B.O. 22/10/2024. Vigencia: a partir del día siguiente al de su publicación en el BOLETÍN OFICIAL)"
+     },
+     {
+      "date": "2025-09-12",
+      "instrument": "Decreto N° 646/2025 – Reglamentación de la Ley 26.165",
+      "article": "Anexo I, arts. 7.2 and 8",
+      "kind": "new_instrument",
+      "what_changed": "Regulation of art. 8: once an expulsion is final and the refugee has had up to 30 days to seek admission elsewhere, DNM or CONARE may ask a safe country willing to receive the person to admit them, with UNHCR's good offices. Art. 7.2 allows return to a first country of asylum that granted refugee status. Both work with the statutory guarantee rather than change it.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto",
+      "passage": "ARTÍCULO 8°.- Cuando la decisión de expulsión quede firme, y luego de haberse concedido al interesado un plazo no mayor a TREINTA (30) días para gestionar su admisión legal en otro país, la DIRECCIÓN NACIONAL DE MIGRACIONES o, a su requerimiento, la COMISIÓN NACIONAL PARA LOS REFUGIADOS (CONARE), podrán solicitar ... la admisión de aquél a un país seguro dispuesto a recibirlo."
+     }
+    ],
+    "implementation_then_now": "The starting coding gives Does Not Apply, which is kept on both dates. No source found documents a refugee being expelled under art. 8 to a third country in either period. USDOS reports for 2022 and 2024 record cooperation with UNHCR and no refoulement. These sources cover refugees and asylum seekers only, which matches the people art. 8 protects.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina (USDOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2024 Country Reports on Human Rights Practices: Argentina (USDOS, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128424.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "refugees_asylum_seekers"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 8 reads the same in the original text and in the consolidated text with amendment notes on argentina.gob.ar. The only amendments to Ley 26.165 in the window (Decretos 819/2024 and 942/2024) touch arts. 9, 11, 12 and 18. Dating is strong. Practice evidence is thin.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.165 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto"
+     },
+     {
+      "title": "Ley 26.165 – texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/actualizacion"
+     },
+     {
+      "title": "Ley 26.165 – normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/normas-modifican"
+     },
+     {
+      "title": "DNU 942/2024 – texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-405520/texto"
+     },
+     {
+      "title": "Decreto 646/2025 – Reglamentación Ley 26.165",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-417374/texto"
+     },
+     {
+      "title": "USDOS 2022 Human Rights Report Argentina (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html"
+     },
+     {
+      "title": "USDOS 2024 Human Rights Report Argentina (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2128424.html"
+     },
+     {
+      "title": "UNHCR RIMAP – Ley 26.165",
+      "url": "https://rimap.unhcr.org/node/42718"
+     }
+    ],
+    "starting_answer_concern": "The starting coding contradicts itself. The answer is \"Yes\", but the citation opens with \"No protection of this right for all migrants\" and implementation is \"Does Not Apply\", a rating reserved for the lowest answer. Art. 8 of Ley 26.165 bans onward refoulement only for recognised refugees being expelled; nothing in Ley 25.871 covers other migrants. If \"Yes\" is kept, implementation should be rated (perhaps Usually, from the absence of documented breaches), not Does Not Apply.",
+    "confidence": "medium",
+    "notes": "The starting answer and its Does Not Apply rating are kept as instructed, and both carry forward unchanged."
+   },
+   {
+    "question_id": 59,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 61",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 62",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 66 (no collective expulsion; individual examination)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 69",
+      "enacted": "2025-05-29",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 74",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 89",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 35 and 37 (border rejection / flagrancy)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 15 (sustituye art. 61 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "Art. 61 used to say DNM \"deberá conminarlo\" (must require the irregular migrant to regularise, taking personal and family circumstances into account) before ordering expulsion. It now says DNM \"podrá intimarlo\", so that step is discretionary. Expulsion is still ordered by DNM decision under the law, with judicial review, so the protection survives in narrower form.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "la DIRECCIÓN NACIONAL DE MIGRACIONES podrá intimarlo a regularizar su situación en el plazo perentorio que fije a tal efecto, bajo apercibimiento de decretar su expulsión. ... (Artículo sustituido por art. 15 del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación en el BOLETÍN OFICIAL.)"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 16 (sustituye art. 62 Ley 25.871) and arts. 18, 29",
+      "kind": "replaced",
+      "what_changed": "Grounds for cancelling residence and expelling were widened: any conviction for an intentional offence carrying a prison sentence, however it is served, and failure to disclose criminal records. Art. 69, a vetoed blank in 2023, now covers precarious residence during criminal proceedings. Art. 89 still limits judicial review to legality, due process and reasonableness. Grounds remain individual and set by law.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "b) hubiese sido condenado, en la REPÚBLICA ARGENTINA o en el exterior, por delito doloso que merezca pena privativa de libertad, cualquiera fuese la modalidad de cumplimiento;"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 11 (sustituye art. 37 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "Before, anyone who entered irregularly was liable to expulsion \"en los términos y condiciones de la presente ley\". Now people caught in flagrancy, including just after entry or with traces of recent entry, are rejected at the border under art. 35, with no expulsion proceeding. This takes a class of irregular migrants out of the individual expulsion procedure.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "Cuando la autoridad migratoria constate, en situación de flagrancia, el ingreso irregular de un extranjero al territorio argentino, procederá a su rechazo en frontera conforme a lo dispuesto por el artículo 35 de la presente."
+     }
+    ],
+    "implementation_then_now": "2023: Usually. Expulsions were decided case by case by DNM decision and reviewed by federal courts. The CSJN case of 13 Oct 2022 (summary read) shows an expulsion decreed before the migrant had counsel, then contested in the administrative and judicial channels. 2026: Sometimes; Usually. After DNU 366/2025, expulsions rose to record levels (Chequeado: 157 in Q1 2025, a record daily rate, with acceleration before final convictions). In July 2025 the Buenos Aires Herald and CELS reported a Uruguayan resident of 19 years, with Argentine children, detained while renewing his residence and deported within days on a ground CELS says did not apply. Hivos reports a federal court found part of the decree unconstitutional in one case (Aug 2025). The evidence covers regular and irregular migrants and is mostly press and NGO reporting.",
+    "practice_sources": [
+     {
+      "title": "CSJN: derecho de defensa en el proceso de expulsión de migrantes (13/10/2022) – summary, Revista Pensamiento Penal",
+      "url": "https://pensamientopenal.com.ar/fallos/90420-csjn-derecho-defensa-proceso-expulsion-migrantes-disidencia-del-juez-carlos",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Milei administration expels first immigrant under draconian new policy (Buenos Aires Herald)",
+      "url": "https://buenosairesherald.com/politics/milei-administration-expels-first-immigrant-under-draconian-new-policy",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Reforma migratoria de Javier Milei: qué muestran los datos sobre expulsiones (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (Hivos EU SEE alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The 2023 text is the InfoLEG texto original. InfoLEG notes that Decreto 138/2021 abrogated DNU 70/2017 and restored those articles, so the original text was in force on 1 Jan 2023. The 2025 changes were read in the consolidated text and the Boletín Oficial. PDF practice reports (CAREF, MPD, CELS UPR) could not be opened. The August 2025 ruling was not read.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "DNU 366/2025 – Boletín Oficial",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Revista Pensamiento Penal – CSJN 13/10/2022",
+      "url": "https://pensamientopenal.com.ar/fallos/90420-csjn-derecho-defensa-proceso-expulsion-migrantes-disidencia-del-juez-carlos"
+     },
+     {
+      "title": "Buenos Aires Herald – first expulsion under DNU 366/25",
+      "url": "https://buenosairesherald.com/politics/milei-administration-expels-first-immigrant-under-draconian-new-policy"
+     },
+     {
+      "title": "Chequeado – datos sobre expulsiones",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The MRD cites art. 69. In the original Ley 25.871 that article is blank (vetoed), and InfoLEG shows it restored as blank by Decreto 138/2021, so it had no content on 1 Jan 2023. Art. 66 (\"Cada caso de expulsión será examinado y decidido individualmente\") is the more apt basis and was unchanged throughout.",
+    "confidence": "medium",
+    "notes": "Decreto 681/2026 (B.O. 30/7/2026) later amended art. 63(c), outside the window. Press reports a 2026 Cámara Nacional Electoral ruling annulling DNU 366/2025 on citizenship matters, also after the window and not read. Whether Congress rejected DNU 366/2025 under Ley 26.122 was not checked; InfoLEG still shows it in force."
+   },
+   {
+    "question_id": 61,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 74",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 75-80 (recursos)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 81 and 84",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "repealed"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 82 (suspensive effect)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 86 (free legal aid, interpreter)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 89",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Art. 69",
+      "enacted": "2025-05-29",
+      "history_read": "version_history",
+      "status": "replaced"
+     },
+     {
+      "instrument": "Ley de Migraciones N° 25.871",
+      "article": "Arts. 35 and 37",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "replaced"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Arts. 21-27, 34 (sustituyen arts. 74-80; derogan arts. 81 y 84 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "Before: reconsideration (10 days), hierarchical appeal (15 days), optional alzada to the Ministry, then 30 working days to go to court. After: hierarchical appeal only (15 working days), reconsideration and alzada abolished, judicial appeal within 15 judicial working days filed directly at the federal appeals chamber, with counsel, short 5-day steps, and summary rejection if formal requirements are not met. Review before expulsion survives in shortened form; art. 82 suspensive effect is kept.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 76. — Agotada la vía administrativa, podrá interponerse el recurso judicial dentro de los QUINCE (15) días hábiles judiciales desde la notificación del acto que agote la instancia administrativa. ... ARTICULO 77. — El recurso judicial deberá ser interpuesto ante la Cámara Nacional de Apelaciones en lo Contencioso Administrativo Federal o las Cámaras Federales con asiento en las provincias."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Art. 28 (sustituye art. 86 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "Free legal aid is now conditional on the person proving lack of means (\"acrediten carecer\"). It no longer covers proceedings that may lead to denial of entry, and the clause requiring regulations to safeguard the constitutional right of defence was dropped. The interpreter right is kept.",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 86. — Los extranjeros que se encuentren en territorio nacional y acrediten carecer de medios económicos tendrán derecho a asistencia jurídica gratuita en aquellos procedimientos administrativos y judiciales que dispongan su retorno a su país de origen u ordenen su expulsión de la REPÚBLICA ARGENTINA."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Arts. 10-11 (sustituyen arts. 35 y 37 Ley 25.871)",
+      "kind": "replaced",
+      "what_changed": "Irregular entrants detected in flagrancy (at entry, immediately after, or with traces of recent entry) are now rejected at the border, and the decision can be appealed only from abroad through Argentine consulates. These people lose any chance to argue against removal before it happens.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529",
+      "passage": "Las decisiones adoptadas en virtud del rechazo del ingreso al país de todo extranjero serán recurribles exclusivamente desde el exterior, mediante petición efectuada ante las delegaciones diplomáticas de la REPÚBLICA ARGENTINA”."
+     }
+    ],
+    "implementation_then_now": "2023: Sometimes; Usually (MRD). Expulsion orders could be challenged with suspensive effect and courts reviewed them, but the CSJN case of 13 Oct 2022 (summary read) shows DNM expelling before the migrant had counsel, with the Court accepting review after the fact. 2026: Sometimes. After DNU 366/2025, CELS reports a long-term resident detained at DNM and deported to Uruguay within about five days (July 2025). Civil society (Hivos alert, Chequeado) reports the decree is being used to speed up expulsions and cut appeal periods. Flagrancy rejections allow no review before removal. The evidence covers regular and irregular migrants; there is no official data on review rates.",
+    "practice_sources": [
+     {
+      "title": "CSJN: derecho de defensa en el proceso de expulsión de migrantes (13/10/2022) – summary, Revista Pensamiento Penal",
+      "url": "https://pensamientopenal.com.ar/fallos/90420-csjn-derecho-defensa-proceso-expulsion-migrantes-disidencia-del-juez-carlos",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Milei administration expels first immigrant under draconian new policy (Buenos Aires Herald)",
+      "url": "https://buenosairesherald.com/politics/milei-administration-expels-first-immigrant-under-draconian-new-policy",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights (Hivos EU SEE alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Reforma migratoria de Javier Milei: qué muestran los datos sobre expulsiones (Chequeado)",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "The 2023 text of arts. 74-89 was read in the InfoLEG texto original. InfoLEG notes that Decreto 138/2021 restored arts. 82 and 86 after DNU 70/2017 was abrogated, so the original text was in force on 1 Jan 2023. The current text and DNU 366/2025 were read in InfoLEG and the Boletín Oficial. Practice PDFs (CAREF 2023 and 2026, MPD article on DNU 366 and effective judicial protection) could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "DNU 366/2025 – Boletín Oficial",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/326096/20250529"
+     },
+     {
+      "title": "Revista Pensamiento Penal – CSJN 13/10/2022",
+      "url": "https://pensamientopenal.com.ar/fallos/90420-csjn-derecho-defensa-proceso-expulsion-migrantes-disidencia-del-juez-carlos"
+     },
+     {
+      "title": "Buenos Aires Herald – first expulsion under DNU 366/25",
+      "url": "https://buenosairesherald.com/politics/milei-administration-expels-first-immigrant-under-draconian-new-policy"
+     },
+     {
+      "title": "Hivos EU SEE alert on Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "Chequeado – datos sobre expulsiones",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/"
+     }
+    ],
+    "starting_answer_concern": "The MRD cites art. 69, which was a vetoed blank on 1 Jan 2023. The protection really rests on arts. 74-84 and 82 (suspensive effect) and art. 86 (legal aid).",
+    "confidence": "medium",
+    "notes": "Art. 82 (appeals suspend execution until final) was unchanged through 1 Jan 2026, so review before removal survives for expulsions. The flagrancy border rejection (arts. 35 and 37) is formally a rejection, not an expulsion, but it reaches people already inside the country. CAREF, MPD and CELS analyses are PDFs that could not be read, so practice rests on press and NGO HTML sources."
+   }
+  ]
+ }
 }
