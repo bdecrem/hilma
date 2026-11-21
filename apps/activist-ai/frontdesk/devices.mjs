@@ -201,7 +201,7 @@ export const deviceView = (d) => ({
 
 // ---------------------------------------------------------------- the server's half
 
-export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null, onPeople = null }) {
+export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, recheckMs = 1000, log = () => {}, switches = null, onPeople = null, onKept = null }) {
   const key = cfg.key
   const enabled = !!key
   const codes = new Map() // pass id -> { challenge, personId, name, kind, exp }
@@ -379,6 +379,11 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
    *   GET    /api/device/kept  { count, since }
    *   DELETE /api/device/kept  all of this person's, at once
    */
+  // The worked examples written from one person's kept turns (OLA-181, examples.mjs) follow every change.
+  function keptChanged(personId) {
+    if (!onKept) return
+    try { onKept(personId) } catch (e) { log(`kept: examples not rewritten: ${e.message}`) }
+  }
   const KEPT = { product: ['mac', 'iphone', 'cli', 'web'], runtime: ['local', 'cloud'], engine: ['ola', 'hosted', 'claude'], status: ['done', 'failed', 'stopped'] }
   async function kept(req, res, dev) {
     if (req.method === 'GET') {
@@ -388,6 +393,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     if (req.method === 'DELETE') {
       const r = db.prepare('DELETE FROM kept_turns WHERE person_id = ?').run(dev.personId)
       log(`kept: p${dev.personId} deleted ${r.changes} turn(s)`)
+      keptChanged(dev.personId)
       return json(res, 200, { deleted: Number(r.changes) })
     }
     if (req.method !== 'POST') return json(res, 405, { error: 'method' })
@@ -411,6 +417,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
       Number.isFinite(b.seconds) ? Math.max(0, Math.round(b.seconds)) : null, t.request, t.answer, JSON.stringify(steps), one(b.switched_from, KEPT.engine))
     // A switch to a fallback (OLA-157): its labels, and the kept turns are its draft test task.
     if (switches && one(b.switched_from, KEPT.engine)) switches.fromKept(db.prepare('SELECT id FROM kept_turns WHERE person_id = ? AND session = ? AND turn = ?').get(dev.personId, t.session, t.turn).id)
+    keptChanged(dev.personId)
     return json(res, 200, { ok: true })
   }
 

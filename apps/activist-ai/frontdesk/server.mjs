@@ -42,6 +42,7 @@ import { gatewayServed, makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
+import { writeExamples } from './examples.mjs'
 import { publishAskOf } from '../web/server/publishask.mjs'
 import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
@@ -87,6 +88,8 @@ export function config(env = process.env) {
     host,
     port: num('OLA_FD_PORT', Number(origin.port || 4700), 0, 65535),
     data: env.OLA_FD_DATA ?? path.join(os.homedir(), '.ola-frontdesk'),
+    // OLA-181: whose kept requests become worked examples (only this one person's; examples.mjs).
+    examplesFrom: env.OLA_EXAMPLES_FROM ?? 'bart',
     dist: env.OLA_FD_DIST ?? path.join(HERE, '../web/dist'),
     maxUpload: num('OLA_FD_MAX_UPLOAD_MB', 50, 1, 1024) * 1024 * 1024,
     // A file that comes in pieces (resumable; a library zip, a large database): up to this size,
@@ -265,7 +268,16 @@ export function makeFrontDesk(cfg = config()) {
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })
-  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, onPeople: () => hosted.writeGrants() })
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, onPeople: () => hosted.writeGrants(),
+    // OLA-181: one person's kept requests become worked examples in every project's VM (examples.mjs).
+    onKept: (personId) => {
+      const who = db.prepare('SELECT handle FROM people WHERE id = ?').get(personId)?.handle
+      if (who !== cfg.examplesFrom) return
+      log(`kept: ${writeExamples(db, path.join(WS_HOME, 'examples', 'kept.json'), who)} worked example(s) from ${who}`)
+    },
+  })
+  // And once at start, so the file matches the database after a restart or an update.
+  try { log(`kept: ${writeExamples(db, path.join(WS_HOME, 'examples', 'kept.json'), cfg.examplesFrom)} worked example(s) from ${cfg.examplesFrom} at start`) } catch (e) { log(`kept: examples not written at start: ${e.message}`) }
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so

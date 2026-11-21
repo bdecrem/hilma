@@ -436,7 +436,12 @@ try {
     const mounts = JSON.stringify(cfg.mounts || [])
     const sockets = JSON.stringify(cfg.sockets || cfg.publishedSockets || [])
     const other = id === A ? B : A
-    t(`${id}: mounts only its own volume and door`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && (cfg.mounts || []).filter((m) => !m.type?.tmpfs).length === 2, (cfg.mounts || []).map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
+    // Three: its volume, its door, and the worked-examples folder (OLA-181), which is the same for every
+    // workspace, holds only the examples file and is read-only (tried from inside below).
+    const hard = (cfg.mounts || []).filter((m) => !m.type?.tmpfs)
+    t(`${id}: mounts only its own volume and door, and the examples folder`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && hard.length === 3 && hard.some((m) => m.destination === '/ola/examples' && JSON.stringify(m).includes(ws.examplesDir())), hard.map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
+    const ro = inside(id, "import json\ntry:\n    open('/ola/examples/x', 'w').write('x'); print(json.dumps('written'))\nexcept OSError as e:\n    print(json.dumps(e.strerror))")
+    t(`${id}: the examples folder is read-only from inside`, /read-only/i.test(ro.out), ro.out.trim() || ro.err.trim().split('\n').pop())
     // opencode is reached through the desk (container exec), so nothing is published.
     t(`${id}: publishes no socket; its desk (container exec) is open`, (sockets === '[]' || sockets === '{}') && Boolean(ws.deskPid(id)), sockets)
   }

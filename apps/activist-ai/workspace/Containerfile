@@ -78,6 +78,10 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-59 (OLA-181): Bart's own kept requests as worked examples. ws.mjs mounts <ws HOME>/examples
+# read-only at /ola/examples (the front desk writes kept.json there from his kept turns only,
+# frontdesk/examples.mjs) and OLA_EXAMPLES_EXTRA names the file; the plugin reads it again when it
+# changes. A missing file is no example. Builds on 2.3.0-58.
 # 2.3.0-58 (OLA-181): the plugin ola-examples (plugins/ola-examples, at /opt/ola/plugins, named by the
 # system config): when a request asks to make an app, page or game, the closest worked example in its
 # examples.json (test requests only; a kept file of Bart's own requests can be added with
@@ -174,7 +178,7 @@ RUN apt-get update \
  # signal, trace or write to it). Neither has a home or a shell.
  && groupadd --gid 1001 olarun \
  && useradd --no-create-home --uid 1002 --user-group --home-dir /nonexistent --shell /usr/sbin/nologin twin \
- && mkdir -p /work /ola/gw \
+ && mkdir -p /work /ola/gw /ola/examples \
  && chown work:work /work \
  # No setuid or setgid programs (su, passwd, mount, chsh...): no program in the image hands
  # out root, which would reach the fifth vCPU, the cgroup and the guest's root-owned files.
@@ -205,6 +209,7 @@ ENV HOME=/work/.ola/home \
     OPENCODE_DISABLE_PROJECT_CONFIG=1 \
     OPENCODE_DISABLE_FREE_MODELS=1 \
     OPENCODE_DISABLE_MODELS_FETCH=1 \
+    OLA_EXAMPLES_EXTRA=/ola/examples/kept.json \
     MPLCONFIGDIR=/work/.ola/cache/matplotlib \
     PATH=/opt/ola/bin:/usr/local/bin:/usr/bin:/bin
 USER work

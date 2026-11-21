@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-58'
+export const IMAGE = 'ola-workspace:2.3.0-59'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -362,6 +362,14 @@ export async function create(id, opts = {}) {
   return { id, cpus, memory, disk }
 }
 
+/** The folder mounted read-only at /ola/examples in every VM (OLA-181); made here so the mount has a source. */
+export function examplesDir() {
+  const dir = path.join(HOME, 'examples')
+  mkdirSync(dir, { recursive: true })
+  chmodSync(dir, 0o755)
+  return dir
+}
+
 function createArgs(id, { cpus, memory }) {
   const n = names(id)
   const p = paths(id)
@@ -387,6 +395,9 @@ function createArgs(id, { cpus, memory }) {
     '--env', 'OPENCODE_DISABLE_PROJECT_CONFIG=1',
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
+    // OLA-181: the worked examples from Bart's kept requests (frontdesk/examples.mjs writes kept.json
+    // here), read-only; the folder holds nothing else. The plugin ola-examples reads it.
+    '--mount', `type=bind,source=${examplesDir()},target=/ola/examples,readonly`,
     IMAGE,
   ]
 }

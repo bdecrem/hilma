@@ -14,8 +14,10 @@
 //
 // Whose content: the committed library holds only test requests, written for it and kept apart from the seven
 // measured problems (evals/apps/problems.json), so the measure is not taught to the test. Bart's own kept
-// requests are the next source (not built yet, OLA-181): a file on the Ola machine, outside this public repo,
-// named by OLA_EXAMPLES_EXTRA (colon-separated paths), holding only his. No other person's content is stored.
+// requests are the second source: the front desk writes them from his kept turns only (frontdesk/examples.mjs)
+// to a file outside this public repo, mounted read-only at /ola/examples/kept.json and named by
+// OLA_EXAMPLES_EXTRA (colon-separated paths). It is read again whenever it changes (a new kept turn, or his
+// turns deleted). No other person's content is stored.
 //
 // Switches: OLA_EXAMPLES=off turns it off (the "without examples" column of the measure);
 // OLA_EXAMPLES_FILE replaces the committed library (tests).
@@ -23,7 +25,7 @@
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -131,7 +133,15 @@ export function newestRequest(messages) {
 }
 
 let LIB = null
+let LIB_STAMP = ''
 const chosen = new Map() // sessionID -> { request, note }: one choice per request, the same text on every step
+
+/** The extra files' sizes and change times: a different stamp means the library is read again. */
+function stampOf(env) {
+  return String(env.OLA_EXAMPLES_EXTRA ?? '').split(':').filter(Boolean).map((f) => {
+    try { const s = statSync(f); return `${f}:${s.size}:${s.mtimeMs}` } catch { return `${f}:-` }
+  }).join('|')
+}
 
 export function onContext(event, env = process.env) {
   if (String(env.OLA_EXAMPLES ?? '').toLowerCase() === 'off') return
@@ -141,7 +151,8 @@ export function onContext(event, env = process.env) {
   const sid = String(event.sessionID ?? '')
   let c = chosen.get(sid)
   if (!c || c.request !== request) {
-    LIB ??= loadLibrary(env)
+    const stamp = stampOf(env)
+    if (!LIB || stamp !== LIB_STAMP) { LIB = loadLibrary(env); LIB_STAMP = stamp }
     const hit = closest(request, LIB)
     c = { request, note: hit ? noteFor(hit.example) : null }
     chosen.set(sid, c)
@@ -151,7 +162,7 @@ export function onContext(event, env = process.env) {
 }
 
 /** For tests: forget the loaded library and the choices. */
-export function reset() { LIB = null; chosen.clear() }
+export function reset() { LIB = null; LIB_STAMP = ''; chosen.clear() }
 
 export default {
   id: 'ola-examples',

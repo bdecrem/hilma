@@ -110,9 +110,16 @@ written for it, none of them one of the seven here (the test proves it), so the 
 taught to the test; each of the seven has a neighbor of its kind (the crossword gets the AI word
 game, the memory game tic-tac-toe, the to-do app the reading list).
 
-Bart's own kept requests (kept turns with "Store your conversations" on, status done, no switch to
-Claude after) are the next source; they stay on the Ola machine, outside this public repo, in a
-file named by `OLA_EXAMPLES_EXTRA`. No other person's content is stored.
+Bart's own kept requests are the second source (image 2.3.0-59): the front desk turns his kept
+turns ("Store your conversations" on) into examples in `~/.ola/examples/kept.json` on the Ola
+machine, outside this public repo, at start, after each kept turn of his and after he deletes them
+(then it is emptied). A turn qualifies when it is done, asks to make something, wrote a file and
+tried the page after the last change (`ola-page`, `look.py`, "Checked the work"), and no later
+turn in its session switched engines. Every VM has the folder read-only at `/ola/examples`; the
+image's `OLA_EXAMPLES_EXTRA` names the file and the plugin reads it again when it changes. Only
+the person named by the front desk's `OLA_EXAMPLES_FROM` (default `bart`); no other person's
+content is stored. The Mac's local runtime uses the committed library only. Test:
+`node --test frontdesk/test/examples.test.mjs`.
 
 Checks: `node --test workspace/plugins/ola-examples/examples.test.mjs` (the matching, the note, the
 hook, the switches) and `node workspace/plugins/ola-examples/opencode.check.mjs` (Ola's own opencode
