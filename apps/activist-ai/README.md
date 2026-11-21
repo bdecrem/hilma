@@ -1320,9 +1320,15 @@ previous release's tool, so this takes effect from the second update after it la
 **A time limit per suite, and a failed suite run once more (OLA-335, OLA-334, 2026-11-21,
 `ops/suite.mjs`).** On Nov 21 from 1:12 to 1:43 am the automatic check's apps suite (`swift test`)
 sat in `OnlyOlasModelsTests.testSettingsFileDamagedWhileItRuns` and held the turn: `LocalServer.stop()`
-sent the engine SIGTERM and waited for it with no limit, and the engine, its settings file changed
-while it ran, does not end on SIGTERM (measured after the fix: both "while it runs" cases end at the
-5 s grace, so the engine was killed each time). `stop()` now kills it after `stopGrace` (5 s). And
+sat in `Process.waitUntilExit()` (sampled twice, the second time with the engine already gone).
+`isRunning` and `waitUntilExit()` learn of the exit through the run loop of the thread that started
+the process, and `start`/`stop` run on Swift's cooperative threads, whose run loops nobody turns:
+when `stop()` lands on another thread than `start()`, the exit is never seen. And the engine, its
+settings file changed while it runs, does not end on SIGTERM at all: both "while it runs" cases end
+at the grace, by SIGKILL (5.1 s each, four runs of the tests on the mini, no hang; with SIGKILL
+alone and `waitUntilExit()` kept, the second run hung again, the engine already gone). `stop()` now waits on a semaphore the process's
+`terminationHandler` signals, up to `stopGrace` (5 s), then SIGKILL and 5 s more, never longer; the
+output handler also stops at end of file (it was called in a loop). And
 every suite of an update or a check runs under a limit, in its own process group (`LIMITS`: front
 desk 25 min, web 20, workspace 15, apps 15, gateway and TLS 8, the rest 5; `OLA_SUITE_LIMIT_MIN`
 overrides them for tests): at the limit the group gets SIGTERM, then SIGKILL 5 s later, the suite

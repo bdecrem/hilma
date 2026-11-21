@@ -835,7 +835,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     if (file && !existsSync(path.join(code, file))) return say(`suite ${name}: not in this commit (${file}), skipped`)
     const t0 = Date.now()
     const limit = limitMs(name)
-    say(`suite ${name}: node ${args.join(' ')}${attempt > 1 ? ' (the rerun, by itself)' : ''}, limit ${Math.round(limit / 60000)} min`)
+    say(`suite ${name}: node ${args.join(' ')}${attempt > 1 ? ' (the rerun, by itself)' : ''}, limit ${limit < 60000 ? `${Math.round(limit / 1000)} s` : `${Math.round(limit / 60000)} min`}`)
     // Each line stamped with the seconds since the suite started, so the log shows where it waits.
     let text = ''
     let atStart = true

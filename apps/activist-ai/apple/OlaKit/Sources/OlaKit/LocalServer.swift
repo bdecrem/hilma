@@ -202,9 +202,8 @@ public final class LocalServer: @unchecked Sendable {
   public var onForeignModels: (@Sendable ([String]) -> Void)?
   /// How often the running engine's models are read (ModelGuard).
   public var watchEvery: TimeInterval = 2
-  /// OLA-335: how long `stop()` waits for the engine to end after SIGTERM before it kills it. On Nov 21
-  /// the engine (opencode under sandbox-exec, its settings file damaged while it ran) never ended on
-  /// SIGTERM and `stop()` waited for it with no limit: the test sat 30 minutes and held the test machine.
+  /// OLA-335: how long `stop()` waits for the engine to end after SIGTERM before it kills it (and it
+  /// then waits 5 s more at most): `stop()` never waits without a limit (see `exited`).
   public var stopGrace: TimeInterval = 5
   /// Checks only: run between writing the config and starting the engine (a check deletes or
   /// damages the file there), and a program to start opencode through (sandbox-exec, no network).
@@ -214,6 +213,12 @@ public final class LocalServer: @unchecked Sendable {
   private let processLock = NSLock()
   private var process: Process?
   private var lifeline: Pipe?
+  /// Signalled by the engine's terminationHandler (OLA-335): `stop()` waits on this, never on
+  /// `Process.isRunning` / `waitUntilExit()`, which learn of the exit through the run loop of the
+  /// thread that started the engine. `start` and `stop` run on Swift's cooperative threads, which
+  /// have no run loop anyone turns: on Nov 21 `stop()` sat 30 minutes in `waitUntilExit()` after
+  /// the engine had already ended.
+  private var exited: DispatchSemaphore?
   private var pidFile: URL?
   public private(set) var log = ""
 
@@ -491,13 +496,18 @@ public final class LocalServer: @unchecked Sendable {
     p.standardOutput = pipe
     p.standardError = pipe
     pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
-      let s = String(decoding: h.availableData, as: UTF8.self)
+      let d = h.availableData
+      // End of the output (the engine ended): stop listening, or the handler is called again at once, forever.
+      if d.isEmpty { h.readabilityHandler = nil; return }
+      let s = String(decoding: d, as: UTF8.self)
       if !s.isEmpty { trace?("opencode: \(s.trimmingCharacters(in: .newlines))") }
       self?.appendLog(s)
     }
     trace?("starting \(bin.path) serve on 127.0.0.1:\(port) in \(folder.path)")
+    let ended = DispatchSemaphore(value: 0)
+    p.terminationHandler = { _ in ended.signal() }
     try p.run()
-    processLock.withLock { process = p }
+    processLock.withLock { process = p; exited = ended }
     if let pidFile { try? String(p.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8) }
     trace?("pid \(p.processIdentifier)")
     let config = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: password)
@@ -574,15 +584,23 @@ public final class LocalServer: @unchecked Sendable {
   public func stop() {
     watch?.cancel()
     watch = nil
-    guard let p = processLock.withLock({ () -> Process? in let p = process; process = nil; return p }) else { return }
+    guard let (p, ended) = processLock.withLock({ () -> (Process, DispatchSemaphore?)? in
+      guard let p = process else { return nil }
+      let e = exited
+      process = nil
+      exited = nil
+      return (p, e)
+    }) else { return }
     if p.isRunning { p.terminate() }
     try? lifeline?.fileHandleForWriting.close()
     lifeline = nil
-    // Never wait forever (OLA-335): SIGTERM, then SIGKILL once stopGrace has passed.
-    let deadline = Date().addingTimeInterval(stopGrace)
-    while p.isRunning && Date() < deadline { usleep(50_000) }
-    if p.isRunning { kill(p.processIdentifier, SIGKILL) }
-    p.waitUntilExit()
+    // Never wait forever (OLA-335): SIGTERM, up to stopGrace for the end, then SIGKILL and 5 s more.
+    if let ended {
+      if ended.wait(timeout: .now() + stopGrace) == .timedOut {
+        kill(p.processIdentifier, SIGKILL)
+        _ = ended.wait(timeout: .now() + 5)
+      }
+    }
     // Only our own pid: another server of this app may have written the file since.
     if let pidFile, (try? String(contentsOf: pidFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == String(p.processIdentifier) {
       try? FileManager.default.removeItem(at: pidFile)
