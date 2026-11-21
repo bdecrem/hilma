@@ -1,0 +1,47 @@
+.mrd .hist .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+.mrd .hist .gh { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+.mrd .hist .cell { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.mrd .hist .cell h2 { font-family: var(--font-source-serif-4), Georgia, serif; font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.mrd .hist .cell h2 small { display: block; font-family: var(--font-inter-tight), sans-serif; font-size: 13px; font-weight: 400; color: var(--mute); letter-spacing: 0; margin-top: 2px; }
+.mrd .hist .bar { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.mrd .hist .bar i { display: block; height: 100%; background: var(--blue); }
+.mrd .hist .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mrd .hist .nums b { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.mrd .hist .nums span { font-size: 11px; color: var(--mute); }
+.mrd .hist .meta { font-size: 13px; color: var(--mute); line-height: 1.4; }
+.mrd .hist .go { font-size: 14px; font-weight: 600; color: var(--blue); text-decoration: none; }
+.mrd .hist .go:hover { text-decoration: underline; }
+.mrd .hist section { margin-top: 32px; }
+.mrd .hist h2.sec { text-transform: none; letter-spacing: -.01em; font-family: var(--font-source-serif-4), Georgia, serif; font-size: 22px; font-weight: 600; }
+.mrd .hist .scroll { overflow-x: auto; margin-top: 12px; max-width: 100%; }
+.mrd .hist table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mrd .hist th { text-align: left; font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mute); font-weight: 400; padding: 6px 12px 8px 0; border-bottom: 1px solid var(--ink); }
+.mrd .hist td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; vertical-align: top; }
+.mrd .hist .note { font-family: var(--font-inter-tight), sans-serif; font-size: 13px; color: var(--mute); line-height: 1.5; margin-top: 12px; }
+.mrd .hist .crumbs { font-size: 13px; color: var(--mute); }
+.mrd .hist .crumbs a { color: inherit; }
+.mrd .hist .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; margin-top: 16px; display: grid; gap: 12px; min-width: 0; }
+.mrd .hist .card h3 { color: var(--ink); font-family: var(--font-inter-tight), sans-serif; text-transform: none; letter-spacing: 0; font-size: 16px; line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.mrd .hist .card h3 .q { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--blue); margin-right: 8px; }
+.mrd .hist .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mrd .hist .chip { border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; font-size: 13px; line-height: 1.3; background: var(--paper); min-width: 0; max-width: 100%; }
+.mrd .hist .chip b { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); font-weight: 400; }
+.mrd .hist .chip.diff { border-color: var(--red); }
+.mrd .hist .chip em { font-style: normal; color: var(--mute); font-size: 12px; display: block; }
+.mrd .hist .scale { font-size: 13px; color: var(--mute); line-height: 1.45; }
+.mrd .hist .ev { border-left: 3px solid var(--blue); padding: 2px 0 2px 12px; display: grid; gap: 4px; font-size: 14px; line-height: 1.5; min-width: 0; overflow-wrap: anywhere; }
+.mrd .hist .ev .when { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--blue); }
+.mrd .hist .ev .what { color: var(--ink); }
+.mrd .hist .ev .inst { font-size: 13px; color: var(--mute); }
+.mrd .hist .ev a { color: var(--blue); }
+.mrd .hist details { font-size: 13px; line-height: 1.5; }
+.mrd .hist details summary { cursor: pointer; color: var(--mute); }
+.mrd .hist blockquote { margin: 6px 0 0; padding: 8px 12px; background: var(--paper); border-radius: 6px; font-style: italic; overflow-wrap: anywhere; }
+.mrd .hist .concern { border: 1px solid var(--red); border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.5; }
+.mrd .hist .concern b { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--red); font-weight: 400; }
+.mrd .hist .conf { font-size: 12px; color: var(--mute); }
+.mrd .hist .nc { list-style: none; display: grid; gap: 10px; margin-top: 12px; font-size: 14px; line-height: 1.45; }
+.mrd .hist .nc li { overflow-wrap: anywhere; }
+.mrd .hist .nc b { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--blue); margin-right: 6px; font-weight: 500; }
+.mrd .hist .pending { background: var(--card); border: 1px dashed var(--rule); border-radius: 10px; padding: 14px 16px; margin-top: 16px; font-size: 14px; color: var(--mute); }
+@media (max-width: 700px) { .mrd .hist .grid { grid-template-columns: 1fr; } .mrd .hist .nums { grid-template-columns: repeat(2, 1fr); } }
