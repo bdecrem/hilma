@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 argentina liberty_a claude-opus-5-5 high",
- "pid": 62582,
  "step": "back2000",
  "slug": "argentina",
  "chunk": "liberty_a",
@@ -58,5 +57,835 @@
   "user": 179
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T06:01:25.469Z",
+ "minutes": 52.62,
+ "meters_after": {
+  "at": "2026-11-21T06:01:25.470Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 52,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 52,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 52% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 79052,
+   "output": 21652,
+   "cache_read": 1543975,
+   "cache_write": 111658,
+   "cost_usd": 1.5781,
+   "total": 1756337
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 79012,
+    "output": 5902,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1866,
+    "cost_usd": 0.0609
+   },
+   "claude-opus-5-5": {
+    "input": 40,
+    "output": 15750,
+    "cache_read": 1543975,
+    "cache_write": 111658,
+    "thinking": 4034,
+    "cost_usd": 1.5172
+   }
+  }
+ },
+ "turns": 29,
+ "calls": 42,
+ "duration_ms": 454078,
+ "duration_api_ms": 361858,
+ "pages_read": 20,
+ "pages": [
+  {
+   "at": "2026-11-21T05:08:55.304Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 70 | ARTICULO 71 | ARTICULO 72 | ARTICULO 86 | ARTICULO 87",
+   "ok": true,
+   "chars": 10578
+  },
+  {
+   "at": "2026-11-21T05:08:56.295Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 61 | ARTICULO 70 | ARTICULO 72 | consular",
+   "ok": true,
+   "chars": 10595
+  },
+  {
+   "at": "2026-11-21T05:09:03.574Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "Viena | 17.081 | menores | QUINCE (15) días corridos",
+   "ok": true,
+   "chars": 6082
+  },
+  {
+   "at": "2026-11-21T05:09:04.684Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 70 | ARTICULO 71 | ARTICULO 72 | ARTICULO 125 | ARTICULO 126",
+   "ok": true,
+   "chars": 5485
+  },
+  {
+   "at": "2026-11-21T05:09:19.008Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "ARTÍCULO 70 | Artículo 70 | retención preventiva | menores",
+   "ok": true,
+   "chars": 7497
+  },
+  {
+   "at": "2026-11-21T05:09:29.681Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+   "find": "Sustitúyese el artículo 70 | TREINTA (30) días | ARTÍCULO 22",
+   "ok": true,
+   "chars": 5513
+  },
+  {
+   "at": "2026-11-21T05:09:30.619Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "Artículo 40 | ARTICULO 40 | detención | Artículo 41",
+   "ok": true,
+   "chars": 2900
+  },
+  {
+   "at": "2026-11-21T05:09:46.866Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican",
+   "find": null,
+   "ok": true,
+   "chars": 3284
+  },
+  {
+   "at": "2026-11-21T05:09:52.490Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/texact.htm",
+   "find": "ARTICULO 19 | privación de libertad",
+   "ok": true,
+   "chars": 3461
+  },
+  {
+   "at": "2026-11-21T05:10:01.223Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-202024/texto",
+   "find": "Apruébase | Artículo 36 | ARTICULO 36 | comunicarse",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:26.261Z",
+   "url": "https://www.dipublico.org/doc/legislacion/Ley17081.pdf",
+   "find": "Apruébase | Artículo 36 | comunicarse libremente",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:27.422Z",
+   "url": "https://www.diariojudicial.com/news-13414-detencion-de-extranjeros-y-notificacion-consular",
+   "find": null,
+   "ok": true,
+   "chars": 5402
+  },
+  {
+   "at": "2026-11-21T05:16:27.953Z",
+   "url": "https://www.mpd.gov.ar/users/uploads/1354812176res DGN 0770_2012.pdf",
+   "find": "consular | 36",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:29:43.614Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-202024/texto",
+   "find": null,
+   "ok": true,
+   "chars": 3333
+  },
+  {
+   "at": "2026-11-21T05:29:56.058Z",
+   "url": "https://www.diariojudicial.com/news-13837-los-de-afuera-no-son-de-palo",
+   "find": "Convención de Viena | consular",
+   "ok": true,
+   "chars": 3691
+  },
+  {
+   "at": "2026-11-21T05:30:08.927Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-202024/texto",
+   "find": "Comunicación con los nacionales | comunicarse libremente",
+   "ok": true,
+   "chars": 2423
+  },
+  {
+   "at": "2026-11-21T05:30:19.762Z",
+   "url": "https://www.cels.org.ar/web/wp-content/uploads/2002/06/IA2002.-Hechos-2001-12-Migrantes-ley-inconstitucional-y-practica-arbitraria.pdf",
+   "find": "detención | consul | niños",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:30:35.381Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "consular | detention | detained | children",
+   "ok": true,
+   "chars": 4828
+  },
+  {
+   "at": "2026-11-21T05:30:36.333Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": "detention | consular | children",
+   "ok": true,
+   "chars": 2460
+  },
+  {
+   "at": "2026-11-21T05:39:31.499Z",
+   "url": "https://www.diariojudicial.com/news-34354-la-seleccion-del-resto-del-mundo-en-nuestras-prisiones",
+   "find": "consular | consulado | Procuración",
+   "ok": true,
+   "chars": 4140
+  }
+ ],
+ "searches": [
+  "infoleg Ley 22.439 Ley General de Migraciones y Fomento de la Inmigración texto artículo 40 detención",
+  "Ley 17.081 Convención de Viena sobre Relaciones Consulares aprobación infoleg",
+  "Argentina extranjeros detenidos notificación consular Convención de Viena artículo 36 incumplimiento Procuración Penitenciaria Defensoría General",
+  "CELS informe detención migrantes Ley Videla Dirección Nacional de Migraciones detenidos expulsión 2000 2001 comisarías",
+  "Committee on Migrant Workers concluding observations Argentina 2011 CMW/C/ARG/CO/1 consular detention refworld",
+  "Procuración Penitenciaria de la Nación personas extranjeras presas asistencia consular informe anual comunicación consulado"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":15,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Ley 17.081 (B.O. 12/1/1967) approved the Vienna Convention on Consular Relations. Its art. 36(1)(a)-(b) lets consular officials and their nationals 'comunicarse libremente', and requires the authorities to tell detainees of this right. Under Constitution art. 75 inc. 22 (1994) the treaty ranks above statute and is directly applicable. I found no practice evidence for around 2000, so this rating is inferred.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Same treaty basis as in 2000. Ley 25.871 (in force January 2004) says nothing on consular communication. Practice: the UK consul complained to the Consejo de la Magistratura that a Ghanaian prisoner held in a federal prison unit (detained about 18 months up to March 2004) was never notified to the consulate. The Consejo then urged criminal courts to comply with VCCR art. 36. This shows notification was not done systematically.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes\",\"basis\":\"Same treaty basis. Decreto 616/2010 was published on 6 May 2010, so its art. 61 was not yet in force on 1 January 2010. Practice: Diario Judicial dates the Consejo de la Magistratura's instruction to criminal judges to give 'estricto e inmediato cumplimiento' to detainees' consular-information right to 16 July 2010. It responded to a failure to notify. I found no systematic data.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Sometimes; Usually\",\"basis\":\"Ley 17.081 / VCCR art. 36 still applied. Since May 2010, Decreto 616/2010 art. 61 also requires DNM to safeguard the consular-assistance information right when it declares a stay illegal and orders expulsion. A 2014 Procuración Penitenciaria study of foreign prisoners has a section on consular assistance, but I could only see press coverage of it, not its findings. The rating is inferred and confidence is low.\"}",
+ "output": {
+  "answers": [
+   {
+    "question_id": 15,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Ley 17.081 (B.O. 12/1/1967) approved the Vienna Convention on Consular Relations. Its art. 36(1)(a)-(b) lets consular officials and their nationals 'comunicarse libremente', and requires the authorities to tell detainees of this right. Under Constitution art. 75 inc. 22 (1994) the treaty ranks above statute and is directly applicable. I found no practice evidence for around 2000, so this rating is inferred."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Same treaty basis as in 2000. Ley 25.871 (in force January 2004) says nothing on consular communication. Practice: the UK consul complained to the Consejo de la Magistratura that a Ghanaian prisoner held in a federal prison unit (detained about 18 months up to March 2004) was never notified to the consulate. The Consejo then urged criminal courts to comply with VCCR art. 36. This shows notification was not done systematically."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Same treaty basis. Decreto 616/2010 was published on 6 May 2010, so its art. 61 was not yet in force on 1 January 2010. Practice: Diario Judicial dates the Consejo de la Magistratura's instruction to criminal judges to give 'estricto e inmediato cumplimiento' to detainees' consular-information right to 16 July 2010. It responded to a failure to notify. I found no systematic data."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Ley 17.081 / VCCR art. 36 still applied. Since May 2010, Decreto 616/2010 art. 61 also requires DNM to safeguard the consular-assistance information right when it declares a stay illegal and orders expulsion. A 2014 Procuración Penitenciaria study of foreign prisoners has a section on consular assistance, but I could only see press coverage of it, not its findings. The rating is inferred and confidence is low."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 17.081 (approves the Convención de Viena sobre Relaciones Consulares, 1963), Convention art. 36",
+      "article": "art. 1 and annexed Convention art. 36",
+      "role": "cited",
+      "in_force": "1967-01-12 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010 (reglamentación de la Ley de Migraciones 25.871)",
+      "article": "art. 61",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Nacional",
+      "article": "art. 75 inc. 22",
+      "role": "other_in_force",
+      "in_force": "1994-08-24 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "art. 61",
+      "kind": "new_instrument",
+      "what_changed": "This is the first domestic migration-law provision requiring DNM, when it orders expulsion, to safeguard the person's right to information on consular assistance under the VCCR. It adds to the treaty basis, which was unchanged.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "Se deberá resguardar el derecho de la persona a la información sobre la asistencia consular conforme lo dispuesto por la Convención de Viena sobre Relaciones Consulares adoptada por la ORGANIZACION DE LAS NACIONES UNIDAS (ONU) el 24 de abril de 1963 y aprobada por Ley Nº 17.081."
+     },
+     {
+      "date": "2010-07",
+      "instrument": "Consejo de la Magistratura de la Nación, plenary declaration (reported by Diario Judicial)",
+      "article": "VCCR art. 36",
+      "kind": "practice",
+      "what_changed": "After a UK consular complaint that a Ghanaian prisoner had not been notified, the Consejo told all national and federal criminal judges to comply with the consular-information right. This is practice evidence, not law.",
+      "url": "https://www.diariojudicial.com/news-13837-los-de-afuera-no-son-de-palo",
+      "passage": "El Consejo de la Magistratura de la Nación instó al fuero criminal nacional y federal para que cumplan con la Convención de Viena sobre relaciones consulares. El pedido se debe al reclamo del Consulado del Reino Unido de Gran Bretaña por no avisar de la detención de un extranjero."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Detención de extranjeros y notificación consular (Diario Judicial)",
+      "url": "https://www.diariojudicial.com/news-13414-detencion-de-extranjeros-y-notificacion-consular",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "Los de afuera no son de palo (Diario Judicial)",
+      "url": "https://www.diariojudicial.com/news-13837-los-de-afuera-no-son-de-palo",
+      "year": 2010,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "La 'selección' del resto del mundo en nuestras prisiones (Diario Judicial, on PPN statistics)",
+      "url": "https://www.diariojudicial.com/news-34354-la-seleccion-del-resto-del-mundo-en-nuestras-prisiones",
+      "year": 2014,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the treaty text (argentina.gob.ar, texto original of Ley 17.081) and Decreto 616/2010 art. 61 on InfoLEG. Neither has been amended. PDFs could not be opened in this session (no pdftotext), so I could not read PPN, DGN Res. 770/2012 or CELS reports. Practice evidence is thin and comes from the press.",
+    "sources_opened": [
+     {
+      "title": "Ley 17.081 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-202024/texto"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Diario Judicial news-13414",
+      "url": "https://www.diariojudicial.com/news-13414-detencion-de-extranjeros-y-notificacion-consular"
+     },
+     {
+      "title": "Diario Judicial news-13837",
+      "url": "https://www.diariojudicial.com/news-13837-los-de-afuera-no-son-de-palo"
+     },
+     {
+      "title": "Diario Judicial news-34354",
+      "url": "https://www.diariojudicial.com/news-34354-la-seleccion-del-resto-del-mundo-en-nuestras-prisiones"
+     },
+     {
+      "title": "CMW concluding observations Argentina 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": "The 'Yes' holds. The starting implementation rating 'Usually; Rarely' combines two levels that are not neighbours and is not an allowed option here. My past ratings use 'Sometimes' or 'Sometimes; Usually'.",
+    "confidence": "low",
+    "notes": "The protection rests on a treaty, the VCCR approved by Ley 17.081, which is directly applicable and ranks above statute (Constitution art. 75 inc. 22). No court ruling was relied on. Diario Judicial shows the article date as 16 July 2010, but the facts (a March 2004 notice, Petracchi as Consejo president) suggest the complaint dates from 2004-2005."
+   },
+   {
+    "question_id": 17,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 arts. 40-42 let the Ministry of the Interior or DNM order the detention of any foreigner whose expulsion was decreed, with no exception for children. No other national rule prohibited detaining migrant children."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 (in force January 2004) arts. 70-72 allow judicially ordered retention of any foreigner subject to expulsion and contain no child-specific prohibition. Ley 26.061 had not yet been enacted."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 26.061 art. 19 (2005) guarantees children's liberty but only requires that any deprivation of liberty follow the law in force. It does not prohibit immigration detention. Ley 25.871 arts. 70-72 were unchanged."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Decreto 616/2010 art. 70 regulates retention (15 days, extendable by 30) with no child exception. Ley 26.061 art. 19 and Ley 25.871 arts. 70-72 were unchanged."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 22.439 Ley General de Migraciones y de Fomento de la Inmigración",
+      "article": "arts. 40-42",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 70-72",
+      "role": "other_in_force",
+      "in_force": "2004-01-21 to today (art. 70 replaced 2017-01-30 by DNU 70/2017, restored 2021-03-05, replaced 2025-05-29 by DNU 366/2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "art. 70",
+      "role": "other_in_force",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.061 de Protección Integral de los Derechos de las Niñas, Niños y Adolescentes",
+      "article": "art. 19",
+      "role": "other_in_force",
+      "in_force": "2005-10 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Constitución Nacional (CRC with constitutional rank)",
+      "article": "art. 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "arts. 70-72, 124",
+      "kind": "replaced",
+      "what_changed": "Administrative detention by DNM under Ley 22.439 art. 40 was replaced by retention ordered by a judge. Neither regime exempted children.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Firme y consentida la expulsión de un extranjero, el Ministerio del Interior o la Dirección Nacional de Migraciones, solicitarán a la autoridad judicial competente que ordene su retención, mediante resolución fundada, al solo y único efecto de cumplir aquélla."
+     },
+     {
+      "date": "2005-10",
+      "instrument": "Ley 26.061",
+      "article": "art. 19",
+      "kind": "new_instrument",
+      "what_changed": "Recognises children's right to personal liberty, but only requires that deprivation of liberty follow the law in force. It is not a prohibition of immigration detention.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/texact.htm",
+      "passage": "La privación de libertad personal, entendida como ubicación de la niña, niño o adolescente en un lugar de donde no pueda salir por su propia voluntad, debe realizarse de conformidad con la normativa vigente."
+     },
+     {
+      "date": "2017-01-30",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "art. 21 (replacing Ley 25.871 art. 70)",
+      "kind": "amended",
+      "what_changed": "Widened retention, allowing preventive retention at any stage of the procedure. It added no child exception.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "ARTÍCULO 21. — Sustitúyese el artículo 70 de la Ley N° 25.871 y su modificatoria por el siguiente: “ARTÍCULO 70.- Firme la expulsión de un extranjero, la DIRECCIÓN NACIONAL DE MIGRACIONES solicitará a la autoridad judicial competente que ordene su retención"
+     }
+    ],
+    "repealed_search": "I checked Ley 22.439 (detention chapter, arts. 40-43), the original text of Ley 25.871 (arts. 70-72), Decreto 616/2010 art. 70, DNU 70/2017 and Ley 26.061 art. 19. None contained a child-specific ban on immigration detention, and I found no ban that was repealed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the texto original of Ley 25.871 and the text of Ley 22.439 on official portals. The CRC and the CMW Convention (approved by Ley 26.202) were not read in this session. No practice evidence was needed because the answer is 'Does Not Apply'.",
+    "sources_opened": [
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "Ley 26.061",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/110778/texact.htm"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The constitutional-rank CRC (arts. 37 and 9) sets general standards but contains no explicit ban on detaining children because of migration status, so it does not change the No. No court ruling was relied on."
+   },
+   {
+    "question_id": 19,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 art. 40: once expulsion was decreed, the Ministry of the Interior or DNM 'podrán ordenar su detención mediante resolución fundada', an administrative detention without a judge. CELS reported on DNM detentions without judicial control in this period (search results only; I could not open the reports)."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 art. 70 (in force January 2004): retention is ordered by a judge, normally once expulsion is final and, exceptionally, before that. Detention linked to migration status therefore remained lawful."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 arts. 70-72 were unchanged. Decreto 616/2010, with its time limits on retention, was not yet in force (6 May 2010)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 arts. 70-72 applied, plus Decreto 616/2010 art. 70 limiting retention to 15 days, extendable by up to 30 more. Detention for expulsion remained lawful. The widening by DNU 70/2017 came later."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 22.439",
+      "article": "arts. 40-42",
+      "role": "predecessor",
+      "in_force": "1981-03-27 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "arts. 70-72",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 70 replaced 2017-01-30 by DNU 70/2017 art. 21, restored 2021-03-05 by Decreto 138/2021, replaced 2025-05-29 by DNU 366/2025 art. 19; art. 71 replaced 2025 by art. 20)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "arts. 70-71",
+      "role": "cited",
+      "in_force": "2010-05-06 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "arts. 11, 21",
+      "role": "cited",
+      "in_force": "2017-01-30 to 2021-03-05",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871",
+      "article": "arts. 70-72, 124",
+      "kind": "replaced",
+      "what_changed": "Replaced the DNM's power to order detention administratively (Ley 22.439 art. 40) with retention ordered by a judge, 'al solo y único efecto' of carrying out expulsion. Detention remained lawful.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "Excepcionalmente y cuando las características del caso lo justificare, la Dirección Nacional de Migraciones o el Ministerio del Interior podrán solicitar a la autoridad judicial la retención del extranjero aún cuando la orden de expulsión no se encuentre firme y consentida."
+     },
+     {
+      "date": "2010-05-06",
+      "instrument": "Decreto 616/2010",
+      "article": "art. 70",
+      "kind": "new_instrument",
+      "what_changed": "Set retention at up to 15 days, extendable by up to 30 days with reports to the judge every 10 days. It limits detention but does not prohibit it.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "La retención podrá solicitarse por un plazo de hasta QUINCE (15) días corridos."
+     },
+     {
+      "date": "2017-01-30",
+      "instrument": "Decreto de Necesidad y Urgencia 70/2017",
+      "article": "arts. 11 (art. 69 bis) and 21 (art. 70)",
+      "kind": "amended",
+      "what_changed": "Allowed preventive retention 'en todo momento del procedimiento' and rewrote art. 70, widening detention.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm",
+      "passage": "La retención preventiva podrá ser pedida en todo momento del procedimiento administrativo o del proceso judicial."
+     }
+    ],
+    "repealed_search": "I searched Ley 22.439, the original Ley 25.871 and Decreto 616/2010 for any prohibition of migration-status detention that existed between 2000 and 2020 and was later repealed. All of them authorise detention or retention for expulsion; I found no prohibition that was later repealed.",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CELS, 'UN urges Argentina to derogate and suspend decree that violates migrant rights'",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original text of Ley 25.871 and its version history on InfoLEG (which notes art. 70 restored by Decreto 138/2021), the text of Ley 22.439, and the amending text of DNU 70/2017. I could not open the CELS PDF annual reports (no pdftotext).",
+    "sources_opened": [
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 22.439 normas modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-16176/normas-modifican"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Decreto 616/2010",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "DNU 70/2017",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271245/norma.htm"
+     },
+     {
+      "title": "CELS 2019 CMW note",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The answer is No on every date. The regime moved from administrative detention by DNM (Ley 22.439, to January 2004), to judicial retention (Ley 25.871), to time-limited judicial retention (Decreto 616/2010), to wider retention (DNU 70/2017 from January 2017). DNU 70/2017's entry-into-force date of 30 January 2017 comes from my own knowledge; I did not see it on the page."
+   }
+  ]
+ }
 }
