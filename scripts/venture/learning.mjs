@@ -87,12 +87,22 @@ const ola = {
   goal: '100: Ola’s own model scores as well as Claude on the work people bring.',
 }
 
+// The Ola machine's admin.mjs, read here when this is the Ola machine (the runner on the mini: ssh from
+// the mini to itself is refused, OLA-235's check found the Learning page with no counts), over Tailscale
+// from anywhere else.
+const OLA_FRONTDESK = `${process.env.HOME}/ola-staging/current/apps/activist-ai/frontdesk`
+function olaAdmin(args) {
+  const cmd = `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${args}`
+  if (existsSync(OLA_FRONTDESK)) return spawnSync('/bin/sh', ['-c', cmd], { encoding: 'utf8', timeout: 30000 })
+  return spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', cmd], { encoding: 'utf8', timeout: 30000 })
+}
+
 // Switches to Claude (OLA-157): requests handed to Claude or the hosted model right after Ola's own
 // model had the conversation's last turn, from the Ola machine (frontdesk/switches.mjs, `admin.mjs
 // switches --json`): labels and counts only, never a request. Over Tailscale (100.95.51.98), as the
 // sweep's gather; when the machine does not answer, the last reading stays, with its own date.
 function machineSwitches() {
-  const r = spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', 'export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs switches --json --days 7'], { encoding: 'utf8', timeout: 30000 })
+  const r = olaAdmin('switches --json --days 7')
   if (r.status !== 0) return { error: (r.stderr || 'the Ola machine did not answer').trim().split('\n').pop().slice(0, 200) }
   try {
     const s = JSON.parse(r.stdout.trim().split('\n').pop())
@@ -112,7 +122,7 @@ else {
 // stopped, by kind, and answers people marked "This was wrong" (frontdesk/faults.mjs, `admin.mjs faults
 // --json`): labels and counts only, the same way as the switches.
 function machineFaults() {
-  const r = spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', 'export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs faults --json --days 7'], { encoding: 'utf8', timeout: 30000 })
+  const r = olaAdmin('faults --json --days 7')
   if (r.status !== 0) return { error: (r.stderr || 'the Ola machine did not answer').trim().split('\n').pop().slice(0, 200) }
   try {
     const s = JSON.parse(r.stdout.trim().split('\n').pop())

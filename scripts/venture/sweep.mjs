@@ -143,7 +143,12 @@ async function facts() {
     // the turns people chose to keep on the Ola machine, and those handed to another engine after a first try.
     // Over Tailscale (100.95.51.98): the public address's port 22 timed out on Nov 19 and the day's
     // requests went unread; Tailscale reaches the mini from this iMac and from the mini itself.
-    const ssh = (c) => spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${c}`], { encoding: 'utf8', timeout: 30000 })
+    // On the Ola machine itself (the runner on the mini) ssh to itself is refused, so it runs here (OLA-235).
+    const ssh = (c) => {
+      const cmd = `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${c}`
+      if (existsSync(`${process.env.HOME}/ola-staging/current/apps/activist-ai/frontdesk`)) return spawnSync('/bin/sh', ['-c', cmd], { encoding: 'utf8', timeout: 30000 })
+      return spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', cmd], { encoding: 'utf8', timeout: 30000 })
+    }
     const r = ssh('kept --days 3 --json')
     if (r.status !== 0) throw new Error((r.stderr || 'the Ola machine did not answer').trim().split('\n').pop())
     const rows = JSON.parse(r.stdout.trim().split('\n').pop()).filter((k) => new Date(k.at).toISOString() >= from && new Date(k.at).toISOString() < to)
