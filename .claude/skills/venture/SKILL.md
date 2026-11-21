@@ -258,7 +258,8 @@ with its checks written (or `check <id> internal --why` naming a test), and the 
 step hands both to builders the same night, an Opus builder per part of the code from an open
 session, otherwise the mini's agent, which takes idea tickets right after P0. `sweep.mjs post`
 refuses the next review while an earlier idea is neither done nor dropped (`sweep.mjs ideas`
-lists them).
+lists them). Before the post, `requests.mjs --day <day>` matches every request Bart made that day
+to a ticket and opens the missing ones (OLA-213); the post refuses a day it has not matched.
 
 ## 7. Review, at the end of every cycle
 

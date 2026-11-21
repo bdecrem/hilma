@@ -390,6 +390,18 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
       <p className="bd-sweep-count">
         Open issues: <b>{open.n}</b> <span className="faint">(yesterday: {open.yesterday})</span>
       </p>
+      {s.requests && (
+        <p className="bd-sweep-count">
+          Requests from Bart: <b>{s.requests.n}</b>, each matched to a ticket <span className="faint">({s.requests.matched} had one{s.requests.opened.length ? `, ${s.requests.opened.length} opened that night: ` : ', none opened'}</span>
+          {s.requests.opened.map((id, k) => (
+            <span key={id} className="faint">
+              {k > 0 && ', '}
+              <a href={`${href(base, '/issues')}/${id}`} className="m">{id}</a>
+            </span>
+          ))}
+          <span className="faint">)</span>
+        </p>
+      )}
       <p className="bd-sweep-sum">{inline(s.summary)}</p>
       {s.pattern && (
         <p className="bd-sweep-sum pattern">

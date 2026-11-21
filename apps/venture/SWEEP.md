@@ -235,10 +235,26 @@ requirement or something the agent could not have known. Each one gets an entry 
 correction is unfiled, or while the grader counted more corrections than were written down. On
 Nov 18 the ledger held 9 corrections for the day and the re-read found 27.
 
+### Every request has a ticket
+
+On Nov 19 Bart had to ask again for the Mac Cloud setting ("BAD FAIL THAT I HAVE TO REMIND YOU
+AGAIN", correction 90): an earlier request never became a ticket (OLA-213). After his last message
+of the day, run
+
+    node scripts/venture/requests.mjs --day 2026-11-18
+
+It reads what he typed, texted and said that day (the same messages the grader reads), matches
+each request to the ticket that carries it, and opens a P1 ticket for each request that has none,
+with his words in it; one question to Claude Opus on the machine's Max login, never the API key.
+`gather` prints the result; `sweep.mjs post` refuses a day that was not matched and stores the
+counts with the entry, which the Learning page shows ("Requests from Bart: N, each matched to a
+ticket"). A rerun opens nothing twice. Read the opened tickets: one that is not a request is
+dropped with the reason, one that is gets its checks.
+
 ### What to look at for Kit (how the project is run)
 
 - A correction, a steer, or anything he had to say twice.
-- Something he said in passing that has no ticket.
+- Something he said in passing that has no ticket (requests.mjs opens one; read what it opened).
 - Something that went wrong and he did not see: a failed deploy, a check that could not run, a
   wrong time or number in a note, a watcher that was not running, a tool that read the wrong place.
 - Something that worked and should be kept: an approach he confirmed, a check that caught a fault.

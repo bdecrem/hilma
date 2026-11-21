@@ -6,7 +6,8 @@
 //   node scripts/venture/steers.mjs --day 2026-11-16     one day
 //   node scripts/venture/steers.mjs --backfill 2026-11-13 2026-11-16
 //   node scripts/venture/steers.mjs --dry [--day …]      grade and print, store nothing
-//   node scripts/venture/steers.mjs --collect [--day …]  print what he wrote, no model call (--full: whole messages)
+//   node scripts/venture/steers.mjs --collect [--day …]  print what he wrote, no model call (--full: whole messages;
+//                                                        --json: one day's messages as JSON, for requests.mjs)
 //   node scripts/venture/steers.mjs --export              store what he typed on THIS machine today and
 //                                                        yesterday (venture_state "typed_<host>"), so the
 //                                                        count on another machine includes it
@@ -386,6 +387,8 @@ if (flag('--export')) {
   process.exit(0)
 }
 if (collectOnly) {
+  // --json: the day's messages as one JSON line, for requests.mjs (OLA-213)
+  if (flag('--json')) (console.log(JSON.stringify(await collect(days[0]))), process.exit(0))
   for (const day of days) {
     const msgs = await collect(day)
     console.log(`\n=== ${day}: ${msgs.length} messages`)

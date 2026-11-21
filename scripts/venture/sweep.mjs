@@ -82,6 +82,14 @@ async function facts() {
     add("Bart's words (typed, texted, said; every machine that has exported its day)", lines)
   })
 
+  await tryIt('Requests', async () => {
+    // OLA-213: every request of the day matched to a ticket, the missing ones opened (requests.mjs)
+    const d = (await getState(db, 'requests'))?.value?.days?.[day]
+    if (!d) return add("Bart's requests matched to tickets (requests.mjs)", [`not matched yet: run node scripts/venture/requests.mjs --day ${day} before posting (post refuses the day until it is)`])
+    count(d.counts.requests, `requests from you, ${d.counts.opened} without a ticket until tonight`)
+    add(`Bart's requests matched to tickets (requests.mjs, ${d.at}; rerun it after his last message)`, d.requests.map((r) => `${r.time} ${r.source} ${r.ticket}${r.opened ? ' (opened tonight)' : ''}: ${r.request}`))
+  })
+
   await tryIt('Steers', async () => {
     const d = (await getState(db, 'steers'))?.value?.days?.[day]
     if (!d) return add('Steers (the grader)', ['not graded yet for this day (the grader runs the next morning)'])
@@ -347,6 +355,9 @@ if (cmd === '--wait') {
       if (no.length) die(`the entry was not stored: the day's ideas are built tonight, so each is a P1 ticket with its checks (OLA-331):\n- ${no.join('\n- ')}`)
     }
   }
+  // OLA-213: the day's requests are matched to tickets before the entry is posted; the counts are the tracker's
+  const req = (await getState(db, 'requests'))?.value?.days?.[e.day]
+  if (!req) die(`the entry was not stored: Bart's requests of ${e.day} are not matched to tickets yet. Run node scripts/venture/requests.mjs --day ${e.day} (it opens a ticket for each request that has none; OLA-213), then post again.`)
   const bad = checkEntry(e)
   // OLA-251, tenth pass: a fix settled in the ledger past correct.mjs becomes a line before the day's lines are counted
   spawnSync('node', [root + 'scripts/venture/correct.mjs', 'audit'], { encoding: 'utf8', stdio: ['ignore', 'ignore', 'inherit'] })
@@ -386,6 +397,7 @@ if (cmd === '--wait') {
     const late = owedFixes(loadWeaknesses(rootUrl)).filter((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3)
     if (late.length) bad.push(`fixes owed for more than ${OWED_DAYS} days: ${late.map((o) => `${o.ref} (${o.name}, ${o.issue}, ${o.days} days)`).join('; ')}. Build each and settle it: correct.mjs fix <n> --fix … --level … --where … (correct.mjs owed lists them)`)
   }
+  const requests = { n: req.counts.requests, matched: req.counts.matched, opened: req.opened, at: req.at }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
   // an idea is new: its ticket was not the idea of another day
   for (const side of ['kit', 'ola']) {
@@ -404,6 +416,7 @@ if (cmd === '--wait') {
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
   const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), overrides, models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
+  entry.requests = requests
   // "Open issues: N (yesterday: M)", from the tracker's records at the moment of posting (OLA-212:
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.

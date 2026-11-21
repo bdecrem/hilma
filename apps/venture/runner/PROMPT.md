@@ -44,8 +44,11 @@ differences because you are unattended:
   one for Ola, each with its own new P1 ticket and its checks (SWEEP.md, "One idea for each side,
   every day"): every idea is built at once, and the runner's next work runs take them before any
   ticket but a P0. `sweep.mjs post` refuses while an earlier day's idea is neither done nor
-  dropped: say so in the journal and leave the post for after they are built. `sweep.mjs post`
-  texts Bart those two ideas once; send no other text about the sweep.
+  dropped: say so in the journal and leave the post for after they are built. Before posting,
+  `node scripts/venture/requests.mjs --day <day>` matches each of his requests that day to a
+  ticket and opens the missing ones (SWEEP.md, "Every request has a ticket"); the post refuses a
+  day it has not matched. `sweep.mjs post` texts Bart those two ideas once; send no other text
+  about the sweep.
 - **A text to Bart is a touch.** His own texts and voice notes already got an
   immediate answer from the server; do the thing he asked for, and text him
   only when it is done and he needs to know, or when money or a customer is at

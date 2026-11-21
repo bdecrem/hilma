@@ -191,6 +191,9 @@ export type Sweep = {
   /** The tracker's open count when the entry was posted, and at the end of the day before (OLA-212;
    *  sweep.mjs post computes both from the records). Older entries have none: the page counts them. */
   openIssues?: { n: number; yesterday: number }
+  /** Since Nov 21 (OLA-213): Bart's requests that day, each matched to a ticket by requests.mjs; the
+   *  tickets opened for the requests that had none. sweep.mjs post copies it from the tracker's state. */
+  requests?: { n: number; matched: number; opened: string[]; at: string }
   /** Since Nov 20 (OLA-251): what the review removed, merged or corrected in the notes that day,
    *  checked against what really happened. The review cleans the notes instead of adding rules. */
   cleaned?: { did: 'removed' | 'merged' | 'corrected'; what: string; where: string }[]
