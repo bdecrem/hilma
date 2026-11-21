@@ -1241,7 +1241,11 @@ def who_words(engine, model):
         return "%s, an outside open model that Ola uses for design work (not Ola's own model)" % d
     if engine == "ola" and model == UNKNOWN_MODEL:
         return "Ola, but which model made this change is not known (two conversations were working at the same time)"
+    # A picked choice at the hosted provider (OLA-337): named as itself, an outside open model.
+    if engine == "hosted" and model in PICKED_MODELS:
+        return PICKED_MODELS[model]
     return ENGINES.get(engine, engine) + (" (model %s)" % model if model else "")
+PICKED_MODELS = {"deepseek-v4-pro": "DeepSeek V4 Pro, an outside open model (not Ola's own model)"}
 MADE_SKIP_DIRS = {"node_modules", "__pycache__", "lost+found"}
 MADE_SKIP_FILES = {"project.db", "project.db-wal", "project.db-shm", ".DS_Store"}
 MADE_MAX_FILES = 20000

@@ -26,6 +26,12 @@
 // left off. Either way the gateway gets a grant for this run only (fallback_once, a lease renewed
 // while the run lives), taken back when it ends; every lease is dropped when the front desk starts. Each run is audited hosted_used (or hosted_once) with numbers only, the
 // gateway's own count before and after: tokens and cost, no content, no file names.
+//
+// A picked choice (OLA-337): the run's body may name `model`, one of the outside open models the
+// gateway serves at the hosted provider beside `hosted` (DeepSeek V4 Pro, `deepseek-v4-pro`). It is
+// the person's pick for that one request (the Mac app's "Try again with" and the choice in its box),
+// under the same switch, grant, month and audit as the hosted model; the session goes back to
+// `ola/general` after it, as always. Nothing else here ever chooses it.
 import { randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -122,6 +128,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
     const m = g?.hostedMonth.get(`ws-${ws.slug}`)
     const run = runs.get(ws.slug)
     return {
+      picks: g?.hosted?.picks ?? [],
       enabled: r.enabled === 1,
       canChange: ws.role === 'owner',
       configured: Boolean(provider),
@@ -172,11 +179,14 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
     if (r.enabled !== 1 && !once) return { status: 403, body: { error: 'hosted_off', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.' } }
     if (once && ws.role !== 'owner') return { status: 403, body: { error: 'owner_only', message: 'Only the project’s owner can hand a request to the hosted open model while it is off.' } }
     const request = typeof body?.request === 'string' ? body.request.trim() : ''
+    const model = body?.model === undefined || body.model === 'hosted' ? 'hosted' : body.model
     const session = body?.conversation
     if (!request || request.length > MAX_REQUEST || typeof session !== 'string' || !ID.test(session)) return { status: 400, body: { error: 'bad_request', message: 'That request could not be read.' } }
     status.at = 0
     const i = await info(ws)
     if (!i.configured) return { status: 503, body: { error: 'not_set_up', message: i.unavailable } }
+    const pick = model === 'hosted' ? null : i.picks.find((x) => x.id === model)
+    if (model !== 'hosted' && !pick) return { status: 400, body: { error: 'unknown_model', message: 'That model is not one this machine offers.' } }
     // The page hears a run end on opencode's stream a moment before the watcher below does: a run
     // whose session no longer executes is finished now, so the next request is not refused for it.
     const old = runs.get(ws.slug)
@@ -185,7 +195,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
       if (now && !now.has(old.session)) await end(old, true)
     }
     if (runs.has(ws.slug)) return { status: 409, body: { error: 'hosted_busy', message: 'The hosted open model is already working on a request in this project. Wait for it to finish, or stop it.' } }
-    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, once, leaseId: null, before: null, ended: false, timer: null, turn: null }
+    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, once, model, leaseId: null, before: null, ended: false, timer: null, turn: null }
     runs.set(ws.slug, run) // before any await below: a second start finds it
     try {
       await workspaces.ensureRunning(ws.slug)
@@ -200,13 +210,13 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
         await new Promise((res) => setTimeout(res, 500))
         run.before = await usage(true)
       }
-      const sw = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/model`, { model: HOSTED_MODEL })
+      const sw = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/model`, { model: { ...HOSTED_MODEL, id: model } })
       if (sw.status < 200 || sw.status > 299) throw Object.assign(new Error('switch'), { status: sw.status === 404 ? 404 : 502 })
       // Which engine made a file (madeby.mjs, OLA-224): this run is the hosted model's turn in the
       // VM, and opencode's history shows Ola's replies as its own, so what Ola and Claude did in this
       // conversation since its last turn goes in front of the request as a marked note.
       const note = madeBy ? madeBy.noteFor(ws.slug, session, 'hosted') : ''
-      run.turn = madeBy ? await madeBy.begin(ws.slug, { engine: 'hosted', session, request }) : null
+      run.turn = madeBy ? await madeBy.begin(ws.slug, { engine: 'hosted', session, request, model }) : null
       const p = await workspaces.oc(ws.slug, 'POST', `/api/session/${session}/prompt`, { text: note + request })
       if (p.status < 200 || p.status > 299) throw Object.assign(new Error('prompt'), { status: 502 })
       workspaces.notePrompt(ws.slug, ws.id, personId, session)
@@ -215,9 +225,9 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
       const message = e.status === 404 ? 'That conversation is not in this project.' : 'The hosted open model could not start in your project just now. Nothing was changed.'
       return { status: e.status ?? 502, body: { error: 'hosted_failed', message } }
     }
-    log(`${ws.slug}: a hosted model run started${once ? ' (just this once)' : ''}`)
+    log(`${ws.slug}: a hosted model run started${pick ? ` on ${pick.name}` : ''}${once ? ' (just this once)' : ''}`)
     watchEnd(run)
-    return { status: 200, body: { ok: true, run: run.id, provider: i.provider } }
+    return { status: 200, body: { ok: true, run: run.id, provider: i.provider, model, ...(pick ? { name: pick.name } : {}) } }
   }
 
   // The run ends when opencode stops saying the session is executing, once it was seen executing or

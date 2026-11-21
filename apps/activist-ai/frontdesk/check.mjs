@@ -210,7 +210,7 @@ const fakeHosted = await startFakeModel({ hosted: true })
 fakeHosted.server.unref()
 const HOSTED_UP = HOSTED_LIVE
   ? { HOSTED_BASE_URL: 'https://api.together.xyz/v1', HOSTED_API_KEY: together(), HOSTED_MODEL: HOSTED_LIVE, HOSTED_PROVIDER: 'Together AI', GATEWAY_HOSTED_PRICES: process.env.OLA_CHECK_HOSTED_PRICES || 'in=1.4,out=4.4' }
-  : { HOSTED_BASE_URL: `http://127.0.0.1:${fakeHosted.port}/v1`, HOSTED_API_KEY: 'fake-hosted-key-not-a-secret', HOSTED_MODEL: 'fake-hosted', HOSTED_PROVIDER: 'Made-up Cloud' }
+  : { HOSTED_BASE_URL: `http://127.0.0.1:${fakeHosted.port}/v1`, HOSTED_API_KEY: 'fake-hosted-key-not-a-secret', HOSTED_MODEL: 'fake-hosted', HOSTED_PROVIDER: 'Made-up Cloud', HOSTED_DEEPSEEK_MODEL: 'fake-deepseek' }
 const gwEnv = {
   HOME: homedir(),
   ...(LIVE ? { UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: `general=${process.env.OLA_CHECK_GENERAL_MODEL || 'zai-org/GLM-5.3-Flash'}` } : FAKE_UP),
@@ -765,12 +765,22 @@ await check("the apps' cloud: a device signed in as alice lists her project and 
     [tb, 'GET', `${W}/oc/api/session`, 404], [tb, 'GET', `${W}/oc/api/info`, 404], [tb, 'GET', `${W}/api/files`, 404],
     [null, 'GET', '/api/device/projects', 401], [null, 'GET', `${W}/oc/api/session`, 401], ['olap1.made-up', 'GET', `${W}/oc/api/session`, 401],
     [ta, 'GET', `${W}/oc/api/config`, 403], [ta, 'GET', `${W}/api/project`, 404], [ta, 'DELETE', `${W}/api/files/x.csv`, 404], [ta, 'POST', '/api/device/projects', 405],
+    // The project's fallbacks and a hosted run (OLA-337): its members only; the other routes stay shut.
+    [tb, 'GET', `${W}/api/fallback`, 404], [tb, 'POST', `${W}/api/hosted/run`, 404], [ta, 'POST', `${W}/api/fallback`, 404], [ta, 'POST', `${W}/api/hosted/settings`, 404], [ta, 'POST', `${W}/api/claude/run`, 404],
   ]
   for (const [t, m, p, want] of cases) {
     const r = await dev(t, p, { method: m })
     if (r.status !== want) wrong.push(`${m} ${p} ${r.status} (wanted ${want})`)
   }
   assert(!wrong.length, wrong.join(', '))
+  // The Mac app in a cloud project (OLA-337): the project's fallbacks with the picked choices, a
+  // viewer cannot hand a request over, and a model the machine does not offer is refused, nothing run.
+  const fb = await dev(ta, `${W}/api/fallback`)
+  assert(fb.status === 200 && fb.json.hosted.configured === true && JSON.stringify(fb.json.hosted.picks.map((x) => x.id)) === '["deepseek-v4-pro"]' && fb.json.canChange === true, `fallback through the device route: ${fb.status} ${JSON.stringify(fb.json?.hosted)}`)
+  const vr = await dev(tv, `${W}/api/hosted/run`, { method: 'POST', body: JSON.stringify({ request: 'x', conversation: id, once: true, model: 'deepseek-v4-pro' }) })
+  assert(vr.status === 403, `vera's hosted run: ${vr.status}`)
+  const unk = await dev(ta, `${W}/api/hosted/run`, { method: 'POST', body: JSON.stringify({ request: 'x', conversation: id, once: true, model: 'some-other-model' }) })
+  assert(unk.status === 400 && unk.json.error === 'unknown_model', `a model not offered: ${unk.status} ${JSON.stringify(unk.json)}`)
   // An open event stream through the device route ends within seconds of the device's sign-out.
   const ctl = new AbortController()
   const st = { open: true, status: null }
@@ -2682,6 +2692,23 @@ await check('"Just this once": with the switches off the owner hands one request
   const said = thanks.lines.filter((e) => e.type === 'assistant').flatMap((e) => e.message.content.filter((c) => c.type === 'text').map((c) => c.text))
   assert(thanks.status === 200 && thanks.ended?.reason === 'done' && JSON.stringify(said) === '["[[ola:react thanks]]"]', `a compliment to Claude: ${JSON.stringify(said)}`)
   return 'hosted: one run, then 403 from inside; Claude: one run, then 403; the reactions rule reached Claude Code'
+})
+// A picked choice (OLA-337): DeepSeek V4 Pro, for one request the owner picks it for, with the switch
+// off ("just this once", as the Mac app sends it): the session runs on `deepseek-v4-pro`, the gateway
+// sends its own model id to the hosted provider, it is audited like a hosted run, and the
+// conversation goes back to Ola's model.
+await check('a request the owner picks DeepSeek V4 Pro for runs on it, marked by its model, audited as a hosted run, then back to Ola', async () => {
+  const before = fakeHosted.calls()
+  const r = await hostedRun(a, 'Count the rows in survey.csv', { once: true, model: 'deepseek-v4-pro' })
+  assert(r.status === 200 && JSON.stringify(r.models) === '["deepseek-v4-pro"]' && r.idle[0] === 'succeeded', `the run: ${r.status} ${JSON.stringify(r.json ?? r.models)} ${r.idle}`)
+  assert(fakeHosted.calls() > before, 'the hosted provider was not asked')
+  const lines = gateway.log.split('\n').filter((l) => l.includes('"model":"deepseek-v4-pro"') && l.includes(`"caller":"ws-${FA}"`))
+  assert(lines.length >= 1 && lines.every((l) => l.includes('"pick":"deepseek-v4-pro"')), `${lines.length} gateway lines`)
+  const once = dbRow("SELECT tokens_in, name_ref FROM audit WHERE action = 'hosted_once' ORDER BY id DESC LIMIT 1")
+  assert(once && once.tokens_in > 0 && once.name_ref === null, `hosted_once: ${JSON.stringify(once)}`)
+  const s = await api(`/oc/api/session/${r.id}`, { cookie: a.cookie, ws: FA })
+  assert((s.json?.data ?? s.json)?.model?.id === 'general' && !hostedFile()[`ws-${FA}`], `after: ${(s.json?.data ?? s.json)?.model?.id}`)
+  return `${lines.length} requests on deepseek-v4-pro, audited hosted_once, back on general`
 })
 // The hosted grants are kept right by the admin CLI through a rotation and a close (the checks at the
 // VM cap, at the end): turned on here, with a stale entry planted for the CLI to drop.

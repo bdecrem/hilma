@@ -24,6 +24,15 @@
           "name": "hosted",
           "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
           "limit": { "context": 262144, "output": 32000 }
+        },
+        // A picked choice (OLA-337): DeepSeek V4 Pro at the hosted provider, only for a request a
+        // person picks it for (the Mac app's "Try again with" and the choice in its box). The
+        // gateway serves it under the same grant as `hosted`, never as a default or a backup.
+        "deepseek-v4-pro": {
+          "modelID": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
+          "limit": { "context": 1000000, "output": 32000 }
         }
       }
     }

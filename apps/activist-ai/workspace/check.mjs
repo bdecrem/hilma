@@ -685,7 +685,8 @@ print(json.dumps(out))
   // provider's model id (never the caller's) goes upstream.
   {
     const conf = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/opencode.jsonc'], { encoding: 'utf8' }).stdout
-    const named = /"hosted":\s*\{[^}]*"modelID":\s*"hosted"/.test(conf)
+    // ...and DeepSeek V4 Pro, a picked choice only (OLA-337), never the default model.
+    const named = /"hosted":\s*\{[^}]*"modelID":\s*"hosted"/.test(conf) && /"deepseek-v4-pro":\s*\{[^}]*"modelID":\s*"deepseek-v4-pro"/.test(conf) && /"model":\s*"ola\/general"/.test(conf)
     const probe = 'import sys, json, urllib.request\nbody = json.dumps({"model": "hosted", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
     // Not spawnSync: the stand-in provider answers from this process, so its event loop must run.
     const ask = () =>
@@ -754,7 +755,7 @@ print(json.dumps(out))
       const bad = seen.filter((x) => /ripgrep|execution failed|error|not found/i.test(x.result) || !/fx-tools\.txt/.test(x.result))
       t('file search works inside the sealed box: opencode’s glob and grep tools (and list, where it offers one: 2.3.0 lists folders with glob) each run once and find the file (ripgrep from the image, nothing downloaded)', /^\/usr\/bin\/rg \d/.test(rg) && p.status < 300 && idle && seen.length >= 2 && ['glob', 'grep', ...(seen[0]?.offered?.includes('list') ? ['list'] : [])].every((n) => seen.some((x) => x.tool === n)) && !bad.length, `rg: ${rg}; tools offered ${JSON.stringify(seen[0]?.offered)}; ${seen.map((x) => `${x.tool}: ${x.result.replace(/\s+/g, ' ').slice(0, 90)}`).join(' | ')}`)
     }
-    t('inside: the image names the model `hosted`; the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
+    t('inside: the image names the models `hosted` and `deepseek-v4-pro` (ola/general stays the default); the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
   }
   for (const k of ['proxy_request', 'host_header']) t(`inside: a ${k.replace('_', ' ')} through the door still lands on the gateway`, /^HTTP\/1\.1 (401|404)/.test(g[k] || ''), g[k])
   // Node's server drops a CONNECT it has no handler for: no tunnel, the connection just closes.

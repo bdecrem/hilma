@@ -163,7 +163,9 @@ export async function gatewayUsage(cc) {
     const month = new Map(data.filter((d) => typeof d?.caller === 'string' && d.claude_month).map((d) => [d.caller, d.claude_month]))
     // Fallback to a hosted open model (gateway/hosted.mjs): whether it is set up (the provider's
     // name as people read it, or null), and each caller's month.
-    const hosted = j.hosted && typeof j.hosted.provider === 'string' ? { provider: j.hosted.provider.slice(0, 40) } : null
+    // The picked choices it serves at that provider (OLA-337: DeepSeek V4 Pro), names only.
+    const picks = Array.isArray(j.hosted?.picks) ? j.hosted.picks.filter((x) => typeof x?.id === 'string' && /^[a-z0-9.-]{1,40}$/.test(x.id) && typeof x.name === 'string').map((x) => ({ id: x.id, name: x.name.slice(0, 40), words: typeof x.words === 'string' ? x.words.slice(0, 80) : x.name.slice(0, 40) })) : []
+    const hosted = j.hosted && typeof j.hosted.provider === 'string' ? { provider: j.hosted.provider.slice(0, 40), picks } : null
     const hostedMonth = new Map(data.filter((d) => typeof d?.caller === 'string' && d.hosted_month).map((d) => [d.caller, d.hosted_month]))
     return { modes, month, hosted, hostedMonth }
   } catch {

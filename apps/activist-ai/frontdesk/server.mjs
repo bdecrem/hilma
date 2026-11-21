@@ -1136,6 +1136,8 @@ export function makeFrontDesk(cfg = config()) {
   //   ANY /api/device/w/<project>/oc/<opencode>    the web's one list of opencode routes (proxy.mjs)
   //   GET /api/device/w/<project>/oc/api/info      answered here: the pass and the membership work
   //   GET /api/device/w/<project>/api/files[/<f>]  the file list and a download
+  //   GET /api/device/w/<project>/api/fallback     the project's fallbacks (OLA-337)
+  //   POST /api/device/w/<project>/api/hosted/run  one request on the hosted model or a picked choice
   // Under /api/device/ the TLS front lets a pass through (ops/tls.mjs) and nowhere else. A write
   // needs no Origin or CSRF token: the pass is never sent by a browser on its own.
   const projectsOf = (personId) =>
@@ -1153,7 +1155,10 @@ export function makeFrontDesk(cfg = config()) {
     const m = /^\/api\/device\/w\/([^/]{1,40})(\/.*)$/.exec(p)
     const rest = m?.[2] ?? ''
     const files = req.method === 'GET' && (rest === '/api/files' || rest.startsWith('/api/files/'))
-    if (!m || (!rest.startsWith('/oc/') && !files)) return json(res, 404, NOT_FOUND)
+    // The project's fallbacks, and one request handed to the hosted open model or a picked choice
+    // (OLA-337: the Mac app's "Try again with" and the choice in its box, in a cloud project).
+    const fallback = (req.method === 'GET' && rest === '/api/fallback') || (req.method === 'POST' && rest === '/api/hosted/run')
+    if (!m || (!rest.startsWith('/oc/') && !files && !fallback)) return json(res, 404, NOT_FOUND)
     // The project is named by the path; whatever the device sent as X-Ola-Workspace is replaced.
     req.headers['x-ola-workspace'] = m[1]
     if (rest === '/oc/api/info' && req.method === 'GET') {
