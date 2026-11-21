@@ -1,0 +1,726 @@
+{
+ "status": "ok",
+ "job_id": "back2000 argentina life claude-opus-5-5 high",
+ "step": "back2000",
+ "slug": "argentina",
+ "chunk": "life",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2020 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  9,
+  11,
+  13
+ ],
+ "started_at": "2026-11-21T05:08:51.047Z",
+ "meters_before": {
+  "at": "2026-11-21T05:08:39.725Z",
+  "window": {
+   "pct": 2,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 50,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 2,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 50,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 2% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 50% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 354 requests · 2 sessions\n  58%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  16%  Compact before you step away · run /compact\n  Top subagents: general-purpose 36%\n\nLast 7d · 365 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "prompt_chars": {
+  "system": 25136,
+  "user": 178
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T05:30:44.080Z",
+ "minutes": 21.88,
+ "meters_after": {
+  "at": "2026-11-21T05:30:44.080Z",
+  "window": null,
+  "week": null,
+  "fable": null,
+  "subscription": false,
+  "bars": {},
+  "text": ""
+ },
+ "tokens": {
+  "totals": {
+   "input": 46733,
+   "output": 17505,
+   "cache_read": 902997,
+   "cache_write": 101315,
+   "cost_usd": 1.3033,
+   "total": 1068550
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 46705,
+    "output": 3726,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1580,
+    "cost_usd": 0.0365
+   },
+   "claude-opus-5-5": {
+    "input": 28,
+    "output": 13779,
+    "cache_read": 902997,
+    "cache_write": 101315,
+    "thinking": 3078,
+    "cost_usd": 1.2668
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 29,
+ "duration_ms": 278856,
+ "duration_api_ms": 249469,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T05:09:06.334Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm",
+   "find": "ARTICULO 5 | No punibilidad | sanciones o impedimentos",
+   "ok": true,
+   "chars": 2484
+  },
+  {
+   "at": "2026-11-21T05:09:20.268Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/texact.htm",
+   "find": "ARTICULO 5 | No punibilidad | sanciones o impedimentos",
+   "ok": true,
+   "chars": 2292
+  },
+  {
+   "at": "2026-11-21T05:09:28.344Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 116 | ARTICULO 107 | ARTICULO 35 | ARTICULO 17 | ARTICULO 114",
+   "ok": true,
+   "chars": 9581
+  },
+  {
+   "at": "2026-11-21T05:09:31.588Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "Policía Migratoria Auxiliar | tráfico ilegal de personas | ARTICULO 120 | ARTICULO 121",
+   "ok": true,
+   "chars": 9536
+  },
+  {
+   "at": "2026-11-21T05:09:44.135Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "rechazo | ingreso clandestino | Policía Migratoria Auxiliar | prisión | fuerza pública | multa",
+   "ok": true,
+   "chars": 9510
+  },
+  {
+   "at": "2026-11-21T05:09:50.882Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 37 | ARTICULO 38 | ARTICULO 39 | ARTICULO 104 | ARTICULO 105 | Gendarmería",
+   "ok": true,
+   "chars": 6981
+  },
+  {
+   "at": "2026-11-21T05:09:51.906Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+   "find": "ARTICULO 35 | reconducción | ARTICULO 116",
+   "ok": true,
+   "chars": 5495
+  },
+  {
+   "at": "2026-11-21T05:09:59.439Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 37 | ARTICULO 114 | ARTICULO 124 | ARTICULO 126 | reingres",
+   "ok": true,
+   "chars": 5513
+  },
+  {
+   "at": "2026-11-21T05:10:00.474Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/120000-124999/122609/norma.htm",
+   "find": "ARTICULO 40 | ARTICULO 7 | ingreso ilegal",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:16:15.609Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "lugar no habilitado | Policía Aeronáutica | Derógase | 22.439",
+   "ok": true,
+   "chars": 4507
+  },
+  {
+   "at": "2026-11-21T05:16:25.260Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto",
+   "find": "ARTICULO 40 | ARTICULO 2 | ingreso ilegal | sanciones",
+   "ok": true,
+   "chars": 4394
+  },
+  {
+   "at": "2026-11-21T05:16:37.180Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/458/texact.htm",
+   "find": "ARTICULO 22 | Naciones Unidas | Código de Etica",
+   "ok": true,
+   "chars": 2239
+  },
+  {
+   "at": "2026-11-21T05:16:50.104Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/197021/20181203?anexos=1",
+   "find": "ARTÍCULO 2 | ARTÍCULO 3 | ARTÍCULO 5 | peligro inminente | fuga",
+   "ok": true,
+   "chars": 5433
+  },
+  {
+   "at": "2026-11-21T05:16:52.434Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/224089/20191224",
+   "find": "956 | ARTÍCULO 1",
+   "ok": true,
+   "chars": 3382
+  }
+ ],
+ "searches": [
+  "infoleg Ley 22.439 Ley General de Migraciones y de Fomento de la Inmigración texto",
+  "Ley 26.165 artículo 40 \"no se impondrán sanciones penales o administrativas\" ingreso ilegal refugiado",
+  "Resolución 956/2018 Ministerio de Seguridad reglamento armas de fuego derogada Resolución 1231/2019 boletín oficial"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.05,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.08,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":9,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 22.439 (1981) governed. Its art. 39 allowed the immediate expulsion of anyone who entered by an unauthorised place. Its art. 91 made the Prefectura, Gendarmería, Policía Aeronáutica and Policía Federal the Policía Migratoria Auxiliar. Nothing in it prohibited the use of force to prevent entry. Ley 24.059 art. 21 only sets a general rule that means must fit the case. No practice evidence was gathered, since the rating is Does Not Apply.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Ley 25.871 (published in the Boletín Oficial 21/1/2004) replaced Ley 22.439. Arts. 35 and 37 provide for rejection at the border and expulsion. Arts. 113-114 set up the Policía Migratoria Auxiliar. None of them says anything on force. Decreto 616/2010 did not yet exist.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"The text was the same as in 2005. Ley 26.165 (December 2006) art. 2 bars rejection at the border of asylum seekers, but that is a non-refoulement rule, not a ban on force. Decreto 616/2010, issued in May 2010, came later than this date.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Decreto 616/2010 art. 35(a) says only that the authority 'arbitrará los medios necesarios' for removal 'en el menor tiempo posible'. It allows flagrante rejection, including while the person 'es perseguida por la fuerza pública', subject to arts. 39-40 of Ley 26.165. There is no ban on force.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Arts. 35, 37, 107-108, 113-114\",\"role\":\"cited\",\"in_force\":\"2004-01 to today (arts. 35, 37 and 114 replaced by DNU 366/2025 in May 2025)\",\"history_read\":\"version_history\"},{\"instrument\":\"Decreto 616/2010 (Reglamento Ley 25.871)\",\"art",
+ "output": {
+  "answers": [
+   {
+    "question_id": 9,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 (1981) governed. Its art. 39 allowed the immediate expulsion of anyone who entered by an unauthorised place. Its art. 91 made the Prefectura, Gendarmería, Policía Aeronáutica and Policía Federal the Policía Migratoria Auxiliar. Nothing in it prohibited the use of force to prevent entry. Ley 24.059 art. 21 only sets a general rule that means must fit the case. No practice evidence was gathered, since the rating is Does Not Apply."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 (published in the Boletín Oficial 21/1/2004) replaced Ley 22.439. Arts. 35 and 37 provide for rejection at the border and expulsion. Arts. 113-114 set up the Policía Migratoria Auxiliar. None of them says anything on force. Decreto 616/2010 did not yet exist."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The text was the same as in 2005. Ley 26.165 (December 2006) art. 2 bars rejection at the border of asylum seekers, but that is a non-refoulement rule, not a ban on force. Decreto 616/2010, issued in May 2010, came later than this date."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Decreto 616/2010 art. 35(a) says only that the authority 'arbitrará los medios necesarios' for removal 'en el menor tiempo posible'. It allows flagrante rejection, including while the person 'es perseguida por la fuerza pública', subject to arts. 39-40 of Ley 26.165. There is no ban on force."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 35, 37, 107-108, 113-114",
+      "role": "cited",
+      "in_force": "2004-01 to today (arts. 35, 37 and 114 replaced by DNU 366/2025 in May 2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto 616/2010 (Reglamento Ley 25.871)",
+      "article": "Art. 35",
+      "role": "cited",
+      "in_force": "2010-05 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Arts. 37, 39, 91-93",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01 (repealed by art. 124 of Ley 25.871)",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 24.059 de Seguridad Interior",
+      "article": "Arts. 21-22",
+      "role": "other_in_force",
+      "in_force": "1992 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 26.165 General de Reconocimiento y Protección al Refugiado",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2006-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871",
+      "article": "Arts. 35, 37, 113-114",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439. It sets up rejection at the border and expulsion for unauthorised entry and a Policía Migratoria Auxiliar. It says nothing on force, so the indicator is unaffected.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 37. — El extranjero que ingrese a la República por lugar no habilitado a tal efecto, o eludiendo cualquier forma de contralor migratorio, será pasible de expulsión en los términos y condiciones de la presente ley."
+     },
+     {
+      "date": "2006-12",
+      "instrument": "Ley 26.165",
+      "article": "Art. 2",
+      "kind": "new_instrument",
+      "what_changed": "Created the principles of non-refoulement, including no rejection at the border, and no penalty for illegal entry, for asylum seekers and refugees. It does not address force.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto",
+      "passage": "La protección de los refugiados en la República Argentina se realizará con arreglo a los principios de no devolución, incluyendo la prohibición de rechazo en frontera, no discriminación, no sanción por ingreso ilegal"
+     },
+     {
+      "date": "2010-05",
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 35",
+      "kind": "enacted",
+      "what_changed": "Regulated rejection at the border. The authority 'arbitrará los medios necesarios' to remove the person quickly, and flagrante cases include pursuit by the fuerza pública. There is no ban on force.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm",
+      "passage": "Cuando se dispusiere el rechazo en frontera de un extranjero, la autoridad migratoria arbitrará los medios necesarios para que su reconducción fuera del territorio argentino se realice en el menor tiempo posible."
+     }
+    ],
+    "repealed_search": "I read Ley 22.439 (1981) arts. 37-43 and 90-94 for any limit on force at entry and found none. Its art. 39 allowed immediate expulsion on entry. I read the original and current texts of Ley 25.871 and found no limit there either. Nothing protective was repealed.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the 1981 text of Ley 22.439, the original and consolidated texts of Ley 25.871 and Decreto 616/2010 as published. No provision on force at entry exists in any version, so the dating is strong.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Decreto 616/2010 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/norma.htm"
+     },
+     {
+      "title": "Ley 26.165 texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto"
+     },
+     {
+      "title": "Ley 24.059 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/458/texact.htm"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "The answer is No on every date. The general limits in Ley 24.059 arts. 21-22 (fitting means to the case, protecting life, the UN Code of Conduct) apply to all police action. They do not prohibit force to prevent entry. DNU 366/2025 later changed arts. 35, 37 and 114; that is outside the period."
+   },
+   {
+    "question_id": 11,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 has no rule on lethal force at entry. Ley 24.059 art. 22 (1992) requires the forces to put the UN Code of Conduct for Law Enforcement Officials into their regulations. That is a general standard, not a prohibition aimed at entry. No practice evidence was gathered (Does Not Apply)."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 (2004) is silent on lethal force. Ley 24.059 arts. 21-22 are unchanged."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Ley 26.165 (2006) bars rejection at the border of asylum seekers but does not address lethal force."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change. Decreto 616/2010 art. 35 is silent on force. Resolución 956/2018 (in force December 2018) widened the cases where federal forces may use firearms. Resolución 1231/2019 (20/12/2019, published in the Boletín Oficial 24/12/2019) repealed it. Both came after this date, and neither deals with migrants or entry."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 24.059 de Seguridad Interior",
+      "article": "Arts. 21-22",
+      "role": "other_in_force",
+      "in_force": "1992 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 35, 37, 113-114",
+      "role": "other_in_force",
+      "in_force": "2004-01 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 39, 91",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Resolución 956/2018 Ministerio de Seguridad (Reglamento General para el Empleo de las Armas de Fuego)",
+      "article": "Arts. 1-3 and Annex",
+      "role": "other_in_force",
+      "in_force": "2018-12-04 to 2019-12-24",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871",
+      "article": "Arts. 113-114",
+      "kind": "new_instrument",
+      "what_changed": "Replaced Ley 22.439's Policía Migratoria Auxiliar provisions (art. 91) with the same set of forces. There is no rule on lethal force.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 114. — La Policía Migratoria Auxiliar quedará integrada por la Prefectura Naval Argentina, la Gendarmería Nacional, la Policía Aeronáutica Nacional y la Policía Federal"
+     },
+     {
+      "date": "2018-12-04",
+      "instrument": "Resolución 956/2018 (RESOL-2018-956-APN-MSG)",
+      "article": "Art. 1 and Annex",
+      "kind": "new_instrument",
+      "what_changed": "Approved general firearms rules for the federal forces, which widened when lethal force may be used. It is not specific to migrants or entry, and it does not create a prohibition.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/197021/20181203?anexos=1",
+      "passage": "ARTÍCULO 1º.- Apruébase el REGLAMENTO GENERAL PARA EL EMPLEO DE LAS ARMAS DE FUEGO POR PARTE DE LOS MIEMBROS DE LAS FUERZAS FEDERALES DE SEGURIDAD"
+     },
+     {
+      "date": "2019-12-24",
+      "instrument": "Resolución 1231/2019 (RESOL-2019-1231-APN-MSG)",
+      "article": "Art. 1",
+      "kind": "repealed",
+      "what_changed": "Repealed Resolución 956/2018 because it departed from the UN Code of Conduct that Ley 24.059 art. 22 incorporates. This puts back the general limits, not a prohibition aimed at entry.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/224089/20191224",
+      "passage": "dicha norma amplía de manera significativa aquellas circunstancias que habilitan el uso del armamento letal por parte de los funcionarios de las fuerzas policiales y de seguridad, alejándose de las recomendaciones del “Código de Conducta"
+     }
+    ],
+    "repealed_search": "I checked Ley 22.439 (1981) and the original Ley 25.871 for any rule on lethal force at entry and found none. I also checked the general firearms rules: Resolución 956/2018, which widened lethal force, was in force December 2018 to December 2019 and was repealed by Resolución 1231/2019. Neither ever prohibited lethal force to prevent entry.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the migration laws in every version and the 2018 and 2019 firearms resolutions. I did not read the annex of Resolución 956/2018 itself. The general police statutes of the Gendarmería and Prefectura were not read.",
+    "sources_opened": [
+     {
+      "title": "Ley 24.059 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/458/texact.htm"
+     },
+     {
+      "title": "Resolución 956/2018 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/197021/20181203?anexos=1"
+     },
+     {
+      "title": "Resolución 1231/2019 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/224089/20191224"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     }
+    ],
+    "starting_answer_concern": "This is debatable rather than clearly wrong. Ley 24.059 art. 22 (in force throughout) brings the UN Code of Conduct into the federal forces' regulations, and the Code limits firearms to extreme cases. Under the Colombia example's logic (general police rules on lethal force coded Yes), a coder could argue Yes. Since there is no rule specific to entry, No is defensible.",
+    "confidence": "high",
+    "notes": "No court ruling was found or relied on."
+   },
+   {
+    "question_id": 13,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 22.439 art. 46 made it a crime for an expelled foreigner to return (3 months to 1 year; 6 months to 2 years if by an unauthorised place). There was no exemption for trafficked or smuggled persons, and no anti-trafficking law yet. No practice evidence was gathered."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 25.871 (January 2004) repealed Ley 22.439, including the re-entry offence. Under it, unauthorised entry leads only to expulsion (art. 37), and arts. 116-121 punish the smuggler. There is no express exemption for smuggled migrants, and no trafficking-victim exemption before 2008."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 26.364 art. 5 (published in the Boletín Oficial 30/4/2008) exempts trafficking victims from crimes that directly result from being trafficked and from migration penalties. Smuggled migrants have no exemption, so the answer stays at the lowest option. Ley 26.364 art. 15 also replaced art. 119 of Ley 25.871 (aggravated smuggling)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No, government may punish trafficked or smuggled migrants",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 26.842 (Boletín Oficial 27/12/2012) rewrote Ley 26.364 but left art. 5 unchanged. There is still no exemption for smuggled migrants."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 26.364 de Prevención y Sanción de la Trata de Personas y Asistencia a sus Víctimas",
+      "article": "Art. 5",
+      "role": "cited",
+      "in_force": "2008-05 to today (unchanged by Ley 26.842)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 26.842",
+      "article": "Arts. 1-3 (amending Ley 26.364)",
+      "role": "other_in_force",
+      "in_force": "2012-12 to today",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 37, 116-121",
+      "role": "other_in_force",
+      "in_force": "2004-01 to today (art. 119 replaced 2008; art. 37 replaced 2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 46-47",
+      "role": "predecessor",
+      "in_force": "1981 to 2004-01",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.165",
+      "article": "Art. 2",
+      "role": "other_in_force",
+      "in_force": "2006-12 to today",
+      "history_read": "current_text_only"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01",
+      "instrument": "Ley 25.871",
+      "article": "Arts. 116-121; art. 124 (repeal of Ley 22.439)",
+      "kind": "replaced",
+      "what_changed": "Repealed Ley 22.439 and with it the art. 46 re-entry offence. It created smuggling offences aimed at the smuggler. There is no express exemption for the smuggled migrant.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 116. — Será reprimido con prisión o reclusión de uno (1) a seis (6) años el que realizare, promoviere o facilitare el tráfico ilegal de personas desde, en tránsito o con destino a la República Argentina."
+     },
+     {
+      "date": "2004-01",
+      "instrument": "Ley 22.439 (repealed by Ley 25.871 art. 124)",
+      "article": "Art. 46",
+      "kind": "repealed",
+      "what_changed": "Before: foreigners who returned after expulsion were punished with prison. Repealing it removed one ground on which smuggled migrants could be criminally punished.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 46. – Será reprimido con prisión de Tres (3) meses a Un (1) año el extranjero expulsado del territorio nacional que reingrese en violación a lo dispuesto en los Artículos 44 y 46."
+     },
+     {
+      "date": "2008-05",
+      "instrument": "Ley 26.364",
+      "article": "Art. 5",
+      "kind": "enacted",
+      "what_changed": "Exempted trafficking victims from punishment for offences that directly result from being trafficked and from migration penalties. Smuggled migrants are not covered.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm",
+      "passage": "ARTICULO 5º — No punibilidad. Las víctimas de la trata de personas no son punibles por la comisión de cualquier delito que sea el resultado directo de haber sido objeto de trata."
+     },
+     {
+      "date": "2012-12",
+      "instrument": "Ley 26.842",
+      "article": "Ley 26.364 arts. 2-6",
+      "kind": "amended",
+      "what_changed": "Replaced art. 2 and repealed arts. 3-4 of Ley 26.364. Art. 5 kept its original wording.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/texact.htm",
+      "passage": "ARTICULO 5º — No punibilidad. Las víctimas de la trata de personas no son punibles por la comisión de cualquier delito que sea el resultado directo de haber sido objeto de trata."
+     }
+    ],
+    "repealed_search": "I searched Ley 22.439 and the original Ley 25.871 for any exemption for smuggled migrants. There was none. Ley 22.439 instead punished re-entry after expulsion (art. 46), and that offence was repealed in 2004. The trafficking exemption (2008) still stands. No exemption for smuggled migrants ever existed.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the original and current texts of Ley 26.364 and Ley 25.871, and the 1981 text of Ley 22.439. The exact days of entry into force were not checked; they are dated from Boletín Oficial publication.",
+    "sources_opened": [
+     {
+      "title": "Ley 26.364 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/norma.htm"
+     },
+     {
+      "title": "Ley 26.364 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/140000-144999/140100/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 26.165 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/122609/texto"
+     }
+    ],
+    "starting_answer_concern": "Ley 25.871 does not make irregular entry a crime; it leads only to expulsion (art. 37), and arts. 116-121 punish only the smuggler. Under the Brazil example's logic (no crime of irregular entry counts as an exemption), Argentina could have been coded 'Yes' from 2008, once Ley 26.364 art. 5 covered trafficking victims. The citation's statement that the Protocols have constitutional rank under art. 75(22) is wrong: they have supra-legal rank only, and were approved by Ley 25.632.",
+    "confidence": "medium",
+    "notes": "Ley 26.165 art. 2 (no penalty for illegal entry) covers asylum seekers only. No rulings relied on."
+   }
+  ]
+ }
+}
