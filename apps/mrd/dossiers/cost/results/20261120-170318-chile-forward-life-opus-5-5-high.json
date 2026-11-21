@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile life claude-opus-5-5 high",
- "pid": 47243,
  "step": "forward",
  "slug": "chile",
  "chunk": "life",
@@ -58,5 +57,726 @@
   "user": 104
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T01:24:00.560Z",
+ "minutes": 20.7,
+ "meters_after": {
+  "at": "2026-11-21T01:24:00.561Z",
+  "window": {
+   "pct": 15,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 45,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 15,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 45,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 15% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 45% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 308 requests · 2 sessions\n  56%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 319 requests · 3 sessions\n  54%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  28%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 80816,
+   "output": 25614,
+   "cache_read": 1614844,
+   "cache_write": 124686,
+   "cost_usd": 1.7751,
+   "total": 1845960
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 80778,
+    "output": 5942,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1680,
+    "cost_usd": 0.061
+   },
+   "claude-opus-5-5": {
+    "input": 38,
+    "output": 19672,
+    "cache_read": 1614844,
+    "cache_write": 124686,
+    "thinking": 7463,
+    "cost_usd": 1.714
+   }
+  }
+ },
+ "turns": 26,
+ "calls": 46,
+ "duration_ms": 358690,
+ "duration_api_ms": 306888,
+ "pages_read": 17,
+ "pages": [
+  {
+   "at": "2026-11-21T01:03:30.198Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 13 | Artículo 21 | Artículo 7 | trata de personas | tráfico ilícito",
+   "ok": true,
+   "chars": 4134
+  },
+  {
+   "at": "2026-11-21T01:03:39.288Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 21.- | Artículo 7.- | trata de personas",
+   "ok": true,
+   "chars": 11651
+  },
+  {
+   "at": "2026-11-21T01:05:53.473Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "versiones | Ley 21655 | LEY 21655 | 21.655 | fecha_vigencia | Artículo 33.- | Artículo 131",
+   "ok": true,
+   "chars": 10108
+  },
+  {
+   "at": "2026-11-21T01:05:58.077Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "La autoridad contralora informará de ello al Servicio | fuerza | Artículo 132 BIS",
+   "ok": true,
+   "chars": 8549
+  },
+  {
+   "at": "2026-11-21T01:06:07.641Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "Art. 411 bis | Art. 411 ter | Art. 411 quáter | Art. 411 quinquies | Art. 411 octies | 411 sexies",
+   "ok": true,
+   "chars": 8128
+  },
+  {
+   "at": "2026-11-21T01:06:51.933Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "ART. 411 octies | ART. 411 qu&#xE1;ter | 411 sexies.- Derogado",
+   "ok": true,
+   "chars": 2239
+  },
+  {
+   "at": "2026-11-21T01:06:52.852Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1206373",
+   "find": "411 sexies | víctima | no será punible | eximente",
+   "ok": true,
+   "chars": 8209
+  },
+  {
+   "at": "2026-11-21T01:10:22.563Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2023-01-01",
+   "find": "ART. 411 sexies | ART. 411 octies",
+   "ok": true,
+   "chars": 2242
+  },
+  {
+   "at": "2026-11-21T01:10:33.425Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595",
+   "find": "Artículo 78 bis | Art. 78 bis",
+   "ok": true,
+   "chars": 4045
+  },
+  {
+   "at": "2026-11-21T01:14:13.231Z",
+   "url": "https://www.ecoi.net/en/document/2130540.html",
+   "find": "penaliz | non-punishment | deport | screen | inappropriately | immigration violations",
+   "ok": true,
+   "chars": 4904
+  },
+  {
+   "at": "2026-11-21T01:14:15.906Z",
+   "url": "https://www.ecoi.net/de/dokument/2077653.html",
+   "find": "penaliz | non-punishment | deport | screen | inappropriately | immigration violations",
+   "ok": true,
+   "chars": 5284
+  },
+  {
+   "at": "2026-11-21T01:14:44.684Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1189483",
+   "find": "Artículo 1 | Artículo 10 | Artículo 11 | migrant | fuerza letal | arma de fuego | ingreso | reconduc",
+   "ok": true,
+   "chars": 14656
+  },
+  {
+   "at": "2026-11-21T01:20:25.635Z",
+   "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/",
+   "find": "disparos | neumático | herid | reglas",
+   "ok": true,
+   "chars": 3199
+  },
+  {
+   "at": "2026-11-21T01:20:26.792Z",
+   "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html",
+   "find": "escopeta | Reglas | Bolivia | agredido",
+   "ok": true,
+   "chars": 4629
+  },
+  {
+   "at": "2026-11-21T01:20:39.116Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583",
+   "find": "QUINCUAGÉSIMA TERCERA | quincuagésima tercera | zonas fronterizas | uso de la fuerza",
+   "ok": true,
+   "chars": 6456
+  },
+  {
+   "at": "2026-11-21T01:21:00.642Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2023-01-01",
+   "find": "411 octies | 411 septies.-",
+   "ok": true,
+   "chars": 4434
+  },
+  {
+   "at": "2026-11-21T01:21:04.849Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+   "find": "411 octies",
+   "ok": true,
+   "chars": 3384
+  }
+ ],
+ "searches": [
+  "ley reglas del uso de la fuerza Chile 2025 publicada Diario Oficial fuerzas armadas policías",
+  "Chile Trafficking in Persons Report 2025 \"penalized\" victims \"Chile\"",
+  "Ley 21542 reforma constitucional infraestructura crítica zonas fronterizas leychile idNorma",
+  "Ley 21.849 reglas uso de la fuerza leychile texto frontera migrantes",
+  "Decreto 1364 2018 uso de la fuerza intervenciones policiales leychile",
+  "INDH frontera norte Colchane militares migrantes uso de la fuerza disparos 2024 2025 informe",
+  "ley infraestructura crítica publicada Diario Oficial resguardo zonas fronterizas Fuerzas Armadas ley N° 2025 promulga"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.13,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.14,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.44,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":9,\"answer_2023\":\"No\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 21\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 131 (reconducción)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Decreto con Fuerza de Ley Núm. 1 (2023), para el resguardo de las áreas de zonas fronterizas\",\"article\":\"Arts. 1, 6, 7, 10, 11\",\"enacted\":\"2023-02-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2023-02-03\",\"instrument\":\"Ley 21.542, modifica la Carta Fundamental con el objeto de permitir la protección de infraestructura crítica por parte de las Fuerzas Armadas\",\"article\":\"Constitución Art. 32 Nº 21 (last paragraph) and 53rd transitory provision\",\"kind\":\"new_instrument\",\"what_changed\":\"Allows the President to deploy the Armed Forces to guard border-zone areas, subject to rules on the use of force, and authorises a DFL setting their powers. It authorises force at the border; it does not prohibit it.\",\"url\":\"https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583\",\"passage\":\"La atribución especial contenida en este numeral también se podrá utilizar para el resguardo de áreas de las zonas fronterizas del país, de acuerdo a las instrucciones contenidas en el decreto supremo que se dicte en conformidad con la ley.\"},{\"date\":\"2023-02-20\",\"instrument\":\"Decreto con Fuerza de Ley Núm. 1, de 2023, para el resguardo de las áreas de zonas fronterizas\",\"article\":\"Arts. 7, 10, 11\",\"kind\":\"new_instrument\",\"what_changed\":\"Gives the forces guarding border zones powers to check identity and to detain people entering through unauthorised crossings, and sets use-of-force",
+ "output": {
+  "answers": [
+   {
+    "question_id": 9,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 131 (reconducción)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto con Fuerza de Ley Núm. 1 (2023), para el resguardo de las áreas de zonas fronterizas",
+      "article": "Arts. 1, 6, 7, 10, 11",
+      "enacted": "2023-02-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-02-03",
+      "instrument": "Ley 21.542, modifica la Carta Fundamental con el objeto de permitir la protección de infraestructura crítica por parte de las Fuerzas Armadas",
+      "article": "Constitución Art. 32 Nº 21 (last paragraph) and 53rd transitory provision",
+      "kind": "new_instrument",
+      "what_changed": "Allows the President to deploy the Armed Forces to guard border-zone areas, subject to rules on the use of force, and authorises a DFL setting their powers. It authorises force at the border; it does not prohibit it.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583",
+      "passage": "La atribución especial contenida en este numeral también se podrá utilizar para el resguardo de áreas de las zonas fronterizas del país, de acuerdo a las instrucciones contenidas en el decreto supremo que se dicte en conformidad con la ley."
+     },
+     {
+      "date": "2023-02-20",
+      "instrument": "Decreto con Fuerza de Ley Núm. 1, de 2023, para el resguardo de las áreas de zonas fronterizas",
+      "article": "Arts. 7, 10, 11",
+      "kind": "new_instrument",
+      "what_changed": "Gives the forces guarding border zones powers to check identity and to detain people entering through unauthorised crossings, and sets use-of-force principles and a graduated 10-rule scale (dissuasion, non-lethal weapons, riot weapons, firearms as a last resort). Force is regulated and allowed when necessary to guard the border, not prohibited, so the q9 answer stays No.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1189483",
+      "passage": "b) Principio de necesidad: En el cumplimiento del deber de velar por el resguardo de las Áreas de zonas fronterizas se puede utilizar la fuerza solo cuando sea estrictamente necesaria para cumplir el deber."
+     },
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655",
+      "article": "Ley 21.325 Art. 131",
+      "kind": "amended",
+      "what_changed": "Widens immediate reconducción (return) to people caught entering while evading control, or found up to 10 km inside the land border. It says nothing about force, so it leaves the indicator unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+      "passage": "o que se haya internado al territorio nacional hasta 10 kilómetros del límite fronterizo terrestre o dentro del mar territorial, ... será inmediatamente reembarcado o reconducido a la frontera"
+     },
+     {
+      "date": "2025-10-30",
+      "instrument": "Practice: Army border post, Colchane (Tarapacá)",
+      "article": "DFL 1/2023 Art. 11",
+      "kind": "practice",
+      "what_changed": "A soldier used a riot shotgun (non-lethal) against six migrants trying to cross by an unauthorised route; the Defence Minister described this as preventing an irregular entry. It shows force being used to stop entry, which the law permits.",
+      "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html",
+      "passage": "al verse amenazado, utilizó armamento no letal, una escopeta antidisturbios, haciendo que los migrantes regresaran a territorio boliviano"
+     }
+    ],
+    "implementation_then_now": "Does Not Apply on both dates: no law prohibits the use of force to prevent entry. Since February 2023, DFL 1/2023 expressly authorises the forces guarding the border to use graduated force. Press reports from 2024–2025 show soldiers using force at Colchane to stop entries: shots at a van carrying 17 migrants in February 2024, and a riot shotgun used in October 2025.",
+    "practice_sources": [
+     {
+      "title": "Militar del Ejército es agredido por extranjeros que intentaron ingresar al país por un paso no habilitado en Colchane (Pauta)",
+      "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Dos disparos en Colchane: los detalles del incidente entre una patrulla militar y una van que transportaba 17 migrantes irregulares (The Clinic)",
+      "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile consolidated JSON read for Ley 21.325 (with the Ley 21.655 marker on Art. 131), Ley 21.542 and DFL 1/2023 (a single version, in force since 2023-02-20, not repealed). Art. 21 of Ley 21.325 has no amendment marker.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 (LeyChile navigation)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 consolidated text (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.542 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583"
+     },
+     {
+      "title": "DFL 1/2023 resguardo de áreas de zonas fronterizas (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1189483"
+     },
+     {
+      "title": "The Clinic, Dos disparos en Colchane (2024)",
+      "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/"
+     },
+     {
+      "title": "Pauta, Militar agredido en Colchane (2025)",
+      "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "high",
+    "notes": "Ley 21.849 on rules for the use of force (Reglas del Uso de la Fuerza) was published on 2026-10-16, after the window. I did not read it, so I make no claim about its content; it may matter for the November 2026 coding. Practice evidence is press reporting only and concerns irregular migrants at the northern border."
+   },
+   {
+    "question_id": 11,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There was no right protection (as of January 1, 2023), but there is now (as of January 1, 2026)",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 21",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto con Fuerza de Ley Núm. 1 (2023), para el resguardo de las áreas de zonas fronterizas",
+      "article": "Arts. 10(d), 11 (Regla Nº 8)",
+      "enacted": "2023-02-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-02-03",
+      "instrument": "Ley 21.542 (reforma constitucional, infraestructura crítica y zonas fronterizas)",
+      "article": "Constitución Art. 32 Nº 21; 53rd transitory provision",
+      "kind": "new_instrument",
+      "what_changed": "Authorises Armed Forces deployment to border zones under rules on the use of force, and a DFL regulating their powers. It is the enabling basis for the DFL below.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583",
+      "passage": "sujeta a los procedimientos establecidos en la legalidad vigente y en las reglas del uso de la fuerza que se fijen al efecto para el cumplimiento del deber."
+     },
+     {
+      "date": "2023-02-20",
+      "instrument": "Decreto con Fuerza de Ley Núm. 1, de 2023, para el resguardo de las áreas de zonas fronterizas",
+      "article": "Art. 11, Regla Nº 8; Art. 10(d)",
+      "kind": "new_instrument",
+      "what_changed": "For the forces guarding the border and controlling entry, firearms are allowed only as a last resort against people using or about to use lethal weapons, or otherwise endangering life. Lethal force is therefore excluded as a means of stopping entry as such. Before this, no rule specific to entry existed (starting answer No).",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1189483",
+      "passage": "Regla Nº 8. Usar armas de fuego como último recurso, cuando las medidas anteriormente señaladas resultaren insuficientes, y sólo en el caso de enfrentamiento con personas que utilicen o se apresten a utilizar armas de fuego u otras armas letales, o pongan en peligro, de algún otro modo, la vida de otras personas"
+     },
+     {
+      "date": "2024-01-31",
+      "instrument": "Practice: Army checkpoint, Cariquima/Colchane",
+      "article": "DFL 1/2023 Art. 11",
+      "kind": "practice",
+      "what_changed": "Soldiers fired two shots at a van carrying 17 irregular migrants that evaded a checkpoint, hitting the bumper and a wheel; no one was injured. The regional delegate justified it as a risk to the soldiers. This is the one documented use of firearms in the context of entry.",
+      "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/",
+      "passage": "el personal militar del lugar realizó dos disparos contra el vehículo. Uno de ellos dio en el parachoque y otro en la rueda delantera. ... no reportaron personas heridas."
+     }
+    ],
+    "implementation_then_now": "2023: Does Not Apply (starting answer No). 2026: Usually. DFL 1/2023 confines firearms to threats to life, and the reporting I found shows mostly non-lethal force at the border. In October 2025 the army used a riot shotgun and reported acting under its use-of-force rules. The one firearm incident found, in February 2024, was two shots at an evading van carrying migrants; no one was injured, and the authorities justified it as a risk to the soldiers. I found no reported deaths of migrants from state force at the border. The evidence is press reporting about irregular migrants at the northern border, not monitoring-body findings.",
+    "practice_sources": [
+     {
+      "title": "Dos disparos en Colchane: los detalles del incidente entre una patrulla militar y una van que transportaba 17 migrantes irregulares (The Clinic)",
+      "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Militar del Ejército es agredido por extranjeros que intentaron ingresar al país por un paso no habilitado en Colchane (Pauta)",
+      "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile shows DFL 1/2023 as a single version, in force since 2023-02-20 and not repealed. It applies while the law referred to in Const. Art. 32 Nº 21 has not been published; I found no sign that law was published before 2026-01-01. Practice evidence is press only; I found no INDH or UN findings for 2023–2025.",
+    "sources_opened": [
+     {
+      "title": "DFL 1/2023 resguardo de áreas de zonas fronterizas (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1189483"
+     },
+     {
+      "title": "Ley 21.542 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1188583"
+     },
+     {
+      "title": "Ley 21.325 consolidated text (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 (LeyChile navigation)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "The Clinic, Dos disparos en Colchane (2024)",
+      "url": "https://www.theclinic.cl/2024/02/01/dos-disparos-en-colchane-los-detalles-del-incidente-entre-una-patrulla-militar-y-una-van-que-transportaba-17-migrantes-irregulares/"
+     },
+     {
+      "title": "Pauta, Militar agredido en Colchane (2025)",
+      "url": "https://www.pauta.cl/actualidad/2025/10/30/militar-del-ejercito-es-agredido-por-extranjeros-que-intentaron-ingresar-al-pais-por-un-paso-no-habilitado-en-colchane.html"
+     }
+    ],
+    "starting_answer_concern": "Chile already had police use-of-force rules before 2023 (Decreto 1.364 of 2018 and Carabineros Circular 1.832). Under the MRD's Peru example, firearm-restriction rules can support a 'Yes'. I did not read those texts, so I keep the starting 'No' for 2023; a reviewer may want to check them.",
+    "confidence": "medium",
+    "notes": "The change rests on DFL 1/2023, a decree with force of law (Rule 8). Its wording is equivalent to the Peruvian Decreto Legislativo 1186 Art. 8.3 that the MRD coded 'Yes'. Its scope is limited to the forces deployed to guard border-zone areas under the constitutional mechanism, which is the situation this indicator asks about. Ley 21.849 (Reglas del Uso de la Fuerza, published 2026-10-16) falls after the window; I did not read it."
+   },
+   {
+    "question_id": 13,
+    "answer_2023": "Yes, the national law provides exemption",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes, the national law provides exemption",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 bis",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 ter",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 quáter",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 quinquies",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 sexies",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "repealed"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 septies",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Penal",
+      "article": "Art. 411 octies",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código Procesal Penal",
+      "article": "Art. 78 bis",
+      "enacted": "2011-04-08",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 7, 13",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 20.507",
+      "article": "whole act (amending act)",
+      "enacted": "2011-04-08",
+      "history_read": "amending_acts",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 42/2005 (UNTOC and Protocols)",
+      "article": "promulgation decree",
+      "enacted": "2005",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-06-15",
+      "instrument": "Ley 21.577",
+      "article": "Código Penal Art. 411 octies",
+      "kind": "amended",
+      "what_changed": "Rewords the authorisation of interception and special investigative techniques in trafficking and smuggling investigations. It does not touch the treatment of victims or smuggled migrants.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984",
+      "passage": "Ley 21577 Art. 1 Nº 11 a) y b) D.O. 15.06.2023 ... Cuando existan fundadas sospechas de que una persona ha cometido o preparado la comisión de alguno de los delitos indicados en este Párrafo"
+     },
+     {
+      "date": "2024-09-04",
+      "instrument": "Ley 21.694",
+      "article": "Código Penal Art. 411 sexies",
+      "kind": "repealed",
+      "what_changed": "Art. 411 sexies, which allowed a sentence reduction of two degrees for offenders who cooperate effectively, was repealed (general cooperation rules were moved to the Código Procesal Penal). It never concerned non-punishment of victims or smuggled migrants, so the indicator is not affected.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1206373",
+      "passage": "5) Elimínase el artículo 411 sexies."
+     }
+    ],
+    "implementation_then_now": "Usually on both dates. The US TIP Report 2022 (covering 2021–22) found no pattern of victims being penalised, but recommended guidelines so that children are not penalised for acts traffickers compelled. It also noted that the 2021 migration law expressly prohibits deporting identified trafficking victims. The TIP Report 2025 (covering 2024) keeps Chile at Tier 1 and reports the deportation bar and victim visas (18 in 2023, 3 in 2024). It again urges active screening of vulnerable migrants, which points to identification gaps rather than prosecution of victims. For smuggled migrants, Ley 21.325 Art. 9 states that irregular migration is not a crime; their exposure is administrative (reconducción was widened by Ley 21.655 in 2024), not criminal.",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Chile (US Department of State, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Chile (US Department of State, via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2130540.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the Código Penal version of 2023-01-01 and the current version on LeyChile, which carry amendment markers for Ley 21.523 (31.12.2022, before the window), Ley 21.577 (2023) and Ley 21.694 (2024). Código Procesal Penal Art. 78 bis and Ley 21.325 Arts. 7, 9 and 13 show no amendments in the window. I did not open Decreto 42/2005.",
+    "sources_opened": [
+     {
+      "title": "Código Penal consolidated (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984"
+     },
+     {
+      "title": "Código Penal version 2023-01-01 (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1984&idVersion=2023-01-01"
+     },
+     {
+      "title": "Ley 21.694 (LeyChile)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1206373"
+     },
+     {
+      "title": "Código Procesal Penal consolidated (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=176595"
+     },
+     {
+      "title": "Ley 21.325 consolidated text (LeyChile JSON)",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "2025 TIP Report: Chile (ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2130540.html"
+     },
+     {
+      "title": "2022 TIP Report: Chile (ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2077653.html"
+     }
+    ],
+    "starting_answer_concern": "None of the cited provisions contains an express non-punishment clause. Art. 411 bis punishes only the smuggler. CPP Art. 78 bis provides protection measures during the criminal process. Ley 21.325 Arts. 7 and 13 promote regularisation and allow a visa for trafficking victims. The strongest basis for smuggled migrants is Ley 21.325 Art. 9 ('La migración irregular no es constitutiva de delito'), which the starting answer does not cite. For trafficked persons who commit offences under compulsion, there is no specific exemption; the 2022 TIP Report recommended guidelines to ensure such victims are not penalised. On a strict reading, the 'Yes' is doubtful. It is kept here because nothing changed in the window.",
+    "confidence": "medium",
+    "notes": "Practice evidence comes from US TIP reports, which cover trafficking victims (mostly identified victims) more than smuggled migrants. No change in law or practice was found in the window that bears on non-punishment."
+   }
+  ]
+ }
 }
