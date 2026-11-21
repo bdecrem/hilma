@@ -34,6 +34,11 @@
 //   node scripts/venture/correct.mjs at <correction> --at "10:58 am" [--day YYYY-MM-DD]
 //                                              corrects the time of an entry recorded later than Bart said it (OLA-258):
 //                                              the heading gets his time, the entry keeps the time it was recorded
+//   node scripts/venture/correct.mjs confirm <correction> --weakness <id> [--owed OLA-n] [--why "…"]
+//                                              from a caller that did not record it (OLA-251, Nov 21): confirms the
+//                                              weakness, or moves it there (owed at that weakness's bar); sweep.mjs post
+//                                              refuses a day until each of its corrections is confirmed
+//   node scripts/venture/correct.mjs unconfirmed [--day D]   the day's corrections no other caller confirmed
 //   node scripts/venture/correct.mjs owed      every owed fix, oldest first (sweep.mjs post refuses while one is
 //                                              older than two days; the prompt hook and the Learning page show them)
 //   node scripts/venture/correct.mjs list      every weakness: times seen, came back, strongest fix
@@ -50,7 +55,7 @@ import { dirname } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import { OWED_DAYS, owedFixes, privPath } from './_weak.mjs'
+import { OWED_DAYS, owedFixes, privPath, unconfirmedCorrections } from './_weak.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const COR = privPath(root, 'CORRECTIONS.md')
@@ -65,7 +70,7 @@ const die = (m) => (console.error(m), process.exit(1))
 // back whole; two runs at once each wrote what they had read and one correction, with its fix, was lost with no
 // line. One run at a time writes the ledger: a lock folder beside data/weaknesses.json, held from before the
 // first read to exit, waited for up to two minutes, taken over when its holder is gone or it is ten minutes old.
-if (cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') {
+if (cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes' || cmd === 'confirm') {
   const lock = `${realpathSync(dirname(WEAK))}/.correct.lock`
   const t0 = Date.now()
   for (;;) {
@@ -275,7 +280,7 @@ function timeProblem(said, date = null) {
 }
 
 // the tracker's ledger lock, across machines (_ledgerlock.mjs); a copy of the notes with the real tracker takes none
-if ((cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+if ((cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes' || cmd === 'confirm') && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
   const L = await import('./_ledgerlock.mjs')
   const owner = `${(await import('node:os')).hostname()} pid ${process.pid} ${Date.now()}`
   const why = await L.acquire(owner)
@@ -386,6 +391,15 @@ if (cmd === 'add') {
       }
       await tdb.from('venture_state').upsert({ key: `owed-fix:${n}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
     } catch (e) { console.error(`(the tracker's list of owed fixes was not updated: ${e.message}; correct.mjs audit adds it)`) }
+  }
+  // OLA-251, the kind-4 answer to which weakness a correction belongs to (twenty-six checkers found a new way
+  // to file one under a lower bar): who recorded it is kept in the tracker, and the evening post refuses the
+  // day until another caller has confirmed each correction's weakness (correct.mjs confirm)
+  if (!onCopy || process.env.VENTURE_TRACKER_FAKE) {
+    try {
+      const { realCaller } = await import('./_overrides.mjs')
+      await (await trackerDb()).from('venture_state').upsert({ key: `correction-by:${n}`, value: { caller: realCaller(argv, 'correct.mjs'), weakness: w.id, need: owed ? need : cannot ? null : level, day: today(), at: new Date().toISOString() }, at: new Date().toISOString() })
+    } catch (e) { console.error(`(who recorded correction ${n} was not kept: ${e.message}; its confirmation will need --why)`) }
   }
   // a fix given with the correction is the agent's own word that it is built: whether the file or ticket
   // carries it is the same judgment as settling an owed fix, so a fix of kind 3 or stronger, and a "no stronger
@@ -503,6 +517,63 @@ if (cmd === 'add') {
   await writeOverride(db, { key: `weak-accepted-${fpList(list)}-${Date.now()}`, what: `data/weaknesses.json accepted as it is, past correct.mjs (${why}); it decides how strong the next fix must be: read what changed`, tool: 'correct.mjs' })
   await recordFp(list)
   console.log('accepted; a line is in issues.mjs overrides')
+} else if (cmd === 'confirm') {
+  // OLA-251: which weakness a correction belongs to decides how strong its fix must be, and the one who recorded
+  // it picks it. Word tests could not tell a misfiling (twenty-six checkers in one evening, each a new way), so
+  // the check is done by another: a caller that did not record the correction reads it and confirms its weakness,
+  // or moves it to the one it belongs to, where the fix it is owed is that weakness's (--owed OLA-n when the fix
+  // given is weaker). The evening post (sweep.mjs post) refuses a day with an unconfirmed correction.
+  if (onCopy && !process.env.VENTURE_TRACKER_FAKE) die('confirm writes the tracker: on a copy of the notes, set VENTURE_TRACKER_FAKE to a copy of the tracker too')
+  await fpGate()
+  const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))
+  const to = str('weakness')
+  if (!num || !to) die('usage: correct.mjs confirm <correction number> --weakness <id> [--owed OLA-n] [--why "…"]   (the weakness it belongs to, read from its entry in CORRECTIONS.md)')
+  const list = weak()
+  const from = list.find((x) => x.seen.some((s) => s.ref === `correction ${num}`))
+  if (!from) die(`correction ${num} is not filed under any weakness in data/weaknesses.json`)
+  const dest = list.find((x) => x.id === to)
+  if (!dest) die(`no weakness ${to} (correct.mjs list shows them)`)
+  const { realCaller, writeOverride } = await import('./_overrides.mjs')
+  const me = realCaller(argv, 'correct.mjs')
+  if (me === 'unknown') die('Refused: a confirmation counts only from a command of a Claude Code session the hook gave a caller token to (a subagent that did not record the correction); this caller is unknown.')
+  const db = await trackerDb()
+  const by = (await db.from('venture_state').select('value').eq('key', `correction-by:${num}`).maybeSingle()).data?.value
+  if (by && by.caller === me) die(`Refused: correction ${num} was recorded by this caller (${me}); another must confirm where it belongs (SWEEP.md: a fresh subagent reads the day's corrections).`)
+  if (!by && !(str('why') && str('why').length >= 15)) die(`correction ${num} has no record of who recorded it (recorded before Nov 21, or the tracker was not reached): give --why "…" (15 characters or more)`)
+  let moved = null
+  if (dest.id !== from.id) {
+    const { need } = required(dest)
+    const entry = from.seen.find((s) => s.ref === `correction ${num}`)
+    const ow = (from.owed ?? []).find((o) => o.ref === `correction ${num}`)
+    const given = ow ? ow.need : by?.need ?? null
+    const owedOn = str('owed')
+    if ((given === null || given < need) && !ow && !owedOn) die(`Refused: under ${dest.id} the next fix must be kind ${need}, and correction ${num} was given ${given === null ? 'no fix' : `kind ${given}`}: give --owed OLA-n (the open ticket that will carry the kind-${need} fix)`)
+    if (owedOn && !/^OLA-\d+$/.test(owedOn)) die('--owed needs a ticket id, OLA-n')
+    if (owedOn) await ticketMustExist(owedOn)
+    from.seen = from.seen.filter((s) => s !== entry)
+    dest.seen.push(entry)
+    if (ow) { from.owed = from.owed.filter((o) => o !== ow); ow.need = Math.max(ow.need, need); if (owedOn) ow.issue = owedOn; (dest.owed ??= []).push(ow) }
+    else if (given === null || given < need) (dest.owed ??= []).push({ ref: `correction ${num}`, since: new Date().toISOString(), issue: owedOn, need })
+    const o = (dest.owed ?? []).find((x) => x.ref === `correction ${num}`)
+    if (o) await db.from('venture_state').upsert({ key: `owed-fix:${num}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
+    const text = readFileSync(COR, 'utf8')
+    const re = new RegExp(`(^## ${num}\\. [\\s\\S]*?^Weakness: )${from.id}\\b`, 'm')
+    writeFileSync(COR, re.test(text) ? text.replace(re, `$1${dest.id} (moved from ${from.id} by a confirmation)`) : text)
+    writeFileSync(WEAK, JSON.stringify(list, null, 2) + '\n')
+    await recordFp(list)
+    moved = { from: from.id, need, owed: o ? `${o.issue}, kind ${o.need}` : null }
+    await writeOverride(db, { ticket: o?.issue ?? null, who: me, what: `correction ${num} was filed under ${from.id} by ${by?.caller ?? 'an unknown caller'}; ${me} confirmed it belongs under ${dest.id}, whose next fix must be kind ${need}, and moved it there${o ? ` (fix owed: ${o.issue}, kind ${o.need})` : ''}`, tool: 'correct.mjs' })
+  }
+  await db.from('venture_state').upsert({ key: `correction-confirm:${num}`, value: { caller: me, weakness: dest.id, moved, why: str('why'), at: new Date().toISOString() }, at: new Date().toISOString() })
+  console.log(moved ? `correction ${num} moved from ${moved.from} to ${dest.id} and confirmed${moved.owed ? `; fix owed ${moved.owed}` : ''}` : `correction ${num} confirmed under ${dest.id}`)
+  if (moved) console.log(NEXT)
+} else if (cmd === 'unconfirmed') {
+  // the corrections of a day with no confirmation by a caller that did not record them (sweep.mjs post refuses the day)
+  const day = str('day') ?? today()
+  const out = await unconfirmedCorrections(await trackerDb(), weak(), day)
+  for (const u of out) console.log(`correction ${u.num}  ${u.weakness.padEnd(18)} ${u.why}`)
+  console.log(`${out.length} correction(s) of ${day} not confirmed by another caller${out.length ? ': correct.mjs confirm <n> --weakness <id>, from a subagent that did not record them (SWEEP.md)' : ''}`)
+  process.exit(out.length ? 1 : 0)
 } else if (cmd === 'at') {
   // OLA-258: an entry recorded later than Bart said it gets his time in its heading; the time it was recorded stays in the entry
   const num = Number(String(argv[1] ?? '').replace(/^correction\s*/i, ''))

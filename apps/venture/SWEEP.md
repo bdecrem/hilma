@@ -54,6 +54,18 @@ Before anything else, the three things that say whether "it works" could be trus
 A correction is recorded with `node scripts/venture/correct.mjs add …` and nothing else. A weakness
 that came back gets a stronger kind of fix; the tool refuses another written rule.
 
+**Each correction's weakness is confirmed by another (since 2026-11-21, OLA-251).** The weakness a
+correction is filed under decides how strong its fix must be, and the one who recorded it chose it; on
+Nov 20 checkers found twenty-six ways to file one under a lower bar, and no word test could tell. So
+`sweep.mjs post` refuses the day until every correction of the day is confirmed by a caller that did not
+record it. `node scripts/venture/correct.mjs unconfirmed [--day D]` lists them. Start one fresh subagent
+(the session's model, a narrow brief: the day's entries in CORRECTIONS.md, `correct.mjs list`, the
+weaknesses' names and descriptions in data/weaknesses.json; nothing else of the day). For each it reads his
+words and what happened and runs `correct.mjs confirm <n> --weakness <id>`: the same id confirms it; another
+id moves it there, and when the fix given is weaker than that weakness's bar it needs `--owed OLA-n` and is
+owed at that bar. A move is a line in the overrides. A correction recorded before who recorded it was kept
+needs `--why`. The recorder, and a caller the hook gave no token, are refused.
+
 ## 1b2. The models (since 2026-11-20, OLA-245)
 
 Bart, Nov 20: "are you being deliberste about when to do things yourself (Fable, more expensive)

@@ -57,6 +57,31 @@ export function owedFixes(list, now = Date.now()) {
     .sort((a, b) => a.since.localeCompare(b.since))
 }
 
+// Corrections confirmed by another (OLA-251, Nov 21). correct.mjs add keeps who recorded a correction
+// (venture_state correction-by:<n>); correct.mjs confirm, from a caller that did not, confirms or moves its
+// weakness (correction-confirm:<n>). The corrections of a day since CONFIRM_SINCE that have no such
+// confirmation are listed here, and sweep.mjs post refuses the day while there are any.
+export const CONFIRM_SINCE = '2026-11-21'
+export async function unconfirmedCorrections(db, list, day) {
+  if (day < CONFIRM_SINCE) return []
+  const out = []
+  for (const w of list) for (const s of w.seen) {
+    if (s.day !== day) continue
+    const num = Number(/\d+/.exec(s.ref)?.[0])
+    if (!num) continue
+    const get = async (k) => {
+      const r = await db.from('venture_state').select('value').eq('key', `${k}:${num}`).maybeSingle()
+      if (r.error) throw new Error(`venture_state: ${r.error.message}`)
+      return r.data?.value ?? null
+    }
+    const by = await get('correction-by')
+    const ok = await get('correction-confirm')
+    const why = !ok ? 'no confirmation yet' : ok.caller === by?.caller ? `confirmed by the caller that recorded it (${ok.caller})` : ok.weakness !== w.id ? `confirmed under ${ok.weakness}, now filed under ${w.id}` : null
+    if (why) out.push({ num, weakness: w.id, why })
+  }
+  return out.sort((a, b) => a.num - b.num)
+}
+
 // CORRECTIONS.md headings that look like a correction but carry no number (2026-11-19 sweep). Every
 // count and check reads only "## N. <date>: …" entries, so on Nov 19 three corrections written as
 // "## Nov 19, 5:34 pm: …" were invisible: not counted for the day, not required to be filed under a

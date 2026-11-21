@@ -29,7 +29,7 @@ import { fpOf } from './_sweepfp.mjs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
-import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
+import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unconfirmedCorrections, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { ideaTicketProblems, openCounts, unbuiltIdeas } from './_plate.mjs'
 import { overridesOf, writeOverride } from './_overrides.mjs'
 import { fakeClient } from './_fakedb.mjs'
@@ -422,6 +422,9 @@ if (cmd === '--wait') {
     // OLA-251: a correction is recorded at once, its stronger fix may be owed; owed for more than two days blocks the day's entry
     const late = owedFixes(loadWeaknesses(rootUrl)).filter((o) => Date.now() - Date.parse(o.since) > OWED_DAYS * 86400e3)
     if (late.length) bad.push(`fixes owed for more than ${OWED_DAYS} days: ${late.map((o) => `${o.ref} (${o.name}, ${o.issue}, ${o.days} days)`).join('; ')}. Build each and settle it: correct.mjs fix <n> --fix … --level … --where … (correct.mjs owed lists them)`)
+    // OLA-251, Nov 21: each correction of the day confirmed under its weakness by a caller that did not record it
+    const unconf = await unconfirmedCorrections(db, loadWeaknesses(rootUrl), e.day)
+    if (unconf.length) bad.push(`corrections of ${e.day} whose weakness no other caller has confirmed: ${unconf.map((u) => `${u.num} (${u.weakness}: ${u.why})`).join('; ')}. Start a fresh subagent that did not record them; it reads each entry in CORRECTIONS.md and runs correct.mjs confirm <n> --weakness <id> (moving it, with --owed OLA-n, when it belongs elsewhere; SWEEP.md)`)
   }
   const requests = req.failed ? { failed: req.failed.error, why: goOn.trim(), opened: req.opened ?? [], at: req.failed.at } : { n: req.counts.requests, matched: req.counts.matched, done: req.counts.done ?? 0, answered: req.counts.answered ?? 0, opened: req.opened, at: req.at }
   const old = (await getState(db, 'sweeps'))?.value ?? { days: [] }
