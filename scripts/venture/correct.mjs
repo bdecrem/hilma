@@ -283,6 +283,7 @@ if ((cmd === 'add' || cmd === 'fix' || cmd === 'accept-notes') && (!onCopy || pr
   process.on('exit', () => { try { execFileSync('node', [fileURLToPath(new URL('./_ledgerlock.mjs', import.meta.url)), 'release', owner], { stdio: 'ignore', env: process.env, timeout: 30e3 }) } catch {} })
 }
 let newWeakLine = null
+const refusalKey = (t, wd) => createHash('sha256').update(`${String(t ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')}|${String(wd ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')}`).digest('hex').slice(0, 16)
 if (cmd === 'add') {
   await fpGate()
   const [title, words, did, cause, fix] = ['title', 'words', 'did', 'cause', 'fix'].map(str)
@@ -326,6 +327,11 @@ if (cmd === 'add') {
     // a ticket named as the fix carries it only when it is closed with every check passed, as for fix
     // (twentieth checker: add took any existing ticket or file as a kind-4 or kind-5 fix)
     if (!problem && /^OLA-\d+$/i.test(str('where') ?? '')) problem = await settleProblem(str('where'), { issue: null, since: new Date().toISOString() })
+    if (problem && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+      // twenty-fourth checker: a correction refused under one weakness and then recorded under another with a
+      // lower bar skipped the fix it was due; the refusal is remembered for a day so the later add is a line
+      try { await (await trackerDb()).from('venture_state').upsert({ key: `add-refused:${refusalKey(title, words)}`, value: { weakness: w.id, need, at: new Date().toISOString() }, at: new Date().toISOString() }) } catch {}
+    }
     if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
   const text = readFileSync(COR, 'utf8')
@@ -385,6 +391,17 @@ if (cmd === 'add') {
   // twenty-third checker: also when the fix is owed (an owed fix under a lower-bar weakness owed less), and
   // words most weaknesses share say nothing: each shared word counts by how rare it is among the weaknesses
   // (log N/df), the chosen weakness is ranked too, and a line is written only when another one is clearly closer
+  // the same correction refused earlier under another weakness whose fix had to be stronger: a line
+  if (!newWeakLine && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+    try {
+      const was = (await (await trackerDb()).from('venture_state').select('value').eq('key', `add-refused:${refusalKey(title, words)}`).maybeSingle()).data?.value
+      const now = owed ? need : cannot ? 0 : level
+      if (was && was.weakness !== w.id && Date.now() - Date.parse(was.at) < 86400e3 && was.need > now) newWeakLine = `refused under ${was.weakness} (its fix had to be kind ${was.need}) at ${was.at}, then filed under ${w.id} with ${owed ? `a fix owed at kind ${need}` : cannot ? 'no stronger fix' : `a kind-${level} fix`}: read where the correction belongs`
+    } catch {}
+  }
+  // an escape (he met it broken after being told it worked) is the agent's own claim; filed under a weakness of
+  // Ola's side, the agent's fix is skipped: a line
+  if (!newWeakLine && opt.escape && w.side === 'ola') newWeakLine = `an escape (he met it broken after being told it worked) filed under ${w.id}, a weakness of Ola's, so the agent's own claim is owed no fix of its own: read whether it belongs under unchecked or not-your-path`
   const given = owed ? need : cannot ? null : level
   if (given !== null && given <= 3 && !newWeakLine) {
     const toks = (x) => new Set(String(x).toLowerCase().match(/[a-z]{4,}/g) ?? [])
