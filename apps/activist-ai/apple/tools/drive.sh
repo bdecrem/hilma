@@ -90,12 +90,17 @@ if ! mkdir "$LOCK" 2>/dev/null; then
   rm -rf "$LOCK"; mkdir "$LOCK" || fail "could not take the drive lock"
 fi
 echo $$ > "$LOCK/pid"
+. "$HERE/drive-stop.sh"
+# With the lock held no other drive runs: whatever an earlier run left running is stopped (OLA-271).
+for r in "$STATE"/run-*; do if [ -d "$r" ]; then stop_run "$STATE" "$r" $$; fi; done
 # Old runs' folders (their homes and scratch folders), kept a day for a look.
 find "$STATE" -maxdepth 1 -name 'run-*' -mtime +1 -exec rm -rf {} + 2>/dev/null
 RUN="$STATE/run-$$"
 rm -rf "$RUN"; mkdir -p "$RUN"
 PW="$RUN/password"
 cleanup() {
+  # What this run started, the app copy's engine and terminal daemon included (OLA-271).
+  stop_run "$STATE" "$RUN"
   node "$HERE/drive-account.mjs" cleanup 2>&1 | sed 's/^/  /'
   rm -f "$PW"
   # The driven Mac copy's own settings domain (Mac/MacDrive.swift); never the app's cx.ola.mac.
