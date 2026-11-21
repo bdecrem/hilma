@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile vulnerable claude-opus-5-5 high",
- "pid": 62576,
  "step": "back2000",
  "slug": "chile",
  "chunk": "vulnerable",
@@ -58,5 +57,793 @@
   "user": 172
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T06:01:25.038Z",
+ "minutes": 52.57,
+ "meters_after": {
+  "at": "2026-11-21T06:01:25.038Z",
+  "window": {
+   "pct": 18,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 52,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 68,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 18,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 52,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 68,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 18% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 52% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 68% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 32894,
+   "output": 19699,
+   "cache_read": 1174796,
+   "cache_write": 89647,
+   "cost_usd": 1.3264,
+   "total": 1317036
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 32856,
+    "output": 2215,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 669,
+    "cost_usd": 0.0244
+   },
+   "claude-opus-5-5": {
+    "input": 38,
+    "output": 17484,
+    "cache_read": 1174796,
+    "cache_write": 89647,
+    "thinking": 5802,
+    "cost_usd": 1.302
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 32,
+ "duration_ms": 452298,
+ "duration_api_ms": 358008,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T05:09:04.942Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435",
+   "find": "menores | niños | mujeres | género | discapacidad | vulnerab",
+   "ok": true,
+   "chars": 2152
+  },
+  {
+   "at": "2026-11-21T05:09:05.648Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "33 bis | trata | menores | víctima",
+   "ok": true,
+   "chars": 2113
+  },
+  {
+   "at": "2026-11-21T05:09:26.524Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15",
+   "find": "Artículo 38 | no acompañados | Artículo 41 | interés superior",
+   "ok": true,
+   "chars": 2319
+  },
+  {
+   "at": "2026-11-21T05:09:48.356Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/Exportar?radioExportar=Normas&exportar_formato=pdf&nombrearchivo=LEY-20430&exportar_con_notas_bcn=False&exportar_con_notas_originales=False&exportar_con_notas_al_pie=False&hddResultadoExportar=1012435.2010-04-15.0.0%23",
+   "find": "Artículo 38 | Artículo 39 | Artículo 40 | Artículo 41 | Artículo 42 | mujer | género",
+   "ok": true,
+   "chars": 1298
+  },
+  {
+   "at": "2026-11-21T05:29:43.917Z",
+   "url": "https://webarchive.archive.unhcr.org/20160921200439if_/http://www.refworld.org/pdfid/4bcc66112.pdf",
+   "find": "Artículo 38 | Artículo 39 | Artículo 40 | Artículo 41 | género | Artículo 4",
+   "ok": true,
+   "chars": 895
+  },
+  {
+   "at": "2026-11-21T05:30:15.328Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156",
+   "find": "menores | género | discapacidad | vulnerab | mujer",
+   "ok": true,
+   "chars": 4032
+  },
+  {
+   "at": "2026-11-21T05:30:24.561Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15",
+   "find": "acompañado | separado | edad | sexual | vigencia",
+   "ok": true,
+   "chars": 2196
+  },
+  {
+   "at": "2026-11-21T05:30:25.528Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156",
+   "find": "Artículo 54 | Artículo 58 | Artículo 59 | víctimas de violencia",
+   "ok": true,
+   "chars": 2263
+  },
+  {
+   "at": "2026-11-21T05:30:28.723Z",
+   "url": "https://derecho.udp.cl/wp-content/uploads/2016/08/refugiados_ley.pdf",
+   "find": "Artículo 38 | Artículo 39 | Artículo 41 | Artículo 42 | Artículo 49 | Artículo 50 | género",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:30:33.538Z",
+   "url": "https://www.refworld.org/es/node/132392",
+   "find": "Artículo 38 | Artículo 39 | Artículo 41 | Artículo 42 | Artículo 50 | género",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T05:39:32.849Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+   "find": "Artículo 38 | Artículo 39 | Artículo 41 | Artículo 42 | Artículo 50 | género",
+   "ok": true,
+   "chars": 9254
+  },
+  {
+   "at": "2026-11-21T05:39:43.496Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+   "find": "Artículo 3º | Artículo 54 | Artículo 55 | Artículo 56 | Artículo 57 | Artículo 58 | Artículo 59",
+   "ok": true,
+   "chars": 10893
+  },
+  {
+   "at": "2026-11-21T05:39:45.044Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 33 bis | trata de personas | menor | discapac | embaraz",
+   "ok": true,
+   "chars": 8989
+  },
+  {
+   "at": "2026-11-21T05:45:41.343Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "menor de 18 | menores | embaraz | discapac | trata | víctima",
+   "ok": true,
+   "chars": 8507
+  }
+ ],
+ "searches": [
+  "Ley 20.430 \"menores no acompañados o separados de sus familias\" artículo 38 \"interés superior\" texto",
+  "\"Ley 20.430\" \"Artículo 38\" \"menor no acompañado\" refugiados texto completo pdf",
+  "bcn.cl leychile Decreto 597 1984 reglamento de extranjería idNorma"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.02,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.04,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.06,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.07,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.09,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.1,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.5,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.11,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.12,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.15,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.51,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":3,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"The regime was DL 1.094 (1975) and DS 597 (1984). Under DL 1.094, art. 14 only lets a minor with no parent or guardian stay in Chile in their entry residence status until age 18. Under DS 597, art. 27 No. 4 makes unaccompanied minors without authorisation a ground for refusing entry. Neither is a protection regime for migrant children, and no practice evidence for this period was read.\"},{\"date\":\"2005-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"No change from 2000: DL 1.094 art. 14 and DS 597 were unchanged on this point. Executive measures on schooling and health access for children (circulars and agreements) are not decrees with force of law, and none was read. No practice evidence was read.\"},{\"date\":\"2010-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"Still DL 1.094 and DS 597. Ley 20.430 (with its procedure for unaccompanied minors seeking asylum) was only published on 15 April 2010, so it was not yet in force. No practice evidence was read.\"},{\"date\":\"2015-01-01\",\"answer\":\"No\",\"implementation\":\"Does Not Apply\",\"basis\":\"In force by now: Ley 20.430 arts. 38-40 (from 15 April 2010) and Decreto 837 arts. 54-57 (from 17 February 2011), which set a special procedure for asylum-seeking children. These remained unchanged through 1 January 2020, where the MRD answer is 'No', so no event separates 2015 from 2020 and the answer stays 'No' (see starting_answer_concern). No practice evidence was read.\"}],\"change_2000_2020\":\"There have been no right protections neither in 2000 nor in 2020\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Arts. 7, 22 No. 2, 28, 41, 70\",\"role\":\"cited\",\"in_force\":\"2022-02-12 to today\",\"history_read\":\"not_found\"},{\"instrument\":\"Decreto 177 (2022, humanitarian sub-categories)\",\"article\":\"Art. 10\",\"role\":\"cited\",\"in_force\":\"2022 to today\",\"history_read\":\"no",
+ "output": {
+  "answers": [
+   {
+    "question_id": 3,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The regime was DL 1.094 (1975) and DS 597 (1984). Under DL 1.094, art. 14 only lets a minor with no parent or guardian stay in Chile in their entry residence status until age 18. Under DS 597, art. 27 No. 4 makes unaccompanied minors without authorisation a ground for refusing entry. Neither is a protection regime for migrant children, and no practice evidence for this period was read."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "No change from 2000: DL 1.094 art. 14 and DS 597 were unchanged on this point. Executive measures on schooling and health access for children (circulars and agreements) are not decrees with force of law, and none was read. No practice evidence was read."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Still DL 1.094 and DS 597. Ley 20.430 (with its procedure for unaccompanied minors seeking asylum) was only published on 15 April 2010, so it was not yet in force. No practice evidence was read."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "In force by now: Ley 20.430 arts. 38-40 (from 15 April 2010) and Decreto 837 arts. 54-57 (from 17 February 2011), which set a special procedure for asylum-seeking children. These remained unchanged through 1 January 2020, where the MRD answer is 'No', so no event separates 2015 from 2020 and the answer stays 'No' (see starting_answer_concern). No practice evidence was read."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 7, 22 No. 2, 28, 41, 70",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 177 (2022, humanitarian sub-categories)",
+      "article": "Art. 10",
+      "role": "cited",
+      "in_force": "2022 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley N° 1.094 de 1975 (Ley de Extranjería)",
+      "article": "Art. 14 (minors under 18; guardian's duty; a minor with no guardian stays until 18)",
+      "role": "predecessor",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo N° 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Art. 27 No. 4 (entry of unaccompanied minors)",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley N° 20.430 Establece disposiciones sobre protección de refugiados",
+      "article": "Arts. 38-40 (Procedimiento especial para menores no acompañados o separados)",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto N° 837 de 2010, Reglamento de la Ley 20.430",
+      "article": "Arts. 3, 54-57",
+      "role": "other_in_force",
+      "in_force": "2011-02-17 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley N° 20.507 (tráfico de migrantes y trata de personas)",
+      "article": "Art. tercero No. 2 (inserts art. 33 bis DL 1.094)",
+      "role": "other_in_force",
+      "in_force": "2011-04-08 to 2022-02-12",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley N° 20.430",
+      "article": "Arts. 38-40",
+      "kind": "new_instrument",
+      "what_changed": "Sets a special asylum procedure for minors. Every minor may apply for refugee status independently of their legal representative, and for unaccompanied or separated minors the child-protection authority must be notified and UNHCR guidelines followed. This reaches asylum-seeking children only.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+      "passage": "Artículo 39.- Menores no Acompañados o Separados. Cuando la solicitud fuese presentada por un menor de edad no acompañado o separado de su familia, la Secretaría Técnica de la Comisión de Reconocimiento informará, de inmediato, a la autoridad de menores, de manera que se ejerzan las medidas de protección, cuidado y asistencia que sean necesarias."
+     },
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley N° 20.430",
+      "article": "Art. 49",
+      "kind": "repealed",
+      "what_changed": "Repeals the DL 1.094 rules on refugees. Ley 20.430 replaces them; the repealed DL 1.094 refugee articles were not read for child-specific content.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+      "passage": "Artículo 49.- Deróganse las normas establecidas en el decreto ley Nº1.094, de 1975, en lo que digan relación con los refugiados."
+     },
+     {
+      "date": "2011-02-17",
+      "instrument": "Decreto N° 837 de 2010 (Reglamento Ley 20.430)",
+      "article": "Arts. 3, 54-57",
+      "kind": "new_instrument",
+      "what_changed": "Requires an age-sensitive interpretation of the refugee definition (art. 3). Defines separated, unaccompanied and orphaned children, requires immediate notice to the child-protection authority, and requires a child-rights expert at interviews of unaccompanied children (arts. 54-57). Asylum seekers only.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+      "passage": "Tratándose de menores de edad separados de su familia, no acompañados o huérfanos, la Secretaría Técnica deberá informar de inmediato a la autoridad de protección de derechos de niños, niñas o adolescentes para que se adopten las medidas de protección, cuidado y asistencia que se estimen necesarias."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley N° 20.507",
+      "article": "Art. tercero No. 2 (new art. 33 bis DL 1.094)",
+      "kind": "amended",
+      "what_changed": "Gives foreign victims of trafficking (art. 411 quáter Código Penal) a right to request temporary residence of at least six months. Not specific to children.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "Artículo 33 bis.- Las víctimas del delito previsto en el artículo 411 quáter del Código Penal, que no sean nacionales o residentes permanentes en el país, tendrán derecho a presentar una solicitud de autorización de una residencia temporal por un período mínimo de seis meses"
+     }
+    ],
+    "repealed_search": "Searched the consolidated DL 1.094 (LeyChile JSON) and DS 597 for 'menor', 'menores', 'embaraz', 'discapac', 'trata' and 'víctima'. Also read the original text of Ley 20.430 and Decreto 837. Found DL 1.094 art. 14 (in force throughout 2000-2022, not repealed before 2020) and the Ley 20.430/Decreto 837 child procedures (added 2010/2011, still in force in 2020). Nothing child-protective was repealed or narrowed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Read: the original versions of Ley 20.430 (15 April 2010) and Decreto 837 (17 February 2011) through the LeyChile JSON service, plus the consolidated texts of DL 1.094 and DS 597. Could not read: the PDFs (the converter failed), the earlier dated versions of DS 597, and any practice reports.",
+    "sources_opened": [
+     {
+      "title": "LeyChile – Ley 20.430 (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435"
+     },
+     {
+      "title": "LeyChile – Ley 20.430 texto original",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "LeyChile JSON – Ley 20.430 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "LeyChile – Decreto 837",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156"
+     },
+     {
+      "title": "LeyChile JSON – Decreto 837 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17"
+     },
+     {
+      "title": "LeyChile – DL 1.094",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "LeyChile JSON – DL 1.094",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "LeyChile JSON – DS 597 Reglamento de Extranjería",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "LeyChile export (404)",
+      "url": "https://www.bcn.cl/leychile/Consulta/Exportar?radioExportar=Normas&exportar_formato=pdf&nombrearchivo=LEY-20430&exportar_con_notas_bcn=False&exportar_con_notas_originales=False&exportar_con_notas_al_pie=False&hddResultadoExportar=1012435.2010-04-15.0.0%23"
+     },
+     {
+      "title": "UNHCR web archive – Ley 20.430 (blocked)",
+      "url": "https://webarchive.archive.unhcr.org/20160921200439if_/http://www.refworld.org/pdfid/4bcc66112.pdf"
+     },
+     {
+      "title": "UDP – Ley refugiados PDF (failed)",
+      "url": "https://derecho.udp.cl/wp-content/uploads/2016/08/refugiados_ley.pdf"
+     },
+     {
+      "title": "Refworld – Ley 20.430 (failed)",
+      "url": "https://www.refworld.org/es/node/132392"
+     }
+    ],
+    "starting_answer_concern": "On 1 January 2020 national law already gave migrant children special treatment. Ley 20.430 arts. 38-40 and Decreto 837 arts. 3 and 54-57 (in force since 2010/2011) give asylum-seeking children an independent right to apply, immediate notice to the child-protection authority, a child-rights expert at interviews and age-sensitive interpretation. DL 1.094 art. 14 lets an unaccompanied minor remain until 18. A 'Yes' limited to asylum-seeking and unaccompanied children looks defensible for 2015 and 2020; the coder seems to have looked only at general migration law.",
+    "confidence": "medium",
+    "notes": "Answers are kept at 'No' for every date to match the starting answer, because no event between 2015 and 2020 separates them. If the starting answer were corrected to 'Yes', the change would date from 15 April 2010 (Ley 20.430) and 17 February 2011 (Decreto 837), giving 2015 'Yes' and 2000/2005/2010 'No'. No court ruling was relied on, and no treaty (the CRC) was treated as directly applicable. No practice sources were read, since implementation is 'Does Not Apply'."
+   },
+   {
+    "question_id": 5,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "DL 1.094 and DS 597 contain nothing protective for vulnerable migrant women. DL 1.094 art. 32 only treats a foreign woman married to a Chilean as a temporary resident. No practice evidence was read."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged from 2000. Administrative measures (e.g. on health care for pregnant migrants) are not law with force of law and none was read. No practice evidence was read."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Ley 20.430 was not yet published (15 April 2010), and Ley 20.507 on trafficking came in April 2011. No practice evidence was read."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "In force by now: Ley 20.430 arts. 30 and 41 (same-sex interviewers; psychosocial assistance for asylum applicants who suffered sexual or gender-based violence), Decreto 837 arts. 3 and 58 (gender-sensitive interpretation), and DL 1.094 art. 33 bis (trafficking victims, not gender-specific). All were unchanged through 2020, where the MRD answers 'No', so the answer stays 'No' (see starting_answer_concern). No practice evidence was read."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13, 22 No. 2, 70",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 177 (2022)",
+      "article": "Art. 10",
+      "role": "cited",
+      "in_force": "2022 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley N° 1.094 de 1975",
+      "article": "Art. 32 (foreign wife of a Chilean); Art. 33 bis (trafficking victims, from 2011)",
+      "role": "predecessor",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo N° 597 de 1984",
+      "article": "Whole text searched (no provision on women, pregnancy or victims)",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley N° 20.430",
+      "article": "Arts. 30, 41",
+      "role": "other_in_force",
+      "in_force": "2010-04-15 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto N° 837 de 2010",
+      "article": "Arts. 3, 58",
+      "role": "other_in_force",
+      "in_force": "2011-02-17 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley N° 20.507",
+      "article": "Art. tercero No. 2 (art. 33 bis DL 1.094)",
+      "role": "other_in_force",
+      "in_force": "2011-04-08 to 2022-02-12",
+      "history_read": "amending_acts"
+     }
+    ],
+    "events": [
+     {
+      "date": "2010-04-15",
+      "instrument": "Ley N° 20.430",
+      "article": "Arts. 30, 41",
+      "kind": "new_instrument",
+      "what_changed": "Art. 30 lets asylum applicants choose interviewers and interpreters of their own sex, trained to identify gender factors. Art. 41 provides psychological and social assistance for applicants who allege sexual or gender-based violence. Asylum seekers only.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15",
+      "passage": "Artículo 41.- Tratamiento Especial. En el caso de personas que presentaren una solicitud y alegasen haber sido víctimas de violencia sexual o por motivos de género, se procurará que los organismos públicos competentes les presten asistencia psicológica y social"
+     },
+     {
+      "date": "2011-02-17",
+      "instrument": "Decreto N° 837 de 2010",
+      "article": "Arts. 3, 58",
+      "kind": "new_instrument",
+      "what_changed": "Requires a gender-sensitive interpretation of the refugee definition (art. 3) and psychosocial assistance plus confidentiality for applicants who are victims of sexual or gender-based violence (art. 58). Asylum seekers only.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+      "passage": "Artículo 3º.- Condiciones especiales. En la interpretación de cada uno de los elementos del concepto de refugiado establecido en el artículo precedente, se aplicará una perspectiva sensible al género, a la edad u otras condiciones especiales de vulnerabilidad."
+     },
+     {
+      "date": "2011-04-08",
+      "instrument": "Ley N° 20.507",
+      "article": "Art. tercero No. 2 (new art. 33 bis DL 1.094)",
+      "kind": "amended",
+      "what_changed": "Gives trafficking victims a right to request temporary residence of at least six months, with no repatriation where there is grave danger. Gender-neutral, so not specific to women.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+      "passage": "En ningún caso podrá decretarse la repatriación de las víctimas que soliciten autorización de residencia por existir grave peligro para su integridad física o psíquica resultante de las circunstancias en que se ha cometido el delito en sus países de origen."
+     }
+    ],
+    "repealed_search": "Searched DL 1.094 and DS 597 (consolidated LeyChile JSON) for 'embaraz', 'mujer', 'víctima' and 'trata'. Found only DL 1.094 art. 32 (wife of a Chilean, not protective), art. 33 bis (2011, still in force in 2020) and DS 597 art. 26's 'trata de blancas' entry ban. Nothing protective was repealed between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Read: the original texts of Ley 20.430 and Decreto 837, plus the consolidated DL 1.094 with Ley 20.507's insertion marked. Could not read: Ministry of Health and Interior circulars on pregnant migrants (2008-2015) and any practice reports.",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – Ley 20.430 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "LeyChile – Ley 20.430 texto original",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1012435&idVersion=2010-04-15"
+     },
+     {
+      "title": "LeyChile JSON – Decreto 837 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17"
+     },
+     {
+      "title": "LeyChile – Decreto 837",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1023156"
+     },
+     {
+      "title": "LeyChile JSON – DL 1.094",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "LeyChile – DL 1.094",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "LeyChile JSON – DS 597",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     }
+    ],
+    "starting_answer_concern": "Ley 20.430 arts. 30 and 41 and Decreto 837 arts. 3 and 58 (in force since 2010/2011) give gender-specific protection to asylum-seeking women: same-sex interviewers, gender-sensitive interpretation, and psychosocial assistance for victims of sexual or gender-based violence. A 'Yes' limited to asylum seekers looks defensible for 2015 and 2020. Outside asylum, the migration law gave no women-specific protection before 2022.",
+    "confidence": "medium",
+    "notes": "Kept at 'No' to match the starting answer, since nothing changed between 2015 and 2020. If corrected, the change would date from 15 April 2010 and 17 February 2011. No rulings were relied on, and CEDAW was not treated as directly applicable. No practice sources were read, since implementation is 'Does Not Apply'."
+   },
+   {
+    "question_id": 7,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Neither DL 1.094 nor DS 597 mentions disability; a search for 'discapac' found nothing. No practice evidence."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged from 2000. No practice evidence."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Unchanged. Ley 20.422 on disability (February 2010) is general, and no migration-specific provision was found. No practice evidence."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Decreto 837 art. 3 (from 2011) refers only generically to 'otras condiciones especiales de vulnerabilidad' when interpreting the refugee definition. It has no disability-specific protection, and nothing changed through 2020. No practice evidence."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 1 No. 13, Art. 22 No. 2, Art. 42",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Ley N° 20.422 sobre igualdad de oportunidades e inclusión social de personas con discapacidad",
+      "article": "General",
+      "role": "cited",
+      "in_force": "2010-02-10 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto Ley N° 1.094 de 1975",
+      "article": "Whole text searched (no disability provision)",
+      "role": "predecessor",
+      "in_force": "1975 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo N° 597 de 1984",
+      "article": "Whole text searched (no disability provision)",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto N° 837 de 2010",
+      "article": "Art. 3",
+      "role": "other_in_force",
+      "in_force": "2011-02-17 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2011-02-17",
+      "instrument": "Decreto N° 837 de 2010",
+      "article": "Art. 3",
+      "kind": "new_instrument",
+      "what_changed": "Requires gender-, age- and vulnerability-sensitive interpretation of the refugee definition. Disability is not named, so it does not establish a disability-specific protection.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17",
+      "passage": "se aplicará una perspectiva sensible al género, a la edad u otras condiciones especiales de vulnerabilidad."
+     }
+    ],
+    "repealed_search": "Searched the consolidated DL 1.094 and DS 597 for 'discapac' (not found) and read Ley 20.430 and Decreto 837 in their original texts. No disability-specific migration protection existed, or was repealed, between 2000 and 2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Disability-specific provisions are absent from every pre-2022 migration text read. Not read: Ley 20.422 itself, and the dated earlier versions of DS 597 (the current consolidated text was searched).",
+    "sources_opened": [
+     {
+      "title": "LeyChile JSON – DL 1.094",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "LeyChile JSON – DS 597",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "LeyChile JSON – Decreto 837 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1023156&idVersion=2011-02-17"
+     },
+     {
+      "title": "LeyChile JSON – Ley 20.430 texto original",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1012435&idVersion=2010-04-15"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The protection cited for 2023 (Ley 21.325 art. 42) arrived only in February 2022. Before that nothing disability-specific existed in migration law, so the answer is 'No' on every date. No practice sources, since implementation is 'Does Not Apply'."
+   }
+  ]
+ }
 }
