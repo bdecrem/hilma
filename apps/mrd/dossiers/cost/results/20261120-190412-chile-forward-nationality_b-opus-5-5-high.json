@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile nationality_b claude-opus-5-5 high",
- "pid": 54860,
  "step": "forward",
  "slug": "chile",
  "chunk": "nationality_b",
@@ -58,5 +57,672 @@
   "user": 107
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:28:03.253Z",
+ "minutes": 23.85,
+ "meters_after": {
+  "at": "2026-11-21T03:28:03.253Z",
+  "window": {
+   "pct": 54,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 48,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 54,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 48,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 54% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 48% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 90252,
+   "output": 25189,
+   "cache_read": 1826597,
+   "cache_write": 65089,
+   "cost_usd": 1.3259,
+   "total": 2007127
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 90210,
+    "output": 6827,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1997,
+    "cost_usd": 0.0724
+   },
+   "claude-opus-5-5": {
+    "input": 42,
+    "output": 18362,
+    "cache_read": 1826597,
+    "cache_write": 65089,
+    "thinking": 6290,
+    "cost_usd": 1.2534
+   }
+  }
+ },
+ "turns": 29,
+ "calls": 52,
+ "duration_ms": 313648,
+ "duration_api_ms": 267774,
+ "pages_read": 21,
+ "pages": [
+  {
+   "at": "2026-11-21T03:04:40.881Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 173 | Artículo 69 | regularización | apátrida | Artículo 155",
+   "ok": true,
+   "chars": 8169
+  },
+  {
+   "at": "2026-11-21T03:09:42.017Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 173 | apátrida | octavo transitorio | regularización | Artículo 155",
+   "ok": true,
+   "chars": 13654
+  },
+  {
+   "at": "2026-11-21T03:09:45.724Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo octavo | Artículo 84 | Artículo 87 | Ley 21655 | Ley 21.655",
+   "ok": true,
+   "chars": 5570
+  },
+  {
+   "at": "2026-11-21T03:10:11.532Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Última modificación | Ley 21 | Versión | Inicio Vigencia",
+   "ok": true,
+   "chars": 5820
+  },
+  {
+   "at": "2026-11-21T03:14:51.843Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 173.- | Artículo 69.- | 8. Disponer",
+   "ok": true,
+   "chars": 3373
+  },
+  {
+   "at": "2026-11-21T03:15:00.017Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 173.- | Artículo 69.- | 8. Disponer | fechaVersion",
+   "ok": true,
+   "chars": 961
+  },
+  {
+   "at": "2026-11-21T03:15:05.503Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "21655 | 21730 | 21589 | 21590 | 21610 | 21816",
+   "ok": true,
+   "chars": 3358
+  },
+  {
+   "at": "2026-11-21T03:15:11.446Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+   "find": "artículo 69 | artículo 155 | artículo 173 | regulariz | Artículo 1",
+   "ok": true,
+   "chars": 6425
+  },
+  {
+   "at": "2026-11-21T03:15:12.187Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "21.325 | artículo 69 | artículo 155 | artículo 173",
+   "ok": true,
+   "chars": 2135
+  },
+  {
+   "at": "2026-11-21T03:15:16.588Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idLey=21730",
+   "find": "Migración | Artículo décimo | Artículo noveno | Artículo octavo",
+   "ok": true,
+   "chars": 2502
+  },
+  {
+   "at": "2026-11-21T03:15:22.731Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "132 bis | 131 bis | Artículo 131.- | Ministerio del Interior.",
+   "ok": true,
+   "chars": 5432
+  },
+  {
+   "at": "2026-11-21T03:15:29.042Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 173.- | Artículo 69.- | 8. Disponer",
+   "ok": true,
+   "chars": 5886
+  },
+  {
+   "at": "2026-11-21T03:15:35.910Z",
+   "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=19444",
+   "find": "Artículo 2 | renuncia | Artículo 11 | Ley 20888 | doble nacionalidad",
+   "ok": true,
+   "chars": 416
+  },
+  {
+   "at": "2026-11-21T03:16:22.819Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=19444",
+   "find": "Artículo 2 | renuncia | Ley 20888 | Ley 21 | Versión",
+   "ok": true,
+   "chars": 6167
+  },
+  {
+   "at": "2026-11-21T03:16:29.661Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444",
+   "find": "Última modificación | Tipo Versión | Versión:",
+   "ok": true,
+   "chars": 3764
+  },
+  {
+   "at": "2026-11-21T03:21:29.071Z",
+   "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302",
+   "find": "Artículo 10.- | Artículo 11.- | Última modificación",
+   "ok": true,
+   "chars": 4605
+  },
+  {
+   "at": "2026-11-21T03:21:55.985Z",
+   "url": "https://radio.uchile.cl/2026/02/11/hay-mas-de-180-mil-personas-amenazadas-organizaciones-civiles-llaman-a-concluir-regularizacion-de-migrantes-empadronados/",
+   "find": "regularización | empadronamiento | 155",
+   "ok": true,
+   "chars": 5433
+  },
+  {
+   "at": "2026-11-21T03:21:56.966Z",
+   "url": "https://www.emol.com/noticias/Nacional/2024/12/13/1151297/rechazos-aprensiones-oficialistas-regularizacion-acotada.html",
+   "find": "regularización | Cordero | empadronados",
+   "ok": true,
+   "chars": 4550
+  },
+  {
+   "at": "2026-11-21T03:25:50.904Z",
+   "url": "https://upr-info.org/sites/default/files/country-document/2025-12/UNHCR_UPR46_CHL_E_Main.pdf",
+   "find": "stateless | statelessness | transeúnte | transient | birth",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:25:52.230Z",
+   "url": "https://www.diarioconstitucional.cl/2025/10/25/un-reglamento-que-no-se-dicta-una-ley-que-no-se-aplica-y-ninos-y-ninas-que-sufren-las-consecuencias-por-no-existir-ante-la-ley-por-macarena-rodriguez/",
+   "find": "apatridia | reglamento | 173 | transeúnte",
+   "ok": true,
+   "chars": 3952
+  },
+  {
+   "at": "2026-11-21T03:26:31.460Z",
+   "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/",
+   "find": "circular | transeúnte | apatridia | 2018 | Corte Suprema",
+   "ok": true,
+   "chars": 3686
+  }
+ ],
+ "searches": [
+  "decreto 5142 1960 nacionalización renuncia nacionalidad anterior leychile",
+  "Ley 21.325 modificaciones 2024 2025 regularización migratoria ley publicada Diario Oficial",
+  "Ley 21730 modifica ley 21325 migración 2025",
+  "Chile regularización migratoria empadronamiento biométrico 2025 gobierno descarta regularización extraordinaria",
+  "\"mecanismo de regularización\" resolución Subsecretaría del Interior \"155\" Ley 21.325 2024 OR 2025 niños padres empadronados",
+  "Chile apatridia niños nacidos hijo de extranjero transeúnte Registro Civil 2024 informe ACNUR artículo 173 Ley 21.325"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.46,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.47,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.49,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.5,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.51,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.52,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":71,\"answer_2023\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation_2023\":\"Does Not Apply\",\"answer_2026\":\"No, no migrants may obtain dual nationality by retaining their nationality of origin\",\"implementation_2026\":\"Does Not Apply\",\"change_2023_2026\":\"There have been no right protections neither in 2023 nor in 2026\",\"provisions\":[{\"instrument\":\"Decreto 5.142 de 1960, Ministerio del Interior (texto refundido sobre nacionalización de extranjeros)\",\"article\":\"Art. 2\",\"enacted\":\"1960-10-29\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República (Decreto 100 de 2005)\",\"article\":\"Arts. 10 and 11\",\"enacted\":\"1980-10-24\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Arts. 84 and 87 (refer naturalization to DS 5.142)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Convenio de doble nacionalidad Chile–España (1958)\",\"article\":\"—\",\"enacted\":\"1958\",\"history_read\":\"not_found\",\"status\":\"could_not_establish\"}],\"events\":[],\"implementation_then_now\":\"The protection answer is the lowest option on both dates, so implementation is Does Not Apply. DS 5.142 art. 2 required renunciation of the nationality of origin as a condition of the naturalization certificate throughout the window. LeyChile shows no new version of DS 5.142 after 12-Feb-2022, and Constitution arts 10–11 carry no amendment notes after 2005. Nothing in the window points to a change in how naturalization is administered.\",\"practice_sources\":[],\"past_versions\":\"read_the_version_in_force\",\"sourcing_note\":\"LeyChile's version table for DS 5.142 shows the 12-FEB-2022 version (last modified by Ley 21.325) still current, so the text read covers both dates. Constitution arts 10–11 were read with their amendment notes, none after Ley 20.050 (2005). I did not open the Chile–Spain conve",
+ "output": {
+  "answers": [
+   {
+    "question_id": 71,
+    "answer_2023": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Decreto 5.142 de 1960, Ministerio del Interior (texto refundido sobre nacionalización de extranjeros)",
+      "article": "Art. 2",
+      "enacted": "1960-10-29",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República (Decreto 100 de 2005)",
+      "article": "Arts. 10 and 11",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 84 and 87 (refer naturalization to DS 5.142)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Convenio de doble nacionalidad Chile–España (1958)",
+      "article": "—",
+      "enacted": "1958",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is Does Not Apply. DS 5.142 art. 2 required renunciation of the nationality of origin as a condition of the naturalization certificate throughout the window. LeyChile shows no new version of DS 5.142 after 12-Feb-2022, and Constitution arts 10–11 carry no amendment notes after 2005. Nothing in the window points to a change in how naturalization is administered.",
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's version table for DS 5.142 shows the 12-FEB-2022 version (last modified by Ley 21.325) still current, so the text read covers both dates. Constitution arts 10–11 were read with their amendment notes, none after Ley 20.050 (2005). I did not open the Chile–Spain convention in this session.",
+    "sources_opened": [
+     {
+      "title": "Decreto 5142 (imprimir) – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=19444"
+     },
+     {
+      "title": "Decreto 5142 – LeyChile navegar (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=19444"
+     },
+     {
+      "title": "Constitución Política (Decreto 100) – LeyChile imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Ley 21.325 consolidated XML – LeyChile",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     }
+    ],
+    "starting_answer_concern": "The starting citation itself names an exception: the Chile–Spain dual nationality convention lets Spaniards naturalize in Chile without losing their nationality. If that treaty is directly applicable, the instrument's 'Conditional, depending on the country of origin' option fits better than 'No'. Also, art. 11 of the Constitution is about losing Chilean nationality; the renunciation requirement for foreigners comes from DS 5.142 art. 2 ('Será requisito para la concesión de la carta de nacionalización que el extranjero renuncie a su nacionalidad de origen').",
+    "confidence": "high",
+    "notes": "DS 5.142 art. 2 (text in force on both dates): 'Será requisito para la concesión de la carta de nacionalización que el extranjero renuncie a su nacionalidad de origen, o a cualquier otra adquirida o que pudiere corresponderle.' LeyChile lists pending bills to amend DS 5.142, e.g. Boletín 18325-06, none enacted. Whether the country of origin recognises the renunciation is a matter for its own law, so some naturalized people may keep their old nationality de facto."
+   },
+   {
+    "question_id": 133,
+    "answer_2023": "No, there is no opportunity for irregular migrant workers to regularize",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No, there is no opportunity for irregular migrant workers to regularize",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 69 inc. 2",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 155 Nº 8 (and Nº 9)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 157 Nº 13; Artículo octavo transitorio",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 81, 91",
+      "enacted": "1975",
+      "history_read": "current_text_only",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2024-02-20",
+      "instrument": "Ley 21.655 (modifica la ley Nº 20.430 ... y la ley Nº 21.325, en relación con la medida de reconducción o devolución inmediata)",
+      "article": "Ley 21.325 art. 131 (reconducción); not arts 69 or 155",
+      "kind": "amended",
+      "what_changed": "It amended Ley 21.325's rules on immediate return at the border (reconducción) and Ley 20.430's refugee procedure. It left arts 69 and 155 Nº 8 untouched, so it does not affect this indicator.",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655",
+      "passage": "MODIFICA LA LEY Nº 20.430, PARA ESTABLECER UNA ETAPA INICIAL DEL PROCEDIMIENTO DE DETERMINACIÓN DE LA CONDICIÓN DE REFUGIADO, Y LA LEY Nº 21.325, EN RELACIÓN CON LA MEDIDA DE RECONDUCCIÓN O DEVOLUCIÓN INMEDIATA DE PERSONAS EXTRANJERAS QUE INGRESEN DE FORMA IRREGULAR AL TERRITORIO NACIONAL"
+     },
+     {
+      "date": "2024-12-13",
+      "instrument": "Government announcement of a 'regularización acotada' for part of the biometrically registered population (never implemented)",
+      "article": "Ley 21.325 art. 155 Nº 8 (power not exercised)",
+      "kind": "practice",
+      "what_changed": "The Interior Undersecretariat floated a limited regularization for some of those registered in the 2023–2025 biometric registration. It was 'en etapa de estudio' and met cross-party opposition. No mechanism was issued, so the answer does not change.",
+      "url": "https://www.emol.com/noticias/Nacional/2024/12/13/1151297/rechazos-aprensiones-oficialistas-regularizacion-acotada.html",
+      "passage": "Si bien el Ejecutivo señala que la medida está en etapa de estudio, no descarta que aquellas personas que hayan entrado al país por pasos irregulares sean beneficiados"
+     }
+    ],
+    "implementation_then_now": "The protection answer is the lowest option on both dates, so implementation is Does Not Apply. In practice no regularization mechanism under art. 155 Nº 8 was issued in 2023–2025. The 2023 biometric registration ('empadronamiento biométrico') did not regularize anyone. The 'limited regularization' announced in December 2024 stayed under study. In February 2026 the outgoing government ruled out regularizing the more than 180,000 registered migrants, leaving them, in the words of migrant organizations, in limbo. Practice did not shift.",
+    "practice_sources": [
+     {
+      "title": "\"No es viable políticamente\": Los reparos oficialistas que complican la regularización acotada del Gobierno (Emol)",
+      "url": "https://www.emol.com/noticias/Nacional/2024/12/13/1151297/rechazos-aprensiones-oficialistas-regularizacion-acotada.html",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "\"Hay más de 180 mil personas amenazadas\": organizaciones civiles llaman a concluir regularización de migrantes empadronados (Diario UChile)",
+      "url": "https://radio.uchile.cl/2026/02/11/hay-mas-de-180-mil-personas-amenazadas-organizaciones-civiles-llaman-a-concluir-regularizacion-de-migrantes-empadronados/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the 12-FEB-2022 original version (in force until 06-AUG-2023, so on 1 Jan 2023) and the current consolidated text: arts 69, 155 Nº 8 and 157 Nº 13 are identical. LeyChile's version table lists the window's amending laws: 21.590 and 21.589 (Aug 2023), 21.610 (Sep 2023), 21.655 (Feb 2024) and 21.730 (in force Apr 2025); the next is 21.816 (Jun 2026). I opened 21.655 and 21.730, and neither touches these articles. The 2023 laws (21.590, 21.589, 21.610) were not opened; I inferred they don't touch these articles because the 2022 and current texts are identical.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile navegar (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 consolidated XML – LeyChile",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 versión 12-FEB-2022 (imprimir)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.655 – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21655"
+     },
+     {
+      "title": "Ley 21.730 – LeyChile",
+      "url": "https://www.bcn.cl/leychile/navegar?idLey=21730"
+     },
+     {
+      "title": "Emol, regularización acotada (13-12-2024)",
+      "url": "https://www.emol.com/noticias/Nacional/2024/12/13/1151297/rechazos-aprensiones-oficialistas-regularizacion-acotada.html"
+     },
+     {
+      "title": "Diario UChile, empadronados (11-02-2026)",
+      "url": "https://radio.uchile.cl/2026/02/11/hay-mas-de-180-mil-personas-amenazadas-organizaciones-civiles-llaman-a-concluir-regularizacion-de-migrantes-empadronados/"
+     }
+    ],
+    "starting_answer_concern": "Art. 155 Nº 8 already authorized the Interior Undersecretary to set up regularization mechanisms for people in irregular status, with requirements 'determinados prudencialmente con el objeto de facilitar y promover la regularidad migratoria'. Art. 155 Nº 9 allows humanitarian temporary residence 'con independencia de la condición migratoria'. A reviewer could argue these give a conditional opportunity in law, even though the power was never used; the MRD coded No.",
+    "confidence": "high",
+    "notes": "Kept the starting answer. The answer rests on statute plus the documented absence of any resolution under art. 155 Nº 8 in the window. Art. 155 Nº 9 humanitarian permits are case-by-case. Supreme Court rulings in 2025 on refusals under 155 Nº 9 (seen only in search results, not read) would at most be practice evidence. The transitory art. 8 regularization window closed in 2021."
+   },
+   {
+    "question_id": 137,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 173 (Prevención de la apatridia)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 155 Nº 10 (determination of statelessness)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 10 Nº 1",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-10-25",
+      "instrument": "Opinion column, Diario Constitucional (Macarena Rodríguez): statelessness-determination regulation still not issued",
+      "article": "Ley 21.325 art. 155 Nº 10 (statelessness determination)",
+      "kind": "practice",
+      "what_changed": "The column documents that, more than four years after Ley 21.325, the government had not issued the regulation for the statelessness-determination procedure. That leaves stateless migrant children without a working procedure. It is a gap that already existed in 2023, not a change, and it does not touch art. 173 for children born in Chile.",
+      "url": "https://www.diarioconstitucional.cl/2025/10/25/un-reglamento-que-no-se-dicta-una-ley-que-no-se-aplica-y-ninos-y-ninas-que-sufren-las-consecuencias-por-no-existir-ante-la-ley-por-macarena-rodriguez/",
+      "passage": "La ausencia de un reglamento para determinar la apatridia, pese a que la Ley 21.325 lo ordenó hace más de cuatro años, mantiene en la indefensión a cientos de niños y niñas migrantes en Chile"
+     }
+    ],
+    "implementation_then_now": "From 2022 to the end of 2025, children born in Chile to migrants in irregular status were in general registered as Chilean under art. 173's narrow definition of 'transient foreigner'. The Defensoría de la Niñez's April 2026 statement calls the later Registro Civil circular a 'retroceso respecto de los avances', confirming the earlier practice. The known gap is for stateless migrants not born in Chile: the regulation for the art. 155 Nº 10 statelessness procedure had still not been issued in October 2025. I rate Usually on both dates; no shift in the window. The restrictive Registro Civil Circular N°14 (13 April 2026) falls after 1 Jan 2026.",
+    "practice_sources": [
+     {
+      "title": "Un reglamento que no se dicta, una ley que no se aplica y niños y niñas que sufren las consecuencias por no existir ante la ley (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2025/10/25/un-reglamento-que-no-se-dicta-una-ley-que-no-se-aplica-y-ninos-y-ninas-que-sufren-las-consecuencias-por-no-existir-ante-la-ley-por-macarena-rodriguez/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "\"Hijo de extranjero transeúnte\": Defensoría de la Niñez advierte riesgos ante circular del Registro Civil (Chilevisión)",
+      "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 173 is identical in the 12-FEB-2022 original version and the current consolidated text. None of the window's amending laws (21.590, 21.589, 21.610, 21.655, 21.730) touched it; I opened 21.655 and 21.730, and the 2023 laws are inferred from the identical texts. The practice evidence is thin: an academic's column and a press report of a Defensoría statement. The UNHCR UPR46 submission (2025) could not be read (PDF extraction failed).",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 consolidated XML – LeyChile",
+      "url": "https://www.leychile.cl/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 versión 12-FEB-2022 (imprimir)",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile navegar (versiones)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Constitución Política – LeyChile imprimir",
+      "url": "https://www.bcn.cl/leychile/navegar/imprimir?idNorma=242302"
+     },
+     {
+      "title": "Diario Constitucional column on apatridia regulation (25-10-2025)",
+      "url": "https://www.diarioconstitucional.cl/2025/10/25/un-reglamento-que-no-se-dicta-una-ley-que-no-se-aplica-y-ninos-y-ninas-que-sufren-las-consecuencias-por-no-existir-ante-la-ley-por-macarena-rodriguez/"
+     },
+     {
+      "title": "Chilevisión, Defensoría de la Niñez on Circular N°14 (25-04-2026)",
+      "url": "https://www.chilevision.cl/noticias/nacional/hijo-de-extranjero-transeunte-defensoria-de-la-ninez-cuestiona-circular-del-registro-civil/"
+     }
+    ],
+    "starting_answer_concern": "The MRD's implementation 'Usually; Effectively Never' is not one of the allowed options: it pairs two non-neighbouring levels, apparently Usually for children born in Chile and Effectively Never for stateless migrants without a working determination procedure. I used Usually because art. 173's guarantee covers people born in Chile. Art. 173 guarantees citizenship only to those born in Chile; stateless migrants born abroad get no guarantee, only the art. 155 Nº 10 determination.",
+    "confidence": "medium",
+    "notes": "Art. 173 inc. 2: 'Cualquier persona nacida en el territorio nacional que se encontrare en alguna de las excepciones del numeral 1 del artículo 10 de la Constitución Política que de otro modo fuese apátrida, será considerada como chilena por nacimiento.' Inc. 3 sets a foundling presumption. After the window: Registro Civil Circular N°14 (13-Apr-2026) has children of irregular parents registered as 'hijo de extranjero transeúnte'. A September 2026 Supreme Court ruling was seen only in search results, not read. These bear on the current (Nov 2026) implementation, not on 1 Jan 2026."
+   }
+  ]
+ }
 }
