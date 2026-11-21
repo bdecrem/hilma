@@ -81,6 +81,7 @@ import { checkDeploys, overrideLine, overridesOf, writeOverride } from './_overr
 import { relative, resolve } from 'node:path'
 import { fakeClient } from './_fakedb.mjs'
 import { aheadLine, textAhead } from './_clock.mjs'
+import { LOOKBACK_DAYS, bartSaid } from './_bartwords.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -135,6 +136,14 @@ const many = (k) => (opt[k] === undefined ? [] : [].concat(opt[k]))
 const die = (m) => {
   console.error(m)
   process.exit(1)
+}
+/** Words given as Bart's on a daily idea ticket must be his (OLA-331): looked up in what he typed, texted
+ *  or said in the last days (_bartwords.mjs); refused otherwise, with a line in the overrides. */
+async function mustBeBarts(id, text, what) {
+  const r = bartSaid(text)
+  if (r.ok) return
+  await writeOverride(db, { ticket: id, what: `${what} of the daily idea ${id} gave words as Bart's that were not found in what he typed, texted or said in the last ${LOOKBACK_DAYS} days (${String(text).slice(0, 120)}); refused`, tool: 'issues.mjs' })
+  die(`Refused: ${r.why}. Words given as Bart's on a daily idea are looked up in his own messages; quote what he typed, texted or said (at least 12 characters of it).`)
 }
 const check = (r, what) => {
   if (r.error) die(`${what}: ${r.error.message}`)
@@ -859,10 +868,16 @@ if (cmd === 'overrides') {
   const idea = ((await getState(db, 'sweeps'))?.value?.days ?? []).find((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(id))
   const why = typeof one('why') === 'string' ? one('why') : ''
   if (idea && !/^\s*bart:\s*\S/i.test(why)) die(`Refused: ${id} is the daily idea of the ${idea.day} review, and every idea is built; only Bart drops one. Drop it with his words: issues.mjs drop ${id} --why "Bart: <his words>".`)
+  if (idea) await mustBeBarts(id, why, 'a drop')
   await patch(id, { status: 'dropped', finished_at: new Date().toISOString(), day: pacificDay(), ...(one('why') ? { proof: `dropped: ${one('why')}` } : {}), what: r.what })
   await releaseNoting(id, 'dropped')
 } else if (cmd === 'edit') {
   const id = normId(pos[0])
+  // OLA-331: a proof that gives words as Bart's on a daily idea ticket is checked like a drop
+  if (typeof one('proof') === 'string' && /bart:/i.test(one('proof'))) {
+    const idea = ((await getState(db, 'sweeps'))?.value?.days ?? []).find((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(id))
+    if (idea) await mustBeBarts(id, one('proof'), 'an edit of the proof')
+  }
   const f = {}
   for (const [k, col] of [['title', 'title'], ['what', 'what'], ['area', 'area'], ['pri', 'priority'], ['who', 'who'], ['proof', 'proof'], ['day', 'day']]) if (one(k) !== undefined) f[col] = one(k)
   if (one('week') !== undefined) f.week = one('week') === 'none' ? null : Number(one('week'))

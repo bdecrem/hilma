@@ -12,11 +12,17 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { fpOf } from './_sweepfp.mjs'
 
 const here = (f) => fileURLToPath(new URL(f, import.meta.url))
 const dir = mkdtempSync(join(tmpdir(), 'sweep-ideas-'))
 const fake = join(dir, 'tracker.json')
-const env = { ...process.env, VENTURE_TRACKER_FAKE: fake }
+// what Bart said, for the look-up of words given as his (a stand-in for steers.mjs --collect)
+const said = join(dir, 'said.json')
+writeFileSync(said, JSON.stringify([{ id: 1, at: new Date().toISOString(), source: 'terminal', where: 'm1', text: 'Hmm. OK drop the request matcher idea, we have the grader. And that one is not needed after all.' }]))
+const stub = join(dir, 'stub.mjs')
+writeFileSync(stub, "import { readFileSync, writeFileSync } from 'node:fs'\nconst a = process.argv.slice(2)\nwriteFileSync(a[a.indexOf('--out') + 1], JSON.stringify({ messages: JSON.parse(readFileSync(process.env.STUB_SAID, 'utf8')), machines: [], host: 'here' }))\n")
+const env = { ...process.env, VENTURE_TRACKER_FAKE: fake, VENTURE_STEERS_SCRIPT: stub, STUB_SAID: said }
 delete env.VENTURE_PRIVATE
 const node = (script, ...a) => spawnSync(process.execPath, [here(script), ...a], { encoding: 'utf8', env, timeout: 60000 })
 const run = (...a) => node('sweep.mjs', ...a)
@@ -26,9 +32,11 @@ const DAYS = [
   { day: '2026-11-20', at: '2026-11-21T05:00:00Z', ideas: { kit: { text: 'x', issue: 'OLA-324' }, ola: { text: 'y', issue: 'OLA-325' } } },
   { day: '2026-11-19', at: '2026-11-20T05:00:00Z', ideas: { kit: { text: 'x', issue: 'OLA-213' }, ola: { text: 'y', issue: 'OLA-214' } } },
 ]
+// every stored review has its fingerprint, as post leaves it (a test that wants another passes its own)
+const prints = (days) => ({ key: 'sweeps_fp', at: '2026-11-21T05:00:00Z', value: Object.fromEntries(days.map((d) => [d.day, fpOf(d)])) })
 const tracker = (st, { days = DAYS, extra = [], state = [] } = {}) => ({
   venture_issues: [T(213, st[213]), T(214, st[214]), T(324, st[324]), T(325, st[325]), ...extra],
-  venture_state: [{ key: 'sweeps', at: '2026-11-21T05:00:00Z', value: { at: '2026-11-21T05:00:00Z', since: '2026-11-19', days } }, ...state],
+  venture_state: [{ key: 'sweeps', at: '2026-11-21T05:00:00Z', value: { at: '2026-11-21T05:00:00Z', since: '2026-11-19', days } }, ...(state.some((x) => x.key === 'sweeps_fp') ? [] : [prints(days)]), ...state],
   venture_issue_activity: [],
   venture_commits: [],
 })
@@ -130,7 +138,7 @@ try {
     put(tracker(ALL_BUILT, { extra: [T(400, 'open', NEW), T(401, 'open', NEW)], state: [internal('OLA-400'), internal('OLA-401'), { key: 'sweeps_fp', at: '2026-11-21T05:00:00Z', value: { '2026-11-20': 'not-its-print', '2026-11-19': 'x' } }] }))
     const r = run('post', entry(I('OLA-400', 'OLA-401')), '--dry')
     assert.equal(r.status, 1)
-    assert.match(r.stderr, /the stored review of 2026-11-20, 2026-11-19 was changed outside sweep.mjs post since it was posted/)
+    assert.match(r.stderr, /the stored review of 2026-11-20 \(its fingerprint differs\), 2026-11-19 \(its fingerprint differs\) may have been changed outside sweep.mjs post/)
     assert.match(run('ideas', '--day', '2026-11-21').stdout, /changed outside sweep.mjs post/)
     assert.equal(run('accept-review', '2026-11-20', '--why', 'short').status, 1, 'a reason is needed')
     for (const d of ['2026-11-20', '2026-11-19']) assert.equal(run('accept-review', d, '--why', 'checked by hand: only a typo fixed').status, 0)
@@ -138,6 +146,36 @@ try {
     const r2 = run('post', entry(I('OLA-400', 'OLA-401')), '--dry')
     assert.doesNotMatch(r2.stderr, /changed outside/)
     assert.match(r2.stderr, /not matched to tickets yet/)
+  })
+
+  ok('a posted review with no fingerprint is named (deleting the prints hides nothing)', () => {
+    put(tracker(ALL_BUILT, { state: [{ key: 'sweeps_fp', at: '2026-11-21T05:00:00Z', value: { '2026-11-20': fpOf(DAYS[0]) } }] }))
+    const r = run('ideas', '--day', '2026-11-21')
+    assert.equal(r.status, 1)
+    assert.match(r.stdout, /2026-11-19 \(it has no fingerprint\)/)
+    assert.doesNotMatch(r.stdout, /2026-11-20 \(/)
+    assert.match(run('post', entry(I('OLA-400', 'OLA-401')), '--dry').stderr, /2026-11-19 \(it has no fingerprint\)/)
+  })
+
+  ok("words given as Bart's are looked up: a drop or a proof edit of an idea ticket with words he never said is refused, with a line", () => {
+    put(tracker({ 213: 'open', 214: 'open', 324: 'open', 325: 'dropped' }))
+    const iss = (...a) => node('issues.mjs', ...a)
+    const no = iss('drop', 'OLA-213', '--why', 'Bart: drop it')
+    assert.equal(no.status, 1)
+    assert.match(no.stderr, /Refused: "drop it" is under 12 characters/)
+    const no2 = iss('drop', 'OLA-213', '--why', 'Bart: not needed any more, drop it')
+    assert.equal(no2.status, 1)
+    assert.match(no2.stderr, /Refused: "not needed any more, drop it" is not in anything Bart typed, texted or said in the last 3 days/)
+    assert.equal(db().venture_issues.find((i) => i.id === 'OLA-213').status, 'open')
+    assert.ok(db().venture_state.some((x) => x.key.startsWith('override:') && /drop of the daily idea OLA-213 gave words as Bart's/.test(x.value.what)), 'a line in the overrides')
+    const yes = iss('drop', 'OLA-213', '--why', 'Bart: ok DROP the request matcher idea')
+    assert.equal(yes.status, 0, yes.stderr)
+    assert.equal(db().venture_issues.find((i) => i.id === 'OLA-213').status, 'dropped')
+    const ed = iss('edit', 'OLA-325', '--proof', 'dropped: Bart: x is not wanted anymore at all')
+    assert.equal(ed.status, 1)
+    assert.match(ed.stderr, /Refused: "x is not wanted anymore at all" is not in anything Bart typed/)
+    assert.ok(db().venture_state.some((x) => x.key.startsWith('override:') && /an edit of the proof of the daily idea OLA-325/.test(x.value.what)))
+    assert.equal(iss('edit', 'OLA-325', '--proof', 'dropped: Bart: we have the grader.').status, 0)
   })
 
   ok('when every idea is done or dropped by Bart, nothing holds the post', () => {

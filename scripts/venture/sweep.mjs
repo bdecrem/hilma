@@ -25,7 +25,7 @@
 // apps/venture/private/data/sweeps/<day>.json (private, backed up by sync.mjs).
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { createHash } from 'node:crypto'
+import { fpOf } from './_sweepfp.mjs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
@@ -313,15 +313,13 @@ async function unbuilt(d) {
 const unbuiltLine = (u) => `${u.id ?? 'no ticket'} (the ${u.side === 'kit' ? 'Kit' : 'Ola'} idea of ${u.day}, ${u.status})${u.title ? `: ${u.title.slice(0, 90)}` : ''}`
 // OLA-331: each stored review keeps a fingerprint (venture_state "sweeps_fp", by day) of what post stored;
 // one that no longer matches was changed outside this tool. `told` is left out: post sets it after the text.
-// keys sorted at every level: the database (jsonb) gives an object back with its keys in its own order
-const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => [k, canon(v[k])])) : v)
-const fpOf = (d) => createHash('sha256').update(JSON.stringify(canon({ ...d, ideas: d.ideas ? { ...d.ideas, told: undefined } : undefined }))).digest('hex').slice(0, 16)
 async function changedReviews() {
   const days = (await getState(db, 'sweeps'))?.value?.days ?? []
   const fps = (await getState(db, 'sweeps_fp'))?.value ?? {}
-  return { days, fps, changed: days.filter((d) => fps[d.day] && fps[d.day] !== fpOf(d)).map((d) => d.day) }
+  // a posted review with no fingerprint is named too: deleting the prints must not hide an edit
+  return { days, fps, changed: days.filter((d) => !fps[d.day] || fps[d.day] !== fpOf(d)).map((d) => ({ day: d.day, why: fps[d.day] ? 'its fingerprint differs' : 'it has no fingerprint' })) }
 }
-const changedLine = (days) => `the stored review of ${days.join(', ')} was changed outside sweep.mjs post since it was posted (its fingerprint differs). Read what changed (sweep.mjs show --day <day>), then repost that day's file with sweep.mjs post, or accept it as it is with sweep.mjs accept-review <day> --why "<what changed and why>" (a line in issues.mjs overrides)`
+const changedLine = (list) => `the stored review of ${list.map((c) => `${c.day} (${c.why})`).join(', ')} may have been changed outside sweep.mjs post since it was posted. Read what changed (sweep.mjs show --day <day>), then repost that day's file with sweep.mjs post, or accept it as it is with sweep.mjs accept-review <day> --why "<what changed and why>" (a line in issues.mjs overrides)`
 
 if (cmd === '--wait') {
   for (;;) {
@@ -354,7 +352,7 @@ if (cmd === '--wait') {
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
   const e = JSON.parse(readFileSync(file, 'utf8'))
   {
-    const ch = (await changedReviews()).changed.filter((d) => d !== e.day)
+    const ch = (await changedReviews()).changed.filter((c) => c.day !== e.day)
     if (ch.length) die(`the entry was not stored: ${changedLine(ch)} (OLA-331).`)
     const u = await unbuilt(e.day)
     if (u.length) die(`the entry was not stored: ${u.length} daily idea(s) of an earlier review ${u.length === 1 ? 'is' : 'are'} neither done nor dropped by Bart, and every idea is built before the next review is posted (OLA-331):\n- ${u.map(unbuiltLine).join('\n- ')}\nBuild each now (an Opus builder per part of the code, SWEEP.md "One idea for each side, every day"); only Bart drops one.`)
@@ -461,7 +459,7 @@ if (cmd === '--wait') {
   // fingerprints: this entry's new one, the others kept (a day with none yet gets its present one)
   {
     const fps = (await getState(db, 'sweeps_fp'))?.value ?? {}
-    await setState(db, 'sweeps_fp', Object.fromEntries(days.map((d) => [d.day, d.day === entry.day ? fpOf(entry) : fps[d.day] ?? fpOf(d)])))
+    await setState(db, 'sweeps_fp', Object.fromEntries(days.map((d) => [d.day, d.day === entry.day ? fpOf(entry) : fps[d.day]]).filter(([, f]) => f)))
   }
   const all = days.flatMap((d) => [...d.kit, ...d.ola])
   console.log(`stored ${entry.day}: ${entry.kit.length} for Kit, ${entry.ola.length} for Ola, ${entry.open.length} open`)
@@ -495,6 +493,7 @@ if (cmd === '--wait') {
   const x = days.find((y) => y.day === d)
   if (!x) die(`no stored review for ${d}`)
   if (fps[d] === fpOf(x)) die(`the review of ${d} has not changed since it was posted`)
+  // (a review with no fingerprint is accepted the same way, with the same line)
   await writeOverride(db, { key: `sweep-accepted-${d}-${fpOf(x)}`, what: `the review of ${d} was changed outside sweep.mjs post and accepted as it is (${why.trim()})`, tool: 'sweep.mjs' })
   await setState(db, 'sweeps_fp', { ...fps, [d]: fpOf(x) })
   console.log(`accepted the review of ${d} as it is; a line is in issues.mjs overrides`)

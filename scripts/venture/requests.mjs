@@ -65,16 +65,41 @@ if (args[0] === 'show') {
 }
 
 // ---------------------------------------------------------------- what he said, the tickets, the commits
+const MIN = 60e3
+/** Is every machine that had a session that day in the messages? Fails, named, when one is not (OLA-213):
+ *  zero messages from a machine with a session that day, or an export older than its session's last hour.
+ *  This machine's own transcripts are read directly, so only its count is checked. */
+function machineCheck(list, own) {
+  const bad = []
+  for (const m of list) {
+    const isOwn = m.host === own
+    console.log(`  machine ${m.host}${isOwn ? ' (this one)' : ''}: ${m.messages} message(s), newest ${m.newest ? hhmm(m.newest) : 'none'}; export ${m.exportedAt ? `${m.exportedAt.slice(0, 16)}Z` : 'never'}; session that day ${m.session ? `until ${hhmm(m.session)}` : 'none'}`)
+    if (!m.session || (isOwn && dry)) continue
+    if (!m.messages) bad.push(`${m.host} had a session that day until ${hhmm(m.session)} and its export holds no message from Bart`)
+    else if (!isOwn && (!m.exportedAt || Date.parse(m.exportedAt) < Date.parse(m.session) - 60 * MIN)) bad.push(`${m.host}'s export (${m.exportedAt ? `${m.exportedAt.slice(0, 16)}Z` : 'never'}, newest message ${m.newest ? hhmm(m.newest) : "none"}) is older than its session's last hour (until ${hhmm(m.session)}): run node scripts/venture/steers.mjs --export on ${m.host} (sync.mjs push does it)`)
+  }
+  if (bad.length) fail(`Bart's messages of ${day} are not all here: ${bad.join('; ')}. Then rerun requests.mjs.`)
+}
 function messages() {
-  if (opt('--messages')) return JSON.parse(readFileSync(opt('--messages'), 'utf8'))
-  // this machine's typed messages, for the other machines: a write, so never in a dry run or on a copy
-  if (!dry && !FAKE) spawnSync(process.execPath, [STEERS, '--export'], { encoding: 'utf8' })
+  if (opt('--messages')) {
+    const j = JSON.parse(readFileSync(opt('--messages'), 'utf8'))
+    return Array.isArray(j) ? j : j.messages
+  }
+  // this machine's typed messages first (from the main checkout's sessions, whatever folder this runs in),
+  // for the other machines: a write, so never in a dry run or on a copy
+  if (!dry && !FAKE) {
+    const x = spawnSync(process.execPath, [STEERS, '--export'], { encoding: 'utf8' })
+    if (x.status !== 0) fail(`this machine's messages could not be exported (steers.mjs --export): ${(x.stderr || x.stdout || '').trim().split('\n').pop()}`)
+  }
   const dir = mkdtempSync(join(tmpdir(), 'requests-'))
   try {
     const out = join(dir, 'messages.json')
     const r = spawnSync(process.execPath, [STEERS, '--collect', '--json', '--out', out, '--day', day], { encoding: 'utf8', env: process.env })
     if (r.status !== 0 || !existsSync(out)) fail(`Bart's messages could not be read (steers.mjs --collect): ${(r.stderr || r.stdout || '').trim().split('\n').pop()}`)
-    return JSON.parse(readFileSync(out, 'utf8'))
+    const j = JSON.parse(readFileSync(out, 'utf8'))
+    if (!Array.isArray(j.messages) || !Array.isArray(j.machines)) fail('the collector gave no list of messages and machines')
+    machineCheck(j.machines, j.host)
+    return j.messages
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

@@ -23,7 +23,8 @@ const stub = file('steers-stub.mjs', `import { appendFileSync, readFileSync, wri
 const a = process.argv.slice(2)
 appendFileSync(process.env.STUB_LOG, a.join(' ') + '\\n')
 if (process.env.STUB_FAIL) { console.error('the transcripts could not be read'); process.exit(1) }
-if (a.includes('--out')) writeFileSync(a[a.indexOf('--out') + 1], readFileSync(process.env.STUB_MESSAGES, 'utf8'))
+const machines = process.env.STUB_MACHINES ? JSON.parse(process.env.STUB_MACHINES) : []
+if (a.includes('--out')) writeFileSync(a[a.indexOf('--out') + 1], JSON.stringify({ messages: JSON.parse(readFileSync(process.env.STUB_MESSAGES, 'utf8')), machines, host: 'here' }))
 `)
 const baseEnv = { ...process.env, VENTURE_TRACKER_FAKE: fake, VENTURE_STEERS_SCRIPT: stub, STUB_LOG: log }
 delete baseEnv.VENTURE_PRIVATE
@@ -124,6 +125,27 @@ try {
     const ok2 = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
     assert.equal(ok2.status, 0, ok2.stderr)
     assert.equal(db().venture_state.find((x) => x.key === 'requests').value.days[DAY].failed, undefined)
+  })
+
+  ok('every machine with a session that day: two made-up machines, one stale, fails named; zero messages fails, never "0 requests"', () => {
+    reset()
+    const fresh = { host: 'm4', messages: 3, newest: '2026-11-20T05:00:00Z', exportedAt: '2026-11-20T06:30:00Z', session: '2026-11-20T07:00:00Z' }
+    const stale = { host: 'mini', messages: 2, newest: '2026-11-19T20:00:00Z', exportedAt: '2026-11-19T22:00:00Z', session: '2026-11-20T06:00:00Z' }
+    const none = { host: 'here', messages: 0, newest: null, exportedAt: '2026-11-20T07:00:00Z', session: '2026-11-20T07:10:00Z' }
+    const r = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([fresh, stale]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(r.status, 1)
+    assert.match(r.stdout, /machine m4: 3 message\(s\), newest 9:00 pm; export 2026-11-20T06:30Z; session that day until 11:00 pm/)
+    assert.match(r.stdout, /machine mini: 2 message\(s\), newest 12:00 pm/)
+    assert.match(r.stderr, /mini's export \(2026-11-19T22:00Z, newest message 12:00 pm\) is older than its session's last hour \(until 10:00 pm\): run node scripts\/venture\/steers.mjs --export on mini/)
+    assert.doesNotMatch(r.stderr, /m4's export/, 'the fresh one is fine')
+    assert.match(r.stderr, /stored as failed/)
+    assert.equal(db().venture_issues.length, 2, 'nothing opened')
+    const z = node({ STUB_MESSAGES: file('empty.json', []), STUB_MACHINES: JSON.stringify([fresh, none]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(z.status, 1)
+    assert.match(z.stderr, /here had a session that day until 11:10 pm and its export holds no message from Bart/)
+    assert.ok(db().venture_state.find((x) => x.key === 'requests').value.days[DAY].failed, 'stored as failed, not as 0 requests')
+    const fine = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([fresh, { ...stale, exportedAt: '2026-11-20T05:30:00Z' }]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(fine.status, 0, fine.stderr)
   })
 } finally {
   rmSync(dir, { recursive: true, force: true })

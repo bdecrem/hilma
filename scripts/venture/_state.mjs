@@ -15,7 +15,17 @@ export async function setState(db, key, value) {
 }
 
 // "an interactive session is open here": never fails a watcher over it
-export const beat = (db, what) => setState(db, 'session', { host: hostname(), by: what }).catch(() => {})
+export const beat = async (db, what) => {
+  await setState(db, 'session', { host: hostname(), by: what }).catch(() => {})
+  // and per machine, the last beat of each day (seen_<host>, the last 7 days): requests.mjs reads it to
+  // know which machines had a session that day and until when, apart from their own exports (OLA-213)
+  try {
+    const host = hostname().replace(/\..*$/, '').replace(/[^A-Za-z0-9]/g, '_')
+    const days = { ...((await getState(db, `seen_${host}`))?.value?.days ?? {}), [pacificDay()]: new Date().toISOString() }
+    for (const k of Object.keys(days).sort().slice(0, -7)) delete days[k]
+    await setState(db, `seen_${host}`, { host, days })
+  } catch {}
+}
 
 // The daily sweep (scripts/venture/sweep.mjs, apps/venture/SWEEP.md): the Pacific days that still
 // need one. A day is due from 6 pm of that day; every day since the first sweep counts.

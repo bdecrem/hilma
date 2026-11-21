@@ -201,9 +201,12 @@ are immediately implemented"; OLA-331). An idea is work, not a proposal he can d
    names each one; `sweep.mjs ideas` lists them beforehand. Built is done, or dropped by Bart: an
    idea with no ticket, or dropped without his words, is not built. Only Bart drops an idea:
    `issues.mjs drop <id> --why "Bart: <his words>"`, any other drop of an idea ticket is refused.
+   His words are looked up: at least 12 characters of them must be in what he typed, texted or
+   said in the last 3 days (the same for `edit --proof` on an idea ticket), else the drop is
+   refused and a line goes to the overrides.
 4. An idea's ticket is new: opened on or after the review's day, and not finished before the
    review was first posted. A repost may not point an idea at another ticket while the first one
-   is unbuilt. A stored review changed outside `sweep.mjs post` is named, and the next post waits
+   is unbuilt. A stored review changed outside `sweep.mjs post`, or with no fingerprint, is named, and the next post waits
    until it is reposted or accepted (`sweep.mjs accept-review <day> --why "..."`, a line in the
    overrides).
 
@@ -253,7 +256,11 @@ of the day, run
 It reads what he typed, texted and said that day (the same messages the grader reads), and gives
 each request one outcome with its reason: on a ticket (an existing ticket carries it), done the
 same day, answered (a question answered that day), or new (still wanted at the end of the day and
-no ticket carries it). Only a new one becomes a P1 ticket, with his words in it. It is one question
+no ticket carries it). Only a new one becomes a P1 ticket, with his words in it. It first exports
+this machine's messages (from the main checkout's sessions, whatever folder it runs in), prints
+each machine's count, newest message, export time and session, and fails, named, when a machine
+that had a session that day has no message from Bart or an export older than its session's last
+hour (run `steers.mjs --export` there, then rerun). It is one question
 to Claude Opus on the machine's Max login, never the API key; `--dry` writes nothing anywhere.
 `gather` prints the result; `sweep.mjs post` refuses a day that was not matched and stores the
 counts with the entry, which the Learning page shows ("Requests from Bart: N, each accounted

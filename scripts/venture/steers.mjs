@@ -27,6 +27,7 @@
 // live here. The rubric, the rules and his words stay out of git: they are read from
 // apps/venture/private/ at run time.
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { homedir, hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
@@ -35,6 +36,16 @@ import { createClient } from '@supabase/supabase-js'
 import { getState, setState } from './_state.mjs'
 
 const root = new URL('../../', import.meta.url)
+// The main checkout, also when this runs in a worktree (OLA-213): its notes, and the Claude Code project
+// folder its sessions write to. A worktree's own folder holds only the agents that ran there.
+const MAIN = (() => {
+  try {
+    const common = execFileSync('git', ['-C', fileURLToPath(root), 'rev-parse', '--path-format=absolute', '--git-common-dir'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+    return common.endsWith('/.git') ? common.slice(0, -5) : fileURLToPath(root).replace(/\/$/, '')
+  } catch {
+    return fileURLToPath(root).replace(/\/$/, '')
+  }
+})()
 const env = Object.fromEntries(
   readFileSync(new URL('.env.local', root), 'utf8')
     .split('\n')
@@ -42,7 +53,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
 const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-const priv = (f) => new URL(`apps/venture/private/${f}`, root)
+const priv = (f) => new URL(`apps/venture/private/${f}`, `file://${MAIN}/`)
 const TZ = 'America/Los_Angeles'
 const MODEL = 'claude-opus-5-5'
 const CONTEXT = 1500
@@ -70,8 +81,27 @@ const clean = (s) => s.replace(/<pasted_content[^>]*>([\s\S]*?)(<\/pasted_conten
 // and on mid-turn (queued_command) attachments; everything else in a transcript is the machine.
 // The transcripts of this checkout on this machine (Claude Code names the folder after the path).
 // Until Nov 18 this was the M1's folder, typed out: a day worked on the M4 was counted as empty.
+const projectDir = () => process.env.VENTURE_TRANSCRIPTS || join(homedir(), '.claude/projects', MAIN.replace(/[^A-Za-z0-9]/g, '-'))
+/** The last moment of an interactive session on this machine that day (any line of a Claude Code
+ *  session started in the terminal, entrypoint "cli"; headless runs are "sdk-cli"), or null. */
+function lastActive(day) {
+  const dir = projectDir()
+  if (!existsSync(dir)) return null
+  const lo = Date.parse(`${addDays(day, -1)}T00:00:00Z`)
+  let last = null
+  for (const f of readdirSync(dir).filter((f) => f.endsWith('.jsonl'))) {
+    const p = join(dir, f)
+    if (statSync(p).mtimeMs < lo) continue
+    for (const line of readFileSync(p, 'utf8').split('\n')) {
+      if (!line.includes('"entrypoint":"cli"')) continue
+      const t = /"timestamp":"([^"]+)"/.exec(line)?.[1]
+      if (t && laDay(t) === day && (!last || t > last)) last = t
+    }
+  }
+  return last
+}
 function fromTranscripts(day) {
-  const dir = join(homedir(), '.claude/projects', fileURLToPath(root).replace(/\/$/, '').replace(/[^A-Za-z0-9]/g, '-'))
+  const dir = projectDir()
   if (!existsSync(dir)) return []
   const lo = Date.parse(`${addDays(day, -1)}T00:00:00Z`)
   const out = []
@@ -189,13 +219,43 @@ async function fromOtherMachines(day) {
   if (error) throw new Error(`venture_state: ${error.message}`)
   return data.filter((r) => r.key !== `typed_${HOST}`).flatMap((r) => r.value?.days?.[day] ?? [])
 }
+/** Every machine's export and session record for the day (OLA-213): [{ host, messages, newest, exportedAt, session }]. */
+async function machines(day) {
+  const { data, error } = await db.from('venture_state').select('key, value, at').or('key.like.typed_%,key.like.seen_%')
+  if (error) throw new Error(`venture_state: ${error.message}`)
+  const by = {}
+  const m = (h) => (by[h] ??= { host: h, messages: 0, newest: null, exportedAt: null, session: null })
+  for (const r of data) {
+    if (r.key.startsWith('typed_')) {
+      const x = m(r.key.slice(6))
+      const ms = r.value?.days?.[day] ?? []
+      x.messages = ms.length
+      x.newest = ms.map((y) => y.at).sort().pop() ?? null
+      x.exportedAt = r.value?.exportedAt ?? r.at
+      const a = r.value?.active?.[day]
+      if (a && (!x.session || a > x.session)) x.session = a
+    } else {
+      // the watchers' heartbeat of each machine (_state.mjs beat), by day
+      const x = m(r.key.slice(5))
+      const a = r.value?.days?.[day]
+      if (a && (!x.session || a > x.session)) x.session = a
+    }
+  }
+  return Object.values(by).sort((a, b) => a.host.localeCompare(b.host))
+}
 async function exportTyped() {
   const today = laDay(new Date().toISOString())
-  const old = (await getState(db, `typed_${HOST}`))?.value?.days ?? {}
-  const days = { ...old }
-  for (const day of [addDays(today, -1), today]) days[day] = fromTranscripts(day)
+  const prev = (await getState(db, `typed_${HOST}`))?.value ?? {}
+  const days = { ...(prev.days ?? {}) }
+  const active = { ...(prev.active ?? {}) }
+  for (const day of [addDays(today, -1), today]) {
+    days[day] = fromTranscripts(day)
+    const a = lastActive(day)
+    if (a) active[day] = a
+  }
   for (const k of Object.keys(days).sort().slice(0, -7)) delete days[k]
-  await setState(db, `typed_${HOST}`, { host: HOST, days })
+  for (const k of Object.keys(active).sort().slice(0, -7)) delete active[k]
+  await setState(db, `typed_${HOST}`, { host: HOST, days, active, exportedAt: new Date().toISOString() })
   console.log(`typed on ${HOST}: ${Object.keys(days).sort().slice(-2).map((d) => `${d} ${days[d].length}`).join(', ')}`)
 }
 
@@ -391,7 +451,7 @@ if (collectOnly) {
   // stdout: process.exit right after a large write to a pipe cut the output at 64 KB (Nov 20 is 166 KB).
   if (flag('--json')) {
     if (!flag('--out')) (console.error('--json needs --out <file>'), process.exit(1))
-    writeFileSync(after('--out'), JSON.stringify(await collect(days[0])))
+    writeFileSync(after('--out'), JSON.stringify({ messages: await collect(days[0]), machines: await machines(days[0]), host: HOST }))
     process.exit(0)
   }
   const lines = []
