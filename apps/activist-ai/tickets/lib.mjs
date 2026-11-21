@@ -15,6 +15,13 @@ export const nmOla = path.join(repo, 'apps/activist-ai/node_modules')
 export const MODELS = JSON.parse(readFileSync(path.join(here, 'models.json'), 'utf8'))
 export const MIN_FREE_GB = 10
 
+// The tracker, called with an argument list and never through a shell: a comment carries the model's
+// own words, and on Nov 21 Ola's reply quoted `node scripts/venture/runner-test.mjs` in backticks,
+// which the hand-off's shell line ran on the mini, outside the sandbox.
+export function tracker(args, script = process.env.OLA_TICKETS_TRACKER || path.join(repo, 'scripts/venture/issues.mjs')) {
+  return execFileSync(process.execPath, [script, ...args], { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 << 20 }).toString()
+}
+
 export const sh = (cmd, cwd) => execFileSync('/bin/sh', ['-c', cmd], { cwd, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 << 20 }).toString()
 export const q = (p) => JSON.stringify(p)
 export const portOf = (model) => 4460 + Object.keys(MODELS).filter((k) => !k.startsWith('_')).indexOf(model)

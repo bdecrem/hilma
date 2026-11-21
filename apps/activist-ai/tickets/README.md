@@ -19,7 +19,7 @@ apps/activist-ai/tickets/gateway.sh kimi-k3.1-pro glm-5.3        # one loopback 
 node apps/activist-ai/tickets/trial.mjs --models reference,empty # self-test: the real commit must pass every case, no change must fail
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 --max-usd 30 [--run-usd 10] --time 1500 --tokens 3000000
 node apps/activist-ai/tickets/trial.mjs --report                 # pass count, cost and minutes per model
-node apps/activist-ai/tickets/test.mjs                           # the stops and refusals, offline (8 tests)
+node apps/activist-ai/tickets/test.mjs                           # the stops and refusals, offline (9 tests)
 ```
 
 **Spending stops (Nov 21, after the $45 morning).** Every run, trial or hand-off, stops itself after

@@ -5,11 +5,11 @@
 //   node apps/activist-ai/tickets/test.mjs
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { existsSync, mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { cost, here, overLimit, runFolders, runOpencode, runTest } from './lib.mjs'
+import { cost, here, overLimit, runFolders, runOpencode, runTest, tracker } from './lib.mjs'
 
 // A stand-in for opencode: one model call every 20 ms, each 200,000 tokens in and 1,000 out, until
 // it is killed or has made `steps` calls. At Kimi K3.1 Pro's prices ($2 in, $10 out) a call is $0.41.
@@ -81,6 +81,20 @@ test('the trial refuses runs whose worst case is over --max-usd', () => {
   const one = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--cases', 'ola-324-clock', '--run-usd', '6'], { encoding: 'utf8' })
   assert.equal(one.status, 2)
   assert.match(one.stderr, /--max-usd is required: these 1 runs can cost up to \$6\.00/)
+})
+
+test('the tracker gets the model\'s words as one argument, never through a shell', () => {
+  // Nov 21: Ola's reply quoted `node scripts/venture/runner-test.mjs` in backticks, and the hand-off's
+  // shell line ran it on the mini. Here a reply that would write a file if a shell ever saw it.
+  const dir = realpathSync(mkdtempSync(path.join(tmpdir(), 'olt-tracker-')))
+  const fake = path.join(dir, 'issues.mjs')
+  writeFileSync(fake, "console.log(JSON.stringify(process.argv.slice(2)))\n")
+  const marker = path.join(dir, 'ran')
+  const words = `Changed \`touch ${marker}\` and $(touch ${marker}); "quoted" 'single' \\ done`
+  const out = JSON.parse(tracker(['comment', 'OLA-1', words], fake))
+  assert.deepEqual(out, ['comment', 'OLA-1', words])
+  assert.equal(existsSync(marker), false)
+  rmSync(dir, { recursive: true, force: true })
 })
 
 test('the hand-off refuses to start without a test that decides', () => {

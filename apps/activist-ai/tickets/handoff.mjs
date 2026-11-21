@@ -23,12 +23,12 @@
 import { writeFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { hostname } from 'node:os'
-import { MODELS, repo, root, sh, q, freeGb, MIN_FREE_GB, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, cost } from './lib.mjs'
+import { MODELS, repo, root, sh, q, freeGb, MIN_FREE_GB, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, cost, tracker } from './lib.mjs'
 
 const argv = process.argv.slice(2)
 const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true) }
 const flags = (n) => argv.flatMap((x, i) => (x === `--${n}` && argv[i + 1] && !argv[i + 1].startsWith('--') ? [argv[i + 1]] : []))
-const issues = (args) => sh(`node ${q(path.join(repo, 'scripts/venture/issues.mjs'))} ${args}`, repo)
+const issues = (...args) => tracker(args) // an argument list, never a shell line (lib.mjs tracker)
 const die = (m) => { console.error(m); process.exit(2) }
 
 if (argv[0] === 'list') {
@@ -44,7 +44,7 @@ if (!model || !MODELS[model] || model.startsWith('_')) die(`no ticket model: --m
 const dry = flag('dry', false) === true
 const tests = flags('test')
 if (!tests.length) die('--test "<cmd>" is required (one per command): the ticket\'s tests decide whether Ola\'s change works')
-const show = issues(`show ${id}`)
+const show = issues('show', id)
 const who = (show.split('\n').find((l) => l.startsWith('area ')) || '').split(' · ').pop()?.trim()
 const claimed = flag('claimed', '')
 if (!dry && who !== 'ola' && !(claimed && who === claimed)) die(`${id} is held by "${who}": only a ticket marked for Ola (issues.mjs edit ${id} --who ola), or claimed by the one running this (--claimed ${who}), is handed off`)
@@ -100,7 +100,7 @@ console.log(`${id}: ${s.end}, ${minutes} min, ${s.requests} model calls, $${usd}
 console.log(`${id}: tests ${passed ? 'PASS' : 'FAIL'}: ${testLine}`)
 if (!diff.trim()) {
   rmSync(run.work, { recursive: true, force: true })
-  if (!dry) issues(`comment ${id} ${q(`Ola (${MODELS[model].id}) worked ${minutes} min on it and changed nothing (${s.end}, $${usd}). Its last words: ${s.final.slice(0, 600) || '(none)'}`)}`)
+  if (!dry) issues('comment', id, `Ola (${MODELS[model].id}) worked ${minutes} min on it and changed nothing (${s.end}, $${usd}). Its last words: ${s.final.slice(0, 600) || '(none)'}`)
   process.exit(1)
 }
 
@@ -125,5 +125,5 @@ try {
 }
 const where = `${hostname().split('.')[0]}:${repo}`
 console.log(`${id}: local branch ${branch} = ${commit.slice(0, 8)} in ${where} (not pushed); patch ${path.join(run.dir, 'change.patch')}`)
-if (!dry) issues(`comment ${id} ${q(`Ola built it on ${MODELS[model].id}: local branch ${branch} (${commit.slice(0, 8)}, from main ${base.slice(0, 8)}) in ${where}, not pushed; patch ${path.relative(root, run.dir)}/change.patch under ~/ola-trials. ${summary.files}; ${minutes} min, ${s.requests} model calls, $${usd} (${s.end}). Tests in its sandbox: ${passed ? 'PASS' : 'FAIL'}, ${testLine}. Ola's words: ${s.final.slice(0, 600)}. Next: the lead reviews the branch, runs the checks and merges.`)}`)
+if (!dry) issues('comment', id, `Ola built it on ${MODELS[model].id}: local branch ${branch} (${commit.slice(0, 8)}, from main ${base.slice(0, 8)}) in ${where}, not pushed; patch ${path.relative(root, run.dir)}/change.patch under ~/ola-trials. ${summary.files}; ${minutes} min, ${s.requests} model calls, $${usd} (${s.end}). Tests in its sandbox: ${passed ? 'PASS' : 'FAIL'}, ${testLine}. Ola's words: ${s.final.slice(0, 600)}. Next: the lead reviews the branch, runs the checks and merges.`)
 process.exit(passed ? 0 : 1)
