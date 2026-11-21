@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "back2000 chile labor_b claude-opus-5-5 high",
- "pid": 78568,
  "step": "back2000",
  "slug": "chile",
  "chunk": "labor_b",
@@ -59,5 +58,908 @@
   "user": 184
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T10:42:22.009Z",
+ "minutes": 8.89,
+ "meters_after": {
+  "at": "2026-11-21T10:42:22.010Z",
+  "window": {
+   "pct": 38,
+   "resets": "Nov 21 at 7am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 6,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 38,
+    "resets": "Nov 21 at 7am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 6,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 38% used · resets Nov 21 at 7am (America/Los_Angeles)\nCurrent week (all models): 6% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 135226,
+   "output": 43137,
+   "cache_read": 2940120,
+   "cache_write": 140541,
+   "cost_usd": 2.471,
+   "total": 3259024
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 135164,
+    "output": 10661,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3399,
+    "cost_usd": 0.1088
+   },
+   "claude-opus-5-5": {
+    "input": 62,
+    "output": 32476,
+    "cache_read": 2940120,
+    "cache_write": 140541,
+    "thinking": 7439,
+    "cost_usd": 2.3621
+   }
+  }
+ },
+ "turns": 34,
+ "calls": 63,
+ "duration_ms": 532751,
+ "duration_api_ms": 346820,
+ "pages_read": 22,
+ "pages": [
+  {
+   "at": "2026-11-21T10:33:37.763Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+   "find": "Artículo 23 | Artículo 42 | Artículo 41 | permanencia definitiva | contrato",
+   "ok": true,
+   "chars": 4214
+  },
+  {
+   "at": "2026-11-21T10:33:42.756Z",
+   "url": "https://www.leychile.cl/Navegar?idNorma=6483",
+   "find": "Artículo 23 | Artículo 42 | Artículo 41 | Artículo 25",
+   "ok": true,
+   "chars": 2336
+  },
+  {
+   "at": "2026-11-21T10:33:47.290Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 23 | Artículo 42 | Artículo 41 | Artículo 25",
+   "ok": true,
+   "chars": 10377
+  },
+  {
+   "at": "2026-11-21T10:33:51.717Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483",
+   "find": "Artículo 27.- | Artículo 28.- | Artículo 29.- | Artículo 30.- | Artículo 31.-",
+   "ok": true,
+   "chars": 4353
+  },
+  {
+   "at": "2026-11-21T10:34:07.569Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "Artículo 37 | terminación del contrato | caducidad | 30 días | permanencia definitiva al",
+   "ok": true,
+   "chars": 12580
+  },
+  {
+   "at": "2026-11-21T10:34:14.135Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "Artículo 38° | Artículo 36° | Artículo 35° | Artículo 49° | Artículo 50° | Artículo 102°",
+   "ok": true,
+   "chars": 12379
+  },
+  {
+   "at": "2026-11-21T10:34:22.303Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+   "find": "DTO 2910 | Decreto 1930 | fecha_version | vigencia | versiones",
+   "ok": true,
+   "chars": 6477
+  },
+  {
+   "at": "2026-11-21T10:34:34.620Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=1998-05-18",
+   "find": "Artículo 39° | Artículo 40° | Artículo 47°",
+   "ok": true,
+   "chars": 6485
+  },
+  {
+   "at": "2026-11-21T10:34:58.628Z",
+   "url": "https://derecho.uc.cl/images/old/stories/DAE/clinica_juridica/4._Visas_para_trabajadores_extranjeros__1.pdf",
+   "find": "30 días | término | caduc | permanencia definitiva",
+   "ok": true,
+   "chars": 3516
+  },
+  {
+   "at": "2026-11-21T10:35:33.859Z",
+   "url": "https://portal.dev.chileatiende.cl/fichas/2383/1/pdf",
+   "find": "30 días | término | finiquito | permanencia",
+   "ok": true,
+   "chars": 1078
+  },
+  {
+   "at": "2026-11-21T10:36:07.292Z",
+   "url": "https://www.dt.gob.cl/m/1620/articles-60408_recurso_2.doc",
+   "find": "30 días | término | caduc | iguales derechos | Inspección",
+   "ok": true,
+   "chars": 579
+  },
+  {
+   "at": "2026-11-21T10:36:39.805Z",
+   "url": "https://santiagodechile.consulado.gov.co/sites/default/files/FOTOS2020/guia-santiago-chile.pdf",
+   "find": "caduca | 30 días | sujeta a contrato",
+   "ok": true,
+   "chars": 747
+  },
+  {
+   "at": "2026-11-21T10:37:11.415Z",
+   "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes",
+   "find": "30 días | término | caduc | permanencia",
+   "ok": true,
+   "chars": 5491
+  },
+  {
+   "at": "2026-11-21T10:37:31.692Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+   "find": "Art. 1° | Art. 2° | Art. 19. | Art. 20. | nacionalidad",
+   "ok": true,
+   "chars": 10552
+  },
+  {
+   "at": "2026-11-21T10:37:38.555Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+   "find": "Las relaciones laborales entre los empleadores | Art. 420. | Art. 485.",
+   "ok": true,
+   "chars": 2238
+  },
+  {
+   "at": "2026-11-21T10:37:41.735Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+   "find": "relaciones laborales entre | Art. 485 | tutela",
+   "ok": true,
+   "chars": 5463
+  },
+  {
+   "at": "2026-11-21T10:37:59.000Z",
+   "url": "https://dt.gob.cl/legislacion/1624/w3-article-111640.html",
+   "find": "1998 | orden público laboral | autorización | Fecha",
+   "ok": true,
+   "chars": 5398
+  },
+  {
+   "at": "2026-11-21T10:38:12.032Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "contract | labour | exploitation | employer | permanent | complaint",
+   "ok": true,
+   "chars": 4710
+  },
+  {
+   "at": "2026-11-21T10:38:15.178Z",
+   "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+   "find": "16. | 17. | irregular situation | inspect",
+   "ok": true,
+   "chars": 5369
+  },
+  {
+   "at": "2026-11-21T10:38:27.020Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2022/12/DEM-2016-Migracion-en-Chile-2005-2014.pdf",
+   "find": "Permanencias definitivas otorgadas | rechaz | sujeta a contrato | Visa Temporaria por motivos laborales",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T10:38:55.060Z",
+   "url": "https://www.bcn.cl/siit/actualidad-territorial/chile-y-la-migracion-los-extranjeros-en-chile",
+   "find": "permanencias definitivas | 271.310 | sujeta a contrato",
+   "ok": true,
+   "chars": 4928
+  },
+  {
+   "at": "2026-11-21T10:39:07.927Z",
+   "url": "https://carey.cl/visa-temporaria-por-motivos-laborales/2",
+   "find": "permanencia | contrato | Circular | 2015 | término",
+   "ok": true,
+   "chars": 415
+  }
+ ],
+ "searches": [
+  "Decreto 597 1984 reglamento de extranjería leychile idNorma",
+  "Decreto 2910 2000 Interior modifica reglamento de extranjería residente sujeto a contrato leychile",
+  "visa sujeta a contrato término de contrato \"30 días\" nueva visa Departamento de Extranjería caducidad artículo 39 reglamento",
+  "Chile visa sujeta a contrato término de contrato plazo 30 días presentar nuevo contrato extranjeria.gob.cl",
+  "extranjeria.gob.cl \"sujeta a contrato\" \"término de la relación laboral\" \"30 días\" solicitar nueva visa finiquito",
+  "Dirección del Trabajo dictamen trabajador extranjero sin visa derechos laborales demandar Inspección del Trabajo migrantes irregulares Chile",
+  "CMW/C/CHL/CO/1 concluding observations Chile 2011 migrant workers visa subject to contract",
+  "Departamento de Extranjería \"Migración en Chile 2005-2014\" permanencias definitivas otorgadas visas sujeta a contrato",
+  "\"visa temporaria por motivos laborales\" circular 2015 Departamento de Extranjería eliminada 2018 permanencia definitiva un año"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795273200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795273200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.05,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":101,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"DL 1.094 Art. 25 and DS 597 Art. 39 (version of 18.05.1998, read) made termination of the contract a ground of caducidad of the 'residente sujeto a contrato' visa, 'sin perjuicio del derecho de su titular de solicitar una nueva visación'; DS 597 Art. 38 allowed, in qualified cases, an ex officio temporary visa of up to 90 days; temporary-resident, student and permanent statuses were not tied to employment. No practice evidence found for c.2000; rating carried from the starting answer.\"},{\"date\":\"2005-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"Same statutory rule; Decreto 2910 (D.O. 23.05.2000) only changed procedure in DS 597 Arts. 39-40 (employer notification, continuity of employment not counted as termination, finiquito or authority document accepted for the new visa). No practice evidence found for c.2005.\"},{\"date\":\"2010-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"No change in DL 1.094 Arts. 23-25 or DS 597 Arts. 38-40. No practice evidence specific to this issue found for c.2010 (CMW 2011 concluding observations do not address it).\"},{\"date\":\"2015-01-01\",\"answer\":\"Loss of employment implies loss of immigration status unless a new job is found within a specified time period\",\"implementation\":\"Sometimes\",\"basis\":\"Same rules; the administrative 30-day window to apply for a new visa after termination is documented in practice guidance (ACHS 2017). Decreto 1930 (D.O. 07.03.2015) amended only DS 597 Art. 41 on artists. The 2015 administrative 'visa temporaria por motivos laborales' did not change ",
+ "output": {
+  "answers": [
+   {
+    "question_id": 101,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "DL 1.094 Art. 25 and DS 597 Art. 39 (version of 18.05.1998, read) made termination of the contract a ground of caducidad of the 'residente sujeto a contrato' visa, 'sin perjuicio del derecho de su titular de solicitar una nueva visación'; DS 597 Art. 38 allowed, in qualified cases, an ex officio temporary visa of up to 90 days; temporary-resident, student and permanent statuses were not tied to employment. No practice evidence found for c.2000; rating carried from the starting answer."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "Same statutory rule; Decreto 2910 (D.O. 23.05.2000) only changed procedure in DS 597 Arts. 39-40 (employer notification, continuity of employment not counted as termination, finiquito or authority document accepted for the new visa). No practice evidence found for c.2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "No change in DL 1.094 Arts. 23-25 or DS 597 Arts. 38-40. No practice evidence specific to this issue found for c.2010 (CMW 2011 concluding observations do not address it)."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+      "implementation": "Sometimes",
+      "basis": "Same rules; the administrative 30-day window to apply for a new visa after termination is documented in practice guidance (ACHS 2017). Decreto 1930 (D.O. 07.03.2015) amended only DS 597 Art. 41 on artists. The 2015 administrative 'visa temporaria por motivos laborales' did not change the statute."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 de 1975 (Ley de Extranjería)",
+      "article": "Art. 25 (and Art. 23)",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984 (Reglamento de Extranjería)",
+      "article": "Arts. 38, 39, 40",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12 (Arts. 39-40 amended 2000-05-23)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 72",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Decreto 177 (2022)",
+      "article": "Art. 21",
+      "role": "cited",
+      "in_force": "2022 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910, Ministerio del Interior (2000)",
+      "article": "DS 597 Arts. 39 (inc. 3-4), 40 (inc. 2), 47",
+      "kind": "amended",
+      "what_changed": "Before: employer to notify termination after finiquito; new contract visa required finiquito. After: employer notifies termination; continuity of employment under the Labour Code is not termination; finiquito or administrative/judicial document accepted. Caducidad rule and right to apply for a new visa unchanged; procedural only.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+      "passage": "Se entenderá que no existe término de contrato cuandoDTO 2910, INTERIOR Art. Unico, N° 2 D.O. 23.05.2000 haya continuidad laboral en los términos a que se refiere el Código del Trabajo."
+     },
+     {
+      "date": "2018-04-23",
+      "instrument": "Ministerio del Interior, administrative measure (2018 migration reform announcement)",
+      "article": "visa temporaria por motivos laborales",
+      "kind": "practice",
+      "what_changed": "The administrative 'visa temporaria por motivos laborales' (2015) stopped being granted; contract visa unaffected. Does not alter the contract-visa termination rule.",
+      "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes",
+      "passage": "En abril de 2018 el Gobierno anunció una reforma a la Ley Migratoria, la que incluye una reformulación de los visados temporarios, eliminando los permisos temporales por motivos de trabajo"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "DL 1.094 (whole)",
+      "kind": "replaced",
+      "what_changed": "DL 1.094 replaced by Ley 21.325 (after 2020; outside the period, noted for context).",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+      "passage": "Versión: Última Versión - 12-FEB-2022 Última modificación: 20-ABR-2021 - Ley 21325"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Requisitos legales para los trabajadores migrantes (ACHS)",
+      "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes",
+      "year": 2017,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2015"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DS 597 read in the 1998-05-18 version (in force 1 Jan 2000) and current version with amendment notes; DL 1.094 read in its final version with marginal notes showing Arts. 23-25 unamended since 1975. The 30-day window is administrative practice documented only in secondary guidance; no practice evidence on enforcement for any date.",
+    "sources_opened": [
+     {
+      "title": "DL 1094 (LeyChile navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1094 (leychile.cl)",
+      "url": "https://www.leychile.cl/Navegar?idNorma=6483"
+     },
+     {
+      "title": "DL 1094 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "DS 597 version 1998-05-18",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=1998-05-18"
+     },
+     {
+      "title": "ACHS requisitos trabajadores migrantes",
+      "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes"
+     },
+     {
+      "title": "UC Clínica Jurídica visas (404)",
+      "url": "https://derecho.uc.cl/images/old/stories/DAE/clinica_juridica/4._Visas_para_trabajadores_extranjeros__1.pdf"
+     },
+     {
+      "title": "ChileAtiende ficha 2383 (404)",
+      "url": "https://portal.dev.chileatiende.cl/fichas/2383/1/pdf"
+     },
+     {
+      "title": "DT trabajador extranjero doc (404)",
+      "url": "https://www.dt.gob.cl/m/1620/articles-60408_recurso_2.doc"
+     },
+     {
+      "title": "Consulado Colombia guía (blocked)",
+      "url": "https://santiagodechile.consulado.gov.co/sites/default/files/FOTOS2020/guia-santiago-chile.pdf"
+     }
+    ],
+    "starting_answer_concern": "The MRD citation (Ley 21.325 Art. 72, Decree 177 Art. 21) post-dates 1 Jan 2020; the 2020 answer rests on DL 1.094 Art. 25 and DS 597 Arts. 38-40. The statute fixes no time window (only a discretionary up-to-90-day temporary visa in Art. 38); the 30-day window was administrative practice. The answer fits only contract-visa holders; other regular statuses were unaffected.",
+    "confidence": "low",
+    "notes": "Protection answer rests on statutes/regulation, no rulings. Implementation 'Sometimes' kept from the starting answer for lack of dated practice evidence."
+   },
+   {
+    "question_id": 113,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "DL 1.094 Art. 23 (contract-visa holders may apply for permanencia definitiva after two years), Art. 31 (temporary residents after one year), Art. 28 (students at end of studies); DS 597 Art. 40 and 47. No practice evidence found for c.2000; rating carried from the starting answer."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Same provisions, unamended. DEM data show permanencias definitivas granted at scale from 2005 (271,310 in 2005-2015)."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Same provisions; grants peaked around 2009 for Peruvians per BCN analysis of DEM data."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, there is an opportunity to switch to permanent status after certain conditions are",
+      "implementation": "Usually",
+      "basis": "Same provisions; the 2015 administrative 'visa temporaria por motivos laborales' added a further temporary route without statutory change; DEM grant data through 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 23 (inc. final), 28, 31, 41, 42",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Arts. 40, 47, 78",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 55, 75, 76, 78, 79",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910, Ministerio del Interior (2000)",
+      "article": "DS 597 Art. 47 inc. 3",
+      "kind": "amended",
+      "what_changed": "Defined 'término de sus estudios' for students' access to permanencia definitiva (professional/technical title or secondary licence). Contract-visa route (Art. 40 inc. 1) unchanged.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+      "passage": "Se entenderá por término de sus estudios la obtenciónDTO 2910, INTERIOR Art. Unico, N° 4 D.O. 23.05.2000 del título profesional o técnico correspondiente o la licencia secundaria en caso de egreso de la enseñanza media."
+     },
+     {
+      "date": "2018-04-23",
+      "instrument": "Ministerio del Interior, administrative measure",
+      "article": "visa temporaria por motivos laborales",
+      "kind": "practice",
+      "what_changed": "Administrative temporary work visa (2015) discontinued; contract visa route to permanence unaffected.",
+      "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes",
+      "passage": "eliminando los permisos temporales por motivos de trabajo, e incluyendo nuevas alternativas de visado"
+     },
+     {
+      "date": "2022-02-12",
+      "instrument": "Ley 21.325",
+      "article": "DL 1.094",
+      "kind": "replaced",
+      "what_changed": "Regime replaced after the period.",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6483",
+      "passage": "Versión: Última Versión - 12-FEB-2022 Última modificación: 20-ABR-2021 - Ley 21325"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "Chile y la migración: los extranjeros en Chile (BCN SIIT, based on DEM data)",
+      "url": "https://www.bcn.cl/siit/actualidad-territorial/chile-y-la-migracion-los-extranjeros-en-chile",
+      "year": 2016,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "DL 1.094 Arts. 23, 28, 31 carry no amendment notes 1975-2022; DS 597 read in 1998 and final versions. Practice data cover 2005-2015 only; none for 2000. DEM yearbook PDF could not be opened.",
+    "sources_opened": [
+     {
+      "title": "DL 1094 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "DS 597 version 1998-05-18",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=1998-05-18"
+     },
+     {
+      "title": "BCN SIIT Chile y la migración",
+      "url": "https://www.bcn.cl/siit/actualidad-territorial/chile-y-la-migracion-los-extranjeros-en-chile"
+     },
+     {
+      "title": "DEM Migración en Chile 2005-2014 (failed to open)",
+      "url": "https://serviciomigraciones.cl/wp-content/uploads/2022/12/DEM-2016-Migracion-en-Chile-2005-2014.pdf"
+     },
+     {
+      "title": "Carey visa temporaria motivos laborales (404)",
+      "url": "https://carey.cl/visa-temporaria-por-motivos-laborales/2"
+     },
+     {
+      "title": "ACHS requisitos trabajadores migrantes",
+      "url": "https://www.achs.cl/centro-de-noticias/noticia/2017/requisitos-legales-para-los-trabajadores-migrantes"
+     }
+    ],
+    "starting_answer_concern": "Cited Ley 21.325 articles were not in force on 1 Jan 2020; the 2020 answer rests on DL 1.094 Arts. 23, 28, 31 and DS 597 Arts. 40, 47, which support it.",
+    "confidence": "medium",
+    "notes": "Grant statistics are of permanencias overall, not by prior visa type."
+   },
+   {
+    "question_id": 115,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Kept from the starting answer; no event changed the relevant rules 2000-2020 (DL 1.094 Arts. 23, 28, 31; DS 597 Arts. 40, 47, 61). Routes differed by visa (2 years contract, 1 year temporary, students only at end of studies with 2 years). No practice evidence needed for Does Not Apply."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same provisions; no amendment."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same provisions; Ley 20.430 (2010) concerned refugees only."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "Same provisions; administrative 2015 temporary work visa did not change the statute."
+     }
+    ],
+    "change_2000_2020": "There have been no right protections neither in 2000 nor in 2020",
+    "provisions": [
+     {
+      "instrument": "Decreto Ley 1.094 de 1975",
+      "article": "Arts. 21, 23, 28, 31",
+      "role": "predecessor",
+      "in_force": "1975-07-19 to 2022-02-12",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Decreto Supremo 597 de 1984",
+      "article": "Arts. 40, 47, 61, 78",
+      "role": "predecessor",
+      "in_force": "1984-11-24 to 2022-02-12",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2000-05-23",
+      "instrument": "Decreto 2910, Ministerio del Interior (2000)",
+      "article": "DS 597 Art. 47",
+      "kind": "amended",
+      "what_changed": "Defined end of studies for students' permanence route; does not alter visa-type conditionality.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516",
+      "passage": "Se entenderá por término de sus estudios la obtenciónDTO 2910, INTERIOR Art. Unico, N° 4 D.O. 23.05.2000 del título profesional o técnico correspondiente"
+     }
+    ],
+    "repealed_search": "Searched DL 1.094 and DS 597 (1998 and final versions) for any provision granting a uniform, visa-independent route to permanencia that was later repealed or narrowed; found none: each residence class carried its own conditions throughout 2000-2020.",
+    "rulings": [],
+    "practice_sources": [],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Texts read in versions in force; no amendment to the relevant articles in the period.",
+    "sources_opened": [
+     {
+      "title": "DL 1094 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=6483"
+     },
+     {
+      "title": "DS 597 JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516"
+     },
+     {
+      "title": "DS 597 version 1998-05-18",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=14516&idVersion=1998-05-18"
+     }
+    ],
+    "starting_answer_concern": "Under DL 1.094 every residence visa (sujeta a contrato Art. 23, estudiante Art. 28, temporario Art. 31, asilado DS 597 Art. 61) could lead to permanencia definitiva, with different waiting periods; the MRD rationale (medical-treatment visa, temporary migrant workers' visa) describes Ley 21.325 subcategories not in force in 2020. A 'Yes' for 2020 is arguable; only non-resident permits (tourist work authorisation, DS 597 Art. 100) lacked a route.",
+    "confidence": "medium",
+    "notes": "Kept 'No' per instructions since no dated event explains a different answer."
+   },
+   {
+    "question_id": 117,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Código del Trabajo (DFL 1/1994 text, provisions originating in Ley 18.620 of 1987): Art. 1 (labour relations between employers and workers governed by the Code, no nationality condition) and Art. 420(a) (labour courts hear disputes on contracts). DT dictamen Ord. 4944/342 (16.10.1998) cited as doctrine. Thin practice evidence for c.2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Usually; Effectively Always",
+      "basis": "DFL 1/2002 (published 16.01.2003) re-enacted the Code with the same Arts. 1 and 420(a); Ley 19.759 (2001) added nationality-based discrimination ban to Art. 2. Ley 20.022 (D.O. 30.05.2005) labour court reform later in 2005. Little practice evidence for c.2005."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same substantive rights; Ley 20.087 (D.O. 03.01.2006) new labour procedure phased in from 2008. CMW 2011 noted migrant domestic workers' poor access to complaint mechanisms, a gap that may point to 'Usually'."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes, same as citizens",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions; DT Ord. 1404 (31.03.2017) restated that contracts with unauthorised foreign workers are valid and labour benefits cannot be denied, consistent with prior doctrine."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Código del Trabajo, DFL 1 de 2002 (texto refundido)",
+      "article": "Arts. 1, 2, 420",
+      "role": "other_in_force",
+      "in_force": "2003-01-16 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Código del Trabajo, DFL 1 de 1994",
+      "article": "Arts. 1, 420 (then numbered per 1994 text)",
+      "role": "predecessor",
+      "in_force": "1994 to 2003-01-16",
+      "history_read": "amending_acts"
+     },
+     {
+      "instrument": "Ley 21.325",
+      "article": "Arts. 13-14",
+      "role": "cited",
+      "in_force": "2022-02-12 to today",
+      "history_read": "not_found"
+     },
+     {
+      "instrument": "Código del Trabajo",
+      "article": "Arts. 19-20 (85% Chilean workers quota)",
+      "role": "other_in_force",
+      "in_force": "1987 to today",
+      "history_read": "version_history"
+     }
+    ],
+    "events": [
+     {
+      "date": "2001-12",
+      "instrument": "Ley 19.759",
+      "article": "Código del Trabajo Art. 2",
+      "kind": "amended",
+      "what_changed": "Inserted the declaration that acts of discrimination, including on nationality, are contrary to labour law principles; reinforces equal treatment, does not change the redress answer.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+      "passage": "Son contrarios a los principios de lasL. 19.759 Art. único, Nº 2 leyes laborales los actos de discriminación."
+     },
+     {
+      "date": "2003-01-16",
+      "instrument": "DFL 1 de 2002, Ministerio del Trabajo y Previsión Social",
+      "article": "Código del Trabajo (whole)",
+      "kind": "new_instrument",
+      "what_changed": "Consolidated text replaced DFL 1/1994; Art. 1 kept origin in Ley 18.620.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+      "passage": "Artículo 1.o Las relaciones laborales entreL. 18620 ART. PRIMERO Art. 1º los empleadores y los trabajadores se regularán por este Código y por sus leyes complementarias."
+     },
+     {
+      "date": "2006-01-03",
+      "instrument": "Ley 20.087",
+      "article": "Código del Trabajo Art. 420 and labour procedure",
+      "kind": "amended",
+      "what_changed": "New labour procedure (oral trials, tutela de derechos) applicable to all workers; strengthens redress without distinction by nationality.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436",
+      "passage": "LEY 20087 Art. UNICO N° 14 D.O. 03.01.2006c)  las cuestiones derivadas de la aplicación de las normas de previsión o de seguridad social"
+     },
+     {
+      "date": "2017-03-31",
+      "instrument": "Dirección del Trabajo, Ord. N°1404",
+      "article": "Código del Trabajo Arts. 1, 168",
+      "kind": "practice",
+      "what_changed": "Administrative doctrine: contract with unauthorised foreign worker is valid; lack of permit cannot block labour and social security entitlements.",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-111640.html",
+      "passage": "el contrato de trabajo celebrado con un trabajador extranjero que no cuenta aún con autorización administrativa, es perfectamente válido y eficaz para regular la relación jurídica existente entre empleador y trabajador"
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations on Chile (CMW/C/CHL/CO/1)",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Dirección del Trabajo ORD. N°1404",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-111640.html",
+      "year": 2017,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "several"
+     }
+    ],
+    "past_versions": "reconstructed_from_amending_acts",
+    "sourcing_note": "Current consolidated Código del Trabajo read with marginal origin notes; the 1994 DFL text was not opened separately (reconstructed from notes showing Art. 1 and Art. 420(a) originate in Ley 18.620 of 1987). Practice evidence thin for 2000 and 2005.",
+    "sources_opened": [
+     {
+      "title": "Código del Trabajo JSON consolidated",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=207436"
+     },
+     {
+      "title": "DT ORD. N°1404 (2017)",
+      "url": "https://dt.gob.cl/legislacion/1624/w3-article-111640.html"
+     },
+     {
+      "title": "CMW Chile 2011 concluding observations",
+      "url": "https://hrlibrary.umn.edu/cmw/chile2011.html"
+     }
+    ],
+    "starting_answer_concern": "Cited Ley 21.325 Arts. 13-14 were not in force on 1 Jan 2020; the 2020 answer rests on the Código del Trabajo alone. 'Usually; Effectively Always' may be generous given CMW 2011 findings on domestic migrant workers' access to complaints.",
+    "confidence": "medium",
+    "notes": "No court ruling relied on; DT dictámenes are administrative doctrine used as practice evidence."
+   }
+  ]
+ }
 }
