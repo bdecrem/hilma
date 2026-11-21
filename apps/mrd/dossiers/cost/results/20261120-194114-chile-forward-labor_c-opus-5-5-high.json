@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile labor_c claude-opus-5-5 high",
- "pid": 58300,
  "step": "forward",
  "slug": "chile",
  "chunk": "labor_c",
@@ -57,5 +56,432 @@
   "user": 102
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T04:05:30.259Z",
+ "minutes": 24.26,
+ "meters_after": {
+  "at": "2026-11-21T04:05:30.259Z",
+  "window": null,
+  "week": null,
+  "fable": null,
+  "subscription": false,
+  "bars": {},
+  "text": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.\n"
+ },
+ "tokens": {
+  "totals": {
+   "input": 60266,
+   "output": 14186,
+   "cache_read": 833819,
+   "cache_write": 90104,
+   "cost_usd": 1.1202,
+   "total": 998375
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 60240,
+    "output": 4986,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1328,
+    "cost_usd": 0.0485
+   },
+   "claude-opus-5-5": {
+    "input": 26,
+    "output": 9200,
+    "cache_read": 833819,
+    "cache_write": 90104,
+    "thinking": 2429,
+    "cost_usd": 1.0717
+   }
+  }
+ },
+ "turns": 20,
+ "calls": 31,
+ "duration_ms": 252874,
+ "duration_api_ms": 206801,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T03:41:20.768Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 13 | Artículo 14 | Artículo 16 | veinticuatro meses | seguridad social",
+   "ok": true,
+   "chars": 4512
+  },
+  {
+   "at": "2026-11-21T03:41:25.793Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Artículo 13.- | Artículo 14.- | Artículo 16.- | veinticuatro meses | seguridad social",
+   "ok": true,
+   "chars": 8646
+  },
+  {
+   "at": "2026-11-21T03:41:35.910Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "\"vd\" | fecha_version | versiones | Ley 21655 | LEY 21655 | 21.655",
+   "ok": true,
+   "chars": 5919
+  },
+  {
+   "at": "2026-11-21T03:49:57.660Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Texto Original | Los extranjeros que se vean afectados",
+   "ok": true,
+   "chars": 4079
+  },
+  {
+   "at": "2026-11-21T03:50:02.377Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12",
+   "find": "Artículo 16.- | Artículo 14.- Derechos laborales",
+   "ok": true,
+   "chars": 3256
+  },
+  {
+   "at": "2026-11-21T03:50:03.110Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=184979",
+   "find": "Artículo 1º | Artículo 1.- | Artículo 2º | \"vigencias\" | extranjero",
+   "ok": true,
+   "chars": 9541
+  },
+  {
+   "at": "2026-11-21T03:51:57.782Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=184979",
+   "find": "nacionalidad | extranjeros | Artículo 12.- | Artículo 24.-",
+   "ok": true,
+   "chars": 4461
+  },
+  {
+   "at": "2026-11-21T03:52:03.239Z",
+   "url": "https://previsionsocial.gob.cl/wp-content/uploads/2025/12/Estudio-Analisis-de-la-migracion-en-Chile.pdf",
+   "find": "seguro de cesantía | cotizantes | PGU | 20 años | informalidad | barreras",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:58:36.853Z",
+   "url": "https://www.df.cl/mercados/pensiones/cotizantes-extranjeros-de-afp-caen-a-un-ritmo-mayor-que-los-chilenos-por",
+   "find": "cesantía | cotizantes extranjeros | informalidad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:01:59.640Z",
+   "url": "https://mirada.fen.uchile.cl/uploads/pdf/5693d638477800f7019175207bf0875d5a209bff.pdf",
+   "find": "seguro de cesantía | cotiza | informalidad",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T04:04:30.258Z",
+   "url": "https://www.chileatiende.gob.cl/fichas/102077",
+   "find": "20 años | residencia | extranjer",
+   "ok": true,
+   "chars": 4296
+  },
+  {
+   "at": "2026-11-21T04:04:31.935Z",
+   "url": "https://www.cnnchile.com/pais/pgu-migrantes-gasto-fiscal-2050-estudio_20260420/",
+   "find": "extranjeros | PGU | 2025",
+   "ok": true,
+   "chars": 2162
+  },
+  {
+   "at": "2026-11-21T04:04:49.795Z",
+   "url": "https://www.chileatiende.gob.cl/fichas/62932-seguro-de-cesantia",
+   "find": "extranjer | Requisitos | nacionalidad",
+   "ok": true,
+   "chars": 3367
+  },
+  {
+   "at": "2026-11-21T04:04:50.472Z",
+   "url": "https://www.isl.gob.cl/migrantes/",
+   "find": "nacionalidad | migrantes | situación migratoria",
+   "ok": true,
+   "chars": 3317
+  }
+ ],
+ "searches": [
+  "Ley 21.325 artículo 16 \"veinticuatro meses\" seguridad social no contributiva modificación",
+  "migrantes Chile acceso seguridad social seguro de cesantía cotizaciones informalidad informe 2023 OIT",
+  "Pensión Garantizada Universal extranjeros requisito 20 años residencia migrantes rechazos",
+  "seguro de cesantía AFC trabajadores extranjeros afiliados beneficiarios cotizantes migrantes 2024"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.6,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.61,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.63,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.64,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.65,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":109,\"answer_2023\":\"Equal access to all types of social security protections after some period of time\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Equal access to all types of social security protections after some period of time\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 16 (incl. inc. 2: 24-month residence for fully state-funded non-contributory cash benefits)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Arts. 13-14 (equality of rights; equal labour rights)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[],\"implementation_then_now\":\"Neither date has any practice evidence of foreign workers with valid permits being denied enrolment in contributory schemes (AFP pensions, health, workplace accident insurance) on grounds of nationality. The ISL states that its work-accident insurance covers everyone who works in Chile 'sin importar su nacionalidad'. Fully state-funded benefits reach migrants once they meet the residence conditions: a Qualimet study for the Consejo Consultivo Previsional (reported April 2026) counted 13,464 foreign PGU recipients in 2022 and about US$60m of PGU spending on migrants projected for 2025. There are known gaps: high informality among recently arrived migrants means no contributions are paid, and some PGU claims are rejected because residence cannot be proved. These are mostly not refusals of the legal right to permit holders. I found no evidence of a shift between 2023 and 2026, so the starting rating is kept for both dates.\",\"practice_sources\":[{\"title\":\"Gasto fiscal en PGU para migrantes se multiplicaría por",
+ "output": {
+  "answers": [
+   {
+    "question_id": 109,
+    "answer_2023": "Equal access to all types of social security protections after some period of time",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Equal access to all types of social security protections after some period of time",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 16 (incl. inc. 2: 24-month residence for fully state-funded non-contributory cash benefits)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13-14 (equality of rights; equal labour rights)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Neither date has any practice evidence of foreign workers with valid permits being denied enrolment in contributory schemes (AFP pensions, health, workplace accident insurance) on grounds of nationality. The ISL states that its work-accident insurance covers everyone who works in Chile 'sin importar su nacionalidad'. Fully state-funded benefits reach migrants once they meet the residence conditions: a Qualimet study for the Consejo Consultivo Previsional (reported April 2026) counted 13,464 foreign PGU recipients in 2022 and about US$60m of PGU spending on migrants projected for 2025. There are known gaps: high informality among recently arrived migrants means no contributions are paid, and some PGU claims are rejected because residence cannot be proved. These are mostly not refusals of the legal right to permit holders. I found no evidence of a shift between 2023 and 2026, so the starting rating is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Gasto fiscal en PGU para migrantes se multiplicaría por 30 y superaría los US$1.600 millones al 2050 (CNN Chile, reporting the Qualimet study for the Consejo Consultivo Previsional)",
+      "url": "https://www.cnnchile.com/pais/pgu-migrantes-gasto-fiscal-2050-estudio_20260420/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Seguro laboral para personas migrantes en Chile (ISL)",
+      "url": "https://www.isl.gob.cl/migrantes/",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Pensión Garantizada Universal (ChileAtiende ficha 102077)",
+      "url": "https://www.chileatiende.gob.cl/fichas/102077",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile JSON for Ley 21.325 in both the current version (from 2026-06-02) and the original version in force from 2022-02-12 to 2023-08-06. Art. 16 has the same text in both, and no amendment notes appear on Arts. 13-16. The version list shows changes on 2023-08-07, 2023-08-18, 2023-09-22, 2024-02-20 (Ley 21.655), 2025-04-01 and 2026-06-02, all to other articles. I could not open the practice studies themselves (the Previsión Social/Qualimet PDF and the Mirada FEN PDF); I relied on the press report.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile (navegar)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON, current version",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON, original version 2022-02-12",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "ChileAtiende – Pensión Garantizada Universal",
+      "url": "https://www.chileatiende.gob.cl/fichas/102077"
+     },
+     {
+      "title": "CNN Chile – PGU migrantes gasto fiscal 2050",
+      "url": "https://www.cnnchile.com/pais/pgu-migrantes-gasto-fiscal-2050-estudio_20260420/"
+     },
+     {
+      "title": "ISL – Seguro laboral para personas migrantes",
+      "url": "https://www.isl.gob.cl/migrantes/"
+     }
+    ],
+    "starting_answer_concern": "The starting citation says the law covers 'some, but not all types' of protection, yet the answer chosen is 'after some period of time'. Under Art. 16, contributory benefits are equal from the start, the 24-month residence rule applies only to fully state-funded non-contributory cash transfers, and specific laws such as the PGU require 20 years of residence. That fits either the 75 or the 50 option. 'Effectively Always' is also generous given documented informality and PGU rejections for unproven residence; 'Usually' would be more defensible. I have kept the starting answers, since no dated event changes them.",
+    "confidence": "medium",
+    "notes": "The provision is statutory (Ley 21.325 Art. 16), confirmed against the version history; no court decision was relied on. Ley 21.735 (pension reform, D.O. 26.03.2025) created new contributory benefits that do not depend on nationality. I did not establish whether it changed the PGU residence requirement; ChileAtiende's current PGU page still lists the 20-year/4-of-5-years residence rule."
+   },
+   {
+    "question_id": 111,
+    "answer_2023": "Yes, immediate equal access to all types of unemployment benefits",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes, immediate equal access to all types of unemployment benefits",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 13-14",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 19.728 que establece un Seguro de Desempleo",
+      "article": "Art. 1",
+      "enacted": "2001-05-14",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-12-01",
+      "instrument": "Ley 21.628",
+      "article": "Ley 19.728 Arts. 12 b) and 24 a)",
+      "kind": "amended",
+      "what_changed": "Changed the minimum number of contributions needed for benefits from the individual account and from the Fondo de Cesantía Solidario, setting it at 10 monthly contributions. The rule applies to all members whatever their nationality, so it does not touch the indicator. LeyChile shows the new version from 2023-12-01; D.O. 31.10.2023.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=184979",
+      "passage": "registre en la Cuenta Individual por Cesantía un mínimo de Ley 21628 Art. 1 N° 1 a) D.O. 31.10.2023 10 cotizaciones mensuales continuas o discontinuas"
+     },
+     {
+      "date": "2025-03-26",
+      "instrument": "Ley 21.735",
+      "article": "Ley 19.728 Art. 11 (collection of unpaid contributions)",
+      "kind": "amended",
+      "what_changed": "Updated the list of Ley 17.322 provisions that apply to collecting unpaid unemployment-insurance contributions. This is procedural, not about nationality, and does not touch the indicator.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=184979",
+      "passage": "Será aplicable, en lo pertinente, a los deudores a que se refiere este artículo, lo dispuesto en los artículos Ley 21735 Art. 70 N° 2 e) D.O. 26.03.20251°, 3°, 4°, 4° bis"
+     }
+    ],
+    "implementation_then_now": "Membership of the Seguro de Cesantía is automatic for every dependent worker under the Código del Trabajo. The ChileAtiende eligibility page lists no nationality condition, and I found no documented refusals of the insurance to foreign workers with valid permits in either period. Press reports and academic work using ENE data (search snippets only; the Mirada FEN PDF and the DF article could not be opened) suggest migrants with formal contracts pay into the insurance at least as often as nationals. The main gap is informality, which affects migrants without permits more than permit holders. I found no evidence of a shift between 2023 and 2026, so the rating is unchanged.",
+    "practice_sources": [
+     {
+      "title": "Seguro de Cesantía (ChileAtiende ficha 62932)",
+      "url": "https://www.chileatiende.gob.cl/fichas/62932-seguro-de-cesantia",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "I read the LeyChile JSON for Ley 19.728. Art. 1 has no amendment notes, and its version list covers 2020-10-01 to 2023-11-30 and later versions up to 2026-06-01. The amendments I saw in the window (Ley 21.628, Ley 21.735) do not concern nationality. Arts. 13-14 of Ley 21.325 have the same text in the original (2022-02-12) and current versions. No direct practice source on foreign beneficiaries of the unemployment insurance could be opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 19.728 – LeyChile JSON, current version",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=184979"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON, current version",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON, original version 2022-02-12",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549&idVersion=2022-02-12"
+     },
+     {
+      "title": "ChileAtiende – Seguro de Cesantía",
+      "url": "https://www.chileatiende.gob.cl/fichas/62932-seguro-de-cesantia"
+     }
+    ],
+    "starting_answer_concern": "Access is equal in law, but every claimant, national or foreign, must first have paid a minimum number of contributions (now 10). 'Immediate' therefore means no nationality or residence condition, not benefits from the first day. 'Effectively Always' rests on no direct evidence about practice; given the documented informality among migrants, 'Usually' may be more defensible.",
+    "confidence": "low",
+    "notes": "The protection rests on statute (Ley 19.728 Art. 1, which covers all dependent workers under the Código del Trabajo, and Ley 21.325 Arts. 13-14 on equal labour rights); no court decision was relied on. Confidence is low because I found no source on actual practice for foreign claimants in either period."
+   }
+  ]
+ }
 }
