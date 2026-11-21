@@ -74,6 +74,11 @@ function machineCheck(list, own) {
   for (const m of list) {
     const isOwn = m.host === own
     console.log(`  machine ${m.host}${isOwn ? ' (this one)' : ''}: ${m.messages} message(s), newest ${m.newest ? hhmm(m.newest) : 'none'}; export ${m.exportedAt ? `${m.exportedAt.slice(0, 16)}Z` : 'never'}; session that day ${m.session ? `until ${hhmm(m.session)}` : 'none'}`)
+    // an old export with no session record, recent enough that the machine may have worked that day
+    if (!m.session && !isOwn && m.noSessionRecord && m.exportedAt && Date.parse(m.exportedAt) >= Date.parse(`${day}T12:00:00Z`) - 14 * 86400e3) {
+      bad.push(`${m.host}'s export (${m.exportedAt.slice(0, 16)}Z) was written before exports recorded sessions, so whether Bart worked there on ${day} is not known: run node scripts/venture/steers.mjs --export on ${m.host} once (sync.mjs push does it)`)
+      continue
+    }
     if (!m.session || (isOwn && dry)) continue
     if (!m.messages) bad.push(`${m.host} had a session that day until ${hhmm(m.session)} and its export holds no message from Bart`)
     else if (!isOwn && (!m.exportedAt || Date.parse(m.exportedAt) < Date.parse(m.session) - 60 * MIN)) bad.push(`${m.host}'s export (${m.exportedAt ? `${m.exportedAt.slice(0, 16)}Z` : 'never'}, newest message ${m.newest ? hhmm(m.newest) : "none"}) is older than its session's last hour (until ${hhmm(m.session)}): run node scripts/venture/steers.mjs --export on ${m.host} (sync.mjs push does it)`)

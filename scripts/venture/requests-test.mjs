@@ -147,6 +147,18 @@ try {
     const fine = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([fresh, { ...stale, exportedAt: '2026-11-20T05:30:00Z' }]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
     assert.equal(fine.status, 0, fine.stderr)
   })
+
+  ok('an export from before exports recorded sessions (the M4 on Nov 21) is named, not read as "no session"; an old one weeks back is not', () => {
+    reset()
+    const old = { host: 'm4', messages: 61, newest: '2026-11-20T02:00:00Z', exportedAt: '2026-11-20T02:19:00Z', session: null, noSessionRecord: true }
+    const r = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([old]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(r.status, 1)
+    assert.match(r.stderr, /m4's export \(2026-11-20T02:19Z\) was written before exports recorded sessions, so whether Bart worked there on 2026-11-19 is not known: run node scripts\/venture\/steers.mjs --export on m4 once/)
+    const gone = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([{ ...old, exportedAt: '2026-10-20T02:19:00Z' }]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(gone.status, 0, gone.stderr)
+    const now = node({ STUB_MESSAGES: messages, STUB_MACHINES: JSON.stringify([{ ...old, noSessionRecord: false }]) }, 'requests.mjs', '--day', DAY, '--answer', answer(null))
+    assert.equal(now.status, 0, now.stderr)
+  })
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

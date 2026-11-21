@@ -224,7 +224,7 @@ async function machines(day) {
   const { data, error } = await db.from('venture_state').select('key, value, at').or('key.like.typed_%,key.like.seen_%')
   if (error) throw new Error(`venture_state: ${error.message}`)
   const by = {}
-  const m = (h) => (by[h] ??= { host: h, messages: 0, newest: null, exportedAt: null, session: null })
+  const m = (h) => (by[h] ??= { host: h, messages: 0, newest: null, exportedAt: null, session: null, noSessionRecord: false })
   for (const r of data) {
     if (r.key.startsWith('typed_')) {
       const x = m(r.key.slice(6))
@@ -232,6 +232,9 @@ async function machines(day) {
       x.messages = ms.length
       x.newest = ms.map((y) => y.at).sort().pop() ?? null
       x.exportedAt = r.value?.exportedAt ?? r.at
+      // an export written before exports carried their sessions (44d4261c) cannot say whether that machine
+      // had a session on the day; requests.mjs names it until the machine exports once with this code
+      x.noSessionRecord = !r.value?.active
       const a = r.value?.active?.[day]
       if (a && (!x.session || a > x.session)) x.session = a
     } else {
