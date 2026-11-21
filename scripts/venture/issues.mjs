@@ -94,7 +94,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 14
+export const TRACKER_VERSION = 15
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -513,9 +513,10 @@ if (cmd === 'overrides') {
   for (const v of rows) console.log(overrideLine(v))
   console.log(`${rows.length} way(s) around a guard on ${day}`)
 } else if (cmd === 'record-override') {
-  // for the other venture tools (a refusal on a copy of the notes, an update of the test server outside the gate)
+  // for the other venture tools (a refusal on a copy of the notes, an update of the test server outside the gate);
+  // a --key given here is kept under ext: so it never takes a key a tool writes once, like correct.mjs audit's (OLA-251, twelfth checker)
   const what = typeof one('what') === 'string' ? one('what') : die('usage: issues.mjs record-override --what "…" [--ticket OLA-n] [--tool name] [--key k] [--at iso]')
-  await writeOverride(db, { what, ticket: typeof one('ticket') === 'string' ? one('ticket') : null, tool: typeof one('tool') === 'string' ? one('tool') : 'venture', key: typeof one('key') === 'string' ? one('key') : null, at: typeof one('at') === 'string' ? one('at') : null, who: typeof one('caller') === 'string' ? one('caller') : null })
+  await writeOverride(db, { what, ticket: typeof one('ticket') === 'string' ? one('ticket') : null, tool: typeof one('tool') === 'string' ? one('tool') : 'venture', key: typeof one('key') === 'string' ? `ext:${one('key')}` : null, at: typeof one('at') === 'string' ? one('at') : null, who: typeof one('caller') === 'string' ? one('caller') : null })
 } else if (cmd === 'add') {
   const title = pos[0]
   if (!title) die('usage: issues.mjs add "title" --area web --pri P1 [--what …] [--who lead] [--week 1] [--start]')

@@ -333,8 +333,10 @@ if (cmd === 'add') {
   // tool (settled on a copy and copied over, or edited by hand). Each such settle gets a line, once.
   if (!onCopy || process.env.VENTURE_TRACKER_FAKE) {
     try {
-      const { writeOverride, hasOverride } = await import('./_overrides.mjs')
+      const { writeOverride } = await import('./_overrides.mjs')
       const db = await trackerDb()
+      // written once: only a line this audit wrote itself counts (a line someone else put under the key does not)
+      const ownLine = async (d, key) => { const x = await d.from('venture_state').select('value').eq('key', 'override:' + key).maybeSingle(); return x.data?.value?.tool === 'correct.mjs' && /^correction \d+'s owed fix /.test(String(x.data?.value?.what ?? '')) }
       const r = await db.from('venture_state').select('value').like('key', 'override:%')
       const lines = (r.data ?? []).map((x) => String(x.value?.what ?? '')).filter((w) => !w.startsWith('(on a copy')) // a settle on a copy does not account for one in the real ledger
       const text = readFileSync(COR, 'utf8')
@@ -350,14 +352,14 @@ if (cmd === 'add') {
       for (const h of held) {
         if (h.value?.settled || owedNow.some((o) => o.ref === h.value?.ref)) continue
         const num = h.key.slice('owed-fix:'.length)
-        if (await hasOverride(db, `owed-gone-${num}`)) continue
+        if (await ownLine(db, `owed-gone-${num}`)) continue
         await writeOverride(db, { key: `owed-gone-${num}`, ticket: h.value?.issue ?? null, what: `correction ${num}'s owed fix (${h.value?.issue}) is gone from the notes' list of owed fixes, but correct.mjs never settled it (data/weaknesses.json edited by hand, or copied over from a copy): read whether the fix exists`, tool: 'correct.mjs' })
       }
       for (const m of text.matchAll(/^## (\d+)\. [^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)) {
         const num = m[1]
         if (!/^Fix settled /m.test(m[2])) continue
         if (lines.some((w) => new RegExp(`\\bcorrection ${num}\\b[^\\n]*settled`).test(w))) continue
-        if (await hasOverride(db, `settle-unrecorded-${num}`)) continue
+        if (await ownLine(db, `settle-unrecorded-${num}`)) continue
         await writeOverride(db, { key: `settle-unrecorded-${num}`, what: `correction ${num}'s owed fix is settled in the ledger with no record of correct.mjs settling it (edited by hand, or settled on a copy and copied over): read whether the fix exists`, tool: 'correct.mjs' })
       }
     } catch (e) {
