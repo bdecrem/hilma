@@ -16,6 +16,13 @@
 # set, else the first "Apple Development" identity on this Mac, else ad hoc (with a warning).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Free disk before anything is staged or built (OLA-327: on Nov 20 an app build stopped on the M1 iMac
+# with 12 GB free, and on the mini with 3.8 GB). OLA_BUILD_NEED_GB changes the floor (default 15).
+if [ "${1:-}" != install-mac ]; then
+  NEED="${OLA_BUILD_NEED_GB:-15}"
+  FREE=$(df -g /System/Volumes/Data | awk 'NR==2{print $4}')
+  [ "${FREE:-0}" -ge "$NEED" ] || { echo "error: an app build needs ${NEED} GB free and this Mac has ${FREE:-?} GB: not started (free some first: DerivedData, old builds)" >&2; exit 1; }
+fi
 DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-shared}"
 APP="$DD/Build/Products/Debug/Ola.app"
 # Ola's skills, copied fresh from apps/activist-ai/skills as committed (refuses uncommitted changes);

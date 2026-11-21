@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { ALWAYS, ENTRY, PARTS, lanes, plan, suiteFiles, toolFiles, treeFiles } from './select.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const SUITES = ['turn', 'gateway', 'workspace', 'web', 'frontdesk', 'backup', 'ci', 'signers', 'tls', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio']
+const SUITES = ['turn', 'gateway', 'workspace', 'web', 'frontdesk', 'backup', 'ci', 'signers', 'tls', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk']
 const T = mkdtempSync(path.join(tmpdir(), 'ola-select-test-'))
 after(() => rmSync(T, { recursive: true, force: true }))
 const README = readFileSync(path.join(AI, 'README.md'), 'utf8')

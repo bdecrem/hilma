@@ -79,6 +79,7 @@ import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
+import { diskRefusal, freeGB } from './disk.mjs'
 import { deployable } from './signers.mjs'
 import { unchanged } from './restart.mjs'
 import { changedFiles, lanes, plan } from './select.mjs'
@@ -590,7 +591,11 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['watch', ['--test', 'ops/watch-test.mjs']], // the alarm (OLA-291), seconds, no VM
     ['clean', ['--test', 'ops/clean-test.mjs']], // the cleaner (OLA-291), seconds, no VM
     ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
+    ['disk', ['--test', 'ops/disk-test.mjs']], // the free-disk refusal (OLA-327), seconds, no VM
   ]
+  // Free disk first (OLA-327): on Nov 20 an update stopped half way with 3.8 GB left on the mini.
+  const diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
+  if (diskShort) fail(diskShort)
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)
   const git = (...a) => sh('/usr/bin/git', ['-C', STAGING, ...a])
