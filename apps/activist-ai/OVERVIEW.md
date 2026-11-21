@@ -116,7 +116,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 | The asks: real requests sent again as chat after every deploy, and the one list of everything Ola can be asked to do, by place (`evals/asks/abilities.json`; Ola's instructions about its abilities are written from it: the end of `workspace/AGENTS.md` and OlaKit `Abilities.swift`) | `evals/asks/` | the staging machine, after every deploy | README, "The asks" (OLA-231, OLA-232) |
 | The asks: every request of a person that failed, kept as a case and sent again as chat after every update, in a cloud project and on the Mac (22 cases) | `evals/asks/` | the staging machine, started by each update that serves; results in `~/ola-staging/asks-latest.json` and on the board | README, "The asks" |
 | Publishing | `frontdesk/sites.mjs`, `skills/publish/`, `web/src/components/PublishSheet.tsx` | the front desk; pages served at sites.ola.cx | README, "Publish" |
-| Learning from use: conversations kept only with the person's switch (off by default), every switch to Claude labeled and counted | `frontdesk/` | the staging machine; the largest group on the board's Learning page | README, "Learning from every switch to Claude" |
+| Learning from use: conversations kept only with the person's switch (off by default), every switch to Claude labeled and counted, every "I can't", failed step and stopped request counted by kind (labels only), and "This was wrong" under an answer on the website keeps that request as a test case with the person's yes (OLA-235) | `frontdesk/` | the staging machine; the largest group on the board's Learning page | README, "Learning from every switch to Claude" |
 | Compare with Claude, batch jobs, reading real documents | `frontdesk/compare.mjs`, `frontdesk/jobs.mjs`, `workspace/` | inside each project's VM | README, those sections |
 | Mac and iPhone apps, OlaKit | `apple/` | Bart's Mac and phone; TestFlight; the download | `apple/README.md`, `apple/testflight/README.md` |
 | Ola's opencode build (cosmetic fork, a patch set) | `opencode-fork/` | built here, carried in the Mac app | `opencode-fork/README.md` |
@@ -217,7 +217,7 @@ change; publishing on the website in a cloud project (the apps and the Mac's loc
 **Next:** the Mac Studio as the Ola machine (about December 1), then Frances and Ian in December;
 the backup drives on the Studio; deploys only from signed commits; the
 open-model quality gap (app requests, design); a way for a checker to use the Mac and iPhone apps
-(OLA-237); Ola counting its own "I can't" answers (OLA-235); the phone's local runtime without
+(OLA-237); the "This was wrong" link in the Mac and iPhone apps (OLA-350); the phone's local runtime without
 Tailscale. The
 tracker holds the full list: `node scripts/venture/issues.mjs list --status open`.
 
