@@ -587,6 +587,9 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['select', ['--test', 'ops/select-test.mjs']], // which suites an update runs (OLA-283), seconds, no VM
     ['models', ['--test', 'ops/models-test.mjs']], // the model check through the real gateway (OLA-214), seconds, no VM, no model call
     ['suite', ['--test', 'ops/suite-test.mjs']], // a suite's time limit and a failed suite's rerun (OLA-334, OLA-335), seconds, no VM
+    ['watch', ['--test', 'ops/watch-test.mjs']], // the alarm (OLA-291), seconds, no VM
+    ['clean', ['--test', 'ops/clean-test.mjs']], // the cleaner (OLA-291), seconds, no VM
+    ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
   ]
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)

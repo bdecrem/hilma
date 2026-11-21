@@ -4,15 +4,15 @@
 // suite is known to use runs everything, and a change in one part that another part's check uses
 // (a shared file, a server a check starts, the page a check signs in through) runs that check too.
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { ALWAYS, PARTS, lanes, plan, suiteFiles, toolFiles, treeFiles } from './select.mjs'
+import { ALWAYS, ENTRY, PARTS, lanes, plan, suiteFiles, toolFiles, treeFiles } from './select.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const SUITES = ['turn', 'gateway', 'workspace', 'web', 'frontdesk', 'backup', 'ci', 'signers', 'tls', 'restart', 'asks', 'select', 'models', 'suite']
+const SUITES = ['turn', 'gateway', 'workspace', 'web', 'frontdesk', 'backup', 'ci', 'signers', 'tls', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio']
 const T = mkdtempSync(path.join(tmpdir(), 'ola-select-test-'))
 after(() => rmSync(T, { recursive: true, force: true }))
 const README = readFileSync(path.join(AI, 'README.md'), 'utf8')
@@ -109,4 +109,14 @@ test('lanes: the two VM suites one after the other, everything else beside them'
   assert.ok(l.some((x) => x.length === 1 && x[0] === 'web'))
   assert.ok(l.some((x) => x.includes('select')))
   assert.equal(l.flat().length, 7)
+})
+
+test('every ops test file is an update suite, in the update tool and in the selection (OLA-291)', () => {
+  const tool = readFileSync(path.join(AI, 'ops/ola.mjs'), 'utf8')
+  const tests = readdirSync(path.join(AI, 'ops')).filter((f) => f.endsWith('-test.mjs')).map((f) => `ops/${f}`)
+  const entries = new Set(Object.values(ENTRY))
+  for (const f of tests) {
+    assert.ok(entries.has(f), `${f} is no suite's entry in select.mjs`)
+    assert.ok(tool.includes(`'--test', '${f}'`), `${f} is not in ola.mjs SUITES`)
+  }
 })

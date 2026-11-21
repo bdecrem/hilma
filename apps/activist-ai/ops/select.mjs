@@ -34,7 +34,7 @@ import path from 'node:path'
 
 
 // Seconds each, no VM: run every time.
-export const ALWAYS = ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite']
+export const ALWAYS = ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio']
 // Entry file per suite (the check's own test file).
 export const ENTRY = {
   turn: 'ops/turn-test.mjs',
@@ -46,6 +46,9 @@ export const ENTRY = {
   select: 'ops/select-test.mjs',
   models: 'ops/models-test.mjs',
   suite: 'ops/suite-test.mjs',
+  watch: 'ops/watch-test.mjs',
+  clean: 'ops/clean-test.mjs',
+  studio: 'ops/studio-test.mjs',
   gateway: 'gateway/test.mjs',
   workspace: 'workspace/check.mjs',
   web: 'web/check.mjs',
@@ -63,19 +66,21 @@ export const OWNS = {
   frontdesk: ['frontdesk/', 'web/src/', 'web/public/', 'web/index.html', 'web/vite.config.ts', 'web/tsconfig.json', 'web/package.json', 'web/package-lock.json', 'web/scripts/', 'web/server/', 'workspace/', 'skills/'],
   // OlaKit's tests read the workspace's plugins and skills and the web app's recorded runs.
   apps: ['apple/', 'workspace/', 'skills/', 'web/test/fixtures/', 'web/src/lib/'],
+  // The studio's own setup scripts (studio-test reads them).
+  studio: ['ops/studio/'],
 }
 // Lanes: the suites of one lane run in order; lanes run side by side.
-export const LANES = [['workspace', 'frontdesk'], ['web'], ['gateway'], ['tls'], ['apps'], ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite']]
+export const LANES = [['workspace', 'frontdesk'], ['web'], ['gateway'], ['tls'], ['apps'], ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio']]
 // A change to these runs every suite (with the update tool's own files, toolFiles).
 export const ALL_IF = ['package.json', 'package-lock.json']
 // Files no suite runs or reads, when no suite's closure names them: writing (*.md outside the
 // image's folders), the evals and the asks' runner (the asks' own test is an ALWAYS suite), the
 // site, the brand, Bart's own tools, the opencode fork's scripts, the Apple apps (a check's apps
-// suite owns them), and the ops programs no update suite runs (the alarm, the cleaner's and the
-// studio's own tests, the certificate, DNS, probe and tunnel scripts).
+// suite owns them), and the ops programs no update suite runs (the certificate, DNS, probe and
+// tunnel scripts; the alarm, the cleaner and the studio have suites since OLA-291).
 const UNCHECKED = [
   /\.md$/, /^evals\//, /^site\//, /^brand\//, /^bart\//, /^opencode-fork\//, /(^|\/)\.gitignore$/, /^apple\//,
-  /^ops\/(watch|watch-test|clean-test|studio|studio-test|cert|dns|probe|tunnel)\.mjs$/, /^ops\/studio\//, /^ops\/ngrok\.yml$/,
+  /^ops\/(cert|dns|probe|tunnel)\.mjs$/, /^ops\/ngrok\.yml$/,
 ]
 // *.md in these folders goes into the image or is read by a check: never "unchecked" by its name.
 const READ_MD = [/^workspace\//, /^skills\//]
