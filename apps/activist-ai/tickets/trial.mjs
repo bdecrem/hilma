@@ -4,7 +4,7 @@
 // "by measuring on our own tickets"; "performance is the only criteria".
 //
 //   node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 [--cases ola-324-clock,...]
-//        [--time 1800] [--tokens 4000000] [--concurrency 4]   (gateway.sh <the same models> first)
+//        --max-usd <ceiling> [--time 1800] [--tokens 4000000] [--concurrency 4]   (gateway.sh <the same models> first)
 //   node apps/activist-ai/tickets/trial.mjs --report
 //
 // One run: the repo exported at <commit>^ into ~/ola-trials/runs/<case>-<model>-<stamp>/work (a
@@ -36,6 +36,16 @@ const cases = args.cases ? String(args.cases).split(',').map((id) => CASES.find(
 const timeLimit = Number(args.time || 1800)
 const tokenLimit = Number(args.tokens || 4000000)
 const concurrency = Number(args.concurrency || 4)
+// The worst case is said and capped before anything runs: on Nov 21 a trial of 12 runs at 3M tokens
+// spent about $45 and took the Together account past its credit limit, and Ola's models stopped.
+const paid = models.filter((m) => LISTED[m])
+const worst = cases.length * paid.reduce((a, m) => a + tokenLimit * MODELS[m].in / 1e6, 0)
+if (paid.length) {
+  const cap = Number(args['max-usd'])
+  if (!cap) die(`--max-usd is required: these ${cases.length * paid.length} runs can cost up to $${worst.toFixed(2)} (${tokenLimit.toLocaleString()} tokens each, at the input price)`)
+  if (worst > cap) die(`these runs can cost up to $${worst.toFixed(2)}, over --max-usd ${cap}: fewer models or cases, or a smaller --tokens`)
+  console.log(`worst case $${worst.toFixed(2)} of Together use (ceiling $${cap})`)
+}
 const gwToken = models.every((m) => m === 'reference' || m === 'empty') ? '' : gatewayToken()
 function die(m) { console.error(m); process.exit(2) }
 

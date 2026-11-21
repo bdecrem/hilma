@@ -4,7 +4,7 @@
 //   node scripts/venture/issues.mjs edit OLA-n --who ola
 //
 //   node apps/activist-ai/tickets/handoff.mjs list                    open tickets marked for Ola
-//   node apps/activist-ai/tickets/handoff.mjs run OLA-n [--model <alias>] [--time 2400] [--tokens 6000000] [--dry]
+//   node apps/activist-ai/tickets/handoff.mjs run OLA-n [--model <alias>] [--time 2400] [--tokens 4000000] [--max-usd 12] [--dry]
 //
 // run: the ticket and its whole thread (issues.mjs show) become the request. origin/main is exported
 // into ~/ola-trials/handoff/OLA-n-<time>/work (its own git, no link to this checkout); Ola's opencode
@@ -37,6 +37,10 @@ if (!model || !MODELS[model] || model.startsWith('_')) die(`no ticket model: --m
 const dry = flag('dry', false) === true
 const show = issues(`show ${id}`)
 if (!dry && !/· (ola)\b/.test(show.split('\n').find((l) => l.startsWith('area ')) || '')) die(`${id} is not marked for Ola (issues.mjs edit ${id} --who ola); only a ticket Kit marked is handed off`)
+const tokenLimit = Number(flag('tokens', 4000000))
+const worst = tokenLimit * MODELS[model].in / 1e6
+const cap = Number(flag('max-usd', 12))
+if (worst > cap) die(`a run of up to ${tokenLimit.toLocaleString()} tokens on ${model} can cost $${worst.toFixed(2)}, over --max-usd ${cap} (default 12)`)
 const free = freeGb()
 if (free < MIN_FREE_GB + 2) die(`only ${free.toFixed(1)} GB free; a hand-off needs ${MIN_FREE_GB + 2} (nothing started)`)
 
@@ -65,7 +69,7 @@ writeFileSync(path.join(run.dir, 'request.md'), request)
 
 console.log(`${id}: Ola on ${model} (${MODELS[model].id}) in ${path.relative(root, run.dir)}, from main ${base.slice(0, 8)}`)
 const t0 = Date.now()
-const s = await runOpencode(run, request, { timeLimit: Number(flag('time', 2400)), tokenLimit: Number(flag('tokens', 6000000)), token: gatewayToken() })
+const s = await runOpencode(run, request, { timeLimit: Number(flag('time', 2400)), tokenLimit, token: gatewayToken() })
 const minutes = +((Date.now() - t0) / 60000).toFixed(1)
 const usd = cost(model, s)
 sh('git add -A && (git diff --cached --quiet || git commit -qm "uncommitted at the end of the run")', run.work)
@@ -77,6 +81,7 @@ const summary = { id, model, model_id: MODELS[model].id, base, end: s.end, minut
 writeFileSync(path.join(run.dir, 'summary.json'), JSON.stringify({ ...summary, final: s.final }, null, 2))
 console.log(`${id}: ${s.end}, ${minutes} min, ${s.requests} model calls, $${usd}; ${summary.files}`)
 if (!diff.trim()) {
+  rmSync(run.work, { recursive: true, force: true })
   if (!dry) issues(`comment ${id} ${q(`Ola (${MODELS[model].id}) worked ${minutes} min on it and changed nothing (${s.end}, $${usd}). Its last words: ${s.final.slice(0, 600) || '(none)'}`)}`)
   process.exit(1)
 }
