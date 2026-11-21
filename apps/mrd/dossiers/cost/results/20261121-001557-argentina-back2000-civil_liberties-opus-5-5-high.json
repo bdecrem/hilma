@@ -1,0 +1,1242 @@
+{
+ "status": "ok",
+ "job_id": "back2000 argentina civil_liberties claude-opus-5-5 high",
+ "step": "back2000",
+ "slug": "argentina",
+ "chunk": "civil_liberties",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "label": null,
+ "source": "database, the MRD's 2020 coding",
+ "fixture": null,
+ "country": {
+  "id": 2,
+  "iso": "ARG",
+  "name": "Argentina",
+  "lang": "Spanish"
+ },
+ "qids": [
+  81,
+  83,
+  85,
+  87,
+  89,
+  131
+ ],
+ "started_at": "2026-11-21T08:15:57.356Z",
+ "meters_before": {
+  "at": "2026-11-21T08:15:49.620Z",
+  "window": {
+   "pct": 37,
+   "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 1,
+   "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 37,
+    "resets": "Nov 21 at 1:59am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 1,
+    "resets": "Nov 27 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 37% used · resets Nov 21 at 1:59am (America/Los_Angeles)\nCurrent week (all models): 1% used · resets Nov 27 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "prompt_chars": {
+  "system": 42115,
+  "user": 195
+ },
+ "default_model": "claude-opus-5-5",
+ "default_effort": "high",
+ "finished_at": "2026-11-21T08:34:29.822Z",
+ "minutes": 18.54,
+ "meters_after": {
+  "at": "2026-11-21T08:34:29.823Z",
+  "window": {
+   "pct": 48,
+   "resets": "Nov 21 at 2am (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 2,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 0,
+   "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 48,
+    "resets": "Nov 21 at 2am (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 2,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0,
+    "resets": "Nov 27 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 48% used · resets Nov 21 at 2am (America/Los_Angeles)\nCurrent week (all models): 2% used · resets Nov 27 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used · resets Nov 27 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 358 requests · 2 sessions\n  59%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  25%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%\n\nLast 7d · 369 requests · 3 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  35%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  15%  Compact before you step away · run /compact\n  Top subagents: general-purpose 35%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 93116,
+   "output": 31096,
+   "cache_read": 428566,
+   "cache_write": 57473,
+   "cost_usd": 1.0871,
+   "total": 610251
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 93096,
+    "output": 7679,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 2049,
+    "cost_usd": 0.0731
+   },
+   "claude-opus-5-5": {
+    "input": 20,
+    "output": 23417,
+    "cache_read": 428566,
+    "cache_write": 57473,
+    "thinking": 5856,
+    "cost_usd": 1.0139
+   }
+  }
+ },
+ "turns": 23,
+ "calls": 32,
+ "duration_ms": 403749,
+ "duration_api_ms": 460774,
+ "pages_read": 14,
+ "pages": [
+  {
+   "at": "2026-11-21T08:18:22.782Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14 | Artículo 14 bis | Artículo 16 | Artículo 20 | Pacto Internacional de Derechos Civiles",
+   "ok": true,
+   "chars": 6463
+  },
+  {
+   "at": "2026-11-21T08:18:22.857Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 4 | ARTICULO 5 | ARTICULO 6 | ARTICULO 13 | ARTICULO 14 | ARTICULO 17",
+   "ok": true,
+   "chars": 9558
+  },
+  {
+   "at": "2026-11-21T08:21:29.303Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+   "find": "ARTICULO 31 | ARTICULO 32 | ARTICULO 33 | ARTICULO 95 | ARTICULO 102 | ARTICULO 103 | ARTICULO 104",
+   "ok": true,
+   "chars": 9410
+  },
+  {
+   "at": "2026-11-21T08:21:30.401Z",
+   "url": "https://www.fidh.org/IMG/pdf/Rapargentine559econjCELS-1.pdf",
+   "find": "discrimina | 22.439 | sindica | expresión",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:21:50.815Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+   "find": null,
+   "ok": true,
+   "chars": 5335
+  },
+  {
+   "at": "2026-11-21T08:21:54.557Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6 | ARTICULO 7 | ARTICULO 8 | ARTICULO 124 | ARTICULO 125 | Ley Nº 22.439",
+   "ok": true,
+   "chars": 7543
+  },
+  {
+   "at": "2026-11-21T08:21:55.512Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20465/texact.htm",
+   "find": "ARTICULO 1",
+   "ok": true,
+   "chars": 3419
+  },
+  {
+   "at": "2026-11-21T08:26:40.908Z",
+   "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+   "find": "discrimination | trade union | association | Senegal | 22.439 | regulations",
+   "ok": true,
+   "chars": 7120
+  },
+  {
+   "at": "2026-11-21T08:26:49.442Z",
+   "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+   "find": "25871 | 22439 | migrant | immigrant | xenophob",
+   "ok": true,
+   "chars": 6410
+  },
+  {
+   "at": "2026-11-21T08:26:50.017Z",
+   "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+   "find": "migrant | immigrant | foreign | xenophob",
+   "ok": true,
+   "chars": 4893
+  },
+  {
+   "at": "2026-11-21T08:27:13.372Z",
+   "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+   "find": null,
+   "ok": true,
+   "chars": 4465
+  },
+  {
+   "at": "2026-11-21T08:27:14.152Z",
+   "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml",
+   "find": null,
+   "ok": true,
+   "chars": 4466
+  },
+  {
+   "at": "2026-11-21T08:27:22.674Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20993/texact.htm",
+   "find": "ARTICULO 4 | ARTICULO 18 | ciudadanos argentinos",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T08:32:19.537Z",
+   "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 53 | ARTICULO 124 | ARTICULO 125 | Derógase",
+   "ok": true,
+   "chars": 4472
+  }
+ ],
+ "searches": [
+  "Ley 22.439 Ley General de Migraciones y Fomento de la Inmigración infoleg texto",
+  "Ley 26.202 Convención Internacional Protección Derechos Trabajadores Migratorios aprobación infoleg",
+  "\"26.202\" ley trabajadores migratorios argentina.gob.ar normativa",
+  "Comité Trabajadores Migratorios observaciones finales Argentina 2011 CMW/C/ARG/CO/1 discriminación migrantes",
+  "CERD concluding observations Argentina 2004 migrants discrimination Bolivia Paraguay Peru CERD/C/65/CO/1",
+  "CMW/C/ARG/CO/2 concluding observations Argentina 2019 Decree 70/2017 discrimination migrants",
+  "extranjeros detenidos protesta Congreso presupuesto 2018 expulsión Bullrich venezolano paraguayo CELS"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.42,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.43,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795255200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.44,
+     "resetsAt": 1795255200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.01,
+     "resetsAt": 1795849200,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":81,\"answers_by_date\":[{\"date\":\"2000-01-01\",\"answer\":\"Yes\",\"implementation\":\"Effectively Always\",\"basis\":\"Constitution art. 14 (every inhabitant may 'profesar libremente su culto'), art. 20 (foreigners 'ejercer libremente su culto') and art. 75 inc. 22 (ICCPR, ACHR with constitutional rank) were in force from the 1994 reform. Ley 22.439 contained nothing on religion. The CERD 2001 observations record xenophobic attitudes but no breach of migrants' religious freedom; practice evidence for this right is thin.\"},{\"date\":\"2005-01-01\",\"answer\":\"Yes\",\"implementation\":\"Effectively Always\",\"basis\":\"Same constitutional provisions. Ley 25.871 took effect on 21 Jan 2004 and added arts. 5, 6, 13 (religion as a prohibited ground) and 14(c) (valuing immigrants' religious expressions). We found no documented breach. CERD 2004 does not raise religious freedom for migrants.\"},{\"date\":\"2010-01-01\",\"answer\":\"Yes\",\"implementation\":\"Effectively Always\",\"basis\":\"Same provisions. Ley 26.202 approved the ICRMW (art. 12), which Argentina ratified on 23 Feb 2007; we could not open the law. We found no documented breach. The CMW 2011 observations raise discrimination concerns but not religious freedom.\"},{\"date\":\"2015-01-01\",\"answer\":\"Yes\",\"implementation\":\"Effectively Always\",\"basis\":\"No change to the provisions. We found no documented restriction on migrants' religious practice. Evidence on this specific right is thin.\"}],\"change_2000_2020\":\"There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Arts. 14, 20, 75 inc. 22\",\"role\":\"cited\",\"in_force\":\"1994-08-24 to today\",\"history_read\":\"current_text_only\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Arts. 5, 6, 13, 14(c)\",\"role\":\"cited\",\"in_force\":\"2004-01-21 to today (art. 6 replaced by DNU 366/2025 on 2025-05-29)\",\"history_read\":\"versio",
+ "output": {
+  "answers": [
+   {
+    "question_id": 81,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Constitution art. 14 (every inhabitant may 'profesar libremente su culto'), art. 20 (foreigners 'ejercer libremente su culto') and art. 75 inc. 22 (ICCPR, ACHR with constitutional rank) were in force from the 1994 reform. Ley 22.439 contained nothing on religion. The CERD 2001 observations record xenophobic attitudes but no breach of migrants' religious freedom; practice evidence for this right is thin."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Same constitutional provisions. Ley 25.871 took effect on 21 Jan 2004 and added arts. 5, 6, 13 (religion as a prohibited ground) and 14(c) (valuing immigrants' religious expressions). We found no documented breach. CERD 2004 does not raise religious freedom for migrants."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Same provisions. Ley 26.202 approved the ICRMW (art. 12), which Argentina ratified on 23 Feb 2007; we could not open the law. We found no documented breach. The CMW 2011 observations raise discrimination concerns but not religious freedom."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "No change to the provisions. We found no documented restriction on migrants' religious practice. Evidence on this specific right is thin."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 20, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 14(c)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 6 replaced by DNU 366/2025 on 2025-05-29)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439 General de Migraciones y de Fomento de la Inmigración",
+      "article": "Whole act (no religion provision)",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (approving the ICRMW)",
+      "article": "Convention art. 12",
+      "role": "cited",
+      "in_force": "2007 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 14, 122, 124",
+      "kind": "new_instrument",
+      "what_changed": "The new migration law entered into force on publication. It added equality of treatment, religion as a prohibited ground of discrimination and the valuing of immigrants' religious expressions, and it repealed Ley 22.439. The constitutional protection was already in place.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 122. — La presente ley entrará en vigencia a partir de su publicación... ARTICULO 124. — Derógase la ley 22.439"
+     },
+     {
+      "date": "2007-02-23",
+      "instrument": "Ley 26.202",
+      "article": "ICRMW art. 12",
+      "kind": "new_instrument",
+      "what_changed": "Argentina approved and ratified the Migrant Workers Convention. This reinforces an existing protection. We did not open the text, so the event does not count.",
+      "url": null,
+      "passage": null
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations: Argentina (CERD/C/304/Add.112), 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations: Argentina (CERD/C/65/CO/1), 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG shows that the constitutional text has been unchanged since 1994, and we read both the original and the updated text of Ley 25.871. We could not open Ley 26.202. Practice evidence specific to religious freedom is essentially absent for every period.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 22.439 texto (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "CERD 2001 Argentina",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CERD 2004 Argentina",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011 Argentina",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The answer rests on the Constitution: arts. 14 and 20 are directly applicable, and art. 75 inc. 22 gives the listed treaties constitutional rank. The statutory additions (2004, 2007) reinforce the protection; they do not create it. The implementation ratings carry the 2020 rating back because no breach is documented. They are not based on positive evidence."
+   },
+   {
+    "question_id": 83,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Constitution arts. 14 (every inhabitant may 'publicar sus ideas por la prensa sin censura previa'), 19, 20 and 75 inc. 22 (ICCPR art. 19, ACHR art. 13) were in force. Ley 22.439 did not restrict holding opinions. We found no practice evidence of interference with migrants' opinions."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Same constitutional provisions. Ley 25.871 (in force 21 Jan 2004) arts. 5, 6 and 13 add equality and list ideology and political opinion as prohibited grounds. We found no documented breach."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "Same provisions, plus the ICRMW ratified in 2007 (Ley 26.202, not read). We found no documented breach."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Effectively Always",
+      "basis": "No change to the provisions. We found no documented interference with the holding of opinions. Evidence is thin."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 19, 20, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 14(c)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Whole act",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (ICRMW)",
+      "article": "Convention art. 13",
+      "role": "cited",
+      "in_force": "2007 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 122, 124",
+      "kind": "new_instrument",
+      "what_changed": "The new migration law entered into force. Its art. 13 lists ideology and political opinion as prohibited grounds. It repealed Ley 22.439. The core constitutional protection did not change.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 13. — A los efectos de la presente ley se considerarán discriminatorios todos los actos u omisiones determinados por motivos tales como etnia, religión, nacionalidad, ideología, opinión política o gremial..."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations: Argentina, 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The constitutional and statutory texts were read on InfoLEG. Practice evidence specific to the freedom to hold opinions does not exist for any period.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "CERD 2001 Argentina",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CMW 2011 Argentina",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     }
+    ],
+    "starting_answer_concern": "The MRD citation's treaty article numbers are off: it cites ACHR art. 12 and ICCPR art. 18, but opinion is covered by ICCPR art. 19 and ACHR art. 13. This does not affect the answer.",
+    "confidence": "medium",
+    "notes": "The answer rests on the Constitution throughout. The implementation ratings carry the 2020 rating back for want of any documented breach."
+   },
+   {
+    "question_id": 85,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Constitution art. 14 ('publicar sus ideas por la prensa sin censura previa'), arts. 20 and 32, and art. 75 inc. 22 (ICCPR art. 19, ACHR art. 13) were in force. Ley 22.439 art. 95(b) let the Interior Ministry expel any foreigner for 'actividades que afecten la paz social, la seguridad nacional o el orden público', a broad power that could reach expression. We found no documented use of it against speech around 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 25.871 (in force 21 Jan 2004) repealed Ley 22.439, including art. 95(b), and added the equality provisions in arts. 5, 6 and 13. We found no documented breach. CERD 2004 does not raise migrants' expression."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions, plus the ICRMW from 2007 (not read). The CMW 2011 observations raise discrimination and xenophobic discourse, not restrictions on migrants' own expression."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "No change to the provisions before DNU 70/2017, which did not touch these rights. We found no documented breach around 2015. The deportation threats against foreigners detained at the October 2018 Congress protest fall after this date."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 20, 32, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 14(c)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Art. 95(b) (expulsion for activities affecting social peace/public order)",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (ICRMW)",
+      "article": "Convention arts. 13, 26",
+      "role": "cited",
+      "in_force": "2007 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 122, 124",
+      "kind": "new_instrument",
+      "what_changed": "Ley 25.871 repealed Ley 22.439, including art. 95(b), which had allowed expulsion of any foreigner for activities affecting 'la paz social' or 'el orden público', and added equality provisions. The constitutional protection did not change.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 124. — Derógase la ley 22.439, su decreto reglamentario 1023/9"
+     },
+     {
+      "date": "1981-03",
+      "instrument": "Ley 22.439",
+      "article": "Art. 95(b)",
+      "kind": "enacted",
+      "what_changed": "The provision in force on 1 Jan 2000 (until 2004) allowed expulsion of any foreigner whatever their residence status for activities affecting social peace, national security or public order.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 95. – El Ministerio del Interior podrá disponer la expulsión de la República, de todo extranjero, cualquiera sea su situación de residencia, cuando: ... b) realizare en el país o en el exterior, actividades que afecten la paz social, la seguridad nacional o el orden público de la República."
+     },
+     {
+      "date": "2018-10",
+      "instrument": "Government statements on the expulsion of foreigners detained at the Congress protest",
+      "article": "n/a",
+      "kind": "practice",
+      "what_changed": "Ministers called for the expulsion of four foreigners arrested at the protest against the 2019 budget. This is practice evidence for the 2020 rating, not for the past dates.",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml",
+      "passage": "\"We hope to deport them as soon as possible\", Interior Minister Rogelio Frigerio said Thursday, calling for an express trial."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations: Argentina, 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations: Argentina, 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations: Argentina, 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Congress protests spark anti-migrant discourse, calls for deportation (Buenos Aires Times)",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "We read the constitutional text, Ley 25.871 and Ley 22.439. Practice evidence specific to migrants' expression before 2018 was not found, so the past implementation ratings carry the 2020 rating back.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CERD 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "BA Times 2018",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml"
+     }
+    ],
+    "starting_answer_concern": "The MRD citation cites treaty articles on assembly and association (UDHR 20, ACHR 15-16, ICCPR 22) rather than those on expression (UDHR 19, ACHR 13, ICCPR 19). This does not affect the answer.",
+    "confidence": "medium",
+    "notes": "The answer rests on the Constitution. Repealing Ley 22.439 art. 95(b) in 2004 removed a broad expulsion ground that could reach political expression. We did not treat that as changing the Yes answer, because the constitutional right applied throughout and we found no documented use of art. 95(b) against speech."
+   },
+   {
+    "question_id": 87,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Constitution art. 14 ('asociarse con fines útiles'), art. 14 bis (free trade union organisation), art. 20 and art. 75 inc. 22 were in force. Ley 22.439 arts. 30-31 barred irregular migrants from working. That bar continued under Ley 25.871 art. 53, so the position matches 2020. No union-specific practice evidence was found for 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 25.871 (in force 21 Jan 2004) added equality (arts. 5-6) and lists 'opinión ... gremial' as a prohibited ground (art. 13). Art. 16 preserves irregular workers' rights against employers. We found no documented breach of migrants' association rights."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions, plus the ICRMW (Ley 26.202, 2007; arts. 26 and 40, not read). The CMW 2011 observations do not report obstacles to union membership."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "No change to the provisions. We found no documented breach around 2015."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 14 bis, 20, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 16, 53",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (arts. 6 and 53 replaced by DNU 366/2025 in 2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 30, 31 (irregular migrants barred from work)",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (ICRMW)",
+      "article": "Convention arts. 26, 40",
+      "role": "cited",
+      "in_force": "2007 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 13, 16, 124",
+      "kind": "new_instrument",
+      "what_changed": "The new law replaced Ley 22.439. It added equality, union opinion as a prohibited ground and protection of irregular workers' rights against employers. It kept the bar on irregular migrants working (art. 53).",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "ARTICULO 16. — La adopción por el Estado de todas las medidas necesarias y efectivas para eliminar la contratación laboral ... de inmigrantes en situación irregular ... no menoscabará los derechos de los trabajadores inmigrantes frente a sus empleadores en relación con su empleo."
+     },
+     {
+      "date": "1981-03",
+      "instrument": "Ley 22.439",
+      "article": "Art. 30",
+      "kind": "enacted",
+      "what_changed": "Under the provision in force in 2000, irregular migrants could not work. It contains no explicit bar on joining associations or unions.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 30. – Los extranjeros que residan ilegalmente en la República no podrán trabajar o realizar tareas remuneradas o lucrativas, ya sea por cuenta propia o ajena, con o sin relación de dependencia."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Argentina, 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CERD Concluding observations: Argentina, 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "We read the Constitution, Ley 25.871 and Ley 22.439. We could not open Ley 23.551 (trade unions) or Ley 26.202. There is no union-specific practice evidence for any past period.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     }
+    ],
+    "starting_answer_concern": "The answer may be questioned on two points. First, irregular migrants are legally barred from working (Ley 25.871 art. 53, and Ley 22.439 art. 30 before it); in the Chile example, the MRD coded a similar situation 'No'. Second, Ley 23.551 is reported to reserve most union leadership posts for Argentine citizens; we could not open it to verify. Both points apply equally in 2000 and 2020, so neither is a change.",
+    "confidence": "medium",
+    "notes": "The answer rests on Constitution arts. 14, 14 bis and 20. No event in 2000-2020 altered association rights specifically."
+   },
+   {
+    "question_id": 89,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Assembly is not named in Constitution art. 14. It is protected through art. 33 (implicit rights), arts. 14 and 20, and art. 75 inc. 22 (ICCPR art. 21, ACHR art. 15), all in force since 1994. Ley 22.439 art. 95(b) allowed expulsion for activities affecting public order. We found no practice evidence for around 2000."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Ley 25.871 (in force 21 Jan 2004) repealed Ley 22.439 and added arts. 5, 6 and 14(c). We found no documented breach."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "Same provisions, plus the ICRMW (2007). The CMW 2011 observations do not report restrictions on migrants' assembly."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually; Effectively Always",
+      "basis": "No change to the provisions. We found no documented breach around 2015. The expulsion threats against foreign protesters in October 2018 fall after this date."
+     }
+    ],
+    "change_2000_2020": "There have been right protections both in 2000 and 2020 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 14 bis, 20, 33, 75 inc. 22",
+      "role": "cited",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 6, 14(c)",
+      "role": "cited",
+      "in_force": "2004-01-21 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Art. 95(b)",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 26.202 (ICRMW)",
+      "article": "Convention art. 26",
+      "role": "cited",
+      "in_force": "2007 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 14, 124",
+      "kind": "new_instrument",
+      "what_changed": "The new law replaced Ley 22.439, including the art. 95(b) public-order expulsion ground, and added integration provisions. The constitutional protection did not change.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "c) Al conocimiento y la valoración de las expresiones culturales, recreativas, sociales, económicas y religiosas de los inmigrantes;"
+     },
+     {
+      "date": "2018-10",
+      "instrument": "Government statements on the expulsion of foreigners detained at the Congress protest",
+      "article": "n/a",
+      "kind": "practice",
+      "what_changed": "Ministers called for deporting foreigners arrested at a protest. This is practice relevant to the 2020 rating only.",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml",
+      "passage": "For her part, Security Minister Patricia Bullrich said \"it is probable\" that the foreigners will be \"expelled from the country\"."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CMW Concluding observations: Argentina, 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "Buenos Aires Times, Congress protests spark anti-migrant discourse",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml",
+      "year": 2018,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The legal texts were read. Practice evidence on migrants' assembly is absent before 2018, so the past ratings carry the 2020 rating back.",
+    "sources_opened": [
+     {
+      "title": "Constitución Nacional (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "BA Times 2018",
+      "url": "https://www.batimes.com.ar/news/argentina/congress-protests-spark-anti-migrant-discourse-calls-for-deportation.phtml"
+     }
+    ],
+    "starting_answer_concern": "The citation has two errors. It cites art. 17(c), but the quoted text is art. 14(c) of Ley 25.871. It also presents the art. 14 right of association as the right of assembly. The answer stands through the treaties with constitutional rank and art. 33.",
+    "confidence": "medium",
+    "notes": "The answer rests on the Constitution and the treaties with constitutional rank (art. 75 inc. 22), which have been directly applicable since 1994."
+   },
+   {
+    "question_id": 131,
+    "answers_by_date": [
+     {
+      "date": "2000-01-01",
+      "answer": "No",
+      "implementation": "Does Not Apply",
+      "basis": "The regime was Ley 22.439, which mandated differential treatment by migration status. Art. 30 barred irregular migrants from work; art. 32 barred renting housing to them; art. 102 limited secondary and higher education to permanent or temporary residents; arts. 103-104 obliged hospitals and officials to report irregular migrants. Ley 23.592 and Constitution art. 16 prohibit discrimination on nationality, not on migration status. CERD 2001 recorded xenophobia and costly, bureaucratic regularisation for undocumented neighbouring-country migrants."
+     },
+     {
+      "date": "2005-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes",
+      "basis": "Ley 25.871 took effect on 21 Jan 2004 and repealed Ley 22.439. Its arts. 6-8 secure equal access and education and health 'cualquiera sea su situación migratoria', and art. 13 defines discrimination. CERD 2004 noted that implementing measures were still lacking and that INADI's budget had been severely reduced."
+     },
+     {
+      "date": "2010-01-01",
+      "answer": "Yes",
+      "implementation": "Sometimes; Usually",
+      "basis": "Same provisions. The regulating Decreto 616/2010 came only in May 2010. Over 2006-2010 the Patria Grande programme regularised large numbers of migrants. The CMW 2011 observations still report discrimination against migrant children at school, xenophobic statements by politicians, and media linking migrants to crime."
+     },
+     {
+      "date": "2015-01-01",
+      "answer": "Yes",
+      "implementation": "Usually",
+      "basis": "Same provisions, now regulated by Decreto 616/2010. INADI investigated complaints (CMW 2011). The CMW's 2019 concerns about DNU 70/2017 and provincial health restrictions concern 2017 onwards."
+     }
+    ],
+    "change_2000_2020": "There was no right protection (as of January 1, 2000), but there is now (as of January 1, 2020)",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 6, 7, 8, 13",
+      "role": "cited",
+      "in_force": "2004-01-21 to today (art. 6 replaced by DNU 366/2025 on 2025-05-29; art. 7 amended 2025)",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Ley 22.439",
+      "article": "Arts. 30, 31, 32, 102, 103, 104",
+      "role": "predecessor",
+      "in_force": "1981-03 to 2004-01-21",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Ley 23.592 de Actos Discriminatorios",
+      "article": "Art. 1",
+      "role": "other_in_force",
+      "in_force": "1988-09 to today",
+      "history_read": "version_history"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 16, 20",
+      "role": "other_in_force",
+      "in_force": "1994-08-24 to today",
+      "history_read": "current_text_only"
+     },
+     {
+      "instrument": "Decreto 616/2010 (reglamentario Ley 25.871)",
+      "article": "Regulation of arts. 6-8",
+      "role": "other_in_force",
+      "in_force": "2010-05 to today",
+      "history_read": "not_found"
+     }
+    ],
+    "events": [
+     {
+      "date": "2004-01-21",
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 6, 7, 8, 13, 122, 124",
+      "kind": "new_instrument",
+      "what_changed": "The new law replaced Ley 22.439, which had mandated status-based exclusions. It introduced equal access for immigrants (art. 6), a ban on refusing education or health because of irregular status (arts. 7-8) and a definition of discrimination (art. 13).",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+      "passage": "ARTICULO 7° — En ningún caso la irregularidad migratoria de un extranjero impedirá su admisión como alumno en un establecimiento educativo... ARTICULO 8° — No podrá negársele o restringírsele en ningún caso, el acceso al derecho a la salud... cualquiera sea su situación migratoria."
+     },
+     {
+      "date": "1981-03",
+      "instrument": "Ley 22.439",
+      "article": "Arts. 102, 103",
+      "kind": "enacted",
+      "what_changed": "Under the provisions in force on 1 Jan 2000, education beyond primary level required regular residence and hospitals had to report irregular migrants, i.e. discrimination by migration status was mandated.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto",
+      "passage": "ARTICULO 102. – Los institutos de enseñanza media o superior... solamente podrán admitir como alumnos, a aquellos extranjeros que acrediten... su calidad de 'residentes permanentes' o 'residentes temporarios'"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Ley 25.871 art. 6",
+      "kind": "replaced",
+      "what_changed": "After 2020, art. 6 equal access was made subject to 'los derechos y obligaciones correspondientes a cada categoría migratoria'. This does not affect the past dates.",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+      "passage": "de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria... (Artículo sustituido por art. 1º del Decreto Nº 366/2025 B.O. 29/5/2025."
+     }
+    ],
+    "repealed_search": "not applicable",
+    "rulings": [],
+    "practice_sources": [
+     {
+      "title": "CERD Concluding observations: Argentina, 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html",
+      "year": 2001,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2000"
+     },
+     {
+      "title": "CERD Concluding observations: Argentina (CERD/C/65/CO/1), 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html",
+      "year": 2004,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "refugees_asylum_seekers"
+      ],
+      "period": "around_2005"
+     },
+     {
+      "title": "CMW Concluding observations: Argentina (CMW/C/ARG/CO/1), 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html",
+      "year": 2011,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2010"
+     },
+     {
+      "title": "CELS, UN urges Argentina to derogate and suspend decree that violates migrant rights (CMW 2019)",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights",
+      "year": 2019,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "around_2020"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "We read the original and updated texts of Ley 25.871, Ley 22.439 and Ley 23.592. We did not read Decreto 616/2010. The UN treaty-body observations give practice evidence for 2001, 2004 and 2011; there is no source specifically for around 2015.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado (argentina.gob.ar)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Ley 22.439 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-22439-16176/texto"
+     },
+     {
+      "title": "Ley 23.592 texto actualizado",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/20465/texact.htm"
+     },
+     {
+      "title": "Constitución Nacional",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "CERD 2001",
+      "url": "https://hrlibrary.umn.edu/country/argentina2001.html"
+     },
+     {
+      "title": "CERD 2004",
+      "url": "https://hrlibrary.umn.edu/country/argentina2004.html"
+     },
+     {
+      "title": "CMW 2011",
+      "url": "https://hrlibrary.umn.edu/cmw/argentina2011.html"
+     },
+     {
+      "title": "CELS 2019",
+      "url": "https://cels.org.ar/web/en/2019/09/un-urges-argentina-to-derogate-and-suspend-decree-that-violates-migrant-rights"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "The 2000 'No' is a judgement call. Ley 23.592 art. 1 (1988) already listed 'nacionalidad' as a ground, as Ley 25.871 art. 13 later did. Read the way the Colombia example reads national origin, it could support a 'Yes'. However, Ley 22.439 in force in 2000 expressly required exclusion and reporting of irregular migrants, so no general prohibition of discrimination by migration status existed until Ley 25.871 arts. 6-8 (21 Jan 2004). The 2020 citation's own basis for status-based protection is arts. 6-8."
+   }
+  ]
+ }
+}
