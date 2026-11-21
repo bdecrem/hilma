@@ -2,7 +2,7 @@ import XCTest
 @testable import OlaKit
 
 /// OLA-249: the engine on this Mac answers only with Ola's models, whatever happens to its settings
-/// file. The real opencode 2.3.0, started as the Mac app and `ola` start it (LocalServer), in a
+/// file. The real opencode 2.3.2, started as the Mac app and `ola` start it (LocalServer), in a
 /// scratch HOME, under sandbox-exec with every outbound connection but loopback refused (DNS too),
 /// against a stand-in for Ola's model connection that counts the requests it gets
 /// (tools/planted-model.py). Each case: the settings file deleted before the start, deleted while
@@ -62,7 +62,7 @@ final class OnlyOlasModelsTests: XCTestCase {
 
   /// Another provider planted before the start: the engine is stopped before anything is sent.
   func testPlantedProviderAtTheStartStopsTheEngine() async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let r = try await Rig.make(self, plant: .otherProvider, plantAtStart: true)
     defer { r.end() }
     r.server.afterPrepare = { try FileManager.default.removeItem(at: r.settingsFile) }
@@ -82,7 +82,7 @@ final class OnlyOlasModelsTests: XCTestCase {
   /// refuses the request with the sentence and asks for the engine to be stopped.
   @MainActor
   func testPlantedProviderWhileItRunsIsRefusedBeforeTheRequest() async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let r = try await Rig.make(self, plant: .otherProvider, plantAtStart: false)
     defer { r.end() }
     r.server.watchEvery = 3600
@@ -105,7 +105,7 @@ final class OnlyOlasModelsTests: XCTestCase {
   /// Another provider planted while it runs: the engine's own watch stops it within seconds and
   /// says so (the app and `ola` show the sentence from there), and nothing reaches that provider.
   func testPlantedProviderWhileItRunsStopsTheEngineByItself() async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let r = try await Rig.make(self, plant: .otherProvider, plantAtStart: false)
     defer { r.end() }
     r.server.watchEvery = 1
@@ -123,7 +123,7 @@ final class OnlyOlasModelsTests: XCTestCase {
   /// OLA-287: a settings file that leaves Ola no model at all (only opencode's provider enabled, and
   /// its free models are off): the same stop and the same sentence, not opencode's own error.
   func testSettingsThatLeaveNoModelStopTheEngineWithTheSentence() async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let r = try await Rig.make(self, plant: .onlyOpencode, plantAtStart: false)
     defer { r.end() }
     r.server.watchEvery = 1
@@ -139,7 +139,7 @@ final class OnlyOlasModelsTests: XCTestCase {
   /// One case of the five that must keep Ola working: only Ola's models, and one request that
   /// reaches only Ola's stand-in.
   func onlyOla(_ change: Change, plant: Plant = .none) async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let r = try await Rig.make(self, plant: plant, plantAtStart: true)
     defer { r.end() }
     let tripped = Flag()

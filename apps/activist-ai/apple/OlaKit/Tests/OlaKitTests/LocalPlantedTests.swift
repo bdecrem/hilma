@@ -32,11 +32,11 @@ final class LocalPlantedTests: XCTestCase {
     XCTAssertEqual(LocalServer.installPlugins(into: dir).count, 2)
   }
 
-  /// The real opencode 2.3.0, started as the Mac app and `ola` start it, in a scratch HOME, against
+  /// The real opencode 2.3.2, started as the Mac app and `ola` start it, in a scratch HOME, against
   /// a fake model (tools/planted-model.py) that reads a planted file: the read result it gets back
   /// carries the plugin's note; without the plugin it does not.
   func testAPlantedFileReadOnThisMacCarriesTheNote() async throws {
-    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.0 on this Mac (tools/install-local-opencode.sh)")
+    try XCTSkipIf(LocalServer.binary == nil, "no opencode 2.3.2 on this Mac (tools/install-local-opencode.sh)")
     let with = try await readThroughOpencode(plugin: true)
     XCTAssertTrue(with.contains { $0.contains("[Ola file check]") && $0.contains("- survey.csv: \"") && $0.contains("Note: survey.csv contains text addressed to an AI") }, with.joined(separator: "\n---\n"))
     let without = try await readThroughOpencode(plugin: false)

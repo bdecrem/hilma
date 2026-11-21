@@ -3,20 +3,20 @@ import CryptoKit
 import Foundation
 
 /// opencode for "On this Mac", installed by the app itself on a Mac that has nothing else: the
-/// pinned 2.3.0 build for this Mac's processor, from the npm registry, checked against the sha512
+/// pinned 2.3.2 build for this Mac's processor, from the npm registry, checked against the sha512
 /// that `apps/activist-ai/package-lock.json` pins (the same bytes `npm ci` would accept), unpacked
 /// user-level into Application Support/Ola/opencode/bin, then asked for its version. No Node, no
 /// npm, no administrator password.
 public enum OpencodeInstall {
-  public static let version = "2.3.0"
+  public static let version = "2.3.2"
 
   /// The registry tarball and its pinned integrity, per processor (package-lock.json; a test
   /// checks these against the file).
   public static let packages: [String: (url: String, integrity: String)] = [
-    "arm64": ("https://registry.npmjs.org/@opencode/cli-darwin-arm64/-/cli-darwin-arm64-2.3.0.tgz",
-              "sha512-ey2HOWX2DK2YJrKta5a+pcvIlkiCyJJsN7NjkJZPsVg9TDXpQWE1OJLWVFqjxZcWNtaMjvKYlrlCY6g8Z2Lb+A=="),
-    "x86_64": ("https://registry.npmjs.org/@opencode/cli-darwin-x64/-/cli-darwin-x64-2.3.0.tgz",
-               "sha512-OARYGefjQb1xClR9lX0bTl/unxaJ2H9kpyqYuEH+59YdgantqpMdPrXXnJgwiydk3WP94CxWLXFOxSYtCxoDQQ=="),
+    "arm64": ("https://registry.npmjs.org/@opencode/cli-darwin-arm64/-/cli-darwin-arm64-2.3.2.tgz",
+              "sha512-cYrIzW8CvYc52INFA/cXmw7U2mk+JNWaV+olH7AflYqa/5srSrA/hbLwF7G1N4QTRMtOFrmeTM0LVN81q396sg=="),
+    "x86_64": ("https://registry.npmjs.org/@opencode/cli-darwin-x64/-/cli-darwin-x64-2.3.2.tgz",
+               "sha512-vNLWgHc2I/hAbW37OOANepj6VNS8mbbLp9TbWgEKY6MMvzZlx0ifsrcwUuLI0Qoso82UEj6RV20xcBWyZdF84w=="),
   ]
 
   public static var arch: String {
@@ -139,7 +139,7 @@ public enum OpencodeInstall {
     do { try p.run() } catch { throw Failure.wrongVersion("did not run") }
     let d = out.fileHandleForReading.readDataToEndOfFile()
     p.waitUntilExit()
-    // It prints "opencode v2.3.0".
+    // It prints "opencode v2.3.2".
     let text = String(decoding: d, as: UTF8.self)
     return text.range(of: #"\d+\.\d+\.\d+"#, options: .regularExpression).map { String(text[$0]) } ?? text.trimmingCharacters(in: .whitespacesAndNewlines)
   }

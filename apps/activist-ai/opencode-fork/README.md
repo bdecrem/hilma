@@ -34,7 +34,7 @@ binary goes into the Mac app, the notice goes into the bundle and the app's cred
 names opencode and its license.
 
 **Which Ola this is (2026-11-18, OLA-152).** The home screen's corner shows "Ola 0.1 (11)" where opencode
-shows its own version, and `/version` says "Ola 0.1 (11), built on opencode 2.3.0". Both read `OLA_VERSION`,
+shows its own version, and `/version` says "Ola 0.1 (11), built on opencode 2.3.2". Both read `OLA_VERSION`,
 which the `ola` command sets from the app's version and build (`OlaCLI.versionText`); `ola --version` prints
 the same. Display only: the one command added here does nothing but show that line.
 

@@ -1,6 +1,6 @@
 # The workspace image: one sealed Linux VM per customer workspace (Apple `container`).
 #
-# What is in it: Debian bookworm-slim (pinned by digest), opencode 2.3.0 (pinned by npm
+# What is in it: Debian bookworm-slim (pinned by digest), opencode 2.3.2 (pinned by npm
 # integrity), python3 (the agent needs a language to run code on files), socat (the bridge to the door in
 # ola-init, and the desk's relay to opencode), and a non-root user `work`. Nothing else: no sudo, no setuid
 # or setgid programs, no package manager use after build,
@@ -78,6 +78,8 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-61 (OLA-239): opencode 2.3.2 (from 2.3.0: the system prompt cached on GPT-6.2 Responses routes,
+# webfetch output no longer repeats its url and format). Everything of 2.3.0-60 is in it.
 # 2.3.0-60 (OLA-232): AGENTS.md: a request that names Claude comes with the front desk's note on
 # whether Claude can take it in this project; when it cannot, Ola says why and never sends them to
 # /claude. Builds on 2.3.0-59.
@@ -148,9 +150,9 @@
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
 FROM ${DEBIAN} AS fetch
-ARG OPENCODE_VERSION=2.3.0
-# npm's own integrity for @opencode/cli-linux-arm64@2.3.0 (registry.npmjs.org, 2026-11-16)
-ARG OPENCODE_SHA512=1IF1NQFD5mdZ7NcU81UifdYAVKEDAP/J07ylbgE4ZATminS7pOn5SOXVzyOkuN1WLcDzXunkju0hw8hug48wTg==
+ARG OPENCODE_VERSION=2.3.2
+# npm's own integrity for @opencode/cli-linux-arm64@2.3.2 (registry.npmjs.org, 2026-11-21)
+ARG OPENCODE_SHA512=t44ZuW5CKaWiRSp4gWUDurMf4edyXw/SmUty1pRi827zda0T2RatKWj4LnMUewNCL05COLB1Ppg8RWicswhFaQ==
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates openssl && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30 --speed-limit 20000 --speed-time 60 -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-${OPENCODE_VERSION}.tgz" \
  && got="$(openssl dgst -sha512 -binary /tmp/oc.tgz | openssl base64 -A)" \

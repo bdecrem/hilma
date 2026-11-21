@@ -183,7 +183,7 @@ func wait(_ watch: Watch, seconds: Double, until: (Conversation, [JSON]) -> Bool
 let t0 = Date()
 do {
   let info = try await client.info()
-  line(info["version"].str == "2.3.0", "connect with the password", "opencode \(info["version"].str)")
+  line(info["version"].str == OpencodeInstall.version, "connect with the password", "opencode \(info["version"].str)")
 } catch {
   line(false, "connect with the password", "\(error)")
   exit(1)

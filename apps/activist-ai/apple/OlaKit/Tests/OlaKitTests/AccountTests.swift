@@ -434,7 +434,7 @@ final class OpencodeInstallTests: XCTestCase {
     defer { try? FileManager.default.removeItem(at: dest.deletingLastPathComponent()) }
     let seen = Flag()
     let bin = try await OpencodeInstall.install(to: dest) { f in if f > 0, f < 1 { seen.set() } }
-    XCTAssertEqual(try OpencodeInstall.runVersion(bin), "2.3.0")
+    XCTAssertEqual(try OpencodeInstall.runVersion(bin), OpencodeInstall.version)
     XCTAssertTrue(seen.value, "progress was reported while downloading")
   }
 }
