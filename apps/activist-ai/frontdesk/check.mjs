@@ -91,6 +91,7 @@ const env = {
   OLA_FD_SITES_FILE: path.join(run, 'sites.env'),
   OLA_FD_SITES_POLL_MS: '100',
   OLA_FD_SITES_VERIFY_MS: '8000',
+  OLA_FD_SITES_SETTLE_MS: '300',
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {

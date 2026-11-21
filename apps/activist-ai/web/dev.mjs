@@ -317,7 +317,7 @@ devJobs = makeJobs({
 const fakeToken = randomBytes(16).toString('hex')
 const fakeVercel = await startFakeVercel({ token: fakeToken })
 fs.writeFileSync(path.join(run, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${fakeToken}\n`, { mode: 0o600 })
-const devSites = makeSites({ cfg: sitesConfig({ OLA_FD_SITES_ORIGIN: fakeVercel.origin, OLA_FD_SITES_API: fakeVercel.api, OLA_FD_SITES_FILE: path.join(run, 'sites.env'), OLA_FD_SITES_POLL_MS: '50', OLA_FD_SITES_VERIFY_MS: '5000' }), dataDir: path.join(run, 'fd'), log })
+const devSites = makeSites({ cfg: sitesConfig({ OLA_FD_SITES_ORIGIN: fakeVercel.origin, OLA_FD_SITES_API: fakeVercel.api, OLA_FD_SITES_FILE: path.join(run, 'sites.env'), OLA_FD_SITES_POLL_MS: '50', OLA_FD_SITES_VERIFY_MS: '5000', OLA_FD_SITES_SETTLE_MS: '120' }), dataDir: path.join(run, 'fd'), log })
 const uploadedHere = new Set()
 let pagePort = PORT
 // The event streams the page holds open (for /__dev/cut-streams), and how many it has opened.

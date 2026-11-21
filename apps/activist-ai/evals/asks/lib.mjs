@@ -424,6 +424,10 @@ const CANNOT = new Set(['says it cannot do it from here'])
 /** The https://sites.ola.cx/<name>/ addresses in a text. */
 export const siteAddresses = (text) => [...new Set([...String(text).matchAll(/https:\/\/sites\.ola\.cx\/[a-z0-9][a-z0-9-]{0,62}\/?/gi)].map((m) => m[0].replace(/\/?$/, '/')))]
 
+// The front desk's own reader (sites.mjs), loaded only when a site: check runs (add-case's test copies
+// this file elsewhere).
+const readAsReaderLazy = (u) => import('../../frontdesk/sites.mjs').then((m) => m.readAsReader(u))
+
 async function fetchText(url) {
   try {
     const r = await fetch(url, { cache: 'no-store', redirect: 'follow' })
@@ -436,13 +440,14 @@ async function fetchText(url) {
 /**
  * One outcome, checked. Kinds (cases.json "must"):
  *   site:<words>         Ola's answer gives an https://sites.ola.cx/<name>/ address, and that address
+ *                        (read once, then 3 more times over 12 s as a reader, OLA-302)
  *                        answers 200 with a page that says <words>
  *   says:<regex>         Ola's answer matches (case-insensitive)
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
  *   served:<name>        the model connection's own record says <name> served at least one of this
  *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
  */
-export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [] } = {}) {
+export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
   if (kind === 'served') {
@@ -473,10 +478,23 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
     if (!addrs.length) return { ok: false, why: 'no sites.ola.cx address in Ola’s answer' }
     const seen = []
     for (const a of addrs) {
-      const r = await fetchText(a)
+      const r = await fetchFirst(a)
       const has = r.status === 200 && r.text.toLowerCase().includes(arg.toLowerCase())
       seen.push(`${a} ${r.status}${r.status === 200 ? (has ? ` with "${arg}"` : ` without "${arg}"`) : ''}`)
-      if (has) return { ok: true, why: seen.join('; '), url: a }
+      if (!has) continue
+      // OLA-302: one fresh read is not what a reader gets. The page counts only if it says the words
+      // on every one of `rereads` more reads over the next seconds, each on a new connection with no
+      // cache-skipping headers (another of the host's edge servers may still have the old page).
+      for (let i = 1; i <= rereads; i++) {
+        await new Promise((res) => setTimeout(res, rereadMs))
+        const x = await reader(a).then((y) => ({ status: y.status, text: y.body.toString('utf8') }), (e) => ({ status: `error ${e.code ?? e.message}`, text: '' }))
+        if (!(x.status === 200 && x.text.toLowerCase().includes(arg.toLowerCase()))) {
+          seen.push(`read again ${i * rereadMs / 1000} s later as a reader: ${x.status}${x.status === 200 ? ` without "${arg}" (the old page)` : ''}`)
+          return { ok: false, why: seen.join('; ') }
+        }
+      }
+      seen.push(`the same on ${rereads} more reads over ${(rereads * rereadMs) / 1000} s, each a new connection`)
+      return { ok: true, why: seen.join('; '), url: a }
     }
     return { ok: false, why: seen.join('; ') }
   }

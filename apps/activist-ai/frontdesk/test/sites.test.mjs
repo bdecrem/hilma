@@ -25,7 +25,7 @@ async function setup() {
   const v = await startFakeVercel({ token })
   const d = tmp()
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${token}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
-  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_POLL_MS: '50' })
+  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
   return { v, sites: makeSites({ cfg, dataDir: path.join(d, 'fd') }), d }
 }
 
@@ -181,6 +181,8 @@ test('not set up: no credential file, nothing published, said plainly', async ()
 // OLA-223: no Vercel token, a git remote instead. The host deploys the repository on push; here the
 // remote is a bare repository on disk and a small server plays sites.ola.cx by serving what its
 // branch holds (trailing slash -> index.html, anything missing -> 404, as Vercel does).
+// `edges.stale(p)`: when it returns a body, every third new connection (one edge server in three
+// that has not switched over yet) gets that body instead of the branch's (OLA-302).
 async function gitSetup({ delayMs = 0 } = {}) {
   const { execFileSync } = await import('node:child_process')
   const http = await import('node:http')
@@ -188,9 +190,14 @@ async function gitSetup({ delayMs = 0 } = {}) {
   const bare = path.join(d, 'remote.git')
   execFileSync('git', ['init', '-q', '--bare', bare])
   let pushedAt = 0
+  let conns = 0
+  const edges = { stale: () => null, requests: 0, connections: 0 }
   const server = http.createServer((req, res) => {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\//, '')
     if (p === '' || p.endsWith('/')) p += 'index.html'
+    edges.requests += 1
+    const old = req.socket.n % 3 === 0 ? edges.stale(p) : null
+    if (old) return res.writeHead(200).end(old)
     let body = null
     if (Date.now() - pushedAt >= delayMs) {
       try {
@@ -199,12 +206,16 @@ async function gitSetup({ delayMs = 0 } = {}) {
     }
     res.writeHead(body ? 200 : 404).end(body ?? 'not found')
   })
+  server.on('connection', (sock) => {
+    sock.n = ++conns
+    edges.connections = conns
+  })
   await new Promise((r) => server.listen(0, '127.0.0.1', r))
   const origin = `http://127.0.0.1:${server.address().port}`
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_GIT_REMOTE=${bare}\nOLA_SITES_GIT_EMAIL=owner@example.com\n`, { mode: 0o600 })
   const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: origin, OLA_FD_SITES_API: 'http://127.0.0.1:9', OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_GIT_VERIFY_MS: '3000', OLA_FD_SITES_GIT_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
   const branch = (args) => execFileSync('git', ['-C', bare, ...args], { encoding: 'utf8' })
-  return { d, bare, origin, branch, server, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()) }
+  return { d, bare, origin, branch, server, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()), edges }
 }
 
 test('git mode: publish = one commit pushed, the page live; publish again; unpublish leaves no trace in the branch', async () => {
@@ -264,6 +275,40 @@ test('git mode: a host slower than the wait says so plainly; a push that fails c
   assert.equal(bad.status, 502)
   assert.match(bad.body.message, /Nothing changed/)
   assert.equal(g.sites.status('git-fail'), null)
+  g.server.close()
+})
+
+test('git mode: one edge server still on the old page means not live; live once every read, each on a new connection, shows the new one (OLA-302)', async () => {
+  const g = await gitSetup()
+  const root = project({ 'site/index.html': '<!doctype html><title>Oak</title>' })
+  const ctx = folderCtx('git-edges', root)
+  const pre = await g.sites.preview(ctx, { folder: 'site' })
+  assert.equal((await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)).body.live, true)
+  const oak = fs.readFileSync(path.join(root, 'site/index.html'))
+  // Publish again while one edge in three keeps the old page for the whole wait: not live, and the
+  // answer names what the address still shows.
+  g.edges.stale = (p) => (p === 'git-edges/index.html' ? oak : null)
+  fs.writeFileSync(path.join(root, 'site/index.html'), '<!doctype html><title>Bart was here</title>')
+  const pre2 = await g.sites.preview(ctx, { folder: 'site' })
+  const before = { r: g.edges.requests, c: g.edges.connections }
+  const pub2 = await g.sites.publish(ctx, { folder: 'site' }, pre2.body.fingerprint)
+  assert.equal(pub2.status, 200)
+  assert.equal(pub2.body.live, false, 'an old answer from one edge server must keep it from being called live')
+  assert.match(pub2.body.message, /does not show it yet/)
+  // Every read of the check was its own connection, as a reader's would be.
+  assert.equal(g.edges.connections - before.c, g.edges.requests - before.r)
+  // The edge switches over 400 ms in: live, and after it every read gets the new page.
+  const t0 = Date.now()
+  g.edges.stale = (p) => (p === 'git-edges/index.html' && Date.now() - t0 < 400 ? oak : null)
+  fs.writeFileSync(path.join(root, 'site/index.html'), '<!doctype html><title>Bart was here, again</title>')
+  const pre3 = await g.sites.preview(ctx, { folder: 'site' })
+  const pub3 = await g.sites.publish(ctx, { folder: 'site' }, pre3.body.fingerprint)
+  assert.equal(pub3.body.live, true, JSON.stringify(pub3.body))
+  assert.ok(Date.now() - t0 >= 400)
+  for (let i = 0; i < 6; i++) {
+    const { readAsReader } = await import('../sites.mjs')
+    assert.match((await readAsReader(`${g.origin}/git-edges/`)).body.toString(), /again/)
+  }
   g.server.close()
 })
 

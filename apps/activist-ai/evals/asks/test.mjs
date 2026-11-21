@@ -83,6 +83,21 @@ test('site addresses in an answer', () => {
   assert.deepEqual(siteAddresses('https://example.com/x/'), [])
 })
 
+test('site: one fresh read is not enough; every reread as a reader must show the words (OLA-302)', async () => {
+  const page = (t) => ({ status: 200, text: `<title>${t}</title>` })
+  const body = (t) => ({ status: 200, ok: true, body: Buffer.from(`<title>${t}</title>`) })
+  const answer = 'Live at https://sites.ola.cx/appdriver/'
+  const opts = { rereadMs: 1, fetchFirst: async () => page('Bart was here') }
+  // One edge server still answers with the old page on the second reread: not live.
+  let n = 0
+  const stale = await checkMust('site:Bart was here', {}, answer, { ...opts, reader: async () => (++n === 2 ? body('Bart') : body('Bart was here')) })
+  assert.equal(stale.ok, false)
+  assert.match(stale.why, /the old page/)
+  const good = await checkMust('site:Bart was here', {}, answer, { ...opts, reader: async () => body('Bart was here') })
+  assert.equal(good.ok, true, good.why)
+  assert.match(good.why, /3 more reads/)
+})
+
 test('a conversation folds into turns as the apps fold it', () => {
   const t = turnsOf([
     { type: 'user', text: 'make a page', time: { created: 1 } },

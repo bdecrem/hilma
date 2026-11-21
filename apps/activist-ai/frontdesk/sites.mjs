@@ -28,10 +28,37 @@
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import http from 'node:http'
+import https from 'node:https'
 import os from 'node:os'
 import path from 'node:path'
 
 const posix = path.posix
+
+/**
+ * One GET the way a reader's browser makes it: a new connection (no reused socket, so the host's
+ * load balancer may hand it to another edge server) and no request headers asking a cache to skip
+ * itself (fetch's `cache: 'no-store'` sends `Cache-Control: no-cache`, which a reader never does).
+ * Follows up to 5 redirects. Returns { status, ok, body }.
+ */
+export function readAsReader(url, hops = 5) {
+  const u = new URL(url)
+  const mod = u.protocol === 'https:' ? https : http
+  return new Promise((resolve, reject) => {
+    const req = mod.get(u, { agent: false, headers: { 'user-agent': 'Mozilla/5.0 (ola publish check)', accept: 'text/html,*/*' }, timeout: 15_000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && hops > 0) {
+        res.resume()
+        return resolve(readAsReader(new URL(res.headers.location, u), hops - 1))
+      }
+      const parts = []
+      res.on('data', (c) => parts.push(c))
+      res.on('end', () => resolve({ status: res.statusCode, ok: res.statusCode >= 200 && res.statusCode < 300, body: Buffer.concat(parts) }))
+      res.on('error', reject)
+    })
+    req.on('timeout', () => req.destroy(Object.assign(new Error('timed out'), { code: 'TimeoutError' })))
+    req.on('error', reject)
+  })
+}
 
 export function sitesConfig(env = process.env) {
   const origin = new URL(env.OLA_FD_SITES_ORIGIN ?? 'https://sites.ola.cx').origin
@@ -48,10 +75,16 @@ export function sitesConfig(env = process.env) {
     verifyMs: Number(env.OLA_FD_SITES_VERIFY_MS) || 90_000,
     // A push is built by the host before it is served: a minute or two, longer when it is busy.
     gitVerifyMs: Number(env.OLA_FD_SITES_GIT_VERIFY_MS) || 300_000,
-    // After a push the host's edges switch over a few seconds apart (seen 2026-11-20: the front desk
-    // saw the new page, curl a second later the old answer): a match counts once it holds again
-    // this long after.
-    gitSettleMs: Number(env.OLA_FD_SITES_GIT_SETTLE_MS) || 8000,
+    // After a deploy the host's edge servers switch over seconds apart, and one keeps answering with
+    // the old page while its neighbours have the new one (seen 2026-11-20: the front desk saw the new
+    // page, curl a second later the old answer; OLA-302: the check saw one fresh copy, a reader got
+    // the old page three times over the next 12 s, a cache HIT). So the page counts as live only
+    // when every read for this long, and at least `settleReads` reads in a row, each on a new
+    // connection (a reader's own, so another edge server can answer), show it; one old answer starts
+    // the count again.
+    gitSettleMs: Number(env.OLA_FD_SITES_GIT_SETTLE_MS) || 20_000,
+    settleMs: Number(env.OLA_FD_SITES_SETTLE_MS) || 15_000,
+    settleReads: Number(env.OLA_FD_SITES_SETTLE_READS) || 8,
     pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
   }
 }
@@ -614,26 +647,32 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
   const deploy = (c, all) => (c.git ? gitDeployAll(c.git, all) : deployAll(c, all))
 
   // The public address answers with what was published (or, after an unpublish, with 404).
-  async function verify(url, expect, ms = cfg.verifyMs, settleMs = 0) {
+  // `shows` is what the address said last (the old words while it still has them).
+  async function verify(url, expect, ms = cfg.verifyMs, settleMs = cfg.settleMs) {
     const until = Date.now() + ms
     let last = ''
     let shows = ''
     let since = null
+    let streak = 0
     while (Date.now() < until) {
       try {
-        const r = await fetch(url, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15_000) })
-        const b = Buffer.from(await r.arrayBuffer())
+        const r = await readAsReader(url)
         last = String(r.status)
-        shows = r.ok ? wordsOf(b) : ''
-        if (expect === null ? r.status === 404 : r.ok && sha1(b) === expect) {
+        shows = r.ok ? wordsOf(r.body) : ''
+        if (expect === null ? r.status === 404 : r.ok && sha1(r.body) === expect) {
           since ??= Date.now()
-          if (Date.now() - since >= settleMs) return { ok: true, shows }
-        } else since = null
+          streak += 1
+          if (Date.now() - since >= settleMs && streak >= cfg.settleReads) return { ok: true, shows }
+        } else {
+          since = null
+          streak = 0
+        }
       } catch (e) {
         last = e.code ?? e.name
         since = null
+        streak = 0
       }
-      await new Promise((r) => setTimeout(r, since === null ? cfg.pollMs : Math.max(cfg.pollMs, Math.min(2000, settleMs))))
+      await new Promise((r) => setTimeout(r, since === null ? cfg.pollMs : Math.max(cfg.pollMs, Math.min(2000, settleMs / cfg.settleReads))))
     }
     log(`sites: ${url} did not show the change yet (${last})`)
     return { ok: false, shows }
@@ -806,7 +845,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       const index = plan.items.find((i) => i.as === plan.page)
       // The address itself, fetched, against the page just published: `live` and `shows` (what the
       // address says now) are what Ola's answer is written from (OLA-267), never what it believes.
-      const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)
+      const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)
       const live = seen.ok
       const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet${seen.shows ? ` (it still shows “${seen.shows}”)` : ''}. It usually appears within a few minutes; check the address again then.` }
       return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, shows: seen.shows, expected: wordsOf(buffers.get(index.path)), ...notYet, fingerprint: plan.fingerprint }, plan }
@@ -831,7 +870,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
         return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
       }
-      const gone = (await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : 0)).ok
+      const gone = (await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)).ok
       const notYet = gone ? {} : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
       return { status: 200, body: { unpublished: true, url: m.url, gone, ...notYet, files: m.files.length } }
     },

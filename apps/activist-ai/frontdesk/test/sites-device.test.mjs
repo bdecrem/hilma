@@ -42,6 +42,7 @@ before(async () => {
     OLA_FD_SITES_API: v.api,
     OLA_FD_SITES_FILE: path.join(run, 'sites.env'),
     OLA_FD_SITES_VERIFY_MS: '3000',
+    OLA_FD_SITES_SETTLE_MS: '120',
     OLA_FD_SITES_POLL_MS: '50',
     OLA_FD_SITES_MAX_TOTAL_MB: '2',
   })

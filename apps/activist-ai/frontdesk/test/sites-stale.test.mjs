@@ -25,7 +25,7 @@ async function setup() {
   const v = await startFakeVercel({ token })
   const d = tmp()
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${token}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
-  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_POLL_MS: '50' })
+  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
   return { v, sites: makeSites({ cfg, dataDir: path.join(d, 'fd') }) }
 }
 const sha = (t) => createHash('sha256').update(t).digest('hex')

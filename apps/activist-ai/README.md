@@ -2661,6 +2661,18 @@ that was open; it is not changed. Tests:
 `publish-third-page` (two pages published, each in its own conversation, then a third with a new
 word; `separate: true` in `cases.json`).
 
+**"Live" means every reader gets the new page (OLA-302, 2026-11-21).** After "publish it again"
+the check of the address saw one fresh copy and Ola said the new words were live; a reader's three
+fetches over the next 12 s still got the old page (a cache HIT on another of the host's edge
+servers, which switch over seconds apart). The check read on one kept-open connection, so one edge
+server answered all its reads. Now every read is a new connection with no cache-skipping headers,
+as a reader's browser makes it (`sites.mjs readAsReader`), and the page counts as live only once
+every read for 20 s (git mode; 15 s with the deploy API) and at least 8 reads in a row show it; one
+old answer starts the count again, and if it never settles the answer says what the address still
+shows. Settings: `OLA_FD_SITES_GIT_SETTLE_MS`, `OLA_FD_SITES_SETTLE_MS`, `OLA_FD_SITES_SETTLE_READS`.
+Test: `test/sites.test.mjs`, "one edge server still on the old page" (a host where one connection
+in three gets the old page: not live; it fails on the old check).
+
 **Takedown.** `node admin.mjs unpublish <project>` takes a project's pages down at once (audited as
 the admin's); `node admin.mjs sites` lists what is published.
 
