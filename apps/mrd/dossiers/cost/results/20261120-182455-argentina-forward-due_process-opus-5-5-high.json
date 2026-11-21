@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina due_process claude-opus-5-5 high",
- "pid": 49735,
  "step": "forward",
  "slug": "argentina",
  "chunk": "due_process",
@@ -61,5 +60,1382 @@
   "user": 124
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:00:35.530Z",
+ "minutes": 35.67,
+ "meters_after": {
+  "at": "2026-11-21T03:00:35.530Z",
+  "window": {
+   "pct": 39,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 39,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 39% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 234735,
+   "output": 46078,
+   "cache_read": 4433380,
+   "cache_write": 178531,
+   "cost_usd": 3.0967,
+   "total": 4892724
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 234665,
+    "output": 16590,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 4504,
+    "cost_usd": 0.1918
+   },
+   "claude-opus-5-5": {
+    "input": 70,
+    "output": 29488,
+    "cache_read": 4433380,
+    "cache_write": 178531,
+    "thinking": 8111,
+    "cost_usd": 2.905
+   }
+  }
+ },
+ "turns": 55,
+ "calls": 89,
+ "duration_ms": 640942,
+ "duration_api_ms": 527306,
+ "pages_read": 36,
+ "pages": [
+  {
+   "at": "2026-11-21T02:25:12.164Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 86 | asistencia jurídica | intérprete | trata | artículo 6° | 23 | igualdad",
+   "ok": true,
+   "chars": 19061
+  },
+  {
+   "at": "2026-11-21T02:25:41.233Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 9° | ARTÍCULO 12 | ARTÍCULO 15 | ARTÍCULO 18 | ARTÍCULO 21 | ARTÍCULO 23.- | ARTÍCULO 24 | ARTÍCULO 32 | vigencia | ARTÍCULO 35",
+   "ok": true,
+   "chars": 18408
+  },
+  {
+   "at": "2026-11-21T02:26:39.405Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 8°.- Sustitúyese | ARTÍCULO 16.- | ARTÍCULO 19.- | razones humanitarias | entrará en vigencia | Comisión Bicameral | ARTÍCULO 40",
+   "ok": true,
+   "chars": 15255
+  },
+  {
+   "at": "2026-11-21T02:27:02.904Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto",
+   "find": "ARTICULO 6° | ARTICULO 86 | ARTÍCULO 86 | m) Razones humanitarias | trata de personas | ARTICULO 37 | ARTÍCULO 37",
+   "ok": true,
+   "chars": 7786
+  },
+  {
+   "at": "2026-11-21T02:27:05.126Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+   "find": "Decreto | Ley",
+   "ok": true,
+   "chars": 5651
+  },
+  {
+   "at": "2026-11-21T02:27:11.890Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+   "find": "ARTICULO 86 | m) Razones Humanitarias | ARTICULO 12 | g) Promover | ARTICULO 37 | ARTICULO 81 | ARTICULO 84",
+   "ok": true,
+   "chars": 12594
+  },
+  {
+   "at": "2026-11-21T02:27:40.409Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-616-2010-167004/actualizacion",
+   "find": "ARTICULO 86 | m) Razones Humanitarias | trata de personas | Decreto N°",
+   "ok": true,
+   "chars": 1962
+  },
+  {
+   "at": "2026-11-21T02:27:41.407Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-27372-276064/actualizacion",
+   "find": "ARTÍCULO 2° | ARTÍCULO 5° | querellante | sustituido | incorporado",
+   "ok": true,
+   "chars": 1952
+  },
+  {
+   "at": "2026-11-21T02:48:30.832Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/167004/texact.htm",
+   "find": "ARTICULO 86 | m) Razones Humanitarias | trata de personas",
+   "ok": true,
+   "chars": 648
+  },
+  {
+   "at": "2026-11-21T02:48:31.731Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/275000-279999/276064/norma.htm",
+   "find": "ARTÍCULO 2° | ARTÍCULO 5° | querellante | Ámbito",
+   "ok": true,
+   "chars": 4396
+  },
+  {
+   "at": "2026-11-21T02:49:14.248Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican",
+   "find": "2023 | 2024 | 2025 | Decreto",
+   "ok": true,
+   "chars": 2938
+  },
+  {
+   "at": "2026-11-21T02:49:15.060Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+   "find": "ARTICULO 86 | m) Razones Humanitarias | trata",
+   "ok": true,
+   "chars": 8492
+  },
+  {
+   "at": "2026-11-21T02:49:20.958Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto",
+   "find": "ARTICULO 86.- | Ministerio Público de la Defensa | intérprete",
+   "ok": true,
+   "chars": 4189
+  },
+  {
+   "at": "2026-11-21T02:49:21.743Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-276819/normas-modificadas",
+   "find": "Ley | Decreto",
+   "ok": true,
+   "chars": 1524
+  },
+  {
+   "at": "2026-11-21T02:49:27.524Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-276819/normas-modifican",
+   "find": "Ley | Decreto | Resolución",
+   "ok": true,
+   "chars": 1783
+  },
+  {
+   "at": "2026-11-21T02:49:29.699Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/276819/texto",
+   "find": "ARTÍCULO 2° | ARTÍCULO 5° | querellante | ARTÍCULO 3°",
+   "ok": true,
+   "chars": 6393
+  },
+  {
+   "at": "2026-11-21T02:49:35.957Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-140100/normas-modifican",
+   "find": "Ley | Decreto",
+   "ok": true,
+   "chars": 3423
+  },
+  {
+   "at": "2026-11-21T02:50:29.895Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26364-140100/actualizacion",
+   "find": "ARTICULO 5° | ARTICULO 6° | migratoria | Decreto N° 195",
+   "ok": true,
+   "chars": 5934
+  },
+  {
+   "at": "2026-11-21T02:50:31.955Z",
+   "url": "https://www.ecoi.net/de/dokument/2130514.html",
+   "find": "residen | immigration | foreign victims | deport | legal alternatives",
+   "ok": true,
+   "chars": 6382
+  },
+  {
+   "at": "2026-11-21T02:50:37.763Z",
+   "url": "https://www.ecoi.net/de/dokument/2130514.html",
+   "find": "visa | permanent | humanitarian | removal | penalized",
+   "ok": true,
+   "chars": 3983
+  },
+  {
+   "at": "2026-11-21T02:50:45.911Z",
+   "url": "https://www.ecoi.net/en/document/2077677.html",
+   "find": "residency | foreign victims | humanitarian | deport",
+   "ok": true,
+   "chars": 4333
+  },
+  {
+   "at": "2026-11-21T02:50:46.941Z",
+   "url": "https://www.diariojudicial.com/news-84376-la-dgn-denuncio-ante-la-onu-la-situacion-de-las-personas-migrantes-en-argentina",
+   "find": "defensa | asistencia | expulsi | 366 | intérprete",
+   "ok": true,
+   "chars": 3233
+  },
+  {
+   "at": "2026-11-21T02:51:15.580Z",
+   "url": "https://caref.org.ar/wp-content/uploads/2026/08/Informe-DNU-366_2025-Analizar-la-norma.pdf",
+   "find": "asistencia jurídica | artículo 86 | defensa pública | intérprete | patrocinio | expulsiones",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:51:16.779Z",
+   "url": "https://repositorio.mpd.gov.ar/jspui/bitstream/123456789/5874/3/El%20Decreto%20366%20y%20el%20Desaf%c3%ado%20a%20la%20Tutela%20Judicial%20Efectiva%20de%20los%20Migrantes%20en%20Argentina..pdf",
+   "find": "asistencia jurídica | artículo 86 | Defensor | patrocinio letrado | intérprete",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:51:36.441Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23984-383/actualizacion",
+   "find": "Art. 268 | intérprete | Art. 82",
+   "ok": true,
+   "chars": 5450
+  },
+  {
+   "at": "2026-11-21T02:52:04.852Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23984-383/actualizacion",
+   "find": "Art. 268 | Intérpretes | Designación",
+   "ok": true,
+   "chars": 3425
+  },
+  {
+   "at": "2026-11-21T02:52:24.176Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23984-383/actualizacion",
+   "find": "traducir documentos | idioma distinto del nacional | conocimiento personal",
+   "ok": true,
+   "chars": 2409
+  },
+  {
+   "at": "2026-11-21T02:52:33.277Z",
+   "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+   "find": "expulsiones | 2024 | 2023 | Defensoría | 2025",
+   "ok": true,
+   "chars": 5024
+  },
+  {
+   "at": "2026-11-21T02:52:36.942Z",
+   "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+   "find": "legal | defence | defensa | lawyer | interpret | due process | expedited",
+   "ok": true,
+   "chars": 5738
+  },
+  {
+   "at": "2026-11-21T02:52:37.676Z",
+   "url": "https://www.ecoi.net/en/document/2136186.html",
+   "find": "migra | decree | deport",
+   "ok": true,
+   "chars": 3419
+  },
+  {
+   "at": "2026-11-21T02:52:56.010Z",
+   "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+   "find": "CIDH | defensa | abogad | expulsi | rechazo en frontera | refugio",
+   "ok": true,
+   "chars": 2862
+  },
+  {
+   "at": "2026-11-21T02:53:08.168Z",
+   "url": "https://www.oas.org/en/IACHR/jsForm/?File=/en/iachr/media_center/PReleases/2025/217.asp",
+   "find": "Decree 366 | access to justice | equal | October | Washington",
+   "ok": true,
+   "chars": 677
+  },
+  {
+   "at": "2026-11-21T02:56:41.895Z",
+   "url": "https://www.oas.org/en/iachr/media_center/PReleases/2025/217.asp",
+   "find": "Decree 366 | access to justice | equal | October",
+   "ok": true,
+   "chars": 645
+  },
+  {
+   "at": "2026-11-21T02:57:26.332Z",
+   "url": "https://ecoi.net/en/document/2107604.html",
+   "find": "interpret | free of charge | Fair Public Trial | refugees | migrants | deport",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:57:51.182Z",
+   "url": "https://www.ecoi.net/de/dokument/2089254.html",
+   "find": "interpret | free of charge | Trial Procedures | refugees | migrants",
+   "ok": true,
+   "chars": 6044
+  },
+  {
+   "at": "2026-11-21T02:57:57.272Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26165-122609/actualizacion",
+   "find": "ARTICULO 40 | ingreso ilegal | sanciones penales",
+   "ok": true,
+   "chars": 3442
+  }
+ ],
+ "searches": [
+  "DNU 366/2025 Ley 25.871 artículo 86 asistencia jurídica gratuita modificación",
+  "infoleg Ley 25.871 texto actualizado decreto 366/2025",
+  "DNU 366/2025 migraciones Congreso rechazo Diputados Senado inconstitucional fallo",
+  "CELS amparo colectivo DNU 366/2025 migraciones medida cautelar rechazada juzgado contencioso administrativo",
+  "Ley 25.871 artículo 86 texto anterior \"que puedan llevar a la denegación de su entrada\"",
+  "argentina.gob.ar normativa Ley 27372 derechos y garantías de las personas víctimas de delitos texto",
+  "argentina.gob.ar normativa Decreto 616/2010 reglamentación ley de migraciones texto actualizado",
+  "2025 Trafficking in Persons Report Argentina victims residency DNM",
+  "Comisión del Migrante Defensoría General de la Nación expulsiones 2025 DNU 366 asistencia jurídica intervención defensa pública",
+  "2023 Trafficking in Persons Report Argentina \"foreign victims\" residency visas humanitarian",
+  "Código Procesal Penal Federal artículo intérprete \"idioma nacional\" imputado derecho a ser asistido por intérprete texto ordenado",
+  "Código Procesal Penal Federal implementación Comodoro Py agosto 2025 resolución Comisión Bicameral entrada en vigencia sistema acusatorio",
+  "Human Rights Watch World Report 2026 Argentina migrants decree 366",
+  "CIDH comunicado Argentina decreto 366/2025 migrantes acceso a la justicia debido proceso",
+  "oas.org CIDH comunicado 2025 Argentina reformas migratorias preocupación DNU 366 refugio centros",
+  "ecoi.net \"2022 Country Reports on Human Rights Practices: Argentina\""
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.23,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.25,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.26,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.27,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.28,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.29,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.3,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.45,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.31,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.32,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.33,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.34,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":35,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Usually; Effectively Always\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Usually\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 but they are not the same\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Arts. 18, 75.22\",\"enacted\":\"1853 (1994 reform)\",\"history_read\":\"not_found\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 3.g\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 6\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"amended\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 12\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia 366/2025 (DNU-2025-366-APN-PTE)\",\"article\":\"Art. 1 (replacing art. 6 Ley 25.871)\",\"kind\":\"amended\",\"what_changed\":\"Art. 6 used to guarantee migrants and their families equal access to the same protection and rights as nationals, including justice. It now adds 'de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria', which ties equal access to migratory category. This touches the indicator directly.\",\"url\":\"https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion\",\"passage\":\"ARTICULO 6° — El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social. (Artículo sustituido por art. 1º del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación\"},{\"date\":\"2025-0",
+ "output": {
+  "answers": [
+   {
+    "question_id": 35,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 18, 75.22",
+      "enacted": "1853 (1994 reform)",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 3.g",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 12",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025 (DNU-2025-366-APN-PTE)",
+      "article": "Art. 1 (replacing art. 6 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Art. 6 used to guarantee migrants and their families equal access to the same protection and rights as nationals, including justice. It now adds 'de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria', which ties equal access to migratory category. This touches the indicator directly.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+      "passage": "ARTICULO 6° — El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social. (Artículo sustituido por art. 1º del Decreto Nº 366/2025 B.O. 29/5/2025. Vigencia: a partir del día de su publicación"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Arts. 21-31, 34 (arts. 74-80, 89, 92, 98 Ley 25.871 replaced; arts. 81, 84 repealed)",
+      "kind": "amended",
+      "what_changed": "The decree restructured the appeal regime against Dirección Nacional de Migraciones decisions. It removed the recurso de alzada, routed judicial appeals directly to the federal chambers with mandatory counsel, and limited judicial review to legality, due process and reasonableness. This touches access to courts for migrants specifically, though equal protection under the general constitutional guarantees remains.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 89.- El recurso judicial previsto por los artículos 76 y 77 de la presente, como la consecuente intervención y decisión del órgano judicial competente para entender respecto de aquellos, se limitarán al control de legalidad, debido proceso y de razonabilidad del acto motivo de impugnación”."
+     }
+    ],
+    "implementation_then_now": "In 2023 the 2022 US State Department report found the judiciary generally enforced fair-trial rights despite delays. There was no migrant-specific breach pattern, so the MRD's 'Usually; Effectively Always' is kept as the starting rating. In 2025, after DNU 366, the IACHR (as reported in El Salto) said the decree removes appeal mechanisms, halves procedural deadlines and restricts access to justice previously recognised on equal terms with nationals. Human Rights Watch reported about 35% of federal judicial posts, including public defenders, vacant. Implementation is lowered to 'Usually' for 2026.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina (US State Dept, via ecoi.net)",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Human Rights Watch World Report 2026: Argentina (via ecoi.net)",
+      "url": "https://www.ecoi.net/en/document/2136186.html",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "El Salto: endurecimiento de las políticas migratorias en Argentina (reporting IACHR press release 217/25)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Global Detention Project: Argentina's Migration Shift: From Rights to Security",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants",
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The pre-2025 art. 6 was read in the original text, which had not been amended before DNU 366, and the current text with its Infoleg amendment note was also read. The decree itself was read. The IACHR release could not be opened (bot check), so its content is second-hand via El Salto.",
+    "sources_opened": [
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html"
+     },
+     {
+      "title": "HRW World Report 2026 Argentina",
+      "url": "https://www.ecoi.net/en/document/2136186.html"
+     },
+     {
+      "title": "El Salto article",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     },
+     {
+      "title": "Global Detention Project Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     },
+     {
+      "title": "IACHR press release 217/25 (blocked)",
+      "url": "https://www.oas.org/en/iachr/media_center/PReleases/2025/217.asp"
+     }
+    ],
+    "starting_answer_concern": "The protection answer holds, since constitutional arts. 16, 18 and 20 cover foreigners. The 'Effectively Always' end of the 2023 implementation rating looks generous, given documented due-process problems in expulsion appeals before 2023.",
+    "confidence": "medium",
+    "notes": "Courts later challenged DNU 366/2025. The Cámara Nacional Electoral declared it null on 2026-06-30 (press reports, not read); earlier rulings concerned citizenship or individual parties. None changes the 1 January 2026 text. The Constitution's text was not opened in this session; it has not been amended since 1994. Ley 25.871 art. 6 was amended by a DNU rather than by Congress."
+   },
+   {
+    "question_id": 37,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 18, 75(22)",
+      "enacted": "1853 (1994 reform)",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 86",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 86",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Zuluaga Celemín (CSJN, 13 Oct 2022)",
+      "article": "—",
+      "enacted": "2022-10-13",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)",
+      "article": "Art. 18.3.d",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 27.149 Orgánica del Ministerio Público de la Defensa",
+      "article": "Art. 35.e",
+      "enacted": "2015-06-18",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 28 (replacing art. 86 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Before, foreigners lacking means had free legal aid in proceedings that 'may lead to' refused entry, return or expulsion. Now they must prove ('acrediten') they lack means, and aid covers only proceedings that order return or expulsion; entry-refusal proceedings are dropped. The right survives in narrower form.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+      "passage": "ARTICULO 86. — Los extranjeros que se encuentren en territorio nacional y acrediten carecer de medios económicos tendrán derecho a asistencia jurídica gratuita en aquellos procedimientos administrativos y judiciales que dispongan su retorno a su país de origen u ordenen su expulsión de la REPÚBLICA ARGENTINA."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 10 (replacing art. 35 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Border rejections now cover irregular entry detected in the act, and all decisions refusing entry can be appealed only from abroad. Together with the new art. 86, this takes entry refusals out of the free legal aid guarantee.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "Las decisiones adoptadas en virtud del rechazo del ingreso al país de todo extranjero serán recurribles exclusivamente desde el exterior, mediante petición efectuada ante las delegaciones diplomáticas de la REPÚBLICA ARGENTINA”."
+     }
+    ],
+    "implementation_then_now": "In 2023 the MRD rated this 'Usually'. The public defender's migrant unit (Comisión del Migrante) assisted migrants in expulsion cases; no source opened here documents the period directly. In 2025 the IACHR (via El Salto) said DNU 366 removes appeal mechanisms and halves deadlines, restricting access to justice. Chequeado reports accelerated expulsions after the decree, with a record pace in 2025. Human Rights Watch notes vacancies among public defenders. No source opened documents legal aid actually being refused, so the 2026 rating of 'Sometimes; Usually' is inferred and low-confidence.",
+    "practice_sources": [
+     {
+      "title": "Chequeado: Reforma migratoria de Javier Milei: qué muestran los datos sobre expulsiones",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants",
+       "irregular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "El Salto (reporting IACHR press release 217/25)",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Human Rights Watch World Report 2026: Argentina",
+      "url": "https://www.ecoi.net/en/document/2136186.html",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Both versions of art. 86 were read: the original text, unamended until 2025, and the consolidated text with its DNU 366 note. Decreto 616/2010 art. 86 was read, and its amendment list shows nothing in 2025. Practice evidence on legal aid itself is thin; the defender's PDFs could not be opened.",
+    "sources_opened": [
+     {
+      "title": "Decreto DNU 366/2025 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Decreto 616/2010 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Chequeado expulsiones",
+      "url": "https://chequeado.com/el-explicador/reforma-migratoria-de-javier-milei-que-muestran-los-datos-sobre-expulsiones-de-extranjeros-que-delinquen/"
+     },
+     {
+      "title": "El Salto article",
+      "url": "https://www.elsaltodiario.com/argentina/endurecimiento-politicas-migratorias-argentina"
+     },
+     {
+      "title": "HRW World Report 2026 Argentina",
+      "url": "https://www.ecoi.net/en/document/2136186.html"
+     },
+     {
+      "title": "IACHR press release 217/25 (blocked)",
+      "url": "https://www.oas.org/en/iachr/media_center/PReleases/2025/217.asp"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "low",
+    "notes": "The Zuluaga Celemín ruling (13 Oct 2022) predates the window and was not read. Decreto 616/2010 art. 86 (referral to the public defender's office) stays in force, unchanged. The new art. 77 requires appeals to be filed 'con patrocinio letrado' (with a lawyer)."
+   },
+   {
+    "question_id": 39,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 86",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Código Procesal Penal de la Nación (Ley 23.984)",
+      "article": "Art. 268",
+      "enacted": "1991-09-09",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 86",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 27.149",
+      "article": "Arts. 16-25",
+      "enacted": "2015-06-18",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     },
+     {
+      "instrument": "Convención Trabajadores Migratorios (Ley 26.202)",
+      "article": "Art. 18.3.d",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 18, 75.22",
+      "enacted": "1853 (1994 reform)",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 28 (replacing art. 86 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Art. 86 was replaced, but its interpreter sentence was kept in substance ('Además, tendrán derecho a la asistencia de un intérprete si no comprenden o hablan el idioma oficial'). The final sentence on protecting the right of defence in regulations was dropped. The interpreter right is unaffected.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+      "passage": "Además, tendrán derecho a la asistencia de un intérprete si no comprenden o hablan el idioma oficial. (Artículo sustituido por art. 28 del Decreto Nº 366/2025 B.O. 29/5/2025."
+     }
+    ],
+    "implementation_then_now": "No migrant-specific practice evidence on interpretation in criminal proceedings was found for either period. The 2022 US State Department report says the judiciary generally enforced fair-trial rights. CPPN art. 268 is unchanged, and no documented shift appeared between 2023 and 2026. The 'Usually' rating is kept for both dates at low confidence.",
+    "practice_sources": [
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "CPPN art. 268 was read in the consolidated text, with no amendment note. Ley 25.871 art. 86 was read in both versions. No practice source specific to interpreters was found.",
+    "sources_opened": [
+     {
+      "title": "Código Procesal Penal de la Nación texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23984-383/actualizacion"
+     },
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Decreto DNU 366/2025",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "2022 Country Report on Human Rights Practices: Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2089254.html"
+     }
+    ],
+    "starting_answer_concern": "Ley 25.871 art. 86 concerns migration proceedings, not criminal ones. For criminal proceedings the operative provision is CPPN art. 268, and in the jurisdictions where it applies, the Código Procesal Penal Federal.",
+    "confidence": "low",
+    "notes": "The accusatory Código Procesal Penal Federal is being rolled out province by province. Its start in Comodoro Py was postponed past 1 January 2026 (press reports; not read), so the CPPN still applied in the CABA federal courts on that date."
+   },
+   {
+    "question_id": 41,
+    "answer_2023": "No",
+    "implementation_2023": "Does Not Apply",
+    "answer_2026": "No",
+    "implementation_2026": "Does Not Apply",
+    "change_2023_2026": "There have been no right protections neither in 2023 nor in 2026",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 37",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 11 (replacing art. 37 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Irregular entry used to make a person liable only to expulsion. It still does, and the decree adds immediate border rejection when entry is caught in flagrante. The sanction stays administrative; no criminal penalty was introduced.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+      "passage": "ARTICULO 37. — El extranjero que ingrese en la REPÚBLICA ARGENTINA por un lugar no habilitado a tal efecto o eludiendo cualquier forma de contralor migratorio será pasible de expulsión del territorio en los términos y condiciones de la presente ley. Cuando la autoridad migratoria constate, en situación de flagrancia, el ingreso irregular de un extranjero al territorio argentino, procederá a su rechazo en frontera"
+     }
+    ],
+    "implementation_then_now": "The protection answer is 'No', so implementation is 'Does Not Apply' on both dates. For context, no criminal prosecution of migrants for irregular entry was documented in either period. Enforcement is administrative (expulsion and border rejection), and it hardened after DNU 366 according to Chequeado and the Global Detention Project.",
+    "practice_sources": [
+     {
+      "title": "Global Detention Project: Argentina's Migration Shift",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue",
+      "year": 2025,
+      "shows": "law_only",
+      "groups": [
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 37 was read in its original and amended versions. Ley 26.165 arts. 2 and 40 were read in the current text.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Decreto DNU 366/2025",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Ley 26.165 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26165-122609/actualizacion"
+     },
+     {
+      "title": "Global Detention Project Argentina",
+      "url": "https://www.globaldetentionproject.org/argentina-from-migration-as-a-right-to-migration-as-a-security-issue"
+     }
+    ],
+    "starting_answer_concern": "The starting 'No' looks wrong. The question asks about criminal sanctions, and the first coder's own note says immigration offences cannot be criminalised. Ley 25.871 has no criminal offence of irregular entry (art. 37 provides only expulsion, and the offences in arts. 116-121 target smugglers). Ley 26.165 art. 2 ('no sanción por ingreso ilegal') and art. 40 ('No se impondrán sanciones penales o administrativas al solicitante de la condición de refugiado por motivo de ingreso ilegal') protect asylum seekers expressly. On the Brazil and Chile examples, this would code 'Yes'. It is kept as 'No' per the method, since a disagreement with the first coder is not a change in the law.",
+    "confidence": "high",
+    "notes": "Decreto 646/2025, which regulates Ley 26.165 and creates reception centres for asylum seekers, was reported by the IACHR but not read. It does not create criminal penalties for entry."
+   },
+   {
+    "question_id": 43,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually; Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually; Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Art. 20",
+      "enacted": "1853",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 5",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 27.372 de Derechos y Garantías de las Personas Víctimas de Delitos",
+      "article": "Arts. 2, 5",
+      "enacted": "2017-07-13",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Art. 1 (replacing art. 6 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "Equal access to justice in art. 6 is now qualified by migratory category. The provision decisive for this indicator, Ley 27.372 art. 5(h) (right to act as querellante), is unchanged, and it covers every 'víctima' regardless of nationality or status. So the indicator's protection does not change.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion",
+      "passage": "de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social."
+     }
+    ],
+    "implementation_then_now": "The US Trafficking in Persons reports are the only practice evidence and cover trafficking victims only. In 2021 (2022 report) foreign victims were identified and assisted. In 2024 (2025 report) CNR reported 1,256 victims taking part in investigations or prosecutions, and foreign victims had the same access to care as Argentines. No documented shift in migrant victims' access to criminal proceedings, so the rating is kept for both dates. Evidence on victims of other crimes and on irregular migrants is lacking.",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Argentina",
+      "url": "https://www.ecoi.net/en/document/2077677.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2130514.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 27.372 text was read, and its amendment list shows only Decreto 421/2018 and Ley 27.801 (March 2026, after the window). CPPN art. 82 (querella) was read in the consolidated text, last amended 2017. Practice evidence covers trafficking victims only.",
+    "sources_opened": [
+     {
+      "title": "Ley 27.372 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/276819/texto"
+     },
+     {
+      "title": "Ley 27.372 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-276819/normas-modifican"
+     },
+     {
+      "title": "Ley 27.372 normas modificadas",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-276819/normas-modificadas"
+     },
+     {
+      "title": "CPPN texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-23984-383/actualizacion"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "2022 TIP Report Argentina",
+      "url": "https://www.ecoi.net/en/document/2077677.html"
+     },
+     {
+      "title": "2025 TIP Report Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2130514.html"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Ley 27.801 (published 2026-03-09, a juvenile penal regime) modified Ley 27.372 after the window and is irrelevant to the 1 January 2026 answer."
+   },
+   {
+    "question_id": 45,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 18, 20",
+      "enacted": "1853",
+      "history_read": "not_found",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 23(m)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 616/2010",
+      "article": "Art. 23(m)",
+      "enacted": "2010-05-06",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 27.372",
+      "article": "—",
+      "enacted": "2017-07-13",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 26.364",
+      "article": "Art. 6(j) (and art. 5)",
+      "enacted": "2008-04-30",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia 366/2025",
+      "article": "Arts. 8 and 16 (replacing arts. 29 and 62 Ley 25.871)",
+      "kind": "amended",
+      "what_changed": "The grounds for inadmissibility and for cancelling residence were widened, but the humanitarian waiver was kept. The decree excludes it only for serious intentional crimes against life, sexual integrity or the constitutional order. The relief route for victims under art. 23(m) and Decreto 616/2010 art. 23(m)(3) is untouched.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "Excepcionalmente, por motivos acreditados y fundados en razones humanitarias, de reunificación familiar o cuando se vieran afectados gravemente derechos de menores de edad, la DIRECCIÓN NACIONAL DE MIGRACIONES podrá admitir en el país a los extranjeros comprendidos en los impedimentos previstos en el presente artículo."
+     }
+    ],
+    "implementation_then_now": "The evidence is the US Trafficking in Persons reports (2022 and 2025) and covers trafficking victims only. Both report foreign victims identified and assisted, and the 2025 report says foreign victims had the same access to care as Argentines. Neither gives figures on humanitarian residence permits. The 2025 report notes cuts to assistance programmes and uneven victim identification across provinces. No documented shift on immigration relief, so 'Sometimes; Usually' is kept for both dates at low confidence.",
+    "practice_sources": [
+     {
+      "title": "2022 Trafficking in Persons Report: Argentina",
+      "url": "https://www.ecoi.net/en/document/2077677.html",
+      "year": 2022,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "2025 Trafficking in Persons Report: Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2130514.html",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 23(m) was read in the original and consolidated texts, unchanged. Decreto 616/2010 art. 23(m)(3) was read, with no 2025 amendments in its list. Ley 26.364 arts. 5-6 were read in the consolidated text; Decreto 195/2024 amended only its institutional arts. 18 and 21. No data on humanitarian visas granted to victims was found.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 texto original",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/texto"
+     },
+     {
+      "title": "Ley 25.871 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/92016/actualizacion"
+     },
+     {
+      "title": "Decreto 616/2010 texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/texto"
+     },
+     {
+      "title": "Decreto 616/2010 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-167004/normas-modifican"
+     },
+     {
+      "title": "Ley 26.364 texto actualizado",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-26364-140100/actualizacion"
+     },
+     {
+      "title": "Ley 26.364 normas que modifican",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-140100/normas-modifican"
+     },
+     {
+      "title": "Decreto DNU 366/2025",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "2022 TIP Report Argentina",
+      "url": "https://www.ecoi.net/en/document/2077677.html"
+     },
+     {
+      "title": "2025 TIP Report Argentina",
+      "url": "https://www.ecoi.net/de/dokument/2130514.html"
+     }
+    ],
+    "starting_answer_concern": "The quoted list of trafficking and smuggling victims comes from Decreto 616/2010 art. 23(m)(3), not from the Law's art. 23(m), which only refers to 'razones humanitarias'. Ley 26.364 art. 5 (no migration sanctions for trafficking victims) supports the answer better than art. 6(j). The route covers trafficking and smuggling victims, not crime victims generally.",
+    "confidence": "low",
+    "notes": null
+   }
+  ]
+ }
 }
