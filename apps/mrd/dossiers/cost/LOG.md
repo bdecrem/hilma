@@ -46,3 +46,4 @@ against the plan, whose meters are read before and after with `claude -p /usage`
 | 2026-11-20 18:24 | forward | expulsion_a · argentina | claude-opus-5-5 | high | 37.34 | 36 | 46,365 | 2,549,659 | 2.46 | 21→42 | 45→47 | 67→67 | 25 | ok | `forward argentina expulsion_a claude-opus-5-5 high` |
 | 2026-11-20 18:51 | forward | expulsion_b · argentina | claude-opus-5-5 | high | 12.01 | 32 | 32,719 | 2,509,454 | 2.25 | 32→44 | 46→47 | 67→67 | 23 | ok | `forward argentina expulsion_b claude-opus-5-5 high` |
 | 2026-11-20 18:26 | forward | expulsion_a · chile | claude-opus-5-5 | high | 37.76 | 41 | 57,296 | 2,896,347 | 2.81 | 25→44 | 45→47 | 67→67 | 28 | ok | `forward chile expulsion_a claude-opus-5-5 high` |
+| 2026-11-20 18:53 | forward | nationality_a · chile | claude-opus-5-5 | high | 16.25 | 30 | 25,771 | 2,100,279 | 1.39 | 35→46 | 46→47 | 67→67 | 21 | ok | `forward chile nationality_a claude-opus-5-5 high` |

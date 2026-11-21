@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward chile nationality_a claude-opus-5-5 high",
- "pid": 53274,
  "step": "forward",
  "slug": "chile",
  "chunk": "nationality_a",
@@ -59,5 +58,712 @@
   "user": 110
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:09:37.669Z",
+ "minutes": 16.25,
+ "meters_after": {
+  "at": "2026-11-21T03:09:37.669Z",
+  "window": {
+   "pct": 46,
+   "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 47,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 46,
+    "resets": "Nov 20 at 8:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 47,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 10:59pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 46% used · resets Nov 20 at 8:59pm (America/Los_Angeles)\nCurrent week (all models): 47% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 10:59pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 103266,
+   "output": 25771,
+   "cache_read": 1897535,
+   "cache_write": 73707,
+   "cost_usd": 1.387,
+   "total": 2100279
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 103222,
+    "output": 9131,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 3362,
+    "cost_usd": 0.0849
+   },
+   "claude-opus-5-5": {
+    "input": 44,
+    "output": 16640,
+    "cache_read": 1897535,
+    "cache_write": 73707,
+    "thinking": 5423,
+    "cost_usd": 1.3021
+   }
+  }
+ },
+ "turns": 30,
+ "calls": 51,
+ "duration_ms": 330303,
+ "duration_api_ms": 265253,
+ "pages_read": 21,
+ "pages": [
+  {
+   "at": "2026-11-21T02:53:27.848Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=1158549",
+   "find": "Artículo 70 | Artículo 78 | Artículo 79 | Artículo 85 | Artículo 86 | Artículo 88",
+   "ok": true,
+   "chars": 2502
+  },
+  {
+   "at": "2026-11-21T02:56:45.841Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "Artículo 84 | Artículo 85 | Artículo 86 | Artículo 87 | Artículo 70 | Artículo 79",
+   "ok": true,
+   "chars": 16867
+  },
+  {
+   "at": "2026-11-21T02:57:02.511Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549",
+   "find": "idParte=\"10221354\" | idParte=\"10221359\" | idParte=\"10221358\" | idParte=\"10221353\" | fechaVersion=\"2026-06-02\" | fechaVersion=\"2024",
+   "ok": true,
+   "chars": 9040
+  },
+  {
+   "at": "2026-11-21T02:57:14.039Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=242302",
+   "find": "Artículo 10.- | Artículo 11.- | Artículo 13.- | Artículo 14.- | Artículo 16.- | Artículo 17.-",
+   "ok": true,
+   "chars": 965
+  },
+  {
+   "at": "2026-11-21T02:58:11.111Z",
+   "url": "https://www.bcn.cl/leychile/navegar?idNorma=242302",
+   "find": "Artículo 11.- | Artículo 14.- | Artículo 17.- | cancelación de la carta",
+   "ok": true,
+   "chars": 3358
+  },
+  {
+   "at": "2026-11-21T02:58:18.426Z",
+   "url": "https://interior.gob.cl/transparencia/doc/MarcoNormativoAplicable/200/7965042.pdf",
+   "find": "Artículo 8 | indigno | Artículo 2",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T02:58:26.154Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=242302",
+   "find": "Artículo 11.- | Artículo 14.- | Artículo 17.- | Artículo 13.-",
+   "ok": true,
+   "chars": 931
+  },
+  {
+   "at": "2026-11-21T02:58:27.073Z",
+   "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1048693",
+   "find": "Artículo 8 | indigno",
+   "ok": true,
+   "chars": 890
+  },
+  {
+   "at": "2026-11-21T03:00:44.597Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "Artículo 11.- | Artículo 14.- | Artículo 17.-",
+   "ok": true,
+   "chars": 4056
+  },
+  {
+   "at": "2026-11-21T03:00:47.734Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302",
+   "find": "Artículo 13 | Artículo 14 | cinco años en Chile",
+   "ok": true,
+   "chars": 8495
+  },
+  {
+   "at": "2026-11-21T03:01:04.038Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=19444",
+   "find": "Artículo 2 | Artículo 3 | Artículo 8 | indigno | Ley 21",
+   "ok": true,
+   "chars": 7358
+  },
+  {
+   "at": "2026-11-21T03:01:08.566Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=19444",
+   "find": "\"versiones\" | tipo_version_s",
+   "ok": true,
+   "chars": 2516
+  },
+  {
+   "at": "2026-11-21T03:01:12.480Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "\"vigencias\" | Artículo 88.- | Artículo 86.-",
+   "ok": true,
+   "chars": 5010
+  },
+  {
+   "at": "2026-11-21T03:01:16.398Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "Ley 21816",
+   "ok": true,
+   "chars": 2160
+  },
+  {
+   "at": "2026-11-21T03:01:20.520Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idLey=21773",
+   "find": "Artículo único | transitoria | 2026 | diez años",
+   "ok": true,
+   "chars": 5605
+  },
+  {
+   "at": "2026-11-21T03:01:40.009Z",
+   "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos",
+   "find": "nacionalización | cartas | solicitudes | refugiad",
+   "ok": true,
+   "chars": 2925
+  },
+  {
+   "at": "2026-11-21T03:01:41.015Z",
+   "url": "https://serviciomigraciones.cl/wp-content/uploads/2025/07/Reporte-4-Estadisticas-SERMIG-010725.pdf",
+   "find": "nacionalización | Cartas de nacionalización | calificada",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:02:12.922Z",
+   "url": "https://serviciomigraciones.cl/nacionalidad/perdida",
+   "find": "cancelación | carta de nacionalización | indigno",
+   "ok": true,
+   "chars": 4348
+  },
+  {
+   "at": "2026-11-21T03:02:14.013Z",
+   "url": "https://www.diarioconstitucional.cl/2026/07/13/suprema-ordena-resolver-solicitudes-de-nacionalizacion-pendientes/",
+   "find": "2025 | solicitudes | plazo | demora",
+   "ok": true,
+   "chars": 5491
+  },
+  {
+   "at": "2026-11-21T03:07:18.992Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "razones humanitarias | Reunificación familiar | Trabajadores de temporada",
+   "ok": true,
+   "chars": 5477
+  },
+  {
+   "at": "2026-11-21T03:07:21.419Z",
+   "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549",
+   "find": "3. Extranjeros que se establezcan en el país con el objetivo de estudiar",
+   "ok": true,
+   "chars": 2286
+  }
+ ],
+ "searches": [
+  "decreto 5142 1960 nacionalización de extranjeros leychile cancelación carta artículo 8",
+  "Ley 21.773 reforma constitucional sufragio extranjeros diez años bcn.cl leychile",
+  "\"Decreto 5142\" nacionalización de extranjeros bcn.cl leychile navegar idNorma",
+  "cartas de nacionalización otorgadas Chile 2023 2024 cifras Servicio Nacional de Migraciones aumento solicitudes",
+  "decreto 177 2022 subcategorías residencia temporal razones humanitarias modificación decreto 2024 2025",
+  "demora tramitación carta de nacionalización 2025 Chile miles de solicitudes pendientes Ministerio del Interior",
+  "cancelación carta de nacionalización Chile condenado decreto Consejo de Ministros caso Corte Suprema"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.35,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.36,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.37,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.39,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.4,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.41,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.46,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.45,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":63,\"answer_2023\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation_2023\":\"Effectively Never; Rarely\",\"answer_2026\":\"Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status\",\"implementation_2026\":\"Effectively Never; Rarely\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 86 (Impedimentos)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 21.325 de Migración y Extranjería\",\"article\":\"Art. 88 (Causales de rechazo)\",\"enacted\":\"2021-04-20\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Arts. 11, 16, 17\",\"enacted\":\"1980-10-24\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Constitución Política de la República\",\"article\":\"Art. 14\",\"enacted\":\"1980-10-24\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Decreto 5.142 (1960), texto refundido sobre nacionalización de extranjeros\",\"article\":\"Art. 8\",\"enacted\":\"1960-10-29\",\"history_read\":\"version_history\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2026-01-01\",\"instrument\":\"Ley N° 21.773, modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras\",\"article\":\"Constitución, art. 14 inciso primero\",\"kind\":\"amended\",\"what_changed\":\"Raised the residence needed for foreigners (not naturalised persons) to vote from five years to more than ten uninterrupted years, counted from definitive residence. Published 7 Oct 2025; a transitional provision applies it 'desde el año 2026'. Art. 14(2) on naturalised persons was not touched, so this does not affect loss of nationality or citizenship after a conviction.\",\"url\":\"https://nuevo.leychile.",
+ "output": {
+  "answers": [
+   {
+    "question_id": 63,
+    "answer_2023": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+    "implementation_2023": "Effectively Never; Rarely",
+    "answer_2026": "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+    "implementation_2026": "Effectively Never; Rarely",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 86 (Impedimentos)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 88 (Causales de rechazo)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Arts. 11, 16, 17",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 14",
+      "enacted": "1980-10-24",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Decreto 5.142 (1960), texto refundido sobre nacionalización de extranjeros",
+      "article": "Art. 8",
+      "enacted": "1960-10-29",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2026-01-01",
+      "instrument": "Ley N° 21.773, modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras",
+      "article": "Constitución, art. 14 inciso primero",
+      "kind": "amended",
+      "what_changed": "Raised the residence needed for foreigners (not naturalised persons) to vote from five years to more than ten uninterrupted years, counted from definitive residence. Published 7 Oct 2025; a transitional provision applies it 'desde el año 2026'. Art. 14(2) on naturalised persons was not touched, so this does not affect loss of nationality or citizenship after a conviction.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idLey=21773",
+      "passage": "\"Artículo 14.- Los extranjeros avecindados en Chile por más de diez años ininterrumpidos, y que cumplan con los requisitos señalados en el inciso primero del artículo 13, podrán ejercer el derecho de sufragio... Quincuagésima cuarta. Las modificaciones a los artículos 14 y 15 ... comenzarán a regir desde el año 2026."
+     }
+    ],
+    "implementation_then_now": "In both 2023 and 2026, revoking a naturalised person's nationality after a conviction is legally possible but exceptional. Under Decree 5.142, art. 8, it needs 'ocurrencias que hagan indigno' or a conviction under Ley 12.927 (state security), a Council of Ministers agreement and a presidential decree. SERMIG's nationality page (updated March 2026) still lists 'Cancelación de la carta de nacionalización' as a ground of loss. I found no documented cancellation during 2023–2025. The best-known precedent is the 2017 cancellation for Fr. John O'Reilly after his conviction for sexual abuse; I saw it only in search results and did not read it. Nothing shows a shift in practice, so the starting rating is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Pérdida de la nacionalidad – SERMIG",
+      "url": "https://serviciomigraciones.cl/nacionalidad/perdida",
+      "year": 2026,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "LeyChile's JSON for Ley 21.325 shows Arts. 84–87 at version date 2021-04-20. Art. 88's only change is by Ley 21.816 (D.O. 2 June 2026), after the window. DS 5.142's last version starts 2022-02-12. Constitution Arts. 11, 16 and 17 carry no annotation after 2005. The PDF reports could not be read (no PDF tool), and no case file on any cancellation could be read.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile XML",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON with version list",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Constitución Política – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Decreto 5.142 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=19444"
+     },
+     {
+      "title": "Ley 21.773 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idLey=21773"
+     },
+     {
+      "title": "SERMIG – Pérdida de la nacionalidad",
+      "url": "https://serviciomigraciones.cl/nacionalidad/perdida"
+     }
+    ],
+    "starting_answer_concern": "The answer holds, but the citation is imprecise. Ley 21.325 Arts. 86 and 88 deal with refusing naturalisation and residence, not losing nationality. The operative rules are Constitution Art. 11(3) (loss by cancellation of the carta) and DS 5.142 Art. 8 (cancellation for 'indignidad' or Ley 12.927 convictions). Constitution Art. 17 (loss of ciudadanía for pena aflictiva) applies to every Chilean, not only naturalised persons. The 'indignidad' ground is open-ended, but in practice it is tied to serious crimes.",
+    "confidence": "medium",
+    "notes": "Relied on statutes only, not court rulings. Ley 21.816 art. 3 (D.O. 2 June 2026) added No. 6 to Ley 21.325 art. 88 (passenger-offender register). It is outside the window and concerns residence permits, not nationality."
+   },
+   {
+    "question_id": 65,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 13",
+      "enacted": "1980-10-24",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Constitución Política de la República",
+      "article": "Art. 14",
+      "enacted": "1980-10-24",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Arts. 78–83",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 5.142 (1960)",
+      "article": "Art. 2",
+      "enacted": "1960-10-29",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2026-01-01",
+      "instrument": "Ley N° 21.773, modifica la Carta Fundamental en materia de derecho de sufragio de personas extranjeras",
+      "article": "Constitución, art. 14 inciso primero",
+      "kind": "amended",
+      "what_changed": "Raised foreigners' voting residence requirement from five years to more than ten years counted from definitive residence. Published 7 Oct 2025, applicable from 2026. It concerns non-citizens' suffrage, not the naturalisation pathway (DS 5.142 art. 2: 18 years of age, more than 5 years' residence, definitive residence), so the answer is unaffected.",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idLey=21773",
+      "passage": "Reemplázase el inciso primero del artículo 14 por el siguiente: \"Artículo 14.- Los extranjeros avecindados en Chile por más de diez años ininterrumpidos ... sólo se considerarán avecindados a partir del momento en que obtengan un permiso de residencia definitiva."
+     }
+    ],
+    "implementation_then_now": "The pathway runs from a work temporary residence, to definitive residence after 24 months (Ley 21.325 art. 79), to a carta after more than 5 years (DS 5.142 art. 2). It worked in both periods, but with very large backlogs. A 2024 Nómade/SERMIG data study reported 42,147 applications in 2023 and only 16,466 approvals over 2013–2023, an acceptance rate of 14.9%. Search results quoting SERMIG put grants at about 2,572 in 2023 and 2,207 in 2024, against 49,113 applications in 2024. In 2026 the Supreme Court found delays of more than three years illegal and arbitrary and ordered SERMIG to decide. The bottleneck existed already in 2023 and has not clearly changed, so I keep the starting rating for both dates. Evidence covers regular migrants with definitive residence.",
+    "practice_sources": [
+     {
+      "title": "Lideran venezolanos: solicitudes de nacionalización aumentaron 300% en últimos 3 años (24horas, citing Nómade/SERMIG data)",
+      "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Suprema ordena resolver solicitudes de nacionalización pendientes (Diario Constitucional, CS Rol 34.504-2025)",
+      "url": "https://www.diarioconstitucional.cl/2026/07/13/suprema-ordena-resolver-solicitudes-de-nacionalizacion-pendientes/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Arts. 78–83 of Ley 21.325 carry fechaVersion 2021-04-20 in LeyChile, and DS 5.142's last version starts 2022-02-12, so the texts in force on both dates match today's. The SERMIG statistical reports are PDFs I could not open; grant figures come from search-result summaries and the 24horas article.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile XML",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Constitución – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=242302"
+     },
+     {
+      "title": "Decreto 5.142 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=19444"
+     },
+     {
+      "title": "Ley 21.773 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idLey=21773"
+     },
+     {
+      "title": "24horas – solicitudes de nacionalización",
+      "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos"
+     },
+     {
+      "title": "Diario Constitucional – Suprema ordena resolver solicitudes",
+      "url": "https://www.diarioconstitucional.cl/2026/07/13/suprema-ordena-resolver-solicitudes-de-nacionalizacion-pendientes/"
+     }
+    ],
+    "starting_answer_concern": "The citation misplaces the basic rule. Constitution Arts. 13–14 govern ciudadanía and suffrage, and Ley 21.325 Arts. 78–83 govern definitive residence. The naturalisation requirements (18 years of age, more than 5 years' residence, definitive residence) are in DS 5.142 art. 2, applied through Ley 21.325 art. 84. 'Usually' may be generous given an acceptance rate of about 15% and backlogs of several years ('Sometimes; Usually' would be defensible), but that is a disagreement with the coder, not a change.",
+    "confidence": "medium",
+    "notes": "Relied on statutes. The court rulings were used only as practice evidence; they are orders confined to the parties."
+   },
+   {
+    "question_id": 67,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Never",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Never",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 70 (Subcategorías)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Decreto 5.142 (1960)",
+      "article": "Art. 2 (incl. children of recognised refugees)",
+      "enacted": "1960-10-29",
+      "history_read": "version_history",
+      "status": "unchanged"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "No practice evidence specific to humanitarian residents or refugees obtaining naturalisation was found for either period. The general naturalisation backlog documented for 2023–2026 (about 15% acceptance, delays of several years) presumably also affects them. The starting rating of 'Effectively Never' is kept for both dates because nothing documents a shift; it is not otherwise supported by evidence I read.",
+    "practice_sources": [
+     {
+      "title": "Lideran venezolanos: solicitudes de nacionalización aumentaron 300% (24horas)",
+      "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 70 carries fechaVersion 2021-04-20, and DS 5.142's last version starts 2022-02-12, so the law did not change in the window. I could not open the subcategories decree (Decreto 177/2022) or its version history, and found no practice data on humanitarian or refugee naturalisation.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile XML",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "Decreto 5.142 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=19444"
+     }
+    ],
+    "starting_answer_concern": "'Effectively Never' looks too low and is unsupported. Humanitarian residents and recognised refugees can reach definitive residence and apply under DS 5.142 art. 2, and that article also lets minor children of naturalised refugees naturalise without other requirements. The general naturalisation system grants roughly 2,000–2,500 cartas a year. A rating such as 'Rarely; Sometimes' would fit the general evidence better, but there are no group-specific data.",
+    "confidence": "low",
+    "notes": "The source on practice covers naturalisation applicants generally, not specifically humanitarian migrants or refugees."
+   },
+   {
+    "question_id": 69,
+    "answer_2023": "Yes",
+    "implementation_2023": "Sometimes; Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Ley 21.325 de Migración y Extranjería",
+      "article": "Art. 85 (Nacionalización calificada)",
+      "enacted": "2021-04-20",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Código Civil",
+      "article": "Art. 133",
+      "enacted": "unknown",
+      "history_read": "not_found",
+      "status": "could_not_establish"
+     }
+    ],
+    "events": [],
+    "implementation_then_now": "Art. 85 (two years of definitive residence plus a family tie: spouse of a Chilean, relative to the second degree, adoptee, or child of a former Chilean) was available on both dates. SERMIG-based reporting attributes part of the rise in applications after 2021 (42,147 in 2023; 49,113 in 2024) to the new nacionalización calificada. But grants stayed at about 2,200–2,600 a year. In 2026 courts found SERMIG delays of 1–3 years arbitrary in individual protección cases. The same bottleneck existed in 2023 and 2026, with no documented shift.",
+    "practice_sources": [
+     {
+      "title": "Lideran venezolanos: solicitudes de nacionalización aumentaron 300% (24horas)",
+      "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos",
+      "year": 2024,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "both"
+     },
+     {
+      "title": "Suprema ordena resolver solicitudes de nacionalización pendientes (Diario Constitucional)",
+      "url": "https://www.diarioconstitucional.cl/2026/07/13/suprema-ordena-resolver-solicitudes-de-nacionalizacion-pendientes/",
+      "year": 2026,
+      "shows": "practice",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "Art. 85 carries fechaVersion 2021-04-20 in LeyChile, and Ley 21.325's version list (2023-08-07 to 2026-06-02) shows no annotation on it. I did not read the history of Civil Code art. 133. The practice evidence does not separate family-based from residence-based applicants.",
+    "sources_opened": [
+     {
+      "title": "Ley 21.325 – LeyChile XML",
+      "url": "https://www.bcn.cl/leychile/Consulta/obtxml?opt=7&idNorma=1158549"
+     },
+     {
+      "title": "Ley 21.325 – LeyChile JSON",
+      "url": "https://nuevo.leychile.cl/servicios/Navegar/get_norma_json?idNorma=1158549"
+     },
+     {
+      "title": "24horas – solicitudes de nacionalización",
+      "url": "https://www.24horas.cl/actualidad/nacional/lideran-venezolanos-solicitudes-nacionalizarse-aumentaron-ultimos-anos"
+     },
+     {
+      "title": "Diario Constitucional – Suprema ordena resolver solicitudes",
+      "url": "https://www.diarioconstitucional.cl/2026/07/13/suprema-ordena-resolver-solicitudes-de-nacionalizacion-pendientes/"
+     }
+    ],
+    "starting_answer_concern": "The quoted translation ('two years of nationalization') is garbled; art. 85 requires two years of continuous residence as a definitive resident. The answer itself holds.",
+    "confidence": "medium",
+    "notes": "The MRD's own implementation string is 'Usually; Sometimes', recorded here as the neighbouring range 'Sometimes; Usually'."
+   }
+  ]
+ }
 }
