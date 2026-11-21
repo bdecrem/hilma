@@ -1,0 +1,6 @@
+back2000 chile --chunk life --model claude-opus-5-5 --effort high --to-the-limit
+back2000 chile --chunk personhood --model claude-opus-5-5 --effort high --to-the-limit
+back2000 chile --chunk expulsion_b --model claude-opus-5-5 --effort high --to-the-limit
+back2000 chile --chunk family --model claude-opus-5-5 --effort high --to-the-limit
+back2000 chile --chunk labor_a --model claude-opus-5-5 --effort high --to-the-limit
+back2000 chile --chunk health_housing --model claude-opus-5-5 --effort high --to-the-limit

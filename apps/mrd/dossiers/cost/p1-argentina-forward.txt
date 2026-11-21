@@ -1,0 +1,5 @@
+forward argentina --chunk liberty_b --model claude-opus-5-5 --effort high --to-the-limit
+forward argentina --chunk expulsion_a --model claude-opus-5-5 --effort high --to-the-limit
+forward argentina --chunk nationality_b --model claude-opus-5-5 --effort high --to-the-limit
+forward argentina --chunk political --model claude-opus-5-5 --effort high --to-the-limit
+forward argentina --chunk labor_c --model claude-opus-5-5 --effort high --to-the-limit

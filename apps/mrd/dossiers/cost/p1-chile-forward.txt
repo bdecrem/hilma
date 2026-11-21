@@ -1,0 +1,5 @@
+forward chile --chunk liberty_b --model claude-opus-5-5 --effort high --to-the-limit
+forward chile --chunk expulsion_a --model claude-opus-5-5 --effort high --to-the-limit
+forward chile --chunk nationality_b --model claude-opus-5-5 --effort high --to-the-limit
+forward chile --chunk political --model claude-opus-5-5 --effort high --to-the-limit
+forward chile --chunk labor_c --model claude-opus-5-5 --effort high --to-the-limit
