@@ -310,7 +310,10 @@ if (cmd === 'add') {
     owed = { issue: owedIssue, need }
   } else if (!cannot) {
     if (!fix || !(level >= 1 && level <= 5)) die(`add needs --fix "<what changed>" and --level 1..5:\n${Object.entries(KINDS).map(([n, k]) => `  ${n}  ${k}`).join('\n')}\nor, when that fix is not built yet: --owed OLA-n (the ticket that builds it). The correction is then recorded now.`)
-    const problem = fixProblem(w, level, { prev, cameBack, need }) ?? (level >= 3 || str('where') ? await whereProblem(str('where')) : null)
+    let problem = fixProblem(w, level, { prev, cameBack, need }) ?? (level >= 3 || str('where') ? await whereProblem(str('where')) : null)
+    // a ticket named as the fix carries it only when it is closed with every check passed, as for fix
+    // (twentieth checker: add took any existing ticket or file as a kind-4 or kind-5 fix)
+    if (!problem && /^OLA-\d+$/i.test(str('where') ?? '')) problem = await settleProblem(str('where'), { issue: null, since: new Date().toISOString() })
     if (problem) die(`${problem}\n\nThe correction is NOT recorded yet. Record it now and owe the fix: add --owed OLA-n (open the ticket with issues.mjs add), then settle it with: correct.mjs fix <n> --fix … --level ${need} --where …`)
   }
   const text = readFileSync(COR, 'utf8')
@@ -359,6 +362,15 @@ if (cmd === 'add') {
       }
       await tdb.from('venture_state').upsert({ key: `owed-fix:${n}`, value: { ref: o.ref, issue: o.issue, since: o.since, need: o.need, settled: null }, at: new Date().toISOString() })
     } catch (e) { console.error(`(the tracker's list of owed fixes was not updated: ${e.message}; correct.mjs audit adds it)`) }
+  }
+  // a fix given with the correction is the agent's own word that it is built: whether the file or ticket
+  // carries it is the same judgment as settling an owed fix, so a fix of kind 3 or stronger, and a "no stronger
+  // fix" claim, are a line a person reads the same day, as every settle is (twentieth checker)
+  if ((cannot || (!owed && level >= 3)) && (!onCopy || process.env.VENTURE_TRACKER_FAKE)) {
+    try {
+      const { writeOverride } = await import('./_overrides.mjs')
+      await writeOverride(await trackerDb(), { what: cannot ? `correction ${n} (${w.id}) recorded with no stronger fix ("${cannot}"), so no fix is owed: read whether that is so${onCopy ? ` (on a copy of the notes, ${process.env.VENTURE_PRIVATE})` : ''}` : `correction ${n} (${w.id}) recorded with its fix already built, kind ${level} (${KINDS[level]}), at ${str('where')}: read whether that carries the fix${onCopy ? ` (on a copy of the notes, ${process.env.VENTURE_PRIVATE})` : ''}`, tool: 'correct.mjs' })
+    } catch (e) { console.error(`(the line for this fix was not written: ${e.message})`) }
   }
   console.log(`correction ${n} recorded under "${w.name}" (${w.side}); seen ${w.seen.length} time(s)${cannot ? '; NO stronger fix: shown as open' : owed ? `; fix OWED (kind ${need} or stronger, ${owed.issue}): settle with correct.mjs fix ${n} … within ${OWED_DAYS} days` : `; fix kind ${level} (${KINDS[level]})`}`)
   console.log(NEXT)
