@@ -1,7 +1,6 @@
 {
- "status": "started",
+ "status": "ok",
  "job_id": "forward argentina civil_liberties claude-opus-5-5 high",
- "pid": 56849,
  "step": "forward",
  "slug": "argentina",
  "chunk": "civil_liberties",
@@ -61,5 +60,980 @@
   "user": 125
  },
  "default_model": "claude-opus-5-5",
- "default_effort": "high"
+ "default_effort": "high",
+ "finished_at": "2026-11-21T03:42:31.750Z",
+ "minutes": 15.1,
+ "meters_after": {
+  "at": "2026-11-21T03:42:31.750Z",
+  "window": {
+   "pct": 63,
+   "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+  },
+  "week": {
+   "pct": 49,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "fable": {
+   "pct": 67,
+   "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+  },
+  "subscription": true,
+  "bars": {
+   "Current session": {
+    "pct": 63,
+    "resets": "Nov 20 at 9pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 49,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 67,
+    "resets": "Nov 20 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 63% used · resets Nov 20 at 9pm (America/Los_Angeles)\nCurrent week (all models): 49% used · resets Nov 20 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 67% used · resets Nov 20 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate · sessions on this machine only · shares overlap\n\nLast 24h · 335 requests · 2 sessions\n  57%  Start fresh when you switch tasks · run /clear\n  37%  Check which model \"general-purpose\" subagents use\n  26%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 37%\n\nLast 7d · 346 requests · 3 sessions\n  55%  Start fresh when you switch tasks · run /clear\n  36%  Check which model \"general-purpose\" subagents use\n  27%  Trim ~/Documents/code/hilma/CLAUDE.md · 17k tokens per request\n  Top subagents: general-purpose 36%"
+ },
+ "tokens": {
+  "totals": {
+   "input": 90037,
+   "output": 26740,
+   "cache_read": 1237597,
+   "cache_write": 107378,
+   "cost_usd": 1.5811,
+   "total": 1461752
+  },
+  "by_model": {
+   "claude-haiku-5-5": {
+    "input": 90007,
+    "output": 6635,
+    "cache_read": 0,
+    "cache_write": 0,
+    "thinking": 1949,
+    "cost_usd": 0.0723
+   },
+   "claude-opus-5-5": {
+    "input": 30,
+    "output": 20105,
+    "cache_read": 1237597,
+    "cache_write": 107378,
+    "thinking": 4304,
+    "cost_usd": 1.5088
+   }
+  }
+ },
+ "turns": 21,
+ "calls": 34,
+ "duration_ms": 256409,
+ "duration_api_ms": 224740,
+ "pages_read": 13,
+ "pages": [
+  {
+   "at": "2026-11-21T03:27:31.795Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm",
+   "find": "ARTICULO 5 | ARTICULO 6 | ARTICULO 13 | ARTICULO 14 | ARTICULO 17 | 366/2025",
+   "ok": true,
+   "chars": 16617
+  },
+  {
+   "at": "2026-11-21T03:28:03.019Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm",
+   "find": "ARTICULO 6 | ARTICULO 7 | ARTICULO 8 | ARTICULO 13",
+   "ok": true,
+   "chars": 6495
+  },
+  {
+   "at": "2026-11-21T03:28:03.137Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016",
+   "find": null,
+   "ok": true,
+   "chars": 6358
+  },
+  {
+   "at": "2026-11-21T03:28:06.026Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016",
+   "find": "-2023 | -2024 | -2025 | -2026",
+   "ok": true,
+   "chars": 7020
+  },
+  {
+   "at": "2026-11-21T03:28:17.457Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+   "find": "ARTÍCULO 1° | categoría migratoria | Ley N° 26.122 | entrará en vigencia | igualdad",
+   "ok": true,
+   "chars": 8509
+  },
+  {
+   "at": "2026-11-21T03:29:09.928Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/300917/20231215",
+   "find": "extranjeros | Migraciones | residencia provisoria",
+   "ok": true,
+   "chars": 2316
+  },
+  {
+   "at": "2026-11-21T03:29:12.639Z",
+   "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+   "find": null,
+   "ok": true,
+   "chars": 3696
+  },
+  {
+   "at": "2026-11-21T03:39:00.404Z",
+   "url": "https://www.argentina.gob.ar/sites/default/files/observaciones_finales_cerd_-_abril_2023.pdf",
+   "find": "migrantes | Migrantes | xenofobia | INADI",
+   "ok": false,
+   "chars": 0
+  },
+  {
+   "at": "2026-11-21T03:39:03.283Z",
+   "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto",
+   "find": "ARTÍCULO 1° | Disuélvese",
+   "ok": true,
+   "chars": 962
+  },
+  {
+   "at": "2026-11-21T03:40:00.113Z",
+   "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/311795/20240806",
+   "find": "ARTÍCULO 1° | Disuélvese | Ley N° 23.592",
+   "ok": true,
+   "chars": 3426
+  },
+  {
+   "at": "2026-11-21T03:40:06.349Z",
+   "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+   "find": "migrantes | xenofobia | discriminación",
+   "ok": true,
+   "chars": 3542
+  },
+  {
+   "at": "2026-11-21T03:40:20.573Z",
+   "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos",
+   "find": "expulsión | extranjeros | mexicano | peruana",
+   "ok": true,
+   "chars": 2407
+  },
+  {
+   "at": "2026-11-21T03:40:30.772Z",
+   "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "find": "Artículo 14 | Artículo 20",
+   "ok": true,
+   "chars": 3417
+  }
+ ],
+ "searches": [
+  "Decreto 366/2025 infoleg Ley 25.871 modificación texto \"Sustitúyese el artículo 6°\"",
+  "Resolución 943/2023 Ministerio de Seguridad protocolo extranjeros Dirección Nacional de Migraciones manifestaciones",
+  "DNU 366/2025 migraciones Congreso rechazo Diputados Senado vigencia",
+  "Decreto 696/2024 disolución INADI Boletín Oficial",
+  "Comité para la Eliminación de la Discriminación Racial observaciones finales Argentina migrantes CERD/C/ARG/CO",
+  "Bullrich extranjeros detenidos protesta expulsión Migraciones 2024 2025 manifestación"
+ ],
+ "rate_limit_events": [
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.53,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.54,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.55,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.47,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.56,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.57,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.58,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  },
+  {
+   "status": "allowed",
+   "resetsAt": 1795237200,
+   "rateLimitType": "five_hour",
+   "overageStatus": "rejected",
+   "overageDisabledReason": "out_of_credits",
+   "isUsingOverage": false,
+   "unifiedWindows": {
+    "five_hour": {
+     "utilization": 0.59,
+     "resetsAt": 1795237200,
+     "status": "allowed"
+    },
+    "seven_day": {
+     "utilization": 0.48,
+     "resetsAt": 1795244400,
+     "status": "allowed"
+    }
+   }
+  }
+ ],
+ "error": null,
+ "result_text": "{\"answers\":[{\"question_id\":81,\"answer_2023\":\"Yes\",\"implementation_2023\":\"Effectively Always\",\"answer_2026\":\"Yes\",\"implementation_2026\":\"Effectively Always\",\"change_2023_2026\":\"There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed\",\"provisions\":[{\"instrument\":\"Constitución de la Nación Argentina\",\"article\":\"Arts. 14, 20, 75 inc. 22\",\"enacted\":\"1853 (text as reformed 1994)\",\"history_read\":\"current_text_only\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Arts. 5, 13, 14(c)\",\"enacted\":\"2004-01-21\",\"history_read\":\"version_history\",\"status\":\"unchanged\"},{\"instrument\":\"Ley 25.871 de Migraciones\",\"article\":\"Art. 6\",\"enacted\":\"2004-01-21\",\"history_read\":\"amending_acts\",\"status\":\"amended\"},{\"instrument\":\"Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)\",\"article\":\"Art. 12\",\"enacted\":\"2007\",\"history_read\":\"not_found\",\"status\":\"unchanged\"}],\"events\":[{\"date\":\"2025-05-29\",\"instrument\":\"Decreto de Necesidad y Urgencia N° 366/2025\",\"article\":\"Ley 25.871, art. 6\",\"kind\":\"amended\",\"what_changed\":\"Art. 6 used to promise equal access for immigrants and their families to the same protection and rights as nationals. It now adds 'de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria'. It is a general equality clause and does not touch freedom of religion or belief, which rests on Constitution arts. 14 and 20 (both unchanged).\",\"url\":\"https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto\",\"passage\":\"“ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales...\"}],\"implementati",
+ "output": {
+  "answers": [
+   {
+    "question_id": 81,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 20, 75 inc. 22",
+      "enacted": "1853 (text as reformed 1994)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 13, 14(c)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Convención Internacional sobre la Protección de los Derechos de Todos los Trabajadores Migratorios (Ley 26.202)",
+      "article": "Art. 12",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Art. 6 used to promise equal access for immigrants and their families to the same protection and rights as nationals. It now adds 'de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria'. It is a general equality clause and does not touch freedom of religion or belief, which rests on Constitution arts. 14 and 20 (both unchanged).",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales..."
+     }
+    ],
+    "implementation_then_now": "I found no documented case, in 2023 or in 2025, of authorities restricting migrants' religious practice or belief, and the 2023 CERD review summary did not raise religion. Nothing shows a shift between the two dates, so the starting rating is kept for both. This rests on the absence of reported breaches, not on positive monitoring data.",
+    "practice_sources": [
+     {
+      "title": "Examen de l'Argentine – Comité pour l'élimination de la discrimination raciale (résumé de séance, 18 avril 2023)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 25.871 texto original, texto actualizado and InfoLEG list of amending norms were read. DNU 366/2025 is the only amendment to the cited articles in the window, and it touched only art. 6. The Constitution has not been reformed since 1994, and art. 14 was read on InfoLEG. Art. 20 did not appear in the passage returned.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican y/o complementan (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "CERD review of Argentina, meeting summary April 2023",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des"
+     }
+    ],
+    "starting_answer_concern": "The 'Effectively Always' rating came with no evidence. Art. 14(c) of Ley 25.871 only promotes appreciation of migrants' religious expressions; it is not a guarantee. The decisive provisions are Constitution arts. 14 ('profesar libremente su culto') and 20.",
+    "confidence": "medium",
+    "notes": "Protection rests on the Constitution (arts. 14, 20), together with treaties given constitutional rank by art. 75 inc. 22. DNU 681/2026 (30 July 2026) amended Ley 25.871 again, outside the window. No court ruling was relied on."
+   },
+   {
+    "question_id": 83,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 20, 75 inc. 22",
+      "enacted": "1853 (text as reformed 1994)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 13, 14(c)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.202 (Convención Trabajadores Migratorios)",
+      "article": "Art. 12",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Equal access to rights in art. 6 is now qualified by migratory category. This does not bear on freedom to hold opinions, which rests on Constitution arts. 14, 19 and 20 (unchanged).",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social"
+     }
+    ],
+    "implementation_then_now": "I found no documented interference with migrants' right to hold opinions in either period. Nothing shows a shift, so the starting rating is kept. The rating rests on the absence of reported breaches.",
+    "practice_sources": [
+     {
+      "title": "Examen de l'Argentine – CERD (résumé de séance, avril 2023)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The cited Ley 25.871 articles were checked against the texto original, the texto actualizado and the list of amending norms. Only art. 6 changed (DNU 366/2025). The Constitution is unchanged since 1994.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     }
+    ],
+    "starting_answer_concern": "The treaty articles cited are wrong for this right. ACHR art. 12 and ICCPR art. 18 cover religion; holding opinions is ACHR art. 13 and ICCPR art. 19, and MWC art. 13 rather than art. 12. 'Effectively Always' came with no evidence.",
+    "confidence": "medium",
+    "notes": "Protection rests on Constitution arts. 14 and 20 and on treaties with constitutional rank (art. 75 inc. 22). DNU 681/2026 falls after the window."
+   },
+   {
+    "question_id": 85,
+    "answer_2023": "Yes",
+    "implementation_2023": "Effectively Always",
+    "answer_2026": "Yes",
+    "implementation_2026": "Effectively Always",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 20",
+      "enacted": "1853 (text as reformed 1994)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 13, 14(c)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.202 (Convención Trabajadores Migratorios)",
+      "article": "Art. 26",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Art. 6's equal-access clause is now qualified by migratory category. It does not touch freedom of expression, which rests on Constitution art. 14 ('publicar sus ideas por la prensa sin censura previa') and art. 20 (both unchanged).",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria"
+     }
+    ],
+    "implementation_then_now": "I found no documented censorship or sanction of migrants for what they said or published, in either period. The 2024–2025 government moves against foreigners detained at protests concern assembly (q89), not speech as such. The starting rating is kept for both dates, resting on the absence of reported breaches.",
+    "practice_sources": [
+     {
+      "title": "Marcha de los jubilados: el Gobierno contraataca (El Cronista, 13 March 2025)",
+      "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 25.871 version history and DNU 366/2025 were read, and the Constitution's art. 14 text was read. Ley 26.202's text was not opened.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "El Cronista, 13 March 2025",
+      "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos"
+     }
+    ],
+    "starting_answer_concern": "The treaty articles cited (UDHR 20, ACHR 15/16, ICCPR 22, MWC 26) cover assembly, association and unions, not expression. The correct ones are UDHR 19, ACHR 13, ICCPR 19 and MWC 13. 'Effectively Always' came with no evidence.",
+    "confidence": "medium",
+    "notes": "Protection rests on the Constitution and treaties with constitutional rank, not on any court ruling. DNU 681/2026 falls after the window."
+   },
+   {
+    "question_id": 87,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 and neither the right protection nor the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 14 bis, 20, 75 inc. 22",
+      "enacted": "1853 (14 bis 1957; 1994 reform)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 5",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.202 (Convención Trabajadores Migratorios)",
+      "article": "Art. 26",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Art. 6's equal access 'in particular' to work and employment is now qualified 'according to each migratory category'. Union membership itself rests on Constitution arts. 14 ('asociarse con fines útiles'), 14 bis (free trade union organisation) and 20, all unchanged. DNU 366/2025 also re-worded art. 53 (irregular migrants may not work), which concerns the right to work, not association.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria, en particular en lo referido a servicios sociales, bienes públicos, salud, educación, justicia, trabajo, empleo y seguridad social"
+     }
+    ],
+    "implementation_then_now": "Migrants join unions and associations in practice, and I found no documented barrier to membership in either period. In 2025 civil-society monitors (Hivos/EU SEE) reported that DNU 366/2025 and the official narrative shrank the space for migrant organisations and organisations working with migrants. That is a deterioration in climate, not a documented denial of association. 'Usually' is kept for both dates.",
+    "practice_sources": [
+     {
+      "title": "Government maintains Decree 366/2025 restricting migrants' rights and participation in civic life (Hivos EU SEE alert)",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 25.871 version history and DNU 366/2025 were read, and Constitution arts. 14 and 14 bis were read. I found no report on union membership by migrants specifically for either period.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Hivos EU SEE alert on DNU 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": null,
+    "confidence": "medium",
+    "notes": "Hivos reports a federal court ruling of August 2025 declaring part of DNU 366/2025 unconstitutional in a single case. I did not read the ruling, and it is confined to the parties, so it does not change the answer. DNU 681/2026 falls after the window."
+   },
+   {
+    "question_id": 89,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but the implementation level of these protections has changed",
+    "provisions": [
+     {
+      "instrument": "Constitución de la Nación Argentina",
+      "article": "Arts. 14, 14 bis, 20",
+      "enacted": "1853 (1994 reform)",
+      "history_read": "current_text_only",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Arts. 5, 14(c) (cited as 17.C)",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 26.202 (Convención Trabajadores Migratorios)",
+      "article": "Art. 26",
+      "enacted": "2007",
+      "history_read": "not_found",
+      "status": "unchanged"
+     }
+    ],
+    "events": [
+     {
+      "date": "2023-12-15",
+      "instrument": "Resolución N° 943/2023 del Ministerio de Seguridad (Protocolo para el mantenimiento del orden público ante el corte de vías de circulación)",
+      "article": "Art. 11",
+      "kind": "new_instrument",
+      "what_changed": "This ministerial protest protocol (in force on publication) orders that the data of foreigners with provisional residence identified in road-blocking protests be sent to the Dirección Nacional de Migraciones 'a los fines pertinentes'. As a resolution it does not change the statutory or constitutional protection. It is evidence of a practice shift that singles out migrants who protest.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/300917/20231215",
+      "passage": "En caso de tratarse de extranjeros con residencia provisoria en el territorio argentino, se enviarán sus datos a la DIRECCIÓN NACIONAL DE MIGRACIONES, a los fines pertinentes."
+     },
+     {
+      "date": "2025-03-13",
+      "instrument": "Ministerio de Seguridad – announcement after the 12 March 2025 pensioners' march",
+      "article": "n/a (practice)",
+      "kind": "practice",
+      "what_changed": "The Security Minister announced she would ask Migraciones for the immediate expulsion of a Mexican and a Peruvian national detained during the protest. This is practice evidence that participation in protests carries immigration consequences for migrants.",
+      "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos",
+      "passage": "Bullrich confirmó que expulsarán a dos personas extranjeras detenidas durante la movilización. Se trata de un ciudadano mexicano y una ciudadana peruana, la ministra solicitará su expulsión inmediata a la Dirección de Migraciones."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Art. 6's general equal-access clause is now qualified by migratory category. It does not address assembly, which rests on the Constitution (unchanged).",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria"
+     }
+    ],
+    "implementation_then_now": "Up to the end of 2022 migrants took part in public demonstrations without documented migrant-specific sanctions, so the starting 'Usually' stands. From 15 December 2023, Resolution 943/2023 requires that data of foreign protesters with provisional residence be sent to Migraciones. In March 2025 the Security Minister publicly sought the immediate expulsion of two foreign nationals detained at a protest. A 2025 civil-society alert also documents a climate restricting migrants' participation in civic life. I rate 2026 'Sometimes; Usually'. I did not confirm whether any expulsion was actually carried out.",
+    "practice_sources": [
+     {
+      "title": "Resolución 943/2023 Ministerio de Seguridad (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/300917/20231215",
+      "year": 2023,
+      "shows": "law_only",
+      "groups": [
+       "regular_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Marcha de los jubilados: el Gobierno contraataca (El Cronista)",
+      "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Hivos EU SEE alert on DNU 366/2025 and migrants' civic participation",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "The Ley 25.871 version history and the DNU 366/2025 text were read, and Res. 943/2023 was read in the Boletín Oficial. The expulsion announcement comes from a press report. I did not find out what happened to those cases, or to the court challenges against Res. 943/2023.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Constitución de la Nación Argentina (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm"
+     },
+     {
+      "title": "Resolución 943/2023 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/300917/20231215"
+     },
+     {
+      "title": "El Cronista, 13 March 2025",
+      "url": "https://www.cronista.com/economia-politica/marcha-de-los-jubilados-el-gobierno-critico-la-liberacion-de-114-detenidos"
+     },
+     {
+      "title": "Hivos EU SEE alert",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     }
+    ],
+    "starting_answer_concern": "The citation attributes the integration clause to 'article 17.C'. The quoted text is art. 14(c); art. 17 is about regularisation. Constitution art. 14 protects association and petition; assembly is not named there and is protected as an implicit right (art. 33) and through treaties with constitutional rank (ACHR 15, ICCPR 21). ICCPR 22 and ACHR 16 are the association articles.",
+    "confidence": "medium",
+    "notes": "The protection answer is unchanged: Res. 943/2023 is a ministerial resolution and does not alter the constitutional guarantee. The implementation change rests on the protocol and on one documented episode."
+   },
+   {
+    "question_id": 131,
+    "answer_2023": "Yes",
+    "implementation_2023": "Usually",
+    "answer_2026": "Yes",
+    "implementation_2026": "Sometimes; Usually",
+    "change_2023_2026": "There have been right protections both in 2023 and 2026 but they are not the same",
+    "provisions": [
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 13",
+      "enacted": "2004-01-21",
+      "history_read": "version_history",
+      "status": "unchanged"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 6",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 7",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     },
+     {
+      "instrument": "Ley 25.871 de Migraciones",
+      "article": "Art. 8",
+      "enacted": "2004-01-21",
+      "history_read": "amending_acts",
+      "status": "amended"
+     }
+    ],
+    "events": [
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 1",
+      "article": "Ley 25.871, art. 6",
+      "kind": "amended",
+      "what_changed": "Before: the State ensured immigrants and their families equal access to the same protection and rights as nationals, with no qualification. After: that access is 'de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria', so differentiation by migration status is now authorised.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 6°.- El Estado en todas sus jurisdicciones asegurará el acceso igualitario de los inmigrantes a las mismas condiciones de protección, amparo y derechos de los que gozan los nacionales, de acuerdo con los derechos y obligaciones correspondientes a cada categoría migratoria"
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 2",
+      "article": "Ley 25.871, art. 7",
+      "kind": "amended",
+      "what_changed": "Before: irregular status could never bar admission to any educational establishment, including tertiary and university. After: the non-discrimination guarantee covers only initial, primary and secondary education.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 7°.- Los extranjeros tendrán derecho, aun cuando su condición migratoria fuera irregular, a ser admitidos como alumnos en un establecimiento educativo inicial, primario o secundario... para lo cual su situación migratoria no podrá ser causa de discriminación alguna."
+     },
+     {
+      "date": "2025-05-29",
+      "instrument": "Decreto de Necesidad y Urgencia N° 366/2025, art. 3",
+      "article": "Ley 25.871, art. 8",
+      "kind": "amended",
+      "what_changed": "Before: access to health, social assistance and health care could 'en ningún caso' be denied or restricted, whatever the migration status. After: that holds only in emergencies. Permanent residents get equal access, and others receive routine care in national-run facilities only against health insurance or payment.",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto",
+      "passage": "“ARTÍCULO 8°.- En casos de emergencia, no podrá negársele ni restringírsele el acceso a la asistencia social o a la atención sanitaria a todos los extranjeros que lo requieran, cualquiera sea su situación migratoria. Los extranjeros residentes permanentes podrán acceder al sistema de salud público en igualdad de condiciones"
+     },
+     {
+      "date": "2024-08-06",
+      "instrument": "Decreto 696/2024",
+      "article": "Art. 1",
+      "kind": "new_instrument",
+      "what_changed": "Dissolved the INADI (Instituto Nacional contra la Discriminación, la Xenofobia y el Racismo), the national body that received discrimination and xenophobia complaints. It does not change the substantive prohibition but removes the main enforcement body.",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/311795/20240806",
+      "passage": "ARTÍCULO 1°.- Disuélvese el INSTITUTO NACIONAL CONTRA LA DISCRIMINACIÓN, LA XENOFOBIA Y EL RACISMO (INADI), organismo descentralizado actuante en el ámbito del MINISTERIO DE JUSTICIA."
+     }
+    ],
+    "implementation_then_now": "In April 2023 CERD members, relaying civil society, raised persistent structural discrimination and racial profiling by police against migrants. The legal framework was still applied and INADI was operating, so 'Usually' holds for 2023. In the window, INADI was dissolved (Decreto 696/2024, August 2024). DNU 366/2025 then wrote status-based differentiation into arts. 6–8 for health, higher education and access to rights. Civil-society monitoring in 2025 reports record expulsions and disproportionate impact on trans migrants, sex workers and families. I rate 2026 'Sometimes; Usually'.",
+    "practice_sources": [
+     {
+      "title": "Examen de l'Argentine – CERD (résumé de séance, 18 avril 2023)",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des",
+      "year": 2023,
+      "shows": "practice",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "before_2023"
+     },
+     {
+      "title": "Decreto 696/2024 – disolución del INADI (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/311795/20240806",
+      "year": 2024,
+      "shows": "law_only",
+      "groups": [
+       "all_migrants"
+      ],
+      "period": "2023_2026"
+     },
+     {
+      "title": "Hivos EU SEE alert: Government maintains Decree 366/2025",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/",
+      "year": 2025,
+      "shows": "practice",
+      "groups": [
+       "all_migrants",
+       "irregular_migrants"
+      ],
+      "period": "2023_2026"
+     }
+    ],
+    "past_versions": "read_the_version_in_force",
+    "sourcing_note": "InfoLEG's texto original (the version in force on 1 January 2023 for arts. 6–8 and 13), the texto actualizado and the list of amending norms were read, along with the full text of DNU 366/2025. DNU 366/2025 entered into force on publication (29 May 2025), and I found no record that both chambers rejected it under Ley 26.122. The 2023 CERD concluding observations PDF could not be opened, so I relied on the UN meeting summary.",
+    "sources_opened": [
+     {
+      "title": "Ley 25.871 – texto actualizado (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/texact.htm"
+     },
+     {
+      "title": "Ley 25.871 – texto original (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/90000-94999/92016/norma.htm"
+     },
+     {
+      "title": "Ley 25.871 – normas que modifican (InfoLEG)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=92016"
+     },
+     {
+      "title": "Decreto DNU 366/2025 – texto",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/decreto-366-2025-413297/texto"
+     },
+     {
+      "title": "Decreto 696/2024 (Boletín Oficial)",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/311795/20240806"
+     },
+     {
+      "title": "CERD review of Argentina, meeting summary April 2023",
+      "url": "https://www.ungeneva.org/es/news-media/meeting-summary/2023/04/examen-de-largentine-la-situation-des-peuples-autochtones-et-des"
+     },
+     {
+      "title": "Hivos EU SEE alert",
+      "url": "https://eusee.hivos.org/alert/government-maintains-decree-366-2025-restricting-migrants-rights-and-participation-in-civic-life/"
+     },
+     {
+      "title": "Decreto 696/2024 (argentina.gob.ar, page unavailable)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/norma-402470/texto"
+     },
+     {
+      "title": "CERD concluding observations April 2023 (PDF, could not be parsed)",
+      "url": "https://www.argentina.gob.ar/sites/default/files/observaciones_finales_cerd_-_abril_2023.pdf"
+     }
+    ],
+    "starting_answer_concern": "Art. 13 lists nationality, ethnicity and similar grounds but not migration status itself. In 2023 the 'Yes' really rested on arts. 7 and 8, which barred restrictions 'cualquiera sea su situación migratoria'. After DNU 366/2025 the status-based protection survives mainly in art. 7 (basic education) and art. 8 (emergencies), while art. 6 expressly allows differentiation by category. Whether this still clears the 'Yes' bar is arguable, so I kept 'Yes' and recorded the change as 'not the same'.",
+    "confidence": "medium",
+    "notes": "Hivos reports a federal court ruling of August 2025 declaring part of DNU 366/2025 unconstitutional in a single case, now on appeal. I did not read it, and it is confined to the parties. DNU 681/2026 (30 July 2026) and Ministerio de Salud Res. 1066/2026 fall after the window; they bear on the November 2026 coding, not on 1 January 2026."
+   }
+  ]
+ }
 }
