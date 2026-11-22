@@ -41,6 +41,7 @@ import { makeSwitches } from './switches.mjs'
 import { makeFaults } from './faults.mjs'
 import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { asksAboutFile, filesFact } from './filesnote.mjs'
+import { asksChangeNotPublish, publishedFact } from './publishednote.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
@@ -259,7 +260,18 @@ export function makeFrontDesk(cfg = config()) {
     const filesFactText = filesRow
       ? await Promise.race([fileEntries(filesRow).then((list) => filesFact(list)), new Promise((r) => setTimeout(() => r(''), 5000).unref())]).catch((e) => (log(`${slug}: the file list for a file question could not be read (${e?.message ?? e})`), ''))
       : ''
-    const about = [claudeFact, record, filesFactText].filter(Boolean).join(' ')
+    // A request that changes something and does not ask to publish, in a project whose page is
+    // published, gets that fact and the rule (publishednote.mjs, OLA-244): change the page's own
+    // file, not the publish copy, do not publish, and end with the not-public sentence.
+    let publishedText = ''
+    if (asksChangeNotPublish(text)) {
+      try {
+        publishedText = publishedFact(sites.status(slug))
+      } catch (e) {
+        log(`${slug}: the publish status for a change request could not be read (${e?.message ?? e})`)
+      }
+    }
+    const about = [claudeFact, record, filesFactText, publishedText].filter(Boolean).join(' ')
     // One note in front of the request (the apps strip one): the engines note with the facts added to it.
     const join = (note) => (!about ? note : note ? note.replace(NOTE_CLOSE, ` ${about}${NOTE_CLOSE}`) : `${NOTE_OPEN}${about}${NOTE_CLOSE}\n\n`)
     if (!madeBy) return join('') + text

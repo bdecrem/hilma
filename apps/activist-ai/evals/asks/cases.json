@@ -573,6 +573,33 @@
       "ability": "publish"
     },
     {
+      "id": "heading-instead-not-publish",
+      "say": "make the heading say Willow instead",
+      "before": [
+        "put up a page on ola that just says Hazel"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "noran:ola-publish\\s+(?!status\\b|preview\\b)",
+        "says:publish(ed)? (it |the change )?again|(not|isn.t) (public|published|live) yet|still shows"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "passes": 5,
+      "from": {
+        "date": "2026-11-22",
+        "ticket": "OLA-244",
+        "what": "The OLA-244 checker on app.ola.cx, Nov 22, on releases 11595ff14c64 and ed5252593fa1 (2 of 2 tries each): in a new project, right after 'put up a page on ola that just says Hazel', 'make the heading say Willow instead' published nothing but never said the change was not public, and once edited the publish copy site/index.html too. Since then the web server puts the published page's fact and the rule in front of such a request (frontdesk/publishednote.mjs)."
+      },
+      "ability": "publish"
+    },
+    {
       "id": "publish-again",
       "say": "publish it again",
       "before": [
