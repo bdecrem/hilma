@@ -20,7 +20,7 @@ node apps/activist-ai/tickets/trial.mjs --models reference,empty # self-test: th
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 --max-usd 30 [--run-usd 10] --time 1500 --tokens 3000000
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro --cases ola-351-ready --lean --max-usd 2.5 --run-usd 2.5   # the lean configuration (OLA-356)
 node apps/activist-ai/tickets/trial.mjs --report                 # pass count, cost and minutes per model
-node apps/activist-ai/tickets/test.mjs                           # the stops, refusals, cache pricing and lean config, offline (13 tests)
+node apps/activist-ai/tickets/test.mjs                           # the stops, refusals, cache pricing and lean config, offline (14 tests)
 ```
 
 **Spending stops (Nov 21, after the $45 morning).** Every run, trial or hand-off, stops itself after
@@ -35,7 +35,8 @@ most $10 a run and $30 a day. Measured cost so far: 2.2 to 3.1M tokens in a run,
 A run: `git archive <commit>^ -- <the case's paths>` (only the folders the ticket needs, about 8 MB; a whole copy is gigabytes, and on Nov 21 twelve of them filled the mini's disk for a few minutes; a run refuses to start with less than 10 GB free) into `~/ola-trials/runs/<case>-<model>-<time>/work` (its own git,
 no link to this checkout), the ticket's test files put in from `<commit>`, then opencode 2.3.0
 (`run --auto`) with the request. It runs under `sandbox-exec`: the home folder is out of reach
-except its run folder and the two `node_modules` (read only), the network is loopback only, so the
+except its run folder and the two `node_modules` (read only), and so is every mounted disk (`/Volumes`; Nov 21,
+OLA-370: Recursive Flint ran `find / -name select.mjs` and copied OLA-283's answer from the mini's backup disk), the network is loopback only, so the
 model can reach nothing but its gateway and no secret on the machine. Its gateway is the ticket
 lane's own (`gateway.sh`: caller `tickets`, the model under the name `code`, 20M tokens a week per
 model), never Ola's. When it stops, the given tests are put back from the real commit (editing a

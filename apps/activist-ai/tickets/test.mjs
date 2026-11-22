@@ -5,7 +5,7 @@
 //   node apps/activist-ai/tickets/test.mjs
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
@@ -151,4 +151,15 @@ test('OLA-370: gateway.sh refuses an OpenRouter key file that others can read, a
   assert.match(none.stdout, /openrouter\.key not found/)
   assert.match(run('no-such-model').stdout, /unknown model no-such-model/)
   rmSync(home, { recursive: true, force: true })
+})
+
+test('OLA-370: the sandbox keeps mounted disks out of reach (the backup disk held the answer and env files)', async () => {
+  const { run, dir } = fakeRun(1)
+  assert.match(readFileSync(path.join(run.dir, 'sandbox.sb'), 'utf8'), /\(deny file-read\* file-write\* \(subpath "[^"]+"\) \(subpath "\/Volumes"\)\)/)
+  const r = await runTest(run, 'volumes', 'ls /Volumes/ && echo LISTED')
+  assert.notEqual(r.exit, 0)
+  assert.ok(!readFileSync(path.join(run.dir, 'test-volumes.txt'), 'utf8').includes('LISTED'))
+  const ok = await runTest(run, 'work', 'ls . >/dev/null && echo fine')
+  assert.equal(ok.exit, 0)
+  rmSync(dir, { recursive: true, force: true })
 })

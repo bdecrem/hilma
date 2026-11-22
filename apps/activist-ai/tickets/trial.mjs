@@ -107,7 +107,8 @@ async function one(c, model) {
   const passed = tests.every((t) => t.exit === 0 && t.total > 0 && t.pass === t.total)
   const row = { at: new Date().toISOString(), case: c.id, ticket: c.ticket, level: c.level, model, model_id: m.id, passed, tests, end: s.end, error: s.error, minutes,
     requests: s.requests, tokens_in: s.tokens_in, tokens_cached: s.tokens_cached || 0, tokens_out: s.tokens_out, lean, cost_usd: cost, tools: s.tools, tool_errors: s.tool_errors, dir: path.relative(root, run.dir) }
-  if (!MODELS[model].in && !MODELS[model].out) appendFileSync(path.join(root, 'selftest.jsonl'), JSON.stringify(row) + '\n')
+  // The self-test rows (reference, empty) go apart; a free model (Recursive Flint, OLA-370) is a real run.
+  if (!LISTED[model]) appendFileSync(path.join(root, 'selftest.jsonl'), JSON.stringify(row) + '\n')
   else appendFileSync(results, JSON.stringify(row) + '\n')
   console.log(`${passed ? 'PASS' : 'FAIL'} ${c.id} on ${model}: ${tests.map((t) => `${t.name} ${t.pass}/${t.total}`).join(', ')}; ${s.end}, ${minutes} min, ${(s.tokens_in / 1e6).toFixed(2)}M in + ${((s.tokens_cached || 0) / 1e6).toFixed(2)}M cached, $${cost}`)
 }

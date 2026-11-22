@@ -1,6 +1,8 @@
 // Shared by trial.mjs and handoff.mjs (OLA-300): the sandbox a ticket model works in, its opencode
 // settings and one opencode run. The sandbox: the home folder is out of reach except the run folder
-// and the two node_modules (read only); outbound network only to loopback (the ticket lane's gateway).
+// and the two node_modules (read only), and so is every mounted disk (/Volumes: on Nov 21 Recursive Flint
+// ran `find / -name select.mjs` and copied the ticket's answer from the mini's backup disk, which also
+// holds env files; OLA-370); outbound network only to loopback (the ticket lane's gateway).
 import { spawn, execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, createWriteStream } from 'node:fs'
 import path from 'node:path'
@@ -51,7 +53,7 @@ export function gatewayToken() {
 export function profile(runDir) {
   return `(version 1)
 (allow default)
-(deny file-read* file-write* (subpath ${q(homedir())}))
+(deny file-read* file-write* (subpath ${q(homedir())}) (subpath "/Volumes"))
 (allow file-read* (literal ${q(homedir())}) (subpath ${q(nmRoot)}) (subpath ${q(nmOla)}) (subpath ${q(runDir)}))
 (allow file-read-metadata (subpath ${q(homedir())}))
 (allow file-write* (subpath ${q(runDir)}))
