@@ -541,9 +541,11 @@ function weekStart(now = Date.now()) {
 const weekKey = (start) => new Date(start).toISOString().slice(0, 10)
 // The ola-examples plugin's note (workspace/plugins/ola-examples): fenced, so it can be counted and cut out.
 const EXAMPLE_NOTE = /\[Ola worked example\][\s\S]*?\[end of the worked example\]\n?/g
-/** 'project' or 'library' when a system message carries a worked example ('off' when it was cut out), else null. */
+/** 'project' or 'library' when a system message carries a worked example ('off' once it was cut out), else null.
+ * A note without the fence (a Mac app with plugin 1.1 or older) cannot be cut and keeps its label. */
 function workedExample(messages, off) {
   let found = null
+  let cut = false
   for (const m of Array.isArray(messages) ? messages : []) {
     if (m?.role !== 'system' && m?.role !== 'developer') continue
     const parts = typeof m.content === 'string' ? [null] : Array.isArray(m.content) ? m.content.filter((p) => typeof p?.text === 'string') : []
@@ -552,12 +554,14 @@ function workedExample(messages, off) {
       if (!text.includes('[Ola worked example]')) continue
       found = found === 'project' || text.includes('[Ola worked example] (from this project)') ? 'project' : 'library'
       if (!off) continue
-      const cut = text.replace(EXAMPLE_NOTE, '')
-      if (p) p.text = cut
-      else m.content = cut
+      const left = text.replace(EXAMPLE_NOTE, '')
+      if (left === text) continue
+      cut = true
+      if (p) p.text = left
+      else m.content = left
     }
   }
-  return found && off ? 'off' : found
+  return cut && !/\[Ola worked example\]/.test(JSON.stringify(messages.filter((m) => m?.role === 'system' || m?.role === 'developer'))) ? 'off' : found
 }
 
 function usageOf(name) {

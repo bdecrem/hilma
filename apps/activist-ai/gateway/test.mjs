@@ -589,6 +589,10 @@ test('OLA-181: the log line says when a worked example was beside the request; G
   const sent = up.st.seen.slice(-2)
   assert.ok(sent.every((s) => !s.system.includes('worked example') && !s.system.includes('bike')), 'off: the model receives no example')
   assert.ok(sent[0].system.includes('You are Ola.') && sent[0].system.includes('Be brief.'), 'the rest of the instructions stay')
+  // an older Mac app's note has no fence: it cannot be cut, and the log does not say off
+  const old = { model: 'general', messages: [{ role: 'system', content: 'You are Ola.\n[Ola worked example] A request like this one was built here before.' }, { role: 'user', content: JSON.stringify({ tag: 'old' }) }] }
+  assert.equal((await call(off, T.a, old)).status, 200)
+  assert.equal((await waitFor(() => (off.logs().length >= 3 ? off.logs() : null), 3000, 'a third line'))[2].example, 'library')
   await off.stop()
 })
 

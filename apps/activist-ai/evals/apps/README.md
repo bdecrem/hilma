@@ -116,8 +116,8 @@ a file and then tried the page (`ola-page`, `look.py`, exit 0) with no refusal a
 writes it into that project's own volume with `ola-db examples add` (`/work/.ola/examples.json`,
 named by the image's `OLA_EXAMPLES_EXTRA`; the request, the files written, the commands that tried
 it, the answer; never file contents or output). It is shown only to later requests in that same
-project, "(from this project)". "This was wrong", a later `/claude` or `/hosted` in the conversation
-and deleting the conversation take it out. It never leaves the project (not on the host, not in a
+project, "(from this project)". "This was wrong" and a later `/claude` or `/hosted` in the
+conversation take it out. It never leaves the project (not on the host, not in a
 log, gone with the project). The Mac's local runtime uses the committed library only. The gateway's
 log line says `example: project` or `library` (a label, never words), and `GATEWAY_EXAMPLES=off`
 in the gateway's env cuts the example out of every request: the one switch. (Until 2.3.2-62 Bart's

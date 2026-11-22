@@ -12,8 +12,9 @@
 // machine never sees it; it is in the project's backup and goes when the project is deleted. The front
 // desk's log says only that an example was kept, with the project's name. It is taken out when:
 //   - the person marks the answer "This was wrong" (faults.mjs mark), and
-//   - a later request in the same conversation is handed to another engine (/claude, /hosted), and
-//   - the conversation is deleted (a DELETE of it through the front desk, from any app).
+//   - a later request in the same conversation is handed to another engine (/claude, /hosted).
+// (A cloud conversation cannot be deleted on its own today: the proxy has no DELETE route. When one is
+// added, it calls forget(slug, session) too.)
 //
 // "Ended well", from what is already recorded about the turn:
 //   - the run succeeded (opencode's session.execution.succeeded), and faults.readTurn finds no refusal
@@ -90,7 +91,7 @@ export function makeExamples({ workspaces, log = () => {}, settleMs = 1500 }) {
     if (r.code !== 0) throw new Error(`ola-db examples ${args[0]} exited ${r.code}`)
     return JSON.parse(r.out || '{}')
   }
-  /** "This was wrong" on a turn, or a deleted conversation (no turn): its examples are taken out. */
+  /** "This was wrong" on a turn, or a whole conversation (no turn, a handover): its examples are taken out. */
   async function forget(slug, sessionID, turn = null) {
     if (!ID.test(sessionID ?? '') || (turn !== null && !ID.test(turn ?? ''))) return 0
     const out = await call(slug, ['remove', '--session', sessionID, ...(turn ? ['--turn', turn] : [])])

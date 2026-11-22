@@ -81,7 +81,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
    make an app, page or game, the closest kept worked example in the model's instructions for that
    request (the `ola-examples` plugin, also on the Mac: test requests, and in a cloud project also that
    project's own requests that ended well, kept only in its volume by `frontdesk/examples.mjs` and
-   `ola-db examples`, taken out on "This was wrong" or a deleted conversation; the gateway's log line
+   `ola-db examples`, taken out on "This was wrong" or a handover to /claude; the gateway's log line
    says `example: project|library`, and `GATEWAY_EXAMPLES=off` turns it off everywhere; OLA-181).
 3. **The model gateway.** The one address a workspace can reach. It holds the model keys, checks the
    caller's token (bound to that workspace's door), caps size, concurrency, time and weekly tokens,

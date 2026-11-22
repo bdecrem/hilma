@@ -281,8 +281,6 @@ export function makeFrontDesk(cfg = config()) {
     if (wsId) faults?.fromRun(slug, wsId, sessionID).catch((e) => log(`faults: not read in ${slug} (${e?.message ?? e})`))
     // OLA-181: a request that ended well becomes a worked example inside this project (examples.mjs).
     examples?.fromRun(slug, sessionID, how).catch((e) => log(`examples: not kept in ${slug} (${e?.message ?? e})`))
-  }, onSessionDeleted: (slug, sessionID) => {
-    examples?.forget(slug, sessionID).catch((e) => log(`examples: not taken out in ${slug} (${e?.message ?? e})`))
   } })
   faults = makeFaults({ db, workspaces, log })
   examples = makeExamples({ workspaces, log })

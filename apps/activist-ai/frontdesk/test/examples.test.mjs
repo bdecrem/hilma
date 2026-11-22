@@ -1,7 +1,7 @@
 // A project's own requests that ended well as worked examples (OLA-181, frontdesk/examples.mjs) without a
 // workspace: which turns count as ended well, what is kept (the request, the files written, the tries after
 // the last change, never output), that it is written with `ola-db examples` (the real tool, on a folder that
-// stands in for /work), taken out on "This was wrong", a handover or a deleted conversation, and that the
+// stands in for /work), taken out on "This was wrong" or a handover to another engine, and that the
 // plugin shows it as "(from this project)". Run: node --test frontdesk/test/examples.test.mjs
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -69,7 +69,7 @@ function project() {
   return { work, file: path.join(work, '.ola', 'examples.json'), run }
 }
 
-test('fromRun writes it into the project with ola-db examples; This was wrong, a handover and a delete take it out', async () => {
+test('fromRun writes it into the project with ola-db examples; This was wrong and a handover take it out; a whole conversation can be taken out', async () => {
   const p = project()
   let list = turn()
   const logs = []
@@ -91,7 +91,7 @@ test('fromRun writes it into the project with ola-db examples; This was wrong, a
   list = [...turn(), { type: 'user', id: 'msg_u2', text: '/claude make it work properly', time: { created: 5 } }, { type: 'assistant', id: 'a2', content: [{ type: 'text', text: 'Done.' }], time: { created: 6 } }, { type: 'idle', id: 'i2', outcome: 'succeeded', time: { created: 7 } }]
   assert.equal(await ex.fromRun('p1', 'ses_one', 'succeeded'), false)
   assert.equal(JSON.parse(p.run(['--json']).out).count, 0, 'handed over: no example from that conversation')
-  // a deleted conversation
+  // a whole conversation
   list = turn()
   await ex.fromRun('p1', 'ses_two', 'succeeded')
   assert.equal(await ex.forget('p1', 'ses_two'), 1)
