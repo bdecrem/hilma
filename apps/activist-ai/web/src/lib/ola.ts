@@ -4,7 +4,7 @@
 // drawer never shows a stale "working" after the network comes back.
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
-import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
+import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, NO_LONGER_NEEDED, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
@@ -324,7 +324,24 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     try {
       await client.permission.reply({ sessionID: a.sessionID, requestID: a.id, decision })
     } catch (e) {
+      // The request is not waiting any more (its step ran, or the run ended): the card goes, said
+      // plainly, never "Try again" on a card no answer can reach (OLA-250, Nov 22, the Mac app).
+      if (!(await stillWaiting(a.sessionID, a.id))) {
+        if (state.approval?.id === a.id) setState('approval', null)
+        setState('problem', { text: NO_LONGER_NEEDED })
+        return
+      }
       setState('problem', { text: 'Your answer did not reach Ola’s computer. Try again.', detail: String((e as any)?.message ?? e) })
+    }
+  }
+
+  /** Whether a request still waits on the server; when it cannot be asked, it counts as waiting. */
+  async function stillWaiting(sessionID: string, requestID: string) {
+    try {
+      const pending = (await client.permission.list({ sessionID })) as any[]
+      return pending.some((p) => p?.id === requestID)
+    } catch {
+      return true
     }
   }
 

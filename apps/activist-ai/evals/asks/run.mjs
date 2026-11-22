@@ -39,7 +39,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STATE, asksToPublishInWords, lostConnection, modelUsedUp, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STATE, asksToPublishInWords, cardFaults, lostConnection, modelUsedUp, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -226,9 +226,14 @@ async function runCase(T, c) {
   const answered = []
   // OLA-250: a turn that asked in words to publish (no card): the "yes" below would hide it.
   const askedInWords = []
+  // OLA-250, Nov 22: what the person's screen showed (the app's or the website's own cards): a card
+  // still up after the answer, a publishing step as a raw command card, a Yes that could not land.
+  const cardProblems = []
+  const noteCards = (said, turn) => cardProblems.push(...cardFaults(turn.cards).map((f) => `after "${said}": ${f}`))
   // One request, and the person's "yes" when Ola ends on a question (twice at most).
   async function converse(text) {
     let turn = await ask(T, sid, text, Math.max(end - Date.now(), 1000))
+    noteCards(text, turn)
     const texts = [...turn.texts]
     steps.push(...turn.tools.map((t) => `${t.name}: ${String(t.input).slice(0, 160)}`))
     answered.push(...turn.answered)
@@ -237,6 +242,7 @@ async function runCase(T, c) {
       if (asksToPublishInWords(q)) askedInWords.push(`"${text}" ended on a question in words, not the app's card: ${oneLine(q.slice(-200))}`)
       answered.push(`said in the conversation: ${c.yes ?? 'Yes, go ahead.'}`)
       turn = await ask(T, sid, c.yes ?? 'Yes, go ahead.', end - Date.now())
+      noteCards(c.yes ?? 'Yes, go ahead.', turn)
       texts.push(...turn.texts)
       steps.push(...turn.tools.map((t) => `${t.name}: ${String(t.input).slice(0, 160)}`))
       answered.push(...turn.answered)
@@ -270,6 +276,7 @@ async function runCase(T, c) {
   const never = checkNever(c, answer, { done: !fails.length })
   if (never.length) fails.push(`Ola ${never.join(', and ')}`)
   if (askedInWords.length) fails.push(`Ola asked to publish in words (a person gets no card to say yes to; the runner's typed yes went on): ${askedInWords.join('; ')}`)
+  if (cardProblems.length) fails.push(`the person's screen: ${[...new Set(cardProblems)].join('; ')}`)
   return { ...base, ok: !fails.length, why: fails.length ? `${fails.join('; ')}. Ola said: ${oneLine(answer)}` : notes.join('; ') }
 }
 function endsOnQuestion(t) {

@@ -322,7 +322,13 @@ public final class OlaStore {
         }
       } else {
         Task {
-          do { try await client?.reply(session: sid, request: rid, decision: .once) } catch { _ = conversations[sid]?.apply(ev) }
+          do { try await client?.reply(session: sid, request: rid, decision: .once) } catch {
+            // OLA-250, Nov 22: this yes was answered 404 because the request had already been
+            // answered (the step ran 60 ms earlier), and the card came up anyway, for good. The card
+            // is shown only if the request is still waiting on the server.
+            guard await stillWaiting(sid, rid) else { return }
+            _ = conversations[sid]?.apply(ev)
+          }
         }
       }
       return
@@ -402,8 +408,11 @@ public final class OlaStore {
       var c = Conversation(sessionID: id, directory: directory, turns: Conversation.turns(fromMessages: try await client.messages(id), directory: directory))
       if let p = try await client.pendingPermissions(id).first {
         let res = p["resources"].array.map(\.str)
-        if !serverAnswers(), (goesAhead?(p["action"].str, res) ?? false) || covered(id, p["action"].str, res), (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
+        let ahead = !serverAnswers() && ((goesAhead?(p["action"].str, res) ?? false) || covered(id, p["action"].str, res))
+        if ahead, (try? await client.reply(session: id, request: p["id"].str, decision: .once)) != nil {
           wentAhead += 1
+        } else if ahead, !(await stillWaiting(id, p["id"].str)) {
+          // Answered meanwhile (the stream's own yes got there first, OLA-250): nothing to show.
         } else {
           // The same description as an approval asked while the app watched (its note and card too).
           var a = Approval(p, dir: directory, cloudProject: config?.cloudProject)
@@ -440,6 +449,9 @@ public final class OlaStore {
       c.turns = ClaudeTurns.merge(c.turns, stored)
       if let live = conversations[id]?.turns.filter({ $0.engine == .claude && $0.isRunning }) { c.turns = ClaudeTurns.merge(c.turns, live) }
       if let madeBy { MadeByTurns.assign(await madeBy.entries(session: id), to: &c.turns) }
+      // The awaits above take time, and a reply heard meanwhile went to the conversation this one
+      // replaces: a card read at the start is kept only if the request is still waiting (OLA-250).
+      if let a = c.approval, a.engine != .claude, !(await stillWaiting(id, a.id)) { c.approval = nil }
       conversations[id] = c
       if stale { saveClaude(id) }
       if hostedRuns[id] != nil, !c.isRunning, !running.contains(id) { await finishHosted(id) }
@@ -700,6 +712,7 @@ public final class OlaStore {
     guard client != nil else { return }
     if decision == .always {
       let status = await answerForSession(session: id, request: a.id)
+      if status == 404 { return noLongerNeeded(id, a.id) }
       if !(200..<300).contains(status) { problem = Problem(text: "Your answer did not reach Ola. Try again.", detail: "\(status)") }
       return
     }
@@ -707,8 +720,26 @@ public final class OlaStore {
       // A cloud publish yes is for the list the card showed: its fingerprint goes with it (OLA-325).
       try await client?.reply(session: id, request: a.id, decision: decision, fingerprint: decision == .reject ? nil : a.card?.fingerprint)
     } catch {
+      // The request is not waiting any more (its step ran, or the run ended): the card goes, said
+      // plainly, never "Try again" on a card no answer can reach (OLA-250, Nov 22).
+      if (error as? OlaError) != .unauthorized, !(await stillWaiting(id, a.id)) { return noLongerNeeded(id, a.id) }
       note(error, "Your answer did not reach the machine. Try again.")
     }
+  }
+
+  /// The sentence when a card's request has already ended (OLA-250).
+  public static let noLongerNeededText = "That question was no longer needed: Ola had already gone on without it."
+
+  private func noLongerNeeded(_ session: String, _ request: String) {
+    if conversations[session]?.approval?.id == request { conversations[session]?.approval = nil }
+    problem = Problem(text: Self.noLongerNeededText)
+  }
+
+  /// Whether a request is still waiting on the server. When the server cannot be asked, it counts as
+  /// waiting: a card shown in doubt can be answered or dismissed; a card hidden in doubt stops the run.
+  func stillWaiting(_ session: String, _ request: String) async -> Bool {
+    guard let client, let list = try? await client.pendingPermissions(session) else { return true }
+    return list.contains { $0["id"].str == request }
   }
 
   /// A cloud publish card waiting: the front desk looks at the files (the website's sheet does the

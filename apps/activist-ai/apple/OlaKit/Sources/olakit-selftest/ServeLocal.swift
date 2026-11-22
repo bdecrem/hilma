@@ -68,6 +68,11 @@ enum ServeLocal {
     _ = await record.endStale()
     let recorder = LocalTurnRecorder(record: record, client: OpenCodeClient(config))
     recorder.start()
+    // The cards the Mac app would show (OLA-250): its own store on this server, Lots of permissions
+    // on as the app's default, answering what the app answers by itself; the runner answers only
+    // the cards, as a person does, and reads what is left on screen after an answer.
+    let cards = await MainActor.run { AppCards(config: config, file: scratch.appendingPathComponent("cards.json")) }
+    await cards.start()
     let info = scratch.appendingPathComponent("server.json")
     let body = try! JSONSerialization.data(withJSONObject: ["url": config.url.absoluteString, "password": config.password, "skills": server.skillStates.map(\.line)])
     fm.createFile(atPath: info.path, contents: body, attributes: [.posixPermissions: 0o600])
@@ -80,6 +85,7 @@ enum ServeLocal {
         c.resume()
       }
     }
+    await cards.stop()
     recorder.stop()
     server.stop()
     door.stop()
@@ -87,5 +93,73 @@ enum ServeLocal {
     try? fm.removeItem(at: info)
     print("stopped")
     return 0
+  }
+}
+
+/// OLA-250, Nov 22: the Mac app showed "Ola wants to run a command: Run publish.py" after the answer,
+/// for a step that had run, and the card could not be answered. The asks runner talked to opencode
+/// directly and answered every waiting request itself, so it could never see what the app shows.
+/// This is the app's own store (OlaStore, the same code as the Mac and the phone) on the local
+/// server, wired as the Mac app wires it with Lots of permissions on (its default): it answers the
+/// steps the app answers by itself and keeps the cards a person must answer. Every 250 ms it writes
+/// `cards.json`: per session, the card on screen now (or null), every card it showed, and whether
+/// the conversation is shown as working. Made-up content only; nothing here is a secret.
+@MainActor
+final class AppCards {
+  let store: OlaStore
+  let file: URL
+  private var seen: [String: [[String: Any]]] = [:]
+  private var task: Task<Void, Never>?
+
+  init(config: ServerConfig, file: URL) {
+    store = OlaStore(config: config)
+    store.goesAhead = { action, resources in PermissionSettings.goesAhead(action: action, resources: resources) }
+    store.serverAnswers = { false }
+    self.file = file
+  }
+
+  func start() {
+    store.start()
+    task = Task { [weak self] in
+      while !Task.isCancelled {
+        await self?.tick()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+      }
+    }
+  }
+
+  func stop() {
+    task?.cancel()
+    try? FileManager.default.removeItem(at: file)
+  }
+
+  static func describe(_ a: Approval) -> [String: Any] {
+    [
+      "id": a.id,
+      "action": a.action,
+      "title": a.title,
+      "command": a.items.map { $0.detail ?? $0.label }.joined(separator: "\n"),
+      "publishCard": a.card != nil,
+      "at": Date().timeIntervalSince1970 * 1000,
+    ]
+  }
+
+  private func tick() async {
+    // Every conversation the server has, loaded the way the app loads the one on screen.
+    for s in store.sessions where store.conversations[s.id] == nil { await store.open(s.id) }
+    var out: [String: Any] = [:]
+    for (id, c) in store.conversations {
+      var card: Any = NSNull()
+      if let a = c.approval {
+        let d = Self.describe(a)
+        card = d
+        if !(seen[id] ?? []).contains(where: { ($0["id"] as? String) == a.id }) { seen[id, default: []].append(d) }
+      }
+      out[id] = ["card": card, "seen": seen[id] ?? [], "working": c.isRunning, "problem": store.problem?.text ?? NSNull()]
+    }
+    guard let data = try? JSONSerialization.data(withJSONObject: out) else { return }
+    let tmp = file.appendingPathExtension("tmp")
+    // Written whole, then renamed over the old one: a reader never sees half a file.
+    if FileManager.default.createFile(atPath: tmp.path, contents: data) { rename(tmp.path, file.path) }
   }
 }

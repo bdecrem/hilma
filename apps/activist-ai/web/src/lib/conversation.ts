@@ -32,6 +32,10 @@ export interface LooseEvent {
 
 const DONE: Turn['status'][] = ['done', 'failed', 'stopped']
 
+/** A card's yes when its request has already ended (OLA-250): the card goes, with this sentence.
+ *  The same words as the apps (OlaKit OlaStore.noLongerNeededText). */
+export const NO_LONGER_NEEDED = 'That question was no longer needed: Ola had already gone on without it.'
+
 /**
  * The person's request without the note the front desk puts in front of an open model's prompt
  * (frontdesk/madeby.mjs, OLA-224: `<ola-engines>…</ola-engines>`, what other engines did in the
@@ -169,6 +173,8 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       const step = stepFor(turn, d.id)
       if (!step) return false
       finishStep(step, true, at, outputText(d.content), d.metadata, null)
+      // Its step ran, so its question was answered (OLA-250): no card for it is left behind.
+      if (state.approval?.stepID === step.id) state.approval = null
       return true
     }
     case 'session.tool.failed': {
@@ -176,12 +182,16 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       if (!step) return false
       const problem = stepProblem(d.error)
       finishStep(step, false, at, [outputText(d.content), d.error?.message ?? ''].filter(Boolean).join('\n'), d.metadata, problem)
+      if (state.approval?.stepID === step.id) state.approval = null
       return true
     }
     case 'permission.asked': {
+      // OLA-250, Nov 22: a question for a step that has already ended is over: never a card, never
+      // a finished step put back to waiting (the Mac showed "Run publish.py" that way, for good).
+      const step = d.source?.id ? stepFor(turn, d.source.id) : undefined
+      if (step && (step.status === 'done' || step.status === 'failed')) return false
       const words = describeApproval(d.action, d.resources ?? [], d.metadata, state.directory)
       state.approval = { id: d.id, sessionID: d.sessionID, action: d.action, ...words, stepID: d.source?.id ?? null }
-      const step = d.source?.id ? stepFor(turn, d.source.id) : undefined
       if (step) step.status = 'waiting'
       return true
     }
@@ -246,7 +256,13 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       turn.error = runProblem(d.error)
       return true
     case 'session.execution.succeeded':
-      if (DONE.includes(turn.status)) return false
+      // The run ended: whatever it asked is no longer waiting (OLA-250). A Claude run's card is its own.
+    {
+      const cleared = (!!state.approval && state.approval.engine !== 'claude') || !!state.question
+      if (state.approval && state.approval.engine !== 'claude') state.approval = null
+      state.question = null
+      if (DONE.includes(turn.status)) return cleared
+    }
       turn.status = 'done'
       turn.ended = at
       turn.notice = null

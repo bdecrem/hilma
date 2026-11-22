@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "8"
+  ola/version: "9"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -204,11 +204,16 @@ After Steps 2 and 3, with the folder ready (`site/`):
    ```
 
    "The files changed since you looked" means: preview again and ask again.
-6. **See it live:** `python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/<name>/ --expect site`.
-   Only when it says `live`, tell the person it is published, with the address written bare.
+6. **Say what it printed, and stop:** `ola-publish publish` checks the address itself (Ola's
+   server reads it as a visitor would). "It answers with the new page now": tell the person it is
+   published, with the address written bare. "did not show the new page yet": say the address still
+   shows the earlier page and to look again in a minute. Do not run `publish.py live` or anything
+   else after it: the publish is done, and a step after it only reads to the person as publishing a
+   second time (OLA-250, Nov 22).
 
-**Publish again** (they changed the page and ask for it to be published again; a change alone is not a request, rule 4): Step 3 `check`, then preview, show the list, publish with the same
-name; it replaces what is there. **Unpublish** ("take it down"): run
+**Publish again** (they changed the page and ask for it to be published again; a change alone is not a request, rule 4): Step 2 `prepare`, Step 3 `check`, then preview and,
+in the same turn, publish with the same name (the app's card is the yes); it replaces what is
+there. Then step 6, and nothing after it. **Unpublish** ("take it down"): run
 `ola-publish unpublish --name <name>` (the app asks the person; that is the yes, do not ask in
 words first), and tell them the
 address now shows nothing. The name stays theirs, so nobody else can use its old links.
@@ -304,6 +309,7 @@ copies it into a text or an email, where the marks come along and the address no
 - Do not use GitHub Pages or a host other than Ola's address or Vercel; do not make the
   repository public unless asked.
 - Do not run `ola-publish publish` or `ola-publish unpublish` without the person's yes for it.
-- Do not say "it is live" before `live` (or, for a domain, `dns`) says so.
+- Do not say "it is live" before `live` (or, for a domain, `dns`) says so; at Ola's address,
+  before `ola-publish` says so.
 - In the cloud, do not try to reach GitHub or Vercel, and never tell the person to go and press
   Publish instead of publishing: run `ola-publish`, which asks them in the conversation.

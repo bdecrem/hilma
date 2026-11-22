@@ -385,14 +385,21 @@ public struct Conversation: Equatable, Sendable {
       finish(&s, ok: true, at: at, output: outputText(d["content"]), metadata: d["metadata"], problem: nil)
       if s.tool == "shell" || s.tool == "bash" { s.input = rawInput }
       turn.steps[i] = s
+      // Its step ran, so its question was answered (OLA-250): no card for it is left behind.
+      if approval?.stepID == s.id { approval = nil }
       return true
     case "session.tool.failed":
       guard let i = step(d["id"].str) else { return false }
       let problem = Plain.stepProblem(d["error"])
       finish(&turn.steps[i], ok: false, at: at, output: [outputText(d["content"]), d["error"]["message"].str].filter { !$0.isEmpty }.joined(separator: "\n"), metadata: d["metadata"], problem: problem)
+      if approval?.stepID == turn.steps[i].id { approval = nil }
       return true
     case "permission.asked":
       let a = Approval(d, dir: directory, cloudProject: cloudProject)
+      // OLA-250, Nov 22: a yes the app had already given came back as a card after its step had
+      // run ("Run publish.py", the step then shown as "did not finish", the card unanswerable). A
+      // question for a step that has ended is over: never a card, never a step put back to waiting.
+      if let sid = a.stepID, let i = step(sid), turn.steps[i].status == .done || turn.steps[i].status == .failed { return false }
       approval = a
       if let sid = a.stepID, let i = step(sid) { turn.steps[i].status = .waiting }
       return true
@@ -450,7 +457,11 @@ public struct Conversation: Equatable, Sendable {
       turn.error = Plain.runProblem(d["error"])
       return true
     case "session.execution.succeeded":
-      if !turn.isRunning { return false }
+      // The run ended: whatever it asked is no longer waiting (OLA-250), whether or not this turn
+      // was still shown as running. (A Claude run's card is its own runner's, not opencode's.)
+      if approval?.engine != .claude { approval = nil }
+      question = nil
+      if !turn.isRunning { return true }
       turn.status = .done
       turn.ended = at
       turn.notice = nil

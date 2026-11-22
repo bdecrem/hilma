@@ -232,3 +232,39 @@ test('a switch (OLA-157): a fallback right after a cheaper engine had the last t
   assert.equal(switchOf([t('claude-1', 'claude')], 'hosted'), null, 'down the ladder')
   assert.equal(switchOf([t('x', 'hosted')], 'hosted'), null, 'the same engine')
 })
+
+// OLA-250, Nov 22 (the Mac app, the same fold as here): a question for a step that had already run
+// came up as a card, the step was shown as "did not finish", and the card could not be answered.
+test('a question for a step that ended is no card, and a card goes when its step or the run ends', () => {
+  const live = 'python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/bart/ --expect site 2>&1'
+  const s = 's'
+  const state = emptyConversation()
+  state.sessionID = s
+  // Read through a function: assert.equal narrows a property it was given to null for the type checker.
+  const card = () => state.approval
+  startTurn(state, 'publish it again', 1)
+  applyEvent(state, { type: 'session.execution.started', created: 2, data: { sessionID: s } })
+  applyEvent(state, { type: 'session.tool.input.started', created: 3, data: { sessionID: s, id: 't1', name: 'shell' } })
+  applyEvent(state, { type: 'session.tool.called', created: 3, data: { sessionID: s, id: 't1', input: { command: live } } })
+  applyEvent(state, { type: 'session.tool.success', created: 4, data: { sessionID: s, id: 't1', content: [{ type: 'text', text: 'live' }], metadata: { exit: 0 } } })
+  // The late copy of its question.
+  applyEvent(state, { type: 'permission.asked', created: 5, data: { sessionID: s, id: 'p1', action: 'shell', resources: [live], source: { id: 't1' } } })
+  assert.equal(card(), null, 'a card for a step that already ran')
+  assert.equal(state.turns[0].steps[0].status, 'done')
+
+  // A card in its time goes when its step ends.
+  applyEvent(state, { type: 'session.tool.input.started', created: 6, data: { sessionID: s, id: 't2', name: 'shell' } })
+  applyEvent(state, { type: 'session.tool.called', created: 6, data: { sessionID: s, id: 't2', input: { command: 'ls' } } })
+  applyEvent(state, { type: 'permission.asked', created: 7, data: { sessionID: s, id: 'p2', action: 'shell', resources: ['ls'], source: { id: 't2' } } })
+  assert.equal(card()?.id, 'p2')
+  applyEvent(state, { type: 'session.tool.success', created: 8, data: { sessionID: s, id: 't2', content: [], metadata: { exit: 0 } } })
+  assert.equal(card(), null, 'the step ran: its card is over')
+
+  // One still up when the run ends goes with it.
+  applyEvent(state, { type: 'session.tool.input.started', created: 9, data: { sessionID: s, id: 't3', name: 'shell' } })
+  applyEvent(state, { type: 'permission.asked', created: 9, data: { sessionID: s, id: 'p3', action: 'shell', resources: ['ls'], source: { id: 't3' } } })
+  applyEvent(state, { type: 'session.execution.succeeded', created: 10, data: { sessionID: s } })
+  assert.equal(card(), null, 'the run ended with a card still up')
+  assert.equal(state.turns[0].status, 'done')
+  assert.equal(state.turns[0].steps[0].status, 'done', 'a step that ran is shown as "did not finish"')
+})

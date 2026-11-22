@@ -174,9 +174,95 @@ async function steady(go, method) {
     }
   }
 }
+// ---------------------------------------------------------------- the cards a person sees (OLA-250)
+// Nov 22, Mac 0.1 (33), Ola on the Mac, "publish it again": the page went up and the answer showed, then
+// a card "Ola wants to run a command: Run publish.py" came up (a step that had already run, its yes
+// given by the app itself), and its Yes gave "Your answer did not reach the machine" for good. The
+// runner answered every waiting request on the server, so it saw none of that. Now it reads the cards
+// a person sees: in the cloud the website's own fold of the event stream (web/src/lib/conversation.ts),
+// on the Mac the app's own store (OlaKit OlaStore in olakit-selftest, cards.json); it answers only those,
+// as a person does, and a case fails on a card still up after the answer or on a card that shows a
+// publishing step as a raw command.
+/** A card for a publishing step shown as the raw command (not the publish card): to a person, Ola
+ *  publishing a second time, with a command to approve (Nov 22: "Run publish.py" after the page went up). */
+export const rawPublishingCard = (card) => !!card && !card.publishCard && /publish\.py|ola-publish/.test(String(card.command ?? ''))
+const cardWords = (c) => `"${c.title}"${c.command ? ` (${oneLineOf(c.command).slice(0, 140)})` : ''}`
+const oneLineOf = (s) => String(s).replace(/\s+/g, ' ').trim()
+/**
+ * What the cards of one request say against the rules: a card left up after the answer, and a raw
+ * command card for publishing. `cards`: { seen: [card], left: card|null, answers: [{card, status}] }.
+ */
+export function cardFaults(cards) {
+  const out = []
+  if (!cards) return out
+  if (cards.left) out.push(`a card was still up after the answer: ${cardWords(cards.left)}${cards.left.problem ? `; the app said: ${cards.left.problem}` : ''}`)
+  for (const c of cards.seen ?? []) if (rawPublishingCard(c)) out.push(`a publishing step was shown as a raw command card: ${cardWords(c)}`)
+  for (const a of cards.answers ?? []) if (a.status >= 300) out.push(`the card's Yes did not reach the machine (${a.status}): ${cardWords(a.card)}`)
+  for (const u of cards.unseen ?? []) out.push(`a request waited 20 s with no card and no yes from the app: ${oneLineOf(u).slice(0, 140)}`)
+  return [...new Set(out)]
+}
+
+/** The website's cards in a cloud project: the event stream folded by the website's own code. */
+export function websiteCards(open) {
+  const states = new Map()
+  const seen = new Map()
+  let started = null
+  let fold = null
+  async function start() {
+    fold = await import('../../web/src/lib/conversation.ts')
+    const res = await open()
+    if (res.status !== 200 || !res.body) throw new Error(`the event stream answered ${res.status}`)
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+    ;(async () => {
+      let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read().catch(() => ({ done: true }))
+        if (done) return
+        buf += value
+        let nl
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl).trim()
+          buf = buf.slice(nl + 1)
+          if (!line.startsWith('data:')) continue
+          let ev
+          try {
+            ev = JSON.parse(line.slice(5).trim())
+          } catch {
+            continue
+          }
+          const sid = ev?.data?.sessionID ?? ev?.data?.form?.sessionID
+          const st = sid && states.get(sid)
+          if (!st) continue
+          fold.applyEvent(st, ev)
+          const a = st.approval
+          if (a && !(seen.get(sid) ?? []).some((c) => c.id === a.id)) seen.set(sid, [...(seen.get(sid) ?? []), cardOf(a)])
+        }
+      }
+    })()
+  }
+  const cardOf = (a) => (a ? { id: a.id, action: a.action, title: a.title, command: (a.items ?? []).map((i) => i.detail ?? i.label).join('\n'), publishCard: !!a.card } : null)
+  return {
+    /** Before a request is sent: the website shows it as a turn (startTurn). */
+    async turn(sid, text) {
+      started ??= start()
+      await started
+      if (!states.has(sid)) {
+        const st = fold.emptyConversation()
+        st.sessionID = sid
+        states.set(sid, st)
+      }
+      fold.startTurn(states.get(sid), text)
+    },
+    card: (sid) => cardOf(states.get(sid)?.approval ?? null),
+    seen: (sid) => seen.get(sid) ?? [],
+  }
+}
+
 export function cloudTransport({ cookie, csrf }) {
+  const headers = { cookie, origin: ORIGIN, 'x-ola-workspace': PROJECT, 'x-ola-csrf': csrf }
   return {
     runtime: 'cloud',
+    cards: websiteCards(() => fetch(`${ORIGIN}/oc/api/event`, { headers: { ...headers, accept: 'text/event-stream' } })),
     async call(method, p, body) {
       const res = await steady(() => fetch(`${ORIGIN}/oc${p}`, {
         method,
@@ -262,10 +348,30 @@ export async function startLocal(password, { build = true } = {}) {
   const { url, password: serverPw, skills } = JSON.parse(readFileSync(info, 'utf8'))
   const auth = 'Basic ' + Buffer.from(`opencode:${serverPw}`).toString('base64')
   const folder = path.join(dir, 'folder')
+  // The Mac app's own store on this server (ServeLocal AppCards, OLA-250): what the app shows.
+  const cardsFile = path.join(dir, 'serve/cards.json')
+  const appCards = () => {
+    try {
+      return JSON.parse(readFileSync(cardsFile, 'utf8'))
+    } catch {
+      return null
+    }
+  }
   return {
     runtime: 'local',
     skills,
     folder,
+    cards: {
+      app: true,
+      async turn() {},
+      card: (sid) => {
+        const s = appCards()?.[sid]
+        return s?.card ? { ...s.card, problem: s.problem ?? null } : null
+      },
+      seen: (sid) => appCards()?.[sid]?.seen ?? [],
+      /** The app has this conversation loaded (its cards are known). */
+      knows: (sid) => !!appCards()?.[sid],
+    },
     async call(method, p, body) {
       const res = await steady(() => fetch(new URL(p, url), { method, headers: { authorization: auth, accept: 'application/json', ...(body !== undefined ? { 'content-type': 'application/json' } : {}) }, body: body !== undefined ? JSON.stringify(body) : undefined }), method)
       const text = await res.text()
@@ -396,15 +502,44 @@ const YES = /^(yes|publish|go ahead|ok|okay|sure|do it|allow|continue|confirm)/i
  */
 export async function ask(T, sid, text, limitMs) {
   const before = (await messagesOf(T, sid)).length
+  await T.cards?.turn(sid, text)
   const sent = await T.call('POST', `/api/session/${sid}/prompt`, { text })
   if (sent.status >= 300) throw new Error(`the request was not taken: ${sent.status} ${sent.text.slice(0, 200)}`)
   const answered = []
+  // OLA-250: the cards a person saw, the ones they answered (with the server's answer), and the one
+  // still up after the answer, if any.
+  const cards = { seen: [], left: null, answers: [], unseen: [] }
+  const waiting = new Map() // On the Mac: a request waiting with neither a card nor the app's own yes
   const end = Date.now() + limitMs
   while (Date.now() < end) {
     await sleep(1500)
+    if (T.cards?.app) {
+      // The Mac app (its own store, Lots of permissions on): the person answers the card on screen; the
+      // app answers the rest itself. Nothing else answers here, as nothing else does on a Mac.
+      const card = T.cards.card(sid)
+      if (card && !cards.answers.some((a) => a.card.id === card.id)) {
+        const r = await T.call('POST', `/api/session/${sid}/permission/${card.id}/reply`, { decision: 'once' })
+        cards.answers.push({ card, status: r.status })
+        answered.push(`card "${card.title}", yes, once${card.command ? `: ${oneLineOf(card.command).slice(0, 120)}` : ''}${r.status >= 300 ? ` (reply ${r.status})` : ''}`)
+      }
+      // A request that waits 20 s with no card and no yes from the app: on a Mac the run would sit
+      // there. Answered here so the case goes on, and counted against it.
+      for (const q of list((await T.call('GET', `/api/session/${sid}/permission`)).json)) {
+        if (!q?.id || cards.answers.some((a) => a.card.id === q.id)) continue
+        if (!waiting.has(q.id)) waiting.set(q.id, Date.now())
+        if (Date.now() - waiting.get(q.id) < 20_000) continue
+        waiting.delete(q.id)
+        const r = await T.call('POST', `/api/session/${sid}/permission/${q.id}/reply`, { decision: 'once' })
+        const what = `${q.action ?? '?'} ${String((q.resources ?? []).join(' ') || q.metadata?.command || '').slice(0, 120)}`
+        cards.unseen.push(what)
+        answered.push(`no card and no yes for 20 s, answered by the runner: ${what}${r.status >= 300 ? ` (reply ${r.status})` : ''}`)
+      }
+    } else
     for (const q of list((await T.call('GET', `/api/session/${sid}/permission`)).json)) {
       if (!q?.id) continue
+      const card = T.cards?.card(sid)
       const r = await T.call('POST', `/api/session/${sid}/permission/${q.id}/reply`, { decision: 'once' })
+      if (card?.id === q.id) cards.answers.push({ card, status: r.status })
       answered.push(`yes, once: ${q.action ?? '?'} ${String(q.resource ?? q.metadata?.command ?? '').slice(0, 120)}${r.status >= 300 ? ` (reply ${r.status})` : ''}`)
     }
     for (const f of list((await T.call('GET', `/api/session/${sid}/form`)).json)) {
@@ -422,11 +557,20 @@ export async function ask(T, sid, text, limitMs) {
     }
     const turns = (await messagesOf(T, sid))
     const t = turns[turns.length - 1]
-    if (turns.length > before && t && t.status !== 'working') return { ...t, answered }
+    if (turns.length > before && t && t.status !== 'working') {
+      if (T.cards) {
+        // What the person sees once the answer is there: looked at 3 s after the turn ended.
+        await sleep(3000)
+        cards.left = T.cards.card(sid)
+        cards.seen = T.cards.seen(sid)
+      }
+      return { ...t, answered, cards }
+    }
   }
   await T.call('POST', `/api/session/${sid}/interrupt`, {}).catch(() => {})
   const turns = (await messagesOf(T, sid))
-  return { ...(turns[turns.length - 1] ?? { texts: [], tools: [] }), status: 'timeout', answered }
+  if (T.cards) cards.seen = T.cards.seen(sid)
+  return { ...(turns[turns.length - 1] ?? { texts: [], tools: [] }), status: 'timeout', answered, cards }
 }
 
 /** A new conversation, as the website makes one with Lots of permissions on (the default). */

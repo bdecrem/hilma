@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, asksToPublishInWords, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, ask, asksToPublishInWords, cardFaults, rawPublishingCard, websiteCards, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -573,5 +573,96 @@ test('the commands the runner starts do not block it (OLA-281)', async () => {
   assert.deepEqual([r.status, r.stdout.trim(), r.stderr.trim()], [3, 'out', 'err'])
   assert.ok(ticks >= 5, `the process kept running while the command ran (${ticks} ticks)`)
   assert.equal((await runChild('/bin/sleep', ['5'], { timeout: 200 })).status, null)
+})
+
+// OLA-250, Nov 22, Mac 0.1 (33), "publish it again": after the answer a card "Ola wants to run a
+// command: Run publish.py" (the raw python3 command) came up, for a step that had already run, and
+// its Yes gave "Your answer did not reach the machine. Try again." The runner answered every waiting
+// request on the server and never saw the app's screen. Now it reads the cards a person sees.
+const nov22Card = { id: 'per_204823895001CIqQdWlkIkCyX9', action: 'shell', title: 'Ola wants to run a command', command: 'python3 /Users/admin/ola-drive/run-48700/home/Library/Ola/skills/publish/scripts/publish.py live https://sites.ola.cx/bart/ --expect site 2>&1', publishCard: false }
+const publishCard = { id: 'per_pub', action: 'shell', title: 'Ola wants to publish this on the web', command: 'base.css', publishCard: true }
+
+test('OLA-250: the Nov 22 screen fails the case; a clean one passes', () => {
+  const bad = cardFaults({ seen: [publishCard, nov22Card], left: { ...nov22Card, problem: 'Your answer did not reach the machine. Try again.' }, answers: [{ card: publishCard, status: 200 }, { card: nov22Card, status: 404 }] })
+  assert.ok(bad.some((f) => /still up after the answer: "Ola wants to run a command"/.test(f)), bad.join('\n'))
+  assert.ok(bad.some((f) => /publishing step was shown as a raw command card/.test(f)), bad.join('\n'))
+  assert.ok(bad.some((f) => /did not reach the machine \(404\)/.test(f)), bad.join('\n'))
+  assert.deepEqual(cardFaults({ seen: [publishCard], left: null, answers: [{ card: publishCard, status: 200 }] }), [])
+  assert.deepEqual(cardFaults(undefined), [])
+  // The publish card itself, a take-down card and a card for another command are not raw publishing cards.
+  assert.equal(rawPublishingCard(publishCard), false)
+  assert.equal(rawPublishingCard({ title: 'Ola wants to run a command', command: 'ls -la', publishCard: false }), false)
+  assert.equal(rawPublishingCard({ title: 'Ola wants to run a command', command: 'ola-publish publish site --name bart --fingerprint 51', publishCard: false }), true, 'the publish command without its card is raw too')
+  assert.ok(cardFaults({ unseen: ['shell ls'] })[0].includes('no card and no yes'))
+})
+
+test('OLA-250: on the Mac the runner answers only the cards the app shows, and reads what is left after the answer', async () => {
+  // A stand-in: one request the app answers by itself (no card), then the publish card, then the
+  // turn ends with a stale card left up (the Nov 22 screen).
+  let polls = 0
+  const replies = []
+  const pending = [{ id: 'per_ls', action: 'shell', resources: ['ls'] }]
+  let card = null
+  const T = {
+    runtime: 'local',
+    cards: { app: true, async turn() {}, card: () => card, seen: () => [publishCard, nov22Card] },
+    async call(method, p, body) {
+      if (method === 'POST' && p.endsWith('/reply')) {
+        const id = p.split('/').at(-2)
+        replies.push(id)
+        return { status: id === 'per_pub' ? 200 : 404, json: null, text: '' }
+      }
+      if (method === 'POST') return { status: 200, json: {}, text: '' }
+      if (p.includes('/permission')) return { status: 200, json: { data: pending }, text: '' }
+      if (p.includes('/form')) return { status: 200, json: { data: [] }, text: '' }
+      // The messages: none before the request; the turn ends at the fourth read.
+      polls++
+      if (polls === 1) return { status: 200, json: { data: [] }, text: '' }
+      if (polls === 2) card = publishCard
+      if (polls === 3) card = nov22Card
+      const ended = polls >= 4
+      return { status: 200, json: { data: [{ type: 'user', text: 'publish it again', time: { created: 1 } }, ...(ended ? [{ type: 'assistant', content: [{ type: 'text', text: 'https://sites.ola.cx/bart/' }], time: { created: 2 } }, { type: 'idle', outcome: 'succeeded', time: { created: 3 } }] : [])] }, text: '' }
+    },
+  }
+  const turn = await ask(T, 'ses_a', 'publish it again', 60_000)
+  assert.equal(turn.status, 'done')
+  assert.ok(!replies.includes('per_ls'), 'the runner answered a request the app answers by itself')
+  assert.ok(replies.includes('per_pub'), 'the publish card was not answered')
+  assert.equal(turn.cards.left?.id, nov22Card.id)
+  const faults = cardFaults(turn.cards)
+  assert.ok(faults.some((f) => /still up after the answer/.test(f)) && faults.some((f) => /raw command card/.test(f)), faults.join('\n'))
+})
+
+test('OLA-250: in the cloud the runner reads the website\'s own cards from the event stream', async () => {
+  // A stand-in event stream: the publish card asked and answered, then a step's question after it ran.
+  const s = 'ses_w'
+  const live = 'python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/askcases/ 2>&1'
+  const events = [
+    { type: 'session.execution.started', data: { sessionID: s } },
+    { type: 'session.tool.input.started', data: { sessionID: s, id: 't1', name: 'shell' } },
+    { type: 'session.tool.called', data: { sessionID: s, id: 't1', input: { command: 'ola-publish site --files index.html' } } },
+    { type: 'permission.asked', data: { sessionID: s, id: 'p1', action: 'shell', resources: ['ola-publish site --files index.html'], source: { id: 't1' } } },
+    { type: 'permission.replied', data: { sessionID: s, requestID: 'p1', reply: 'once' } },
+    { type: 'session.tool.success', data: { sessionID: s, id: 't1', content: [], metadata: { exit: 0 } } },
+    { type: 'session.tool.input.started', data: { sessionID: s, id: 't2', name: 'shell' } },
+    { type: 'session.tool.called', data: { sessionID: s, id: 't2', input: { command: live } } },
+    { type: 'permission.asked', data: { sessionID: s, id: 'p2', action: 'shell', resources: [live], source: { id: 't2' } } },
+  ]
+  let push
+  const body = new ReadableStream({ start: (c) => (push = c) })
+  const w = websiteCards(async () => ({ status: 200, body }))
+  const sent = w.turn(s, 'publish it again')
+  await new Promise((r) => setTimeout(r, 50))
+  await sent
+  for (const e of events) push.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(e)}\n\n`))
+  await new Promise((r) => setTimeout(r, 100))
+  assert.deepEqual(w.seen(s).map((c) => [c.id, c.publishCard]), [['p1', true], ['p2', false]])
+  assert.equal(w.card(s)?.id, 'p2', 'the step\'s card is up while its step waits')
+  assert.ok(rawPublishingCard(w.card(s)), 'publish.py as a raw command card is caught')
+  // The run ends: the website takes the card away (OLA-250), so nothing is left after the answer.
+  push.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'session.execution.succeeded', data: { sessionID: s } })}\n\n`))
+  await new Promise((r) => setTimeout(r, 50))
+  assert.equal(w.card(s), null)
+  push.close()
 })
 

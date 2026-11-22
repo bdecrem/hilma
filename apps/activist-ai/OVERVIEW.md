@@ -111,7 +111,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 |---|---|---|---|
 | Front desk (sign-in, platform database, roles, audit, files, the opencode door to each VM) | `frontdesk/` | the staging machine, launchd `cx.ola.frontdesk`, 127.0.0.1:4700 | README, "The front desk" |
 | Web app | `web/` | built into `web/dist`, served by the front desk | `web/README.md` |
-| Sealed workspaces (image, `ws.mjs`, door, desk, the `ola-*` tools inside) | `workspace/` | VMs on the staging machine, image `ola-workspace:2.3.2-67` (`workspace/ws.mjs` IMAGE) | README, "The workspace" |
+| Sealed workspaces (image, `ws.mjs`, door, desk, the `ola-*` tools inside) | `workspace/` | VMs on the staging machine, image `ola-workspace:2.3.2-69` (`workspace/ws.mjs` IMAGE) | README, "The workspace" |
 | Model gateway (callers, caps, web search, specialists, fallbacks, batch lane) | `gateway/` | launchd `cx.ola.gateway`, 127.0.0.1:4180 and one socket per workspace | README, "The gateway" |
 | The address and TLS | `ops/tls.mjs`, `ops/cert.mjs`, `ops/dns.mjs`, `ops/tunnel.mjs` | `cx.ola.tls`, `cx.ola.tunnel` on the staging machine; certificate renewal job on the iMac | README, "The address: app.ola.cx" |
 | Skills (chart, workbook, report, designer, app-designer, sound, publish, batch-quotes) | `skills/` | read-only in the image at `/opt/ola/skills`; bundled in the Mac app | `skills/README.md` |

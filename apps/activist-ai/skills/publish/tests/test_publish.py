@@ -148,6 +148,11 @@ case("at Ola's address from a Mac: straight from the preview to the publish in t
      and "do not end your turn after the preview" in mac and "same turn" in mac)
 case("the rules: never end a turn with a question about publishing at Ola's address",
      "never end your turn with a\n   question about publishing" in skill)
+# OLA-250, Nov 22 (Mac 0.1 (33), "publish it again"): after ola-publish publish, whose own lines already say
+# whether the address shows the new page, Ola ran publish.py live; a card for that step came up after the
+# answer and read to the person as publishing a second time. At Ola's address nothing runs after the publish.
+case("at Ola's address from a Mac: nothing runs after ola-publish publish (its own lines say live)",
+     "publish.py live" not in mac.replace("Do not run `publish.py live`", "") and "Do not run `publish.py live`" in mac)
 # OLA-250, Nov 22: "**https://sites.ola.cx/bart/**" in the answer; copied, the marks come along.
 case("the address is written bare, never in bold", "## The address" in skill and "never in bold" in skill)
 

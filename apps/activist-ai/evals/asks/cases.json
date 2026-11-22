@@ -623,7 +623,7 @@
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-250",
-        "what": "The neighbour of publish-bart: after a change, the person asks for the page to be published again, in the same conversation (OLA-230 made it work in a cloud project; with Ola working on the Mac it had never been asked as chat)."
+        "what": "The neighbour of publish-bart: after a change, the person asks for the page to be published again, in the same conversation (OLA-230 made it work in a cloud project; with Ola working on the Mac it had never been asked as chat). Nov 22 (OLA-250, Mac 0.1 (33)): the page went up and the answer showed, then a card Run publish.py came up and could not be answered; the runner now reads the cards the app and the website show, and fails on a card still up after the answer or a publishing step shown as a raw command card."
       }
     },
     {
