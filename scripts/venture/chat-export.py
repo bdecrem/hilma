@@ -12,11 +12,45 @@ output, no thinking) to apps/venture/private/TERMINAL-CHAT.md and pushes that on
 venture_docs as "terminal-chat". The last 60,000 characters only: the newest lines matter.
 Headless runs do nothing. Never prints anything (a hook's output would land in the session).
   test: python3 scripts/venture/chat-export.py --dry < hook.json
+        python3 scripts/venture/chat-export-test.py
+
+It also stores this machine's counts for the evening review, at most once every 15 minutes, in the
+background: what Bart typed (steers.mjs --export) and the lead's model use (delegable.mjs --export).
+OLA-274, Nov 20: those were stored only by sync.mjs push, so the M1 iMac, where Bart typed 15 times
+that day and nobody ran a push, had no count and the review named it missing; it was off the
+Stanford network, so nothing could read it from outside either. A session there now stores its
+counts by itself after every turn.
 """
-import json, os, re, subprocess, sys
+import json, os, re, subprocess, sys, tempfile, time
 
 DRY = "--dry" in sys.argv
 KEEP = 60_000
+EVERY = 15 * 60
+EXPORTS = ("steers.mjs", "delegable.mjs")
+
+
+def export_counts(root, now=None, stamp_dir=None):
+    """Starts the two exports in the background when the last start was EVERY seconds ago or more.
+    Returns the scripts it started (or would start, with DRY)."""
+    now = time.time() if now is None else now
+    stamp = os.path.join(stamp_dir or tempfile.gettempdir(), "venture-export-" + re.sub(r"[^A-Za-z0-9]", "_", root))
+    try:
+        if now - os.path.getmtime(stamp) < EVERY:
+            return []
+    except OSError:
+        pass
+    started = []
+    for name in EXPORTS:
+        script = os.path.join(root, "scripts/venture", name)
+        if not os.path.exists(script):
+            continue
+        started.append(name)
+        if not DRY:
+            subprocess.Popen(["node", script, "--export"], cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    if started:
+        open(stamp, "w").close()
+        os.utime(stamp, (now, now))
+    return started
 
 
 def main():
@@ -31,6 +65,9 @@ def main():
     private = os.path.join(root, "apps/venture/private")
     if not os.path.isdir(private) or not os.path.exists(path):
         return
+    started = export_counts(root)
+    if DRY:
+        print("exports started:", ", ".join(started) or "none (one ran less than 15 minutes ago)")
     out = []
     for line in open(path):
         try:

@@ -160,7 +160,7 @@ if (!args.includes('--local')) {
       if (h === HOST) continue
       const st = stored[h]
       const lastSaid = (typed[h] ?? []).map((m) => m.at).filter(Boolean).sort().at(-1) ?? null
-      if (!st) { if ((typed[h] ?? []).length) missing.push({ host: h, why: `Bart typed there ${typed[h].length} time(s) that day and it stored no count (run sync.mjs push or delegable.mjs --export there)` }); continue }
+      if (!st) { if ((typed[h] ?? []).length) missing.push({ host: h, why: `Bart typed there ${typed[h].length} time(s) that day and it stored no count: its checkout is older than the terminal hook that stores the count after every turn (OLA-274); a git pull there fixes it for good, sync.mjs push there fixes the day` }); continue }
       counts.push(st)
       machines.push({ host: h, live: false, at: st.at, files: st.files, ...(lastSaid && lastSaid > st.at ? { upTo: st.at, lastSaid } : {}) })
     }
