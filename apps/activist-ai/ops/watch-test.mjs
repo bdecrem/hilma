@@ -162,6 +162,12 @@ const at = (hhmm, day = 17) => {
   const [h, m] = hhmm.split(':').map(Number)
   return new Date(Date.UTC(2026, 10, day, h + 8, m)).toISOString()
 }
+// Today's Pacific date as a day of November 2026 (Dec 1 is 31): for a test that compares the fake
+// clock with a certificate made by the real one.
+const TODAY = (() => {
+  const t = new Date(Date.now() - 8 * 3_600_000)
+  return 17 + Math.round((Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - Date.UTC(2026, 10, 17)) / 86_400_000)
+})()
 const all = { out: '' }
 function watch(now, args = [], extra = {}) {
   return new Promise((resolve) => {
@@ -299,14 +305,18 @@ test('a problem that starts and ends at night is not texted; it is in the mornin
 })
 
 test('the public address: the password prompt and a certificate with more than 14 days', async () => {
+  // The certificates are made now, by the real clock (SHORT runs out 10 days from today), so this
+  // test runs on today's date: on the fixed Nov 17 the short one had 15 days left once the real
+  // date passed Nov 22, 14:06, and every update was refused (OLA-284 run, Nov 22).
+  const day = TODAY
   up.prompt = false // something answers, but not our door
-  await watch(at('14:00'))
-  assert.deepEqual((await watch(at('14:02'))).sent, ['Ola alarm: The site (app.ola.cx) does not answer from the internet.'])
+  await watch(at('14:00', day))
+  assert.deepEqual((await watch(at('14:02', day))).sent, ['Ola alarm: The site (app.ola.cx) does not answer from the internet.'])
   up.prompt = true
   tlsServer.setSecureContext({ ...SHORT })
   // It answers again (the all-clear), but the certificate is short: one run so far, then the alarm.
-  assert.deepEqual((await watch(at('14:04'))).sent, ['Ola: back to normal. The site answers from the internet again.'])
-  const r2 = await watch(at('14:06'))
+  assert.deepEqual((await watch(at('14:04', day))).sent, ['Ola: back to normal. The site answers from the internet again.'])
+  const r2 = await watch(at('14:06', day))
   assert.equal(r2.sent.length, 1)
   assert.match(r2.sent[0], /^Ola alarm: The site's certificate runs out in \d+ days and has not renewed\.$/)
   assert.ok(state().warnings.renewal, 'the served certificate under 21 days is a warning too')
