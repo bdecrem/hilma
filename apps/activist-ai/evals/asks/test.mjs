@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, asksToPublishInWords, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, asksToPublishInWords, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -558,3 +558,20 @@ test('OLA-244: noran: judges only the steps of the request itself, never what wa
   assert.ok(one && one.must.includes(re) && one.before.length === 1, 'the case is in the list')
   assert.ok(new RegExp(one.must[1].slice(5), 'i').test('Done: the page now says Bart was here. The address still shows the earlier version; say "publish it again" to put the change up.'))
 })
+
+// OLA-281: the runner's commands never block it while it holds connections to Ola. With spawnSync a
+// command longer than the server's idle close left a dead connection in the pool, and the next try's
+// first POST failed ("fetch failed", ECONNRESET), 9 times on Nov 20.
+test('the commands the runner starts do not block it (OLA-281)', async () => {
+  // Never called here: on the test server they act on the live made-up account.
+  for (const f of [live, inProject, emptyProject, takeDownSites, signOutAccount]) assert.equal(f.constructor.name, 'AsyncFunction', `${f.name} is async`)
+  assert.doesNotMatch(readFileSync(path.join(HERE, 'lib.mjs'), 'utf8').match(/export async function live[\s\S]*?\n}\n/)[0], /spawnSync/)
+  let ticks = 0
+  const tick = setInterval(() => ticks++, 50)
+  const r = await runChild('/bin/sh', ['-c', 'sleep 0.6; echo out; echo err >&2; exit 3'])
+  clearInterval(tick)
+  assert.deepEqual([r.status, r.stdout.trim(), r.stderr.trim()], [3, 'out', 'err'])
+  assert.ok(ticks >= 5, `the process kept running while the command ran (${ticks} ticks)`)
+  assert.equal((await runChild('/bin/sleep', ['5'], { timeout: 200 })).status, null)
+})
+

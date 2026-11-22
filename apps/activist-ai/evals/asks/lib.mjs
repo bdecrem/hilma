@@ -44,10 +44,29 @@ function liveEnv() {
   }
   return env
 }
+// OLA-281: every command the runner starts while it holds connections to Ola runs without blocking
+// this process. Taking the pages down took ~20 s in spawnSync; meanwhile the web server closed the
+// kept-open connections (5 s idle) and nothing here could read the close, so the next try's first
+// request went out on a dead connection: "fetch failed" (ECONNRESET), 4 times on ebdd4110 and 5 on
+// da438040. Against app.ola.cx (Nov 22): after an 18 s blocking child 5 of 144 requests were reset,
+// after the same child awaited 0 of 128. Browsers never block their network stack this way (54 of 54
+// in Chromium and in WebKit, after idle gaps and an 18 s busy page): a person does not meet it.
+export function runChild(cmd, args, { cwd, env, timeout = 600_000 } = {}) {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.setEncoding('utf8').on('data', (d) => (stdout += d))
+    child.stderr.setEncoding('utf8').on('data', (d) => (stderr += d))
+    const timer = setTimeout(() => child.kill('SIGKILL'), timeout)
+    child.on('error', (e) => (clearTimeout(timer), resolve({ status: null, stdout, stderr: stderr || e.message })))
+    child.on('close', (status) => (clearTimeout(timer), resolve({ status, stdout, stderr })))
+  })
+}
 /** Runs one of the live release's tools (frontdesk/admin.mjs, workspace/ws.mjs). Output returned, never printed. */
-export function live(tool, args, { ok = false } = {}) {
+export async function live(tool, args, { ok = false } = {}) {
   if (!existsSync(LIVE)) throw new Error(`the live server's release is not on this machine (${LIVE}): run the asks on the test server`)
-  const r = spawnSync(process.execPath, [path.join(LIVE, tool), ...args], { cwd: LIVE, env: liveEnv(), encoding: 'utf8', timeout: 600_000 })
+  const r = await runChild(process.execPath, [path.join(LIVE, tool), ...args], { cwd: LIVE, env: liveEnv() })
   if (r.status !== 0 && !ok) throw new Error(`${tool} ${args[0]}: ${(r.stderr || r.stdout || '').trim().split('\n').pop()}`)
   return (r.stdout || '').trim()
 }
@@ -55,14 +74,14 @@ export const admin = (...a) => live('frontdesk/admin.mjs', a)
 
 /** The person and project exist, the project is empty, and the person has a fresh password (returned). */
 export async function prepareAccount() {
-  const listed = admin('list')
-  if (!new RegExp(`^person ${WHO} `, 'm').test(listed)) admin('add-person', WHO, '--name', WHO_NAME)
+  const listed = await admin('list')
+  if (!new RegExp(`^person ${WHO} `, 'm').test(listed)) await admin('add-person', WHO, '--name', WHO_NAME)
   if (new RegExp(`^person ${WHO} .*\\bsuspended`, 'm').test(listed)) throw new Error(`${WHO} is suspended on the live server; nothing here lifts that`)
   if (new RegExp(`^person ${WHO} .*\\badmin`, 'm').test(listed)) throw new Error(`${WHO} is an admin; the asks run as an ordinary person`)
   if (!new RegExp(`^workspace ${PROJECT} `, 'm').test(listed)) {
-    admin('create-workspace', PROJECT, '--name', 'Made-up asks', '--team', TEAM, '--team-name', 'Made-up Asks', '--owner', WHO, '--memory', '2g', '--disk', '2g', '--cpus', '2')
+    await admin('create-workspace', PROJECT, '--name', 'Made-up asks', '--team', TEAM, '--team-name', 'Made-up Asks', '--owner', WHO, '--memory', '2g', '--disk', '2g', '--cpus', '2')
   }
-  const link = admin('reset-password', WHO, '--hours', '1').split(/\s+/).find((w) => w.includes('/#/reset/'))
+  const link = (await admin('reset-password', WHO, '--hours', '1')).split(/\s+/).find((w) => w.includes('/#/reset/'))
   if (!link) throw new Error('no password link from the admin command')
   const password = `made up ${randomBytes(12).toString('base64url')} asks`
   const r = await post('/api/auth/reset', { token: link.split('/#/reset/')[1], password })
@@ -89,21 +108,21 @@ async function post(p, body, cookie) {
 }
 
 /** Takes down every page of the made-up person's (the project's site and their Mac sites). */
-export function takeDownSites() {
+export async function takeDownSites() {
   const done = []
   // `admin sites` lines: "<name> project <url> …", "<name> mac site of <handle> <url> …",
   // "<name> held by <handle> nothing up".
-  for (const line of admin('sites').split('\n').map((l) => l.trim())) {
+  for (const line of (await admin('sites')).split('\n').map((l) => l.trim())) {
     const name = line.split(/\s+/)[0]
     if (name === PROJECT && /^\S+\s+project\s/.test(line)) {
-      admin('unpublish', PROJECT)
+      await admin('unpublish', PROJECT)
       done.push(`${SITES}/${PROJECT}/ taken down`)
     } else if (line.includes(` mac site of ${WHO} `)) {
-      admin('unpublish', name)
-      admin('site-release', name, '--free')
+      await admin('unpublish', name)
+      await admin('site-release', name, '--free')
       done.push(`${SITES}/${name}/ taken down, the name given up`)
     } else if (line.includes(` held by ${WHO} `) && line.includes('nothing up')) {
-      admin('site-release', name, '--free')
+      await admin('site-release', name, '--free')
       done.push(`${name}: the name given up`)
     }
   }
@@ -111,23 +130,23 @@ export function takeDownSites() {
 }
 
 /** Signs the person out everywhere (sessions and Macs) and stops the project's computer. */
-export function signOutAccount() {
-  const said = admin('revoke-sessions', WHO)
+export async function signOutAccount() {
+  const said = await admin('revoke-sessions', WHO)
   // It would stop itself after 30 idle minutes.
-  live('workspace/ws.mjs', ['stop', PROJECT], { ok: true })
+  await live('workspace/ws.mjs', ['stop', PROJECT], { ok: true })
   return `${said}; the project's computer stopped`
 }
 
 /** Empties the project's folder (its database and Ola's own record stay), so a case starts from nothing. */
-export function emptyProject() {
-  live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
-  const r = spawnSync('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'], { encoding: 'utf8' })
+export async function emptyProject() {
+  await live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
+  const r = await runChild('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'])
   if (r.status !== 0) throw new Error(`emptying the project: ${(r.stderr || '').trim().slice(0, 200)}`)
 }
 
 /** Runs a shell line inside the project's computer (a case's setup). */
-export function inProject(script) {
-  const r = spawnSync('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', script], { encoding: 'utf8' })
+export async function inProject(script) {
+  const r = await runChild('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', script])
   if (r.status !== 0) throw new Error(`in the project: ${(r.stderr || r.stdout || '').trim().slice(0, 200)}`)
   return r.stdout
 }
@@ -181,21 +200,21 @@ export function cloudTransport({ cookie, csrf }) {
       if (res.status !== 200) throw new Error(`listing the project's files: ${res.status}`)
       return ((await res.json()).files ?? []).map((f) => f.path)
     },
-    wrote(rel, { text, base64 }) {
+    async wrote(rel, { text, base64 }) {
       const b64 = base64 ?? Buffer.from(text).toString('base64')
       const safe = rel.replace(/[^A-Za-z0-9._/-]/g, '')
-      inProject(`mkdir -p "$(dirname '/work/${safe}')" && echo ${b64} | base64 -d > '/work/${safe}'`)
+      await inProject(`mkdir -p "$(dirname '/work/${safe}')" && echo ${b64} | base64 -d > '/work/${safe}'`)
     },
-    claudeWrote(rel, text) {
+    async claudeWrote(rel, text) {
       // Recorded the way the server records a Claude run (frontdesk/claude.mjs + madeby.mjs: begin,
       // the file written, end), without running Claude: what the case tests is Ola's answer.
       const turn = `asks-${randomBytes(4).toString('hex')}`
       const b64 = Buffer.from(text).toString('base64')
-      inProject(`ola-db made-by begin --turn ${turn} --engine claude --model claude-opus-5-5 && echo ${b64} | base64 -d > '/work/${rel.replace(/'/g, '')}' && ola-db made-by end --turn ${turn} --model claude-opus-5-5`)
+      await inProject(`ola-db made-by begin --turn ${turn} --engine claude --model claude-opus-5-5 && echo ${b64} | base64 -d > '/work/${rel.replace(/'/g, '')}' && ola-db made-by end --turn ${turn} --model claude-opus-5-5`)
     },
     // The project's record of who made its files (ola-db made-by --json), read in the VM (OLA-303).
-    madeBy(rel = null) {
-      return JSON.parse(inProject(`ola-db made-by --json --limit 50${rel ? ` '/work/${rel.replace(/'/g, '')}'` : ''}`) || '[]')
+    async madeBy(rel = null) {
+      return JSON.parse(await inProject(`ola-db made-by --json --limit 50${rel ? ` '/work/${rel.replace(/'/g, '')}'` : ''}`) || '[]')
     },
   }
 }
@@ -212,7 +231,7 @@ export async function startLocal(password, { build = true } = {}) {
   const kit = path.join(AI, 'apple/OlaKit')
   const scratch = path.join(STATE, 'olakit-build')
   if (build) {
-    const b = spawnSync('/usr/bin/swift', ['build', '--product', 'olakit-selftest', '--scratch-path', scratch], { cwd: kit, encoding: 'utf8', timeout: 900_000 })
+    const b = await runChild('/usr/bin/swift', ['build', '--product', 'olakit-selftest', '--scratch-path', scratch], { cwd: kit, timeout: 900_000 })
     if (b.status !== 0) throw new Error(`building olakit-selftest: ${(b.stderr || b.stdout || '').trim().split('\n').slice(-3).join(' ')}`)
   }
   const bin = path.join(scratch, 'debug/olakit-selftest')

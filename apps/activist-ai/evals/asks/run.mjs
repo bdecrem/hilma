@@ -151,14 +151,13 @@ try {
         }
         // A page from this try is taken down, so the next try has to publish its own.
         try {
-          takeDownSites()
+          await takeDownSites()
         } catch (e) {
           say(`  taking the try's pages down: ${e.message}`)
         }
-        // OLA-250: taking the pages down blocks for ~20 s, and the local server resets the socket
-        // left open meanwhile; the next try's first call (a POST, never sent again) broke on it with
-        // ECONNRESET after every pass on Nov 20. A read first (tried again on a reset) gets a fresh one.
-        await T.call('GET', '/api/session').catch(() => {})
+        // OLA-250 then OLA-281: taking the pages down used to block this process for ~20 s, so it
+        // could not see the server close its kept-open connections, and the next try's first POST
+        // broke with ECONNRESET. Every command is awaited now (lib.mjs runChild); no read first.
       }
       await yieldToDeploy()
       if (usedUp) {
@@ -180,7 +179,7 @@ try {
   if (local) await local.stop().catch(() => {})
   if (password) {
     try {
-      for (const d of [...takeDownSites(), signOutAccount()]) say(`cleanup: ${d}`)
+      for (const d of [...(await takeDownSites()), await signOutAccount()]) say(`cleanup: ${d}`)
     } catch (e) {
       say(`cleanup FAILED: ${e.message}`)
     }
@@ -210,11 +209,11 @@ function row(c, place, r) {
 }
 
 async function runCase(T, c) {
-  if (T.runtime === 'cloud') emptyProject()
+  if (T.runtime === 'cloud') await emptyProject()
   else T.empty()
   for (const step of c.setup ?? []) {
-    if (step.claudeWrote) T.claudeWrote(step.claudeWrote.path, step.claudeWrote.text)
-    else if (step.wrote) T.wrote(step.wrote.path, step.wrote.from ? { base64: readFileSync(path.join(HERE, 'fixtures', path.basename(step.wrote.from))).toString('base64') } : step.wrote)
+    if (step.claudeWrote) await T.claudeWrote(step.claudeWrote.path, step.claudeWrote.text)
+    else if (step.wrote) await T.wrote(step.wrote.path, step.wrote.from ? { base64: readFileSync(path.join(HERE, 'fixtures', path.basename(step.wrote.from))).toString('base64') } : step.wrote)
     else throw new Error(`unknown setup step ${JSON.stringify(step)}`)
   }
   const before = await T.listFiles()
