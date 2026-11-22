@@ -1,7 +1,9 @@
 // The automatic checks' decisions (OLA-84, ops/ci.mjs): node --test ops/ci-test.mjs. No git, no VM.
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import { coveredByDeploy, decide, ghStatus, opensIssue, parseDeploys, parseSuites } from './ci.mjs'
+import { BUILDER_CONTAINERFILE_MAX, builderContainerfile } from '../workspace/ws.mjs'
 
 const A = 'a'.repeat(40)
 const B = 'b'.repeat(40)
@@ -79,4 +81,14 @@ test('a signed deploy line (OLA-85) is read the same way', () => {
   const d = parseDeploys(`2026-11-21T09:00:00.000Z deployed ${A.slice(0, 12)} (origin/main) (signed tag ola-deploy/${A.slice(0, 12)}); turn 10 of 10, gateway 47 of 47`)
   assert.equal(d[A.slice(0, 12)].ok, true)
   assert.deepEqual(parseSuites(d[A.slice(0, 12)].suitesText), { turn: '10 of 10', gateway: '47 of 47' })
+})
+
+// OLA-266/OLA-283: Apple's builder closed every image build at once ('Stream unexpectedly closed')
+// when the Containerfile it was sent passed about 15 KB, and five deploys were refused on Nov 20.
+// This runs on every change, so the file is caught growing back here, not at an update.
+test('the Containerfile the image builder is sent stays well under its 15 KB limit', () => {
+  const sent = builderContainerfile(readFileSync(new URL('../workspace/Containerfile', import.meta.url), 'utf8'))
+  assert.ok(!/^\s*#/m.test(sent), 'comment lines are stripped')
+  const size = Buffer.byteLength(sent)
+  assert.ok(size < BUILDER_CONTAINERFILE_MAX, `the Containerfile sent to the builder is ${size} bytes; above about 15 KB Apple's builder refuses it: shorten it or split steps into a script`)
 })

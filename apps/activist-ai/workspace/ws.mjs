@@ -1372,8 +1372,14 @@ function stageContext() {
   // without comments, 4,455, built); the comments, one per image version, had grown past that.
   // Comment lines are nothing to the build, and the image is the same.
   const cf = path.join(ctx, 'Containerfile')
-  writeFileSync(cf, readFileSync(cf, 'utf8').split('\n').filter((l) => !/^\s*#/.test(l)).join('\n'))
+  writeFileSync(cf, builderContainerfile(readFileSync(cf, 'utf8')))
   return ctx
+}
+// What the builder is sent, and the size it must stay under (OLA-266: the ops/ci-test.mjs test
+// fails at 12 KB, before a deploy meets the builder's limit of about 15 KB).
+export const BUILDER_CONTAINERFILE_MAX = 12 * 1024
+export function builderContainerfile(text) {
+  return text.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n')
 }
 export function buildImage({ tries = 3 } = {}) {
   const tmp = `${IMAGE}-building`
