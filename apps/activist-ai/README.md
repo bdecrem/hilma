@@ -2172,7 +2172,13 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   person's last message, hold opencode's `skill` tool call for `designer` or `app-designer`. AGENTS.md
   has Ola load that skill before every page or app screen, so the turn's first request stays on
   `general` and the rest of the turn goes to `design`. No guessing from the person's words. The
-  same holds on the Mac: its engine sends the same requests through the same gateway.
+  same holds on the Mac: its engine sends the same requests through the same gateway. Since OLA-303
+  (Nov 21) two more cases are design work: a step that reads or runs the skill's own files
+  (`skills/designer/`, e.g. `look.py`, without loading the skill again), and the person's message
+  that answers a question the design work asked in the turn before (the question tool, or words
+  ending in "?"). On the live server the design model had asked "What should the block party page
+  say?" and from the answer on `general` built the whole page (5 design steps, then 27 general). The
+  log line says why: `design_why: skill | answer`.
 - **Limits**: the same caps, log line and weekly allowance as every name (usage `by_model.design`);
   the log line has `served: design` and `design: served | withheld | failed`, never content. The
   design model is never asked with less than 16,000 output tokens (with 50 and its reasoning on it
@@ -2201,6 +2207,16 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   it as "Inkling-2-Small, an outside open model that Ola uses for design work (not Ola's own
   model)", and AGENTS.md tells Ola to say it in those words. With no conversation id, or no answer
   from the gateway, no model is named. A caller's own token reads its own.
+- **The answer comes from the record** (OLA-303, Nov 21): asked "who changed it last?" a moment
+  after a change, Ola answered from a record read before that change's turn was written (a turn's
+  end and its corrections run while the next prompt is already in the VM), or from memory. Now a
+  request that asks who made or changed something (`ASKS_WHO` in `frontdesk/madeby.mjs`) first
+  ends every turn of the project that opencode no longer runs, waits for every end still being
+  written, reads the record (`ola-db made-by --json`) and puts the facts for the newest files in the
+  note in front of the request, in the words above; a conversation still working is said, not
+  hidden. The front desk's log line counts a turn's own design changes apart from changes it matched
+  to another conversation. Request tests: `record:made` / `record:last` check the answer against the
+  project's own record.
 - **The card**: design is no longer a reason for the "this may be a stretch" card before a run on
   the website (`web/src/lib/steps.ts`, `designBeforeRun: false`). The Mac and iPhone apps' copy of that
   check (OlaKit `Fallbacks.swift`) and the Mac's record of the design model wait for a new app build

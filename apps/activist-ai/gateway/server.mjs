@@ -52,7 +52,7 @@ import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
-import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, isDesignTurn, makeDesign, sessionOf, withNote } from './design.mjs'
+import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
 
 // ---------------------------------------------------------------- config
@@ -1151,7 +1151,10 @@ async function handle(req, res, rec, signal) {
   // and Ola is told to say that a stronger design model is available.
   let served = body.model
   let note = null
-  if (!isHosted && !probeBackup && C.models.has('design') && (body.model === 'design' || (body.model === 'general' && !isProbe && isDesignTurn(body.messages)))) {
+  const why = !isHosted && !probeBackup && C.models.has('design') && body.model === 'general' && !isProbe ? designWhy(body.messages) : null
+  if (!isHosted && !probeBackup && C.models.has('design') && (body.model === 'design' || why)) {
+    // Why it is design work, a word for the log line (OLA-303): skill, or answer (the person answering its question).
+    if (why) rec.design_why = why
     if (isProbe || design.may(who)) (served = 'design'), (rec.design = 'served')
     else if (C.models.has('general')) (served = 'general'), (note = WITHHELD), (rec.design = 'withheld')
     else return no(403, 'design work may not leave this machine', 'The design model is off for this project. Its owner can turn on the hosted model in Settings.', 'permission_error')

@@ -39,7 +39,7 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile|served):./.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
     for (const m of c.must.filter((m) => m.startsWith('says:'))) new RegExp(m.slice(5), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
@@ -96,6 +96,25 @@ test('site: one fresh read is not enough; every reread as a reader must show the
   const good = await checkMust('site:Bart was here', {}, answer, { ...opts, reader: async () => body('Bart was here') })
   assert.equal(good.ok, true, good.why)
   assert.match(good.why, /3 more reads/)
+})
+
+// OLA-303, Nov 21: the record said the design model changed the page last, Ola said its own model
+// did (and the other way round). record: checks the answer against the project's own record.
+test('record: the answer must name whoever the record says made or last changed the newest page (OLA-303)', async () => {
+  const rows = [
+    { path: 'index.html', how: 'changed', engine: 'ola', model: 'design:thinkingmachines/Inkling-2-Small', at: '2026-11-21T23:48:00Z' },
+    { path: 'index.html', how: 'created', engine: 'ola', model: null, at: '2026-11-21T23:45:00Z' },
+    { path: 'fonts/a.woff2', how: 'created', engine: 'ola', model: null, at: '2026-11-21T23:49:00Z' },
+  ]
+  const T = { madeBy: async (rel) => (rel ? rows.filter((r) => r.path === rel) : [rows[0], rows[2]]) }
+  const nov21 = 'Ola’s own open model changed it last — at 11:48 PM, just now (the warm palette edit). It was originally created at 11:45 PM, also by Ola’s own open model.'
+  const last = await checkMust('record:last', T, nov21)
+  assert.equal(last.ok, false, last.why)
+  assert.match(last.why, /last changed by Inkling-2-Small \(the design model\)/)
+  assert.equal((await checkMust('record:last', T, 'index.html was last changed by Inkling-2-Small, an outside open model that Ola uses for design work (not Ola’s own model).')).ok, true)
+  const made = await checkMust('record:made', T, nov21)
+  assert.equal(made.ok, true, made.why)
+  assert.equal((await checkMust('record:made', T, 'Inkling-2-Small, an outside open model, made it.')).ok, false, 'the record says Ola’s own model made it')
 })
 
 test('a conversation folds into turns as the apps fold it', () => {

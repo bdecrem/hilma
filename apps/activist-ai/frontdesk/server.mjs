@@ -39,7 +39,7 @@ import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { makeFaults } from './faults.mjs'
-import { NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
+import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
@@ -247,8 +247,13 @@ export function makeFrontDesk(cfg = config()) {
   const onPrompt = async (slug, sessionID, text) => {
     // A request that names Claude gets the fact of whether Claude can take it here (claude.mjs claudeNote, OLA-232).
     const wsRow = NAMES_CLAUDE.test(text ?? '') ? db.prepare('SELECT id, slug FROM workspaces WHERE slug = ?').get(slug) : null
-    const about = wsRow && claude ? await claude.noteFor({ ...wsRow, role: null }, text) : ''
-    // One note in front of the request (the apps strip one): the engines note with the fact added to it.
+    const claudeFact = wsRow && claude ? await claude.noteFor({ ...wsRow, role: null }, text) : ''
+    // A request that asks who made or changed something gets the record itself (OLA-303): every
+    // finished turn written first, then read here and put in front of the request, so the answer
+    // comes from the record and never from the model's memory or a record read too early.
+    const record = madeBy && ASKS_WHO.test(text ?? '') ? await madeBy.factsFor(slug, sessionID).catch((e) => (log(`${slug}: the record for a who-made question could not be read (${e?.message ?? e})`), '')) : ''
+    const about = [claudeFact, record].filter(Boolean).join(' ')
+    // One note in front of the request (the apps strip one): the engines note with the facts added to it.
     const join = (note) => (!about ? note : note ? note.replace(NOTE_CLOSE, ` ${about}${NOTE_CLOSE}`) : `${NOTE_OPEN}${about}${NOTE_CLOSE}\n\n`)
     if (!madeBy) return join('') + text
     const note = madeBy.noteFor(slug, sessionID, 'ola')

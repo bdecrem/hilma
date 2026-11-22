@@ -141,6 +141,52 @@ export function engineNote(turns, engine) {
   return `${NOTE_OPEN}Before this request, other engines worked in this conversation (not you): ${lines.join(' ')} Never say you did their work; ola-made-by <file> shows who made a file.${NOTE_CLOSE}\n\n`
 }
 
+// The answer to "who made that page?" comes from the record, not from the model (OLA-303, Nov 21).
+// The checker asked "who changed it last?" a moment after a change: Ola read the record before that
+// change's turn was written (its end and the corrections run while the next prompt is already in the
+// VM) and answered from it, or from memory. So when a request asks who made or changed something,
+// the front desk first finishes every turn of the project that is no longer running (and waits for
+// any being written), reads the record itself and puts the facts in the note in front of the
+// request, in the words Ola must use. Ola answers from that; nothing it remembers or guesses.
+export const ASKS_WHO = /\b(?:who|which (?:model|engine|agent|ai|one))\b[^?.!\n]{0,60}?\b(?:made|make|makes|built|build|created|create|wrote|write|written|designed|design|changed|change|edited|edit|did|drew|draw|updated|update|redid|redesigned)\b|\bdid (?:you|ola|claude|the [\w-]+ model|inkling[\w-]*) (?:make|build|create|write|design|change|edit|do|draw|update)\b|\b(?:made|built|created|designed|changed|edited|updated) (?:it|that|this|the [\w.-]+) last\b/i
+const PICKED = { 'deepseek-v4-pro': 'DeepSeek V4 Pro, an outside open model (not Ola’s own model)' }
+/** Who made one change, in the words Ola repeats (workspace/ola-db who_words, the same sentences). */
+export function whoWords(engine, model) {
+  if (engine === 'ola' && isDesignModel(model)) return `${designName(model)}, an outside open model that Ola uses for design work (not Ola’s own model)`
+  if (engine === 'ola' && model === 'unknown') return 'Ola, but which model made this change is not known (two conversations were working at the same time)'
+  if (engine === 'hosted' && PICKED[model]) return PICKED[model]
+  const name = { ola: 'Ola’s own open model', hosted: 'the hosted open model', claude: 'Claude' }[engine] ?? String(engine)
+  return name + (model && engine !== 'ola' ? ` (model ${model})` : '')
+}
+// The files a person means by "that page": the project's own things, not fonts, screenshots or copies.
+const NOT_A_THING = /(^|\/)(\.|fonts\/|node_modules\/)|\.(woff2?|ttf|otf|map|lock|pyc)$/i
+const MAX_FACT_FILES = 8
+const when = (iso) => {
+  const d = new Date(iso)
+  return Number.isFinite(d.getTime()) ? `${d.toISOString().slice(0, 16).replace('T', ' ')} UTC` : String(iso)
+}
+
+/**
+ * The facts for a who-made question: what the record says for the project's newest files, read now.
+ * `rows` are `ola-db made-by --json` (each file's last change), `history` the same files' rows newest
+ * first; `busy` is true when another conversation is still working (its changes are not in yet).
+ */
+export function recordFacts(rows, history, { busy = false } = {}) {
+  const head = 'The record of who made this project’s files, read by Ola’s server for this question just now (ola-made-by prints the same). Answer who made or changed a file from these lines and in their words, never from what you remember of the conversation:'
+  const things = (rows ?? []).filter((r) => typeof r?.path === 'string' && r.how !== 'deleted' && !NOT_A_THING.test(r.path))
+  if (!things.length) return `${head} there is no record of any file in this project yet. Say you do not know who made it; never say you made it.${busy ? ' Another conversation in this project is still working, and its changes are not in the record yet.' : ''}`
+  const lines = things.slice(0, MAX_FACT_FILES).map((last) => {
+    const mine = (history ?? []).filter((r) => r?.path === last.path)
+    const made = mine.filter((r) => r.how === 'created').at(-1)
+    const lastWords = `last changed ${when(last.at)} by ${whoWords(last.engine, last.model)}`
+    const name = last.path.replace(/[<>\n]/g, '').slice(0, 200)
+    if (made && made.at === last.at && made.engine === last.engine && made.model === last.model) return `${name}: made ${when(made.at)} by ${whoWords(made.engine, made.model)}, and not changed since.`
+    return `${name}: ${made ? `made ${when(made.at)} by ${whoWords(made.engine, made.model)}; ` : 'made before Ola kept a record; '}${lastWords}.`
+  })
+  const more = things.length - lines.length
+  return `${head} ${lines.join(' ')}${more > 0 ? ` (${more} older ${more === 1 ? 'file' : 'files'} not listed: ola-made-by <file> shows one.)` : ''}${busy ? ' Another conversation in this project is still working, and its changes are not in the record yet.' : ''}`
+}
+
 /** The record's JSON answer to `end`, reduced to what the note and the page need. */
 function filesOf(x) {
   return Array.isArray(x?.files) ? x.files.filter((f) => typeof f?.path === 'string' && ['created', 'changed', 'deleted'].includes(f.how)).map((f) => ({ path: f.path.slice(0, 300), how: f.how })) : []
@@ -154,6 +200,7 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
   const open = new Map() // slug -> Map(turn -> { session, engine, at, seen, silent, entry })
   const convs = new Map() // `${slug}:${session}` -> [{ engine, request, files, interrupted }]
   const cleaned = new Set() // projects whose turns left open by an earlier front desk were ended
+  const writing = new Map() // slug -> Set of turn ends still being written (the record and its corrections)
 
   const entriesOf = (slug, session) => {
     const k = `${slug}:${session}`
@@ -207,11 +254,23 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
   }
 
   /** Ends a turn: what it created, changed or deleted is recorded with its engine. Resolves the files. */
-  async function end(slug, turn, { interrupted = false } = {}) {
+  function end(slug, turn, opts) {
     const t = open.get(slug)?.get(turn)
-    if (!turn || !t) return null
+    if (!turn || !t) return Promise.resolve(null)
     open.get(slug).delete(turn)
     if (!open.get(slug).size) open.delete(slug)
+    // Kept until written, so a who-made question waits for it (settle, OLA-303).
+    const p = write(slug, turn, t, opts)
+    if (!writing.has(slug)) writing.set(slug, new Set())
+    writing.get(slug).add(p)
+    void p.finally(() => {
+      writing.get(slug)?.delete(p)
+      if (!writing.get(slug)?.size) writing.delete(slug)
+    })
+    return p
+  }
+
+  async function write(slug, turn, t, { interrupted = false } = {}) {
     try {
       // Ola's own turn: which model made each change? Asked of the gateway: its steps since a while
       // before the turn began (a change can come from a step before it, OLA-303).
@@ -230,12 +289,14 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
       if (s?.steps && Array.isArray(out?.files)) {
         // Each change matched to its step; rows that need another model or conversation are fixed.
         const groups = new Map()
-        let design = 0
+        let theirs = 0
+        let theirDesign = 0
         let mine = 0
         for (const f of out.files) {
           if (typeof f?.path !== 'string' || f.how === 'deleted' || !Number.isFinite(f.mtime)) continue
           const a = attributeChange(s.steps, t.session, f.mtime * 1000, s.design_model)
-          if (isDesignModel(a.model)) (design++, a.session || mine++)
+          if (a.session) (theirs++, isDesignModel(a.model) && theirDesign++)
+          else if (isDesignModel(a.model)) mine++
           if (a.session) {
             // Another conversation's change: the note for that conversation lists it, not this one's.
             const path = f.path.slice(0, 300)
@@ -259,8 +320,10 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
           }
         }
         if (mine) t.entry.model = designModel(s.design_model)
-        // Names and counts only: how this turn's changes were matched (for the next checker).
-        if (out.files.length) log(`${slug}: an ola turn recorded ${out.files.length} changes, ${design} by the design model; its conversation had ${s.names?.design ?? 0} design and ${s.names?.general ?? 0} general steps`)
+        // Names and counts only: how this turn's changes were matched (for the next checker). A change
+        // matched to another conversation is counted apart: on Nov 21 "6 by the design model" here were
+        // another conversation's, and the checker read them as this conversation's.
+        if (out.files.length) log(`${slug}: an ola turn recorded ${out.files.length} changes: ${out.files.length - theirs} of its own conversation, ${mine} of them by the design model${theirs ? `; ${theirs} matched to another conversation, ${theirDesign} of those by the design model` : ''}; its conversation had ${s.names?.design ?? 0} design and ${s.names?.general ?? 0} general steps`)
       }
       return files
     } catch (e) {
@@ -301,11 +364,43 @@ export function makeMadeBy({ exec, executing, served = null, log = () => {}, swe
   const timer = sweepMs > 0 ? setInterval(() => void sweep().catch(() => {}), sweepMs) : null
   timer?.unref()
 
+  /**
+   * The record made complete before it is read (OLA-303): this conversation's open turn is over (its
+   * person asks something new), so is any other conversation's that opencode no longer runs, and every
+   * end still being written is waited for. Resolves whether another conversation is still working.
+   */
+  async function settle(slug, session) {
+    const now = await executing(slug).catch(() => null)
+    for (const [id, t] of [...(open.get(slug) ?? [])]) {
+      if (t.engine === 'claude') continue
+      if (t.session === session || (now && !now.has(t.session))) await end(slug, id)
+    }
+    for (let i = 0; i < 3 && writing.get(slug)?.size; i++) await Promise.allSettled([...writing.get(slug)])
+    return [...(open.get(slug) ?? new Map()).values()].some((t) => t.session !== session)
+  }
+
+  /** The facts for a who-made question, read from the project's record once it is complete (recordFacts). */
+  async function factsFor(slug, session) {
+    const busy = await settle(slug, session)
+    const last = await exec(slug, ['--json', '--limit', '200'])
+    const rows = last.code === 0 ? parse(last.out) : null
+    if (!Array.isArray(rows)) return ''
+    const paths = rows.filter((r) => typeof r?.path === 'string' && r.how !== 'deleted' && !NOT_A_THING.test(r.path)).slice(0, MAX_FACT_FILES).map((r) => r.path)
+    let history = []
+    if (paths.length) {
+      const h = await exec(slug, ['--json', '--limit', '50', ...paths])
+      history = h.code === 0 ? (parse(h.out) ?? []) : []
+    }
+    return recordFacts(rows, Array.isArray(history) ? history : [], { busy })
+  }
+
   return {
     begin,
     end,
     ended,
     noteFor,
+    settle,
+    factsFor,
     sweep,
     /** The open turns (for checks). */
     openTurns: (slug) => [...(open.get(slug) ?? new Map())].map(([turn, t]) => ({ turn, session: t.session, engine: t.engine })),

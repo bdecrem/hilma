@@ -193,6 +193,10 @@ export function cloudTransport({ cookie, csrf }) {
       const b64 = Buffer.from(text).toString('base64')
       inProject(`ola-db made-by begin --turn ${turn} --engine claude --model claude-opus-5-5 && echo ${b64} | base64 -d > '/work/${rel.replace(/'/g, '')}' && ola-db made-by end --turn ${turn} --model claude-opus-5-5`)
     },
+    // The project's record of who made its files (ola-db made-by --json), read in the VM (OLA-303).
+    madeBy(rel = null) {
+      return JSON.parse(inProject(`ola-db made-by --json --limit 50${rel ? ` '/work/${rel.replace(/'/g, '')}'` : ''}`) || '[]')
+    },
   }
 }
 
@@ -281,6 +285,13 @@ export async function startLocal(password, { build = true } = {}) {
       db(['begin', '--turn', turn, '--engine', 'claude', '--model', 'claude-opus-5-5'])
       writeFileSync(path.join(folder, rel), text)
       db(['end', '--turn', turn, '--model', 'claude-opus-5-5'])
+    },
+    // The folder's record of who made its files, as the app keeps it (OLA-303).
+    madeBy(rel = null) {
+      const tools = path.join(dir, 'serve/support/web-tools')
+      const r = spawnSync(path.join(tools, 'ola-db'), ['made-by', '--json', '--limit', '50', ...(rel ? [rel] : [])], { cwd: folder, env: { ...process.env, OLA_WORK: folder, OLA_LIB: tools }, encoding: 'utf8' })
+      if (r.status !== 0) throw new Error(`ola-db made-by --json: ${(r.stderr || '').trim().slice(0, 200)}`)
+      return JSON.parse(r.stdout || '[]')
     },
     async stop() {
       child.stdin.end()
@@ -437,6 +448,24 @@ async function fetchText(url) {
   }
 }
 
+/** Does an answer name the engine a record row names? { ok, who, miss } (record:, OLA-303). */
+export function whoVerdict(row, answer) {
+  const design = row.engine === 'ola' && /^(design:|the design model, )/.test(row.model ?? '')
+  const a = String(answer)
+  if (design) {
+    const name = String(row.model).replace(/^design:|^the design model, /, '').split('/').pop()
+    if (!new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(a)) return { ok: false, who: `${name} (the design model)`, miss: `no ${name}` }
+    if (/Ola.s own (open )?model (made|built|changed|did)/i.test(a) && !/not Ola.s own/i.test(a)) return { ok: false, who: `${name} (the design model)`, miss: 'it says Ola’s own model' }
+    return { ok: true, who: `${name} (the design model)` }
+  }
+  if (row.engine === 'ola') {
+    const ok = /\bOla.s own\b|\bI (made|built|created|changed|did)\b/i.test(a) && !/inkling|design model/i.test(a.replace(/not (by )?(Inkling[\w-]*|the design model)/gi, ''))
+    return { ok, who: 'Ola’s own open model', miss: 'it does not say Ola’s own model, or names the design model' }
+  }
+  const re = row.engine === 'claude' ? /\bclaude\b/i : /hosted|deepseek/i
+  return { ok: re.test(a), who: row.engine, miss: `no ${row.engine}` }
+}
+
 /**
  * One outcome, checked. Kinds (cases.json "must"):
  *   site:<words>         Ola's answer gives an https://sites.ola.cx/<name>/ address, and that address
@@ -446,6 +475,8 @@ async function fetchText(url) {
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
  *   served:<name>        the model connection's own record says <name> served at least one of this
  *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
+ *   record:made|last     the answer names whoever the project's own record says made (or last
+ *                        changed) the newest page (OLA-303); the design model as an outside model
  */
 export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
   const [kind, ...rest] = must.split(':')
@@ -497,6 +528,24 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
       return { ok: true, why: seen.join('; '), url: a }
     }
     return { ok: false, why: seen.join('; ') }
+  }
+  if (kind === 'record') {
+    // record:made | record:last (OLA-303): the answer names whoever the project's own record says made
+    // (or last changed) the newest page, so an answer that disagrees with the record fails whichever
+    // model really did the work. On Nov 21 the record said one thing and Ola another.
+    let rows
+    try {
+      rows = await T.madeBy()
+    } catch (e) {
+      return { ok: false, why: `the record could not be read (${e.message})` }
+    }
+    const page = rows.filter((r) => /\.html?$/i.test(r?.path ?? '') && r.how !== 'deleted' && !/^site\//.test(r.path)).sort((x, y) => String(y.at).localeCompare(String(x.at)))[0]
+    if (!page) return { ok: false, why: 'the record has no page' }
+    const hist = (await T.madeBy(page.path)).filter((r) => r.path === page.path)
+    const row = arg === 'made' ? (hist.filter((r) => r.how === 'created').at(-1) ?? hist.at(-1)) : hist[0]
+    if (!row) return { ok: false, why: `the record has no row for ${page.path}` }
+    const v = whoVerdict(row, answer)
+    return { ok: v.ok, why: `the record says ${page.path} was ${arg === 'made' ? 'made' : 'last changed'} by ${v.who}; ${v.ok ? 'the answer says so' : `the answer does not (${v.miss})`}` }
   }
   if (kind === 'says') {
     const ok = new RegExp(arg, 'i').test(answer)

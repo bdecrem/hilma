@@ -3,12 +3,12 @@
 // note an open model's prompt gets when other engines worked in the conversation.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync, utimesSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync, utimesSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { attributeChange, engineNote, makeMadeBy, stripEngines, NOTE_OPEN, NOTE_CLOSE } from '../madeby.mjs'
+import { ASKS_WHO, attributeChange, engineNote, makeMadeBy, recordFacts, stripEngines, NOTE_OPEN, NOTE_CLOSE } from '../madeby.mjs'
 
 const OLA_DB = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../workspace/ola-db')
 
@@ -202,4 +202,64 @@ test('attributeChange: the last step before a change decides; steps too close to
   assert.deepEqual(attributeChange(S, 'b', 21500, 'x/D'), { model: 'design:x/D' }, 'both close steps were the design model’s')
   assert.deepEqual(attributeChange([], 'a', 3500, 'x/D'), { model: null }, 'no step: nothing named')
   assert.deepEqual(attributeChange([[1000, 'a', 'design-failed']], 'a', 1500, 'x/D'), { model: null }, 'a failed design step was done by general')
+})
+
+// OLA-303, Nov 21: asked "who changed it last?" right after a change, Ola answered from a record read
+// before that change's turn was written; asked "who made that page?" it named the design model in 1
+// of 3. The answer now comes from the record: the front desk finishes and waits for every turn's
+// record, reads it and puts the facts in front of the request.
+test('a who-made question: the record is complete before it is read, and its facts go in front of the request (OLA-303)', async () => {
+  const p = project()
+  const steps = []
+  const served = async (slug, session, since) => ({ names: { design: 1 }, design_model: 'thinkingmachines/Inkling-2-Small', steps: steps.filter((x) => x[0] >= since) })
+  // The VM is slow to take the corrections (made-by fix), as a busy VM is.
+  let slowFix = 0
+  const exec = async (slug, args) => {
+    if (args[0] === 'fix' && slowFix) await new Promise((r) => setTimeout(r, slowFix))
+    return p.exec(slug, args)
+  }
+  const m = makeMadeBy({ exec, executing: async () => new Set(), served, sweepMs: 0 })
+  const now = Date.now()
+  // Ola's own model makes the page.
+  const t1 = await m.begin('fd-w', { engine: 'ola', session: 'ses_1', request: 'make a page for our block party' })
+  steps.push([now - 60_000, 'ses_1', 'general'])
+  p.put('index.html', '<h1>v1</h1>', (now - 59_500) / 1000)
+  mkdirSync(path.join(p.work, 'fonts'))
+  p.put('fonts/a.woff2', 'x', (now - 59_400) / 1000)
+  await m.end('fd-w', t1)
+  // The design model changes it; the turn's end is still being written when the question comes.
+  const t2 = await m.begin('fd-w', { engine: 'ola', session: 'ses_1', request: 'make it warmer and more festive' })
+  steps.push([now - 30_000, 'ses_1', 'design'])
+  p.put('index.html', '<h1>v2, warm</h1>', (now - 29_500) / 1000)
+  slowFix = 400
+  const ending = m.end('fd-w', t2)
+  const facts = await m.factsFor('fd-w', 'ses_1')
+  await ending
+  assert.match(facts, /^The record of who made this project’s files, read by Ola’s server/)
+  assert.match(facts, /index\.html: made \d{4}-\d\d-\d\d \d\d:\d\d UTC by Ola’s own open model; last changed \d{4}-\d\d-\d\d \d\d:\d\d UTC by Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola’s own model\)\./, facts)
+  assert.ok(!facts.includes('woff2'), 'fonts are not what a person means by "that page"')
+  // A turn of this conversation that was never heard to end is ended and read too.
+  const t3 = await m.begin('fd-w', { engine: 'ola', session: 'ses_1', request: 'add a map page' })
+  steps.push([now - 10_000, 'ses_1', 'design'])
+  p.put('map.html', '<h1>map</h1>', (now - 9_500) / 1000)
+  const f2 = await m.factsFor('fd-w', 'ses_1')
+  assert.deepEqual(m.openTurns('fd-w'), [], `${t3} was ended before the record was read`)
+  assert.match(f2, /map\.html: made [^;]+ by Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola’s own model\), and not changed since\./, f2)
+  // Another conversation still running is said, not hidden.
+  const m2 = makeMadeBy({ exec, executing: async () => new Set(['ses_other']), served, sweepMs: 0 })
+  await m2.begin('fd-w', { engine: 'ola', session: 'ses_other', request: 'build a members table' })
+  assert.match(await m2.factsFor('fd-w', 'ses_1'), /Another conversation in this project is still working, and its changes are not in the record yet\.$/)
+  m.close()
+  m2.close()
+})
+
+test('recordFacts and the who-made question: the words, no record, and which requests ask it (OLA-303)', () => {
+  assert.match(recordFacts([], []), /there is no record of any file in this project yet\. Say you do not know who made it; never say you made it\.$/)
+  const rows = [{ path: 'a.html', how: 'changed', engine: 'claude', model: 'claude-x', at: '2026-11-21T23:48:00Z' }, { path: 'b.html', how: 'created', engine: 'hosted', model: 'deepseek-v4-pro', at: '2026-11-21T23:40:00Z' }]
+  const hist = [rows[0], { path: 'a.html', how: 'created', engine: 'ola', model: 'unknown', at: '2026-11-21T23:30:00Z' }, rows[1]]
+  const f = recordFacts(rows, hist)
+  assert.match(f, /a\.html: made 2026-11-21 23:30 UTC by Ola, but which model made this change is not known \(two conversations were working at the same time\); last changed 2026-11-21 23:48 UTC by Claude \(model claude-x\)\./)
+  assert.match(f, /b\.html: made 2026-11-21 23:40 UTC by DeepSeek V4 Pro, an outside open model \(not Ola’s own model\), and not changed since\./)
+  for (const q of ['who made that page?', 'Who changed it last?', 'which model built index.html', 'which agent built index.html: hosted or claude?', 'did you make this page?', 'who designed the flyer', 'who last edited the report?']) assert.ok(ASKS_WHO.test(q), q)
+  for (const q of ['make a page for our block party on Saturday', 'who is coming to the party?', 'change the look of the page: make it warmer', 'publish it again']) assert.ok(!ASKS_WHO.test(q), q)
 })

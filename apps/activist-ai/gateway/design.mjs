@@ -57,32 +57,62 @@ export function designConfig(env, bad, { models, upstream }) {
   return { local: !!local, file }
 }
 
-/** Does this request come after the designer or app-designer skill was loaded in this turn? */
-export function isDesignTurn(messages) {
-  if (!Array.isArray(messages)) return false
-  let last = -1
-  for (let i = messages.length - 1; i >= 0; i--)
-    if (messages[i]?.role === 'user') {
-      last = i
-      break
+// The skills' own files (SKILL.md, look.py, the palette scripts): a step that reads or runs one is
+// using the skill, whether or not it called the skill tool again (OLA-303: asked to "make it warmer and
+// more festive", Ola ran the designer's look.py on `general` without loading the skill a second time).
+const DESIGN_FILES = new RegExp(`skills/(?:${DESIGN_SKILLS.join('|')})/`)
+
+/** Does this assistant message load or use the designer or app-designer skill? */
+function usesDesignSkill(m) {
+  if (m?.role !== 'assistant' || !Array.isArray(m.tool_calls)) return false
+  for (const c of m.tool_calls) {
+    let a = c?.function?.arguments
+    if (typeof a === 'string' && DESIGN_FILES.test(a)) return true
+    if (c?.function?.name !== 'skill') continue
+    try {
+      if (typeof a === 'string') a = JSON.parse(a)
+    } catch {
+      continue
     }
-  for (let i = last + 1; i < messages.length; i++) {
-    const m = messages[i]
-    if (m?.role !== 'assistant' || !Array.isArray(m.tool_calls)) continue
-    for (const c of m.tool_calls) {
-      if (c?.function?.name !== 'skill') continue
-      let a = c.function.arguments
-      try {
-        if (typeof a === 'string') a = JSON.parse(a)
-      } catch {
-        continue
-      }
-      // opencode 2.3.0 names the skill `id` (seen on the wire, Nov 20); 1.x named it `name`.
-      if (a && typeof a === 'object' && (DESIGN_SKILLS.includes(a.id) || DESIGN_SKILLS.includes(a.name))) return true
-    }
+    // opencode 2.3.0 names the skill `id` (seen on the wire, Nov 20); 1.x named it `name`.
+    if (a && typeof a === 'object' && (DESIGN_SKILLS.includes(a.id) || DESIGN_SKILLS.includes(a.name))) return true
   }
   return false
 }
+
+const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((p) => p?.type === 'text' && typeof p.text === 'string').map((p) => p.text).join('\n') : '')
+/** Did this assistant message ask the person something (the question tool, or words ending in a question)? */
+const asksPerson = (m) => m?.role === 'assistant' && ((Array.isArray(m.tool_calls) && m.tool_calls.some((c) => c?.function?.name === 'question')) || /\?\s*$/.test(textOf(m.content)))
+
+/**
+ * Why this request is design work, or null: the designer or app-designer skill was loaded or used
+ * after the person's last message ('skill'), or the person's last message answers a question the
+ * design work asked them in the turn before ('answer', OLA-303). The checker's Nov 21 conversations:
+ * the design model asked "What should the block party page say?", the person answered, and from that
+ * answer on `general` built the whole page (27 steps), so the page was rightly recorded as Ola's own
+ * model's; the design work ended with the question.
+ */
+export function designWhy(messages) {
+  if (!Array.isArray(messages)) return null
+  const users = []
+  messages.forEach((m, i) => m?.role === 'user' && users.push(i))
+  const last = users.at(-1) ?? -1
+  for (let i = last + 1; i < messages.length; i++) if (usesDesignSkill(messages[i])) return 'skill'
+  if (last < 1) return null
+  const prev = users.at(-2) ?? -1
+  let asked = null
+  for (let i = last - 1; i > prev; i--)
+    if (messages[i]?.role === 'assistant') {
+      asked = messages[i]
+      break
+    }
+  if (!asksPerson(asked)) return null
+  for (let i = prev + 1; i < last; i++) if (usesDesignSkill(messages[i])) return 'answer'
+  return null
+}
+
+/** Does this request come after the designer or app-designer skill was loaded in this turn? */
+export const isDesignTurn = (messages) => designWhy(messages) !== null
 
 /** The note in the request's instructions: added to the first system message, or as one. */
 export function withNote(messages, note) {

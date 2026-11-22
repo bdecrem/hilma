@@ -11,6 +11,7 @@ import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { designWhy } from './design.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -2148,6 +2149,44 @@ test('design: after the designer skill is loaded in this turn, the design model 
     assert.ok(st.json.steps.every((x, i, a) => Number.isSafeInteger(x[0]) && (i === 0 || a[i - 1][0] <= x[0])), 'in order, with times')
     assert.equal(sv.json.steps, undefined, 'only when asked')
     assert.deepEqual((await call(g, T.b, null, { method: 'GET', path: `/v1/served?caller=a&since=${since}&steps=1` })).json.steps.filter((x) => x[1] === 'ses_abc123'), [], 'a caller reads only its own steps')
+  } finally {
+    await g.stop()
+  }
+})
+
+// OLA-303, the checker's Nov 21 conversations on the live server: the design model asked "What should
+// the block party page say?", the person answered, and from that answer on `general` built the whole
+// page (the served table: 5 design steps, then 27 general). Answering the design work's question goes
+// on with the design model; so does a step that runs the designer's own scripts (look.py).
+test('design: the person answering the design work’s question, and the designer’s own scripts, stay with the design model (OLA-303)', async () => {
+  const ask = (how) => {
+    const m = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
+    m.push({ role: 'assistant', content: '', tool_calls: [{ id: 's1', type: 'function', function: { name: 'skill', arguments: '{"id":"designer"}' } }] }, { role: 'tool', tool_call_id: 's1', content: 'the skill' })
+    if (how === 'tool') m.push({ role: 'assistant', content: '', tool_calls: [{ id: 'q1', type: 'function', function: { name: 'question', arguments: '{"questions":[]}' } }] }, { role: 'tool', tool_call_id: 'q1', content: 'User has answered your questions' })
+    if (how === 'words') m.push({ role: 'assistant', content: [{ type: 'text', text: 'What should the block party page say? ' }] })
+    if (how === 'done') m.push({ role: 'assistant', content: 'The page is in your Files.' })
+    m.push({ role: 'user', content: JSON.stringify({ tag: how }) })
+    return m
+  }
+  assert.equal(designWhy(ask('tool')), 'answer', 'the question tool, then the person’s answer')
+  assert.equal(designWhy(ask('words')), 'answer', 'a question in words, then the answer')
+  assert.equal(designWhy(ask('done')), null, 'a design turn that ended without asking: the next request starts on general')
+  const noSkill = ask('words')
+  noSkill.splice(2, 2)
+  assert.equal(designWhy(noSkill), null, 'a question from work that was not design work')
+  const look = [{ role: 'user', content: 'change the look of the page: make it warmer' }, { role: 'assistant', content: '', tool_calls: [{ id: 'b1', type: 'function', function: { name: 'bash', arguments: JSON.stringify({ command: 'python3 /opt/ola/skills/designer/scripts/look.py index.html --name warm' }) } }] }, { role: 'tool', tool_call_id: 'b1', content: 'ok' }]
+  assert.equal(designWhy(look), 'skill', 'running the designer’s look.py is using the skill')
+  assert.equal(designWhy([{ role: 'user', content: 'x' }, { role: 'assistant', content: '', tool_calls: [{ id: 'r', type: 'function', function: { name: 'read', arguments: '{"filePath":"/opt/ola/skills/chart/SKILL.md"}' } }] }]), null, 'another skill’s files: not design')
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV })
+  try {
+    const r = await call(g, T.a, { model: 'general', max_tokens: 4000, messages: ask('tool') }, { headers: { 'X-Session-Id': 'ses_answer1' } })
+    assert.equal(r.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1', 'the answer goes to the design model')
+    const line = await waitFor(() => g.logs().find((l) => l.design_why === 'answer'), 3000, 'the log line says why')
+    assert.equal(line.served, 'design')
+    await call(g, T.a, { model: 'general', max_tokens: 4000, messages: ask('done') }, { headers: { 'X-Session-Id': 'ses_answer1' } })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1')
   } finally {
     await g.stop()
   }

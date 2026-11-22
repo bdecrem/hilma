@@ -709,7 +709,8 @@
         "newfile:\\.html$",
         "served:design",
         "says:inkling",
-        "says:outside|not Ola.s own"
+        "says:outside|not Ola.s own",
+        "record:made"
       ],
       "mustNot": [
         "Ola.s own (open )?model (made|built)",
@@ -740,7 +741,8 @@
       "must": [
         "served:design",
         "says:inkling",
-        "says:outside|not Ola.s own"
+        "says:outside|not Ola.s own",
+        "record:last"
       ],
       "mustNot": [
         "Ola.s own (open )?model (made|built)",
