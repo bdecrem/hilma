@@ -115,6 +115,8 @@ function countHere(day) {
 }
 
 async function db() {
+  // a stand-in tracker for tests (delegable-test.mjs): the other machines' counts are read from that file
+  if (process.env.VENTURE_TRACKER_FAKE) return (await import('./_fakedb.mjs')).fakeClient(process.env.VENTURE_TRACKER_FAKE)
   const { createClient } = await import('@supabase/supabase-js')
   const envFile = join(root, '.env.local')
   const env = existsSync(envFile) ? Object.fromEntries(readFileSync(envFile, 'utf8').split('\n').filter((l) => /^[A-Z0-9_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')])) : process.env
@@ -148,8 +150,10 @@ if (here) { counts.push(here); machines.push({ host: HOST, live: true, files: he
 if (!args.includes('--local')) {
   try {
     const c = await db()
-    const { data, error } = await c.from('venture_state').select('key, value, at').or('key.like.delegable_%,key.like.typed_%')
+    const [a, b] = await Promise.all(['delegable_%', 'typed_%'].map((k) => c.from('venture_state').select('key, value, at').like('key', k)))
+    const error = a.error ?? b.error
     if (error) throw new Error(error.message)
+    const data = [...(a.data ?? []), ...(b.data ?? [])]
     const stored = Object.fromEntries(data.filter((r) => r.key.startsWith('delegable_')).map((r) => [r.key.slice(10), r.value?.days?.[day] ?? null]))
     const typed = Object.fromEntries(data.filter((r) => r.key.startsWith('typed_')).map((r) => [r.key.slice(6), r.value?.days?.[day] ?? []]))
     for (const h of new Set([...Object.keys(stored), ...Object.keys(typed)])) {
