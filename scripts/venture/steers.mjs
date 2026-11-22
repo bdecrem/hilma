@@ -11,6 +11,11 @@
 //   node scripts/venture/steers.mjs --export              store what he typed on THIS machine today and
 //                                                        yesterday (venture_state "typed_<host>"), so the
 //                                                        count on another machine includes it
+//   VENTURE_HOST=<host> VENTURE_TRANSCRIPTS=<dir> node scripts/venture/steers.mjs --export
+//                                                        the same for another machine, from a copy of its
+//                                                        transcripts (scp -p keeps the times): macOS blocks ~/Documents
+//                                                        over ssh, so a checkout there cannot run the export remotely,
+//                                                        while ~/.claude/projects can be copied (Nov 21, the M4)
 // Collects every message Bart wrote that day: what he typed into this project's Claude Code
 // sessions on this iMac (~/.claude/projects/<this project>/*.jsonl, including messages sent
 // mid-turn; never tool results, reminders, notifications, hook output, compaction summaries or
@@ -213,7 +218,7 @@ async function fromCalls(day) {
 }
 
 // What he typed on the other machines: each one stores its own with --export (sync.mjs push runs it).
-const HOST = hostname().replace(/\..*$/, '').replace(/[^A-Za-z0-9]/g, '_')
+const HOST = (process.env.VENTURE_HOST || hostname()).replace(/\..*$/, '').replace(/[^A-Za-z0-9]/g, '_')
 async function fromOtherMachines(day) {
   const { data, error } = await db.from('venture_state').select('key, value').like('key', 'typed_%')
   if (error) throw new Error(`venture_state: ${error.message}`)
