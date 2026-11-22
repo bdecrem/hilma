@@ -18,12 +18,13 @@ What leaves this Mac: for the preview and the publish, every plain file in the f
 server to be checked (passwords and keys, databases, the kinds of file a web page uses, the caps);
 hidden files and working folders (node_modules, __pycache__) by name only, `.git` not at all. Nothing
 is kept on the server by a preview and nothing goes public until the publish. The server's check is
-the one that counts; run the publish skill's `check` first so a problem is found here.
+the one that counts. `preview` runs the publish skill's own `check` on the folder first and sends
+nothing when it finds a PROBLEM (OLA-284), so the skill's order holds.
 
 Exit status: 0 done, 1 refused (the sentence to say to the person is printed), 2 usage, 3 not signed
 in to Ola on this Mac, 4 Ola could not be reached.
 """
-import base64, http.client, json, os, sys
+import base64, http.client, json, os, subprocess, sys
 from pathlib import Path
 
 MAX_SEND = 20 * 1024 * 1024  # one file's bytes are sent only up to this; the server names a larger one
@@ -113,6 +114,27 @@ def body_for(folder, name):
     return {"name": name, "folder": label, "files": listing(f)}
 
 
+def skill_check(folder, out=sys.stdout):
+    """The publish skill's own check (its Step 3) on `folder`, run here before anything is sent (OLA-284,
+    Nov 22: Ola on the Mac went from prepare straight to the preview in 2 of 4 tries; the order now
+    holds whatever the model does). Prints the check's lines; True when it said ready to publish."""
+    skills = os.environ.get("OLA_SKILLS_DIR", "")
+    script = Path(skills) / "publish" / "scripts" / "publish.py" if skills else None
+    if not script or not script.is_file():
+        print("ola-publish: the publish skill's check is not on this Mac (no publish/scripts/publish.py under "
+              "OLA_SKILLS_DIR), so nothing was sent. Open the Ola app once so it sets up its skills, then try again.")
+        sys.exit(2)
+    r = subprocess.run([sys.executable, "-I", str(script), "check", folder], capture_output=True, text=True)
+    print("The publish skill's check, run first:", file=out)
+    for line in (r.stdout + r.stderr).splitlines():
+        print("  " + line, file=out)
+    if r.returncode != 0:
+        print("Not sent: fix every PROBLEM line above (the publish skill's Step 2 and 3), then run "
+              "ola-publish preview again. Nothing was published.", file=out)
+        return False
+    return True
+
+
 def size(n):
     return f"{n} bytes" if n < 1024 else f"{n / 1024:.0f} KB" if n < 1024 * 1024 else f"{n / 1024 / 1024:.1f} MB"
 
@@ -150,6 +172,8 @@ def main(argv):
         return 0
     if cmd in ("preview", "publish") and len(pos) == 2 and opts.get("name") and (cmd == "preview" or opts.get("fingerprint")):
         body = body_for(pos[1], opts["name"])
+        if cmd == "preview" and not skill_check(pos[1], sys.stderr if as_json else sys.stdout):
+            return 1
         if cmd == "publish":
             body.update({"fingerprint": opts["fingerprint"], "confirm": True})
         status, j = call("POST", "/" + cmd, body)
