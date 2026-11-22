@@ -546,6 +546,33 @@
       }
     },
     {
+      "id": "change-not-publish",
+      "say": "change the page so it says Bart was here",
+      "before": [
+        "make a page that says Bart and publish it on ola"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "noran:ola-publish\\s+(?!status\\b|preview\\b)",
+        "says:publish(ed)? (it |the change )?again|(not|isn.t) (public|published|live) yet|still shows"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "passes": 5,
+      "from": {
+        "date": "2026-11-22",
+        "ticket": "OLA-244",
+        "what": "The OLA-230 checker on app.ola.cx, Nov 20 (2 of 2 tries, and again on Nov 21): after a page was published, 'change the page so it says Bart Decrem Was Here instead' made Ola publish the change too, through the one yes (or after asking 'Want me to publish it again?'). A change is not a request to publish: no ola-publish step, and Ola says the address still shows the earlier page until 'publish it again'."
+      },
+      "ability": "publish"
+    },
+    {
       "id": "publish-again",
       "say": "publish it again",
       "before": [

@@ -76,6 +76,8 @@ export interface SiteThing extends ThingBase {
   visibility: 'private' | 'public'
   pages: number
   summary: string
+  /** Folders that are publish copies of this page (site/, made by the publish skill), not shown on their own (OLA-244). */
+  copies?: string[]
 }
 
 /** A picture Ola made (a chart it drew, a photo): shown as itself, from /api/thumb. */

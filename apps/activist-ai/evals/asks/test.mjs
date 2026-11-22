@@ -39,9 +39,9 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|opens|file|ran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|opens|file|ran|noran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
-    for (const m of c.must.filter((m) => /^(says|opens|nonewfile):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
+    for (const m of c.must.filter((m) => /^(says|opens|nonewfile|noran):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
     assert.ok(/^\d{4}-\d\d-\d\d$/.test(c.from?.date) && /^OLA-\d+$/.test(c.from?.ticket), `${c.id}: the date and ticket of the failure it came from`)
   }
@@ -483,4 +483,17 @@ test('OLA-232 checker, Nov 21: opens: reads the first 300 characters; nonewfile:
   const c = readCases().find((x) => x.id === 'ask-claude')
   assert.ok(c.must.includes('nonewfile:hello\\.txt'), 'asked for Claude, Ola does not write the file itself')
   assert.ok(readCases().find((x) => x.id === 'birdsong').must.some((m) => m.startsWith('opens:')))
+})
+
+test('OLA-244: noran: judges only the steps of the request itself, never what was said first', async () => {
+  const T = { listFiles: async () => [] }
+  const re = 'noran:ola-publish\\s+(?!status\\b|preview\\b)'
+  const first = ['bash: ola-publish site --files index.html']
+  assert.equal((await checkMust(re, T, '', { steps: first, lastSteps: [] })).ok, true, 'the publish asked for first does not count')
+  assert.equal((await checkMust(re, T, '', { steps: [...first, 'bash: ola-publish site --files index.html'], lastSteps: ['bash: ola-publish site --files index.html'] })).ok, false)
+  assert.equal((await checkMust(re, T, '', { lastSteps: ['bash: ola-publish status', 'bash: ola-publish preview site --name bart'] })).ok, true)
+  const c = (await import('./cases.json', { with: { type: 'json' } })).default
+  const one = (c.cases ?? c).find((x) => x.id === 'change-not-publish')
+  assert.ok(one && one.must.includes(re) && one.before.length === 1, 'the case is in the list')
+  assert.ok(new RegExp(one.must[1].slice(5), 'i').test('Done: the page now says Bart was here. The address still shows the earlier version; say "publish it again" to put the change up.'))
 })

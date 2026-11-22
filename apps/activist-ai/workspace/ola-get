@@ -17,7 +17,12 @@ args = sys.argv[1:]
 if len(args) != 1:
     fail(2, "one path")
 parts = args[0].split("/")
-if not 1 <= len(parts) <= 6 or not all(NAME.fullmatch(p) and ".." not in p for p in parts):
+# One hidden name is allowed, as the last part only: a publish copy's record, <folder>/.ola-source.json
+# (the publish skill's `prepare` writes it), which the front desk reads to know which page a site/
+# folder was copied from (OLA-244, OLA-267). It is the agent's word like every other file.
+RECORD = ".ola-source.json"
+plain = lambda i, p: (NAME.fullmatch(p) and ".." not in p) or (i == len(parts) - 1 and i > 0 and p == RECORD)
+if not 1 <= len(parts) <= 6 or not all(plain(i, p) for i, p in enumerate(parts)):
     fail(2, "not a plain path")
 fd = os.open("/work", os.O_RDONLY | os.O_DIRECTORY)
 for i, part in enumerate(parts):

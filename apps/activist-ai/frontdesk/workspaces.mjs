@@ -567,6 +567,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     filesAsync: ws.filesAsync,
     peek: ws.peek,
     validRel: ws.validRel,
+    validRecordRel: ws.validRecordRel,
     /** The workspace's own secrets (its opencode password, its gateway key), only to make sure a
      * page about to be published does not carry one (sites.mjs). Never sent anywhere. */
     secretValues: (slug) => {

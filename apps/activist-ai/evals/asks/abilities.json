@@ -138,10 +138,10 @@
       "id": "publish",
       "what": "Publish a page on the web, or give a link anyone can open",
       "cloud": {
-        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app"
+        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app. Only when they ask to publish: a change to a page that is published (\"change the page so it says…\") is not a request to publish it; make the change, do not run `ola-publish`, and say the address still shows the earlier page until they say \"publish it again\""
       },
       "local": {
-        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app"
+        "tell": "load the `publish` skill and run `ola-publish` as it says; you can do this here, the person says yes in the app. Only when they ask to publish: a change to a page that is published (\"change the page so it says…\") is not a request to publish it; make the change, do not run `ola-publish`, and say the address still shows the earlier page until they say \"publish it again\""
       },
       "screens": [
         "cloud-web:screen",

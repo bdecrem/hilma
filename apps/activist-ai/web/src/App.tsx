@@ -62,10 +62,11 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const [siteStatus, { refetch: refetchSite }] = createResource(() => site.status().catch(() => undefined))
   const [publishing, setPublishing] = createSignal<string | null>(null)
   const canPublish = () => props.role === 'owner' && !!siteStatus()?.configured
-  const publishedFor = (file: string | null | undefined) => {
+  // A page carries the Published mark when it, its folder, or its publish copy (site/, OLA-244) is what is published.
+  const publishedFor = (file: string | null | undefined, copies?: string[]) => {
     const s = siteStatus()?.published
     if (!s || !file) return null
-    return s.page === file || (s.folder && file.startsWith(`${s.folder}/`)) ? s.url : null
+    return s.page === file || (s.folder && (file.startsWith(`${s.folder}/`) || copies?.includes(s.folder))) ? s.url : null
   }
 
   const [drawer, setDrawer] = createSignal(false)
@@ -360,7 +361,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                         <For each={g.things}>
                           {(t) => (
                             <div role="listitem" class="thing-slot" data-kind={t.kind}>
-                              <ThingCard thing={t} onPublish={canPublish() && t.kind === 'site' && /\.html?$/i.test(t.file ?? '') ? setPublishing : undefined} published={publishedFor(t.file)} />
+                              <ThingCard thing={t} onPublish={canPublish() && t.kind === 'site' && /\.html?$/i.test(t.file ?? '') ? setPublishing : undefined} published={publishedFor(t.file, t.kind === 'site' ? t.copies : undefined)} />
                             </div>
                           )}
                         </For>

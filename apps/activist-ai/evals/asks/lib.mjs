@@ -479,12 +479,13 @@ export function whoVerdict(row, answer) {
  *                        answers 200 with a page that says <words>
  *   says:<regex>         Ola's answer matches (case-insensitive)
  *   file:<path>[:<words>]  the file is in the project (and says <words>)
+ *   ran:<regex>          a step of this request matches; noran:<regex>: none does (OLA-244)
  *   served:<name>        the model connection's own record says <name> served at least one of this
  *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
  *   record:made|last     the answer names whoever the project's own record says made (or last
  *                        changed) the newest page (OLA-303); the design model as an outside model
  */
-export async function checkMust(must, T, answer, { steps = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
+export async function checkMust(must, T, answer, { steps = [], lastSteps = steps, before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
   if (kind === 'served') {
@@ -587,6 +588,13 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
     if (text === null) return { ok: false, why: `${rel} is not in the project` }
     const ok = !words || text.toLowerCase().includes(words.toLowerCase())
     return { ok, why: ok ? `${rel} is there${words ? ` with "${words}"` : ''}` : `${rel} is there without "${words}"` }
+  }
+  if (kind === 'noran') {
+    // noran:<regex>: no step of this request matches (OLA-244: asked only to change a published page,
+    // Ola ran ola-publish too; the runner says yes to every question, so the step is what shows it).
+    const re = new RegExp(arg, 'i')
+    const hit = lastSteps.find((x) => re.test(x))
+    return { ok: !hit, why: hit ? `a step ran ${hit.slice(0, 120)} without being asked to` : `no step matches /${arg}/ (${lastSteps.length} steps of this request)` }
   }
   if (kind === 'ran') {
     const re = new RegExp(arg, 'i')

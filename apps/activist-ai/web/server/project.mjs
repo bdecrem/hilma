@@ -73,7 +73,28 @@ const isImage = (rel) => /\.(png|jpe?g|gif|webp|svg)$/i.test(rel)
 const isFileDoc = (rel) => /\.(pdf|docx)$/i.test(rel)
 /** A file the home shows as a thing: any page, or a .csv/.md, a picture, a PDF or a Word file Ola
  * wrote at the top of the folder (pictures inside a page's folder belong to the page). */
-export const isThingFile = (f) => isSourceFile(f) || isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && (/\.(csv|md|xlsx)$/.test(f.path) || isImage(f.path) || isFileDoc(f.path)))
+export const isThingFile = (f) => !f.siteCopy && (isSourceFile(f) || isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && (/\.(csv|md|xlsx)$/.test(f.path) || isImage(f.path) || isFileDoc(f.path))))
+
+/**
+ * A publish copy (OLA-244). The publish skill's `prepare` copies a page into a folder (site/) to
+ * publish it, and leaves <folder>/.ola-source.json naming the page it came from. The home showed
+ * both, index.html and site/index.html, so one page looked like two and Publish offered a choice
+ * between them. `records` are [{ folder, page }] read from those records. A folder whose page is
+ * still in the project (outside it) is marked: its files are not things and not "other files" on
+ * the home (Files still lists them), and the page gets `copies` (the folders), so a publish of the
+ * copy shows as the page's. A record whose page is gone leaves the copy shown, as the only page.
+ */
+export function markSiteCopies(entries, records) {
+  const byPath = new Map(entries.map((f) => [f.path, f]))
+  for (const { folder, page } of records ?? []) {
+    if (typeof folder !== 'string' || !folder || typeof page !== 'string') continue
+    const src = byPath.get(page.replace(/^\.\//, ''))
+    if (!src || src.path.startsWith(`${folder}/`) || !isPageFile(src.path)) continue
+    for (const f of entries) if (f.path.startsWith(`${folder}/`)) f.siteCopy = folder
+    src.copies = [...new Set([...(src.copies ?? []), folder])]
+  }
+  return entries
+}
 
 /** Things made from what is in the workspace. */
 export async function derivedThings(files) {
@@ -121,6 +142,7 @@ export async function derivedThings(files) {
         openable: true,
         visibility: 'private',
         pages: 1,
+        ...(f.copies?.length ? { copies: f.copies } : {}),
         summary: `${title ? `${f.path}, a` : 'A'} web page ${f.origin === 'made' ? 'Ola made' : 'you uploaded'}${where && !title ? ` in ${where}` : ''}. Open shows it in a new tab.`,
       })
     } else if (f.path.endsWith('.csv')) {
@@ -170,12 +192,12 @@ export const isCheckShot = (f) => f.origin === 'made' && /^shots\/[^/]+\.png$/i.
 /** The files the home lists under its things: everything not already shown as a thing. */
 export const otherFiles = (list, things, max = 50) => {
   const shown = new Set(things.map((t) => t.file).filter(Boolean))
-  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f)).slice(0, max)
+  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f) && !f.siteCopy).slice(0, max)
 }
 
 export const otherCount = (list, things) => {
   const shown = new Set(things.map((t) => t.file).filter(Boolean))
-  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f)).length
+  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f) && !f.siteCopy).length
 }
 
 /** The dev server's payload: the fixture's made-up things, then the real ones. */

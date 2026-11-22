@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.2-63'
+export const IMAGE = 'ola-workspace:2.3.2-64'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -722,6 +722,11 @@ export async function upload(id, files, { replace = false } = {}) {
 
 // A path inside /work as ola-get and ola-rm accept it: plain names, no "..", at most 6 parts.
 export const validRel = (rel) => typeof rel === 'string' && rel.length <= 1300 && rel.split('/').length <= 6 && rel.split('/').every((p) => UPLOAD_NAME.test(p) && !p.includes('..'))
+// A publish copy's record, <folder>/.ola-source.json (the publish skill's `prepare`): the one hidden
+// file ola-get hands out, so the front desk can read which page a site/ folder was copied from
+// (OLA-244: the home showed the copy as a second page; OLA-267: the old-copy check). Image 2.3.2-64.
+export const SOURCE_RECORD = '.ola-source.json'
+export const validRecordRel = (rel) => typeof rel === 'string' && rel.endsWith(`/${SOURCE_RECORD}`) && validRel(rel.slice(0, -SOURCE_RECORD.length - 1)) && rel.split('/').length <= 6
 
 // One `container exec` of an /opt/ola/bin tool, without blocking. stdout is returned as a stream.
 /** The agent's user in the VM, and the groups and user of our own (image 2.3.0-20, Containerfile). */
@@ -804,7 +809,7 @@ export async function putStream(id, name, source, { replace = false, maxBytes = 
  */
 export async function getStream(id, rel, { headerMs = 15_000, signal } = {}) {
   validId(id)
-  if (!validRel(rel)) return null
+  if (!validRel(rel) && !validRecordRel(rel)) return null
   return headed(execTool(id, 'ola-get', [rel]), { headerMs, signal })
 }
 

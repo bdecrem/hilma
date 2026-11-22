@@ -50,7 +50,7 @@ import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
-import { derivedThings, isSourceFile, isThingFile, otherCount, otherFiles } from '../web/server/project.mjs'
+import { derivedThings, isSourceFile, isThingFile, markSiteCopies, otherCount, otherFiles } from '../web/server/project.mjs'
 import { skillsHash } from '../skills/version.mjs'
 import { createWorkspace, makeVm, slugFor, validProjectName } from './projects.mjs'
 
@@ -418,6 +418,9 @@ export function makeFrontDesk(cfg = config()) {
       if (shas.size > 20_000) shas.clear()
     }
     out.sort((a, b) => (a.origin === b.origin ? a.path.localeCompare(b.path) : a.origin === 'uploaded' ? -1 : 1))
+    // Publish copies' records (<folder>/.ola-source.json, hidden, so not in `out`): madeThings reads
+    // them and folds each copy into its page (OLA-244).
+    out.records = list.filter((f) => f.type === 'file' && workspaces.validRecordRel?.(f.path)).slice(0, 8).map((f) => ({ path: f.path, sha: f.sha256 }))
     return out
   }
   // The things on the project view: the 12 newest pages (.html, anywhere) and .csv/.md files Ola
@@ -441,7 +444,26 @@ export function makeFrontDesk(cfg = config()) {
     return new TextDecoder('windows-1252').decode(buf)
   }
   const texts = new Map() // `${slug}\0${path}\0${sha}` -> text
+  // Which page each publish copy was made from, by its record's checksum: { folder, page } (OLA-244).
+  const copyOf = new Map() // `${slug}\0${path}\0${sha}` -> { folder, page } | null
+  async function siteCopies(ws, records) {
+    const out = []
+    for (const r of records ?? []) {
+      const k = `${ws.slug}\0${r.path}\0${r.sha ?? '?'}`
+      if (!copyOf.has(k) || !r.sha) {
+        let rec = null
+        try {
+          rec = JSON.parse(String(await siteCtx(ws).read(r.path, 256 * 1024)))
+        } catch {}
+        if (copyOf.size > 2000) copyOf.clear()
+        copyOf.set(k, rec && typeof rec.page === 'string' ? { folder: r.path.slice(0, -'/.ola-source.json'.length), page: rec.page } : null)
+      }
+      if (copyOf.get(k)) out.push(copyOf.get(k))
+    }
+    return out
+  }
   async function madeThings(ws, entries) {
+    if (entries.records?.length) markSiteCopies(entries, await siteCopies(ws, entries.records).catch(() => []))
     // Pictures, PDFs and Word files Ola made are things too (2026-11-17); only pages, CSVs and
     // Markdown are read (and so capped at 1 MiB).
     const needsText = (f) => /\.(html?|csv|md)$/i.test(f.path)
@@ -816,7 +838,8 @@ export function makeFrontDesk(cfg = config()) {
       slug: ws.slug,
       list: () => workspaces.filesAsync(ws.slug),
       async read(rel, max) {
-        if (!workspaces.validRel(rel)) return null
+        // The one hidden file it may read: a publish copy's record (OLA-244, OLA-267).
+        if (!workspaces.validRel(rel) && !workspaces.validRecordRel?.(rel)) return null
         const f = await workspaces.getStream(ws.slug, rel)
         if (!f) return null
         if (f.size > max) return f.kill(), null

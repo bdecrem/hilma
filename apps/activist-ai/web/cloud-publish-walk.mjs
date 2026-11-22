@@ -257,7 +257,9 @@ try {
     await page.getByLabel('Choose a password').fill(PASSWORD)
     await page.getByRole('button', { name: 'Make my account' }).click()
     await page.waitForSelector('.project-title', { timeout: 45_000 })
-    await page.waitForSelector('.empty-title, .thing, .drawer.open #ask-input', { timeout: 45_000 })
+    // The home as it is now (OLA-244: '.empty-title' is gone): its things, the line that says there are
+    // none yet, or the conversation's box (a phone opens on the conversation).
+    await page.waitForSelector('.made-none, .thing, #ask-input', { state: 'attached', timeout: 45_000 })
     return `"${await page.locator('.project-title').innerText()}"`
   })
 

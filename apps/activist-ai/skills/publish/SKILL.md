@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "5"
+  ola/version: "6"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -23,6 +23,12 @@ and copies can outlive a takedown. So three things hold in every case:
    out and why, in one sentence each.
 3. **A yes before anything leaves.** Ask, and wait for the answer, every time, even when you are
    allowed to work without asking. A yes for one list is not a yes for a changed list.
+4. **Publish only when the person asks to publish.** A change to a page that is published
+   ("change the page so it says …", "make the title bigger") is a request to change the page, not
+   to publish it, even in a project or a conversation that published before. Make the change, do
+   not run `ola-publish` (or `ola-publish publish`), and end with one sentence: the page is changed
+   in the project, the address still shows the earlier version, and "publish it again" puts the
+   change up. Do not ask "shall I publish it?" either: they say when.
 
 ## Step 1: which runtime, always first
 
@@ -133,7 +139,8 @@ ola-publish site --files index.html,style.css,picture.png
   sentence and make the right page. "NOT LIVE YET": never say live; say in one sentence that the
   address still shows the earlier page, as the command says.
 - Never look the command up (`which`, `--help`): this skill is how it is used.
-- **Publish again** ("publish it again", after a change): Step 2 `prepare`, Step 3 `check`, then
+- **Publish again** only when the person asks for it ("publish it again", "update the live page",
+  "put the change online"); after a change they did not ask to publish, see rule 4 above. Then: Step 2 `prepare`, Step 3 `check`, then
   `ola-publish` with the new list; it replaces what is there, after the same one yes. Say the
   address again.
 - **Take it down** ("take it down", "unpublish"): run `ola-publish unpublish` as a command of its
@@ -186,7 +193,7 @@ After Steps 2 and 3, with the folder ready (`site/`):
 6. **See it live:** `python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/<name>/ --expect site`.
    Only when it says `live`, tell the person it is published, with the address as a link.
 
-**Publish again** (they changed the page): Step 3 `check`, then preview, show the list, publish with the same
+**Publish again** (they changed the page and ask for it to be published again; a change alone is not a request, rule 4): Step 3 `check`, then preview, show the list, publish with the same
 name; it replaces what is there. **Unpublish** ("take it down"): run
 `ola-publish unpublish --name <name>` (the app asks the person; that is the yes, do not ask in
 words first), and tell them the
@@ -270,6 +277,7 @@ not before.
 ## What not to do
 
 - Do not publish without the list and a yes; do not publish more than the list.
+- Do not publish (or offer to) because a page that is published was changed: publish when they ask.
 - Do not put a key, a password, a database, a `.env` file or a list of people on the web, even
   when asked: say why, and offer the version without it.
 - Do not use GitHub Pages or a host other than Ola's address or Vercel; do not make the
