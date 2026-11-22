@@ -27,6 +27,21 @@ test('a bare address in a sentence is a link without the sentence punctuation', 
   assert.ok(parts.includes(', and ('))
 })
 
+// OLA-230, OLA-267, Nov 21: Ola's answer [https://sites.ola.cx/p/](https://sites.ola.cx/p/) was read
+// as "https://sites.ola.cx/p/sites.ola.cx". A label that is an address, or names the site, shows the
+// address the link goes to, exactly, with nothing beside it.
+test('a link labelled with an address shows the address it goes to, and only that', () => {
+  const pub = 'https://sites.ola.cx/chk1121da-test/'
+  for (const label of [pub, 'sites.ola.cx', 'sites.ola.cx/chk1121da-test', 'https://sites.ola.cx/other/', 'the page at sites.ola.cx'])
+    assert.deepEqual(webLink(`[${label}](${pub})`), { label: pub, href: pub, host: 'sites.ola.cx', titled: false }, label)
+  const parts = split(`Live at: [${pub}](${pub}) — the check confirms it.`)
+  const shown = parts.map((p) => (webLink(p) ? webLink(p)!.label + (webLink(p)!.titled ? ` ${webLink(p)!.host}` : '') : p)).join('')
+  assert.equal(shown, `Live at: ${pub} — the check confirms it.`)
+  const addrs = shown.match(/https:\/\/sites\.ola\.cx\/\S*/g)
+  assert.deepEqual(addrs, [pub], 'every address a person reads is the published one')
+  assert.equal(webLink('[Your page](https://sites.ola.cx/p/)')!.titled, true, 'a title that is words still names the site beside it')
+})
+
 test('other schemes and odd addresses stay text', () => {
   for (const bad of ['[x](javascript:alert(1))', '[x](data:text/html,hi)', '[x](https://user:pw@evil.test/)', 'ftp://a.test/x', '[x](doc:a.pdf)'])
     assert.equal(webLink(bad), null, bad)

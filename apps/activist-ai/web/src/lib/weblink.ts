@@ -23,11 +23,19 @@ function parse(address: string): { href: string; host: string } | null {
   return { href: u.href, host: u.hostname.replace(/^www\./, '') }
 }
 
+// A label that is itself an address, or names the site (OLA-230, OLA-267, Nov 21): Ola answered a
+// publish with [https://sites.ola.cx/<project>/](https://sites.ola.cx/<project>/), the page drew the
+// site's name right after it, and the person read "https://sites.ola.cx/<project>/sites.ola.cx", an
+// address that does not exist. Such a link shows the address it goes to, exactly, and nothing beside it.
+const NAMES_AN_ADDRESS = /^\s*(?:https?:\/\/|www\.)|^\s*[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/\S*)?\s*$/i
+
 export function webLink(part: string): WebLink | null {
   const md = /^\[([^\]\n]{1,200})\]\((https?:\/\/[^\s)]{1,2000})\)$/.exec(part)
   if (md) {
     const p = parse(md[2])
-    return p ? { label: md[1], ...p, titled: true } : null
+    if (!p) return null
+    if (NAMES_AN_ADDRESS.test(md[1]) || md[1].toLowerCase().includes(p.host.toLowerCase())) return { label: p.href, ...p, titled: false }
+    return { label: md[1], ...p, titled: true }
   }
   if (new RegExp(`^${WEB_BARE_SPLIT.source}$`).test(part)) {
     const p = parse(part)

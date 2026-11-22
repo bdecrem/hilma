@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -115,6 +115,24 @@ test('record: the answer must name whoever the record says made or last changed 
   const made = await checkMust('record:made', T, nov21)
   assert.equal(made.ok, true, made.why)
   assert.equal((await checkMust('record:made', T, 'Inkling-2-Small, an outside open model, made it.')).ok, false, 'the record says Ola’s own model made it')
+})
+
+// OLA-267, Nov 21: the answer gave "https://sites.ola.cx/chk1121da-test/sites.ola.cx"; the right
+// address was its first part, so the check passed. Every sites.ola.cx link must be the published one.
+test('site: a link in the answer that is not the published address fails, though the address itself is live (OLA-267)', async () => {
+  const pub = 'https://sites.ola.cx/chk1121da-test/'
+  const fetchFirst = async (u) => (u === pub ? { status: 200, text: '<h1>Maple</h1>' } : u === `${pub}maple.html` ? { status: 200, text: 'Maple' } : { status: 404, text: '' })
+  const opts = { rereadMs: 1, rereads: 1, fetchFirst, reader: async () => ({ status: 200, body: Buffer.from('<h1>Maple</h1>') }) }
+  const bad = await checkMust('site:Maple', {}, `Live at: ${pub}sites.ola.cx — the check confirms it.`, opts)
+  assert.equal(bad.ok, false, bad.why)
+  assert.match(bad.why, /gives https:\/\/sites\.ola\.cx\/chk1121da-test\/sites\.ola\.cx, which answers 404/)
+  const other = await checkMust('site:Maple', {}, `Live at ${pub}. Also at https://sites.ola.cx/someone-else/.`, opts)
+  assert.match(other.why, /not the published address/)
+  for (const fine of [`Live at: [${pub}](${pub}).`, `Live at sites.ola.cx/chk1121da-test/ (on sites.ola.cx): ${pub}`, `Live at ${pub}, the page itself at ${pub}maple.html.`]) {
+    const r = await checkMust('site:Maple', {}, fine, opts)
+    assert.equal(r.ok, true, `${fine}: ${r.why}`)
+  }
+  assert.deepEqual(siteLinks(`see ${pub}sites.ola.cx, and [x](${pub}).`), [`${pub}sites.ola.cx`, pub])
 })
 
 test('a conversation folds into turns as the apps fold it', () => {

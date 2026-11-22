@@ -434,6 +434,12 @@ const CANNOT = new Set(['says it cannot do it from here'])
 
 /** The https://sites.ola.cx/<name>/ addresses in a text. */
 export const siteAddresses = (text) => [...new Set([...String(text).matchAll(/https:\/\/sites\.ola\.cx\/[a-z0-9][a-z0-9-]{0,62}\/?/gi)].map((m) => m[0].replace(/\/?$/, '/')))]
+/**
+ * Every sites.ola.cx link in a text, whole, as a person would copy it (OLA-267, Nov 21: Ola's answer
+ * gave "https://sites.ola.cx/chk1121da-test/sites.ola.cx"; siteAddresses saw only its first part, the
+ * right address, and the check passed). Sentence punctuation after a link is not part of it.
+ */
+export const siteLinks = (text) => [...new Set([...String(text).matchAll(/(?:https?:\/\/)?sites\.ola\.cx(?:\/[^\s<>"'`()[\]]*)?/gi)].map((m) => m[0].replace(/[.,;:!?]+$/, '')))]
 
 // The front desk's own reader (sites.mjs), loaded only when a site: check runs (add-case's test copies
 // this file elsewhere).
@@ -525,6 +531,16 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
         }
       }
       seen.push(`the same on ${rereads} more reads over ${(rereads * rereadMs) / 1000} s, each a new connection`)
+      // Every link to sites.ola.cx the person is told must be that address, or a page under it that
+      // answers: never an address Ola composed that goes nowhere (OLA-267).
+      for (const l of siteLinks(answer)) {
+        const full = /^https?:\/\//i.test(l) ? l : `https://${l}`
+        // The host named on its own ("published on sites.ola.cx") is not an address.
+        if (full.replace(/\/?$/, '/') === a || /^https?:\/\/sites\.ola\.cx\/?$/i.test(full)) continue
+        if (!full.startsWith(a)) return { ok: false, why: `${seen.join('; ')}; but the answer also gives ${l}, which is not the published address ${a}` }
+        const r = await fetchFirst(full)
+        if (r.status !== 200) return { ok: false, why: `${seen.join('; ')}; but the answer also gives ${l}, which answers ${r.status}, not the published page` }
+      }
       return { ok: true, why: seen.join('; '), url: a }
     }
     return { ok: false, why: seen.join('; ') }

@@ -21,7 +21,9 @@ export function Inline(props: { text: string }): JSX.Element {
         ) : webLink(part) ? (
           <a class="weblink" href={webLink(part)!.href} target="_blank" rel="noopener noreferrer nofollow">
             {webLink(part)!.label}
-            {webLink(part)!.titled ? <span class="weblink-host"> {webLink(part)!.host}</span> : null}
+            {/* The space stays outside the inline-block: inside it, it is dropped and the site's name runs into the label (OLA-267). */}
+            {webLink(part)!.titled ? ' ' : null}
+            {webLink(part)!.titled ? <span class="weblink-host">{webLink(part)!.host}</span> : null}
           </a>
         ) : part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
           // Bold may hold code or a citation (**`totals.xlsx`**): drawn too, never as raw backticks.
