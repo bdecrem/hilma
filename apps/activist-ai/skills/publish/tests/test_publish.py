@@ -139,6 +139,18 @@ skill = (HERE / "SKILL.md").read_text()
 case("the skill offers Ola's address locally, asks which only when the request does not say, and always asks before publishing",
      all(s in skill for s in ("## Locally, at Ola's address", "Ask only when the request does not say", "ola-publish preview site --name", "ola-publish publish site --name", "ola-publish unpublish --name", "even with \"Lots of permissions\" on", "ola login")))
 
+# OLA-250, Nov 22 (Mac 0.1 (32), Ola on the Mac): after the preview Ola asked "Shall I publish these 3 files
+# at https://sites.ola.cx/bart-simpson/?" in words and ended its turn; no card, nothing published. At Ola's
+# address the only question is the app's card: the skill never tells Ola to ask in words there.
+mac = skill[skill.index("## Locally, at Ola's address"):skill.index("## Locally, on their own hosting")]
+case("at Ola's address from a Mac: straight from the preview to the publish in the same turn, never a question in words",
+     "Shall I publish" not in mac.replace('"Shall I publish these\n   3 files at https://sites.ola.cx/bart/?" in words gave', "")
+     and "do not end your turn after the preview" in mac and "same turn" in mac)
+case("the rules: never end a turn with a question about publishing at Ola's address",
+     "never end your turn with a\n   question about publishing" in skill)
+# OLA-250, Nov 22: "**https://sites.ola.cx/bart/**" in the answer; copied, the marks come along.
+case("the address is written bare, never in bold", "## The address" in skill and "never in bold" in skill)
+
 # In the cloud the skill publishes from the conversation (OLA-230): ola-publish, one yes, never "go press Publish".
 cloud = skill[skill.index("## In the cloud"):skill.index("## Locally, at Ola's address")]
 case("the cloud: ola-publish with the list, publish again, take it down; never sends the person to press Publish",

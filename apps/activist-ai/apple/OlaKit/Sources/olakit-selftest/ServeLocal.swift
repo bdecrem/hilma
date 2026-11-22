@@ -61,6 +61,13 @@ enum ServeLocal {
       try? await api.signOut(session)
       return 1
     }
+    // The record of who made each file, as the app keeps it (OLA-303): every run bracketed, and the
+    // model connection asked which model served each change (the design model is named).
+    let record = LocalMadeBy(folder: URL(fileURLWithPath: folder), tools: LocalServer.support.appendingPathComponent("web-tools"))
+    record.served = { sid, since in await door.served(session: sid, sinceMs: since) }
+    _ = await record.endStale()
+    let recorder = LocalTurnRecorder(record: record, client: OpenCodeClient(config))
+    recorder.start()
     let info = scratch.appendingPathComponent("server.json")
     let body = try! JSONSerialization.data(withJSONObject: ["url": config.url.absoluteString, "password": config.password, "skills": server.skillStates.map(\.line)])
     fm.createFile(atPath: info.path, contents: body, attributes: [.posixPermissions: 0o600])
@@ -73,6 +80,7 @@ enum ServeLocal {
         c.resume()
       }
     }
+    recorder.stop()
     server.stop()
     door.stop()
     do { try await api.signOut(session) } catch { print("FAIL  sign out: \(error)") }

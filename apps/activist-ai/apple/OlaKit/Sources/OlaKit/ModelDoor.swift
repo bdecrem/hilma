@@ -100,6 +100,10 @@ public final class ModelDoor: @unchecked Sendable {
     if let ct = req.header("content-type") { r.setValue(ct, forHTTPHeaderField: "Content-Type") }
     r.setValue(req.header("accept") ?? "*/*", forHTTPHeaderField: "Accept")
     r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    // opencode's conversation id (OLA-303): the model connection keeps which model served each step
+    // by conversation, so the record can name the design model for the changes it made. Until Nov 22
+    // the door dropped it and every step of the Mac arrived with no conversation.
+    for h in Self.sessionHeaders { if let v = req.header(h), Self.isSessionID(v) { r.setValue(v, forHTTPHeaderField: h) } }
     if !req.body.isEmpty { r.httpBody = req.body }
 
     let (id, events) = upstream.start(r)
@@ -133,6 +137,29 @@ public final class ModelDoor: @unchecked Sendable {
     } catch {
       if started { res.end() } else { await res.send(502, Self.error("Ola did not answer. Is this Mac online?")) }
     }
+  }
+
+  /// The headers opencode names its conversation with (gateway design.mjs sessionOf reads both).
+  static let sessionHeaders = ["x-session-id", "x-session-affinity"]
+  /// A conversation id as the gateway takes it: 1 to 80 letters, digits, `_` and `-`.
+  static func isSessionID(_ v: String) -> Bool {
+    !v.isEmpty && v.count <= 80 && v.unicodeScalars.allSatisfy { CharacterSet.alphanumerics.contains($0) && $0.isASCII || $0 == "_" || $0 == "-" }
+  }
+
+  /// Which names served this person's chat steps since a moment (ms), every conversation's
+  /// (GET /v1/served?steps=1, the person's own caller): for the record of who made each file
+  /// (LocalMadeBy.served, OLA-303). nil when the server cannot be asked (an older server, offline).
+  public func served(session: String, sinceMs: Int) async -> ServedSteps? {
+    guard Self.isSessionID(session), !isSignedOut, let token = token(), !token.isEmpty,
+          let base = api.gateway("v1/served"),
+          let url = URL(string: base.absoluteString + "?since=\(max(0, sinceMs))&session=\(session)&steps=1") else { return nil }
+    var r = URLRequest(url: url)
+    r.timeoutInterval = 10
+    r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    r.setValue("application/json", forHTTPHeaderField: "Accept")
+    guard let (d, res) = try? await URLSession(configuration: .ephemeral).data(for: r),
+          (res as? HTTPURLResponse)?.statusCode == 200, let j = JSON.parse(d) else { return nil }
+    return ServedSteps.parse(j)
   }
 
   /// The OpenAI-style error body opencode and the web commands both understand.

@@ -325,11 +325,16 @@ test('ola-publish through a door: preview, the yes, publish, status, publish aga
     assert.doesNotMatch(pre.out, /\.git/)
     const fp = /fingerprint: ([0-9a-f]{64})/.exec(pre.out)[1]
     assert.match(pre.out, new RegExp(`ola-publish publish .* --name food-bank --fingerprint ${fp}`))
+    // OLA-250, Nov 22: the preview told Ola to ask "Shall I publish ...?" in words; Ola did, ended its
+    // turn, and nothing was published. It must send Ola straight on to the publish, which the app asks.
+    assert.doesNotMatch(pre.out, /Shall I publish|\bask\b[^.]*\?/i)
+    assert.match(pre.out, /in this same turn.*Do not ask in words/s)
     assert.equal((await olaPublish(['publish', site, '--name', 'food-bank', '--fingerprint', 'f'.repeat(64)])).status, 1, 'another list')
     const pub = await olaPublish(['publish', site, '--name', 'food-bank', '--fingerprint', fp])
     assert.equal(pub.status, 0, pub.out)
     assert.match(pub.out, /^published: .*\/food-bank\/ +\(2 file\(s\)/m)
     assert.match(pub.out, /answers with the new page now/)
+    assert.match(pub.out, /address exactly as it is here, on its own: \S+\/food-bank\/ \(no bold/)
     assert.match(await (await fetch(`${v.origin}/food-bank/`)).text(), /food bank hours/)
     assert.equal((await fetch(`${v.origin}/food-bank/.git/config`)).status, 404)
     const st = await olaPublish(['status'])

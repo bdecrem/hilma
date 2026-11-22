@@ -179,9 +179,22 @@ public enum AgentNotes {
   /// file") and bart/ola-bart.sh, which write the same lines.
   public static let madeBy = """
   Three engines can work in this project: Ola's own open model, the hosted open model, and Claude. The person can hand any request to any of them, so files may have been made or changed by another engine since you last looked, and earlier replies in this conversation may be another engine's. A request can start with a note in <ola-engines> marks saying what the other engines did: it comes from the app and is true. Before you say who made, wrote, built or changed a file, run `ola-made-by <file>` (a shell command; run it by itself, with nothing piped, chained or redirected, so the person is never asked about it; `ola-made-by` alone lists every file's last change) and answer from what it prints, naming the engine. Never claim work you did not do: if the record names another engine, say so; if there is no record, say you do not know.
+
+  \(designWork)
+  """
+  /// OLA-303: the same paragraph as workspace/AGENTS.md ("Who made a file"), word for word; the Mac's
+  /// notes lacked it until Nov 22, so Ola on the Mac said "I made it ... this model (general)" about a
+  /// page the design model made. MadeByTests checks the two are the same.
+  /// OLA-303 check #5, Nov 22 (Ola on the Mac): asked "make a page for our block party on Saturday", Ola
+  /// asked four questions in a row and made no page. The same paragraph as workspace/AGENTS.md.
+  public static let questions = """
+  Questions before you make something. Ask at most one question before you start, and only when you cannot make a first version without the answer. When the person's answer leaves the details to them ("let me give details", "I'll type them"), stop and wait for their next message; never ask again in another form. Anything you still do not know goes into the first version as a plainly marked line to fill in ("Street: to be added"), and you say so in one sentence.
+  """
+  public static let designWork = """
+  Design work (making or restyling a page or an app screen, once you load the `designer` or `app-designer` skill) is done by Inkling-2-Small, an outside open model by Thinking Machines that Ola rents on Together for design work. It is not Ola's own model. When the record names it, say so in those words: for example "Inkling-2-Small, an outside open model Ola uses for design work, made it". Never call it "Ola's own open model", "my model" or "Ola's model".
   """
   public static var all: String { Reaction.instruction + "\n\n" + drawing + "\n\n" + madeBy }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
   /// `abilities` is written from evals/asks/abilities.json (Abilities.swift, OLA-232).
-  public static var opencode: String { web + "\n\n" + skills + "\n\n" + tryIt + "\n\n" + claude + "\n\n" + all + "\n\n" + abilities }
+  public static var opencode: String { web + "\n\n" + skills + "\n\n" + tryIt + "\n\n" + questions + "\n\n" + claude + "\n\n" + all + "\n\n" + abilities }
 }

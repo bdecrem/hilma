@@ -825,18 +825,20 @@
         "newfile:\\.html$",
         "served:design",
         "says:inkling",
-        "says:outside|not Ola.s own"
+        "says:outside|not Ola.s own",
+        "record:made"
       ],
       "mustNot": [
         "Ola.s own (open )?model (made|built)",
         "Ola.s own (open )?model\\W{0,4}\\(?\\W{0,2}Inkling",
         "Inkling[^.]{0,60}\\b(is|was|,)\\s*(Ola.s own|my own|our own)",
-        "(Ola.s|my|our) own (open )?(design )?model,? Inkling"
+        "(Ola.s|my|our) own (open )?(design )?model,? Inkling",
+        "this model \\(general\\)"
       ],
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-303",
-        "what": "The same question with Ola working on the Mac must get the same words as in a cloud project. The Mac's record names the design model only with a Mac app build that asks the model connection which model served each change (written on OLA-303); until then this case fails on the Mac, and that is the truth.",
+        "what": "The same question with Ola working on the Mac must get the same words as in a cloud project. On Nov 22 (Mac 0.1 (32), release e22f2b7ac99a) the design model served 41 of the page's 44 steps and Ola answered 'I made it ... created by this model (general)': the Mac recorded every Ola turn as general, and this test's local runtime kept no record at all ('there's no record of who made ...', 0 of 2). Since the OLA-303 Mac fix the record asks the model connection which model served each change, the test's local runtime keeps the record as the app does, and record:made checks the answer against it.",
         "words": "description"
       }
     },

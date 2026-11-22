@@ -67,7 +67,8 @@ def tell(r):
         if r.get("live"):
             say(head,
                 "Checked: the address answers with exactly the page just published" + (f"; it shows: “{shows}”." if shows else "."),
-                f"Tell the person it is live, with the address as a link: {r.get('url')}" + (f", and what it shows (“{shows}”)." if shows else "."),
+                "Tell the person it is live" + (f" and what it shows (“{shows}”)" if shows else "")
+                + f", with the address exactly as it is here, on its own (no bold, quotes or other marks around it): {r.get('url')}",
                 "If that is not the page the person asked for, say so plainly instead, make the right page, then publish it.")
             return 0
         say(head,

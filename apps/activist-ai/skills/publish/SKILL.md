@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "7"
+  ola/version: "8"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -22,7 +22,11 @@ and copies can outlive a takedown. So three things hold in every case:
    the group did not say is public: none of these go, whatever the person asks. Say what you left
    out and why, in one sentence each.
 3. **A yes before anything leaves.** Ask, and wait for the answer, every time, even when you are
-   allowed to work without asking. A yes for one list is not a yes for a changed list.
+   allowed to work without asking. A yes for one list is not a yes for a changed list. At Ola's
+   address (in the cloud and on a Mac) the question is the app's card, which `ola-publish` raises
+   when you run it: never ask "Shall I publish …?" in words there, and never end your turn with a
+   question about publishing. A question in words has no yes to give in the app, so nothing is
+   published.
 4. **Publish only when the person asks to publish.** A change to a page that is published
    ("change the page so it says …", "make the title bigger") is a request to change the page, not
    to publish it, even in a project or a conversation that published before. Make the change in
@@ -106,10 +110,11 @@ databases, lists of people (a table with emails or phone numbers), `.env` files,
 the folder or start with `/`, files that are missing. Fix every PROBLEM line and run it again until
 it says `ready to publish`. Hidden files are left out by itself.
 
-**Locally, for GitHub and Vercel**, show the person the list, in plain words: the files, what each
-one is, and the address it will get. Say what you left out and why. Ask: "Shall I publish these
-files?" Wait for the yes. (At Ola's address the app asks instead: see below.) **In the cloud**, do not ask in words: `ola-publish` asks with the exact list (below), and
-a question in words first would make the person say yes twice.
+**Locally, for GitHub and Vercel** (only there), show the person the list, in plain words: the
+files, what each one is, and the address it will get. Say what you left out and why. Ask: "Shall I
+publish these files?" Wait for the yes. **At Ola's address, in the cloud and on a Mac**, do not
+ask in words and do not stop: `ola-publish` asks with the exact list (below). A question in words
+there ends your turn with nothing to say yes to, and nothing is published (OLA-250).
 
 ## In the cloud: `ola-publish`, one yes, the address
 
@@ -126,8 +131,8 @@ ola-publish site --files index.html,style.css,picture.png
   yes is the only one needed: do not ask again in words.
 - On the yes Ola's server checks the files again for secrets and private data, publishes them and
   the command prints the outcome. **Published** with the address: tell the person it is published,
-  with the address as a link (`https://sites.ola.cx/<project>/`), and that publishing again
-  replaces it. **Not published** with a reason: say the reason in plain words, fix what it names
+  with the address written bare (`https://sites.ola.cx/<project>/`, see "The address" below), and
+  that publishing again replaces it. **Not published** with a reason: say the reason in plain words, fix what it names
   (a key in the page, a file that is not in the folder, a different list of files) and, if the
   person still wants it, run `ola-publish` again with the list it names. **Still being
   published**: run `ola-publish status` a minute later (it is never asked) and tell them then.
@@ -186,10 +191,12 @@ After Steps 2 and 3, with the folder ready (`site/`):
    run it again. If it says publishing to sites.ola.cx is not switched on yet, tell the person
    exactly that (nothing was published, the page is still on their Mac) and offer GitHub and
    Vercel instead; do not ask for a yes.
-4. **Show the list, then let the app ask**: write the files, the address and the rule line in your
-   message, then go straight to step 5 in the same turn. The app asks the person for `ola-publish
-   publish` every time, even with "Lots of permissions" on, and that is their one yes: do not
-   also ask in words (they would say yes twice). A yes for one list is not a yes for another.
+4. **Let the app ask, in the same turn**: go straight from the preview to step 5, with nothing in
+   between. The app's card shows the person the exact files and the address for `ola-publish
+   publish`, every time, even with "Lots of permissions" on, and that is their one yes. Do not
+   write the list as a question and do not end your turn after the preview: "Shall I publish these
+   3 files at https://sites.ola.cx/bart/?" in words gave the person nothing to say yes to, and
+   nothing was published (OLA-250, Nov 22). A yes for one list is not a yes for another.
 5. **Publish**, with the fingerprint the preview printed (the app asks the person here):
 
    ```bash
@@ -198,7 +205,7 @@ After Steps 2 and 3, with the folder ready (`site/`):
 
    "The files changed since you looked" means: preview again and ask again.
 6. **See it live:** `python3 /opt/ola/skills/publish/scripts/publish.py live https://sites.ola.cx/<name>/ --expect site`.
-   Only when it says `live`, tell the person it is published, with the address as a link.
+   Only when it says `live`, tell the person it is published, with the address written bare.
 
 **Publish again** (they changed the page and ask for it to be published again; a change alone is not a request, rule 4): Step 3 `check`, then preview, show the list, publish with the same
 name; it replaces what is there. **Unpublish** ("take it down"): run
@@ -280,6 +287,13 @@ python3 /opt/ola/skills/publish/scripts/publish.py dns <their-domain> --wait 600
 It says `live` when the domain points at Vercel and answers over https, `not yet` with what it
 found otherwise. A change at the registrar can take up to an hour; tell the person when it is live,
 not before.
+
+## The address
+
+Write a published address bare, exactly as the command printed it: `https://sites.ola.cx/bart/` on
+its own, never in bold (`**…**`), italics, quotes or backticks, and nothing run into it. A person
+copies it into a text or an email, where the marks come along and the address no longer works
+(OLA-250, Nov 22: "**https://sites.ola.cx/bart/**").
 
 ## What not to do
 

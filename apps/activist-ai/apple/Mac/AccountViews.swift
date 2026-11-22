@@ -277,6 +277,10 @@ final class AccountController {
   }
 
   func stop() { door?.stop() }
+
+  /// The door this launch uses (nil before the first request), for the record's question of which
+  /// model served each step (LocalMadeBy.served, OLA-303).
+  var currentDoor: ModelDoor? { door }
 }
 
 // MARK: the screens before the window

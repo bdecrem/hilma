@@ -984,6 +984,17 @@ await check('devices: the token reaches the gateway as the person’s own caller
     const c = await asDevice('/api/device/gw/v1/chat/completions', gwDevice, { method: 'POST', body: { model: 'general', stream: true, messages: [{ role: 'user', content: 'say hi on one line' }] } })
     assert(c.status === 200 && c.headers.get('content-type')?.startsWith('text/event-stream') && c.text.includes('data: [DONE]'), `chat ${c.status} ${c.headers.get('content-type')} ${c.text.slice(0, 120)}`)
     chat = 'streamed chat 200 (text/event-stream, [DONE])'
+    // OLA-303: the Mac's conversation id goes through to the gateway, and the Mac reads its own steps
+    // (which model served each) for the record of who made each file. Until Nov 22 neither did.
+    const since = Date.now() - 5000
+    const sc = await asDevice('/api/device/gw/v1/chat/completions', gwDevice, { method: 'POST', body: { model: 'general', stream: true, messages: [{ role: 'user', content: 'say hi on one line' }] }, headers: { 'x-session-id': 'ses_madeupmac1' } })
+    assert(sc.status === 200, `chat with a conversation id ${sc.status}`)
+    const served = await asDevice(`/api/device/gw/v1/served?since=${since}&session=ses_madeupmac1&steps=1&caller=ws-x`, gwDevice)
+    assert(served.status === 200 && served.json?.caller === `p-${pid}`, `served ${served.status} ${served.text.slice(0, 160)}`)
+    assert(served.json.steps?.some((s) => s[1] === 'ses_madeupmac1' && s[2] === 'general'), `served steps ${JSON.stringify(served.json.steps)}`)
+    assert((served.json.names?.general ?? 0) >= 1, `served names ${JSON.stringify(served.json.names)}`)
+    assert((await asDevice('/api/device/gw/v1/served', gwDevice, { method: 'POST', body: {} })).status === 403, 'POST served')
+    chat += '; its conversation id and served steps read back as the person’s own caller'
   }
   // Only the allowed routes, methods included; the device's own headers never reach the gateway's choice of lane.
   const embed = await asDevice('/api/device/gw/v1/embeddings', gwDevice, { method: 'POST', body: { input: 'x' } })

@@ -432,6 +432,22 @@ export const NEVER = [
 // The labels a not-offered case is allowed to say (it says it cannot, with the sentence it is given).
 const CANNOT = new Set(['says it cannot do it from here'])
 
+/**
+ * OLA-250, Nov 22 (Mac 0.1 (32), Ola on the Mac): Ola ended its turn on "Shall I publish these 3 files
+ * at https://sites.ola.cx/bart-simpson/?", a question in words with no card, so a person had nothing to
+ * say yes to and nothing was published. The runner says "Yes, go ahead." to a turn that ends on a
+ * question, which published the page and hid the fault. At Ola's address the app's card is the only
+ * question (skill publish 8): a reply that asks in words to publish is a failure in every case.
+ */
+export function asksToPublishInWords(text) {
+  const t = String(text).trim()
+  if (!/\?[\s*_]*$/.test(t)) return false
+  const tail = t.slice(-400)
+  // Which home (the skill's one question for a plain "publish this"), or their own hosting: asked in words.
+  if (/\b(?:github|vercel)\b/i.test(tail)) return false
+  return /\b(?:shall|should|can|may) I (?:go ahead and |now )?(?:publish|republish|put (?:it|this|them|the page|these [\w\s]{0,20}) (?:up|online|live|on))\b|\b(?:want|like) me to (?:go ahead and )?(?:publish|republish|put (?:it|this) (?:up|online|live))\b|\bready (?:for me )?to publish\b|\bpublish (?:it|this|these [\w\s]{0,20}) (?:now|at https?:\S+)\?/i.test(tail)
+}
+
 /** The https://sites.ola.cx/<name>/ addresses in a text. */
 export const siteAddresses = (text) => [...new Set([...String(text).matchAll(/https:\/\/sites\.ola\.cx\/[a-z0-9][a-z0-9-]{0,62}\/?/gi)].map((m) => m[0].replace(/\/?$/, '/')))]
 /**
@@ -439,7 +455,12 @@ export const siteAddresses = (text) => [...new Set([...String(text).matchAll(/ht
  * gave "https://sites.ola.cx/chk1121da-test/sites.ola.cx"; siteAddresses saw only its first part, the
  * right address, and the check passed). Sentence punctuation after a link is not part of it.
  */
-export const siteLinks = (text) => [...new Set([...String(text).matchAll(/(?:https?:\/\/)?sites\.ola\.cx(?:\/[^\s<>"'`()[\]]*)?/gi)].map((m) => m[0].replace(/[.,;:!?]+$/, '')))]
+// Markdown's marks around a link (OLA-250, Nov 22: "**https://sites.ola.cx/bart/**" is a bold
+// link in every app, which shows the address without the stars; the test read the stars as part of
+// it, fetched ".../bart/**" (404) and failed a publish that worked, 2 of 6 and 2 of 2). Emphasis
+// marks (* _ ~) and sentence punctuation after a link are not part of it, in any order.
+const LINK_TAIL = /[.,;:!?*_~]+$/
+export const siteLinks = (text) => [...new Set([...String(text).matchAll(/(?:https?:\/\/)?sites\.ola\.cx(?:\/[^\s<>"'`()[\]]*)?/gi)].map((m) => m[0].replace(LINK_TAIL, '')))]
 
 // The front desk's own reader (sites.mjs), loaded only when a site: check runs (add-case's test copies
 // this file elsewhere).

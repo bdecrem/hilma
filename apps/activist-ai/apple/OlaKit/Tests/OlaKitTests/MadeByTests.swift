@@ -49,6 +49,86 @@ final class MadeByTests: XCTestCase {
     XCTAssertNil(db.range(of: Data("rewritten".utf8)), "the record never holds what is in a file")
   }
 
+  /// OLA-303 check #5, Nov 22 (Mac 0.1 (32), Ola on the Mac): the gateway served 41 of the page's 44
+  /// steps with the design model, the Mac recorded the page as `general`, and Ola answered "I made it
+  /// ... created by this model (general)". The record now asks the model connection which name served
+  /// each change, as the cloud's front desk does.
+  func testOnTheMacTheDesignModelIsNamedForTheChangesItMade() async throws {
+    let (folder, tools) = try scratch("design")
+    let r = LocalMadeBy(folder: folder, tools: tools)
+    let asked = Asked()
+    // The made-up model connection: design steps until a moment ago, in this conversation.
+    r.served = { sid, since in
+      await asked.add(sid, since)
+      let now = Date().timeIntervalSince1970 * 1000
+      return ServedSteps(steps: [.init(at: now - 4000, session: "ses_a", name: "general"), .init(at: now - 500, session: "ses_a", name: "design")], designModel: "thinkingmachines/Inkling-2-Small")
+    }
+    await r.begin(turn: "t1", engine: .ola, model: "general", session: "ses_a")
+    try "<h1>Block party</h1>".write(to: folder.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+    let ended = await r.end(turn: "t1", model: nil, interrupted: false)
+    XCTAssertEqual(ended, ["index.html"])
+    let calls = await asked.calls
+    XCTAssertEqual(calls.map(\.0), ["ses_a"], "asked once, for this conversation")
+    XCTAssertLessThan(Double(calls[0].1), Date().timeIntervalSince1970 * 1000 - 14 * 60 * 1000, "steps from a while before the turn began")
+    let afterDesign = await r.lastChanges()
+    XCTAssertEqual(afterDesign.first?.model, "design:thinkingmachines/Inkling-2-Small")
+    let out = shell(tools.appendingPathComponent("ola-made-by").path, ["index.html"], folder: folder, tools: tools)
+    XCTAssertTrue(out.contains("Inkling-2-Small, an outside open model that Ola uses for design work (not Ola's own model)"), out)
+    XCTAssertFalse(out.contains("(model general)"), out)
+
+    // Ola's own model made the next change: no model is put on it.
+    r.served = { _, _ in ServedSteps(steps: [.init(at: Date().timeIntervalSince1970 * 1000 - 300, session: "ses_a", name: "general")], designModel: "x/Inkling-2-Small") }
+    try await Task.sleep(nanoseconds: 1_100_000_000)
+    await r.begin(turn: "t2", engine: .ola, model: "general", session: "ses_a")
+    try "<h1>Block party, Saturday</h1>".write(to: folder.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+    _ = await r.end(turn: "t2", model: nil, interrupted: false)
+    let afterOwn = await r.lastChanges()
+    XCTAssertEqual(afterOwn.first?.model, "general")
+    // A model connection that cannot be asked names no model: never a guess.
+    r.served = { _, _ in nil }
+    try await Task.sleep(nanoseconds: 1_100_000_000)
+    await r.begin(turn: "t3", engine: .ola, model: "general", session: "ses_a")
+    try "<h1>Block party, 2 pm</h1>".write(to: folder.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+    _ = await r.end(turn: "t3", model: nil, interrupted: false)
+    let afterNone = await r.lastChanges()
+    XCTAssertEqual(afterNone.first?.model, "general")
+  }
+
+  /// The rule, as the cloud's (frontdesk/madeby.mjs attributeChange): the last step at or before the change.
+  func testWhichStepMadeAChange() {
+    let s = ServedSteps(steps: [.init(at: 1000, session: "a", name: "design"), .init(at: 9000, session: "a", name: "general"),
+                                .init(at: 20000, session: "a", name: "design"), .init(at: 21000, session: "b", name: "general")], designModel: "t/Inkling-2-Small")
+    XCTAssertEqual(MadeByAttribution.model(for: 2000, session: "a", served: s), "design:t/Inkling-2-Small")
+    XCTAssertNil(MadeByAttribution.model(for: 9500, session: "a", served: s), "Ola's own model's step")
+    XCTAssertEqual(MadeByAttribution.model(for: 8500, session: "a", served: s), nil, "within the clock slack of the general step")
+    XCTAssertEqual(MadeByAttribution.model(for: 21500, session: "a", served: s), "unknown", "two conversations a second apart, one design")
+    XCTAssertNil(MadeByAttribution.model(for: -100, session: "a", served: s), "no step before it (beyond the clock slack)")
+    XCTAssertEqual(MadeByAttribution.designModel(nil), "design:thinkingmachines/Inkling-2-Small")
+    let j = JSON.parse(#"{"object":"served","caller":"p-16","names":{"design":41,"general":3},"design_model":"thinkingmachines/Inkling-2-Small","steps":[[1763832480000,"ses_x","design"],[1,"",""],["bad"]]}"#)!
+    XCTAssertEqual(ServedSteps.parse(j), ServedSteps(steps: [.init(at: 1763832480000, session: "ses_x", name: "design"), .init(at: 1, session: "", name: "")], designModel: "thinkingmachines/Inkling-2-Small"))
+    XCTAssertNil(ServedSteps.parse(["error": "x"]))
+  }
+
+  /// The Mac's notes say what the cloud's say about design work, word for word (OLA-303).
+  func testTheMacNotesNameTheDesignModelAsTheCloudsDo() throws {
+    let agents = try String(contentsOf: Self.workspace.appendingPathComponent("AGENTS.md"), encoding: .utf8)
+    XCTAssertTrue(agents.contains(AgentNotes.designWork), "workspace/AGENTS.md and AgentNotes.designWork differ")
+    XCTAssertTrue(AgentNotes.opencode.contains(AgentNotes.designWork))
+    // And about questions before making something (check #5's try 1: four questions, no page).
+    XCTAssertTrue(agents.contains(AgentNotes.questions), "workspace/AGENTS.md and AgentNotes.questions differ")
+    XCTAssertTrue(AgentNotes.opencode.contains(AgentNotes.questions))
+  }
+
+  /// The door passes opencode's conversation id on (the gateway keeps which model served it by it).
+  func testTheDoorPassesTheConversationID() {
+    XCTAssertTrue(ModelDoor.isSessionID("ses_1a2B-x"))
+    XCTAssertFalse(ModelDoor.isSessionID(""))
+    XCTAssertFalse(ModelDoor.isSessionID("ses 1"))
+    XCTAssertFalse(ModelDoor.isSessionID("ses_é"))
+    XCTAssertFalse(ModelDoor.isSessionID(String(repeating: "a", count: 81)))
+    XCTAssertEqual(ModelDoor.sessionHeaders, ["x-session-id", "x-session-affinity"])
+  }
+
   func testWords() {
     let e = MadeByEntry(path: "index.html", how: "changed", engine: "claude", at: "2026-11-20T06:49:15Z")
     XCTAssertTrue(MadeByWords.file(e, now: e.date!).hasPrefix("Last changed by Claude, "), MadeByWords.file(e, now: e.date!))
@@ -235,4 +315,10 @@ final class MadeByTests: XCTestCase {
     p.waitUntilExit()
     return String(decoding: d, as: UTF8.self)
   }
+}
+
+/// What the made-up model connection was asked.
+actor Asked {
+  var calls: [(String, Int)] = []
+  func add(_ s: String, _ since: Int) { calls.append((s, since)) }
 }

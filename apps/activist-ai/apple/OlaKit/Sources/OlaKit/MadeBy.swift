@@ -138,12 +138,77 @@ public enum EngineNote {
   }
 }
 
+/// What the model connection says served one person's requests (GET /v1/served?steps=1, gateway
+/// design.mjs): every chat step as [when it finished, conversation, name], and the design model's id.
+public struct ServedSteps: Equatable, Sendable {
+  public struct Step: Equatable, Sendable {
+    public var at: Double // ms since 1970, the gateway's clock
+    public var session: String
+    public var name: String
+    public init(at: Double, session: String, name: String) { self.at = at; self.session = session; self.name = name }
+  }
+  public var steps: [Step]
+  public var designModel: String?
+  public init(steps: [Step], designModel: String? = nil) { self.steps = steps; self.designModel = designModel }
+
+  /// The gateway's answer, or nil when it is not one.
+  public static func parse(_ j: JSON) -> ServedSteps? {
+    guard j["object"].string == "served" else { return nil }
+    let steps = j["steps"].array.compactMap { r -> Step? in
+      let a = r.array
+      guard a.count >= 3, let at = a[0].double, let s = a[1].string, let n = a[2].string else { return nil }
+      return Step(at: at, session: s, name: n)
+    }
+    return ServedSteps(steps: steps, designModel: j["design_model"].string)
+  }
+}
+
+/// Which model made one change (OLA-303, with Ola working on the Mac). The design model serves Ola's
+/// steps once the designer skill is loaded, and only the model connection knows which step it served:
+/// until Nov 22 the Mac recorded every Ola turn as `general`, so a page the design model made (41 of
+/// its 44 steps) was "created by Ola's own open model (model general)" and Ola said so. The same rule
+/// as the cloud's front desk (frontdesk/madeby.mjs attributeChange): the last step at or before the
+/// file's time decides; steps of two conversations within a few seconds are too close to tell.
+public enum MadeByAttribution {
+  public static let clockSlackMs: Double = 1000
+  public static let tooCloseMs: Double = 3000
+
+  /// `design:<id>` (as the record keeps it, and `ola-made-by` prints as an outside model).
+  public static func designModel(_ id: String?) -> String {
+    let t = (id ?? "").trimmingCharacters(in: .whitespaces)
+    return "design:" + (t.isEmpty ? "thinkingmachines/Inkling-2-Small" : t)
+  }
+
+  /// The model for a change made at `mtimeMs` in conversation `session`: `design:<id>`, "unknown"
+  /// (two conversations, one of them design), or nil (Ola's own model, or no step before it).
+  public static func model(for mtimeMs: Double, session: String, served: ServedSteps) -> String? {
+    let before = served.steps.filter { $0.at <= mtimeMs + clockSlackMs }.sorted { $0.at < $1.at }
+    guard let latest = before.last?.at else { return nil }
+    var last: [String: ServedSteps.Step] = [:]
+    for s in before { last[s.session] = s }
+    let cands = last.values.filter { $0.at >= latest - tooCloseMs }
+    let design = { (s: ServedSteps.Step) in s.name == "design" }
+    if cands.count == 1 { return design(cands[0]) ? designModel(served.designModel) : nil }
+    if cands.allSatisfy(design) { return designModel(served.designModel) }
+    if !cands.contains(where: design) { return nil }
+    return "unknown"
+  }
+}
+
 #if os(macOS)
 /// On this Mac: the record in the folder's project.db, through the app's own copy of `ola-db`.
 public final class LocalMadeBy: MadeByRecord, @unchecked Sendable {
   public let folder: URL
   public let tools: URL
   private let queue = DispatchQueue(label: "ola.madeby")
+  /// Asks the model connection which names served this person's steps since a moment (ms), for one
+  /// conversation (ModelDoor.served). nil: no model is named beyond the one the turn began with.
+  public var served: (@Sendable (_ session: String, _ sinceMs: Int) async -> ServedSteps?)?
+  /// The open turns: their conversation, engine and when they began (for the served query).
+  private var open: [String: (session: String?, engine: Turn.Engine, began: Date)] = [:]
+  private let lock = NSLock()
+  /// How far before a turn began its steps are read (a change can come from a step just before it).
+  static let stepsBack: TimeInterval = 15 * 60
 
   public init(folder: URL, tools: URL = LocalServer.support.appendingPathComponent("web-tools")) {
     self.folder = folder
@@ -179,6 +244,7 @@ public final class LocalMadeBy: MadeByRecord, @unchecked Sendable {
     var a = ["begin", "--turn", turn, "--engine", engine.rawValue]
     if let model { a += ["--model", model] }
     if let session { a += ["--session", session] }
+    lock.withLock { open[turn] = (session, engine, Date()) }
     _ = await run(a)
   }
 
@@ -186,8 +252,30 @@ public final class LocalMadeBy: MadeByRecord, @unchecked Sendable {
     var a = ["end", "--turn", turn]
     if let model { a += ["--model", model] }
     if interrupted { a.append("--interrupted") }
+    let t = lock.withLock { open.removeValue(forKey: turn) }
     guard let d = await run(a), let j = JSON.parse(d) else { return [] }
-    return j["files"].array.map { $0["path"].str }
+    let files = j["files"].array
+    // Ola's own turn: which model made each change, from the model connection (OLA-303).
+    if let t, t.engine == .ola, model == nil, let sid = t.session, !sid.isEmpty, let served,
+       let s = await served(sid, Int((t.began.timeIntervalSince1970 - Self.stepsBack) * 1000)) {
+      await attribute(turn: turn, session: sid, files: files, served: s)
+    }
+    return files.map { $0["path"].str }
+  }
+
+  /// Each changed file's row gets the model that made it, when that was not Ola's own (`fix`).
+  func attribute(turn: String, session: String, files: [JSON], served: ServedSteps) async {
+    var groups: [String: [String]] = [:]
+    for f in files where f["how"].string != "deleted" {
+      guard let m = f["mtime"].double, let path = f["path"].string,
+            let model = MadeByAttribution.model(for: m * 1000, session: session, served: served) else { continue }
+      groups[model, default: []].append(path)
+    }
+    for (model, paths) in groups {
+      for i in stride(from: 0, to: paths.count, by: 20) {
+        _ = await run(["fix", "--turn", turn] + paths[i..<min(i + 20, paths.count)] + ["--model", model])
+      }
+    }
   }
 
   public func endStale() async -> [String: [String]] {
@@ -205,6 +293,57 @@ public final class LocalMadeBy: MadeByRecord, @unchecked Sendable {
   public func entries(session: String) async -> [MadeByEntry] {
     guard let d = await run(["--json", "--session", session]) else { return [] }
     return (try? JSONDecoder().decode([MadeByEntry].self, from: d)) ?? []
+  }
+}
+
+/// The record kept from the local runtime's own events, the way the Mac app's store keeps it while
+/// it shows a conversation (OlaStore beginRecord/endRecord): each opencode run is bracketed, Ola's own
+/// open model by default. For a runtime with no window: the request tests' local runtime
+/// (olakit-selftest OLA_SERVE_LOCAL) had no record at all, so "who made that page?" there tested
+/// something no Mac does (design-who-made-local, Nov 22: "there's no record of who made ...").
+public final class LocalTurnRecorder: @unchecked Sendable {
+  let record: LocalMadeBy
+  let client: OpenCodeClient
+  private var turns: [String: String] = [:]
+  private let lock = NSLock()
+  private var task: Task<Void, Never>?
+
+  public init(record: LocalMadeBy, client: OpenCodeClient) {
+    self.record = record
+    self.client = client
+  }
+
+  /// Follows the event stream (again after a drop) until stopped.
+  public func start() {
+    task = Task { [weak self] in
+      while !Task.isCancelled, let self {
+        do { for try await ev in self.client.events() { await self.handle(ev) } } catch {}
+        try? await Task.sleep(nanoseconds: 500_000_000)
+      }
+    }
+  }
+
+  public func stop() { task?.cancel() }
+
+  func handle(_ ev: JSON) async {
+    let type = ev["type"].str
+    let sid = ev["data"]["sessionID"].str
+    guard !sid.isEmpty else { return }
+    switch type {
+    case "session.execution.started", "session.inbox.enqueued":
+      let turn: String? = lock.withLock {
+        guard turns[sid] == nil else { return nil }
+        let t = "oc-\(sid)-\(Int(Date().timeIntervalSince1970 * 1000))"
+        turns[sid] = t
+        return t
+      }
+      if let turn { await record.begin(turn: turn, engine: .ola, model: "general", session: sid) }
+    case "session.execution.succeeded", "session.execution.failed", "session.execution.interrupted":
+      if let turn = lock.withLock({ turns.removeValue(forKey: sid) }) {
+        _ = await record.end(turn: turn, model: nil, interrupted: type != "session.execution.succeeded")
+      }
+    default: break
+    }
   }
 }
 #endif

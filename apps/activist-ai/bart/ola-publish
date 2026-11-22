@@ -175,11 +175,16 @@ def main(argv):
                 print(f"This replaces what is public there now (since {j['published']['at'][:10]}).")
             print(f"rule: {j.get('acceptableUse', '')}")
             print(f"fingerprint: {j['fingerprint']}")
-            print(f"Show the person this list and the address, and ask: \"Shall I publish these {len(items)} file(s) at {j['url']}?\" Publish only after their yes:")
+            # OLA-250, Nov 22: this line said 'ask: "Shall I publish these N file(s) at <address>?"'; Ola
+            # asked that in words, ended its turn, and nothing was published (no card, no yes to give).
+            # The app's card is the only question: it shows the person this exact list and the address.
+            print("Next, in this same turn, run this as a command of its own. Do not ask in words first and do not end your turn before it: "
+                  "running it shows the person this exact list and the address in the app, and their answer there is the one yes.")
             print(f"  ola-publish publish {pos[1]} --name {j['name']} --fingerprint {j['fingerprint']}")
             return 0
         print(f"{'published again' if j.get('again') else 'published'}: {j['url']}  ({j['files']} file(s), {size(j['total'])})")
         print("It answers with the new page now." if j.get("live") else "The address did not show the new page yet; check it again in a minute.")
+        print(f"Give the person the address exactly as it is here, on its own: {j['url']} (no bold, quotes or other marks around it).")
         return 0
     if cmd == "unpublish" and len(pos) == 1 and opts.get("name"):
         status, j = call("POST", "/unpublish", {"name": opts["name"]})
@@ -193,8 +198,8 @@ def main(argv):
     if "--files" in argv:
         # The cloud project's form (workspace/ola-publish, OLA-230), not this Mac's (OLA-250).
         print("ola-publish: `--files` is the form in an Ola cloud project. On this Mac it is two steps: "
-              "ola-publish preview <folder> --name <name>, show the person the list it prints, then "
-              "ola-publish publish <folder> --name <name> --fingerprint <the fingerprint it printed>. Nothing was published.")
+              "ola-publish preview <folder> --name <name>, then straight away, without asking in words, "
+              "ola-publish publish <folder> --name <name> --fingerprint <the fingerprint it printed> (the app asks the person). Nothing was published.")
         return 2
     print(__doc__.split("\n\n")[1], file=sys.stderr)
     return 2

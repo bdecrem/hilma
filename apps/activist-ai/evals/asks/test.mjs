@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, asksToPublishInWords, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -133,6 +133,41 @@ test('site: a link in the answer that is not the published address fails, though
     assert.equal(r.ok, true, `${fine}: ${r.why}`)
   }
   assert.deepEqual(siteLinks(`see ${pub}sites.ola.cx, and [x](${pub}).`), [`${pub}sites.ola.cx`, pub])
+})
+
+// OLA-250, Nov 22, the live release: Ola wrote the address in bold ("**https://sites.ola.cx/bart/**"),
+// which every app shows as the address; the test read "https://sites.ola.cx/bart/**" (404) and failed a
+// publish that worked: publish-bart@local-mac 2 of 6 tries, share-link@local-mac 2 of 2.
+test('site: markdown marks around the address are not part of it (OLA-250)', async () => {
+  const pub = 'https://sites.ola.cx/bart/'
+  const fetchFirst = async (u) => (u === pub ? { status: 200, text: '<h1>Bart</h1>' } : { status: 404, text: '' })
+  const opts = { rereadMs: 1, rereads: 1, fetchFirst, reader: async () => ({ status: 200, body: Buffer.from('<h1>Bart</h1>') }) }
+  for (const said of [
+    'The page says **Bart** and it\'s published at: **https://sites.ola.cx/bart/** It went live with the check.',
+    '[[ola:done]] Published and live: **https://sites.ola.cx/bart/** — a page that says "Bart".',
+    'Here it is: __https://sites.ola.cx/bart/__.',
+    'Live at *https://sites.ola.cx/bart/*, and ~~https://sites.ola.cx/bart/~~!',
+    'Your page is live and ready to share: **https://sites.ola.cx/bart/**.',
+  ]) {
+    const r = await checkMust('site:Bart', {}, said, opts)
+    assert.equal(r.ok, true, `${said}: ${r.why}`)
+    assert.deepEqual(siteLinks(said), [pub], said)
+  }
+  // A link that really goes elsewhere still fails, bold or not.
+  const wrong = await checkMust('site:Bart', {}, `Live at **${pub}** and **${pub}x/**`, opts)
+  assert.equal(wrong.ok, false, wrong.why)
+  assert.match(wrong.why, /bart\/x\/, which answers 404/)
+})
+
+// OLA-250 check #1, Nov 22, try 1 (Mac 0.1 (32), Ola on the Mac): the answer, word for word. The runner
+// typed "Yes, go ahead." to it, which published, so the request test passed what a person met as a failure.
+test('a question in words about publishing is a failure; other questions and plain answers are not (OLA-250)', () => {
+  const nov22 = "Here's the list before anything goes public:\n\n**Would go public at https://sites.ola.cx/bart-simpson/**\n- `index.html` (7 KB) — the fan page itself\n- `fonts/BowlbyOne.woff2` (23 KB) — display font for \"BART\"\n\nLeft out: `.ola-source.json` (hidden working file). Nothing personal, no keys, no database.\n\n**Shall I publish these 3 files at https://sites.ola.cx/bart-simpson/?**"
+  assert.equal(asksToPublishInWords(nov22), true)
+  for (const q of ['Want me to publish it again?', 'Ready to publish?', 'Should I go ahead and publish the page?', 'Would you like me to put it online?', 'Publish these 6 files at https://sites.ola.cx/bart/?'])
+    assert.equal(asksToPublishInWords(q), true, q)
+  for (const q of ['It is live: https://sites.ola.cx/bart/', 'Who is Bart: the person or the cartoon?', 'Shall I make the title bigger?', 'The change is not public yet; say "publish it again" to put it up.', 'Should I publish it on GitHub and Vercel, or at Ola\'s address? I published nothing yet.', 'Where should it live: at Ola\'s own address, sites.ola.cx/bart, or on your own hosting with GitHub and Vercel?'])
+    assert.equal(asksToPublishInWords(q), false, q)
 })
 
 test('a conversation folds into turns as the apps fold it', () => {

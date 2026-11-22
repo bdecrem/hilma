@@ -70,6 +70,9 @@ export const GW_ALLOWED = new Map([
   ['POST /v1/chat/completions', 12 * MIB],
   ['GET /v1/models', 0],
   ['GET /v1/usage', 0],
+  // Which model served the person's own steps (OLA-303): the Mac's record of who made each file names
+  // the design model for the changes it made. The gateway answers a person's token with its own only.
+  ['GET /v1/served', 0],
   ['POST /web/search', 8 * 1024],
   ['POST /web/fetch', 8 * 1024],
   ['POST /web/lookup', 8 * 1024],
@@ -82,6 +85,21 @@ export const GW_ALLOWED = new Map([
 const GW_REPLY_HEADERS = ['content-type', 'content-length', 'retry-after', 'x-ola-final-url', 'x-ola-fetched-at', 'x-ola-redirects']
 
 const sha256 = (s) => createHash('sha256').update(s).digest()
+const SESSION_ID = /^[A-Za-z0-9_-]{1,80}$/
+/** The query a gateway route takes from a device: only /v1/served has one (since, session, steps). */
+export function gatewayQuery(req, rest) {
+  if (rest !== '/v1/served') return ''
+  let q
+  try {
+    q = new URL(req.url ?? '', 'http://x').searchParams
+  } catch {
+    return ''
+  }
+  const keep = new URLSearchParams()
+  for (const k of ['since', 'session', 'steps']) if (q.has(k)) keep.set(k, String(q.get(k)).slice(0, 80))
+  const s = keep.toString()
+  return s ? `?${s}` : ''
+}
 
 export function devicesConfig(env, { home, proxyProtocol }) {
   // One cap for every route instead of the gateway's defaults (when GATEWAY_LIMITS raises them).
@@ -487,10 +505,13 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     const headers = { authorization: `Bearer ${token}`, host: '127.0.0.1' }
     if (typeof req.headers['content-type'] === 'string') headers['content-type'] = req.headers['content-type'].slice(0, 200)
     if (typeof req.headers.accept === 'string') headers.accept = req.headers.accept.slice(0, 200)
+    // opencode's conversation id on the Mac (OLA-303), as the gateway reads it (design.mjs sessionOf):
+    // which model served a step is kept by conversation. Nothing else of the device's goes on.
+    for (const h of ['x-session-id', 'x-session-affinity']) if (typeof req.headers[h] === 'string' && SESSION_ID.test(req.headers[h])) headers[h] = req.headers[h]
     if (declared !== null) headers['content-length'] = String(declared)
     else if (req.method === 'POST') headers['transfer-encoding'] = 'chunked'
     const gw = new URL(gateway)
-    const up = http.request({ host: gw.hostname, port: gw.port, method: req.method, path: rest, headers, agent: false })
+    const up = http.request({ host: gw.hostname, port: gw.port, method: req.method, path: rest + gatewayQuery(req, rest), headers, agent: false })
     // Cut within a second when the device is revoked, the person suspended or the pass expires.
     const timer = setInterval(() => {
       if (stillValid(dev)) return

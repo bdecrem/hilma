@@ -637,6 +637,9 @@ extension WhereOlaWorks {
     if r == .local, let folder = LocalSettings.folder {
       if (s.madeBy as? LocalMadeBy)?.folder != folder {
         let record = LocalMadeBy(folder: folder)
+        // Which model served each step (OLA-303): the design model is named for the changes it made.
+        let doorNow: @MainActor () -> ModelDoor? = { [weak account] in account?.currentDoor }
+        record.served = { sid, since in await doorNow()?.served(session: sid, sinceMs: since) }
         s.madeBy = record
         if Self.cleaned.insert(folder.standardizedFileURL.path).inserted { Task { _ = await record.endStale() } }
       }
