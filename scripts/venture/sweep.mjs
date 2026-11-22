@@ -27,6 +27,7 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { fpOf } from './_sweepfp.mjs'
+import { sshArgs } from './_olassh.mjs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
@@ -148,7 +149,7 @@ async function facts() {
     const ssh = (c) => {
       const cmd = `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${c}`
       if (existsSync(`${process.env.HOME}/ola-staging/current/apps/activist-ai/frontdesk`)) return spawnSync('/bin/sh', ['-c', cmd], { encoding: 'utf8', timeout: 30000 })
-      return spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', cmd], { encoding: 'utf8', timeout: 30000 })
+      return spawnSync('ssh', sshArgs('admin@100.95.51.98', cmd), { encoding: 'utf8', timeout: 30000 })
     }
     const r = ssh('kept --days 3 --json')
     if (r.status !== 0) throw new Error((r.stderr || 'the Ola machine did not answer').trim().split('\n').pop())

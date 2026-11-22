@@ -52,6 +52,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { checkDeploys } from './_overrides.mjs'
+import { sshArgs } from './_olassh.mjs'
 import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
@@ -425,7 +426,7 @@ const onMini = existsSync(`${STAGING}/deploys.log`)
 function mini(command) {
   if (onMini) return spawnSync('/bin/sh', ['-c', command], { encoding: 'utf8', timeout: 20000 }).stdout ?? ''
   for (const h of ['admin@171.66.240.175', 'admin@100.95.51.98']) {
-    const r = spawnSync('ssh', ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes', h, command], { encoding: 'utf8', timeout: 25000 })
+    const r = spawnSync('ssh', sshArgs(h, command, 8), { encoding: 'utf8', timeout: 25000 })
     if (r.status === 0) return r.stdout
   }
   return null

@@ -74,6 +74,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
+import { sshArgs } from './_olassh.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { getState, sweepDue } from './_state.mjs'
 import { tmpdir } from 'node:os'
@@ -521,7 +522,7 @@ function fromMini(what, remote, parse) {
   }
   for (const host of MINI) {
     try {
-      const out = execFileSync('ssh', ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes', host, remote], { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
+      const out = execFileSync('ssh', sshArgs(host, remote, 8), { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
       const c = { at: Date.now(), value: parse(out), from: host }
       try { writeFileSync(cache, JSON.stringify(c)) } catch {}
       return c

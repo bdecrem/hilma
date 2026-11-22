@@ -21,6 +21,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { overridesOf } from './_overrides.mjs'
+import { sshArgs } from './_olassh.mjs'
 import { fakeClient } from './_fakedb.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unnumberedCorrections, weaknessStatus } from './_weak.mjs'
 
@@ -94,7 +95,7 @@ const OLA_FRONTDESK = `${process.env.HOME}/ola-staging/current/apps/activist-ai/
 function olaAdmin(args) {
   const cmd = `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; cd ~/ola-staging/current/apps/activist-ai/frontdesk && node admin.mjs ${args}`
   if (existsSync(OLA_FRONTDESK)) return spawnSync('/bin/sh', ['-c', cmd], { encoding: 'utf8', timeout: 30000 })
-  return spawnSync('ssh', ['-o', 'ConnectTimeout=10', '-o', 'BatchMode=yes', 'admin@100.95.51.98', cmd], { encoding: 'utf8', timeout: 30000 })
+  return spawnSync('ssh', sshArgs('admin@100.95.51.98', cmd), { encoding: 'utf8', timeout: 30000 })
 }
 
 // Switches to Claude (OLA-157): requests handed to Claude or the hosted model right after Ola's own
