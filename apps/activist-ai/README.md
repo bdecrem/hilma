@@ -1170,6 +1170,23 @@ minutes for room beside every VM that is not theirs (one line says they wait), a
 they fail with one line, `the machine is full: N VMs running that are not this suite's (names)`,
 instead of a run of knock-on failures (`waitForRoom` in `ws.mjs`).
 
+**An update while people use Ola (OLA-240, 2026-11-22).** On Nov 20 two updates were refused with
+`the machine is full: 3 VMs running that are not this suite's` (two people's projects and a
+checker's test project). Now, before its VM suites (workspace, frontdesk), `ola.mjs deploy` (and
+`deploy --check`) writes `~/.ola/park-request.json` and the front desk parks every running project
+no one has used for 5 minutes, with no run executing and no upload or download under way: stopped
+the way the 30-minute idle stop does it (an open tab does not wake it, the next request does), and
+listed in `~/.ola/parked.json`. A project in use is never stopped for a test. The update then waits
+up to 20 minutes for room for its two VMs (one line says what it waits for; projects that become
+idle meanwhile are parked too) and is refused with the same line only if all of them stay in use.
+When the suites are done (or the update ends any other way; a request nobody removed ends by itself
+after 3 hours) the request file is removed and the front desk starts again the parked projects that
+are still stopped, across its own restart (the list is a file), and forgets them; a start the machine
+refuses is tried again for 15 minutes. The update's log says what was parked and what was left
+running. Code: `ops/park.mjs`, its use in `frontdesk/workspaces.mjs` and `ops/ola.mjs`; test
+`node --test ops/park-test.mjs` (an update suite, seconds, no VM). A checker's test project is
+parked like any other once its check stops using it.
+
 **Scratch checkouts on the mini.** `~/ola-rot` (2026-11-16, the rotation fix) is a sparse clone of
 this repo (`apps/activist-ai` only) with its own `node_modules` and `web/dist`; nothing runs from it
 when no one is working there. Its suites run beside staging's without touching it:

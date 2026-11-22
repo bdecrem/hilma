@@ -6,11 +6,12 @@
 // opencode on its own loopback. Replies are typed and capped by the proxy; file lists are parsed
 // strictly by ws.mjs; no host path is ever built from anything the workspace says.
 import { spawn } from 'node:child_process'
-import { statSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as ws from '../workspace/ws.mjs'
+import * as park from '../ops/park.mjs'
 import { makeProxy, opencodeCall } from '../web/server/proxy.mjs'
 import { audit, nameRef } from './db.mjs'
 import { webRequests } from '../web/server/webask.mjs'
@@ -245,6 +246,21 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     }
     return counting
   }
+  // Stopped here, the idle stop's way: its event stream does not wake it, the next request does.
+  function sleep(slug, said) {
+    asleep.add(slug)
+    reset(slug)
+    const p = run('stop', slug)
+      .then(() => log(`${slug}: ${said}`))
+      .catch((e) => {
+        asleep.delete(slug)
+        log(`${slug}: stop failed (${e.code ?? 'error'})`)
+        throw e
+      })
+      .finally(() => stopping.delete(slug))
+    stopping.set(slug, p)
+    return p
+  }
   let sweeping = false
   async function sweep() {
     if (sweeping) return
@@ -262,13 +278,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
         }
         const at = Math.max(lastUse.get(slug) ?? 0, lastRun.get(slug) ?? 0)
         if (idleStopMs <= 0 || now - at < idleStopMs || (busy.get(slug) ?? 0) > 0 || starting.has(slug) || stopping.has(slug) || asleep.has(slug)) continue
-        asleep.add(slug)
-        reset(slug)
-        const p = run('stop', slug)
-          .then(() => log(`${slug}: stopped after ${Math.round((now - at) / 60_000)} min idle`))
-          .catch((e) => (asleep.delete(slug), log(`${slug}: idle stop failed (${e.code ?? 'error'})`)))
-          .finally(() => stopping.delete(slug))
-        stopping.set(slug, p)
+        sleep(slug, `stopped after ${Math.round((now - at) / 60_000)} min idle`).catch(() => {})
       }
       const old = Date.now() - 24 * 3600_000
       for (const [k, v] of ceilingStops) if (v.at < old) ceilingStops.delete(k)
@@ -283,6 +293,39 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   const sweepMs = Math.max(1000, Math.min(60_000, Math.min(idleStopMs > 0 ? idleStopMs : Infinity, runCeilingMs > 0 ? runCeilingMs : Infinity) / 4))
   const sweeper = idleStopMs > 0 || runCeilingMs > 0 ? setInterval(sweep, sweepMs) : null
   sweeper?.unref()
+
+  // -------------------------------------------------------------- parked for an update's tests
+  //
+  // OLA-240 (ops/park.mjs): while an update's park request stands, a running project unused for
+  // its idleMs (5 minutes), with no run executing and no transfer, is stopped the idle stop's way,
+  // so the update's suites find room; when the request is gone, the ones still stopped are started
+  // again. Polled every 2 s, and only reads two small files when there is nothing to do.
+  const parkFiles = park.files(ws.HOME)
+  const parker = park.makeParker({
+    home: ws.HOME,
+    log,
+    candidates: async () => {
+      const up = new Set(ws.running().map((c) => (c.configuration?.id || c.id || '').slice(4)))
+      const out = []
+      for (const slug of lastUse.keys()) {
+        if (!up.has(slug)) continue
+        const now = Date.now()
+        let busyNow = (busy.get(slug) ?? 0) > 0 || starting.has(slug) || stopping.has(slug) || now - (lastRun.get(slug) ?? 0) < 60_000
+        if (!busyNow) {
+          const executing = await active(slug)
+          busyNow = !!executing && executing.size > 0
+        }
+        out.push({ slug, running: true, idleMs: now - Math.max(lastUse.get(slug) ?? 0, lastRun.get(slug) ?? 0), busy: busyNow })
+      }
+      return out
+    },
+    park: (slug) => sleep(slug, 'stopped for an update\'s tests'),
+    wake: (slug) => ensureRunning(slug),
+  })
+  const parkTimer = setInterval(() => {
+    if (existsSync(parkFiles.request) || existsSync(parkFiles.parked)) parker.poll().catch((e) => log(`parking: ${e.message}`))
+  }, 2000)
+  parkTimer.unref()
 
   function agentFor(slug) {
     if (!agents.has(slug)) agents.set(slug, new http.Agent({ keepAlive: true, maxSockets: MAX_SOCKETS, maxFreeSockets: 2, timeout: 120_000 }))
@@ -535,6 +578,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     },
     close() {
       if (sweeper) clearInterval(sweeper)
+      clearInterval(parkTimer)
       for (const w of watchers.values()) w.req?.destroy()
       for (const a of agents.values()) a.destroy()
     },

@@ -85,6 +85,10 @@ import { unchanged } from './restart.mjs'
 import { changedFiles, lanes, plan } from './select.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 import { limitMs, outcome, runLimited } from './suite.mjs'
+import { ROOM_WAIT_MS, requestPark, waitAnswered } from './park.mjs'
+// The suites that start VMs, and how many they run at once (workspace/check.mjs, frontdesk/check.mjs).
+const VM_SUITES = ['workspace', 'frontdesk']
+const VM_SUITE_NEED = 2
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -592,6 +596,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['clean', ['--test', 'ops/clean-test.mjs']], // the cleaner (OLA-291), seconds, no VM
     ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
     ['disk', ['--test', 'ops/disk-test.mjs']], // the free-disk refusal (OLA-327), seconds, no VM
+    ['park', ['--test', 'ops/park-test.mjs']], // idle projects parked for the VM suites (OLA-240), seconds, no VM
   ]
   // Free disk first (OLA-327): on Nov 20 an update stopped half way with 3.8 GB left on the mini.
   const diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
@@ -663,9 +668,11 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   const T0 = Date.now()
   let turnWait = 0 // how long this update stood waiting for the turn (another holder's time)
   let turn = null
+  let unpark = () => {} // OLA-240: ends the park request (ops/park.mjs) once the suites are done
   const flaky = [] // OLA-334: suites that failed once and passed on the rerun
   const refuse = (m) => {
     turn?.release() // OLA-335: a refused update or check never keeps the machine's turn
+    unpark()
     if (check) {
       say(`CHECK FAILED: ${m}`)
       say(`${short} stays in ${rel} for a look. Log: ${logFile}`)
@@ -832,6 +839,22 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   if (sh('/bin/cp', ['-c', '-R', path.join(code, 'web/dist'), fdDist]).status !== 0) return refuse('could not copy web/dist for the suites')
   const plannedLanes = lanes(pick.run.filter((n) => n !== 'apps'))
   say(`lanes: ${plannedLanes.map((l) => l.join(' → ')).join(' | ')}`)
+  // OLA-240 (ops/park.mjs): the VM suites need two of the machine's four VMs, and people's projects
+  // (and a checker's) may hold them. Idle projects are parked by the front desk for as long as the
+  // suites run and started again after; the update then waits for room instead of failing.
+  if (plannedLanes.flat().some((n) => VM_SUITES.includes(n))) {
+    unpark = requestPark(OLA, { by: `${check ? 'check' : 'deploy'} ${short}` })
+    process.on('exit', unpark)
+    const answered = await waitAnswered(OLA, unpark.at)
+    if (!answered) say('parking: the front desk did not answer the park request within 30 s (not running?); waiting for room as things are')
+    else say(`parking: ${answered.parked.length ? `parked ${answered.parked.join(', ')}` : 'nothing idle to park'}${answered.kept.length ? `; left running ${answered.kept.map((k) => `${k.slug} (${k.why})`).join(', ')}` : ''}`)
+    try {
+      const { waitForRoom } = await import('../workspace/ws.mjs')
+      await waitForRoom([], VM_SUITE_NEED, { ms: ROOM_WAIT_MS, say: (m) => say(`${m}; idle projects are parked as they become idle, up to ${Math.round(ROOM_WAIT_MS / 60000)} min`) })
+    } catch (e) {
+      return refuse(`${e.message}, for ${Math.round(ROOM_WAIT_MS / 60000)} min, all of them in use (the suites need ${VM_SUITE_NEED})`)
+    }
+  }
   const failures = [] // stops new suites: a suite stopped at its limit, or one that failed its rerun
   const firstFailed = [] // OLA-334: failed once; run again by itself once the lanes are done
   let yielded = false
@@ -890,6 +913,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     flaky.push(o.line)
     say(`suite ${name}: ${o.line}`)
   }
+  unpark() // the suites are done: the front desk starts the projects it parked again
   // a refusal names every suite that failed, the ones not rerun (another stopped at its limit) too
   if (failures.length) for (const { name, first } of firstFailed) if (!rerun.has(name)) failures.push(outcome(name, first).line)
   const took = Math.round((Date.now() - ts) / 1000)
