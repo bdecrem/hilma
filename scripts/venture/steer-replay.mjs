@@ -6,6 +6,8 @@
 //                                                         fails with the rules gets 2 more tries
 //   node scripts/venture/steer-replay.mjs --tries 1 --only c05-design-slop,c13-ai-disclosure
 //   node scripts/venture/steer-replay.mjs --dry           run, print, store nothing
+//   node scripts/venture/steer-replay.mjs --full-rules    the whole of RULES.md as the rules instead of the
+//                                                         digest, to compare (needs --dry)
 //   node scripts/venture/steer-replay.mjs --dry --tries 1 --with-only --rules-text <file> --json <out>
 //                                                         the rules given as that text (a digest, for
 //                                                         rules-trim.mjs), only the with-rules arm, the run
@@ -13,8 +15,11 @@
 // A case is one past correction turned into a test (scripts/venture/_replay.mjs; the cases are
 // private, apps/venture/private/data/replay-cases/*.json: his words and the situations never go in
 // git): the situation Kit was in just before the mistake, a rubric (must / must_not) and the
-// weakness the correction is filed under. Each case goes to a fresh Claude Opus 5.5 with
-// apps/venture/private/RULES.md as standing instructions and without them. A second call grades
+// weakness the correction is filed under. Each case goes to a fresh Claude Opus 5.5 with the rules
+// as standing instructions and without them. "The rules" are what a session starts with: the
+// one-line digest that .claude/hooks/venture-rules.py prints (about 6,500 characters), not the whole
+// of RULES.md (about 34,000), which no session has in front of it (OLA-256: until Nov 22 the replay
+// gave the whole file, so a case could pass on rule text no session sees). A second call grades
 // each response against the rubric: pass or fail, one line why.
 // Two numbers: the cases prevented with the rules (is the learning written down well enough to
 // prevent the mistake?) and the lift over no rules (are the rules doing the work?). A case is
@@ -30,6 +35,8 @@
 // Caveat, honest: RULES.md was written from these same corrections, so the cases are the training
 // set. A case written after its rule (a held-out case) is the stronger test.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { hostname } from 'node:os'
 import { askClaude } from './_claude.mjs'
 import { createClient } from '@supabase/supabase-js'
@@ -56,13 +63,23 @@ const dry = args.includes('--dry')
 const withOnly = args.includes('--with-only') // skip the arm without rules (rules-trim.mjs compares two rule texts)
 const rulesText = after('--rules-text')
 const jsonOut = after('--json')
-if ((rulesText || jsonOut || withOnly) && !dry) { console.error('--rules-text, --with-only and --json are for comparison runs: add --dry, so nothing is stored'); process.exit(1) }
+const fullRules = args.includes('--full-rules')
+if (fullRules && rulesText) { console.error('--full-rules and --rules-text both name the rules: give one'); process.exit(1) }
+if ((rulesText || jsonOut || withOnly || fullRules) && !dry) { console.error('--rules-text, --full-rules, --with-only and --json are for comparison runs: add --dry, so nothing is stored'); process.exit(1) }
 const NEED = 2 // of 3 tries with the rules
 const started = new Date().toISOString()
 
 const cases = loadCases(root).filter((c) => !only || only.includes(c.id))
 if (!cases.length) { console.error('no cases (apps/venture/private/data/replay-cases/ is empty: run sync.mjs pull)'); process.exit(1) }
-const RULES = rulesText ? readFileSync(rulesText, 'utf8') : readFileSync(priv('RULES.md'), 'utf8')
+// the digest every session starts with, from the hook itself, so the replay tests what is loaded
+function sessionDigest() {
+  const r = spawnSync('python3', [fileURLToPath(new URL('.claude/hooks/venture-rules.py', root)), '--text'], { encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: fileURLToPath(root) } })
+  if (r.status !== 0 || !r.stdout.trim()) { console.error(`venture-rules.py --text gave no digest: ${r.stderr || 'empty output (is apps/venture/private/RULES.md there? run sync.mjs pull)'}`); process.exit(1) }
+  return r.stdout.trim()
+}
+const RULES_SOURCE = rulesText ? `text of ${rulesText}` : fullRules ? 'RULES.md, whole' : 'the session digest (venture-rules.py)'
+const RULES = rulesText ? readFileSync(rulesText, 'utf8') : fullRules ? readFileSync(priv('RULES.md'), 'utf8') : sessionDigest()
+console.log(`rules given: ${RULES_SOURCE}, ${RULES.length} characters`)
 
 const BASE = `You are Kit, an AI agent (a Claude model working through Claude Code with a shell, the web, subagents, a browser, and iMessage and voice lines to Bart) who runs Kochito Labs, a small company, with Bart Decrem. Bart holds the accounts and the money; you pick the ideas, build, find customers and run the work.
 
@@ -162,6 +179,8 @@ const run = {
   host: hostname(),
   kind: nightly ? 'nightly' : only ? 'some cases' : 'full',
   model: MODEL,
+  rules: RULES_SOURCE,
+  rules_chars: RULES.length,
   cases: results.length,
   graded: results.filter((r) => r.prevented !== null).length,
   tries,
@@ -225,7 +244,7 @@ const days = old.includes('\n# Replay') ? old.slice(0, old.indexOf('\n# Replay')
 const prior = old.includes('\n# Replay') ? old.slice(old.indexOf('\n# Replay')).replace(/^\n# Replay\n+(Each run[^\n]*\n+)?/, '') : ''
 const n = (xs) => `${passes(xs)}/${graded(xs).length}`
 const section = [
-  `## Run ${run.at.slice(0, 16).replace('T', ' ')} UTC · ${run.kind} · ${run.cases} cases · on the Max plan`,
+  `## Run ${run.at.slice(0, 16).replace('T', ' ')} UTC · ${run.kind} · ${run.cases} cases · rules: ${run.rules}, ${run.rules_chars} characters · on the Max plan`,
   '',
   `With the rules ${run.prevented} of ${run.graded} prevented (${run.with_rules.passed}/${run.with_rules.tries} tries, ${pct(run.with_rules)}%). Without ${run.prevented_without} of ${run.graded} (${pct(run.without_rules)}%). Lift ${pct(run.with_rules) - pct(run.without_rules)} points.`,
   '',
@@ -234,5 +253,5 @@ const section = [
   ...results.map((r) => `| ${r.id} | ${r.weakness ?? ''} | ${n(r.with)} | ${n(r.without)} | ${r.with.filter((x) => x.pass === false).map((x) => x.why.replace(/\|/g, '/')).join(' · ')} |`),
   '',
 ].join('\n')
-writeFileSync(f, `${days.trimEnd()}\n\n# Replay\n\nEach run replays the cases (apps/venture/private/data/replay-cases/) to a fresh Claude Opus 5.5 with RULES.md and without; a case is prevented when 2 of 3 tries with the rules pass (nightly: its first try, or 2 of 3 after two retries).\n\n${section}\n${prior}`)
+writeFileSync(f, `${days.trimEnd()}\n\n# Replay\n\nEach run replays the cases (apps/venture/private/data/replay-cases/) to a fresh Claude Opus 5.5 with the rules as sessions load them (the digest of venture-rules.py; before Nov 22, OLA-256, the whole of RULES.md) and without; a case is prevented when 2 of 3 tries with the rules pass (nightly: its first try, or 2 of 3 after two retries).\n\n${section}\n${prior}`)
 console.log(`stored in venture_state "steer_replay", ${WEAK_FILE} and STEERS.md`)

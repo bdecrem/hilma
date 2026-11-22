@@ -549,11 +549,14 @@ Supabase, never in this repo):
   (`scripts/venture/_claude.mjs`, since 2026-11-19, OLA-186: one headless
   Claude Code call with no tools, no settings and an empty folder).
 - **The replay test** (OLA-175, every night since 2026-11-20).
-  `node scripts/venture/steer-replay.mjs [--nightly | --tries N] [--only ids] [--dry]`
+  `node scripts/venture/steer-replay.mjs [--nightly | --tries N] [--only ids] [--dry] [--full-rules]`
   turns past corrections into tests: one case per correction
   (`private/data/replay-cases/*.json`, read by `scripts/venture/_replay.mjs`: the
   situation just before the mistake, a must / must-not rubric, and the weakness
-  it is filed under), given to a fresh Opus 5.5 with RULES.md and without, each
+  it is filed under), given to a fresh Opus 5.5 with the rules as a session
+  starts with them (the digest of `.claude/hooks/venture-rules.py`, since
+  2026-11-22, OLA-256; `--dry --full-rules` gives the whole RULES.md to compare)
+  and without, each
   answer graded by a second call (all on the Claude login, the Max plan, through
   `_claude.mjs`, four calls at a time). A case is prevented when 2 of 3 tries
   with the rules pass. Every correction from 22 on has a case or a reason in
