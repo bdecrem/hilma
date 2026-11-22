@@ -181,7 +181,7 @@ const note = `output tokens of ${day}, sessions and agents together; machines: $
 const models = { shares, rule: RULE, stretches: list, note, machines: machines.map((m) => m.host), missing: missing.map((m) => m.host) }
 if (args.includes('--json')) console.log(JSON.stringify(models))
 else {
-  console.log(`${day}: ${shares.map((s) => `${s.model} ${s.share}%`).join(', ') || 'no model output'} of output tokens (${total.toLocaleString('en-US')})`)
+  console.log(`${day}: ${shares.map((s) => `${s.model} ${s.share ? s.share + "%" : "under 0.1%"}`).join(', ') || 'no model output'} of output tokens (${total.toLocaleString('en-US')})`)
   console.log(`machines: ${where || 'none'}`)
   for (const m of missing) console.log(`MISSING ${m.host}: ${m.why}`)
   console.log(RULE)
