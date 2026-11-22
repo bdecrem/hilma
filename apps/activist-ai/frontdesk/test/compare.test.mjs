@@ -132,7 +132,7 @@ test('a member sees nothing of it and can start nothing; with the real-task swit
   assert.match(on.body.consent, /^Let Claude redo finished work in this project so we can compare\. Your request and the files Ola read for it go to Anthropic\. So do Ola’s answer and the files it wrote\./)
   assert.equal(db.prepare("SELECT count(*) AS n FROM audit WHERE action = 'compare_real_enabled'").get().n, 1)
   // No credential for the project's mode: nothing that sends is offered.
-  const none = makeCompare({ db, xc, cc: {}, claude: { ...claude, info: async () => ({ configured: false, unavailable: 'Claude is not set up on this machine yet: there is no Anthropic account to use. Bart can set it up.', mode: 'api_key' }) }, hosted: { writeGrants: () => {} }, workspaces, container: '/nonexistent', log: () => {} })
+  const none = makeCompare({ db, xc, cc: {}, claude: { ...claude, info: async () => ({ configured: false, unavailable: 'Claude is not set up on this machine yet: there is no Anthropic account to use. Ola’s team can set it up.', mode: 'api_key' }) }, hosted: { writeGrants: () => {} }, workspaces, container: '/nonexistent', log: () => {} })
   const i = await none.info(owner)
   assert.equal(i.configured, false)
   assert.match(i.unavailable, /not set up/)

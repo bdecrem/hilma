@@ -78,6 +78,10 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-63 (OLA-232): asked for Claude when Claude cannot take requests in the project, Ola asks
+# whether to do it instead and waits for the yes (the checker, Nov 21: 3 of 3 wrote the file itself);
+# the sound skill 3 opens the reply with "made in code, comes close" before any check talk. Builds on
+# 2.3.2-62.
 # 2.3.2-62 (OLA-181): worked examples stay inside their own project. The shared read-only folder
 # /ola/examples (Bart's kept requests, shown in every project) is gone; OLA_EXAMPLES_EXTRA names
 # /work/.ola/examples.json, this project's own requests that ended well, which the front desk writes

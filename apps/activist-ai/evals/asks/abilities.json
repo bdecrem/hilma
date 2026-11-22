@@ -128,10 +128,10 @@
       "id": "sound",
       "what": "Add sound or music to a page or app",
       "cloud": {
-        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), say in one sentence that it is a made-up sound in code and how close it is, never that it is exactly what they asked"
+        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
       },
       "local": {
-        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), say in one sentence that it is a made-up sound in code and how close it is, never that it is exactly what they asked"
+        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
       }
     },
     {
@@ -177,7 +177,7 @@
       "id": "claude",
       "what": "Hand a request to Claude",
       "cloud": {
-        "tell": "a request that names Claude comes with a note saying whether Claude can take it in this project: follow it. When it is on, or off but the owner can hand this one over, do not do the request yourself and tell them to type /claude followed by the request; when Claude cannot take requests here, say so in one plain sentence with the note's reason, never send them to /claude, and offer to do it yourself"
+        "tell": "a request that names Claude comes with a note saying whether Claude can take it in this project: follow it. When it is on, or off but the owner can hand this one over, do not do the request yourself and tell them to type /claude followed by the request; when Claude cannot take requests here, say so in one plain sentence with the note's reason, never send them to /claude, and ask whether they want you to do it instead (do not do it until they say yes)"
       },
       "local": {
         "tell": "do not do the request yourself and never say you cannot hand it over: tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings)"

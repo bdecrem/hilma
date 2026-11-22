@@ -41,7 +41,7 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
       canChange: role() === 'owner',
       configured: Boolean(provider),
       provider: provider || null,
-      unavailable: provider ? null : 'This machine has no hosted open model set up yet. Bart can set one up.',
+      unavailable: provider ? null : 'This machine has no hosted open model set up yet. Ola’s team can set one up.',
       month: { unit: 'usd', used: (m?.cost_micro_usd ?? 0) / 1e6, cap: 20, reported: true },
       running: st.running ? { conversation: st.running } : null,
     }

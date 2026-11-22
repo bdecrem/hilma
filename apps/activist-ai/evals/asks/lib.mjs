@@ -567,6 +567,19 @@ export async function checkMust(must, T, answer, { steps = [], before = [], earl
     const ok = new RegExp(arg, 'i').test(answer)
     return { ok, why: ok ? `the answer matches /${arg}/` : `the answer does not match /${arg}/` }
   }
+  if (kind === 'opens') {
+    // opens:<regex>: the reply's first 300 characters match: what a person on a phone reads first
+    // (OLA-232 checker, Nov 21: the birdsong note came fourth, after a loudness note and check talk).
+    const head = String(answer).trim().slice(0, 300)
+    const ok = new RegExp(arg, 'i').test(head)
+    return { ok, why: ok ? `the reply opens with /${arg}/` : `the reply's first 300 characters do not match /${arg}/ ("${head.slice(0, 120)}")` }
+  }
+  if (kind === 'nonewfile') {
+    // nonewfile:<regex>: the request made no file matching (Ola was to ask first, not do it).
+    const re = new RegExp(arg, 'i')
+    const made = (await T.listFiles()).filter((f) => re.test(f) && !before.includes(f))
+    return { ok: !made.length, why: made.length ? `made ${made.join(', ').slice(0, 160)} without being told to` : `no new file matching /${arg}/` }
+  }
   if (kind === 'file') {
     const [rel, ...w] = arg.split(':')
     const words = w.join(':')

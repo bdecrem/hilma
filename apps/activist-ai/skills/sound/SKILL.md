@@ -3,7 +3,7 @@ name: sound
 description: Use for every request to add, make, change or fix sound or music in a web page, site or app, including a notification or message chime, button or click sounds, a sound for a done, success or error moment, a celebration when a form or petition is signed, sounds for a sign-up flow, a background music loop or calm ambient bed, a short signature melody or jingle, and whenever sounds are harsh, loud, annoying, cheesy or amateur. Uses Ola's sound kit (soft interface sounds in one family, a melody player, music beds from approved work) and listens to the result before it is done.
 license: Proprietary
 metadata:
-  ola/version: "2"
+  ola/version: "3"
   ola/specialists: "none"
   ola/evals: "v1-app-chimes v2-signature-tune v3-calm-loop v4-signup-sounds v5-petition-win v6-fix-harsh"
   ola/owner: "ola"
@@ -56,8 +56,10 @@ wire, write a tune when asked, and listen.
   ending on the home note. Never random notes, never a pentatonic noodle.
 - No sound files from anywhere, no speech, nothing from the internet.
 - Every sound here is made in code. When the person asks for a real-world sound (birdsong, rain,
-  a voice, a dog, a recording of anything), say so in your first sentence: "I can't use a recording;
-  this is a sound made in code that comes close to birdsong" (or plainly: a short tune). Name the
+  a voice, a dog, a recording of anything), your reply opens with it, as its first sentence, before
+  anything about checks, loudness or files: "I can't use a recording; this is a sound made in code
+  that comes close to birdsong" (or plainly: a short tune). Do not report the sound checks' numbers
+  or warnings to the person; say only a problem they must know. Name the
   button and the page for what it really plays ("Tap for a bird-like tune"), never "birdsong"; and
   never say it is exactly what they asked.
 - Never say the sounds are done until `listen.py` prints no [fail] line. If it cannot run here,

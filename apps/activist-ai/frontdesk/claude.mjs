@@ -174,9 +174,9 @@ export async function gatewayUsage(cc) {
 }
 
 const NOT_SET_UP = {
-  oauth: 'Claude is not set up for this project yet: Ola’s computer has no Claude subscription to use. Bart can set it up.',
-  api_key: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Bart can set it up.',
-  unknown: 'Claude cannot be turned on just now: this machine could not check that Claude is set up. Bart can look into it.',
+  oauth: 'Claude is not set up for this project yet: Ola’s computer has no Claude subscription to use. Ola’s team can set it up.',
+  api_key: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Ola’s team can set it up.',
+  unknown: 'Claude cannot be turned on just now: this machine could not check that Claude is set up. Ola’s team can look into it.',
 }
 
 // Whether Claude can take a request in this project, told to Ola before a request that names Claude
@@ -191,7 +191,7 @@ export const NAMES_CLAUDE = /\b(?:have|ask|let|get|use|try|want|need|prefer|swit
 export function claudeNote(i) {
   if (!i) return ''
   const fact = !i.configured
-    ? `${i.unavailable} So Claude cannot take requests in this project, and typing /claude will not work here. Say that in one plain sentence with the reason, never tell them to type /claude, and offer to do the request yourself.`
+    ? `${i.unavailable} So Claude cannot take requests in this project, and typing /claude will not work here. Say that in one plain sentence with the reason, never tell them to type /claude, and ask whether they want you to do it instead; do not do it until they say yes.`
     : i.enabled
       ? 'Fallback to Claude is on in this project: tell them to type /claude followed by the request, and do not do it yourself.'
       : 'Fallback to Claude is off in this project. The project’s owner can type /claude followed by the request to hand over just this one, or turn Fallback to Claude on in Settings; anyone else asks the owner. Tell them that, and do not do it yourself.'

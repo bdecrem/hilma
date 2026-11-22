@@ -39,9 +39,9 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|file|ran|newfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || /^(site|says|opens|file|ran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
-    for (const m of c.must.filter((m) => m.startsWith('says:'))) new RegExp(m.slice(5), 'i')
+    for (const m of c.must.filter((m) => /^(says|opens|nonewfile):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
     assert.ok(/^\d{4}-\d\d-\d\d$/.test(c.from?.date) && /^OLA-\d+$/.test(c.from?.ticket), `${c.id}: the date and ticket of the failure it came from`)
   }
@@ -469,4 +469,18 @@ test('OLA-232: a stored fail that was only the model refusing is not run, in the
     const L = lines({ abilities, cases: [mk(id)], latest: old })
     assert.equal(L.find((l) => l.place === 'cloud-web:chat').status, want, id)
   }
+})
+
+test('OLA-232 checker, Nov 21: opens: reads the first 300 characters; nonewfile: fails when Ola made the file itself', async () => {
+  const late = 'All checks pass (0 flagged). One honest note on the sounds: the robin tune peaks a bit loud. '.repeat(4) + 'This is a made-up sound, not a recording.'
+  const early = "I can't use a recording; this is a sound made in code that comes close to birdsong. The page is in your Files."
+  const re = 'opens:(made (it )?in code|not (a )?(real )?recording|can.?t use a recording)'
+  assert.equal((await checkMust(re, {}, late)).ok, false)
+  assert.equal((await checkMust(re, {}, early)).ok, true)
+  const T = { listFiles: async () => ['notes.md', 'hello.txt'] }
+  assert.equal((await checkMust('nonewfile:hello\\.txt', T, 'x', { before: ['notes.md'] })).ok, false)
+  assert.equal((await checkMust('nonewfile:hello\\.txt', T, 'x', { before: ['notes.md', 'hello.txt'] })).ok, true)
+  const c = readCases().find((x) => x.id === 'ask-claude')
+  assert.ok(c.must.includes('nonewfile:hello\\.txt'), 'asked for Claude, Ola does not write the file itself')
+  assert.ok(readCases().find((x) => x.id === 'birdsong').must.some((m) => m.startsWith('opens:')))
 })

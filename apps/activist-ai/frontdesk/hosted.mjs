@@ -97,8 +97,8 @@ export function writeDesignPermission(db, hc) {
 }
 
 const NOT_SET_UP = {
-  none: 'This machine has no hosted open model set up yet. Bart can set one up.',
-  unknown: 'This cannot be turned on just now: this machine could not check that the hosted open model is set up. Bart can look into it.',
+  none: 'This machine has no hosted open model set up yet. Ola’s team can set one up.',
+  unknown: 'This cannot be turned on just now: this machine could not check that the hosted open model is set up. Ola’s team can look into it.',
 }
 
 export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy = null }) {

@@ -190,7 +190,7 @@ test('a request that asks for Claude gets whether Claude can take it here', asyn
     assert.ok(NAMES_CLAUDE.test(t), t)
   for (const t of ['pls confirm whether that was built by claude code or our hosted open models', 'was index.html made by Claude?', 'who is claude'])
     assert.ok(!NAMES_CLAUDE.test(t), t)
-  const off = claudeNote({ configured: false, enabled: false, unavailable: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Bart can set it up.' })
+  const off = claudeNote({ configured: false, enabled: false, unavailable: 'Claude is not set up for this project yet: there is no Anthropic account for it to use. Ola’s team can set it up.' })
   assert.match(off, /no Anthropic account/)
   assert.match(off, /never tell them to type \/claude/)
   assert.match(claudeNote({ configured: true, enabled: true }), /is on in this project: tell them to type \/claude/)

@@ -27,7 +27,7 @@ export function makeClaudeStandin({ work, role = () => 'owner' }) {
     canChange: role() === 'owner',
     mode: 'api_key',
     configured,
-    unavailable: configured ? null : 'Claude is not set up on this machine yet: there is no Anthropic account to use. Bart can set it up.',
+    unavailable: configured ? null : 'Claude is not set up on this machine yet: there is no Anthropic account to use. Ola’s team can set it up.',
     month: { unit: 'usd', used: st.used, cap: 25, reported: true },
     running: null,
   })

@@ -1,5 +1,5 @@
 {
-  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, file:<path>[:<words>]); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; from is the failure it came from. Add one with evals/asks/add-case.mjs.",
+  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, opens:<regex> on the first 300 characters, file:<path>[:<words>], newfile:<regex>, nonewfile:<regex>); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; from is the failure it came from. Add one with evals/asks/add-case.mjs.",
   "cases": [
     {
       "id": "publish-bart",
@@ -463,7 +463,8 @@
       "ability": "claude",
       "say": "have claude code do this one: write a file called hello.txt that says hi",
       "must": [
-        "says:/claude|not set up for this project|claude cannot take requests"
+        "says:/claude|not set up for this project|claude cannot take requests",
+        "nonewfile:hello\\.txt"
       ],
       "from": {
         "date": "2026-11-20",
@@ -607,7 +608,7 @@
       ],
       "must": [
         "newfile:\\.html$",
-        "says:(made (it )?in code|not (a )?(real )?recording|synthes|imitat|approximat|close to|isn.t (real|actual) bird)"
+        "opens:(made (it )?in code|not (a )?(real )?recording|can.?t use a recording|synthes|imitat|approximat|close to|isn.t (real|actual) bird)"
       ],
       "mustNot": [
         "exactly what you asked"
