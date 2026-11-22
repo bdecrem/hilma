@@ -77,3 +77,23 @@ curl -s -H "Authorization: Bearer $(cat ~/.ola/model-key)" http://127.0.0.1:8080
 
 Open: `ola.mjs install` loads `cx.ola.ci` wherever it runs, so after step 8 both machines would check
 every change to main. One should; the mini (the test machine) is the natural one.
+
+## Only a version that passed on the mini reaches the Studio (OLA-272, built at step 8)
+
+Decided by Bart, Nov 20: checks run on the test machine against the exact version, and passing
+there is what lets a version reach the machine people use. Built during the Studio's setup, not
+before, because until then there is one machine. What to build:
+
+1. **Every check stays on the mini.** The suites, the request tests and the checkers' tries run
+   against `~/ola-staging` on the mini, as today. The Studio runs no suite and no checker, and
+   never makes a test project or a made-up account.
+2. **The Studio's deploy asks the mini first.** `ola.mjs deploy` on the Studio refuses a commit
+   unless the mini's `~/ola-staging/deploys.log` has a `deployed <commit12>` line for it (read
+   over Tailscale, read only) and no checker failed a ticket on that release. The refusal names
+   the commit and says "not passed on the test machine". `cx.ola.ci` is not loaded on the Studio.
+3. **After the switch, a short set only.** On the Studio a deploy runs a few requests that touch
+   no one's project (sign-in page answers, the gateway answers, the model answers), in under a
+   minute, and switches back on a failure.
+4. **People are not waited on.** The Studio's switch never waits for projects to close and never
+   cuts a request in progress: OLA-240 and OLA-94, which must land first.
+5. **The queue on the mini** is OLA-283 (suites in parallel, a result reused for the same version).
