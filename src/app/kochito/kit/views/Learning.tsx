@@ -445,6 +445,11 @@ export function RequestsLine({ r, base }: { r: Sweep['requests']; base: string }
           <span className="faint">)</span>
         </p>
       )}
+      {r.early?.length ? (
+        <p className="bd-sweep-count faint">
+          Posted while an earlier day's match was not final: {r.early.map((x) => `${x.day} (matched ${x.at.slice(0, 16)}Z)`).join(', ')}, because {r.early[0].why}
+        </p>
+      ) : null}
     </>
   )
 }

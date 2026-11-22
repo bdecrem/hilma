@@ -183,11 +183,12 @@ function checkAnswer(answer, msgs, list) {
   return out
 }
 
-/** A real run first reruns the three days before this one whose stored match ran before that day ended. */
+/** A real run first reruns the seven days before this one whose stored match ran before that day ended (the
+ *  same window sweep.mjs post checks). */
 async function earlierDays() {
   if (dry || opt('--messages') || args.includes('--no-earlier')) return
   const days = (await getState(db, 'requests'))?.value?.days ?? {}
-  for (let k = 3; k >= 1; k--) {
+  for (let k = 7; k >= 1; k--) {
     const d = new Date(Date.parse(`${day}T12:00:00Z`) - k * 86400e3).toISOString().slice(0, 10)
     if (!matchEarly(days[d]) || Date.now() < pacificDayEnd(d)) continue
     console.log(`${d}: its match ran at ${hhmm(days[d].at)}, before the day ended; matching it again first`)
@@ -236,7 +237,11 @@ async function run() {
   })
   // an earlier run's opened ticket this run did not name stays listed, with that run's line
   for (const id of before) if (!requests.some((r) => r.ticket === id)) {
-    const was = prev.requests?.find((r) => r.ticket === id) ?? { time: hhmm(prev.at), at: prev.at, source: 'earlier run', messages: [], request: `the request ${id} was opened for`, outcome: 'new', ticket: id, why: `opened by the run of ${hhmm(prev.at)}` }
+    // the same request under another outcome (done or answered later that evening): it stays the opened one
+    const w = prev.requests?.find((r) => r.ticket === id)
+    const same = w && requests.find((r) => !r.opened && (r.at === w.at || r.messages.some((x) => (w.messages ?? []).includes(x))))
+    if (same) { same.note = `${same.note ? `${same.note}; ` : ''}${id} was opened for it by the run of ${hhmm(prev.at)}; this run put it as ${same.outcome}`; same.outcome = 'ticket'; same.ticket = id; same.opened = true; continue }
+    const was = w ?? { time: hhmm(prev.at), at: prev.at, source: 'earlier run', messages: [], request: `the request ${id} was opened for`, outcome: 'new', ticket: id, why: `opened by the run of ${hhmm(prev.at)}` }
     requests.push({ ...was, opened: true, note: `kept from the run of ${hhmm(prev.at)}: this run did not name it` })
   }
   // one opened ticket is one request opened; another request the matcher put on it had a ticket by then
@@ -269,6 +274,7 @@ try {
       const old = (await getState(db, 'requests'))?.value ?? { days: {} }
       const prev = old.days?.[day]
       if (!prev || prev.failed) await setState(db, 'requests', { at: new Date().toISOString(), days: { ...(old.days ?? {}), [day]: { day, at: new Date().toISOString(), failed: { at: new Date().toISOString(), error }, opened: prev?.opened ?? [] } } })
+      else await setState(db, 'requests', { at: new Date().toISOString(), days: { ...(old.days ?? {}), [day]: { ...prev, rematchFailed: { at: new Date().toISOString(), error } } } })
       console.error(prev && !prev.failed ? `the earlier match of ${day} (${prev.at}) is kept` : `stored as failed for ${day}: sweep.mjs post names it`)
     } catch (e2) {
       console.error(`the failure could not be stored either: ${e2.message}`)

@@ -44,6 +44,11 @@ test('a failed match posted anyway says not matched, the failure and the reason'
   assert.equal(text(html), 'Requests from Bart: not matched (the matching failed: collector exited 1; posted anyway because the M4 is off the network tonight)')
 })
 
+test('posted while an earlier day was matched early: the line names that day and the reason', () => {
+  const html = render({ n: 2, matched: 2, done: 0, answered: 0, opened: [], at: 'x', early: [{ day: '2026-11-19', at: '2026-11-20T02:30:00Z', why: 'the mini cannot read the transcripts tonight' }] })
+  assert.match(text(html), /Posted while an earlier day's match was not final: 2026-11-19 \(matched 2026-11-20T02:30Z\), because the mini cannot read the transcripts tonight$/)
+})
+
 test('an entry from before Nov 21 (no requests) shows no line', () => {
   assert.equal(render(undefined), '')
 })

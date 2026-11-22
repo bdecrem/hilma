@@ -111,11 +111,14 @@ try {
     assert.equal(db().venture_issues.length, 3)
   })
 
-  ok('a ticket id the matcher made up counts as no ticket', () => {
+  ok('a ticket id the matcher made up counts as no ticket (and on a rerun, the request keeps the ticket opened for it)', () => {
     const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-99'), '--dry')
     assert.equal(r.status, 0, r.stderr)
-    assert.match(r.stdout, /1 would be opened/)
-    assert.match(r.stdout, /the matcher named OLA-99, which is not in the list/)
+    assert.match(r.stdout, /0 would be opened/)
+    assert.match(r.stdout, /the matcher named OLA-99, which is not in the list; OLA-3 was opened for it by the run of/)
+    const first = node({ VENTURE_TRACKER_FAKE: file('tracker-fresh.json', { venture_issues: [T(1, 'a'), T(2, 'b')], venture_state: [], venture_issue_activity: [], venture_commits: [] }), STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-99'), '--dry')
+    assert.match(first.stdout, /1 would be opened/)
+    assert.match(first.stdout, /the matcher named OLA-99, which is not in the list/)
   })
 
   ok('a collector that read no machine and no message is a failure, never a quiet day', () => {
@@ -140,6 +143,44 @@ try {
     assert.ok(Date.parse(again.at) > Date.parse('2026-11-20T08:00:00Z'))
     assert.deepEqual(again.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 }, 'the rerun opened nothing twice')
     const p2 = node({}, 'sweep.mjs', 'post', join(dir, 'entry-next.json'), '--dry')
+    assert.doesNotMatch(p2.stderr, /before that day ended/)
+  })
+
+  ok('a rerun that puts the opened request as done keeps it as the one opened, never counted twice', () => {
+    const a = JSON.parse(readFileSync(answer(null), 'utf8'))
+    a.requests[4] = { ...a.requests[4], outcome: 'done', ticket: null, why: 'Kit built it that evening.' }
+    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', file('answer-done.json', a))
+    assert.equal(r.status, 0, r.stderr)
+    const s = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.deepEqual(s.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 })
+    assert.equal(s.requests.length, 5)
+    assert.match(s.requests.find((x) => x.ticket === 'OLA-3').note, /OLA-3 was opened for it by the run of .*; this run put it as done/)
+  })
+
+  ok('an early match five days back is matched again by the next run (the same seven days post checks)', () => {
+    const st = db()
+    const row = st.venture_state.find((x) => x.key === 'requests')
+    row.value.days[DAY] = { ...row.value.days[DAY], at: '2026-11-20T02:30:00Z', final: false }
+    writeFileSync(fake, JSON.stringify(st))
+    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', '2026-11-24', '--answer', answer('OLA-3'))
+    assert.match(r.stdout, /2026-11-19: its match ran at 6:30 pm, before the day ended; matching it again first/)
+    assert.equal(db().venture_state.find((x) => x.key === 'requests').value.days[DAY].final, true)
+  })
+
+  ok('an early day whose rematch fails: post names the failure, and --requests-failed lets the review go ahead, named in the entry', () => {
+    const st = db()
+    const row = st.venture_state.find((x) => x.key === 'requests')
+    row.value.days[DAY] = { ...row.value.days[DAY], at: '2026-11-20T02:30:00Z', final: false }
+    writeFileSync(fake, JSON.stringify(st))
+    const f = node({ STUB_FAIL: '1' }, 'requests.mjs', '--day', DAY, '--no-earlier')
+    assert.equal(f.status, 1)
+    const kept = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.equal(kept.counts.requests, 5, 'the match is kept')
+    assert.match(kept.rematchFailed.error, /Bart's messages could not be read/)
+    const p = node({}, 'sweep.mjs', 'post', join(dir, 'entry-next.json'), '--dry')
+    assert.match(p.stderr, /the match of 2026-11-19 ran at 6:30 PM, before that day ended \(matching it again failed at .*: Bart's messages could not be read/)
+    assert.match(p.stderr, /or, when matching again fails and the review must go ahead, post with --requests-failed/)
+    const p2 = node({}, 'sweep.mjs', 'post', join(dir, 'entry-next.json'), '--dry', '--requests-failed', 'the mini cannot read the transcripts tonight')
     assert.doesNotMatch(p2.stderr, /before that day ended/)
   })
 
