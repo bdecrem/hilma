@@ -322,7 +322,8 @@ public struct AccountAPI: Sendable {
     f2.timeZone = calendar.timeZone
     f2.locale = Locale(identifier: "en_US")
     f2.dateFormat = reset.timeIntervalSince(now) < 6 * 86400 ? "EEEE" : "EEEE, MMMM d"
-    return used + " It starts again \(calendar.isDateInTomorrow(reset) ? "tomorrow" : f2.string(from: reset))."
+    let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)).map { calendar.isDate(reset, inSameDayAs: $0) } ?? false
+    return used + " It starts again \(tomorrow ? "tomorrow" : f2.string(from: reset))."
   }
 
   /// No saved credential is ever offered for the door's Basic challenge (a refused pass is a 401
