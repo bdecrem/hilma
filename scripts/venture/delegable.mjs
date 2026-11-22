@@ -171,7 +171,7 @@ const total = [...out.values()].reduce((a, b) => a + b, 0)
 const family = (m) => (/fable/i.test(m) ? 'Fable' : /opus/i.test(m) ? 'Opus' : /sonnet/i.test(m) ? 'Sonnet' : /haiku/i.test(m) ? 'Haiku' : m)
 const fam = new Map()
 for (const [m, n] of out) fam.set(family(m), (fam.get(family(m)) ?? 0) + n)
-const shares = [...fam].sort((a, b) => b[1] - a[1]).map(([model, n]) => ({ model, share: total ? Math.round((1000 * n) / total) / 10 : 0 }))
+const shares = [...fam].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([model, n]) => ({ model, share: total ? Math.round((1000 * n) / total) / 10 : 0 }))
 const where = machines.map((m) => (m.live ? `${m.host} (read now, ${m.files} transcripts)` : `${m.host} (stored ${hm(m.at)}${m.upTo ? `, before Bart's last message there at ${hm(m.lastSaid)}: counted only up to ${hm(m.upTo)}` : ''})`)).join('; ')
 const note = `output tokens of ${day}, sessions and agents together; machines: ${where || 'none'}${missing.length ? `; MISSING: ${missing.map((m) => `${m.host} (${m.why})`).join('; ')}` : ''}`
 const models = { shares, rule: RULE, stretches: list, note, machines: machines.map((m) => m.host), missing: missing.map((m) => m.host) }

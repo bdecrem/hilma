@@ -509,7 +509,7 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
       )}
       {s.models && (
         <div className="bd-sweep-build">
-          <b>Models.</b> {s.models.shares.map((m) => `${m.model} ${Math.round(m.share)}%`).join(', ')} of the day&rsquo;s output. <span className="faint">{s.models.rule}</span>
+          <b>Models.</b> {s.models.shares.filter((m) => m.share > 0).map((m) => `${m.model} ${m.share < 0.5 ? 'under 1' : Math.round(m.share)}%`).join(', ')} of the day&rsquo;s output. <span className="faint">{s.models.rule}</span>
           {s.models.stretches.length > 0 ? (
             <ul>
               {s.models.stretches.map((x, i) => (
