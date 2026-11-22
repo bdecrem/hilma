@@ -768,6 +768,8 @@ await check("the apps' cloud: a device signed in as alice lists her project and 
     [ta, 'GET', `${W}/oc/api/config`, 403], [ta, 'GET', `${W}/api/project`, 404], [ta, 'DELETE', `${W}/api/files/x.csv`, 404], [ta, 'POST', '/api/device/projects', 405],
     // The project's fallbacks and a hosted run (OLA-337): its members only; the other routes stay shut.
     [tb, 'GET', `${W}/api/fallback`, 404], [tb, 'POST', `${W}/api/hosted/run`, 404], [ta, 'POST', `${W}/api/fallback`, 404], [ta, 'POST', `${W}/api/hosted/settings`, 404], [ta, 'POST', `${W}/api/claude/run`, 404],
+    // The look at the files before a publish yes (OLA-325): the owner's only; publishing itself stays shut here.
+    [tb, 'GET', `${W}/api/site/preview?page=x.html`, 404], [tv, 'GET', `${W}/api/site/preview?page=x.html`, 403], [ta, 'POST', `${W}/api/site/preview`, 404], [ta, 'POST', `${W}/api/site/publish`, 404], [ta, 'POST', `${W}/api/site/unpublish`, 404],
   ]
   for (const [t, m, p, want] of cases) {
     const r = await dev(t, p, { method: m })

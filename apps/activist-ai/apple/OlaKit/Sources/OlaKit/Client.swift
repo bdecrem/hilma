@@ -291,8 +291,21 @@ public final class OpenCodeClient: @unchecked Sendable {
 
   public enum Decision: String, Sendable { case once, always, reject }
 
-  public func reply(session: String, request: String, decision: Decision) async throws {
-    try await send("POST", "/api/session/\(session)/permission/\(request)/reply", body: ["decision": .string(decision.rawValue)])
+  /// `fingerprint`: a publish yes in a cloud project, for exactly the list the card showed (the
+  /// front desk's look, `sitePreview`); the front desk then publishes that list (OLA-325).
+  public func reply(session: String, request: String, decision: Decision, fingerprint: String? = nil) async throws {
+    var body: [String: JSON] = ["decision": .string(decision.rawValue)]
+    if let fingerprint { body["fingerprint"] = .string(fingerprint) }
+    try await send("POST", "/api/session/\(session)/permission/\(request)/reply", body: .object(body))
+  }
+
+  /// The cloud: the front desk's look at the files a publish yes would put online (the website's
+  /// `GET /api/site/preview`): the list, sizes, what is left out, warnings, the list's fingerprint.
+  /// `sel`: the publish card's `{page}` or `{folder}`.
+  public func sitePreview(_ sel: JSON) async throws -> JSON {
+    guard config.account else { throw OlaError.badReply("only in a cloud project") }
+    let q = sel["page"].string.map { [URLQueryItem(name: "page", value: $0)] } ?? sel["folder"].string.map { [URLQueryItem(name: "folder", value: $0)] } ?? []
+    return try await json("GET", "/project/api/site/preview", query: q)
   }
 
   // MARK: models

@@ -48,6 +48,13 @@
       "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.", "The address: sites.ola.cx/demo-test/", "three files will be public", "index.html", "style.css", "photo.jpg", "Publish these three files", "Not now"]
     },
     {
+      "name": "publish from a cloud project, once the front desk has looked at the files",
+      "permission": { "action": "shell", "resources": ["ola-publish party --files index.html,fonts/Bowlby.woff2,photo.jpg"] },
+      "ctx": { "address": "sites.ola.cx/demo-test/" },
+      "plan": { "url": "https://sites.ola.cx/demo-test/", "items": [{ "as": "index.html", "size": 4200 }, { "as": "fonts/Bowlby.woff2", "size": 31000 }, { "as": "photo.jpg", "size": 1250000, "uploaded": true }], "total": 1285200, "leftOut": [".ola-notes.md"], "warnings": ["photo.jpg shows a face: publish it only if that person agreed."], "acceptableUse": "Publish only what your group may share.", "fingerprint": "ab12", "published": true },
+      "lines": ["Ola wants to publish this on the web", "These files will be public: anyone with the address can open them, and search engines may find them. Nothing else in the project leaves Ola’s computer.", "The address: sites.ola.cx/demo-test/", "three files will be public, 1.3 MB", "index.html", "4 KB", "fonts/Bowlby.woff2", "31 KB", "photo.jpg", "1.3 MB · added by your group", "Left out: one hidden or working file.", "photo.jpg shows a face: publish it only if that person agreed.", "Publish only what your group may share.", "Publish these three files again", "Not now"]
+    },
+    {
       "name": "publish one page from a cloud project, with 2>&1 (OLA-267)",
       "permission": { "action": "bash", "resources": ["/opt/ola/bin/ola-publish flyer.html --files flyer.html 2>&1"] },
       "ctx": { "address": "sites.ola.cx/demo-test/" },

@@ -25,6 +25,14 @@ export function publishYes(n, again = false) {
   return `Publish ${n === 1 ? 'this file' : `these ${cardCount(n, 'file')}`}${again ? ' again' : ''}`
 }
 
+/** "12 KB" (the same as web/src/lib/format.ts bytes). */
+export function cardBytes(n) {
+  if (n < 1000) return `${n} bytes`
+  if (n < 1000 * 1000) return `${Math.round(n / 1000)} KB`
+  if (n < 1000 * 1000 * 1000) return `${(n / 1000 / 1000).toFixed(1)} MB`
+  return `${(n / 1000 / 1000 / 1000).toFixed(1)} GB`
+}
+
 const PUBLIC = 'These files will be public: anyone with the address can open them, and search engines may find them.'
 
 // ---------------------------------------------------------------- the question card
@@ -149,6 +157,7 @@ export function publishCard(action, resources, ctx = {}) {
       no: 'Not now',
       always: false,
       sel: cloud.sel,
+      checking: 'Looking at the files and checking them for passwords and private data…',
     }
   }
   if (cloud?.unpublish) {
@@ -180,6 +189,32 @@ export function publishCard(action, resources, ctx = {}) {
   return null
 }
 
+/**
+ * A cloud publish card with the front desk's own look at the files (GET /api/site/preview: the
+ * list that would go public, sizes, what is left out, warnings, the fingerprint of the list): what
+ * the website's sheet and the apps' card show once the check is back, and the yes for exactly
+ * that list (OLA-325: the Mac card had left out the sizes, the left-out line and the warnings).
+ * `plan`: { url, items: [{ as, size, uploaded }], total, leftOut: [], warnings: [], acceptableUse, fingerprint, published }
+ */
+export function publishWithPlan(card, plan) {
+  if (!card || card.kind !== 'publish' || !plan || !Array.isArray(plan.items)) return card
+  const items = plan.items.filter((i) => i && typeof i.as === 'string')
+  const left = Array.isArray(plan.leftOut) ? plan.leftOut.length : 0
+  return {
+    ...card,
+    address: String(plan.url ?? card.address).replace(/^https?:\/\//, ''),
+    heading: `${cardCount(items.length, 'file')} will be public, ${cardBytes(Number(plan.total) || 0)}`,
+    files: items.map((i) => i.as),
+    fileNotes: items.map((i) => `${cardBytes(Number(i.size) || 0)}${i.uploaded ? ' · added by your group' : ''}`),
+    leftOut: left ? `Left out: ${cardCount(left, 'hidden or working file')}.` : null,
+    warnings: (Array.isArray(plan.warnings) ? plan.warnings : []).map(String),
+    aup: plan.acceptableUse ? String(plan.acceptableUse) : null,
+    yes: publishYes(items.length, !!plan.published),
+    fingerprint: typeof plan.fingerprint === 'string' ? plan.fingerprint : null,
+    checking: null,
+  }
+}
+
 // ---------------------------------------------------------------- what a card shows, in order
 
 /** Every line a card shows, in order: what the check finds on each client's card. */
@@ -195,5 +230,7 @@ export function cardLines(card) {
     if (card.send) out.push(card.send)
     return out
   }
-  return [card.title, card.lede, ...(card.kind === 'publish' ? [`The address: ${card.address}`, card.heading, ...card.files] : []), card.yes, card.no]
+  if (card.kind !== 'publish') return [card.title, card.lede, card.yes, card.no]
+  const files = card.files.flatMap((f, i) => (card.fileNotes ? [f, card.fileNotes[i]] : [f]))
+  return [card.title, card.lede, `The address: ${card.address}`, card.heading, ...files, ...(card.leftOut ? [card.leftOut] : []), ...(card.warnings ?? []), ...(card.aup ? [card.aup] : []), card.yes, card.no]
 }

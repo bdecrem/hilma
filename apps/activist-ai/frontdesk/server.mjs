@@ -1179,6 +1179,7 @@ export function makeFrontDesk(cfg = config()) {
   //   GET /api/device/w/<project>/api/files[/<f>]  the file list and a download
   //   GET /api/device/w/<project>/api/fallback     the project's fallbacks (OLA-337)
   //   POST /api/device/w/<project>/api/hosted/run  one request on the hosted model or a picked choice
+  //   GET /api/device/w/<project>/api/site/preview  the files a publish yes would put online (owner only)
   // Under /api/device/ the TLS front lets a pass through (ops/tls.mjs) and nowhere else. A write
   // needs no Origin or CSRF token: the pass is never sent by a browser on its own.
   const projectsOf = (personId) =>
@@ -1199,7 +1200,10 @@ export function makeFrontDesk(cfg = config()) {
     // The project's fallbacks, and one request handed to the hosted open model or a picked choice
     // (OLA-337: the Mac app's "Try again with" and the choice in its box, in a cloud project).
     const fallback = (req.method === 'GET' && rest === '/api/fallback') || (req.method === 'POST' && rest === '/api/hosted/run')
-    if (!m || (!rest.startsWith('/oc/') && !files && !fallback)) return json(res, 404, NOT_FOUND)
+    // The front desk's look at the files before a publish yes (OLA-325): the apps' card shows the
+    // same sizes, left-out line and warnings as the website's sheet, and its yes the fingerprint.
+    const sitePreview = req.method === 'GET' && rest === '/api/site/preview'
+    if (!m || (!rest.startsWith('/oc/') && !files && !fallback && !sitePreview)) return json(res, 404, NOT_FOUND)
     // The project is named by the path; whatever the device sent as X-Ola-Workspace is replaced.
     req.headers['x-ola-workspace'] = m[1]
     if (rest === '/oc/api/info' && req.method === 'GET') {

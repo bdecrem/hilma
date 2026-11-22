@@ -60,6 +60,12 @@ public enum Cards {
     return PublishCard(call("publishCard", [.string(action), .array(resources.map { .string($0) }), .object(ctx)]))
   }
 
+  /// A cloud publish card with the front desk's look at the files (cards.mjs publishWithPlan): the
+  /// sizes, the left-out line, the warnings, the acceptable-use line and the yes for that list.
+  public static func withPlan(_ card: PublishCard, plan: JSON) -> PublishCard? {
+    PublishCard(call("publishWithPlan", [card.json, plan]))
+  }
+
   /// The Mac's own command, read (cards.mjs localPublishOf): the folder and the site's name.
   public static func localPublish(_ cmd: String) -> (folder: String, name: String)? {
     let j = call("localPublishOf", [.string(cmd)])
@@ -85,6 +91,15 @@ public struct PublishCard: Equatable, Sendable {
   public var no: String
   /// The folder, for the Mac's own command.
   public var folder: String?
+  /// While the front desk looks at the files (a cloud publish): the line to show.
+  public var checking: String?
+  /// After its look: one note per file (its size), the left-out line, warnings, the acceptable-use
+  /// line, and the fingerprint the yes sends.
+  public var fileNotes: [String]?
+  public var leftOut: String?
+  public var warnings: [String]
+  public var aup: String?
+  public var fingerprint: String?
   /// The description as it came, for `Cards.lines`.
   public var json: JSON
 
@@ -100,8 +115,17 @@ public struct PublishCard: Equatable, Sendable {
     yes = j["yes"].str
     no = j["no"].str
     folder = j["folder"].string
+    checking = j["checking"].string
+    fileNotes = j["fileNotes"].isNull ? nil : j["fileNotes"].array.map(\.str)
+    leftOut = j["leftOut"].string
+    warnings = j["warnings"].array.map(\.str)
+    aup = j["aup"].string
+    fingerprint = j["fingerprint"].string
     json = j
   }
+
+  /// A cloud publish waits for the front desk's look before its yes (as the website's sheet does).
+  public var needsPlan: Bool { kind == .publish && runtime == "cloud" && fingerprint == nil }
 
   /// The address line, as every client writes it.
   public var addressLine: String { "The address: \(address)" }

@@ -11,12 +11,12 @@ import type { Ola } from '../../src/lib/ola.ts'
 import '../../src/styles/tokens.css'
 import '../../src/styles/app.css'
 
-type Fixture = { name: string; form?: unknown; permission?: { action: string; resources: string[] }; ctx?: { address?: string; files?: string[] }; lines: string[] }
+type Fixture = { name: string; form?: unknown; permission?: { action: string; resources: string[] }; ctx?: { address?: string; files?: string[] }; plan?: unknown; lines: string[] }
 // The fixtures, served beside the page by check.mjs (test/cards.fixtures.json).
 const cards = ((await (await fetch('/cards.fixtures.json')).json()) as { cards: Fixture[] }).cards
 
 // The front desk's preview of a cloud publish, made from the fixture: the files the command names.
-const previews = new Map<string, { url: string; files: string[] }>()
+const previews = new Map<string, { url: string; files: string[]; plan?: unknown }>()
 const realFetch = window.fetch.bind(window)
 window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const u = new URL(String(input instanceof Request ? input.url : input), location.href)
@@ -24,6 +24,8 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const key = u.searchParams.get('folder') ?? u.searchParams.get('page') ?? ''
     const p = previews.get(key)
     if (!p) return new Response(JSON.stringify({ error: 'no fixture' }), { status: 404 })
+    // A fixture with the front desk's own look (its `plan`): served as it is, so every line it makes is compared.
+    if (p.plan) return new Response(JSON.stringify(p.plan), { headers: { 'content-type': 'application/json' } })
     const items = p.files.map((f) => ({ path: f, as: f, size: 1200, uploaded: false }))
     return new Response(JSON.stringify({ url: `https://${p.url}`, page: 'index.html', items, leftOut: [], warnings: [], total: items.length * 1200, fingerprint: 'fixture', published: false, acceptableUse: 'Only pages your group may share.' }), { headers: { 'content-type': 'application/json' } })
   }
@@ -39,7 +41,7 @@ function Card(props: { f: Fixture }) {
   const p = f.permission!
   const words = describeApproval(p.action, p.resources, undefined, '/work')
   if (!words.card || words.card.runtime === 'local') return null
-  if (words.publish) previews.set('folder' in words.publish.sel ? words.publish.sel.folder : words.publish.sel.page, { url: f.ctx?.address ?? 'sites.ola.cx', files: words.publish.files })
+  if (words.publish) previews.set('folder' in words.publish.sel ? words.publish.sel.folder : words.publish.sel.page, { url: f.ctx?.address ?? 'sites.ola.cx', files: words.publish.files, plan: f.plan })
   const ola = { state: { approval: { id: `per_${f.name}`, sessionID: 'ses_fixture', action: p.action, stepID: null, ...words }, autonomy: 'ask' }, answer: async () => {} } as unknown as Ola
   return <ApprovalSheet ola={ola} />
 }

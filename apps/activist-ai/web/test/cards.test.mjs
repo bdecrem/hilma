@@ -5,11 +5,11 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { test } from 'node:test'
-import { answerFromWords, cardLines, localPublishOf, publishCard, questionCard } from '../server/cards.mjs'
+import { answerFromWords, cardLines, localPublishOf, publishCard, publishWithPlan, questionCard } from '../server/cards.mjs'
 
 const { cards } = JSON.parse(fs.readFileSync(new URL('./cards.fixtures.json', import.meta.url), 'utf8'))
 
-const describe = (c) => (c.form ? questionCard(c.form) : publishCard(c.permission.action, c.permission.resources, c.ctx ?? {}))
+const describe = (c) => (c.form ? questionCard(c.form) : c.plan ? publishWithPlan(publishCard(c.permission.action, c.permission.resources, c.ctx ?? {}), c.plan) : publishCard(c.permission.action, c.permission.resources, c.ctx ?? {}))
 
 for (const c of cards) {
   test(`${c.name}: the card's lines`, () => {
@@ -35,6 +35,10 @@ test('the publish yes is never for the rest of the conversation', () => {
     const card = describe(c)
     if (card) assert.equal(card.always, false)
   }
+})
+
+test('the yes after the check carries the fingerprint of the list it shows', () => {
+  for (const c of cards.filter((x) => x.plan)) assert.equal(describe(c).fingerprint, c.plan.fingerprint)
 })
 
 test("the Mac's command: odd forms are not read as a publish", () => {

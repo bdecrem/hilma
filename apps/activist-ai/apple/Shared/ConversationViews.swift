@@ -277,12 +277,37 @@ struct ApprovalPanel: View {
         }
         // A publish (OLA-325): the address and how many files, the website's lines, from cards.mjs.
         if let c = approval.card, c.kind == .publish {
-          Text(c.addressLine).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink).textSelection(.enabled)
-          if let h = c.heading { Text(h).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2) }
+          if approval.lookingAtFiles, let w = c.checking {
+            Text(w).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2)
+          } else if let p = approval.publishProblem {
+            Text(p).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
+          } else {
+            Text(c.addressLine).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink).textSelection(.enabled)
+            if let h = c.heading { Text(h).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2) }
+            // After the front desk's look (OLA-325): each file and its size, what is left out, the
+            // warnings and the acceptable-use line, the same lines as the website's sheet.
+            if let notes = c.fileNotes {
+              VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(c.files.enumerated()), id: \.offset) { i, f in
+                  HStack(alignment: .firstTextBaseline) {
+                    Text(f).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink).textSelection(.enabled)
+                    Spacer(minLength: Space.s)
+                    Text(i < notes.count ? notes[i] : "").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2)
+                  }
+                }
+              }
+            }
+            if let l = c.leftOut { Text(l).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2) }
+            ForEach(c.warnings, id: \.self) { w in
+              Text(w).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
+            }
+            if let u = c.aup { Text(u).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true) }
+          }
         }
       }
       VStack(alignment: .leading, spacing: Space.s) {
-        ForEach(Array(approval.items.enumerated()), id: \.offset) { i, item in
+        // A publish card's files are drawn above, with their sizes, once the front desk has looked.
+        ForEach(Array((approval.card?.kind == .publish && (approval.card?.fileNotes != nil || approval.lookingAtFiles || approval.publishProblem != nil) ? [] : approval.items).enumerated()), id: \.offset) { i, item in
           VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
               Text(item.label).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink)
@@ -341,8 +366,11 @@ struct ApprovalPanel: View {
   @ViewBuilder func yesButtons(stacked: Bool) -> some View {
     let w: CGFloat? = stacked ? .infinity : nil
     // A publish or a take-down is one yes for this list, once (cards.mjs: "Publish these two files").
-    Button { reply(.once) } label: { Text(approval.card?.yes ?? "Yes, this once").frame(maxWidth: w) }
-      .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
+    // A cloud publish has its yes only once the front desk has looked at the files (as on the website).
+    if !approval.lookingAtFiles, approval.publishProblem == nil {
+      Button { reply(.once) } label: { Text(approval.card?.yes ?? "Yes, this once").frame(maxWidth: w) }
+        .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
+    }
     if approval.card == nil {
       Button { reply(.always) } label: { Text("Yes, for the rest of this session").frame(maxWidth: w) }
         .buttonStyle(OlaButton(kind: .ghost))
@@ -675,6 +703,7 @@ struct ConversationPane: View {
         if let a = convo?.approval {
           ZStack(alignment: .bottom) {
             ApprovalPanel(approval: a) { d in Task { await store.answer(d) } }
+              .task(id: a.id) { await store.lookAtPublish() }
               .frame(maxWidth: columnWidth + 2 * Space.l)
               .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)
               .transition(.move(edge: .bottom).combined(with: .opacity))

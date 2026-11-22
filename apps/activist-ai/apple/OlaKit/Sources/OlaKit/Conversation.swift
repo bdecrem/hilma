@@ -66,6 +66,10 @@ public struct Approval: Identifiable, Equatable, Sendable {
   /// A publish or a take-down: the card as cards.mjs describes it (OLA-325); the panel draws its
   /// words and its two buttons (the yes is for this list, once).
   public var card: PublishCard?
+  /// A cloud publish whose files the front desk could not look at: why, in its words.
+  public var publishProblem: String?
+  /// The front desk is looking at those files now (the card shows its `checking` line, no yes yet).
+  public var lookingAtFiles = false
   public init(id: String, sessionID: String, action: String, title: String, items: [ApprovalItem], stepID: String?) {
     self.id = id
     self.sessionID = sessionID

@@ -704,10 +704,34 @@ public final class OlaStore {
       return
     }
     do {
-      try await client?.reply(session: id, request: a.id, decision: decision)
+      // A cloud publish yes is for the list the card showed: its fingerprint goes with it (OLA-325).
+      try await client?.reply(session: id, request: a.id, decision: decision, fingerprint: decision == .reject ? nil : a.card?.fingerprint)
     } catch {
       note(error, "Your answer did not reach the machine. Try again.")
     }
+  }
+
+  /// A cloud publish card waiting: the front desk looks at the files (the website's sheet does the
+  /// same), and the card gets their sizes, the left-out line, the warnings and the yes for that
+  /// list. When the look fails, the card says why and keeps only Not now (nothing is published).
+  public func lookAtPublish(in sessionID: String? = nil) async {
+    guard let id = sessionID ?? selectedID, let a = conversations[id]?.approval, let card = a.card, card.needsPlan, a.publishProblem == nil, let client, client.config.account else { return }
+    conversations[id]?.approval?.lookingAtFiles = true
+    defer { if conversations[id]?.approval?.id == a.id { conversations[id]?.approval?.lookingAtFiles = false } }
+    let problem: String
+    do {
+      let plan = try await client.sitePreview(card.json["sel"])
+      if let c = Cards.withPlan(card, plan: plan), c.fingerprint != nil {
+        if conversations[id]?.approval?.id == a.id { conversations[id]?.approval?.card = c }
+        return
+      }
+      problem = "The files could not be checked just now. Nothing was published."
+    } catch OlaError.server(_, let message) where !message.isEmpty {
+      problem = message
+    } catch {
+      problem = "The files could not be checked just now. Nothing was published."
+    }
+    if conversations[id]?.approval?.id == a.id { conversations[id]?.approval?.publishProblem = problem }
   }
 
   /// "Yes, for the rest of this session" to one waiting request (OLA-142), wherever it was given

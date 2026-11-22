@@ -28,6 +28,7 @@ enum Snapshot {
       ("mac-conversation-dark", "main", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
       ("mac-approval-light", "approval", chosen, .aqua, CGSize(width: 1440, height: 900)),
       ("mac-approval-dark", "approval", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
+      ("mac-publish-light", "publish", chosen, .aqua, CGSize(width: 1440, height: 900)),
       ("mac-question-light", "question", chosen, .aqua, CGSize(width: 1440, height: 900)),
       ("mac-question-dark", "question", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
       ("mac-new-session", "empty", chosen, .aqua, CGSize(width: 1200, height: 760)),

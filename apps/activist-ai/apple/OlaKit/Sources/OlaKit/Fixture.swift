@@ -228,6 +228,16 @@ public struct Fixture: Sendable {
     case "results": return results
     case "reactions": return reactions
     case "approval": return approval
+    case "publish":
+      // A cloud publish once the front desk has looked at the files (OLA-325): the website's lines.
+      var f = approval
+      var c = f.conversations["s1"]!
+      var a = Approval(.object(["id": "per_pub", "sessionID": "s1", "action": "shell", "resources": ["ola-publish site --files index.html,fonts/Bowlby.woff2,photo.jpg"]]), dir: dir, cloudProject: "tenants")
+      let plan: JSON = ["url": "https://sites.ola.cx/tenants/", "items": [["as": "index.html", "size": 4200], ["as": "fonts/Bowlby.woff2", "size": 31000], ["as": "photo.jpg", "size": 1250000, "uploaded": true]], "total": 1285200, "leftOut": [".ola-notes.md"], "warnings": [], "acceptableUse": "Publish only what your group may share: no one\u{2019}s private details, nothing you do not have the rights to. Ola takes down pages that break this.", "fingerprint": "ab12", "published": false]
+      a.card = a.card.flatMap { Cards.withPlan($0, plan: plan) }
+      c.approval = a
+      f.conversations["s1"] = c
+      return f
     case "question":
       // Ola asks which words the page should carry (OLA-301), with three choices.
       var f = approval

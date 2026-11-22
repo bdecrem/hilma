@@ -57,12 +57,23 @@ final class CardsTests: XCTestCase {
       let p = f.json["permission"]
       let action = p["action"].str, resources = p["resources"].array.map(\.str)
       let files = f.json["ctx"]["files"].isNull ? nil : f.json["ctx"]["files"].array.map(\.str)
-      let card = Cards.publish(action: action, resources: resources, address: f.json["ctx"]["address"].string, files: files)
+      var card = Cards.publish(action: action, resources: resources, address: f.json["ctx"]["address"].string, files: files)
+      // After the front desk's look at the files (OLA-325): the same lines as the website's sheet.
+      if let c = card, !f.json["plan"].isNull {
+        XCTAssertTrue(c.needsPlan, f.name)
+        card = Cards.withPlan(c, plan: f.json["plan"])
+        XCTAssertEqual(card?.fingerprint, f.json["plan"]["fingerprint"].string, f.name)
+        XCTAssertFalse(card?.needsPlan ?? true, f.name)
+      }
       XCTAssertEqual(card.map { Cards.lines($0.json) } ?? [], f.lines, f.name)
       guard let card else { continue }
       // What ApprovalPanel draws for it, in its order.
       var drawn = [card.title, card.lede]
-      if card.kind == .publish { drawn += [card.addressLine, card.heading ?? ""] + card.files }
+      if card.kind == .publish {
+        drawn += [card.addressLine, card.heading ?? ""]
+        if let notes = card.fileNotes { for (i, f) in card.files.enumerated() { drawn += [f, notes[i]] } } else { drawn += card.files }
+        drawn += (card.leftOut.map { [$0] } ?? []) + card.warnings + (card.aup.map { [$0] } ?? [])
+      }
       drawn += [card.yes, card.no]
       XCTAssertEqual(drawn, f.lines, f.name)
       if let folder = f.json["folder"].string { XCTAssertEqual(card.folder, folder, f.name) }

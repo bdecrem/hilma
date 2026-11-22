@@ -9,11 +9,10 @@
 // shown and reversible in Settings; the gateway enforces it.
 import { createEffect, createSignal, For, Show } from 'solid-js'
 import { DeskError, site, type SitePreview } from '../lib/api.ts'
-import { bytes, count } from '../lib/format.ts'
 import type { Approval, Problem, PublishCard } from '../lib/types.ts'
 import type { Ola } from '../lib/ola.ts'
 import { ProblemBox } from './Drawer.tsx'
-import { publishYes } from '../../server/cards.mjs'
+import { publishWithPlan } from '../../server/cards.mjs'
 
 export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
   let dialog: HTMLDialogElement | undefined
@@ -177,8 +176,6 @@ function TakeDownAsk(props: { card: PublishCard; busy: boolean; reply: (d: 'once
   )
 }
 
-const short = (u: string) => u.replace(/^https?:\/\//, '')
-
 /**
  * Ola asks to publish (OLA-230): the Publish sheet's list in the conversation. The files that would
  * go public and their address, from the front desk's own check; "Publish these N files" sends the
@@ -189,6 +186,8 @@ function PublishAsk(props: { approval: Approval }) {
   const [problem, setProblem] = createSignal<Problem | null>(null)
   const [busy, setBusy] = createSignal(false)
   let first: HTMLButtonElement | undefined
+  // The card once the front desk has looked at the files: every line from server/cards.mjs (OLA-325).
+  const card = () => (plan() && props.approval.card ? publishWithPlan(props.approval.card, plan()) : null)
   createEffect(() => {
     const p = props.approval.publish
     if (!p) return
@@ -218,44 +217,41 @@ function PublishAsk(props: { approval: Approval }) {
       </p>
       <Show when={!plan() && !problem()}>
         <p class="publish-status" role="status">
-          Looking at the files and checking them for passwords and private data…
+          {props.approval.card?.checking}
         </p>
       </Show>
       <Show when={problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
-      <Show when={plan()}>
-        {(p) => (
+      <Show when={card()}>
+        {(c) => (
           <>
             <p class="publish-address">
-              The address: <strong>{short(p().url)}</strong>
+              The address: <strong>{c().address}</strong>
             </p>
-            <h3 class="publish-heading">
-              {count(p().items.length, 'file')} will be public, {bytes(p().total)}
-            </h3>
+            <h3 class="publish-heading">{c().heading}</h3>
             <ul class="publish-files">
-              <For each={p().items}>
-                {(i) => (
+              <For each={c().files}>
+                {(f, i) => (
                   <li>
-                    <span class="publish-name">{i.as}</span>
-                    <span class="publish-meta">
-                      {bytes(i.size)}
-                      {i.uploaded ? ' · added by your group' : ''}
-                    </span>
+                    <span class="publish-name">{f}</span>
+                    <span class="publish-meta">{c().fileNotes?.[i()]}</span>
                   </li>
                 )}
               </For>
             </ul>
-            <Show when={p().leftOut.length}>
-              <p class="meta">Left out: {count(p().leftOut.length, 'hidden or working file')}.</p>
+            <Show when={c().leftOut}>
+              <p class="meta">{c().leftOut}</p>
             </Show>
-            <For each={p().warnings}>{(w) => <p class="publish-warning">{w}</p>}</For>
-            <p class="meta publish-aup">{p().acceptableUse}</p>
+            <For each={c().warnings ?? []}>{(w) => <p class="publish-warning">{w}</p>}</For>
+            <Show when={c().aup}>
+              <p class="meta publish-aup">{c().aup}</p>
+            </Show>
           </>
         )}
       </Show>
       <div class="sheet-actions">
-        <Show when={plan()}>
+        <Show when={card()}>
           <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => send({ decision: 'once', fingerprint: plan()!.fingerprint })}>
-            {busy() ? 'Publishing…' : publishYes(plan()!.items.length, !!plan()!.published)}
+            {busy() ? 'Publishing…' : card()!.yes}
           </button>
         </Show>
         <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => send({ decision: 'reject', ...(problem() ? { message: `Not published: ${problem()!.text}` } : { message: 'The person said not now. Nothing was published.' }) })}>
