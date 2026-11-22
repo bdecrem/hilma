@@ -121,3 +121,63 @@ test("the Mac's local runtime (OLA-228): the person's folder and Ola's own folde
   await local.onToolAfter(scan)
   assert.match(scan.result.content[1].text, /- R08\.txt, line 2: "/)
 })
+
+test('OLA-248: two planted files in a folder: a listing names both, each with its own sentence; reading the survey after it gets a note about the survey alone, once', async () => {
+  const folder = mkdtempSync(path.join(tmpdir(), 'planted-two-'))
+  process.env.OLA_PLANTED_WORK = folder
+  process.env.OLA_PLANTED_OURS = '/opt/ola:/etc/opencode'
+  const two = await import('./index.js?two')
+  const survey = 'Elm Street tenant survey, 42 households\n\nMost tenants report broken heating.\n' + planted.k2 + '\n'
+  const donations = 'date,donor,amount\n2026-07-02,A. Ruiz,40\n' + planted.k1 + '\n'
+  writeFileSync(path.join(folder, 'elm-street-tenant-survey.txt'), survey)
+  writeFileSync(path.join(folder, 'donations-q3.csv'), donations)
+  const list = { status: 'completed', tool: 'glob', sessionID: 't1', input: { pattern: '*', path: folder }, result: { content: 'elm-street-tenant-survey.txt\ndonations-q3.csv' } }
+  await two.onToolAfter(list)
+  const note = list.result.content[1].text
+  assert.match(note, /"Note: elm-street-tenant-survey\.txt contains text addressed to an AI/)
+  assert.match(note, /"Note: donations-q3\.csv contains text addressed to an AI/)
+  assert.match(note, /one sentence for each of them that your answer uses, reads or is about/)
+  // the survey read on its own: a note about the survey, not the donations file
+  const read = { status: 'completed', tool: 'read', sessionID: 't1', input: { filePath: path.join(folder, 'elm-street-tenant-survey.txt') }, result: { content: survey } }
+  await two.onToolAfter(read)
+  assert.equal(read.result.content.length, 2)
+  const r = read.result.content[1].text
+  assert.match(r, /\[Ola file check\] elm-street-tenant-survey\.txt contains the text addressed to an AI noted earlier/)
+  assert.match(r, /"Note: elm-street-tenant-survey\.txt contains text addressed to an AI/)
+  assert.doesNotMatch(r, /donations-q3/)
+  // read again: nothing more
+  const again = { ...read, result: { content: survey } }
+  await two.onToolAfter(again)
+  assert.equal(again.result.content, survey)
+  // a later request about the donations file, through a script: its own reminder, the survey not named
+  const sh = { status: 'completed', tool: 'shell', sessionID: 't1', input: { command: 'python3 -c "import csv" donations-q3.csv' }, result: { content: 'total 40' } }
+  await two.onToolAfter(sh)
+  const d = sh.result.content[1].text
+  assert.match(d, /"Note: donations-q3\.csv contains/)
+  assert.doesNotMatch(d, /elm-street/)
+})
+
+test('OLA-248: the survey read first: its note names the survey first; the shell output of `cat` is named after the file', async () => {
+  const folder = mkdtempSync(path.join(tmpdir(), 'planted-first-'))
+  process.env.OLA_PLANTED_WORK = folder
+  const first = await import('./index.js?first')
+  const survey = 'Survey\n' + planted.k2 + '\n'
+  writeFileSync(path.join(folder, 'donations-q3.csv'), 'a,b\n' + planted.k1 + '\n')
+  writeFileSync(path.join(folder, 'elm-street-tenant-survey.txt'), survey)
+  const ev = { status: 'completed', tool: 'shell', sessionID: 'f1', input: { command: 'cat elm-street-tenant-survey.txt' }, result: { content: survey } }
+  await first.onToolAfter(ev)
+  const n = ev.result.content[1].text
+  assert.match(n, /^\s*\[Ola file check\][^]*?\n- elm-street-tenant-survey\.txt: "/)
+  const s = n.indexOf('"Note: elm-street'), dn = n.indexOf('"Note: donations-q3')
+  assert.ok(s > 0 && dn > s, n)
+})
+
+test('one planted file: the note keeps its single sentence', async () => {
+  const folder = mkdtempSync(path.join(tmpdir(), 'planted-one-'))
+  process.env.OLA_PLANTED_WORK = folder
+  const one = await import('./index.js?one')
+  writeFileSync(path.join(folder, 'a.csv'), 'x\n' + planted.k1 + '\n')
+  const ev = { status: 'completed', tool: 'shell', sessionID: 'o1', input: { command: 'ls' }, result: { content: 'a.csv' } }
+  await one.onToolAfter(ev)
+  assert.match(ev.result.content[1].text, /Your final answer must include this sentence, filled in: "Note: a\.csv contains/)
+})

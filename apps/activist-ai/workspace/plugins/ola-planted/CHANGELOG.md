@@ -1,5 +1,16 @@
 # ola-planted
 
+## 4 (image 2.3.2-66, 2026-11-22, OLA-248)
+
+- Planted text in two files: the note lists one sentence per file, for each file the answer uses or is
+  about, the asked-about file first; 3 named only the first finding, so a summary of the survey warned
+  about the donations file instead (the OLA-238 checker, Mac build 25, two tries of two).
+- A file first named in a note on a folder listing, a search or the scan gets one short note of its own
+  when it is read by name (the read tool, or a command naming it), once per session; 3 noted each finding
+  once, so the read of the survey got nothing. That note names only that file and says not to repeat the
+  other files' sentences, so an answer about the donations file no longer repeats the survey's.
+- `planted.test.mjs`: 17 of 17.
+
 ## 3 (the Mac's local runtime, 2026-11-20, OLA-228)
 
 - The Mac app and the `ola` command load this same file (OlaKit `LocalServer.installPlugins`). The
