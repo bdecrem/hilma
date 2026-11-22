@@ -25,7 +25,8 @@
 // the shape is Sweep in src/lib/venture/board.ts. Keep the posted file in
 // apps/venture/private/data/sweeps/<day>.json (private, backed up by sync.mjs).
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, resolve, sep } from 'node:path'
 import { fpOf } from './_sweepfp.mjs'
 import { sshArgs } from './_olassh.mjs'
 import { fileURLToPath } from 'node:url'
@@ -210,19 +211,105 @@ const dayStart = (d) => {
   const off = new Date(`${d}T12:00:00Z`).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' }).match(/GMT([+-]\d+)/)?.[1] ?? '-8'
   return new Date(Date.parse(`${d}T00:00:00Z`) - Number(off) * 3600e3).toISOString()
 }
-/** The file or folder a cleaned item names: in the notes (VENTURE_PRIVATE or apps/venture/private), this checkout, or absolute. */
+const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim()
+const notesDir = () => resolve(priv(''))
+/** The file or folder a cleaned item names, inside the notes (VENTURE_PRIVATE or apps/venture/private) or
+ *  inside this checkout; never the checkout itself, never a path outside both (OLA-280: '/private/tmp' and '.' passed). */
 function noteFile(where) {
-  const w = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;:]$/, '').replace(/^apps\/venture\/private\//, '')
-  if (!w) return null
-  for (const f of [priv(w), root + w, root + 'apps/venture/private/' + w, w]) if (f && existsSync(f) && (f.startsWith('/') || f.startsWith(root))) return f
+  const raw = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;:]$/, '') ?? ''
+  if (/^apps\/venture\/private\/?$/.test(raw)) return notesDir() // the notes folder itself, for a note removed whole
+  const w = raw.replace(/^apps\/venture\/private\//, '')
+  if (!w || w.split('/').some((x) => x === '.' || x === '..')) return null
+  const top = resolve(root)
+  const inside = (f) => (f === notesDir() || f.startsWith(notesDir() + sep) || (f !== top && f.startsWith(top + sep))) && !/(^|\/)(\.git|node_modules)(\/|$)/.test(f.slice(top.length))
+  for (const f of [priv(w), root + w, root + 'apps/venture/private/' + w]) { const r = resolve(f); if (existsSync(r) && inside(r)) return r }
   return null
 }
-/** Was `where` a code file that a commit changed on that day? { ok, why }. */
-function codeChangedOn(where, d) {
-  const f = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;]$/, '').replace(/:\d+$/, '')
+// Files whose text is instructions a session reads (OLA-280): a change there is a written rule, never code
+// that refuses. The rules digest hook prints RULES.md; weaknesses.json's `now` lines are shown before prompts.
+const INSTRUCTION_FILE = /(^|\/)(\.claude\/hooks\/venture-rules\.(py|sh)|data\/weaknesses\.json|\.claude\/skills\/)/
+// a change whose own words say it wrote a rule, a lesson or an instruction, or put it in a text file
+const WRITTEN_WORDS = /RULES\.md|LESSONS\.md|CLAUDE\.md|SWEEP\.md|SKILL\.md|\.md\b|\b(add|adds|added|write|writes|wrote|new|sharpen|sharpens|sharpened)\b[^.;:]{0,30}\b(rule|lesson|instruction)s?\b/i
+/** Was `where` a code file that a commit for the change's own ticket changed on that day? { ok, why }.
+ *  OLA-280: any code file committed that day made a change "enforced"; now the commit must name `issue`. */
+function codeChangedOn(where, d, issue) {
+  const f = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;]$/, '').replace(/:\d+$/, '').replace(/^apps\/venture\/private\//, '')
   if (!f || /\.(md|txt)$/i.test(f)) return { ok: false, why: `where (${where ?? 'none'}) is not a code file` }
+  if (INSTRUCTION_FILE.test(f)) return { ok: false, why: `where (${f}) holds text a session reads, not code that refuses: a change there is a written rule` }
   if (!existsSync(root + f)) return { ok: false, why: `where (${f}) is not a file in this checkout` }
-  return committedOn(root + f, d) ? { ok: true, why: '' } : { ok: false, why: `no commit on main changed ${f} on ${d}` }
+  if (!/^OLA-\d+$/.test(issue ?? '')) return { ok: false, why: `it names no issue: an enforced change names its ticket (issue: "OLA-n"), and a commit for that ticket changed ${f} that day` }
+  const to = new Date(Date.parse(dayStart(d)) + 86400e3).toISOString()
+  const subjects = spawnSync('git', ['-C', root, 'log', 'origin/main', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%s', '--', f], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean)
+  if (!subjects.length) return { ok: false, why: `no commit on main changed ${f} on ${d}` }
+  if (!subjects.some((s) => new RegExp(`\\b${issue}\\b`).test(s))) return { ok: false, why: `no commit for ${issue} changed ${f} on ${d} (the commits that changed it that day name ${[...new Set(subjects.flatMap((s) => s.match(/OLA-\d+/g) ?? []))].join(', ') || 'no ticket'})` }
+  return { ok: true, why: '' }
+}
+/** A file's earlier versions kept by sync.mjs push (bucket venture-history, docs/<FILE.md>/<stamp> and
+ *  data/<path>/<stamp>, UTC hours): those stamped that day, and the newest one before it.
+ *  VENTURE_HISTORY_DIR=<folder> (same layout) for tests. */
+async function versionsOn(rel, d) {
+  const key = rel.endsWith('.md') && !rel.includes('/') ? `docs/${rel}` : `data/${rel}`
+  const from = dayStart(d).slice(0, 13)
+  const to = new Date(Date.parse(dayStart(d)) + 86400e3).toISOString().slice(0, 13)
+  let stamps
+  const local = process.env.VENTURE_HISTORY_DIR
+  if (local) stamps = existsSync(join(local, key)) ? readdirSync(join(local, key)) : []
+  else if (FAKE) stamps = []
+  else {
+    const { data, error } = await db.storage.from('venture-history').list(key, { limit: 1000, sortBy: { column: 'name', order: 'desc' } })
+    if (error) throw new Error(`history of ${rel}: ${error.message}`)
+    stamps = data.map((o) => o.name)
+  }
+  stamps = stamps.filter((s) => s < to).sort()
+  const pick = [...stamps.filter((s) => s < from).slice(-1), ...stamps.filter((s) => s >= from)]
+  const out = []
+  for (const s of pick) {
+    if (local) out.push({ stamp: s, body: readFileSync(join(local, key, s), 'utf8') })
+    else {
+      const { data, error } = await db.storage.from('venture-history').download(`${key}/${s}`)
+      if (error) throw new Error(`history of ${rel} at ${s}: ${error.message}`)
+      out.push({ stamp: s, body: await data.text() })
+    }
+  }
+  return out
+}
+/** OLA-280: a cleaned item proves itself. `was` is the text removed or replaced (for a file removed whole,
+ *  its name, with where its folder): it is gone now, and it was there that day (git: in a line a commit
+ *  removed that day; the notes: in the version sync.mjs kept that day or the last one before). */
+async function cleanedProblem(c, n, d) {
+  const f = noteFile(c.where)
+  if (!f) return `cleaned[${n}].where: "${c.where}" is no file or folder in the notes or this checkout (a file removed whole: name its folder)`
+  const was = norm(c.was)
+  const day0 = Date.parse(dayStart(d))
+  const to = new Date(day0 + 86400e3).toISOString()
+  const gitLog = (extra, path) => spawnSync('git', ['-C', root, 'log', 'origin/main', `--since=${dayStart(d)}`, `--until=${to}`, ...extra, '--', path], { encoding: 'utf8', maxBuffer: 64e6 }).stdout
+  const rel = f.startsWith(notesDir()) ? f.slice(notesDir().length + 1) : null
+  if (statSync(f).isDirectory()) {
+    const name = String(c.was).trim()
+    if (!name || name.includes('/') && !name.startsWith(c.where)) return `cleaned[${n}].was: for a file removed whole, its name inside ${c.where}`
+    if (existsSync(join(f, name))) return `cleaned[${n}]: ${name} is still in ${c.where}: nothing was removed there`
+    if (tracked(f) || !rel && f !== notesDir()) {
+      const gone = gitLog(['--diff-filter=D', '--name-only', '--format='], f.slice(resolve(root).length + 1) || '.').split('\n').filter(Boolean)
+      return gone.some((g) => g === name || g.endsWith('/' + name)) ? null : `cleaned[${n}]: no commit on main removed ${name} from ${c.where} on ${d}`
+    }
+    const prior = await versionsOn(join(rel ?? '', name).replace(/^\//, ''), d)
+    if (!prior.length) return `cleaned[${n}]: no kept version of ${name} (sync.mjs history), so nothing shows it was in ${c.where}; run sync.mjs push, then post`
+    return statSync(f).mtimeMs < day0 ? `cleaned[${n}].where: ${c.where} has not changed since before ${d}: nothing was removed there that day` : null
+  }
+  if (was.length < 15) return `cleaned[${n}].was: the exact text that was removed or replaced, 15 characters or more, copied from the file as it was (a file removed whole: its name, with where its folder)`
+  if (norm(readFileSync(f, 'utf8')).includes(was)) return `cleaned[${n}].was is still in ${c.where}: nothing was removed or corrected there (OLA-280)`
+  if (tracked(f)) {
+    // a file git tracks: its time changes on every checkout or pull, so only a commit that day counts (OLA-260)
+    const p = f.slice(resolve(root).length + 1)
+    if (!committedOn(f, d)) return `cleaned[${n}].where: ${c.where} is in git and no commit on main changed it on ${d}: nothing was cleaned there that day`
+    const removed = norm(gitLog(['-p', '--format='], p).split('\n').filter((l) => l.startsWith('-') && !l.startsWith('---')).map((l) => l.slice(1)).join('\n'))
+    return removed.includes(was) ? null : `cleaned[${n}].was is in no line a commit on main removed from ${c.where} on ${d}`
+  }
+  if (statSync(f).mtimeMs < day0) return `cleaned[${n}].where: ${c.where} has not changed since before ${d}: nothing was cleaned there that day`
+  if (!rel) return `cleaned[${n}].where: ${c.where} is neither in git nor in the notes, so nothing shows what it held before`
+  const prior = await versionsOn(rel, d)
+  if (!prior.length) return `cleaned[${n}]: no version of ${rel} kept on ${d} or before (sync.mjs history ${rel}), so nothing shows what it held; run sync.mjs push, then post`
+  return prior.some((v) => norm(v.body).includes(was)) ? null : `cleaned[${n}].was is in none of the versions of ${rel} kept on ${d} or the last before it (${prior.map((v) => v.stamp).join(', ')}): it was not removed that day`
 }
 /** Is the file (absolute path) tracked by git in this checkout? */
 const tracked = (f) => f.startsWith(root) && spawnSync('git', ['-C', root, 'ls-files', '--error-unmatch', '--', f.slice(root.length)], { encoding: 'utf8' }).status === 0
@@ -241,7 +328,7 @@ function quietDay(d) {
   const commits = spawnSync('git', ['-C', root, 'log', '--all', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%h'], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean).length
   return (quietCache[d] = { quiet: corr === 0 && commits === 0, why: `${corr} correction(s) and ${commits} commit(s) that day` })
 }
-function checkEntry(e) {
+async function checkEntry(e) {
   const bad = []
   const known = new Set(loadWeaknesses(rootUrl).map((w) => w.id))
   const str = (v) => typeof v === 'string' && v.trim().length > 0
@@ -260,17 +347,11 @@ function checkEntry(e) {
   // OLA-251 (Nov 20): the review cleans the notes instead of adding rules. `cleaned` lists what was
   // removed, merged or corrected in the notes that day, checked against what really happened.
   const CLEAN = ['removed', 'merged', 'corrected']
-  if (!Array.isArray(e.cleaned) || e.cleaned.some((c) => !CLEAN.includes(c.did) || !str(c.what) || !str(c.where))) bad.push(`cleaned: [{ did: ${CLEAN.map((x) => `"${x}"`).join(' | ')}, what: "what changed in the notes, and what in the day's record showed it was wrong, stale or a duplicate", where: "the file" }]`)
+  if (!Array.isArray(e.cleaned) || e.cleaned.some((c) => !CLEAN.includes(c.did) || !str(c.what) || !str(c.where) || !str(c.was))) bad.push(`cleaned: [{ did: ${CLEAN.map((x) => `"${x}"`).join(' | ')}, what: "what changed in the notes, and what in the day's record showed it was wrong, stale or a duplicate", was: "the exact text removed or replaced, copied from the file (a file removed whole: its name)", where: "the file (a file removed whole: its folder)" }]`)
   else {
     if (!e.cleaned.length && !(e.quiet && quietDay(e.day).quiet)) bad.push(`cleaned is empty: the review removes, merges or corrects something in the notes every day (SWEEP.md, "Clean the notes")${e.quiet ? `; the day is not quiet by its record (${quietDay(e.day).why})` : ''}`)
-    // OLA-260: each cleaned item names a file (or, for a file removed whole, its folder) that exists and changed on or after that day
-    e.cleaned.forEach((c, n) => {
-      const f = noteFile(c.where)
-      if (!f) bad.push(`cleaned[${n}].where: "${c.where}" is no file or folder in the notes or this checkout (a file removed whole: name its folder)`)
-      // a file git tracks: its time changes on every checkout or pull, so only a commit that day counts (OLA-260)
-      else if (tracked(f)) { if (!committedOn(f, e.day)) bad.push(`cleaned[${n}].where: ${c.where} is in git and no commit on main changed it on ${e.day}: nothing was cleaned there that day`) }
-      else if (statSync(f).mtimeMs < Date.parse(dayStart(e.day))) bad.push(`cleaned[${n}].where: ${c.where} has not changed since before ${e.day}: nothing was cleaned there that day`)
-    })
+    // OLA-260, OLA-280: each cleaned item names a file in the notes or this checkout and quotes what left it that day
+    for (const [n, c] of e.cleaned.entries()) { const p = await cleanedProblem(c, n, e.day); if (p) bad.push(p) }
   }
   // quiet is the day's record, not the author's word (OLA-260)
   if (e.quiet && !quietDay(e.day).quiet) bad.push(`quiet: true, but ${e.day} was not quiet: ${quietDay(e.day).why}`)
@@ -281,11 +362,15 @@ function checkEntry(e) {
   const weakById = new Map(loadWeaknesses(rootUrl).map((w) => [w.id, w]))
   for (const side of ['kit', 'ola']) for (const [n, c] of (Array.isArray(e[side]) ? e[side] : []).entries()) {
     // OLA-260: enforced: true is the code's, not the author's: a code file (not a note, not a .md) that a commit changed that day
-    const code = codeChangedOn(c.where, e.day)
-    if (c.enforced && !code.ok) bad.push(`${side}[${n}] says enforced: true, but ${code.why}. A change is enforced when code refuses or does it: name that file in where`)
-    const enforced = c.enforced && code.ok
-    // a written rule: level 1, a rule named, or any change whose where is a text file sessions read (RULES.md, SWEEP.md, CLAUDE.md, a skill, any .md)
-    const written = !enforced && (Number(c.level) === 1 || /\.md\b/i.test(c.where ?? '') || /\brules? \d+|RULES\.md|LESSONS\.md|CLAUDE\.md|SWEEP\.md|SKILL\.md|a (new )?rule\b/i.test(`${c.where ?? ''} ${c.changed ?? ''}`))
+    // OLA-280: a change whose words say it wrote a rule, or whose where is text a session reads, is a written
+    // rule whatever else it names; enforced: true needs a commit for the change's own ticket on that file
+    const says = `${c.where ?? ''} ${c.changed ?? ''}`.match(WRITTEN_WORDS)?.[0] ?? (INSTRUCTION_FILE.test(c.where ?? '') ? String(c.where).trim().split(/\s+/)[0] : null)
+    const code = codeChangedOn(c.where, e.day, c.issue)
+    if (c.enforced && says) bad.push(`${side}[${n}] says enforced: true, but its change is a written rule ("${says}"): text a session reads is not code that refuses. Name the code that refuses or does it, or drop enforced`)
+    else if (c.enforced && !code.ok) bad.push(`${side}[${n}] says enforced: true, but ${code.why}. A change is enforced when code refuses or does it: name that file in where and its ticket in issue`)
+    const enforced = c.enforced && code.ok && !says
+    // a written rule: its words or its file say so, level 1, or a rule named
+    const written = !!says || (!enforced && (Number(c.level) === 1 || /\brules? \d+|a (new )?rule\b/i.test(`${c.where ?? ''} ${c.changed ?? ''}`)))
     const w = weakById.get(c.weakness)
     const before = (w?.guards ?? []).filter((g) => g.day < e.day)
     if (written && before.length) bad.push(`${side}[${n}] adds a written rule for "${w.name}", which already has a fix (strongest: kind ${Math.max(...before.map((g) => g.level ?? (g.enforced ? 3 : 1)))}): a rule of the same kind is what failed. Make the change stronger (correct.mjs: refused by code, checked by another, taken away) or, when none can be built yet, owe it with correct.mjs add --owed OLA-n`)
@@ -370,12 +455,12 @@ if (cmd === '--wait') {
   const f = await facts()
   const del = spawnSync('node', [root + 'scripts/venture/delegable.mjs', '--day', day, '--json'], { encoding: 'utf8', maxBuffer: 16e6 })
   const models = del.status === 0 ? JSON.parse(del.stdout.trim().split('\n').pop()) : { shares: [], rule: '', stretches: [], note: `not read: ${(del.stderr || '').trim().split('\n').pop()}` }
-  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', where: '' }], models, kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
+  console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', was: '', where: '' }], models, kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
 } else if (cmd === 'check') {
   // only the entry's own checks (checkEntry), with none of post's look-ups in the tracker; exit 1 on any problem (OLA-260)
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs check <entry.json>')
-  const bad = checkEntry(JSON.parse(readFileSync(file, 'utf8')))
+  const bad = await checkEntry(JSON.parse(readFileSync(file, 'utf8')))
   if (bad.length) die(`the entry has ${bad.length} problem(s):\n- ${bad.join('\n- ')}`)
   console.log('the entry passes its own checks')
 } else if (cmd === 'post') {
@@ -422,7 +507,7 @@ if (cmd === '--wait') {
   // a failure of requests.mjs itself is said plainly, with the two ways on; it never blocks the review silently
   const goOn = opt('--requests-failed')
   if (req.failed && !(goOn && goOn.trim().length >= 10)) die(`the entry was not stored: requests.mjs failed for ${e.day} at ${req.failed.at}: ${req.failed.error}\nEither fix the cause and rerun it (node scripts/venture/requests.mjs --day ${e.day}), or post with --requests-failed "<why the review goes ahead without it>" (10 characters or more): the entry then says the day's requests were not matched, and why.`)
-  const bad = checkEntry(e)
+  const bad = await checkEntry(e)
   // OLA-251, tenth pass: a fix settled in the ledger past correct.mjs becomes a line before the day's lines are counted
   spawnSync('node', [root + 'scripts/venture/correct.mjs', 'audit'], { encoding: 'utf8', stdio: ['ignore', 'ignore', 'inherit'] })
   // OLA-245 check #2, OLA-261: the models part is counted here from the transcripts of every machine the
@@ -482,7 +567,7 @@ if (cmd === '--wait') {
   if (!FAKE) refuseOnCopy('posting the entry')
   const told = old.days.find((d) => d.day === e.day)?.ideas?.told
   const ideas = { kit: { text: e.ideas.kit.text.trim(), why: e.ideas.kit.why.trim(), issue: e.ideas.kit.issue }, ola: { text: e.ideas.ola.text.trim(), why: e.ideas.ola.why.trim(), issue: e.ideas.ola.issue }, ...(told ? { told } : {}) }
-  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), where: c.where.trim() })), overrides, models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
+  const entry = { day: e.day, at: e.at ?? new Date().toISOString(), by: e.by ?? 'Kit', summary: e.summary.trim(), ...(e.quiet ? { quiet: true } : {}), read: e.read, kit: e.kit.map((c) => ({ ...c, enforced: !!c.enforced })), ola: e.ola.map((c) => ({ ...c, enforced: !!c.enforced })), open: e.open, ...(e.build ? { build: e.build } : {}), ...(e.pattern ? { pattern: e.pattern } : {}), ideas, ...(e.learning ? { learning: { changed: e.learning.changed.trim(), why: e.learning.why.trim(), where: e.learning.where.trim(), enforced: !!e.learning.enforced, ...(e.learning.issue ? { issue: e.learning.issue } : {}) } } : {}), ...(e.learningReview ? { learningReview: e.learningReview } : {}), cleaned: e.cleaned.map((c) => ({ did: c.did, what: c.what.trim(), was: String(c.was).trim(), where: c.where.trim() })), overrides, models: { shares: e.models.shares, rule: e.models.rule, stretches: e.models.stretches, ...(e.models.note ? { note: e.models.note } : {}), ...(e.models.missing?.length ? { missing: e.models.missing } : {}) } }
   entry.requests = early.length ? { ...requests, early: early.map((d) => ({ day: d, at: reqDays[d].at, why: goOnEarly.trim() })) } : requests
   // the first post's time stays: an idea must not be finished before the review was first posted (OLA-331)
   { const prev = old.days.find((d) => d.day === e.day); entry.firstAt = prev ? prev.firstAt ?? prev.at : entry.at }

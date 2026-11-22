@@ -96,7 +96,12 @@ against what really happened is what helped. So every evening, against the day's
   tool works that the code no longer matches.
 
 Each one goes in the entry's `cleaned`: `{ "did": "removed" | "merged" | "corrected", "what": "…",
-"where": "NOW.md" }`, where `what` says what changed and what in the record showed it. The Learning
+"was": "…", "where": "NOW.md" }`, where `what` says what changed and what in the record showed it,
+and `was` is the exact text removed or replaced, copied from the file (15 characters or more; a
+file removed whole: its name, with `where` its folder). Posting checks it (OLA-280): `where` is a
+file inside the notes or this checkout; `was` is no longer in it; and it was there that day: for a
+file in git, in a line a commit on main removed that day; for a note, in a version `sync.mjs push`
+kept that day or the last one before (`sync.mjs history <file>`; a push keeps the version it replaces), so push before posting. The Learning
 page shows the list under the day; it is the short list Bart reads of what the review removed.
 `sweep.mjs post` refuses an entry with no `cleaned` (a quiet day excepted), and refuses one whose
 `kit` or `ola` change adds a written rule (a rule, a lesson, `enforced: false` naming RULES.md) for a
@@ -356,10 +361,11 @@ The shape (`Sweep` in `src/lib/venture/board.ts`):
       "pattern": "what the findings have in common, and with earlier days",
       "read":  [{ "n": "115", "what": "messages from you" }, …],       from gather, never from memory
       "kit":   [{ "weakness": "unread-channel", "saw": "what happened", "changed": "what is different now",
-                  "where": "rule 48; the prompt hook", "enforced": true, "issue": "OLA-171" }],
+                  "where": "scripts/venture/issues.mjs", "enforced": true, "issue": "OLA-171" }],
       "ola":   [ … the same … ],
       "open":  [{ "text": "found, not fixed today", "issue": "OLA-175" }],
-      "cleaned": [{ "did": "removed", "what": "what changed in the notes and what showed it", "where": "NOW.md" }],
+      "cleaned": [{ "did": "removed", "what": "what changed in the notes and what showed it",
+                    "was": "the exact text removed or replaced, copied from the file", "where": "NOW.md" }],
       "models":  { "shares": [{ "model": "Fable", "share": 60 }, …], "rule": "…", "stretches": [{ "at": "10:51 am to 10:53 am", "calls": 23, "what": "…" }] },
       "build": { "text": "the one thing to build next that removes a whole weakness", "issue": "OLA-175" },
       "ideas": { "kit": { "text": "one sentence: what would be built", "why": "the evidence, and the measure", "issue": "OLA-180" },
@@ -370,7 +376,11 @@ Rules for the entry:
 - Every change is real and finished: a file changed today, and `where` names it in words Bart
   understands (a rule's number, "the prompt hook", "the steer counter", "the design skill").
 - Every change names its `weakness` (posting refuses one that is not in the ledger).
-- `enforced: true` only when code now does it without Kit having to remember.
+- `enforced: true` only when code now does it without Kit having to remember. Posting checks it
+  (OLA-280): `where` starts with the code file, `issue` names the change's ticket, and a commit on
+  main that day for that ticket changed that file. A change whose words say it wrote a rule (RULES.md,
+  any .md, "added a rule") or whose file is text a session reads (`.claude/hooks/venture-rules.py`,
+  `data/weaknesses.json`, a skill) is a written rule, never enforced.
 - `changed` leads: it says what is different from tomorrow on. `saw` is the evidence in one line,
   with his words where he said it.
 - What was found and not fixed goes under `open` with its ticket. Nothing is left out because it
