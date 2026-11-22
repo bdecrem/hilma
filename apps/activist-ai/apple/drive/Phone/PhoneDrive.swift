@@ -209,27 +209,33 @@ final class PhoneDrive: XCTestCase {
           continue
         }
         // Ola's question (OLA-301, OLA-360): its choices tapped as a person taps them. One question,
-        // one choice: the first choice is the answer. Otherwise (pick several, two questions): the
-        // choices ticked from the top until Send my answers can be pressed (at least two), then it.
+        // one choice: a tap on the first choice is the answer. A card with Send my answers (two
+        // questions, or pick several): each question answered on its own, its first choice for a
+        // pick-one question, its first two for a pick-several one, then Send my answers. Until Nov 21
+        // the drive tapped a pick-one question's choices one after another, each replacing the last,
+        // so the checker saw the fourth font picked and the second question never reached.
         if questionKicker() != nil {
-          let choiceWords = questionChoiceLabels()
-          let choices = choiceWords.map { app.buttons.matching(NSPredicate(format: "label == %@", $0)).firstMatch }
+          let groups = questionChoiceGroups()
+          let choiceWords = groups.flatMap(\.choices)
           let ask = choiceWords.isEmpty ? "a question" : (app.staticTexts.allElementsBoundByIndex.map(\.label).drop { !$0.hasPrefix("Ola is asking you") }.dropFirst().first ?? "a question")
-          said.questions.append("\(ask) [\(choiceWords.joined(separator: " | "))]")
-          step("question: \(ask)", shot: "say\(n)-question\(said.questions.count)")
-          guard let first = choices.first else { said.status = "question"; throw Failed(why: "Ola's question shows no choice to tap") }
+          said.questions.append("\(ask) [\(groups.map { $0.choices.joined(separator: " | ") }.joined(separator: " || "))]")
+          step("question: \(ask) (\(groups.count) question\(groups.count == 1 ? "" : "s"))", shot: "say\(n)-question\(said.questions.count)")
+          guard !choiceWords.isEmpty, groups.allSatisfy({ !$0.choices.isEmpty }) else { said.status = "question"; throw Failed(why: "Ola's question shows no choice to tap") }
           let sendMine = app.buttons["Send my answers"]
+          func button(_ w: String) -> XCUIElement { app.buttons.matching(NSPredicate(format: "label == %@", w)).firstMatch }
           var tapped: [String] = []
           if !sendMine.exists {
-            try reveal(first, choiceWords[0])
-            try tap(first, "the choice \(choiceWords[0])")
-            tapped.append(choiceWords[0])
+            let w = choiceWords[0]
+            try reveal(button(w), w)
+            try tap(button(w), "the choice \(w)")
+            tapped.append(w)
           } else {
-            for (c, word) in zip(choices, choiceWords) {
-              if tapped.count >= 2, sendMine.isEnabled { break }
-              try reveal(c, word)
-              try tap(c, "the choice \(word)")
-              tapped.append(word)
+            for g in groups {
+              for w in g.choices.prefix(g.multiple ? 2 : 1) {
+                try reveal(button(w), w)
+                try tap(button(w), "the choice \(w)")
+                tapped.append(w)
+              }
             }
             step("ticked \(tapped.joined(separator: ", "))", shot: "say\(n)-question\(said.questions.count)-ticked")
             try reveal(sendMine, "Send my answers")
@@ -241,7 +247,7 @@ final class PhoneDrive: XCTestCase {
           // XCUIElements re-resolve, so what the card was is kept as words.
           let was = choiceWords
           let gone = Date().addingTimeInterval(20)
-          func same() -> Bool { questionKicker() != nil && questionChoiceLabels() == was }
+          func same() -> Bool { questionKicker() != nil && questionChoiceGroups().flatMap(\.choices) == was }
           while same(), Date() < gone { sleep(1) }
           if same() {
             said.status = "question"; throw Failed(why: "Ola's question stayed after \(tapped.joined(separator: " + "))")
@@ -296,36 +302,61 @@ final class PhoneDrive: XCTestCase {
     return k.exists ? k : nil
   }
 
-  /// The card's choices, by their words: the buttons after its first line and before its note about
-  /// the box ("Or write…", "Write your answer…"), in the order the screen lists them; Send my answers
-  /// is not one. By the tree's order, not by position: a tall card's top can be above the screen,
+  /// The card's questions, each its choices by their words and whether it takes several: the
+  /// buttons after the card's first line and before its note about the box ("Or write…", "Write
+  /// your answer…"), in the order the screen lists them; a question ends at its own "Or say it in
+  /// your own words" field; Send my answers is not a choice. A choice whose mark is a square takes
+  /// several. By the tree's order, not by position: a tall card's top can be above the screen,
   /// where the conversation's own buttons are.
-  func questionChoiceLabels() -> [String] {
+  func questionChoiceGroups() -> [(choices: [String], multiple: Bool)] {
     guard let root = try? app.snapshot() else { return [] }
     var flat: [XCUIElementSnapshot] = []
     func walk(_ e: XCUIElementSnapshot) { flat.append(e); e.children.forEach(walk) }
     walk(root)
     guard let k = flat.firstIndex(where: { $0.elementType == .staticText && $0.label.hasPrefix("Ola is asking you") }) else { return [] }
-    var out: [String] = []
+    var out: [(choices: [String], multiple: Bool)] = []
+    var cur: (choices: [String], multiple: Bool) = ([], false)
     for e in flat[(k + 1)...] {
       if e.elementType == .staticText, e.label.hasPrefix("Or write") || e.label.hasPrefix("Write your answer") { break }
-      if e.elementType == .button, !e.label.isEmpty, e.label != "Send my answers" { out.append(e.label) }
+      if e.elementType == .textField || e.elementType == .textView {
+        if !cur.choices.isEmpty { out.append(cur) }
+        cur = ([], false)
+        continue
+      }
+      if e.elementType == .button, !e.label.isEmpty, e.label != "Send my answers" {
+        cur.choices.append(e.label)
+        if e.children.contains(where: { $0.elementType == .image && $0.identifier.contains("square") }) { cur.multiple = true }
+      }
     }
+    if !cur.choices.isEmpty { out.append(cur) }
     return out
   }
 
-  /// A choice scrolled into view as a person scrolls the card: a swipe on the card's note about the
-  /// box (always in view under the choices), down when the choice is above, up when below.
+  /// The part of the screen where the card can be seen: under the navigation bar, inside the card's
+  /// own scroll view (which ends above the box and the keyboard).
+  func cardRoom() -> CGRect? {
+    let scrolls = app.scrollViews.containing(NSPredicate(format: "label BEGINSWITH 'Ola is asking you'")).allElementsBoundByIndex
+    guard let card = scrolls.filter({ $0.exists }).min(by: { $0.frame.height < $1.frame.height }) else { return nil }
+    let top = app.navigationBars.firstMatch.exists ? app.navigationBars.firstMatch.frame.maxY : card.frame.minY
+    return CGRect(x: card.frame.minX, y: max(top, card.frame.minY), width: card.frame.width, height: card.frame.maxY - max(top, card.frame.minY))
+  }
+
+  /// A choice scrolled into view as a person scrolls the card: a swipe on the card itself, up when
+  /// the choice is below the room, down when above. In view = wholly inside the card's room; XCUITest
+  /// calls an element clipped by a scroll view "hittable", so that alone is not trusted (Nov 21).
   func reveal(_ e: XCUIElement, _ word: String) throws {
-    let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Or write' OR label BEGINSWITH 'Write your answer'")).firstMatch
     guard e.waitForExistence(timeout: 5) else { throw Failed(why: "\(word) is not on the screen") }
-    for _ in 0..<8 {
-      if e.isHittable { return }
-      let window = app.windows.firstMatch.frame
-      let handle = note.exists && note.isHittable ? note : app.windows.firstMatch
-      if e.frame.midY < window.midY { handle.swipeDown(velocity: .slow) } else { handle.swipeUp(velocity: .slow) }
+    for _ in 0..<10 {
+      guard let room = cardRoom() else { throw Failed(why: "the question card is not on the screen") }
+      let f = e.frame
+      if f.minY >= room.minY - 1, f.maxY <= room.maxY + 1, e.isHittable { return }
+      let from = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: room.midX, dy: room.midY))
+      let dy = min(room.height * 0.4, max(60, abs(f.midY - room.midY)))
+      let to = from.withOffset(CGVector(dx: 0, dy: f.midY > room.midY ? -dy : dy))
+      from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
       usleep(500_000)
     }
+    throw Failed(why: "\(word) could not be scrolled into view in the question card")
   }
 
   /// A real tap, refused when the element is not there, not on the screen or disabled.
