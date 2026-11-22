@@ -249,7 +249,9 @@ async function runCase(T, c) {
     if (c.separate && i) sessions.push((sid = await newSession(T, `asks ${c.id} ${i + 1}`)))
     const { turn, text } = await converse(said)
     earlier.push(text)
-    if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}; Ola said: ${oneLine(text)}` }
+    // The turn's error too (OLA-323): without it a sentence said first that the allowance refused read
+    // 'ended failed; Ola said: (nothing)', and counted as Ola failing (publish-again and two more, Nov 22).
+    if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(text)}` }
   }
   if (c.separate && c.before?.length) sessions.push((sid = await newSession(T, `asks ${c.id} last`)))
   const from = steps.length // noran: judges only the steps of the request itself, not what was said first (OLA-244)

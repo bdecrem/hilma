@@ -679,6 +679,10 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
   for (const r of results) {
     const key = `${r.id}@${r.place}`
     const was = table.cases[key] ?? {}
+    // A fail whose reason is the model refusing (the allowance, the provider's credits) did not run, by
+    // whatever path it came (OLA-323): never STOPPED WORKING, never not working yet, never a pass.
+    const refused = r.ok === false && modelUsedUp(r)
+    if (refused) Object.assign(r, { ok: null, didNotRun: true, why: `did not run: ${refused}` })
     if (r.ok === null && r.didNotRun) {
       // It was tried but never reached Ola (OLA-231 check 7): what it had stands, and the record says so.
       table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status ?? 'not run', everPassed: !!was.everPassed, didNotRun: { at: now, release: r.release, why: r.why } }

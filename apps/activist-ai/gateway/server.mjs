@@ -55,6 +55,7 @@ import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
 import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
+import { CHECK_WEEKLY_TOKENS, checkCallerWeekly } from './check-accounts.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
 
 // ---------------------------------------------------------------- config
@@ -199,7 +200,8 @@ function loadConfig(env) {
 
   // GATEWAY_QUOTAS: "name=tokens per week" for callers who differ from GATEWAY_WEEKLY_TOKENS
   const peopleWeekly = num.GATEWAY_PEOPLE_WEEKLY_TOKENS || num.GATEWAY_WEEKLY_TOKENS
-  const quotas = new Map([...names].map((n) => [n, isPersonName(n) ? peopleWeekly : num.GATEWAY_WEEKLY_TOKENS]))
+  // A check project's caller (ws-askcases, ws-appdriver: check-accounts.mjs, OLA-323) has its own week.
+  const quotas = new Map([...names].map((n) => [n, isPersonName(n) ? peopleWeekly : (checkCallerWeekly(n) ?? num.GATEWAY_WEEKLY_TOKENS)]))
   quotas.set(PROBE, num.GATEWAY_PROBE_WEEKLY_TOKENS)
   const envPeopleQuotas = new Map()
   if (env.GATEWAY_QUOTAS) {
@@ -1579,7 +1581,7 @@ function reloadTokens(why) {
   for (const n of after) {
     if (C.people.has(n)) C.quotas.set(n, personQuota(n))
     else if (n === PROBE) C.quotas.set(n, C.probeWeekly)
-    else if (!C.quotas.has(n)) C.quotas.set(n, C.weekly)
+    else if (!C.quotas.has(n)) C.quotas.set(n, checkCallerWeekly(n) ?? C.weekly)
     queue.addCaller(n)
   }
   queue.prune(after)
@@ -1644,6 +1646,8 @@ process.on('SIGINT', stop)
 server.listen(C.port, C.host, () => {
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'specialists', configured: [...C.models.keys()].filter((n) => !['general', 'fast', 'code'].includes(n)), own_servers: [...targets.keys()], batch_inflight: C.sp.batchMax, batch_wait_ms: C.sp.batchWait }))
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'people', file: !!C.peopleFile, callers: C.people.size, weekly: C.peopleWeekly }))
+  // OLA-323: the check projects' callers that have the check week (names from check-accounts.mjs only).
+  console.log(JSON.stringify({ t: new Date().toISOString(), event: 'check-accounts', callers: [...C.quotas].filter(([n, q]) => checkCallerWeekly(n) && q === CHECK_WEEKLY_TOKENS).map(([n]) => n), weekly: CHECK_WEEKLY_TOKENS }))
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'web', provider: C.web.provider, grants_file: !!C.web.file, weekly: C.web.weekly, per_minute: C.web.perMinute, test_hosts: C.web.testHosts.size }))
   console.log(
     JSON.stringify({

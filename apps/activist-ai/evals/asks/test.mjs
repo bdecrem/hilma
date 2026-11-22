@@ -471,6 +471,32 @@ test('OLA-232: a stored fail that was only the model refusing is not run, in the
   }
 })
 
+test('a said-first turn refused for the allowance did not run (OLA-323, Nov 22: publish-again and two more read "Ola said: (nothing)" and were STOPPED WORKING)', () => {
+  // The sentence said first now carries the turn's error, the way the request itself does.
+  const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(run, /said first, ended \$\{turn\.status\}\$\{turn\.error \? ` \(\$\{turn\.error\}\)` : ''\}; Ola said/)
+  const error = JSON.stringify({ type: 'provider.quota', message: "This project's weekly allowance of Ola's model is used up. It starts again on Sunday, November 29, at 4 pm Pacific time.", status: 429 })
+  const why = `"make a page that says Bart and publish it on ola", said first, ended failed (${error.slice(0, 300)}); Ola said: (nothing)`
+  assert.equal(modelUsedUp({ ok: false, why }), "the made-up account's model allowance is used up (it starts again on Sunday, November 29, at 4 pm Pacific time)")
+  // And the record: by whatever path such a fail reaches it, it did not run. A case that passed
+  // before keeps what it had, one that never ran is not run; none is STOPPED WORKING or not working yet.
+  const known = new Set(['a@cloud-web:chat', 'b@local-mac:chat', 'c@cloud-web:chat'])
+  const old = { cases: { 'a@cloud-web:chat': { id: 'a', place: 'cloud-web:chat', status: 'passing', everPassed: true, lastPassed: { at: 'n0', release: 'r0' } } } }
+  const results = [
+    { id: 'a', place: 'cloud-web:chat', ok: false, why, release: 'r1' },
+    { id: 'b', place: 'local-mac:chat', ok: false, why: 'the turn ended failed (Credit limit exceeded, please add credits)', release: 'r1' },
+    { id: 'c', place: 'cloud-web:chat', ok: false, why: 'site:Bart: https://sites.ola.cx/askcases/ 404', release: 'r1' },
+  ]
+  const t = ratchet(old, results, { now: 'n1', release: 'r1', known, lastRun: {} })
+  assert.deepEqual(results.map((r) => r.status), ['did not run', 'did not run', 'not working yet'])
+  assert.equal(t.cases['a@cloud-web:chat'].status, 'passing', 'what it had stands')
+  assert.match(t.cases['a@cloud-web:chat'].didNotRun.why, /^did not run: the made-up account's model allowance is used up/)
+  assert.equal(t.cases['b@local-mac:chat'].status, 'not run')
+  assert.match(t.cases['b@local-mac:chat'].didNotRun.why, /credits/)
+  assert.equal(t.cases['c@cloud-web:chat'].status, 'not working yet', 'a real fail is still a fail')
+  assert.equal(t.summary.stoppedWorking, 0)
+})
+
 test('OLA-232 checker, Nov 21: opens: reads the first 300 characters; nonewfile: fails when Ola made the file itself', async () => {
   const late = 'All checks pass (0 flagged). One honest note on the sounds: the robin tune peaks a bit loud. '.repeat(4) + 'This is a made-up sound, not a recording.'
   const early = "I can't use a recording; this is a sound made in code that comes close to birdsong. The page is in your Files."

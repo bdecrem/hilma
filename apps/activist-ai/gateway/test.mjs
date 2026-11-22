@@ -2049,6 +2049,48 @@ test('people: each p-<id> caller has its own weekly quota (GATEWAY_PEOPLE_WEEKLY
   }
 })
 
+test('check accounts (OLA-323): the check projects ws-askcases and ws-appdriver have their own larger week, at start and when added later; every other caller keeps the default; GATEWAY_QUOTAS still wins', async () => {
+  const { CHECK_ACCOUNTS, CHECK_WEEKLY_TOKENS } = await import('./check-accounts.mjs')
+  assert.deepEqual([...CHECK_ACCOUNTS], ['askcases', 'appdriver'])
+  assert.ok(CHECK_WEEKLY_TOKENS > 20_000_000, 'larger than the default week')
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'chk-'))
+  const file = path.join(dir, 'gateway-tokens')
+  const W = { asks: tok(), other: tok(), drive: tok(), bart: tok(), lookalike: tok() }
+  writeTokens(file, `ws-askcases:${W.asks},ws-other:${W.other},bart:${W.bart},ws-askcases2:${W.lookalike}`)
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS_FILE: file, GATEWAY_WEEKLY_TOKENS: '100' }
+  delete env.GATEWAY_TOKENS
+  const g = await gateway(env)
+  const quota = async (t) => (await call(g, t, null, { path: '/v1/usage', method: 'GET' })).json.quota
+  try {
+    assert.equal(await quota(W.asks), CHECK_WEEKLY_TOKENS)
+    assert.equal(await quota(W.other), 100, 'another project: the default')
+    assert.equal(await quota(W.bart), 100, 'bart: never the check week')
+    assert.equal(await quota(W.lookalike), 100, 'a name that only starts like one: the default')
+    const line = g.lines.map((l) => JSON.parse(l)).find((l) => l.event === 'check-accounts')
+    assert.deepEqual(line, { t: line.t, event: 'check-accounts', callers: ['ws-askcases'], weekly: CHECK_WEEKLY_TOKENS })
+    // Past the default week, the check project is still served; the other is refused.
+    assert.equal((await call(g, W.other, chat({ usage: [100, 5] }))).status, 200)
+    assert.equal((await call(g, W.other, chat({ usage: [10, 5] }))).status, 429)
+    assert.equal((await call(g, W.asks, chat({ usage: [100, 5] }))).status, 200)
+    assert.equal((await call(g, W.asks, chat({ usage: [10, 5] }))).status, 200, 'the check project is past the default week and still served')
+    // The second check project made later (ws.mjs adds it to the file): the check week too.
+    writeTokens(file, `ws-askcases:${W.asks},ws-other:${W.other},bart:${W.bart},ws-askcases2:${W.lookalike},ws-appdriver:${W.drive}`)
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"tokens"') && l.includes('"added":1')), 5000, 'the reload')
+    assert.equal(await quota(W.drive), CHECK_WEEKLY_TOKENS)
+  } finally {
+    await g.stop()
+  }
+  // An allowance set on purpose for the caller wins.
+  writeTokens(file, `ws-askcases:${W.asks}`)
+  const g2 = await gateway({ ...env, GATEWAY_QUOTAS: 'ws-askcases=500' })
+  try {
+    assert.equal((await call(g2, W.asks, null, { path: '/v1/usage', method: 'GET' })).json.quota, 500)
+  } finally {
+    await g2.stop()
+  }
+})
+
 test('people: the quotas file beside the people file (admin.mjs app-allowance) wins over GATEWAY_QUOTAS and the default, reloads on change, and its refusal reads in plain words; a bad file is kept out', async () => {
   const up = await fakeUpstream()
   const dir = mkdtempSync(path.join(TMP, 'pqf-'))

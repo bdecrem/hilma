@@ -111,6 +111,16 @@ out and the gateway starts. Each person has their own week of tokens, `GATEWAY_P
 exist). A person's caller has a standing web grant (see [Web search and
 downloads](#web-search-and-downloads-2026-11-17)).
 
+**The check accounts' own week (OLA-323, 2026-11-22).** The made-up accounts our own checks use,
+`askcases` (the request tests) and `appdriver` (the Mac and iPhone check tools), are named in
+`gateway/check-accounts.mjs` with their own week, 100 million tokens: the gateway gives it to their
+projects' callers (`ws-askcases`, `ws-appdriver`; the start line `"event":"check-accounts"` names
+them), and the front desk writes it into the people's quotas file for their people. A number set on
+purpose wins (`GATEWAY_QUOTAS` for the project's caller, `admin.mjs app-allowance` for the person);
+an admin, a person who is not active and `bart` never get it, and nobody else's week changes. On Nov
+21 all four of their callers had used the normal 20 million, and the request tests marked 22
+requests STOPPED WORKING that only the allowance had refused.
+
 **The reply is rebuilt, not relayed.** A successful reply is reconstructed from a fixed allowlist
 (`id`, `object`, `created`, `model` as the gateway's own name, `choices` with `role`/`content`/
 `tool_calls`/`finish_reason`, and `usage` trimmed to `prompt_tokens`/`completion_tokens`/

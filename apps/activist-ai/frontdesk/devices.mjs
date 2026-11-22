@@ -35,7 +35,8 @@
 // else has none. workspace/ws.mjs never touches it. Beside it, the quotas file (the people file's
 // name + "-quotas", the same mode and rename): each such person's own weekly allowance on Ola when
 // the admin set one (people.app_weekly_tokens, admin.mjs app-allowance), which the gateway prefers
-// over its GATEWAY_PEOPLE_WEEKLY_TOKENS.
+// over its GATEWAY_PEOPLE_WEEKLY_TOKENS; a check account without one has the check week
+// (gateway/check-accounts.mjs, OLA-323).
 //
 // Signing in without a browser (2026-11-17, "normal means you'd never leave the app"):
 //   POST /api/device/login {handle, password, name, kind}   a name and password: the device; or, for
@@ -51,6 +52,7 @@ import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from '
 import http from 'node:http'
 import path from 'node:path'
 import { bearerPass, makePass, passKey, PASS_PATH, readPass } from '../ops/pass.mjs'
+import { checkPersonWeekly } from '../gateway/check-accounts.mjs'
 import { audit } from './db.mjs'
 import { Limiter, same } from './auth.mjs'
 
@@ -148,8 +150,10 @@ export function syncPeopleFile(db, file) {
   const have = readPeopleFile(file)
   const next = new Map(want.map((id) => [id, have.get(id) ?? randomBytes(24).toString('hex')]))
   // The allowances first, so a person never reaches the gateway before their own number does.
-  const get = db.prepare('SELECT app_weekly_tokens AS t FROM people WHERE id = ?')
-  const own = want.map((id) => [id, get.get(id)?.t]).filter(([, t]) => Number.isSafeInteger(t) && t >= 0)
+  // A check account (askcases, appdriver: gateway/check-accounts.mjs, OLA-323) has the check week
+  // unless the admin set its own number.
+  const get = db.prepare('SELECT handle, status, is_admin, app_weekly_tokens AS t FROM people WHERE id = ?')
+  const own = want.map((id) => [id, ((p) => p?.t ?? checkPersonWeekly(p))(get.get(id))]).filter(([, t]) => Number.isSafeInteger(t) && t >= 0)
   writeIfChanged(quotasFileOf(file), `GATEWAY_QUOTAS=${own.map(([id, t]) => `p-${id}=${t}`).join(',')}\n`, own.length > 0)
   writeIfChanged(file, `GATEWAY_TOKENS=${[...next].map(([id, t]) => `p-${id}:${t}`).join(',')}\n`, next.size > 0)
   return next

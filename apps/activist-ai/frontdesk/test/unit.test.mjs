@@ -1,7 +1,7 @@
 // Unit tests for the parts of the front desk that need no workspace: the database's own refusals,
 // constant-time comparison, rate limits and config. The end-to-end proofs are ../check.mjs.
 import assert from 'node:assert/strict'
-import { mkdtempSync, statSync } from 'node:fs'
+import { mkdtempSync, readFileSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -197,4 +197,30 @@ test('a request that asks for Claude gets whether Claude can take it here', asyn
   assert.match(claudeNote({ configured: true, enabled: false }), /is off in this project\. The project’s owner can type \/claude/)
   assert.equal(claudeNote(null), '')
   assert.ok(!/[<>]/.test(off), 'the fact carries no marks of its own')
+})
+
+test('check accounts (OLA-323): askcases and appdriver get the check week in the quotas file; an admin-set number wins; bart, other people, an admin or an inactive check handle never get it', async () => {
+  const { syncPeopleFile, quotasFileOf } = await import('../devices.mjs')
+  const { CHECK_WEEKLY_TOKENS, checkPersonWeekly } = await import('../../gateway/check-accounts.mjs')
+  const d = dir()
+  const db = openDb(path.join(d, 'fd'))
+  const add = (handle, { admin = 0, own = null } = {}) => {
+    const id = Number(db.prepare("INSERT INTO people (handle, display_name, status, webauthn_user_id, created_at, is_admin, app_weekly_tokens) VALUES (?, 'X', 'active', randomblob(32), 0, ?, ?)").run(handle, admin, own).lastInsertRowid)
+    db.prepare("INSERT INTO devices (person_id, name, kind, token_sha256, created_at, expires_at) VALUES (?, 'Mac', 'mac', randomblob(32), 0, ?)").run(id, Date.now() + 3600_000)
+    return id
+  }
+  const bart = add('bart', { admin: 1, own: 200_000_000 })
+  const asks = add('askcases')
+  const drive = add('appdriver', { own: 7 })
+  add('carol')
+  const file = path.join(d, 'gateway-people')
+  syncPeopleFile(db, file)
+  assert.equal(readFileSync(quotasFileOf(file), 'utf8'), `GATEWAY_QUOTAS=p-${bart}=200000000,p-${asks}=${CHECK_WEEKLY_TOKENS},p-${drive}=7\n`)
+  db.prepare('UPDATE people SET app_weekly_tokens = NULL WHERE id = ?').run(drive)
+  syncPeopleFile(db, file)
+  assert.equal(readFileSync(quotasFileOf(file), 'utf8'), `GATEWAY_QUOTAS=p-${bart}=200000000,p-${asks}=${CHECK_WEEKLY_TOKENS},p-${drive}=${CHECK_WEEKLY_TOKENS}\n`)
+  assert.equal(checkPersonWeekly({ handle: 'askcases', status: 'active', is_admin: 1 }), null, 'an admin: never')
+  assert.equal(checkPersonWeekly({ handle: 'askcases', status: 'suspended', is_admin: 0 }), null, 'not active: never')
+  assert.equal(checkPersonWeekly({ handle: 'bart', status: 'active', is_admin: 0 }), null)
+  assert.equal(checkPersonWeekly({ handle: 'askcases2', status: 'active', is_admin: 0 }), null)
 })
