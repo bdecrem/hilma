@@ -135,6 +135,30 @@ K3.1 Pro 1.90 / 0.19 / 9.50, GLM-5.3 0.563 / 0.125 / 2.50 (deepinfra.com); Firew
 same as Together (fireworks.ai/pricing). With 90% of input cached, output and new input dominate, so
 none of them is more than about 10% cheaper for Kimi.
 
+## Tickets cut into pieces (`--pieces`, OLA-370, Nov 22)
+
+```bash
+node apps/activist-ai/tickets/trial.mjs --models reference,empty --pieces --lean     # self-test: the real commit passes every piece check, no change fails every one
+node apps/activist-ai/tickets/trial.mjs --models inkling-2-mini --cases ola-351-ready --pieces --lean --time 900 --run-usd 0.20 --max-usd 0.61 [--repeat 3 --concurrency 3]
+```
+
+`pieces/pieces.mjs` cuts each trial ticket the way a strong planner would (small 2 pieces, medium 5,
+hard 4): each piece names the file, the function, the exact change and a check (a command; check files
+in `pieces/`, given in the run's `.pieces/` and put back before each check, as the ticket's tests
+are). A run does the pieces in order on one tree, the dollar stop over all of them, then the ticket's
+tests; the row has `mode: "pieces"` and a line per piece. `--repeat n` runs each case n times (side by
+side with `--concurrency`). The pieces were written with the real commit in view, so they are a best
+case for the planner: 12 minutes for the three, instructions 60 to 100% of the size of the code.
+
+| model, in pieces | small | medium | hard |
+|---|---|---|---|
+| Inkling 2 Mini 26B | 24/24 five of five, $0.01, 1 to 5 min | 54/54, $0.05, 22 min | fail: pieces 1 and 3 passed; 2 (an algorithm in prose) timed out with no edit, 4 model error; $0.09 |
+| Nemotron 3.5 Super VL | 24/24, $0.02, 0.5 min | 54/54, $0.08, 11 min | 8/8, $0.05, 1 min |
+
+Whole, Inkling made no edit in four runs; in pieces its small and medium changes are main's code. Three
+Inkling runs side by side on the small ticket all passed, so extra tries bought nothing there. Note for
+Bart, with the tracker sample and the cost comparison: app.kochitolabs.com/notes/chopping-tickets-2026-11-21.
+
 ## Step 2: the hand-off (`handoff.mjs`)
 
 ```bash
