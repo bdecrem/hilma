@@ -15,6 +15,7 @@
 //                                                       of app.kochitolabs.com shows it at once. The first
 //                                                       post of a day also texts Bart the day's two ideas
 //                                                       (one for Kit, one for Ola); --no-text skips that
+//   node scripts/venture/sweep.mjs check <entry.json>   only the entry's own checks, nothing looked up in the tracker
 //   node scripts/venture/sweep.mjs show [--day D]       what is stored
 //   node scripts/venture/sweep.mjs ideas [--day D]      earlier reviews' ideas whose ticket is neither done nor
 //                                                       dropped (exit 1 when any): post refuses while one is (OLA-331)
@@ -220,9 +221,14 @@ function codeChangedOn(where, d) {
   const f = String(where ?? '').trim().split(/\s+/)[0]?.replace(/[,;]$/, '').replace(/:\d+$/, '')
   if (!f || /\.(md|txt)$/i.test(f)) return { ok: false, why: `where (${where ?? 'none'}) is not a code file` }
   if (!existsSync(root + f)) return { ok: false, why: `where (${f}) is not a file in this checkout` }
+  return committedOn(root + f, d) ? { ok: true, why: '' } : { ok: false, why: `no commit on main changed ${f} on ${d}` }
+}
+/** Is the file (absolute path) tracked by git in this checkout? */
+const tracked = (f) => f.startsWith(root) && spawnSync('git', ['-C', root, 'ls-files', '--error-unmatch', '--', f.slice(root.length)], { encoding: 'utf8' }).status === 0
+/** Did a commit on main change the file or folder (absolute path in this checkout) on that Pacific day? */
+function committedOn(f, d) {
   const to = new Date(Date.parse(dayStart(d)) + 86400e3).toISOString()
-  const log = spawnSync('git', ['-C', root, 'log', 'origin/main', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%h', '--', f], { encoding: 'utf8' }).stdout.trim()
-  return log ? { ok: true, why: '' } : { ok: false, why: `no commit on main changed ${f} on ${d}` }
+  return !!spawnSync('git', ['-C', root, 'log', 'origin/main', `--since=${dayStart(d)}`, `--until=${to}`, '--format=%h', '--', f.slice(root.length) || '.'], { encoding: 'utf8' }).stdout.trim()
 }
 const quietCache = {}
 /** A day is quiet when its record holds no correction and no commit (OLA-260). */
@@ -260,6 +266,8 @@ function checkEntry(e) {
     e.cleaned.forEach((c, n) => {
       const f = noteFile(c.where)
       if (!f) bad.push(`cleaned[${n}].where: "${c.where}" is no file or folder in the notes or this checkout (a file removed whole: name its folder)`)
+      // a file git tracks: its time changes on every checkout or pull, so only a commit that day counts (OLA-260)
+      else if (tracked(f)) { if (!committedOn(f, e.day)) bad.push(`cleaned[${n}].where: ${c.where} is in git and no commit on main changed it on ${e.day}: nothing was cleaned there that day`) }
       else if (statSync(f).mtimeMs < Date.parse(dayStart(e.day))) bad.push(`cleaned[${n}].where: ${c.where} has not changed since before ${e.day}: nothing was cleaned there that day`)
     })
   }
@@ -362,6 +370,13 @@ if (cmd === '--wait') {
   const del = spawnSync('node', [root + 'scripts/venture/delegable.mjs', '--day', day, '--json'], { encoding: 'utf8', maxBuffer: 16e6 })
   const models = del.status === 0 ? JSON.parse(del.stdout.trim().split('\n').pop()) : { shares: [], rule: '', stretches: [], note: `not read: ${(del.stderr || '').trim().split('\n').pop()}` }
   console.log(JSON.stringify({ day, by: 'Kit', summary: '', read: f.counts, pattern: '', cleaned: [{ did: 'removed', what: '', where: '' }], models, kit: [{ weakness: '', saw: '', changed: '', where: '', enforced: false }], ola: [], open: [{ text: '', issue: 'OLA-0' }], build: { text: '', issue: 'OLA-0' }, ideas: { kit: { text: '', why: '', issue: 'OLA-0' }, ola: { text: '', why: '', issue: 'OLA-0' } }, ...(day >= TRIAL.from && day <= TRIAL.to ? { learning: { changed: '', why: '', where: '', enforced: false } } : {}), ...(day === TRIAL.review ? { learningReview: { text: '', issue: TRIAL.issue } } : {}) }, null, 2))
+} else if (cmd === 'check') {
+  // only the entry's own checks (checkEntry), with none of post's look-ups in the tracker; exit 1 on any problem (OLA-260)
+  const file = args[1]
+  if (!file || !existsSync(file)) die('usage: sweep.mjs check <entry.json>')
+  const bad = checkEntry(JSON.parse(readFileSync(file, 'utf8')))
+  if (bad.length) die(`the entry has ${bad.length} problem(s):\n- ${bad.join('\n- ')}`)
+  console.log('the entry passes its own checks')
 } else if (cmd === 'post') {
   const file = args[1]
   if (!file || !existsSync(file)) die('usage: sweep.mjs post <entry.json>')
