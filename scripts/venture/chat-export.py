@@ -65,7 +65,7 @@ def main():
     private = os.path.join(root, "apps/venture/private")
     if not os.path.isdir(private) or not os.path.exists(path):
         return
-    started = export_counts(root)
+    started = export_counts(root, stamp_dir=tempfile.mkdtemp() if DRY else None)  # a dry run must not hold back the real one
     if DRY:
         print("exports started:", ", ".join(started) or "none (one ran less than 15 minutes ago)")
     out = []
