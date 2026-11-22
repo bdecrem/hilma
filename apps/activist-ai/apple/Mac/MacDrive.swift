@@ -435,6 +435,9 @@ enum MacDrive {
         }
         try await Task.sleep(nanoseconds: 300_000_000)
       }
+      // The turn's own error line comes before "no card": on Nov 21 a run with a used-up weekly
+      // allowance reported only "no card came", which named the wrong cause.
+      if let e = store.conversation?.turns.last?.error { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(e.text)") }
       if s.card == "yes", said.cards.isEmpty { said.status = "no card"; throw Failed(why: "no card came for sentence \(n), and the script says one must") }
       try await settle(window, 2.5)
       // The answer as the screen shows it: the window's picture, read back with text recognition.

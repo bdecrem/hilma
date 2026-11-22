@@ -277,6 +277,11 @@ final class PhoneDrive: XCTestCase {
         sleep(1)
       }
       said.endedAt = now
+      // The turn's error line comes before "no card" (Nov 21: a used-up weekly allowance was
+      // reported only as "no card came", the wrong cause).
+      if app.descendants(matching: .any)["ola-problem"].exists { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(app.descendants(matching: .any)["ola-problem"].label)") }
+      let problemStarts = ["The model could not take this request", "Ola's model did not accept", "Ola\u{2019}s model did not accept", "The model is busy or did not answer", "The model server had a problem", "It stopped:", "It stopped before it finished", "This project's", "Your weekly allowance"]
+      if let p = app.staticTexts.allElementsBoundByIndex.map(\.label).first(where: { t in problemStarts.contains { t.hasPrefix($0) } }) { said.status = "error"; throw Failed(why: "the app shows an error, not an answer: \(p)") }
       if s.card == "yes", said.cards.isEmpty { said.status = "no card"; throw Failed(why: "no card came for sentence \(n), and the script says one must") }
       // The answer, read from the screen: the texts after the sentence.
       let texts = app.staticTexts.allElementsBoundByIndex.map(\.label).filter { !$0.isEmpty }
@@ -291,8 +296,6 @@ final class PhoneDrive: XCTestCase {
       // The turn's error line (ProblemView): marked "ola-problem" in builds after Nov 21, and known by
       // its words in the ones before (OlaKit Steps.runProblem). On Nov 21 a run passed on "The model
       // could not take this request." while the model's account had no credit.
-      if app.descendants(matching: .any)["ola-problem"].exists { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(app.descendants(matching: .any)["ola-problem"].label)") }
-      let problemStarts = ["The model could not take this request", "Ola's model did not accept", "Ola\u{2019}s model did not accept", "The model is busy or did not answer", "The model server had a problem", "It stopped:", "It stopped before it finished", "This project's", "Your weekly allowance"]
       if let p = after.first(where: { t in problemStarts.contains { t.hasPrefix($0) } }) { said.status = "error"; throw Failed(why: "the app shows an error, not an answer: \(p)") }
       said.status = "answered"
     }
