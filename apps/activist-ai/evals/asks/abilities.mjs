@@ -16,7 +16,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, readCases } from './lib.mjs'
+import { AI, HERE, modelUsedUp, readCases } from './lib.mjs'
 
 export const CHAT = { cloud: ['cloud-web:chat', 'cloud-mac:chat', 'cloud-phone:chat'], local: ['local-mac:chat', 'local-phone:chat'] }
 const LATEST = process.env.OLA_ASKS_LATEST || path.join(homedir(), 'ola-staging/asks-latest.json')
@@ -91,7 +91,9 @@ export function lines({ abilities = readAbilities(), cases = readCases(), latest
       for (const place of CHAT[runtime]) {
         const c = cases.find((x) => x.ability === a.id && (x.places ?? []).includes(place))
         const r = c ? latest.cases?.[`${c.id}@${place}`] : null
-        const ran = r && r.status && r.status !== 'not run'
+        // A fail that was only the model refusing (allowance, provider credits) never reached Ola: not run.
+        const refused = r && (r.status === 'STOPPED WORKING' || r.status === 'not working yet') && modelUsedUp({ why: r.why })
+        const ran = r && r.status && r.status !== 'not run' && !refused
         out.push({ ability: a.id, what: a.what, place, offered: !offer.notOffered, case: c?.id ?? null, status: ran ? (r.status === 'passing' ? 'passing' : r.status === 'works sometimes' ? 'sometimes' : 'failing') : 'not run', at: ran ? r.at : null })
       }
     }

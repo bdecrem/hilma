@@ -646,6 +646,15 @@ export function checkNever(c, answer, { done = false } = {}) {
 export function ratchet(table, results, { now, release, known, lastRun }) {
   table = { cases: {}, ...(table ?? {}) }
   table.cases ??= {}
+  // A stored fail whose reason is the model refusing (allowance used up, provider credits) was written
+  // before run.mjs learned to skip those (OLA-232, Nov 21: 22 of 106 lines of the abilities list showed
+  // "failing" on 44ec5d68e931 tries that never reached Ola). It is not a result: it becomes not run,
+  // with what it had passed before kept.
+  for (const [k, was] of Object.entries(table.cases)) {
+    if (was.status !== 'STOPPED WORKING' && was.status !== 'not working yet') continue
+    const refused = modelUsedUp({ why: was.why })
+    if (refused) table.cases[k] = { ...was, status: 'not run', verdict: null, tries: null, why: `not counted: ${refused} on ${was.release ?? 'an earlier release'}` }
+  }
   for (const r of results) {
     const key = `${r.id}@${r.place}`
     const was = table.cases[key] ?? {}
@@ -725,9 +734,13 @@ export function lostConnection(e) {
  *  Nov 20 (release 44ec5d68e931) all 34 Mac tries failed in 2 s each with provider.quota, and each was
  *  counted as Ola failing. Returns the reason ("the model allowance is used up; It starts again on …")
  *  or null. The place's remaining cases are then "did not run", and their earlier results stand. */
+//  The model provider's own refusal for money (Together, Nov 21, 9 am to 3:39 pm: 402 "Credit limit
+//  exceeded, please add credits" on every request, OLA-346) is the same kind: nothing about Ola.
 const QUOTA = /provider\.quota|allowance of Ola's model is used up/i
+const CREDITS = /Credit limit exceeded|please add credits/i
 export function modelUsedUp(r) {
   const why = String(r?.why ?? r?.message ?? '')
+  if (CREDITS.test(why)) return "the model provider's credits had run out"
   if (!QUOTA.test(why)) return null
   const when = why.match(/It starts again on ([^."\\]+)/)
   return `the made-up account's model allowance is used up${when ? ` (it starts again on ${when[1].trim()})` : ''}`

@@ -444,3 +444,29 @@ test('a try refused for the model allowance did not run (Nov 20, 44ec5d68e931: 3
   assert.match(run, /r\.ok === false && \(usedUp = modelUsedUp\(r\)\)/)
   assert.match(run, /did not run: \$\{usedUp\}/)
 })
+
+test('OLA-232: a stored fail that was only the model refusing is not run, in the record and in the list of abilities', async () => {
+  const quota = 'the turn ended failed ({"type":"provider.quota","message":"This project\'s weekly allowance of Ola\'s model is used up. It starts again on Sunday, November 22, at 4 pm Pacific time.","status":429}); Ola said: (nothing)'
+  const credits = 'the turn ended failed (402 {"error":{"message":"Credit limit exceeded, please add credits"}})'
+  assert.equal(modelUsedUp({ why: credits }), "the model provider's credits had run out")
+  const known = new Set(['a@cloud-web:chat', 'b@cloud-web:chat', 'c@cloud-web:chat'])
+  const old = { cases: {
+    'a@cloud-web:chat': { id: 'a', place: 'cloud-web:chat', status: 'STOPPED WORKING', why: quota, release: 'r0', everPassed: true, lastPassed: { at: 'n0', release: 'rp' } },
+    'b@cloud-web:chat': { id: 'b', place: 'cloud-web:chat', status: 'not working yet', why: credits, release: 'r0', everPassed: false },
+    'c@cloud-web:chat': { id: 'c', place: 'cloud-web:chat', status: 'not working yet', why: 'site:Bart: 404', release: 'r0', everPassed: false },
+  } }
+  const t = ratchet(old, [], { now: 'n1', release: 'r1', known, lastRun: {} })
+  assert.equal(t.cases['a@cloud-web:chat'].status, 'not run')
+  assert.equal(t.cases['a@cloud-web:chat'].everPassed, true, 'what it passed before is kept')
+  assert.match(t.cases['a@cloud-web:chat'].why, /^not counted: the made-up account's model allowance is used up/)
+  assert.equal(t.cases['b@cloud-web:chat'].status, 'not run')
+  assert.equal(t.cases['c@cloud-web:chat'].status, 'not working yet', 'a real fail stands')
+  // the list reads an old table the same way, before any new run rewrites it
+  const { lines } = await import('./abilities.mjs')
+  const abilities = [{ id: 'x', what: 'X', cloud: { tell: 'do x' }, local: { tell: 'do x' } }]
+  const mk = (id) => ({ id, ability: 'x', places: ['cloud-web:chat'] })
+  for (const [id, want] of [['a', 'not run'], ['b', 'not run'], ['c', 'failing']]) {
+    const L = lines({ abilities, cases: [mk(id)], latest: old })
+    assert.equal(L.find((l) => l.place === 'cloud-web:chat').status, want, id)
+  }
+})
