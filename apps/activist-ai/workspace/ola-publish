@@ -83,6 +83,8 @@ def tell(r):
 
 
 HELP = """ola-publish puts a page from this project on the public web, at https://sites.ola.cx/<project>/.
+Follow the publish skill first (the skill tool, id "publish"; its text is /opt/ola/skills/publish/SKILL.md):
+`publish.py where`, then `prepare` and `check`, then this command with the list `check` printed.
   ola-publish site --files index.html,style.css   publish the folder site/ (made by the publish skill's
                                                   prepare, from the page the person asked for); --files is
                                                   the list `publish.py check site` printed. Run it as a

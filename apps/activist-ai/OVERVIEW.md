@@ -74,10 +74,11 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
 2. **The workspace.** Each project is one sealed Linux VM (Apple `container`) with `--network none`,
    a read-only root, no capabilities, and its own volume at `/work` holding its files and its own
    database (`/work/project.db`). opencode 2.3.2 runs inside. Idle projects stop after 30 minutes
-   and wake on the next request. At most 4 run at once. Three things run in every project: a note
+   and wake on the next request. At most 4 run at once. Four things run in every project: a note
    to the person when a file or a tool result carries text that tells an AI what to do (the
    `ola-planted` plugin, also in the Mac's local runtime), a record of which engine made each
-   file (`ola-db made-by`), which Ola reads before saying who made something, and, for a request to
+   file (`ola-db made-by`), which Ola reads before saying who made something, for a request to publish the
+   publish skill itself in the model's instructions (the `ola-skillcue` plugin, also on the Mac; OLA-284), and, for a request to
    make an app, page or game, the closest kept worked example in the model's instructions for that
    request (the `ola-examples` plugin, also on the Mac: test requests, and in a cloud project also that
    project's own requests that ended well, kept only in its volume by `frontdesk/examples.mjs` and

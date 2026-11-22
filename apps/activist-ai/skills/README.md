@@ -31,6 +31,13 @@ opencode.ai/docs/skills on 2026-11-16, and in a VM): one folder per skill with
 
 `check.py` (run by `workspace/check.mjs`) holds the folder to these rules.
 
+**Loaded every time for publishing (OLA-284).** A model may skip the skill tool: the OLA-230 checker saw
+Ola's model look for `publish.md` and Glob `/opt/ola/skills/publish/**` with no path (opencode runs that
+inside the project folder: 0 files) and publish without `prepare`. So the plugin `ola-skillcue`
+(`workspace/plugins/ola-skillcue`, in the image and on the Mac) puts the publish skill's text into the
+system prompt of any request to publish, in the skill tool's own shape. Another skill joins it with a
+pattern in its `CUES` and a test.
+
 ## Where they live in the image, and why nothing in a project can change them
 
 `ws.mjs image` stages the build context with `workspace/` and each skill folder, so the image's

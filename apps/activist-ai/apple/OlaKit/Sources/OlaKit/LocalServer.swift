@@ -134,7 +134,9 @@ public final class LocalServer: @unchecked Sendable {
   /// (project.yml), so the cloud and this Mac load one file; a check run from the repo points this at
   /// workspace/plugins.
   /// ola-examples (OLA-181): the closest kept worked example beside an app request.
-  public static let pluginNames = ["ola-planted", "ola-examples"]
+  /// ola-skillcue (OLA-284): the publish skill in front of a request to publish (it reads the skills
+  /// folder beside this one, skillsHome, so the Mac copy with its paths rewritten).
+  public static let pluginNames = ["ola-planted", "ola-examples", "ola-skillcue"]
   /// What of each plugin is installed, as the Containerfile copies it.
   static let pluginFiles = ["index.js", "package.json"]
   static func pluginFiles(_ name: String) -> [String] { name == "ola-examples" ? pluginFiles + ["examples.json"] : pluginFiles }
@@ -426,6 +428,8 @@ public final class LocalServer: @unchecked Sendable {
     // ola-examples: OLA_EXAMPLES=off in the app's own environment turns the worked example off (the
     // without-examples column of the app evals, OLA-181).
     if let v = mine["OLA_EXAMPLES"] { env["OLA_EXAMPLES"] = v }
+    // ola-skillcue (OLA-284): the skills it puts in front of a request are this Mac's copy.
+    env["OLA_SKILLS_DIR"] = skillsDir.path
     // ola-page asks this app to render a page in its own web view (PageRender in the Mac app).
     env["OLA_RENDER_DIR"] = Self.support.appendingPathComponent("render").path
     env["XDG_CONFIG_HOME"] = config.path

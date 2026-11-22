@@ -12,14 +12,15 @@
         "local-phone:chat"
       ],
       "must": [
-        "site:Bart"
+        "site:Bart",
+        "ran:publish\\.py\\s+(?:\\S+\\s+)*?prepare"
       ],
       "mustNot": [],
       "passes": 5,
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-230",
-        "what": "Bart asked this in a cloud project; Ola answered that it cannot publish from the cloud and told him to press Publish. Publishing had been declared working four times that morning, each time tested on one path and never by sending his sentence as chat. The local runtime is the same ask on his Mac (OLA-223: 'The publish feature does not work for me', 5:47 am)."
+        "what": "Bart asked this in a cloud project; Ola answered that it cannot publish from the cloud and told him to press Publish. Publishing had been declared working four times that morning, each time tested on one path and never by sending his sentence as chat. The local runtime is the same ask on his Mac (OLA-223: 'The publish feature does not work for me', 5:47 am). OLA-284 (the OLA-230 checker, M4 iMac WebKit try 4, Nov 20): Ola never loaded the publish skill (it looked for publish.md and Globbed /opt/ola/skills/publish/** from the project folder, 0 files) and published without prepare; so the skill's prepare must be a step."
       },
       "ability": "publish"
     },

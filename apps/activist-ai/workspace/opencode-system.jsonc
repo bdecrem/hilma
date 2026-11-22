@@ -12,9 +12,10 @@
 // Plugins: only Ola's, from the image (OPENCODE_DISABLE_PROJECT_CONFIG keeps a project's out).
 // ola-planted notes text in a file that speaks to an AI (plugins/ola-planted/index.js, OLA-88).
 // ola-examples puts the closest kept worked example beside an app request (plugins/ola-examples, OLA-181).
+// ola-skillcue puts the publish skill in front of a request to publish (plugins/ola-skillcue, OLA-284).
 {
   "skills": ["/opt/ola/skills"],
-  "plugins": ["/opt/ola/plugins/ola-planted", "/opt/ola/plugins/ola-examples"],
+  "plugins": ["/opt/ola/plugins/ola-planted", "/opt/ola/plugins/ola-examples", "/opt/ola/plugins/ola-skillcue"],
   "policies": [
     { "action": "skill.use", "resource": "*", "effect": "deny" },
     { "action": "skill.use", "resource": "chart", "effect": "allow" },
