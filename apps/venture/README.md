@@ -294,9 +294,12 @@ to the whole file once it reached 34,000. `sync.mjs push` runs
 characters or a rule has no lead sentence (OLA-183). (2) `bart-done.py`
 (UserPromptSubmit) adds the five weaknesses corrected most in the last three
 days, each with its `now` line from `data/weaknesses.json`. (3)
-`.claude/hooks/reply-check.py` (Stop) sends a reply back once when it breaks the
-limits in `scripts/venture/reply-rules.json`; `imsg.mjs send` refuses such a
-text (`--long` when he asked for a full answer) (OLA-180). (4) `sync.mjs push`
+`imsg.mjs send` refuses a text that breaks the limits in
+`scripts/venture/reply-rules.json` (`--long` when he asked for a full answer)
+(OLA-180). Terminal replies are not checked: `.claude/hooks/reply-check.py` is
+not registered in `.claude/settings.json` since Nov 19 (ad47a2e0; it sent back
+replies Bart had already read, so every answer arrived twice), and the file is
+kept only as a record (OLA-255). (4) `sync.mjs push`
 keeps the version it replaces in the bucket `venture-history`, one per file per
 hour; `sync.mjs history <file> [stamp]` lists and prints (OLA-184). (5) From Nov
 19 to Nov 25 a sweep entry must carry `learning`, one improvement to the

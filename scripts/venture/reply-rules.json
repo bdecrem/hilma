@@ -1,5 +1,5 @@
 {
-  "about": "What a reply or a text to Bart may not contain, and how long it may be. Read by .claude/hooks/reply-check.py (terminal replies) and scripts/venture/imsg.mjs (texts). Source: his own instructions (4 sentences unless he asks for depth; no label before a point; no praise opener; no offer in place of the work; no wrapped links).",
+  "about": "What a reply or a text to Bart may not contain, and how long it may be. Read by scripts/venture/imsg.mjs (texts). .claude/hooks/reply-check.py also reads it but is not registered since Nov 19, so terminal replies are not checked (OLA-255). Source: his own instructions (4 sentences unless he asks for depth; no label before a point; no praise opener; no offer in place of the work; no wrapped links).",
   "maxSentences": 4,
   "textMaxSentences": 6,
   "textMaxChars": 700,

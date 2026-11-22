@@ -2,6 +2,10 @@
 """Stop hook: reads the reply before the turn ends and sends it back once when it is too long or
 contains a phrase Bart has banned (OLA-180; rule 52).
 
+NOT REGISTERED in .claude/settings.json since Nov 19 (ad47a2e0, correction 85: it sent back replies
+Bart had already read, so every answer arrived twice). It does not run; nothing checks terminal
+replies. Kept as a record only (OLA-255).
+
 Why: "Text too long, or in Kit's voice" was his most frequent correction on Nov 18 (7 of 30) and
 rested on rules the agent had to remember. The limits are his: at most four sentences unless he
 asked for depth, no label before a point, no praise opener, no offer in place of the work, no link

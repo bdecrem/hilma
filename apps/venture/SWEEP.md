@@ -242,8 +242,8 @@ stored, loaded into a session, enforced, counted or shown. It is made and finish
 proposed; `changed` says what is different from tomorrow on, `why` what showed it was needed,
 `where` names the place in words Bart understands. Posting refuses an entry without it. Where to
 look: a rule-only weakness that could get a guard; a rule that was in the notes and was broken
-anyway (was it in front of the agent?); a count on the Learning page that nothing checks; what
-the reply check sent back that day (`~/.claude/reply-check.log`).
+anyway (was it in front of the agent?); a count on the Learning page that nothing checks; a long reply Bart had to correct that day
+(terminal replies have no check since Nov 19, OLA-255).
 
 The entry of Nov 26 carries `learningReview`: what each of the seven days changed, what the
 figures did over the week (corrections a day, the share under a known weakness, weaknesses
