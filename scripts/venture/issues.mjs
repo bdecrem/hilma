@@ -84,6 +84,7 @@ import { relative, resolve } from 'node:path'
 import { fakeClient } from './_fakedb.mjs'
 import { aheadLine, textAhead } from './_clock.mjs'
 import { LOOKBACK_DAYS, bartSaid } from './_bartwords.mjs'
+import { behindLine, trackerBehind } from './_fresh.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = !existsSync(root + '.env.local') ? process.env : Object.fromEntries(
@@ -99,7 +100,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 16
+export const TRACKER_VERSION = 17
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -163,6 +164,24 @@ const idArg = /^(OLA-)?\d+$/i.test(String(pos[0] ?? '')) ? `OLA-${Number(String(
 // (the lead, Nov 20, 6:30 pm: its own inbox and claims calls were listed as borrowed tokens)
 const READ_ONLY = new Set(['inbox', 'claims', 'show', 'say', 'unchecked', 'list', 'overrides'])
 const readOnly = READ_ONLY.has(cmd) || (cmd === 'check' && pos.length <= 1)
+// OLA-273, second half: older than main by git, not only by the version number above (which works only
+// when every change remembers to bump it). A command that applies a rule is refused from a copy whose own
+// files origin/main has changed since; reading, the hook, the plate and a comment only get a warning
+// line (the runner's comment after a run must not be lost because a tracker change landed meanwhile).
+// On a copy of the tracker it is skipped, unless VENTURE_TRACKER_MAIN_REF names the ref to compare with
+// (tests); on the real one that variable is ignored and the ref is always origin/main.
+if (!FAKE || process.env.VENTURE_TRACKER_MAIN_REF) {
+  const warnOnly = readOnly || ['hook', 'plate', 'unsorted', 'comment', 'record-override'].includes(cmd) || !cmd
+  const ref = FAKE && process.env.VENTURE_TRACKER_MAIN_REF ? process.env.VENTURE_TRACKER_MAIN_REF : 'origin/main'
+  if (!FAKE && process.env.VENTURE_TRACKER_MAIN_REF) envWays.push('VENTURE_TRACKER_MAIN_REF was set on the real tracker (ignored there; honored only with VENTURE_TRACKER_FAKE)')
+  let r = { behind: [] }
+  try { r = trackerBehind({ entry: fileURLToPath(import.meta.url), root, ref, fetch: !warnOnly }) } catch (e) { console.error(`(could not compare this tracker with ${ref}: ${String(e.message).split('\n')[0]})`) }
+  if (r.behind.length) {
+    const line = behindLine(r, { here: fileURLToPath(import.meta.url), args: argv })
+    if (warnOnly) console.error(`warning: ${line}`)
+    else die(`Refused. ${line}`)
+  }
+}
 async function flushWays() {
   if (readOnly) { envWays.length = 0; return }
   while (envWays.length) await writeOverride(db, { ticket: idArg, what: `${envWays.shift()}: issues.mjs ${cmd}` })
