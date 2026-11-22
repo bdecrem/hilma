@@ -34,7 +34,7 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {} }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {}, onSessionDeleted = () => {} }) {
   // `onPrompt` and `onRunEnded` (madeby.mjs, OLA-224): a person's prompt is noted as Ola's turn in
   // the VM before it goes on (and may get a note in front of it), and its run's end ends the turn.
   // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
@@ -309,6 +309,9 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
           onForward: ({ method, pathname }) => {
             const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
             if (method === 'POST' && m) watch(slug, workspaceId)
+            // A conversation deleted from any app (OLA-181: the worked examples made from it go too).
+            const del = /^\/api\/session\/([A-Za-z0-9_-]{1,80})$/.exec(pathname)
+            if (method === 'DELETE' && del) onSessionDeleted(slug, del[1])
           },
           onPrompt: (sessionID, text) => onPrompt(slug, sessionID, text),
           onAutonomy: (sessionID, a) => {
@@ -430,8 +433,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
         ended.set(`${slug}:${d.sessionID}`, Date.now())
         if (/^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID)) onRunEnded(slug, d.sessionID, ev.type.slice('session.execution.'.length))
         return
-      }
-      if (!d || typeof d.id !== 'string' || d.id.length > 120) return
+      }      if (!d || typeof d.id !== 'string' || d.id.length > 120) return
       if (ev.type === 'permission.asked' && typeof d.sessionID === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID) && /^[A-Za-z0-9_-]{1,80}$/.test(d.id)) {
         const allowed = forConversation.get(`${slug}:${d.sessionID}`)
         const web = webRequests(d.action, d.resources).length > 0
@@ -497,6 +499,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     ocCall: (slug, method, pathname, body) => opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, method, pathname, body),
     dbApi: ws.dbApi,
     madeBy: ws.madeBy,
+    examples: ws.examples,
     dbStream: ws.dbStream,
     dbAdd: ws.dbAdd,
     dbRemove: ws.dbRemove,

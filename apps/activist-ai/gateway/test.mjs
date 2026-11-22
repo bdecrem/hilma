@@ -571,6 +571,27 @@ test('OLA-356: the ticket lane alone gets the prompt-cache hit count; the log ke
   await g.stop()
 })
 
+test('OLA-181: the log line says when a worked example was beside the request; GATEWAY_EXAMPLES=off cuts it out', async () => {
+  const up = await fakeUpstream()
+  const note = (from) => `[Ola worked example]${from ? ' (from this project)' : ''} A request like this one was built before.\nIts request: "count the bike racks"\n[end of the worked example]`
+  const withNote = (from, parts = false) => ({ model: 'general', messages: [{ role: 'system', content: parts ? [{ type: 'text', text: 'You are Ola.' }, { type: 'text', text: note(from) }] : `You are Ola.\n${note(from)}\nBe brief.` }, { role: 'user', content: JSON.stringify({ tag: 'ex' }) }] })
+  const g = await gateway(baseEnv(up.url))
+  for (const b of [withNote(true), withNote(false, true), chat({ tag: 'plain' })]) assert.equal((await call(g, T.a, b)).status, 200)
+  const logs = await waitFor(() => (g.logs().length >= 3 ? g.logs() : null), 3000, 'three log lines')
+  assert.deepEqual(logs.map((l) => l.example ?? null), ['project', 'library', null])
+  assert.ok(logs.every((l) => !JSON.stringify(l).includes('bike')), 'no words of the example in the log')
+  assert.ok(up.st.seen[0].system.includes('count the bike racks'), 'on: the model receives it')
+  await g.stop()
+  const off = await gateway({ ...baseEnv(up.url), GATEWAY_EXAMPLES: 'off' })
+  for (const b of [withNote(true), withNote(false, true)]) assert.equal((await call(off, T.a, b)).status, 200)
+  const offLogs = await waitFor(() => (off.logs().length >= 2 ? off.logs() : null), 3000, 'two log lines')
+  assert.deepEqual(offLogs.map((l) => l.example), ['off', 'off'])
+  const sent = up.st.seen.slice(-2)
+  assert.ok(sent.every((s) => !s.system.includes('worked example') && !s.system.includes('bike')), 'off: the model receives no example')
+  assert.ok(sent[0].system.includes('You are Ola.') && sent[0].system.includes('Be brief.'), 'the rest of the instructions stay')
+  await off.stop()
+})
+
 // ---------------------------------------------------------------- review 2026-11-16: quota re-check (no overshoot)
 
 test('a burst cannot run the whole queue past the quota; retries re-check too', async () => {

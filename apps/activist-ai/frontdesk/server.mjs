@@ -43,7 +43,7 @@ import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './ma
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
-import { writeExamples } from './examples.mjs'
+import { makeExamples } from './examples.mjs'
 import { publishAskOf } from '../web/server/publishask.mjs'
 import { linksOf } from './links.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
@@ -89,8 +89,6 @@ export function config(env = process.env) {
     host,
     port: num('OLA_FD_PORT', Number(origin.port || 4700), 0, 65535),
     data: env.OLA_FD_DATA ?? path.join(os.homedir(), '.ola-frontdesk'),
-    // OLA-181: whose kept requests become worked examples (only this one person's; examples.mjs).
-    examplesFrom: env.OLA_EXAMPLES_FROM ?? 'bart',
     dist: env.OLA_FD_DIST ?? path.join(HERE, '../web/dist'),
     maxUpload: num('OLA_FD_MAX_UPLOAD_MB', 50, 1, 1024) * 1024 * 1024,
     // A file that comes in pieces (resumable; a library zip, a large database): up to this size,
@@ -244,6 +242,7 @@ export function makeFrontDesk(cfg = config()) {
   // conversation since Ola's last turn; its run's end records what it changed.
   let madeBy = null
   let faults = null
+  let examples = null
   const onPrompt = async (slug, sessionID, text) => {
     // A request that names Claude gets the fact of whether Claude can take it here (claude.mjs claudeNote, OLA-232).
     const wsRow = NAMES_CLAUDE.test(text ?? '') ? db.prepare('SELECT id, slug FROM workspaces WHERE slug = ?').get(slug) : null
@@ -280,22 +279,23 @@ export function makeFrontDesk(cfg = config()) {
     // OLA-235: what went wrong in the turn, as labels (faults.mjs); never the request or the answer.
     const wsId = db.prepare('SELECT id FROM workspaces WHERE slug = ?').get(slug)?.id
     if (wsId) faults?.fromRun(slug, wsId, sessionID).catch((e) => log(`faults: not read in ${slug} (${e?.message ?? e})`))
+    // OLA-181: a request that ended well becomes a worked example inside this project (examples.mjs).
+    examples?.fromRun(slug, sessionID, how).catch((e) => log(`examples: not kept in ${slug} (${e?.message ?? e})`))
+  }, onSessionDeleted: (slug, sessionID) => {
+    examples?.forget(slug, sessionID).catch((e) => log(`examples: not taken out in ${slug} (${e?.message ?? e})`))
   } })
   faults = makeFaults({ db, workspaces, log })
+  examples = makeExamples({ workspaces, log })
+  // Until image 2.3.2-62 one person's kept requests were copied to <ws HOME>/examples and shown in every
+  // project. Examples now stay inside their own project, so that copy is removed (the kept turns stay).
+  try {
+    if (fs.existsSync(path.join(WS_HOME, 'examples'))) fs.rmSync(path.join(WS_HOME, 'examples'), { recursive: true, force: true }), log('examples: the old shared folder of kept examples is removed')
+  } catch (e) { log(`examples: the old shared folder is not removed (${e.message})`) }
   madeBy = makeMadeBy({ exec: (slug, args) => workspaces.madeBy(slug, args), executing: (slug) => workspaces.executing(slug), served: (slug, session, since) => gatewayServed(cfg.claude, `ws-${slug}`, session, since), log })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
   // Switches to a fallback after a cheaper engine (OLA-157): labels and counts, and a test task where allowed.
   const switches = makeSwitches({ db, log })
-  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, faults, onPeople: () => hosted.writeGrants(),
-    // OLA-181: one person's kept requests become worked examples in every project's VM (examples.mjs).
-    onKept: (personId) => {
-      const who = db.prepare('SELECT handle FROM people WHERE id = ?').get(personId)?.handle
-      if (who !== cfg.examplesFrom) return
-      log(`kept: ${writeExamples(db, path.join(WS_HOME, 'examples', 'kept.json'), who)} worked example(s) from ${who}`)
-    },
-  })
-  // And once at start, so the file matches the database after a restart or an update.
-  try { log(`kept: ${writeExamples(db, path.join(WS_HOME, 'examples', 'kept.json'), cfg.examplesFrom)} worked example(s) from ${cfg.examplesFrom} at start`) } catch (e) { log(`kept: examples not written at start: ${e.message}`) }
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log, switches, faults, onPeople: () => hosted.writeGrants() })
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so
@@ -649,6 +649,8 @@ export function makeFrontDesk(cfg = config()) {
       if (!body) return json(res, 400, { error: 'bad_json' })
       if (req.method === 'POST') await workspaces.ensureRunning(ws.slug)
       const r = req.method === 'POST' ? await faults.mark(ws, sess.personId, body) : faults.unmark(ws, sess.personId, body)
+      // OLA-181: an answer marked wrong is no worked example (taking the mark back does not bring it back).
+      if (req.method === 'POST' && r.status === 200) await examples.forget(ws.slug, body.conversation, body.turn).catch((e) => log(`examples: not taken out in ${ws.slug} (${e?.message ?? e})`))
       return json(res, r.status, r.body)
     }
     // Which engine last changed each file (OLA-224): the project's own record, `ola-db made-by

@@ -42,6 +42,13 @@ Which engine made a file (OLA-224), for the agent as `ola-made-by`, for the apps
                                      is corrected (the front desk, once it knows which request led to each change)
 The record holds file names, engines, models, turns and times, never what is in a file.
 
+This project's worked examples (OLA-181), for the front desk (the ola-examples plugin reads the file):
+  ola-db examples add                a request of this project that ended well (one JSON object on stdin),
+                                     kept in /work/.ola/examples.json, the newest 30
+  ola-db examples remove --session S [--turn T]   the examples made from one conversation or one turn
+  ola-db examples --json             how many there are, and their conversations and turns (no words)
+They never leave the project: no other project sees them, and they go when the project goes.
+
 The fixed core: `documents` (one row per document), `doc_text` (FTS5, one row per page or part,
 so a hit can cite a page), `doc_pages` (how each page's text was got: from the file's own text, or
 by OCR from a scan with the OCR's confidence, so a quote from an OCR page is known to be less
@@ -1346,6 +1353,68 @@ def made_end(con, row, interrupted):
     return {"turn": row["turn"], "engine": row["engine"], "session": row["session"], "interrupted": bool(interrupted), "files": changed}
 
 
+# ---------------------------------------------------------------- worked examples (OLA-181)
+EXAMPLES = os.path.join(WORK, ".ola", "examples.json")
+EXAMPLES_MAX = 30
+EX_ID = re.compile(r"[A-Za-z0-9_-]{1,120}")
+
+
+def examples_read():
+    try:
+        with open(EXAMPLES, encoding="utf-8") as f:
+            data = json.load(f)
+        return [e for e in data.get("examples", []) if isinstance(e, dict)]
+    except (OSError, ValueError, AttributeError):
+        return []
+
+
+def examples_write(exs):
+    os.makedirs(os.path.dirname(EXAMPLES), exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(EXAMPLES), prefix=".examples.")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump({"about": "This project's own requests that ended well, shown to Ola's model beside a close new request in this project only (OLA-181). Written by the front desk; never leaves the project.", "examples": exs[-EXAMPLES_MAX:]}, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, EXAMPLES)
+
+
+def examples_cmd(args, flags):
+    sub = args[0] if args else ""
+    if sub == "add":
+        try:
+            ex = json.loads(sys.stdin.read(64 * 1024))
+        except ValueError:
+            fail("ola-db examples add: stdin is not JSON")
+        def text(v, n):
+            return isinstance(v, str) and 0 < len(v.strip()) <= n
+        def lines(v):
+            return isinstance(v, list) and len(v) <= 12 and all(text(x, 400) for x in v)
+        ok = (isinstance(ex, dict) and EX_ID.fullmatch(str(ex.get("session", ""))) and EX_ID.fullmatch(str(ex.get("turn", "")))
+              and text(ex.get("request"), 2000) and lines(ex.get("tried")) and ex.get("tried") and lines(ex.get("built", []))
+              and isinstance(ex.get("answer", ""), str) and len(ex.get("answer", "")) <= 800)
+        if not ok:
+            fail("ola-db examples add: not an example (session, turn, request, tried, built, answer)")
+        keep = {"id": "project-%s" % ex["turn"], "source": "project", "session": ex["session"], "turn": ex["turn"], "at": now(),
+                "request": ex["request"].strip(), "built": ex.get("built", []), "tried": ex["tried"], "answer": ex.get("answer", "")}
+        exs = [e for e in examples_read() if e.get("turn") != ex["turn"]] + [keep]
+        examples_write(exs)
+        print(json.dumps({"count": min(len(exs), EXAMPLES_MAX)}))
+        return
+    if sub == "remove":
+        s, t = flags.get("session", ""), flags.get("turn")
+        if not EX_ID.fullmatch(s) or (t is not None and not EX_ID.fullmatch(t)):
+            fail("usage: ola-db examples remove --session S [--turn T]")
+        exs = examples_read()
+        left = [e for e in exs if not (e.get("session") == s and (t is None or e.get("turn") == t))]
+        if len(left) != len(exs):
+            examples_write(left)
+        print(json.dumps({"removed": len(exs) - len(left)}))
+        return
+    if sub == "" and flags.get("json"):
+        exs = examples_read()
+        print(json.dumps({"count": len(exs), "examples": [{"session": e.get("session"), "turn": e.get("turn"), "at": e.get("at")} for e in exs]}))
+        return
+    fail("usage: ola-db examples add | remove --session S [--turn T] | --json")
+
+
 def made_by_cmd(args, flags):
     sub = args[0] if args else ""
     if sub == "begin":
@@ -1472,6 +1541,8 @@ def main(argv):
         init()
     elif cmd == "made-by":
         made_by_cmd(args, flags)
+    elif cmd == "examples":
+        examples_cmd(args, flags)
     elif cmd == "api":
         api(rest)
     elif cmd == "query":

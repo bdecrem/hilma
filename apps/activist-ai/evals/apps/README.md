@@ -110,27 +110,39 @@ written for it, none of them one of the seven here (the test proves it), so the 
 taught to the test; each of the seven has a neighbor of its kind (the crossword gets the AI word
 game, the memory game tic-tac-toe, the to-do app the reading list).
 
-Bart's own kept requests are the second source (image 2.3.0-59): the front desk turns his kept
-turns ("Store your conversations" on) into examples in `~/.ola/examples/kept.json` on the Ola
-machine, outside this public repo, at start, after each kept turn of his and after he deletes them
-(then it is emptied). A turn qualifies when it is done, asks to make something, wrote a file and
-tried the page after the last change (`ola-page`, `look.py`, "Checked the work"), and no later
-turn in its session switched engines. Every VM has the folder read-only at `/ola/examples`; the
-image's `OLA_EXAMPLES_EXTRA` names the file and the plugin reads it again when it changes. Only
-the person named by the front desk's `OLA_EXAMPLES_FROM` (default `bart`); no other person's
-content is stored. The Mac's local runtime uses the committed library only. Test:
-`node --test frontdesk/test/examples.test.mjs`.
+The second source is each cloud project's own requests that ended well (image 2.3.2-62): when a run
+in a project succeeds, the front desk reads that turn and, when it asked to make something, wrote
+a file and then tried the page (`ola-page`, `look.py`, exit 0) with no refusal and no stopped run,
+writes it into that project's own volume with `ola-db examples add` (`/work/.ola/examples.json`,
+named by the image's `OLA_EXAMPLES_EXTRA`; the request, the files written, the commands that tried
+it, the answer; never file contents or output). It is shown only to later requests in that same
+project, "(from this project)". "This was wrong", a later `/claude` or `/hosted` in the conversation
+and deleting the conversation take it out. It never leaves the project (not on the host, not in a
+log, gone with the project). The Mac's local runtime uses the committed library only. The gateway's
+log line says `example: project` or `library` (a label, never words), and `GATEWAY_EXAMPLES=off`
+in the gateway's env cuts the example out of every request: the one switch. (Until 2.3.2-62 Bart's
+own kept requests were copied to a folder shown in every project; the front desk now removes it.)
 
 Checks: `node --test workspace/plugins/ola-examples/examples.test.mjs` (the matching, the note, the
-hook, the switches) and `node workspace/plugins/ola-examples/opencode.check.mjs` (Ola's own opencode
-2.3.0 against a stand-in model server: the example is in what the model receives; with
-`OLA_EXAMPLES=off` and for a request that is not an app request, it is not).
+hook, the switches), `node --test frontdesk/test/examples.test.mjs` (what ended well, the real
+`ola-db examples` on a stand-in folder, the take-outs, the plugin showing it), the gateway's
+`OLA-181` test (the label and the switch), the workspace check (kept in the volume, not in another
+project), and `node workspace/plugins/ola-examples/opencode.check.mjs` (Ola's own opencode against a
+stand-in model server: the example is in what the model receives; with `OLA_EXAMPLES=off` and for
+a request that is not an app request, it is not).
 
-The measure: the column `ola-noex` is the open-weights column with `OLA_EXAMPLES=off`. With a Mac
-app built from the commit that added the plugin (or later) frozen into the eval copy, run every
-problem in both columns the same day (`node run.mjs run <id> ola` and `node run.mjs run <id>
-ola-noex`), then `node run.mjs report` and look at every screenshot. Waits for the Together credit
-(OLA-346) and the test-run allowance (resets Monday Nov 23, 00:00 UTC).
+**The measure, one command:** `node run.mjs measure [--usd 4] [--problems a,b]` runs every problem
+in both columns, `ola` then `ola-noex` (the open-weights column with `OLA_EXAMPLES=off`), and stops
+before a run that could pass the dollar ceiling. The spend is the eval caller's own weekly tokens at
+the gateway before and after each run, priced at the dearer model an app run may use (design, Muse
+Glimmer, 0.35 / 1.50 dollars per million tokens), so it never says less than was spent. It refuses
+when the caller's week has under 3M tokens left. Needs what `run` needs: a Mac app built from a
+commit with the plugin frozen into the eval copy, the model tunnel on 127.0.0.1:14311 and the
+harness's Playwright (on the M4 iMac today). **Expected cost** (gateway records of Nov 18 to 21: an
+agent run of 2 to 15 minutes used 0.3M to 4.6M input tokens; an app run about 1.5M in and 30k out):
+about 0.25 dollars a run on general, 0.55 on design, so 3.50 to 8 dollars for all 14; the default
+4-dollar ceiling stops it at about seven runs. Then `node run.mjs report` and look at every
+screenshot.
 
 ## Limits
 

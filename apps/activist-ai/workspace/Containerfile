@@ -78,6 +78,12 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-62 (OLA-181): worked examples stay inside their own project. The shared read-only folder
+# /ola/examples (Bart's kept requests, shown in every project) is gone; OLA_EXAMPLES_EXTRA names
+# /work/.ola/examples.json, this project's own requests that ended well, which the front desk writes
+# with the new `ola-db examples` (add, remove, --json) when a run ends well, and takes out on "This
+# was wrong" or when the conversation is deleted. The plugin's note is fenced and at most 2400
+# characters (ola-examples 1.2.0). Builds on 2.3.2-61.
 # 2.3.2-61 (OLA-239): opencode 2.3.2 (from 2.3.0: the system prompt cached on GPT-6.2 Responses routes,
 # webfetch output no longer repeats its url and format). Everything of 2.3.0-60 is in it.
 # 2.3.0-60 (OLA-232): AGENTS.md: a request that names Claude comes with the front desk's note on
@@ -183,7 +189,7 @@ RUN apt-get update \
  # signal, trace or write to it). Neither has a home or a shell.
  && groupadd --gid 1001 olarun \
  && useradd --no-create-home --uid 1002 --user-group --home-dir /nonexistent --shell /usr/sbin/nologin twin \
- && mkdir -p /work /ola/gw /ola/examples \
+ && mkdir -p /work /ola/gw \
  && chown work:work /work \
  # No setuid or setgid programs (su, passwd, mount, chsh...): no program in the image hands
  # out root, which would reach the fifth vCPU, the cgroup and the guest's root-owned files.
@@ -214,7 +220,7 @@ ENV HOME=/work/.ola/home \
     OPENCODE_DISABLE_PROJECT_CONFIG=1 \
     OPENCODE_DISABLE_FREE_MODELS=1 \
     OPENCODE_DISABLE_MODELS_FETCH=1 \
-    OLA_EXAMPLES_EXTRA=/ola/examples/kept.json \
+    OLA_EXAMPLES_EXTRA=/work/.ola/examples.json \
     MPLCONFIGDIR=/work/.ola/cache/matplotlib \
     PATH=/opt/ola/bin:/usr/local/bin:/usr/bin:/bin
 USER work

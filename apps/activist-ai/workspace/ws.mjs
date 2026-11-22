@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.2-61'
+export const IMAGE = 'ola-workspace:2.3.2-62'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -362,14 +362,6 @@ export async function create(id, opts = {}) {
   return { id, cpus, memory, disk }
 }
 
-/** The folder mounted read-only at /ola/examples in every VM (OLA-181); made here so the mount has a source. */
-export function examplesDir() {
-  const dir = path.join(HOME, 'examples')
-  mkdirSync(dir, { recursive: true })
-  chmodSync(dir, 0o755)
-  return dir
-}
-
 function createArgs(id, { cpus, memory }) {
   const n = names(id)
   const p = paths(id)
@@ -395,9 +387,6 @@ function createArgs(id, { cpus, memory }) {
     '--env', 'OPENCODE_DISABLE_PROJECT_CONFIG=1',
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
-    // OLA-181: the worked examples from Bart's kept requests (frontdesk/examples.mjs writes kept.json
-    // here), read-only; the folder holds nothing else. The plugin ola-examples reads it.
-    '--mount', `type=bind,source=${examplesDir()},target=/ola/examples,readonly`,
     IMAGE,
   ]
 }
@@ -1046,6 +1035,25 @@ export async function madeBy(id, args, { ms = 20_000, max = 4 * 1024 * 1024 } = 
   const child = execTool(id, 'ola-db', ['made-by', ...args])
   const timer = setTimeout(() => child.kill('SIGKILL'), ms)
   const r = await collect(child, max)
+  clearTimeout(timer)
+  return { code: r.code, out: r.out }
+}
+
+/**
+ * `ola-db examples <args>` in the VM (OLA-181): this project's own worked examples, kept in its volume.
+ * `add` takes one example as JSON on stdin; `remove --session S [--turn T]`; `--json` (counts and ids).
+ * Resolves { code, out }.
+ */
+export async function examples(id, args, input, { ms = 20_000 } = {}) {
+  validId(id)
+  if (!['add', 'remove', '--json'].includes(args[0]) || args.some((a) => typeof a !== 'string' || a.length > 300)) refuse('not an examples call')
+  const child = execTool(id, 'ola-db', ['examples', ...args], { stdin: input !== undefined })
+  if (input !== undefined) {
+    child.stdin.on('error', () => {})
+    child.stdin.end(input)
+  }
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, 64 * 1024)
   clearTimeout(timer)
   return { code: r.code, out: r.out }
 }

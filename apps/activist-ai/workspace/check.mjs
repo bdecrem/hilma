@@ -436,12 +436,10 @@ try {
     const mounts = JSON.stringify(cfg.mounts || [])
     const sockets = JSON.stringify(cfg.sockets || cfg.publishedSockets || [])
     const other = id === A ? B : A
-    // Three: its volume, its door, and the worked-examples folder (OLA-181), which is the same for every
-    // workspace, holds only the examples file and is read-only (tried from inside below).
+    // Two: its volume and its door. Nothing shared between workspaces is mounted (OLA-181: the worked
+    // examples are each project's own, in its volume).
     const hard = (cfg.mounts || []).filter((m) => !m.type?.tmpfs)
-    t(`${id}: mounts only its own volume and door, and the examples folder`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && hard.length === 3 && hard.some((m) => m.destination === '/ola/examples' && JSON.stringify(m).includes(ws.examplesDir())), hard.map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
-    const ro = inside(id, "import json\ntry:\n    open('/ola/examples/x', 'w').write('x'); print(json.dumps('written'))\nexcept OSError as e:\n    print(json.dumps(e.strerror))")
-    t(`${id}: the examples folder is read-only from inside`, /read-only/i.test(ro.out), ro.out.trim() || ro.err.trim().split('\n').pop())
+    t(`${id}: mounts only its own volume and door`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && hard.length === 2, hard.map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
     // opencode is reached through the desk (container exec), so nothing is published.
     t(`${id}: publishes no socket; its desk (container exec) is open`, (sockets === '[]' || sockets === '{}') && Boolean(ws.deskPid(id)), sockets)
   }
@@ -968,6 +966,18 @@ print(json.dumps({"mib": n, "stopped": why}))
     t('a 200,000-row table loads and a sorted, filtered page comes back in under 2 s through container exec', put.code === 0 && loaded.code === 0 && browsed.rows?.length === 50 && browsed.total === 4348 && browsed.rows[0][4] >= browsed.rows[49][4] && measured.browse_200k_ms < 2000, browsed.error ?? `${measured.browse_200k_ms} ms, load ${measured.load_200k_s} s`)
     const ro = await sh(A, ['ola-db', 'query', 'DELETE FROM laws'])
     t('ola-db query is read-only by default', ro.code === 3 && /reads only/.test(ro.err) && (await ws.dbApi(A, ['tables'])).tables[0]?.rows === 200_000)
+
+    // OLA-181: a worked example is kept in the project's own volume, where the plugin is told to look
+    // (OLA_EXAMPLES_EXTRA), and nowhere else: workspace B does not have it; remove takes it out.
+    {
+      const ex = JSON.stringify({ session: 'ses_check', turn: 'msg_check', request: 'make a page that counts bike racks', built: ['Wrote index.html'], tried: ['ola-page index.html --do "click +" --text'], answer: 'Done.' })
+      const added = await ws.examples(A, ['add'], ex)
+      const where = (await sh(A, ['sh', '-c', 'echo "$OLA_EXAMPLES_EXTRA"; test -f /work/.ola/examples.json && echo here'])).out.trim().split('\n')
+      const inB = JSON.parse((await ws.examples(B, ['--json'])).out || '{}').count
+      const gone = JSON.parse((await ws.examples(A, ['remove', '--session', 'ses_check'])).out || '{}').removed
+      const left = JSON.parse((await ws.examples(A, ['--json'])).out || '{}').count
+      t('worked examples: kept in the project volume the plugin reads, not in another project, removed by conversation', added.code === 0 && where[0] === '/work/.ola/examples.json' && where[1] === 'here' && inB === 0 && gone === 1 && left === 0, `add ${added.code}, ${where.join(' ')}, B ${inB}, removed ${gone}, left ${left}`)
+    }
 
     // "Compare with Claude" (2.3.0-18): ola-twin and its library are in the image, read-only, and the
     // leak check and the generator's sandbox pass their tests inside the VM, with the VM's Python.

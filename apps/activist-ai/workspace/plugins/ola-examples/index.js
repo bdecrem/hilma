@@ -1,26 +1,31 @@
 // ola-examples: opencode plugin (V2 API) in every workspace image, at /opt/ola/plugins/ola-examples, named by the
 // system config (/etc/opencode/opencode.jsonc), and in the Mac's local runtime (OlaKit LocalServer.installPlugins).
 //
-// What it does (OLA-181): Ola keeps app requests that ended well as worked examples (examples.json beside this
-// file: the request, what it plainly asked for, how it was built, how each thing was tried, and the answer). When a
-// new request arrives, the closest kept example, if it is close enough, is put into the model's system prompt for
-// that request: one example, never more, chosen by word overlap with the request (BM25 over the request and the
-// example's own words; no model call, nothing leaves the process).
+// What it does (OLA-181): Ola keeps app requests that ended well as worked examples: the request, what it plainly
+// asked for, how it was built, how each thing was tried, and the answer. When a new request to make an app, page
+// or game arrives, the closest kept example, if it is close enough, is put into the model's system prompt for that
+// request: one example, never more, at most MAX_CHARS (about 600 tokens), chosen by word overlap with the request
+// (BM25 over the request and the example's own words; no model call, nothing leaves the process).
 //
 // Why: on 2026-11-18 Ola's own model built 2 of 7 real app requests and Claude Code 4 of 4 (evals/apps). A worked
 // example of the same kind, read at the moment the request arrives, shows the steps that made a good result
 // (list what was asked, build, try each item on the page, fix, say what was seen) in a concrete case instead of
 // a general rule.
 //
-// Whose content: the committed library holds only test requests, written for it and kept apart from the seven
-// measured problems (evals/apps/problems.json), so the measure is not taught to the test. Bart's own kept
-// requests are the second source: the front desk writes them from his kept turns only (frontdesk/examples.mjs)
-// to a file outside this public repo, mounted read-only at /ola/examples/kept.json and named by
-// OLA_EXAMPLES_EXTRA (colon-separated paths). It is read again whenever it changes (a new kept turn, or his
-// turns deleted). No other person's content is stored.
+// Whose content, two sources:
+//   - examples.json beside this file: test requests only, written for it and kept apart from the seven measured
+//     problems (evals/apps/problems.json), so the measure is not taught to the test. Every project and every Mac.
+//   - in a cloud project, that project's own requests that ended well, in its own volume at
+//     /work/.ola/examples.json (the image's OLA_EXAMPLES_EXTRA). The front desk writes it through `ola-db
+//     examples` when a run ends well (frontdesk/examples.mjs) and takes an example out on "This was wrong" or
+//     when its conversation is deleted. It never leaves the project: no other project, person or machine sees
+//     it, it goes with the project's backup and is deleted with the project. Shown as "(from this project)".
+//   Read again whenever an extra file changes.
 //
-// Switches: OLA_EXAMPLES=off turns it off (the "without examples" column of the measure);
-// OLA_EXAMPLES_FILE replaces the committed library (tests).
+// The note is fenced by NOTE_HEAD and NOTE_END so the gateway can count it (its log line says example: project
+// or library, a label only) and, with GATEWAY_EXAMPLES=off, take it out of every request: the one switch for
+// the server and every Mac. Here, OLA_EXAMPLES=off turns it off for one process (the measure's "without"
+// column); OLA_EXAMPLES_FILE replaces the committed library (tests).
 //
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process.
@@ -30,11 +35,13 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 export const NOTE_HEAD = '[Ola worked example]'
+export const NOTE_END = '[end of the worked example]'
+export const FROM_PROJECT = '(from this project)'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 // The least score a kept example needs to be shown. Set by examples.test.mjs: every one of the seven measured
 // requests finds a neighbor above it (the lowest, the to-do app, scored 3.5 on Nov 21), and a request to make something unlike every example stays below.
 export const MIN_SCORE = 2.5
-const MAX_CHARS = 6000 // of one example as shown
+export const MAX_CHARS = 2400 // of one example as shown, the fence included: about 600 tokens
 
 const STOP = new Set(('a an and are as at be but by can could do does for from get give go has have how i if in into ' +
   'is it its just let like me my need of on or our please so some something that the their them then there these ' +
@@ -107,17 +114,19 @@ export function closest(request, library, min = MIN_SCORE) {
 
 const list = (xs) => (xs ?? []).map((x) => `- ${x}`).join('\n')
 
-/** The note the model sees, for one example. */
+/** The note the model sees, for one example, fenced by NOTE_HEAD and NOTE_END, at most MAX_CHARS. */
 export function noteFor(ex) {
+  const project = ex.source === 'project'
   const body = [
-    `${NOTE_HEAD} A request like this one was built here before and ended well. It is an example of the steps, not the person's request: build what *this* person asked for, in their words, and do not copy its content.`,
+    `${NOTE_HEAD}${project ? ` ${FROM_PROJECT}` : ''} A request like this one was built ${project ? 'in this project' : 'here'} before and ended well. It is an example of the steps, not the person's request: build what *this* person asked for, in their words, and do not copy its content.`,
     `Its request: "${ex.request}"`,
     ex.asked?.length ? `What it asked for, one line each:\n${list(ex.asked)}` : '',
     ex.built?.length ? `How it was built:\n${list(ex.built)}` : '',
     `How each thing was tried before answering:\n${list(ex.tried)}`,
     ex.answer ? `The answer it ended with: ${ex.answer}` : '',
   ].filter(Boolean).join('\n\n')
-  return body.length > MAX_CHARS ? body.slice(0, MAX_CHARS - 1) + '…' : body
+  const room = MAX_CHARS - NOTE_END.length - 1
+  return (body.length > room ? body.slice(0, room - 1) + '…' : body) + '\n' + NOTE_END
 }
 
 /** The text of the newest message the person typed (tool results and Ola's own notes are not requests). */

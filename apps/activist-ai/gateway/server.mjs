@@ -80,7 +80,7 @@ const SETTINGS = {
   // The model check's own caller (`probe`, OLA-214): its week's tokens, apart from everyone else's.
   GATEWAY_PROBE_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PROBE_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', 'GATEWAY_REPORT_CACHED', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PROBE_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', 'GATEWAY_REPORT_CACHED', 'GATEWAY_EXAMPLES', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -232,6 +232,10 @@ function loadConfig(env) {
   // exactly one caller and no people or tokens file.
   const reportCached = env.GATEWAY_REPORT_CACHED === '1'
   if (env.GATEWAY_REPORT_CACHED && !['0', '1'].includes(env.GATEWAY_REPORT_CACHED)) bad('GATEWAY_REPORT_CACHED must be 0 or 1')
+  // GATEWAY_EXAMPLES=off (OLA-181): the worked example the ola-examples plugin puts beside an app request
+  // is taken out of every request, from every project and every Mac: the one switch for the feature.
+  if (env.GATEWAY_EXAMPLES && !['on', 'off'].includes(env.GATEWAY_EXAMPLES)) bad('GATEWAY_EXAMPLES must be on or off')
+  const examplesOff = env.GATEWAY_EXAMPLES === 'off'
   // Fallback to Claude (claude.mjs): its own upstream, credentials and grants file.
   const claude = claudeConfig(env, bad)
   // Fallback to a hosted open model (hosted.mjs): the model name `hosted`, its own upstream and grants.
@@ -276,6 +280,7 @@ function loadConfig(env) {
     db,
     keepText: textWithCalls === 'keep',
     reportCached,
+    examplesOff,
     sp,
     claude,
     hosted,
@@ -534,6 +539,27 @@ function weekStart(now = Date.now()) {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day)
 }
 const weekKey = (start) => new Date(start).toISOString().slice(0, 10)
+// The ola-examples plugin's note (workspace/plugins/ola-examples): fenced, so it can be counted and cut out.
+const EXAMPLE_NOTE = /\[Ola worked example\][\s\S]*?\[end of the worked example\]\n?/g
+/** 'project' or 'library' when a system message carries a worked example ('off' when it was cut out), else null. */
+function workedExample(messages, off) {
+  let found = null
+  for (const m of Array.isArray(messages) ? messages : []) {
+    if (m?.role !== 'system' && m?.role !== 'developer') continue
+    const parts = typeof m.content === 'string' ? [null] : Array.isArray(m.content) ? m.content.filter((p) => typeof p?.text === 'string') : []
+    for (const p of parts) {
+      const text = p ? p.text : m.content
+      if (!text.includes('[Ola worked example]')) continue
+      found = found === 'project' || text.includes('[Ola worked example] (from this project)') ? 'project' : 'library'
+      if (!off) continue
+      const cut = text.replace(EXAMPLE_NOTE, '')
+      if (p) p.text = cut
+      else m.content = cut
+    }
+  }
+  return found && off ? 'off' : found
+}
+
 function usageOf(name) {
   const start = weekStart()
   const row = readUsage.get(weekKey(start), name)
@@ -1159,6 +1185,10 @@ async function handle(req, res, rec, signal) {
     return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys(), ...(hosted ? ['hosted', ...hosted.picks.keys()] : [])].join(', ')}`, 'invalid_request_error')
   }
   rec.model = body.model
+  // OLA-181: was a worked example beside this request (a label for the log line, never its words), and
+  // with GATEWAY_EXAMPLES=off it is taken out before the request goes anywhere.
+  const ex = workedExample(body.messages, C.examplesOff)
+  if (ex) rec.example = ex
   if (!isHosted && C.sp.spec[body.model].kind !== 'chat') return no(400, 'a name that is not a chat model', `${body.model} is not a chat model; it has its own route`, 'invalid_request_error')
   // The design model (design.mjs): a request after the designer or app-designer skill was loaded in
   // this turn, or one that names `design`, is served by it, if this caller's work may go there; if

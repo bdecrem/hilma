@@ -7,6 +7,7 @@
 //   node run.mjs recheck                                  check every recorded run again
 //   node run.mjs selftest [problem]                       empty folder and wrong fixture fail, good passes
 //   node run.mjs report                                   rebuild results/results.md
+//   node run.mjs measure [--usd 4] [--problems a,b]       OLA-181: every problem with and without the worked example
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -172,8 +173,50 @@ async function selftest(only) {
   process.exit(bad ? 1 : 0)
 }
 
+// OLA-181's measure, one command: every problem in both columns (with the worked example, `ola`, and without,
+// `ola-noex`), alternating, the same day, stopped by a dollar ceiling. The spend is the eval caller's own
+// weekly tokens at the gateway (GET /v1/usage with the run's token) before and after each run, priced at the
+// dearer of the two models an app run uses (general, Nemotron 0.15/0.50; design, Muse Glimmer 0.35/1.50 per
+// million tokens, ops/models.mjs PRICES), so it never says less than was spent. A run is not started when
+// the spend so far plus the largest run so far (0.75 dollars before any) would pass the ceiling.
+const DEAR = { in: 0.35, out: 1.5 }
+async function usage() {
+  const r = await fetch('http://127.0.0.1:14311/v1/usage', { headers: { Authorization: `Bearer ${fs.readFileSync(TOKEN, 'utf8').trim()}` } })
+  if (!r.ok) die(`the gateway did not give this caller's usage (${r.status}): is the model tunnel on 127.0.0.1:14311 up?`)
+  return r.json()
+}
+async function measure() {
+  const ceiling = Number(arg('--usd', 4))
+  const ids = (arg('--problems', null)?.split(',') ?? PROBLEMS.map((p) => p.id)).map((id) => problem(id).id)
+  if (!fs.existsSync(OLA)) die(`no frozen Ola app at ${OLA} (README, "Run")`)
+  const u0 = await usage()
+  const left = u0.quota > 0 ? u0.quota - u0.tokens_used : Infinity
+  console.log(`${ids.length} problems x 2 columns, ceiling $${ceiling}; this caller's week: ${u0.tokens_used.toLocaleString()} tokens used of ${u0.quota > 0 ? u0.quota.toLocaleString() : 'no cap'} (resets ${u0.resets_at})`)
+  if (left < 3_000_000) die(`under 3M tokens left in this caller's week (${left.toLocaleString()}): a run would stop at the allowance; wait for ${u0.resets_at}`)
+  let spent = 0, largest = 0.75, before = u0
+  const out = []
+  for (const id of ids) for (const column of ['ola', 'ola-noex']) {
+    if (spent + largest > ceiling) { console.log(`stopped at the ceiling: $${spent.toFixed(2)} spent, the next run could cost $${largest.toFixed(2)}`); return finish(out, spent) }
+    const r = await runOne(id, column)
+    const now = await usage()
+    const usd = ((now.tokens_in - before.tokens_in) * DEAR.in + (now.tokens_out - before.tokens_out) * DEAR.out) / 1e6
+    before = now
+    spent += usd
+    if (usd > largest) largest = usd
+    out.push({ id, column, pass: r.pass, passed: r.passed, total: r.total, usd })
+    console.log(`  $${usd.toFixed(2)} (at most), $${spent.toFixed(2)} in all`)
+  }
+  finish(out, spent)
+}
+function finish(out, spent) {
+  const sum = (c) => out.filter((r) => r.column === c)
+  for (const c of ['ola', 'ola-noex']) console.log(`${COLUMNS[c]}: ${sum(c).filter((r) => r.pass).length} of ${sum(c).length} passed, ${sum(c).reduce((s, r) => s + r.passed, 0)} of ${sum(c).reduce((s, r) => s + r.total, 0)} sub-checks`)
+  console.log(`spent at most $${spent.toFixed(2)}; look at every screenshot (results/*.json) before trusting a verdict`)
+}
+
 const [cmd, a, b] = process.argv.slice(2)
-if (cmd === 'run') await runOne(a, b)
+if (cmd === 'measure') await measure()
+else if (cmd === 'run') await runOne(a, b)
 else if (cmd === 'check') {
   const r = await checkFolder(problem(a), path.resolve(b), { shot: arg('--shot') })
   console.log(JSON.stringify(r, null, 2))
@@ -189,4 +232,4 @@ else if (cmd === 'check') {
   for (const meta of Object.values(latest)) await record(meta)
 } else if (cmd === 'selftest') await selftest(a)
 else if (cmd === 'report') report()
-else die('usage: run.mjs run|check|recheck|selftest|report')
+else die('usage: run.mjs run|check|recheck|selftest|report|measure')
