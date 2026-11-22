@@ -10,7 +10,8 @@ import Keys from './Keys'
 // priority, a search over ID, title and description, sortable by ID, priority and updated, and
 // New issue. Done is grouped by day, newest first. Everything is in the address (?tab=done&area=web
 // &q=safari&sort=updated), so a view can be bookmarked; Home and Plan link in with week, day and
-// opened. Keyboard: / searches, c opens New issue (Keys.tsx).
+// opened. A ticket Ola built (OLA-300: its commit came from the hand-off) shows Ola as Who, and each
+// day of Done says how many of its tickets Ola built. Keyboard: / searches, c opens New issue (Keys.tsx).
 
 export type TrackerParams = { tab?: string; area?: string; pri?: string; q?: string; sort?: string; week?: string; day?: string; opened?: string; who?: string }
 const TABS: [string, string, Issue['status'][]][] = [
@@ -92,7 +93,9 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
               {i.status === 'done' && i.proof && <span className="proof">{i.proof}</span>}
             </span>
             <span className="area bd-cut">{AREAS[i.area]}</span>
-            <span className="who bd-cut">{i.who}</span>
+            <span className="who bd-cut" title={i.builtBy ? `Built by Ola on ${i.builtBy.model}` : undefined}>
+              {i.builtBy ? 'Ola' : i.who}
+            </span>
             <Status s={i.status} />
             <span className="upd">{ago(updated(i), now)}</span>
           </a>
@@ -136,10 +139,12 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
       ) : byDay ? (
         days.map((day, n) => {
           const list = rows.filter((i) => (i.day ?? pday(i.finished_at ?? i.opened_at)) === day)
+          const byOla = list.filter((i) => i.builtBy).length
           return (
             <div key={day}>
               <h2 className="bd-day">
                 {day === today ? 'Today' : day === shiftDay(today, -1) ? 'Yesterday' : dayLong(day)} <span className="m">{list.length}</span>
+                {byOla > 0 && <span className="m">· {byOla} built by Ola</span>}
               </h2>
               {table(list, n === 0)}
             </div>

@@ -339,6 +339,12 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
                 </select>
               </dd>
             </div>
+            {i.builtBy && (
+              <div>
+                <dt>Built by</dt>
+                <dd>Ola, on {i.builtBy.model}</dd>
+              </div>
+            )}
             <div>
               <dt>Who</dt>
               <dd>

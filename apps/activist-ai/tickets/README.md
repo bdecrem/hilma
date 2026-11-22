@@ -132,5 +132,10 @@ reviews it, runs the folder's checks, merges it, and a checker checks it. `--dry
 but the comment. Exit 0 only when every test passed. The sandbox code is shared with the trial in
 `lib.mjs`.
 
-Still to build: who built each ticket on the board, and the day's count (tickets closed, how many Ola
-built).
+**On the board** (app.kochitolabs.com): a ticket whose commit came from the hand-off shows Ola as Who
+in the tracker and "Built by Ola, on <model>" on its page; each day under Done says how many of its
+tickets Ola built, and Home has the day's count and the last seven days ("Closed today: 6, 1 built by
+Ola"). The mark is read from the commit body's first words, `Built by Ola on <model>`, which
+`handoff.mjs` writes; the lead keeps that line when merging (`git merge --ff-only` or a cherry-pick
+keeps it). Code: `src/lib/venture/board.ts` (`OLA_BUILT`, `closedOn`); test
+`npx tsx scripts/venture/ola-built-test.ts`.

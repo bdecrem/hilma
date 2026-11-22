@@ -16,6 +16,12 @@ export type Area = 'web' | 'apps' | 'model' | 'security' | 'ops' | 'voice' | 'de
 export const AREAS: Record<Area, string> = { web: 'Web app', apps: 'Mac and phone apps', model: 'Model and skills', security: 'Security', ops: 'Operations', voice: 'Voice', design: 'Design', board: 'The board' }
 export type Status = 'open' | 'in_progress' | 'waiting' | 'done' | 'dropped'
 export type Commit = { sha: string; subject: string; at: string; issue_id?: string | null }
+/** Who built an issue (OLA-300): Ola, when one of its commits was made by the hand-off
+ *  (apps/activist-ai/tickets/handoff.mjs writes "Built by Ola on <model> (Together)" in the body);
+ *  null when Kit and its builders did. */
+export type BuiltBy = { by: 'ola'; model: string } | null
+export const OLA_BUILT = /^Built by Ola on (\S+)/m
+export const olaModel = (body: string): string | null => body.match(OLA_BUILT)?.[1] ?? null
 export type Issue = {
   id: string
   num: number
@@ -34,6 +40,7 @@ export type Issue = {
   proof: string
   updated_at: string
   commits: Commit[]
+  builtBy?: BuiltBy
 }
 /** One line of an issue's Activity (schema 012): a comment, a status change or an edit, by a board
  *  account (via 'board', new for Kit until seen_by_kit_at is set) or by Kit's command line ('cli'). */
@@ -345,15 +352,34 @@ export function leadFrom(issues: Pick<Issue, 'status' | 'priority'>[], runner: R
 
 const missing = (e: { code?: string; message?: string } | null) => !!e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? ''))
 
+/** The commits the hand-off made, by sha, with the model (a small query: only bodies that say so). */
+async function olaShas(db: ReturnType<typeof f2Supabase>, issueId?: string): Promise<Map<string, string>> {
+  let q = db.from('venture_commits').select('sha, body').like('body', 'Built by Ola on %')
+  if (issueId) q = q.eq('issue_id', issueId)
+  const { data, error } = await q
+  if (error && !missing(error)) throw new Error(`venture_commits read failed: ${error.message}`)
+  return new Map((data ?? []).flatMap((r) => { const m = olaModel(String(r.body ?? '')); return m ? [[r.sha as string, m] as [string, string]] : [] }))
+}
+const builtBy = (commits: Commit[], ola: Map<string, string>): BuiltBy => {
+  const c = commits.find((x) => ola.has(x.sha))
+  return c ? { by: 'ola', model: ola.get(c.sha) as string } : null
+}
+/** The day's count: tickets closed on a Pacific day, and how many of them Ola built. */
+export const closedOn = (issues: Pick<Issue, 'status' | 'day' | 'builtBy'>[], day: string) => {
+  const done = issues.filter((i) => i.status === 'done' && i.day === day)
+  return { closed: done.length, ola: done.filter((i) => i.builtBy).length }
+}
+
 export async function loadBoard(): Promise<BoardData> {
   const db = f2Supabase()
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
-  const [docs, state, issuesR, commitsR, claimsR] = await Promise.all([
+  const [docs, state, issuesR, commitsR, claimsR, ola] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG, LEARN_SLUG]),
     db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'steer_replay_attempt', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
     db.from('venture_state').select('key, value, at').like('key', 'claim:%'),
+    olaShas(db),
   ])
   if (docs.error) throw new Error(`venture_docs read failed: ${docs.error.message}`)
   if (claimsR.error) throw new Error(`venture_state read failed: ${claimsR.error.message}`)
@@ -367,7 +393,7 @@ export async function loadBoard(): Promise<BoardData> {
   const commits = (commitsR.data ?? []) as (Commit & { ignored: boolean })[]
   const byIssue = new Map<string, Commit[]>()
   for (const c of commits) if (c.issue_id) byIssue.set(c.issue_id, [...(byIssue.get(c.issue_id) ?? []), c])
-  const issues = issuesR.error ? null : (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => ({ ...i, links: i.links ?? [], commits: (byIssue.get(i.id) ?? []).sort((a, b) => a.at.localeCompare(b.at)) }))
+  const issues = issuesR.error ? null : (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => { const cs = (byIssue.get(i.id) ?? []).sort((a, b) => a.at.localeCompare(b.at)); return { ...i, links: i.links ?? [], commits: cs, builtBy: builtBy(cs, ola) } })
   const j = parseJournal(journalRow?.body ?? '')
   return {
     now: new Date().toISOString(),
@@ -403,9 +429,10 @@ export async function loadBoard(): Promise<BoardData> {
 /** Every issue of the project with its commits, for the tracker page and the permalinks. */
 export async function loadIssues(): Promise<Issue[] | null> {
   const db = f2Supabase()
-  const [issuesR, commitsR] = await Promise.all([
+  const [issuesR, commitsR, ola] = await Promise.all([
     db.from('venture_issues').select('*').eq('project', 'ola').order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id').not('issue_id', 'is', null).order('at'),
+    olaShas(db),
   ])
   if (issuesR.error) {
     if (missing(issuesR.error)) return null
@@ -414,7 +441,7 @@ export async function loadIssues(): Promise<Issue[] | null> {
   if (commitsR.error) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
   const byIssue = new Map<string, Commit[]>()
   for (const c of commitsR.data as Commit[]) byIssue.set(c.issue_id as string, [...(byIssue.get(c.issue_id as string) ?? []), c])
-  return (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => ({ ...i, links: i.links ?? [], commits: byIssue.get(i.id) ?? [] }))
+  return (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => ({ ...i, links: i.links ?? [], commits: byIssue.get(i.id) ?? [], builtBy: builtBy(byIssue.get(i.id) ?? [], ola) }))
 }
 
 export type NoteLink = { slug: string; title: string; label: string; at: string; what?: string }
@@ -490,10 +517,11 @@ export function firstLine(body: string): string {
 /** One issue with its commits and its Activity (null when schema 012 is not applied yet). */
 export async function loadIssue(id: string): Promise<{ issue: Issue; activity: Activity[] | null } | null> {
   const db = f2Supabase()
-  const [issueR, commitsR, actR] = await Promise.all([
+  const [issueR, commitsR, actR, ola] = await Promise.all([
     db.from('venture_issues').select('*').eq('id', id).maybeSingle(),
     db.from('venture_commits').select('sha, subject, at, issue_id').eq('issue_id', id).order('at'),
     db.from('venture_issue_activity').select('*').eq('issue_id', id).order('at'),
+    olaShas(db, id),
   ])
   if (issueR.error) {
     if (missing(issueR.error)) return null
@@ -503,7 +531,8 @@ export async function loadIssue(id: string): Promise<{ issue: Issue; activity: A
   if (commitsR.error) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
   if (actR.error && !missing(actR.error)) throw new Error(`venture_issue_activity read failed: ${actR.error.message}`)
   const i = issueR.data as Omit<Issue, 'commits'>
-  return { issue: { ...i, links: i.links ?? [], commits: (commitsR.data ?? []) as Commit[] }, activity: actR.error ? null : (actR.data as Activity[]) }
+  const cs = (commitsR.data ?? []) as Commit[]
+  return { issue: { ...i, links: i.links ?? [], commits: cs, builtBy: builtBy(cs, ola) }, activity: actR.error ? null : (actR.data as Activity[]) }
 }
 
 // ---------------------------------------------------------------- the status panel (OLA-164)

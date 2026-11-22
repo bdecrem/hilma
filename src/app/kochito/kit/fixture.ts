@@ -35,7 +35,7 @@ const issue = (num: number, f: Partial<Issue> & Pick<Issue, 'title' | 'area'>): 
 export function fixture(): BoardData {
   const now = T('2026-11-18', 11, 40)
   const done = DONE.map(([day, area, title, proof, h], n) =>
-    issue(200 - n, { title, area, proof, day, status: n === 9 ? 'dropped' : 'done', opened_at: T(day, Math.max(0, h - 3)), started_at: T(day, Math.max(0, h - 2)), finished_at: T(day, h, (n * 7) % 60), week: n % 3 === 0 ? 1 : null, what: 'Made-up example: one or two sentences on what changed and why it mattered.', commits: [{ sha: `a1b2c3d4e5f6${String(n).padStart(4, '0')}`, subject: `ola web: a made-up commit for ${title.toLowerCase()}`, at: T(day, h) }] }),
+    issue(200 - n, { title, area, proof, day, status: n === 9 ? 'dropped' : 'done', opened_at: T(day, Math.max(0, h - 3)), started_at: T(day, Math.max(0, h - 2)), finished_at: T(day, h, (n * 7) % 60), week: n % 3 === 0 ? 1 : null, builtBy: n % 4 === 1 ? { by: 'ola', model: 'moonshotai/Kimi-K3.1-Pro' } : null, what: 'Made-up example: one or two sentences on what changed and why it mattered.', commits: [{ sha: `a1b2c3d4e5f6${String(n).padStart(4, '0')}`, subject: `ola web: a made-up commit for ${title.toLowerCase()}`, at: T(day, h) }] }),
   )
   const plate = [
     issue(210, { title: 'Sign-in with a name and a password, a passkey optional', what: 'Made-up example: today a person signs in with a link by email, which fails on a phone without mail set up.\nA name and a password works everywhere; a passkey is offered after. See https://ola.cx for the page.', area: 'web', priority: 'P0', status: 'in_progress', who: 'builder 1', started_at: T('2026-11-18', 8, 10), week: 1 }),

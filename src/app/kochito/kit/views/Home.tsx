@@ -1,4 +1,4 @@
-import { openCounts, type BoardData } from '@/lib/venture/board'
+import { closedOn, openCounts, type BoardData } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { Health } from '../health'
 import { firstLink, inline } from '../inline'
@@ -47,6 +47,9 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
   const daysLeft = week ? Math.max(0, Math.round((Date.parse(`${week.to}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86400e3) + 1) : 0
   const tagged = week ? issues.filter((i) => i.week === week.n) : []
   const taggedDone = tagged.filter((i) => i.status === 'done').length
+  // the day's count (OLA-300): tickets closed today and the last seven days, and how many Ola built
+  const closedToday = closedOn(issues, today)
+  const closedWeek = [0, 1, 2, 3, 4, 5, 6].map((n) => closedOn(issues, shiftDay(today, -n))).reduce((a, b) => ({ closed: a.closed + b.closed, ola: a.ola + b.ola }), { closed: 0, ola: 0 })
 
   // learning: the two headline figures and the latest sweep in a line
   const sweep = sweepStats(d.sweeps, today)
@@ -191,6 +194,17 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
             ) : (
               <p className="bd-empty">No plan found.</p>
             )}
+            <a className="bd-week-line" href={`${href(base, '/issues')}?tab=done`}>
+              <span className="bd-cut">
+                Closed today: {closedToday.closed}, {closedToday.ola} built by Ola
+              </span>
+              <span className="m faint">
+                last 7 days: {closedWeek.ola} of {closedWeek.closed} by Ola
+              </span>
+              <span className="bar" aria-hidden="true">
+                <i style={{ width: closedWeek.closed ? `${Math.round((closedWeek.ola / closedWeek.closed) * 100)}%` : 0 }} />
+              </span>
+            </a>
           </section>
         </div>
         <section className="bd-sec" aria-labelledby="learn-h">

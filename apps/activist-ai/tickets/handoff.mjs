@@ -116,6 +116,7 @@ sh(`git worktree add -q --detach ${q(wt)} ${base}`, repo)
 let commit = ''
 try {
   sh(`git apply --index --whitespace=nowarn ${q(path.join(run.dir, 'change.diff'))}`, wt)
+  // "Built by Ola on <model>" opens the body: the board reads it to mark the ticket as Ola's (board.ts OLA_BUILT).
   const msg = `${olaSubject.slice(0, 300) || `the change for ${id}`}\n\nBuilt by Ola on ${MODELS[model].id} (Together), handed off by Kit; ${s.requests} model calls, ${minutes} min, $${usd}. Tests in its sandbox: ${testLine}. Not reviewed yet: the lead reviews, runs the checks and merges. [${id}]`
   writeFileSync(path.join(run.dir, 'commit-message.txt'), msg)
   sh(`git -c user.name=Ola -c user.email=ola@ola.cx commit -q -F ${q(path.join(run.dir, 'commit-message.txt'))}`, wt)
