@@ -20,7 +20,7 @@ node apps/activist-ai/tickets/trial.mjs --models reference,empty # self-test: th
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 --max-usd 30 [--run-usd 10] --time 1500 --tokens 3000000
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro --cases ola-351-ready --lean --max-usd 2.5 --run-usd 2.5   # the lean configuration (OLA-356)
 node apps/activist-ai/tickets/trial.mjs --report                 # pass count, cost and minutes per model
-node apps/activist-ai/tickets/test.mjs                           # the stops, refusals, cache pricing and lean config, offline (11 tests)
+node apps/activist-ai/tickets/test.mjs                           # the stops, refusals, cache pricing and lean config, offline (13 tests)
 ```
 
 **Spending stops (Nov 21, after the $45 morning).** Every run, trial or hand-off, stops itself after
@@ -50,6 +50,12 @@ about $45, pushed it over; OLA-346) and five of their six runs ended on Together
 not measured yet. Kimi K3.1 Pro is the ticket model (`_ticket_model`) until those runs are redone:
 `--models glm-5.3,deepseek-v4-pro,muse-spark --max-usd 30`. The hard case (OLA-283) beat every model
 at 3M tokens; the next round gives it 6M.
+
+**OpenRouter (OLA-370).** A model whose `models.json` entry has `provider: "openrouter"` gets a gateway
+pointed at https://openrouter.ai/api/v1 (`lib.mjs PROVIDERS`), its key read by `gateway.sh` from
+`~/.ola/openrouter.key` (mode 600, refused otherwise) into that gateway's environment only. For the
+trial and the hand-off; Ola's own gateway settings know nothing of it. Listed: `flint` (Recursive
+Flint 40B, the free listing) and `inkling-2-mini` (Inkling 2 Mini 26B), the two that fit the Mac Studio.
 
 Candidates (Nov 21, Together serverless): Kimi K3.1 Pro, DeepSeek V4 Pro, GLM-5.3, Muse Spark Open.
 Qwen3.7-Max is listed but Together refuses it on the serverless API ("the model server rejected the

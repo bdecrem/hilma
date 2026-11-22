@@ -25,6 +25,22 @@ export function tracker(args, script = process.env.OLA_TICKETS_TRACKER || path.j
 export const sh = (cmd, cwd) => execFileSync('/bin/sh', ['-c', cmd], { cwd, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 << 20 }).toString()
 export const q = (p) => JSON.stringify(p)
 export const portOf = (model) => 4460 + Object.keys(MODELS).filter((k) => !k.startsWith('_')).indexOf(model)
+
+// Where a ticket model is served (OLA-370): Together unless models.json gives the model a `provider`.
+// OpenRouter serves models no one else does (Recursive Flint, Inkling 2 Mini); its key is the file
+// ~/.ola/openrouter.key, which gateway.sh reads into that one gateway's environment and never prints.
+// For the ticket lane only: Ola's own gateway settings (~/.ola/gateway.env) do not know this.
+export const PROVIDERS = {
+  together: { base: 'https://api.together.xyz/v1', keyEnv: 'TOGETHER_API_KEY' },
+  openrouter: { base: 'https://openrouter.ai/api/v1', keyFile: '.ola/openrouter.key' },
+}
+export function upstreamOf(model, models = MODELS) {
+  const m = models[model]
+  if (!m || model.startsWith('_')) throw new Error(`unknown model ${model}`)
+  const name = m.provider || 'together'
+  if (!PROVIDERS[name]) throw new Error(`model ${model}: unknown provider ${name}`)
+  return { provider: name, ...PROVIDERS[name] }
+}
 export function freeGb() { return Number(sh(`df -k ${q(homedir())} | tail -1 | awk '{print $4}'`).trim()) / 1048576 }
 export function gatewayToken() {
   const f = path.join(root, '.gw/token')

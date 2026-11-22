@@ -5,11 +5,11 @@
 //   node apps/activist-ai/tickets/test.mjs
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { LEAN, cost, here, opencodeConfig, overLimit, runFolders, runOpencode, runTest, tracker } from './lib.mjs'
+import { LEAN, MODELS, cost, here, opencodeConfig, overLimit, runFolders, runOpencode, runTest, tracker, upstreamOf } from './lib.mjs'
 
 // A stand-in for opencode: one model call every 20 ms, each 200,000 tokens in and 1,000 out, until
 // it is killed or has made `steps` calls. At Kimi K3.1 Pro's prices ($2 in, $10 out) a call is $0.41.
@@ -118,4 +118,37 @@ test('the hand-off refuses to start without a test that decides', () => {
   const r = spawnSync(process.execPath, [path.join(here, 'handoff.mjs'), 'run', 'OLA-1', '--dry'], { encoding: 'utf8' })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /--test "<cmd>" is required/)
+})
+
+test('OLA-370: OpenRouter models go to OpenRouter with the key file, the rest to Together, priced from models.json', () => {
+  assert.deepEqual(upstreamOf('flint'), { provider: 'openrouter', base: 'https://openrouter.ai/api/v1', keyFile: '.ola/openrouter.key' })
+  assert.equal(upstreamOf('inkling-2-mini').provider, 'openrouter')
+  assert.deepEqual(upstreamOf('kimi-k3.1-pro'), { provider: 'together', base: 'https://api.together.xyz/v1', keyEnv: 'TOGETHER_API_KEY' })
+  assert.throws(() => upstreamOf('x', { x: { id: 'a', provider: 'elsewhere' } }), /unknown provider elsewhere/)
+  assert.throws(() => upstreamOf('_note'), /unknown model/)
+  assert.equal(MODELS.flint.id, 'recursive/flint-v1.0:free')
+  assert.equal(MODELS['inkling-2-mini'].id, 'thinkingmachines/inkling-2-mini')
+  const s = { tokens_in: 1_000_000, tokens_cached: 4_000_000, tokens_out: 100_000 }
+  assert.equal(cost('flint', s), 0)
+  assert.equal(cost('inkling-2-mini', s), +(0.075 + 4 * 0.015 + 0.1 * 0.3).toFixed(2)) // $0.17
+  assert.equal(opencodeConfig('flint', { lean: true }).providers.box.models.m.limit.context, 262144)
+})
+
+test('OLA-370: gateway.sh refuses an OpenRouter key file that others can read, and never prints the key', () => {
+  const home = realpathSync(mkdtempSync(path.join(tmpdir(), 'olt-gw-')))
+  mkdirSync(path.join(home, '.ola'))
+  const secret = 'sk-or-v1-test-' + 'f'.repeat(40)
+  const file = path.join(home, '.ola/openrouter.key')
+  writeFileSync(file, secret + '\n', { mode: 0o644 })
+  const run = (alias) => spawnSync(path.join(here, 'gateway.sh'), [alias], { encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home } })
+  const loose = run('flint')
+  assert.equal(loose.status, 1)
+  assert.match(loose.stdout, /must be mode 600/)
+  assert.ok(!(loose.stdout + loose.stderr).includes(secret))
+  rmSync(file)
+  const none = run('inkling-2-mini')
+  assert.equal(none.status, 1)
+  assert.match(none.stdout, /openrouter\.key not found/)
+  assert.match(run('no-such-model').stdout, /unknown model no-such-model/)
+  rmSync(home, { recursive: true, force: true })
 })
