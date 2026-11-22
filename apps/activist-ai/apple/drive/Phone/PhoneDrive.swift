@@ -188,7 +188,10 @@ final class PhoneDrive: XCTestCase {
       // The box must hold the whole sentence, line breaks included, before Send (OLA-275): the
       // keyboard's return key could send the first line alone.
       let norm = { (x: String) in x.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines) }
-      let inBox = (box.value as? String) ?? ""
+      // Looked up again: the box is a text field on one line and a text view once it holds two.
+      let boxes = app.textViews.allElementsBoundByIndex + app.textFields.allElementsBoundByIndex
+      let values = boxes.compactMap { $0.value as? String }
+      let inBox = values.first { norm($0) == norm(sentence) } ?? (composer().exists ? (composer().value as? String ?? "") : values.joined(separator: " | "))
       if norm(inBox) != norm(sentence) {
         let one = { (x: String) in "'" + String(x.replacingOccurrences(of: "\n", with: "⏎").prefix(120)) + "'" }
         throw Failed(why: "the box holds \(one(inBox)), not sentence \(n) \(one(sentence)) (a line break may have sent the first line)")
