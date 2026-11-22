@@ -247,14 +247,16 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     return counting
   }
   // Stopped here, the idle stop's way: its event stream does not wake it, the next request does.
-  function sleep(slug, said) {
+  // `what` names the stop in a failure's log line: 'idle stop' for the idle stop, as before OLA-240
+  // (frontdesk/test/hostile-active.mjs counts a stop attempt by that line).
+  function sleep(slug, said, what = 'idle stop') {
     asleep.add(slug)
     reset(slug)
     const p = run('stop', slug)
       .then(() => log(`${slug}: ${said}`))
       .catch((e) => {
         asleep.delete(slug)
-        log(`${slug}: stop failed (${e.code ?? 'error'})`)
+        log(`${slug}: ${what} failed (${e.code ?? 'error'})`)
         throw e
       })
       .finally(() => stopping.delete(slug))
@@ -319,7 +321,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       }
       return out
     },
-    park: (slug) => sleep(slug, 'stopped for an update\'s tests'),
+    park: (slug) => sleep(slug, 'stopped for an update\'s tests', 'stop for an update'),
     wake: (slug) => ensureRunning(slug),
   })
   const parkTimer = setInterval(() => {
