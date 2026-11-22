@@ -48,6 +48,7 @@ const runUsd = Number(args['run-usd'] || 10)
 const lean = args.lean === true
 const piecesMode = args.pieces === true
 const repeat = Number(args.repeat || 1)
+let started = 0
 if (piecesMode) for (const c of cases) if (!PIECES[c.id]) die(`case ${c.id} has no pieces in pieces/pieces.mjs`)
 // --steps n (with --lean, OLA-370): the step cap instead of 60; the row records it.
 const steps = args.steps ? Number(args.steps) : null
@@ -68,7 +69,8 @@ function prepare(c, model) {
   if (free < MIN_FREE_GB) throw new Error(`only ${free.toFixed(1)} GB free on this disk; a run needs ${MIN_FREE_GB} (nothing started)`)
   if (!c.paths?.length) throw new Error(`case ${c.id} has no paths: a run copies only the folders its ticket needs`)
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-  const run = runFolders(path.join(root, 'runs', `${c.id}-${model}-${stamp}`))
+  // --repeat starts runs in the same second: each gets its own folder (OLA-370)
+  const run = runFolders(path.join(root, 'runs', `${c.id}-${model}-${stamp}${repeat > 1 ? `-${++started}` : ''}`))
   const { work } = run
   // Only the folders the ticket needs (cases.json `paths`): a whole copy of the repo is gigabytes,
   // and twelve of them filled the mini's disk on Nov 21.
