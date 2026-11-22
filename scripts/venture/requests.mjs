@@ -10,7 +10,7 @@
 //   node scripts/venture/requests.mjs --dry [--day D]   match and print; writes nothing anywhere (no ticket, no
 //                                                       state, not even this machine's export of typed messages)
 //   node scripts/venture/requests.mjs show [--day D]    what is stored for the day
-//   for tests: --messages <file.json> (the day's messages instead of steers.mjs --collect --json) and
+//   for tests: --prompt-only (print the matcher's question and stop), --messages <file.json> (the day's messages instead of steers.mjs --collect --json) and
 //              --answer <file.json> (the matcher's answer instead of a call); VENTURE_STEERS_SCRIPT names
 //              another collector; with VENTURE_TRACKER_FAKE the tracker is a copy (_fakedb.mjs)
 //
@@ -208,7 +208,8 @@ async function run() {
   if (msgs.length) {
     if (opt('--answer')) answer = JSON.parse(readFileSync(opt('--answer'), 'utf8'))
     else {
-      const user = `The day: ${day} (Pacific).\n\nThe tickets (id [status] title: description):\n${list.map((t) => `${t.id} [${t.status}${t.status === 'done' && t.day ? ` ${t.day}` : ''}] ${t.title}${t.what ? `: ${String(t.what).replace(/\s+/g, ' ').slice(0, 220)}` : ''}`).join('\n')}\n\nThe day's commits (Pacific time, subject):\n${commits().join('\n') || '(none)'}\n\nBart's messages that day (number, time, where; after "Kit before:" the end of what the agent had said just before):\n${msgs.map((m) => `#${m.id} ${hhmm(m.at)} ${m.source}${m.kit ? `\nKit before: ${String(m.kit).replace(/\s+/g, ' ').slice(-600)}` : ''}\nBart: ${String(m.text).slice(0, 6000)}`).join('\n\n')}`
+      const user = `The day: ${day} (Pacific).\n\nThe tickets (id [status] title: description):\n${list.map((t) => `${t.id} [${t.status}${t.status === 'done' && t.day ? ` ${t.day}` : ''}] ${t.title}${t.what ? `: ${String(t.what).replace(/\s+/g, ' ').slice(0, 220)}` : ''}`).join('\n')}${before.size ? `\n\nTickets an earlier run of this match opened for requests of this same day: ${[...before].join(', ')}. The request each was opened for gets outcome "ticket" with that id, even when it was done or answered later that day.` : ''}\n\nThe day's commits (Pacific time, subject):\n${commits().join('\n') || '(none)'}\n\nBart's messages that day (number, time, where; after "Kit before:" the end of what the agent had said just before):\n${msgs.map((m) => `#${m.id} ${hhmm(m.at)} ${m.source}${m.kit ? `\nKit before: ${String(m.kit).replace(/\s+/g, ' ').slice(-600)}` : ''}\nBart: ${String(m.text).slice(0, 6000)}`).join('\n\n')}`
+      if (args.includes('--prompt-only')) return console.log(user) // for tests: the question, never asked
       const r = await askClaude({ system: SYSTEM, user, schema: SCHEMA, effort: 'medium' }).catch((e) => fail(`the matcher failed (on the Max login, _claude.mjs): ${e.message}`))
       answer = r.json
     }
@@ -239,7 +240,14 @@ async function run() {
   for (const id of before) if (!requests.some((r) => r.ticket === id)) {
     // the same request under another outcome (done or answered later that evening): it stays the opened one
     const w = prev.requests?.find((r) => r.ticket === id)
-    const same = w && requests.find((r) => !r.opened && (r.at === w.at || r.messages.some((x) => (w.messages ?? []).includes(x))))
+    // found by the first message's time (message numbers shift between runs), only among requests with no
+    // ticket, and only when exactly one such request starts at that message (two asks in one message are ambiguous)
+    const cands = w ? requests.filter((r) => !r.opened && r.outcome !== 'ticket' && r.at === w.at) : []
+    // (or, when several do, the one whose words are closest to the earlier run's sentence, if one is clearly closest)
+    const words = (t) => new Set(String(t).toLowerCase().match(/[a-z0-9]{3,}/g) ?? [])
+    const score = (r) => { const a = words(w.request); return [...words(r.request)].filter((x) => a.has(x)).length }
+    const ranked = cands.map((r) => [score(r), r]).sort((x, y) => y[0] - x[0])
+    const same = ranked.length === 1 ? ranked[0][1] : ranked.length > 1 && ranked[0][0] > ranked[1][0] ? ranked[0][1] : null
     if (same) { same.note = `${same.note ? `${same.note}; ` : ''}${id} was opened for it by the run of ${hhmm(prev.at)}; this run put it as ${same.outcome}`; same.outcome = 'ticket'; same.ticket = id; same.opened = true; continue }
     const was = w ?? { time: hhmm(prev.at), at: prev.at, source: 'earlier run', messages: [], request: `the request ${id} was opened for`, outcome: 'new', ticket: id, why: `opened by the run of ${hhmm(prev.at)}` }
     requests.push({ ...was, opened: true, note: `kept from the run of ${hhmm(prev.at)}: this run did not name it` })
