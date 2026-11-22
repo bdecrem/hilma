@@ -118,7 +118,9 @@ the voice and text replies carry against the 1,000,000 budget; `wc -l apps/ventu
    voice and text replies list it and never load it: `src/lib/venture/notes.ts`). The state file
    must read in one screen or two.
 2. **The notes are about 8,700 characters over budget** (Nov 20, 1 pm: 1,008,670 of 1,000,000).
-   Step 1 alone brings them under; check with notes-check.ts after `sync.mjs push`.
+   Cutting NOW.md does not bring them under (measured Nov 21: 28,251 characters moved out, the
+   figure fell by 273): the loader fills the room with older files, and the figure adds the list
+   of files left out. The measure is fixed on OLA-369; until then, read it as unchanged.
 3. Each move, merge and correction is a line in the entry's `cleaned`.
 
 ## 2. Study each thing that went wrong: five questions
