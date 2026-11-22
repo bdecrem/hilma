@@ -195,7 +195,7 @@
     },
     {
       "id": "post",
-      "what": "Post on social media",
+      "what": "Post on social media (a tweet, a post on Instagram, Facebook, Bluesky or any other site), even when the person only says what to post",
       "cloud": {
         "notOffered": "Ola can't post on social media. Here is the post, ready for you to copy."
       },
