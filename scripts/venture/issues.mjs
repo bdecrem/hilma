@@ -101,7 +101,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 17
+export const TRACKER_VERSION = 18
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -497,9 +497,12 @@ const MINI = ['admin@171.66.240.175', 'admin@100.95.51.98']
 // OLA-264, Nov 20: on the test server itself (the runner's own runs) ssh to its own addresses is refused
 // (no key to itself), so every pass printed "live version unknown". Here the same command runs locally.
 const HERE = existsSync(`${process.env.HOME}/ola-staging/current`)
-function fromMini(what, remote, parse) {
+// OLA-278: what decides WORKS (the live release, the request tests' results) is never read from a cache:
+// a file in the temp folder written with the current time and the mini's name passed every test above, so
+// those two are asked fresh at each command (cached: false) and a cache file for them is ignored.
+function fromMini(what, remote, parse, { cached = true } = {}) {
   const cache = `${tmpdir()}/venture-${what}.json`
-  try {
+  if (cached) try {
     const c = JSON.parse(readFileSync(cache, 'utf8'))
     if (Date.now() - c.at < 120e3) {
       // OLA-251, third pass: a cache the tracker did not write as it is (a time ahead of the clock, a file
@@ -514,7 +517,7 @@ function fromMini(what, remote, parse) {
     try {
       const out = execFileSync('/bin/sh', ['-c', remote], { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
       const c = { at: Date.now(), value: parse(out), from: 'local' }
-      try { writeFileSync(cache, JSON.stringify(c)) } catch {}
+      if (cached) try { writeFileSync(cache, JSON.stringify(c)) } catch {}
       return c
     } catch (e) {
       return { at: Date.now(), value: null, error: String(e.stderr || e.message).trim().split('\n').pop().slice(0, 160) }
@@ -524,7 +527,7 @@ function fromMini(what, remote, parse) {
     try {
       const out = execFileSync('ssh', sshArgs(host, remote, 8), { encoding: 'utf8', timeout: 20000, maxBuffer: 32e6, stdio: ['ignore', 'pipe', 'pipe'] })
       const c = { at: Date.now(), value: parse(out), from: host }
-      try { writeFileSync(cache, JSON.stringify(c)) } catch {}
+      if (cached) try { writeFileSync(cache, JSON.stringify(c)) } catch {}
       return c
     } catch (e) {
       err = String(e.stderr || e.message).trim().split('\n').pop().slice(0, 160)
@@ -532,8 +535,8 @@ function fromMini(what, remote, parse) {
   }
   return { at: Date.now(), value: null, error: err || 'the test server did not answer' }
 }
-const liveRelease = () => (process.env.VENTURE_LIVE_RELEASE ? { value: process.env.VENTURE_LIVE_RELEASE } : fromMini('live-release', 'readlink ~/ola-staging/current', (o) => /([0-9a-f]{12})\s*$/.exec(o.trim())?.[1] ?? null))
-const asksCases = () => (process.env.VENTURE_ASKS_FILE ? { value: JSON.parse(readFileSync(process.env.VENTURE_ASKS_FILE, 'utf8')) } : fromMini('asks-latest', 'cat ~/ola-staging/asks-latest.json', (o) => JSON.parse(o)))
+const liveRelease = () => (process.env.VENTURE_LIVE_RELEASE ? { value: process.env.VENTURE_LIVE_RELEASE } : fromMini('live-release', 'readlink ~/ola-staging/current', (o) => /([0-9a-f]{12})\s*$/.exec(o.trim())?.[1] ?? null, { cached: false }))
+const asksCases = () => (process.env.VENTURE_ASKS_FILE ? { value: JSON.parse(readFileSync(process.env.VENTURE_ASKS_FILE, 'utf8')) } : fromMini('asks-latest', 'cat ~/ola-staging/asks-latest.json', (o) => JSON.parse(o), { cached: false }))
 // A check about the test server: any check of a ticket in the server lane, and a product ticket's checks
 // in a cloud project (the Mac and iPhone apps use the server there; Ola on his Mac does not).
 const onServer = (r, a, c = null) => laneOf(r, a.lane) === 'server' || (PRODUCT.has(r.area) && (!c || /^cloud-/.test(String(c.at))))
