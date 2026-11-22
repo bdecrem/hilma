@@ -30,7 +30,7 @@ import { fpOf } from './_sweepfp.mjs'
 import { sshArgs } from './_olassh.mjs'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
-import { getState, setState, sweepDue, pacificDay } from './_state.mjs'
+import { getState, setState, sweepDue, pacificDay, pacificDayEnd, matchEarly } from './_state.mjs'
 import { OWED_DAYS, loadWeaknesses, owedFixes, privPath, refuseOnCopy, unconfirmedCorrections, unnumberedCorrections, weaknessStatus, WEAK_FILE } from './_weak.mjs'
 import { ideaTicketProblems, openCounts, unbuiltIdeas } from './_plate.mjs'
 import { overridesOf, writeOverride } from './_overrides.mjs'
@@ -410,7 +410,12 @@ if (cmd === '--wait') {
     }
   }
   // OLA-213: the day's requests are matched to tickets before the entry is posted; the counts are the tracker's
-  const req = (await getState(db, 'requests'))?.value?.days?.[e.day]
+  const reqDays = (await getState(db, 'requests'))?.value?.days ?? {}
+  const req = reqDays[e.day]
+  // an earlier day matched before it ended (the evening review, from 6 pm) left his later requests that
+  // evening without an outcome: it is matched again before the next day posts (requests.mjs does it first)
+  const early = Object.keys(reqDays).filter((d) => d < e.day && Date.parse(`${d}T12:00:00Z`) >= Date.parse(`${e.day}T12:00:00Z`) - 7 * 86400e3 && matchEarly(reqDays[d]))
+  if (early.length) die(`the entry was not stored: the match of ${early.map((d) => `${d} ran at ${new Date(reqDays[d].at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}, before that day ended`).join('; ')}, so Bart's requests later that evening have no ticket yet. Run node scripts/venture/requests.mjs --day ${e.day} (it matches ${early.length > 1 ? 'those days' : 'that day'} again first), then post again.`)
   if (!req) die(`the entry was not stored: Bart's requests of ${e.day} are not matched to tickets yet. Run node scripts/venture/requests.mjs --day ${e.day} (it opens a ticket for each request that has none; OLA-213), then post again.`)
   // a failure of requests.mjs itself is said plainly, with the two ways on; it never blocks the review silently
   const goOn = opt('--requests-failed')
@@ -487,13 +492,24 @@ if (cmd === '--wait') {
     if (r.error) die(`venture_issues: ${r.error.message}`)
     entry.openIssues = openCounts(r.data, Date.now(), entry.day)
   }
+  // an earlier entry whose day was matched again after it ended shows the final counts (OLA-213)
+  // only an entry whose fingerprint still holds is refreshed (and gets its new one): a changed one stays named
+  const refreshed = new Set()
+  const fps0 = (await getState(db, 'sweeps_fp'))?.value ?? {}
+  for (const d of old.days) {
+    const r = reqDays[d.day]
+    if (d.day === entry.day || !d.requests || d.requests.failed || !r || r.failed || matchEarly(r) || d.requests.at === r.at || fps0[d.day] !== fpOf(d)) continue
+    d.requests = { n: r.counts.requests, matched: r.counts.matched, done: r.counts.done ?? 0, answered: r.counts.answered ?? 0, opened: r.opened, at: r.at }
+    refreshed.add(d.day)
+    console.log(`${d.day}: its requests line now shows the match of ${r.at} (${r.counts.requests} requests)`)
+  }
   const days = [entry, ...old.days.filter((d) => d.day !== entry.day)].sort((a, b) => b.day.localeCompare(a.day))
   const value = { at: new Date().toISOString(), since: [old.since, entry.day].filter(Boolean).sort()[0], days }
   await setState(db, 'sweeps', value)
   // fingerprints: this entry's new one, the others kept (a day with none yet gets its present one)
   {
     const fps = (await getState(db, 'sweeps_fp'))?.value ?? {}
-    await setState(db, 'sweeps_fp', Object.fromEntries(days.map((d) => [d.day, d.day === entry.day ? fpOf(entry) : fps[d.day]]).filter(([, f]) => f)))
+    await setState(db, 'sweeps_fp', Object.fromEntries(days.map((d) => [d.day, d.day === entry.day || refreshed.has(d.day) ? fpOf(d) : fps[d.day]]).filter(([, f]) => f)))
   }
   const all = days.flatMap((d) => [...d.kit, ...d.ola])
   console.log(`stored ${entry.day}: ${entry.kit.length} for Kit, ${entry.ola.length} for Ola, ${entry.open.length} open`)

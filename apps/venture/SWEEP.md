@@ -266,10 +266,9 @@ Nov 18 the ledger held 9 corrections for the day and the re-read found 27.
 ### Every request has a ticket
 
 On Nov 19 Bart had to ask again for the Mac Cloud setting ("BAD FAIL THAT I HAVE TO REMIND YOU
-AGAIN", correction 90): an earlier request never became a ticket (OLA-213). After his last message
-of the day, run
+AGAIN", correction 90): an earlier request never became a ticket (OLA-213). Run
 
-    node scripts/venture/requests.mjs --day 2026-11-18
+    node scripts/venture/requests.mjs --day <the day being reviewed>
 
 It reads what he typed, texted and said that day (the same messages the grader reads), and gives
 each request one outcome with its reason: on a ticket (an existing ticket carries it), done the
@@ -282,7 +281,10 @@ hour (run `steers.mjs --export` there, then rerun). It is one question
 to Claude Opus on the machine's Max login, never the API key; `--dry` writes nothing anywhere.
 `gather` prints the result; `sweep.mjs post` refuses a day that was not matched and stores the
 counts with the entry, which the Learning page shows ("Requests from Bart: N, each accounted
-for"). A rerun opens nothing twice. When the tool itself fails (the collector, the model call, a
+for"). A rerun opens nothing twice, and a ticket an earlier run opened counts once, as opened. A
+match run before the day ended (the review starts at 6 pm; on Nov 21 he typed until 11:22 pm) is
+early: the next real run matches that day again first, `post` refuses the next day while an earlier
+day's match is early, and posting refreshes the earlier entry's line with the final counts. When the tool itself fails (the collector, the model call, a
 crash), the failure is stored and `post` says so with the two ways on: fix the cause and rerun it,
 or post with `--requests-failed "<why the review goes ahead without it>"`, and the entry says the
 requests were not matched. Read the opened tickets: one that is not a request is dropped with the

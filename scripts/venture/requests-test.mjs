@@ -91,11 +91,24 @@ try {
     assert.deepEqual(s.requests.map((x) => `${x.outcome} ${x.ticket}`), ['ticket OLA-1', 'answered null', 'ticket OLA-2', 'done null', 'new OLA-3'])
   })
 
-  ok('a rerun matches the opened ticket and opens nothing twice', () => {
+  ok('a rerun matches the opened ticket and opens nothing twice, counting it once, as opened (Nov 22: 24 parts of 23)', () => {
     const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-3'))
     assert.equal(r.status, 0, r.stderr)
     assert.equal(db().venture_issues.length, 3)
-    assert.deepEqual(db().venture_state.find((x) => x.key === 'requests').value.days[DAY].counts, { requests: 5, matched: 3, done: 1, answered: 1, opened: 1 })
+    const s = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.deepEqual(s.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 })
+    assert.deepEqual(s.opened, ['OLA-3'])
+    assert.equal(s.requests.find((x) => x.ticket === 'OLA-3').opened, true)
+  })
+
+  ok('a rerun that no longer names the opened ticket keeps it listed, and the counts still add up', () => {
+    const fewer = file('answer-fewer.json', { requests: JSON.parse(readFileSync(answer(null), 'utf8')).requests.slice(0, 4) })
+    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', fewer)
+    assert.equal(r.status, 0, r.stderr)
+    const s = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.deepEqual(s.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 })
+    assert.match(s.requests.find((x) => x.ticket === 'OLA-3').note, /kept from the run of/)
+    assert.equal(db().venture_issues.length, 3)
   })
 
   ok('a ticket id the matcher made up counts as no ticket', () => {
@@ -103,6 +116,31 @@ try {
     assert.equal(r.status, 0, r.stderr)
     assert.match(r.stdout, /1 would be opened/)
     assert.match(r.stdout, /the matcher named OLA-99, which is not in the list/)
+  })
+
+  ok('a collector that read no machine and no message is a failure, never a quiet day', () => {
+    const z = node({ STUB_MESSAGES: file('nothing.json', []) }, 'requests.mjs', '--day', '2026-11-17', '--answer', answer(null))
+    assert.equal(z.status, 1)
+    assert.match(z.stderr, /the collector read no machine and no message/)
+    assert.ok(db().venture_state.find((x) => x.key === 'requests').value.days['2026-11-17'].failed, 'stored as failed')
+  })
+
+  ok('a match run before the day ended is matched again first, and post waits for it (Nov 21: matched at 6:30 pm, he typed until 11:22 pm)', () => {
+    const st = db()
+    const row = st.venture_state.find((x) => x.key === 'requests')
+    row.value.days[DAY] = { ...row.value.days[DAY], at: '2026-11-20T02:30:00Z', final: false }
+    writeFileSync(fake, JSON.stringify(st))
+    const p = node({}, 'sweep.mjs', 'post', file('entry-next.json', { day: '2026-11-20', summary: 'the next made-up day' }), '--dry')
+    assert.equal(p.status, 1)
+    assert.match(p.stderr, /the match of 2026-11-19 ran at 6:30 PM, before that day ended, so Bart's requests later that evening have no ticket yet\. Run node scripts\/venture\/requests\.mjs --day 2026-11-20/)
+    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', '2026-11-20', '--answer', answer('OLA-3'))
+    assert.match(r.stdout, /2026-11-19: its match ran at 6:30 pm, before the day ended; matching it again first/)
+    const again = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.equal(again.final, true)
+    assert.ok(Date.parse(again.at) > Date.parse('2026-11-20T08:00:00Z'))
+    assert.deepEqual(again.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 }, 'the rerun opened nothing twice')
+    const p2 = node({}, 'sweep.mjs', 'post', join(dir, 'entry-next.json'), '--dry')
+    assert.doesNotMatch(p2.stderr, /before that day ended/)
   })
 
   ok('a failure of the tool: --dry stores nothing; a real run stores it; post names it and the two ways on', () => {

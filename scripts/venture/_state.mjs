@@ -30,6 +30,13 @@ export const beat = async (db, what) => {
 // The daily sweep (scripts/venture/sweep.mjs, apps/venture/SWEEP.md): the Pacific days that still
 // need one. A day is due from 6 pm of that day; every day since the first sweep counts.
 export const pacificDay = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+/** The moment a Pacific day ends (the next day's midnight, PST or PDT), in ms. */
+export const pacificDayEnd = (day) => {
+  const next = new Date(Date.parse(`${day}T12:00:00Z`) + 86400e3).toISOString().slice(0, 10)
+  return [7, 8].map((h) => Date.parse(`${next}T0${h}:00:00Z`)).find((t) => pacificDay(t) === next && pacificDay(t - 1) === day) ?? Date.parse(`${next}T08:00:00Z`)
+}
+/** A day's stored match (requests.mjs) that ran before the day ended: requests he made after it have no outcome. */
+export const matchEarly = (d) => !!d && !d.failed && Date.parse(d.at) < pacificDayEnd(d.day)
 export async function sweepDue(db) {
   const s = (await getState(db, 'sweeps'))?.value
   if (!s?.since) return []

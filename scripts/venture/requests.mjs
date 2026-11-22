@@ -17,6 +17,11 @@
 // Each request gets one outcome: "ticket" (an existing ticket carries it), "done" (finished the same
 // day), "answered" (a question answered that day), or "new" (still wanted at the end of the day and no
 // ticket carries it): only "new" opens a ticket, and every request is listed with its reason.
+// A match run before the day ended (the evening review, from 6 pm) is early: whatever he asked later
+// that evening has no outcome yet. So a real run first reruns each of the three days before it whose
+// stored match is early, and `sweep.mjs post` refuses a day while an earlier day's match is early
+// (Nov 22: the Nov 21 match ran at 6:30 pm with 13 requests; he typed until 11:22 pm, 24 requests).
+// A rerun of a day keeps the tickets an earlier run opened, and counts each once, as opened.
 // A run that fails for its own reasons (the collector, the model call, a crash) is stored as failed, so
 // `sweep.mjs post` says so and names the two ways on; a --dry run stores nothing, its failure included.
 // What he said comes from the same place as the grader's (steers.mjs --collect: what he typed in this
@@ -30,7 +35,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { askClaude } from './_claude.mjs'
-import { getState, setState, pacificDay } from './_state.mjs'
+import { getState, setState, pacificDay, pacificDayEnd, matchEarly } from './_state.mjs'
 import { fakeClient } from './_fakedb.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -60,7 +65,7 @@ if (args[0] === 'show') {
   if (!d) (console.error(`${day}: not matched yet (node scripts/venture/requests.mjs --day ${day})`), process.exit(1))
   if (d.failed) (console.log(`${day}: FAILED at ${d.failed.at}: ${d.failed.error}`), process.exit(1))
   console.log(`${day}: ${d.counts.requests} requests in ${d.messages} messages: ${d.counts.matched} on a ticket, ${d.counts.done} done that day, ${d.counts.answered} answered, ${d.counts.opened} opened (${d.at})`)
-  for (const r of d.requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${r.outcome.padEnd(8)} ${r.ticket ?? ''}${r.opened ? ' (opened)' : ''}  ${r.request}  [${r.why}]`)
+  for (const r of d.requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${(r.opened ? "opened" : r.outcome).padEnd(8)} ${r.ticket ?? ''}${r.opened ? ' (opened)' : ''}  ${r.request}  [${r.why}]`)
   process.exit(0)
 }
 
@@ -103,6 +108,8 @@ function messages() {
     if (r.status !== 0 || !existsSync(out)) fail(`Bart's messages could not be read (steers.mjs --collect): ${(r.stderr || r.stdout || '').trim().split('\n').pop()}`)
     const j = JSON.parse(readFileSync(out, 'utf8'))
     if (!Array.isArray(j.messages) || !Array.isArray(j.machines)) fail('the collector gave no list of messages and machines')
+    // nothing read at all is a failure of the collector, never a quiet day (a quiet day still lists its machines)
+    if (!j.messages.length && !j.machines.length) fail('the collector read no machine and no message (steers.mjs --collect gave an empty list)')
     machineCheck(j.machines, j.host)
     return j.messages
   } finally {
@@ -176,7 +183,24 @@ function checkAnswer(answer, msgs, list) {
   return out
 }
 
+/** A real run first reruns the three days before this one whose stored match ran before that day ended. */
+async function earlierDays() {
+  if (dry || opt('--messages') || args.includes('--no-earlier')) return
+  const days = (await getState(db, 'requests'))?.value?.days ?? {}
+  for (let k = 3; k >= 1; k--) {
+    const d = new Date(Date.parse(`${day}T12:00:00Z`) - k * 86400e3).toISOString().slice(0, 10)
+    if (!matchEarly(days[d]) || Date.now() < pacificDayEnd(d)) continue
+    console.log(`${d}: its match ran at ${hhmm(days[d].at)}, before the day ended; matching it again first`)
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--day', d, '--no-earlier', ...(opt('--answer') ? ['--answer', opt('--answer')] : [])], { encoding: 'utf8', env: process.env })
+    process.stdout.write((r.stdout ?? '').split('\n').map((l) => (l ? `  ${l}` : l)).join('\n'))
+    if (r.status !== 0) console.error(`  ${d} failed again: ${(r.stderr || '').trim().split('\n').pop()} (sweep.mjs post names it)`)
+  }
+}
+
 async function run() {
+  await earlierDays()
+  const prev = (await getState(db, 'requests'))?.value?.days?.[day]
+  const before = new Set(prev?.failed ? [] : prev?.opened ?? [])
   const msgs = messages()
   const list = await tickets()
   let answer = { requests: [] }
@@ -204,22 +228,33 @@ async function run() {
     r.opened = true
     opened.push(id)
   }
+  // a ticket an earlier run of this day opened is that night's opened ticket, not one it already had
+  for (const r of found) if (r.outcome === 'ticket' && before.has(r.ticket)) r.opened = true
   const requests = found.map((r) => {
     const m = byNum.get(r.messages[0])
     return { time: hhmm(m.at), at: m.at, source: m.source, messages: r.messages, request: r.request.trim(), outcome: r.outcome, ticket: r.ticket, opened: !!r.opened, why: r.why, ...(r.outcome === 'new' ? { title: r.title, area: r.area } : {}), ...(r.note ? { note: r.note } : {}) }
   })
-  const n = (o) => requests.filter((r) => r.outcome === o).length
-  console.log(`${day}: ${requests.length} requests in ${msgs.length} messages: ${n('ticket')} on a ticket, ${n('done')} done that day, ${n('answered')} answered, ${n('new')} ${dry ? 'would be opened' : `opened${opened.length ? ` (${opened.join(', ')})` : ''}`}`)
-  for (const r of requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${r.outcome.padEnd(8)} ${r.outcome === 'new' ? (dry ? `would open "${r.title}" (${r.area})` : `${r.ticket} "${r.title}"`) : r.ticket ?? ''}  ${r.request}  [${r.why}]${r.note ? `  [${r.note}]` : ''}`)
+  // an earlier run's opened ticket this run did not name stays listed, with that run's line
+  for (const id of before) if (!requests.some((r) => r.ticket === id)) {
+    const was = prev.requests?.find((r) => r.ticket === id) ?? { time: hhmm(prev.at), at: prev.at, source: 'earlier run', messages: [], request: `the request ${id} was opened for`, outcome: 'new', ticket: id, why: `opened by the run of ${hhmm(prev.at)}` }
+    requests.push({ ...was, opened: true, note: `kept from the run of ${hhmm(prev.at)}: this run did not name it` })
+  }
+  // one opened ticket is one request opened; another request the matcher put on it had a ticket by then
+  { const seen = new Set(); for (const r of requests) if (r.opened) { if (seen.has(r.ticket)) { r.opened = false; r.outcome = 'ticket' } else seen.add(r.ticket) } }
+  const n = (o) => requests.filter((r) => r.outcome === o && !r.opened).length
+  const nOpened = requests.filter((r) => r.opened).length
+  console.log(`${day}: ${requests.length} requests in ${msgs.length} messages: ${n('ticket')} on a ticket, ${n('done')} done that day, ${n('answered')} answered, ${dry ? `${n('new')} would be opened` : `${nOpened} opened${nOpened ? ` (${requests.filter((r) => r.opened).map((r) => r.ticket).join(', ')})` : ''}`}`)
+  for (const r of requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${(r.opened ? "opened" : r.outcome).padEnd(8)} ${r.outcome === 'new' ? (dry ? `would open "${r.title}" (${r.area})` : `${r.ticket} "${r.title}"`) : r.ticket ?? ''}  ${r.request}  [${r.why}]${r.note ? `  [${r.note}]` : ''}`)
   if (dry) return console.log('--dry: nothing opened, nothing stored, nothing exported')
   const old = (await getState(db, 'requests'))?.value ?? { days: {} }
-  const prev = old.days?.[day]
-  // a rerun keeps the tickets an earlier run of the same day opened
-  const openedAll = [...new Set([...(prev?.opened ?? []), ...opened])]
+  // a rerun keeps the tickets an earlier run of the same day opened, each counted once, as opened
+  const openedAll = [...new Set([...before, ...opened])]
   const counts = { requests: requests.length, matched: n('ticket'), done: n('done'), answered: n('answered'), opened: openedAll.length }
-  const stored = { day, at: new Date().toISOString(), messages: msgs.length, requests, opened: openedAll, counts }
+  if (counts.matched + counts.done + counts.answered + counts.opened !== counts.requests) fail(`the counts do not add up (${JSON.stringify(counts)}): requests.mjs is wrong, nothing stored`)
+  const at = new Date().toISOString()
+  const stored = { day, at, final: !matchEarly({ day, at }), messages: msgs.length, newest: msgs.map((m) => m.at).sort().pop() ?? null, requests, opened: openedAll, counts }
   await setState(db, 'requests', { at: stored.at, days: { ...(old.days ?? {}), [day]: stored } })
-  console.log(`stored in venture_state "requests" for ${day}; sweep.mjs post puts the counts in the day's entry`)
+  console.log(`stored in venture_state "requests" for ${day}; sweep.mjs post puts the counts in the day's entry${stored.final ? '' : `; the day is not over, so the next run (or tomorrow's) matches it again`}`)
 }
 
 try {
