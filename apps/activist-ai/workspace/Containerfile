@@ -78,6 +78,8 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-65 (OLA-244): a change to a published page keeps its file name and never edits the publish
+# copy; Ola always says the change is not public yet (the publish skill 7, AGENTS.md). Builds on 2.3.2-64.
 # 2.3.2-64 (OLA-244): asked only to change a page that is published, Ola changes it and does not
 # publish (the publish skill 6 and AGENTS.md); ola-get hands out <folder>/.ola-source.json, the one
 # hidden name, so the front desk knows which page a site/ copy came from. Builds on 2.3.2-63.

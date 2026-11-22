@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "6"
+  ola/version: "7"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -25,10 +25,14 @@ and copies can outlive a takedown. So three things hold in every case:
    allowed to work without asking. A yes for one list is not a yes for a changed list.
 4. **Publish only when the person asks to publish.** A change to a page that is published
    ("change the page so it says …", "make the title bigger") is a request to change the page, not
-   to publish it, even in a project or a conversation that published before. Make the change, do
-   not run `ola-publish` (or `ola-publish publish`), and end with one sentence: the page is changed
-   in the project, the address still shows the earlier version, and "publish it again" puts the
-   change up. Do not ask "shall I publish it?" either: they say when.
+   to publish it, even in a project or a conversation that published before. Make the change in
+   the page's own file and keep its name: never rename the page (Birch made into Aspen stays
+   `birch.html`), never make a new file for it, and never edit the publish copy (`site/`, or any
+   folder holding `.ola-source.json`): `prepare` makes that copy again at the next publish. Do not
+   run `ola-publish` (or `ola-publish publish`), and always end with one sentence, also when you
+   did not load this skill for the change: the change is not public yet, the address still shows
+   the earlier version, and "publish it again" puts it up. Do not ask "shall I publish it?"
+   either: they say when.
 
 ## Step 1: which runtime, always first
 
@@ -142,7 +146,10 @@ ola-publish site --files index.html,style.css,picture.png
 - **Publish again** only when the person asks for it ("publish it again", "update the live page",
   "put the change online"); after a change they did not ask to publish, see rule 4 above. Then: Step 2 `prepare`, Step 3 `check`, then
   `ola-publish` with the new list; it replaces what is there, after the same one yes. Say the
-  address again.
+  address again. "It" is the page they changed last in this conversation, or the page the
+  published folder's `.ola-source.json` names; when that page is gone (renamed before this rule),
+  publish the page that took its place into the same folder (`prepare <that page> --out <the same
+  folder>`): never ask which page, never call the folder an old copy to the person.
 - **Take it down** ("take it down", "unpublish"): run `ola-publish unpublish` as a command of its
   own. It asks the person; on the yes the pages come down and the command says so. Tell them the
   address now shows nothing.
