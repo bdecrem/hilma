@@ -36,6 +36,7 @@
 #          (OLA-301 check 7).
 #   --answer-words "<words>"  (phone) Ola's question is answered by typing these words in the box and
 #          Send, not by tapping a choice (OLA-301 check 8).
+#   A line break in --say is typed as Option-Return (a new line in the box), not Return (OLA-275).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
 # Signs in as the made-up person `appdriver` (tools/drive-account.mjs), never anyone real: a fresh

@@ -336,13 +336,28 @@ enum MacDrive {
       type(sentence, in: window)
       try await settle(window, 0.8)
       step("typed sentence \(n)", shot: "say\(n)-typed")
-      let mine = { (t: Turn) in t.request.trimmingCharacters(in: .whitespacesAndNewlines) == sentence.trimmingCharacters(in: .whitespacesAndNewlines) }
+      // The box must hold the whole sentence, line breaks included, before Return (OLA-275).
+      let trimmed = { (x: String) in x.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines) }
+      let inBox = box.currentEditor()?.string ?? box.stringValue
+      if trimmed(inBox) != trimmed(sentence) {
+        throw Failed(why: "the box holds \(quoted(inBox)), not sentence \(n) \(quoted(sentence)); nothing was sent")
+      }
+      let mine = { (t: Turn) in trimmed(t.request) == trimmed(sentence) }
       let before = store.conversation?.turns.filter(mine).count ?? 0
+      let turnsBefore = Set(store.conversation?.turns.map(\.id) ?? [])
       key(.return, in: window)
       said.sentAt = now
       said.status = "sent"
-      _ = try await until(30, "the sentence was not taken (no new turn after Return)") { () -> Bool? in
-        (store.conversation?.turns.filter(mine).count ?? 0) > before ? true : nil
+      // A new turn with other words: the app sent part of the sentence, or something else (OLA-275).
+      let taken = try await until(30, "the sentence was not taken (no new turn after Return)") { () -> Turn?? in
+        if (store.conversation?.turns.filter(mine).count ?? 0) > before { return .some(nil) }
+        if let other = store.conversation?.turns.first(where: { !turnsBefore.contains($0.id) && !mine($0) }) { return .some(other) }
+        return nil
+      }
+      if let other = taken {
+        said.status = "sent other words"
+        let left = box.currentEditor()?.string ?? box.stringValue
+        throw Failed(why: "Return sent \(quoted(other.request)), not sentence \(n) \(quoted(sentence))" + (trimmed(left).isEmpty ? "" : "; left in the box: \(quoted(left))"))
       }
       step("sent sentence \(n)", shot: "say\(n)-sent")
       // Until the turn ends; a card is answered the way the script says.
@@ -772,15 +787,25 @@ enum MacDrive {
   }
 
   /// One key event per character, into what has the focus.
+  /// A line break is Option-Return, as a person types one in the box (Return alone sends; OLA-275).
   static func type(_ text: String, in w: NSWindow) {
-    for ch in text { press(String(ch), code: 0, in: w, shortcuts: false) }
+    for ch in text {
+      if ch.isNewline { press("\r", code: 36, in: w, shortcuts: false, modifiers: [.option]) }
+      else { press(String(ch), code: 0, in: w, shortcuts: false) }
+    }
+  }
+
+  /// Words for a failure line: quoted, a line break shown as ⏎, cut at 120 characters.
+  static func quoted(_ x: String) -> String {
+    let one = x.replacingOccurrences(of: "\r\n", with: "⏎").replacingOccurrences(of: "\n", with: "⏎").replacingOccurrences(of: "\r", with: "⏎")
+    return "'" + (one.count > 120 ? String(one.prefix(120)) + "…" : one) + "'"
   }
 
   /// A key down and up, the way the application hands a key on: first to the window's keyboard
   /// shortcuts (a default button takes Return), then to what has the focus.
-  static func press(_ chars: String, code: UInt16, in w: NSWindow, shortcuts: Bool) {
+  static func press(_ chars: String, code: UInt16, in w: NSWindow, shortcuts: Bool, modifiers: NSEvent.ModifierFlags = []) {
     for type in [NSEvent.EventType.keyDown, .keyUp] {
-      guard let ev = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, characters: chars, charactersIgnoringModifiers: chars, isARepeat: false, keyCode: code) else { continue }
+      guard let ev = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: modifiers, timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber, context: nil, characters: chars, charactersIgnoringModifiers: chars, isARepeat: false, keyCode: code) else { continue }
       if type == .keyDown, shortcuts, w.performKeyEquivalent(with: ev) { continue }
       w.sendEvent(ev)
     }

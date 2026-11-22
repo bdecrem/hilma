@@ -97,6 +97,11 @@ tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next se
   it stopped (`NN-stopped-here.png`): the app not opening, a sign-in refused, the app signing itself
   out, the sentence not taken, an error on the screen, a turn that failed or stopped, no card when one
   was required, a card when `--card no`, the answer not on the screen, a wait longer than `--wait`.
+- A line break in `--say` (`$'first line\nsecond line'`) is typed as Option-Return, the way a person
+  starts a new line in the box (Return alone sends); the box must hold the whole sentence before Return,
+  and a Return that sends other words (part of it) fails as `Return sent '…', not sentence n '…'` with
+  what was left in the box (OLA-275; before, a line break was Return, half was sent, and the run said
+  "not taken").
 - `--card yes`: a card must come and is answered "Yes, this once"; `any` (default): any card is
   answered yes; `no`: a card fails the run. `--wait`: seconds per answer (default 600).
 - Ola's questions (its `question` tool; OLA-301) show as their own card with the choices as buttons,
