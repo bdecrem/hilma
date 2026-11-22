@@ -308,7 +308,8 @@ test('ola-publish through a door: preview, the yes, publish, status, publish aga
   writeFileSync(path.join(site, '.git/config'), '[remote "origin"]\n\turl = https://made-up@example.com/x.git\n')
   writeFileSync(path.join(site, '.DS_Store'), 'x')
   const tool = new URL('../../bart/ola-publish', import.meta.url).pathname
-  const env = { PATH: process.env.PATH, HOME: process.env.HOME, OLA_GATEWAY_HOSTPORT: `127.0.0.1:${doorSrv.address().port}`, BOX_API_KEY: doorKey }
+  // OLA_SKILLS_DIR: the preview runs the publish skill's own check first (OLA-284), as the app's runtime sets it.
+  const env = { PATH: process.env.PATH, HOME: process.env.HOME, OLA_GATEWAY_HOSTPORT: `127.0.0.1:${doorSrv.address().port}`, BOX_API_KEY: doorKey, OLA_SKILLS_DIR: new URL('../../skills', import.meta.url).pathname }
   const olaPublish = (args, e = env) =>
     new Promise((resolve) => {
       const c = spawn('python3', ['-I', tool, ...args], { env: e })
@@ -348,10 +349,18 @@ test('ola-publish through a door: preview, the yes, publish, status, publish aga
     // A key in the page: refused in the server's words, the key never printed.
     writeFileSync(path.join(site, 'app.js'), 'const k = "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789"')
     writeFileSync(path.join(site, 'index.html'), '<!doctype html><title>x</title><script src="app.js"></script>')
+    // The preview runs the publish skill's check first (OLA-284): the key is stopped on the Mac, nothing sent.
+    const sentBefore = seenAuth.length
     const leak = await olaPublish(['preview', site, '--name', 'food-bank'])
     assert.equal(leak.status, 1)
-    assert.match(leak.out, /Ola will not publish this: .*app\.js/)
+    assert.match(leak.out, /PROBLEM: app\.js: .*API key[\s\S]*Not sent/)
     assert.doesNotMatch(leak.out, /sk-ant/)
+    assert.equal(seenAuth.length, sentBefore, 'nothing reached the door')
+    // The server's check is the one that counts: a publish sent anyway (no preview) is refused in its words.
+    const forced = await olaPublish(['publish', site, '--name', 'food-bank', '--fingerprint', '0'.repeat(64)])
+    assert.equal(forced.status, 1)
+    assert.match(forced.out, /Ola will not publish this: .*app\.js/)
+    assert.doesNotMatch(forced.out, /sk-ant/)
     // No deploy token on the server yet (OLA-209): the agent is told plainly, and asks nobody for a yes.
     writeFileSync(path.join(site, 'app.js'), 'const k = 1')
     writeFileSync(path.join(run, 'sites.env'), '', { mode: 0o600 })

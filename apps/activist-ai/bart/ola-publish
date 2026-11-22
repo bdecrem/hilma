@@ -124,14 +124,26 @@ def skill_check(folder, out=sys.stdout):
         print("ola-publish: the publish skill's check is not on this Mac (no publish/scripts/publish.py under "
               "OLA_SKILLS_DIR), so nothing was sent. Open the Ola app once so it sets up its skills, then try again.")
         sys.exit(2)
-    r = subprocess.run([sys.executable, "-I", str(script), "check", folder], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, "-I", str(script), "check", folder, "--json"], capture_output=True, text=True)
+    try:
+        j = json.loads(r.stdout)
+    except ValueError:
+        print("ola-publish: the publish skill's check did not answer (" + (r.stderr.strip().splitlines() or ["no output"])[-1] + "). Nothing was sent.", file=out)
+        return False
+    # `.git` never leaves this Mac (listing() skips it), so what the check says about it does not count.
+    problems = [p for p in j.get("problems", []) if not p.startswith(".git/")]
     print("The publish skill's check, run first:", file=out)
-    for line in (r.stdout + r.stderr).splitlines():
-        print("  " + line, file=out)
-    if r.returncode != 0:
+    for f in j.get("files", []):
+        print(f"  {f['path']}  ({size(f['size'])})", file=out)
+    for n in j.get("notes", []):
+        print(f"  note: {n}", file=out)
+    for p in problems:
+        print(f"  PROBLEM: {p}", file=out)
+    if problems:
         print("Not sent: fix every PROBLEM line above (the publish skill's Step 2 and 3), then run "
               "ola-publish preview again. Nothing was published.", file=out)
         return False
+    print("  ready to publish", file=out)
     return True
 
 
@@ -172,6 +184,9 @@ def main(argv):
         return 0
     if cmd in ("preview", "publish") and len(pos) == 2 and opts.get("name") and (cmd == "preview" or opts.get("fingerprint")):
         body = body_for(pos[1], opts["name"])
+        if cmd == "preview" and not door():
+            print(SIGN_IN)  # not signed in says so first: no check would help
+            return 3
         if cmd == "preview" and not skill_check(pos[1], sys.stderr if as_json else sys.stdout):
             return 1
         if cmd == "publish":
