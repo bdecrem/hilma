@@ -135,8 +135,8 @@ never holds user data. The install list, and the check that says which of it is 
 
 ## Deploy and operations
 
-- **Deploy:** `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy [commit]` on the
-  staging machine. It unpacks the commit into its own release, runs its suites (the test turn,
+- **Deploy:** `node scripts/venture/runner.mjs deploy`, which starts `ola.mjs deploy` on the staging
+  machine; `ola.mjs deploy` typed by hand is refused (OLA-279; README, "Deploying staging"). It unpacks the commit into its own release, runs its suites (the test turn,
   gateway, workspace, web, front desk, backup, checks, signers, TLS, restart), and switches
   `current` only if all pass. A failed suite touches nothing that runs. Only the jobs whose code
   changed restart, and the front desk finishes what is in flight first (OLA-94; measured 0 of 602

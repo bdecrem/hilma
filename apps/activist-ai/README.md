@@ -1156,7 +1156,7 @@ model key and the usage token live only in `gateway.env`.
 # ~/.ola/gateway.env (600): UPSTREAM_BASE_URL, UPSTREAM_API_KEY, GATEWAY_MODELS, GATEWAY_PORT=4180,
 #   GATEWAY_TOKENS_FILE=~/.ola/gateway-tokens, GATEWAY_DOOR_DIR=~/.ola/gw, GATEWAY_USAGE_TOKEN (for status)
 # ~/.ola/frontdesk.env (600): OLA_FD_ORIGIN, OLA_FD_PORT=4700, OLA_LAUNCHD=1
-node ops/ola.mjs deploy           # the only way staging changes (below); writes and loads the jobs
+node ops/ola.mjs deploy           # the only way staging changes (below), started by runner.mjs deploy; writes and loads the jobs
 node ops/ola.mjs install          # (re)load the three jobs, pointed at the deployed release
 node ops/ola.mjs status           # the deployed commit, where the jobs run from, every job, the front desk,
                                   # the gateway, each workspace, door and desk; exit 1 if anything is down
@@ -1272,9 +1272,18 @@ nothing else touches, and changes only by `node ops/ola.mjs deploy`:
 ```
 
 ```bash
-node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy            # origin/main
-node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy 6d45c77e   # a named commit (also a rollback)
+node scripts/venture/runner.mjs deploy                                    # the one way to update it (OLA-272, OLA-279)
+OLA_DEPLOY_VIA='runner.mjs deploy' node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy 6d45c77e   # a rollback by hand, the lead only
 ```
+
+**Only through the runner's gate** (OLA-279, 2026-11-22). `ola.mjs deploy` serves only when
+`OLA_DEPLOY_VIA` names a caller in `ops/signers.mjs` (`DEPLOY_CALLERS`): `runner.mjs deploy`, which
+waits while a checker works on the live server or another update runs, and `studio setup.sh`, the
+Studio's first install. Typed by hand it exits 3, changes nothing, and writes one line to
+`~/ola-staging/deploy-refusals.log`. Every deploys.log line ends `via <caller>`; the variable can still
+be typed, so `runner.mjs status` and `issues.mjs unchecked` list (in `issues.mjs overrides`) every
+update with no start the gate allowed, and every line naming another caller. `ola.mjs check` is not
+gated (it serves nothing).
 
 **Signed commits only** (second review, 2026-11-16). `origin/main` is a public repo that unattended
 agents push to (the Discord bot and the venture runner, from this same machine, under the same author
@@ -1482,7 +1491,7 @@ then pointed at GitHub):
 ```bash
 git clone --no-checkout https://github.com/bdecrem/hilma ~/ola-staging
 mkdir -p /tmp/ola-boot && git -C ~/ola-staging archive origin/main apps/activist-ai/ops | tar -x -C /tmp/ola-boot
-node /tmp/ola-boot/apps/activist-ai/ops/ola.mjs deploy    # moves the installed jobs to ~/ola-staging
+OLA_DEPLOY_VIA='studio setup.sh' node /tmp/ola-boot/apps/activist-ai/ops/ola.mjs deploy    # a first install; moves the installed jobs to ~/ola-staging
 ```
 
 **On the mini (2026-11-16).** `~/ola-staging` was cloned, and the first deploy (`b70ef044`, run

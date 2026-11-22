@@ -69,7 +69,7 @@ curl -s -H "Authorization: Bearer $(cat ~/.ola/model-key)" http://127.0.0.1:8080
 | `~/.ola-frontdesk/platform.db` (staging's people and projects, made-up data) | a new, empty platform database; people are added with `frontdesk/admin.mjs add-person` |
 | Workspace images `ola-workspace:2.3.0-*` | built by the first deploy (`ws.mjs image --missing`) |
 | Together as the model | the local model; Together only behind the hosted fallback, off by default |
-| `~/ola-deploy-kit.sh` (fetch, `deploy origin/main --unsigned`, install, status) | not copied: on the Studio a deploy is signed, `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy` |
+| `~/ola-deploy-kit.sh` (fetch, `deploy origin/main --unsigned`, install, status) | not copied: on the Studio a deploy is signed, `node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy`, started by a caller `ops/signers.mjs` DEPLOY_CALLERS names (OLA-279; by hand it is refused: add the Studio's own caller there when its updates are set up) |
 | Backup to a folder on its own disk (no drive) | the SanDisk, plus the second drive swapped weekly (step 9) |
 | Xcode 26.3, used to archive the apps (`apple/testflight/ship-via-mini.sh`) | not installed: shipping stays on the mini. The Studio has only the Command Line Tools |
 | The Venture runner, Mac Plus services, BlueBubbles, the Discord bot, Ollama, Tailscale | none of it in the ola account (`studio.mjs check`, `alone`); Tailscale in Bart's account only |

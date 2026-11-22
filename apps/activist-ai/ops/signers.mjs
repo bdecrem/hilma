@@ -31,6 +31,25 @@ export const tagFor = (commit) => `${TAG_PREFIX}${commit.slice(0, 12)}`
 
 const run = (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: 'utf8', ...opts })
 
+// Who may start an update (OLA-279). `ola.mjs deploy` serves only when started by one of these
+// callers, named in OLA_DEPLOY_VIA: the runner's gate (`runner.mjs deploy`, which waits while a checker
+// works on the live server and while another update runs), or the Studio's first install
+// (`ops/studio/setup.sh`, before any runner exists there). Anything else, a hand-typed
+// `ola.mjs deploy` included, is refused. Setting the variable by hand still gets through; each
+// deploys.log line names its caller, and the venture tools list every update with no start the gate
+// allowed (scripts/venture/_overrides.mjs, ungatedDeploys). `ola.mjs check` is not an update and is
+// not gated.
+export const DEPLOY_CALLERS = ['runner.mjs deploy', 'studio setup.sh']
+export function deployCaller(env = process.env) {
+  const via = String(env.OLA_DEPLOY_VIA ?? '').trim()
+  if (DEPLOY_CALLERS.includes(via)) return { ok: true, via }
+  return {
+    ok: false,
+    via: via || 'by hand',
+    why: `the test server is updated only with node scripts/venture/runner.mjs deploy (OLA-272, OLA-279)${via ? `; OLA_DEPLOY_VIA "${via}" is not one of: ${DEPLOY_CALLERS.join(', ')}` : ''}`,
+  }
+}
+
 // git: (...args) => spawnSync result, already bound to the repository.
 // Returns { ok, how } (how: 'signed commit' | 'signed tag ola-deploy/…') or { ok: false, why }.
 export function deployable(git, commit, signersFile) {

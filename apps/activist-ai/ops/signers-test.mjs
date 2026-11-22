@@ -2,7 +2,7 @@
 // A throwaway repository and throwaway ssh keys in a temp folder; no network, no VM, seconds.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
@@ -71,4 +71,32 @@ test('no list, or an empty one, deploys nothing', () => {
   const empty = path.join(dir, 'empty')
   writeFileSync(empty, '# nobody yet\n')
   assert.match(deployable(git, c, empty).why, /lists no key/)
+})
+
+// OLA-279: ola.mjs deploy serves only for a named caller
+import { DEPLOY_CALLERS, deployCaller } from './signers.mjs'
+test('an update starts only through runner.mjs deploy or the Studio install; by hand is refused', () => {
+  assert.deepEqual(DEPLOY_CALLERS, ['runner.mjs deploy', 'studio setup.sh'])
+  assert.deepEqual(deployCaller({ OLA_DEPLOY_VIA: 'runner.mjs deploy' }), { ok: true, via: 'runner.mjs deploy' })
+  assert.equal(deployCaller({ OLA_DEPLOY_VIA: 'studio setup.sh' }).ok, true)
+  const hand = deployCaller({})
+  assert.equal(hand.ok, false)
+  assert.equal(hand.via, 'by hand')
+  assert.match(hand.why, /runner\.mjs deploy/)
+  for (const v of ['', ' ', 'runner.mjs', 'RUNNER.MJS DEPLOY', 'kit', 'by hand']) assert.equal(deployCaller({ OLA_DEPLOY_VIA: v }).ok, false, v)
+  assert.equal(deployCaller({ OLA_DEPLOY_VIA: ' runner.mjs deploy ' }).ok, true, 'surrounding spaces are not a different caller')
+})
+test('ola.mjs deploy by hand exits 3 and touches nothing but deploy-refusals.log', () => {
+  const st = mkdtempSync(path.join(tmpdir(), 'ola-gate-'))
+  const env = { ...process.env, OLA_STAGING: st }
+  delete env.OLA_DEPLOY_VIA
+  const r = spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'ola.mjs'), 'deploy', '--unsigned'], { encoding: 'utf8', env, timeout: 30e3 })
+  assert.equal(r.status, 3, r.stderr)
+  assert.match(r.stderr, /Refused: the test server is updated only with node scripts\/venture\/runner\.mjs deploy/)
+  assert.deepEqual(readdirSync(st), ['deploy-refusals.log'])
+  assert.match(readFileSync(path.join(st, 'deploy-refusals.log'), 'utf8'), / refused origin\/main via by hand: /)
+  const r2 = spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'ola.mjs'), 'deploy'], { encoding: 'utf8', env: { ...env, OLA_DEPLOY_VIA: 'kit' }, timeout: 30e3 })
+  assert.equal(r2.status, 3)
+  assert.match(readFileSync(path.join(st, 'deploy-refusals.log'), 'utf8'), /via kit: .*"kit" is not one of/)
+  rmSync(st, { recursive: true, force: true })
 })

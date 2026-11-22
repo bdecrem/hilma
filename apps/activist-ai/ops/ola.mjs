@@ -80,7 +80,7 @@ import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { clean } from './clean.mjs'
 import { diskRefusal, freeGB } from './disk.mjs'
-import { deployable } from './signers.mjs'
+import { deployable, deployCaller } from './signers.mjs'
 import { unchanged } from './restart.mjs'
 import { changedFiles, lanes, plan } from './select.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
@@ -320,6 +320,16 @@ if (cmd === 'container-up') {
 } else if (cmd === 'install') {
   install({ restart: false })
 } else if (cmd === 'deploy') {
+  // OLA-279: only through the runner's gate (or the Studio's first install); a refusal touches nothing
+  // and is written to deploy-refusals.log, not deploys.log (it is not an update)
+  const caller = deployCaller()
+  if (!caller.ok) {
+    try {
+      writeFileSync(path.join(STAGING, 'deploy-refusals.log'), `${new Date().toISOString()} refused ${refArg()} via ${caller.via}: ${caller.why}\n`, { flag: 'a' })
+    } catch {}
+    console.error(`Refused: ${caller.why}`)
+    process.exit(3)
+  }
   await deploy(refArg(), { unsigned: process.argv.includes('--unsigned'), all: process.argv.includes('--all') })
 } else if (cmd === 'check') {
   const r = await deploy(refArg(), { check: true, all: process.argv.includes('--all'), base: optArg('--base'), noApps: process.argv.includes('--no-apps') })
@@ -657,7 +667,9 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   const logFile = path.join(LOGS, `${check ? 'check' : 'deploy'}-${short}.log`)
   const out = createWriteStream(logFile)
   const say = (m) => (console.log(m), out.write(`${m}\n`))
-  const history = (line) => writeFileSync(path.join(STAGING, check ? 'checks.log' : 'deploys.log'), `${new Date().toISOString()} ${line}\n`, { flag: 'a' })
+  // deploys.log names who started each update (OLA-279): " via runner.mjs deploy", or what OLA_DEPLOY_VIA said
+  const via = check ? '' : ` via ${deployCaller().via}`
+  const history = (line) => writeFileSync(path.join(STAGING, check ? 'checks.log' : 'deploys.log'), `${new Date().toISOString()} ${line}${via}\n`, { flag: 'a' })
   const suites = {}
   // OLA-334: a failed suite's own output, kept in a file of its own beside the update's log
   const keep = (name, attempt, text) => {

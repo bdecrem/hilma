@@ -201,9 +201,10 @@ t_signers() { [ -s "$OLA/allowed-signers" ]; }
 t_deployed() { [ -f "$STAGING/current/apps/activist-ai/web/dist/index.html" ] && [ -f "$STAGING/deployed.json" ]; }
 d_deployed() {
   # The first deploy has no release to run ola.mjs from: it runs from origin/main's own copy.
+  # ola.mjs deploy serves only for a named caller (OLA-279): this install is one, before any runner.
   local boot; boot=$(mktemp -d)
   git -C "$STAGING" fetch -q origin && git -C "$STAGING" archive origin/main apps/activist-ai | tar -x -C "$boot" &&
-    node "$boot/apps/activist-ai/ops/ola.mjs" deploy origin/main ${OLA_UNSIGNED:+--unsigned} && node "$STAGING/current/apps/activist-ai/ops/ola.mjs" install
+    OLA_DEPLOY_VIA="studio setup.sh" node "$boot/apps/activist-ai/ops/ola.mjs" deploy origin/main ${OLA_UNSIGNED:+--unsigned} && node "$STAGING/current/apps/activist-ai/ops/ola.mjs" install
 }
 t_status() { node "$STAGING/current/apps/activist-ai/ops/ola.mjs" status; }
 

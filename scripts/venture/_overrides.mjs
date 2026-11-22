@@ -57,8 +57,8 @@ export async function overridesOf(db, day = pacificDay()) {
 
 export const overrideLine = (v) => `${new Date(v.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }).padEnd(8)} ${(v.ticket ?? '-').padEnd(8)} ${String(v.caller).slice(0, 44).padEnd(44)} ${v.what}`
 
-// ---- Updates of the test server that did not go through the gate (OLA-279). `ola.mjs deploy` itself has
-// no gate (it is in the server's code); `runner.mjs deploy` is the gate and records every update it
+// ---- Updates of the test server that did not go through the gate (OLA-279). `ola.mjs deploy` refuses
+// any caller but the gate (OLA_DEPLOY_VIA, ops/signers.mjs deployCaller), but the variable can be typed; `runner.mjs deploy` is the gate and records every update it
 // allows in venture_state "runner_deploys". The test server's own list (~/ola-staging/deploys.log, one
 // line per update attempt, ending when it is deployed or refused) is compared with that record; every
 // line after the gate existed with no allowed start in the 90 minutes before it is an override, written
@@ -70,6 +70,12 @@ export function ungatedDeploys(logText = '', starts = [], since = GATE_SINCE) {
   const free = [...starts].map((s) => s.at).sort()
   const out = []
   for (const x of lines.sort((a, b) => a.at.localeCompare(b.at))) {
+    // since OLA-279 each line ends " via <caller>": one that names another caller is outside the gate whatever its time
+    const via = / via (.+)$/.exec(x.l)?.[1]
+    if (via && via !== 'runner.mjs deploy') {
+      out.push(x)
+      continue
+    }
     const i = free.findIndex((s) => s <= x.at && Date.parse(x.at) - Date.parse(s) < DEPLOY_SPAN)
     if (i >= 0) free.splice(i, 1)
     else out.push(x)
