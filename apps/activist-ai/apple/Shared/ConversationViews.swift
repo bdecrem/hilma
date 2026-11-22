@@ -360,6 +360,12 @@ struct ApprovalPanel: View {
   }
 }
 
+/// The question card's own height, measured, so its scroll view is no taller than the card.
+struct QuestionHeight: PreferenceKey {
+  static let defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
 /// Ola's question (OLA-301): opencode's `question` tool waits on the person. Its choices as
 /// buttons (Command-1 to Command-9 pick them, for the keyboard and for a driven copy, MacDrive), and
 /// the person's own words typed in the conversation's box. One field with one choice: a click on a
@@ -621,6 +627,7 @@ struct ConversationPane: View {
   @Binding var draft: String
   var columnWidth: CGFloat = Metrics.column
   var sidePadding: CGFloat = Space.xxl
+  @State private var questionHeight: CGFloat = 0
 
   var body: some View {
     let convo = store.conversation
@@ -673,12 +680,26 @@ struct ConversationPane: View {
               .transition(.move(edge: .bottom).combined(with: .opacity))
           }
         } else if let q = convo?.question {
-          ZStack(alignment: .bottom) {
-            QuestionPanel(question: q) { a in await store.answerQuestion(a) }
+          // A card taller than the room above the box (two questions on a phone with the keyboard up)
+          // scrolls inside itself; before OLA-301's phone check its first question sat above the
+          // screen, out of reach. The card is as tall as it is, never taller than the room.
+          GeometryReader { room in
+            VStack(spacing: 0) {
+              Spacer(minLength: 0)
+              ScrollView(.vertical) {
+                QuestionPanel(question: q) { a in await store.answerQuestion(a) }
+                  .padding(.top, Space.l)
+                  .background(GeometryReader { g in Color.clear.preference(key: QuestionHeight.self, value: g.size.height) })
+              }
+              .scrollBounceBehavior(.basedOnSize)
+              .frame(height: min(questionHeight, max(0, room.size.height - Space.m)))
+              .onPreferenceChange(QuestionHeight.self) { questionHeight = $0 }
               .frame(maxWidth: columnWidth + 2 * Space.l)
               .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)
-              .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            .frame(maxWidth: .infinity)
           }
+          .transition(.move(edge: .bottom).combined(with: .opacity))
         }
       }
       .animation(.easeOut(duration: 0.18), value: convo?.approval?.id)

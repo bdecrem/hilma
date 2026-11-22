@@ -28,6 +28,8 @@ final class PhoneDrive: XCTestCase {
     var endedAt: Double?
     var status: String
     var cards: [String] = []
+    /// Ola's questions (OLA-301), each answered by tapping its choices.
+    var questions: [String] = []
     var answered: [String] = []
     var answerOnScreen: String = ""
   }
@@ -206,9 +208,52 @@ final class PhoneDrive: XCTestCase {
           quietSince = nil
           continue
         }
+        // Ola's question (OLA-301, OLA-360): its choices tapped as a person taps them. One question,
+        // one choice: the first choice is the answer. Otherwise (pick several, two questions): the
+        // choices ticked from the top until Send my answers can be pressed (at least two), then it.
+        if questionKicker() != nil {
+          let choiceWords = questionChoiceLabels()
+          let choices = choiceWords.map { app.buttons.matching(NSPredicate(format: "label == %@", $0)).firstMatch }
+          let ask = choiceWords.isEmpty ? "a question" : (app.staticTexts.allElementsBoundByIndex.map(\.label).drop { !$0.hasPrefix("Ola is asking you") }.dropFirst().first ?? "a question")
+          said.questions.append("\(ask) [\(choiceWords.joined(separator: " | "))]")
+          step("question: \(ask)", shot: "say\(n)-question\(said.questions.count)")
+          guard let first = choices.first else { said.status = "question"; throw Failed(why: "Ola's question shows no choice to tap") }
+          let sendMine = app.buttons["Send my answers"]
+          var tapped: [String] = []
+          if !sendMine.exists {
+            try reveal(first, choiceWords[0])
+            try tap(first, "the choice \(choiceWords[0])")
+            tapped.append(choiceWords[0])
+          } else {
+            for (c, word) in zip(choices, choiceWords) {
+              if tapped.count >= 2, sendMine.isEnabled { break }
+              try reveal(c, word)
+              try tap(c, "the choice \(word)")
+              tapped.append(word)
+            }
+            step("ticked \(tapped.joined(separator: ", "))", shot: "say\(n)-question\(said.questions.count)-ticked")
+            try reveal(sendMine, "Send my answers")
+            try tap(sendMine, "Send my answers")
+            tapped.append("Send my answers")
+          }
+          said.answered.append(tapped.joined(separator: " + "))
+          // The same card (its choices' words) still there after 20 s means the answer was not taken;
+          // XCUIElements re-resolve, so what the card was is kept as words.
+          let was = choiceWords
+          let gone = Date().addingTimeInterval(20)
+          func same() -> Bool { questionKicker() != nil && questionChoiceLabels() == was }
+          while same(), Date() < gone { sleep(1) }
+          if same() {
+            said.status = "question"; throw Failed(why: "Ola's question stayed after \(tapped.joined(separator: " + "))")
+          }
+          step("answered the question: \(tapped.joined(separator: " + "))", shot: "say\(n)-question\(said.questions.count)-answered")
+          quietSince = nil
+          continue
+        }
         if let p = visibleProblem() { said.status = "error"; throw Failed(why: "the app shows an error: \(p)") }
-        // Done: Stop is gone and Send is back, and it stays so for three seconds.
-        if !stop.exists, app.buttons["Send"].exists {
+        // Done: Stop is gone and Send is back, and it stays so for three seconds, with no question
+        // waiting (a waiting question also shows Send and no Stop: OLA-360).
+        if !stop.exists, app.buttons["Send"].exists, questionKicker() == nil {
           if let q = quietSince, Date().timeIntervalSince(q) >= 3 { break }
           if quietSince == nil { quietSince = Date() }
         } else { quietSince = nil }
@@ -243,6 +288,44 @@ final class PhoneDrive: XCTestCase {
     let p = NSPredicate(format: "placeholderValue BEGINSWITH 'Ask, or tell it' OR label BEGINSWITH 'Ask, or tell it'")
     let tv = app.textViews.matching(p).firstMatch
     return tv.exists ? tv : app.textFields.matching(p).firstMatch
+  }
+
+  /// The question card's first line (cards.mjs questionCard kicker), when a question waits.
+  func questionKicker() -> XCUIElement? {
+    let k = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Ola is asking you'")).firstMatch
+    return k.exists ? k : nil
+  }
+
+  /// The card's choices, by their words: the buttons after its first line and before its note about
+  /// the box ("Or write…", "Write your answer…"), in the order the screen lists them; Send my answers
+  /// is not one. By the tree's order, not by position: a tall card's top can be above the screen,
+  /// where the conversation's own buttons are.
+  func questionChoiceLabels() -> [String] {
+    guard let root = try? app.snapshot() else { return [] }
+    var flat: [XCUIElementSnapshot] = []
+    func walk(_ e: XCUIElementSnapshot) { flat.append(e); e.children.forEach(walk) }
+    walk(root)
+    guard let k = flat.firstIndex(where: { $0.elementType == .staticText && $0.label.hasPrefix("Ola is asking you") }) else { return [] }
+    var out: [String] = []
+    for e in flat[(k + 1)...] {
+      if e.elementType == .staticText, e.label.hasPrefix("Or write") || e.label.hasPrefix("Write your answer") { break }
+      if e.elementType == .button, !e.label.isEmpty, e.label != "Send my answers" { out.append(e.label) }
+    }
+    return out
+  }
+
+  /// A choice scrolled into view as a person scrolls the card: a swipe on the card's note about the
+  /// box (always in view under the choices), down when the choice is above, up when below.
+  func reveal(_ e: XCUIElement, _ word: String) throws {
+    let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Or write' OR label BEGINSWITH 'Write your answer'")).firstMatch
+    guard e.waitForExistence(timeout: 5) else { throw Failed(why: "\(word) is not on the screen") }
+    for _ in 0..<8 {
+      if e.isHittable { return }
+      let window = app.windows.firstMatch.frame
+      let handle = note.exists && note.isHittable ? note : app.windows.firstMatch
+      if e.frame.midY < window.midY { handle.swipeDown(velocity: .slow) } else { handle.swipeUp(velocity: .slow) }
+      usleep(500_000)
+    }
   }
 
   /// A real tap, refused when the element is not there, not on the screen or disabled.

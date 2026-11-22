@@ -100,9 +100,11 @@ tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next se
 - `--card yes`: a card must come and is answered "Yes, this once"; `any` (default): any card is
   answered yes; `no`: a card fails the run. `--wait`: seconds per answer (default 600).
 - Ola's questions (its `question` tool; OLA-301) show as their own card with the choices as buttons,
-  Command-1 to Command-9 on the Mac. The Mac drive answers one with its first choice (Command-1), or
-  types "Yes, go ahead." in the box when it has no choices; `transcript.json` lists them under
-  `questions`. They are not yes cards: `--card` does not count them.
+  Command-1 to Command-9 on the Mac. The Mac drive answers one with its first choice (Command-1); a
+  single pick-several question with its first two boxes (Command-1, Command-2) and Send my answers;
+  any other shape by typing "Yes, go ahead." in the box. The phone drive taps the first choice, or ticks
+  choices from the top (at least two) and taps Send my answers, and never counts a run finished while a
+  question waits (OLA-360). `transcript.json` lists them under `questions`. They are not yes cards: `--card` does not count them.
 - **The made-up person** is `appdriver` with its one project `appdriver` on the live test server
   (`tools/drive-account.mjs`, made with the live release's `frontdesk/admin.mjs` the first time).
   Each run gives it a fresh password nobody sees, in a file with mode 600 that the app reads (never

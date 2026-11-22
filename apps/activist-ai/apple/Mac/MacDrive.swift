@@ -364,7 +364,8 @@ enum MacDrive {
           step("answered the card: Yes, this once", shot: "say\(n)-card\(said.cards.count)-answered")
         }
         // Ola's question (OLA-301): its first choice by its shortcut, Command-1, as a person could
-        // press it; any other card (no choices, two questions, pick several) gets "Yes, go ahead."
+        // press it; one pick-several question its first two boxes and Send my answers; any other card
+        // (no choices, two questions) gets "Yes, go ahead."
         // typed in the box and Return, which answers the whole card (OLA-320).
         if store.conversation?.approval == nil, let q = store.conversation?.question, q.id != lastCard {
           lastCard = q.id
@@ -375,6 +376,16 @@ enum MacDrive {
           if let first = f?.options.first, q.single {
             shortcut("1", code: 18, in: window)
             said.answered.append("\(first.label) (Command-1)")
+          } else if let f, q.fields.count == 1, f.multiple, f.options.count >= 2 {
+            // A pick-several question (OLA-301 check 5): its first two boxes ticked by Command-1 and
+            // Command-2, then Return, the card's default button, Send my answers.
+            shortcut("1", code: 18, in: window)
+            try await settle(window, 0.4)
+            shortcut("2", code: 19, in: window)
+            try await settle(window, 0.6)
+            step("ticked \(f.options[0].label) and \(f.options[1].label)", shot: "say\(n)-question\(said.questions.count)-ticked")
+            key(.return, in: window)
+            said.answered.append("\(f.options[0].label) + \(f.options[1].label) (Command-1, Command-2, Return = \(q.sendLabel ?? "Send"))")
           } else {
             let box = try await until(15, "no box to type the answer in") { textFields(in: window).last }
             try click(box, in: window)
