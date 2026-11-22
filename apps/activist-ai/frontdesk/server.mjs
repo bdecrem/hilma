@@ -40,6 +40,7 @@ import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { makeFaults } from './faults.mjs'
 import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
+import { asksAboutFile, filesFact } from './filesnote.mjs'
 import { devicesConfig, makeDevices } from './devices.mjs'
 import { ACCEPTABLE_USE, makeSiteNames, makeSites, readSent, sentCtx, sitesConfig } from './sites.mjs'
 import { makeChatPublish } from './chatpublish.mjs'
@@ -251,7 +252,14 @@ export function makeFrontDesk(cfg = config()) {
     // finished turn written first, then read here and put in front of the request, so the answer
     // comes from the record and never from the model's memory or a record read too early.
     const record = madeBy && ASKS_WHO.test(text ?? '') ? await madeBy.factsFor(slug, sessionID).catch((e) => (log(`${slug}: the record for a who-made question could not be read (${e?.message ?? e})`), '')) : ''
-    const about = [claudeFact, record].filter(Boolean).join(' ')
+    // A request that points at a picture or file without naming one ("whats on this image") gets what
+    // Files holds, newest first, or that it holds none (filesnote.mjs, OLA-380): on the website a file
+    // is added under Files, never attached, and the model read "this image" as a missing attachment.
+    const filesRow = asksAboutFile(text) ? db.prepare('SELECT id, slug FROM workspaces WHERE slug = ?').get(slug) : null
+    const filesFactText = filesRow
+      ? await Promise.race([fileEntries(filesRow).then((list) => filesFact(list)), new Promise((r) => setTimeout(() => r(''), 5000).unref())]).catch((e) => (log(`${slug}: the file list for a file question could not be read (${e?.message ?? e})`), ''))
+      : ''
+    const about = [claudeFact, record, filesFactText].filter(Boolean).join(' ')
     // One note in front of the request (the apps strip one): the engines note with the facts added to it.
     const join = (note) => (!about ? note : note ? note.replace(NOTE_CLOSE, ` ${about}${NOTE_CLOSE}`) : `${NOTE_OPEN}${about}${NOTE_CLOSE}\n\n`)
     if (!madeBy) return join('') + text

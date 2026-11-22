@@ -2215,6 +2215,14 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   hidden. The front desk's log line counts a turn's own design changes apart from changes it matched
   to another conversation. Request tests: `record:made` / `record:last` check the answer against the
   project's own record.
+- **What Files holds, for "this image"** (OLA-380, Nov 22): on the website a file is added under
+  Files, never attached to a message, and asked "whats on this image" after an upload Ola answered
+  "You haven't shared an image with me yet" or "The folder appears to be empty" without a step. Now
+  a request that points at a picture or a file without naming one (`ASKS_FILE` in
+  `frontdesk/filesnote.mjs`: "this image", "the photo I uploaded", "what is on it") gets, in the
+  same note, Files' own list (the newest eight, uploads marked, pictures named, how long ago), or
+  that the project has no files and how to add one. A request that names a file gets nothing.
+  Request test: `this-image-uploaded` in `evals/asks/cases.json`.
 - **The card**: design is no longer a reason for the "this may be a stretch" card before a run on
   the website (`web/src/lib/steps.ts`, `designBeforeRun: false`). The Mac and iPhone apps' copy of that
   check (OlaKit `Fallbacks.swift`) and the Mac's record of the design model wait for a new app build

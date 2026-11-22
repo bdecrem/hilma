@@ -839,6 +839,38 @@
       },
       "ability": "post",
       "notOffered": true
+    },
+    {
+      "id": "this-image-uploaded",
+      "say": "whats on this image",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "says:clean",
+        "says:saturday"
+      ],
+      "mustNot": [
+        "(haven.t|have not|didn.t|did not) (shared|uploaded|attached)",
+        "(folder|project) (appears to be |is )?empty",
+        "don.t see an image"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "poster.png",
+            "from": "poster.png"
+          }
+        }
+      ],
+      "from": {
+        "date": "2026-11-22",
+        "ticket": "OLA-380",
+        "what": "OLA-232 checker, Nov 21 ~11:46 pm on e5aeede9b3c1, 390 px: flyer-photo.png uploaded in a new project, then \"whats on this image\": \"You haven't shared an image with me yet\" (Chromium) and \"The folder appears to be empty\" (WebKit)",
+        "words": "the checker's exact words"
+      }
     }
   ]
 }
