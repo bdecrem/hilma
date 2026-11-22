@@ -20,6 +20,8 @@
 //   site:<words>            Ola's answer gives a https://sites.ola.cx/<name>/ address that answers 200
 //                           with a page saying <words>
 //   says:<regex>            Ola's answer matches (case-insensitive)
+//   opens:<regex>           the first 300 characters of the answer match (what a phone shows first)
+//   newfile:<regex>, nonewfile:<regex>   a file matching was (was not) made by the request
 //   file:<path>[:<words>]   the file is in the project afterwards (and says <words>)
 //   served:<name>           the model connection's own record says <name> served one of the case's
 //                           requests (served:design); served:!<name> says it served none (OLA-168)
@@ -142,7 +144,7 @@ if (must.includes('gone') && !many('--before').length) fail('--must gone needs -
 for (const m of must) {
   const kind = m.split(':')[0]
   if (m === 'gone') continue
-  if (!['site', 'says', 'file', 'newfile', 'served'].includes(kind) || !m.slice(kind.length + 1)) fail(`--must "${m}": site:<words>, says:<regex>, file:<path>[:<words>], newfile:<regex>[:<words>], served:<name> or gone`)
+  if (!['site', 'says', 'opens', 'file', 'newfile', 'nonewfile', 'served'].includes(kind) || !m.slice(kind.length + 1)) fail(`--must "${m}": site:<words>, says:<regex>, file:<path>[:<words>], newfile:<regex>[:<words>], nonewfile:<regex>, opens:<regex>, served:<name> or gone`)
   if (kind === 'says') new RegExp(m.slice(5), 'i')
 }
 for (const s of many('--must-not')) new RegExp(s, 'i')
