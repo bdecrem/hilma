@@ -39,3 +39,22 @@ test('a page in a folder, copied to site/: the page keeps its place', async () =
   const things = await derivedThings(files(list))
   assert.deepEqual(things.filter((t) => t.kind === 'site').map((t) => [t.file, t.copies]), [['flyer/flyer.html', ['site']]])
 })
+
+test('a page renamed after it was published: the copy folds into the page that took its place (checker, Nov 22)', async () => {
+  const at = (path, modified) => ({ ...entry(path), modified })
+  const list = [at('larch.html', '2026-11-22T14:00:00.000Z'), at('site-aspen/index.html', '2026-11-22T13:50:00.000Z'), at('site-aspen/.x', '2026-11-22T13:50:00.000Z')]
+  markSiteCopies(list, [{ folder: 'site-aspen', page: 'aspen.html' }])
+  const things = await derivedThings(files(list))
+  assert.deepEqual(things.filter((t) => t.kind === 'site').map((t) => [t.file, t.copies]), [['larch.html', ['site-aspen']]])
+  // Two candidates, or one older than the copy: the copy stays shown.
+  const two = [at('larch.html', '2026-11-22T14:00:00.000Z'), at('oak.html', '2026-11-22T14:01:00.000Z'), at('site-aspen/index.html', '2026-11-22T13:50:00.000Z')]
+  markSiteCopies(two, [{ folder: 'site-aspen', page: 'aspen.html' }])
+  assert.equal((await derivedThings(files(two))).filter((t) => t.kind === 'site').length, 3)
+  const older = [at('larch.html', '2026-11-22T13:00:00.000Z'), at('site-aspen/index.html', '2026-11-22T13:50:00.000Z')]
+  markSiteCopies(older, [{ folder: 'site-aspen', page: 'aspen.html' }])
+  assert.equal((await derivedThings(files(older))).filter((t) => t.kind === 'site').length, 2)
+  // A page another record names is never taken.
+  const claimed = [at('index.html', '2026-11-22T14:00:00.000Z'), at('site/index.html', '2026-11-22T13:40:00.000Z'), at('site-aspen/index.html', '2026-11-22T13:50:00.000Z')]
+  markSiteCopies(claimed, [{ folder: 'site', page: 'index.html' }, { folder: 'site-aspen', page: 'aspen.html' }])
+  assert.deepEqual((await derivedThings(files(claimed))).filter((t) => t.kind === 'site').map((t) => t.file).sort(), ['index.html', 'site-aspen/index.html'])
+})

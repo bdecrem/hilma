@@ -82,16 +82,41 @@ export const isThingFile = (f) => !f.siteCopy && (isSourceFile(f) || isPageFile(
  * between them. `records` are [{ folder, page }] read from those records. A folder whose page is
  * still in the project (outside it) is marked: its files are not things and not "other files" on
  * the home (Files still lists them), and the page gets `copies` (the folders), so a publish of the
- * copy shows as the page's. A record whose page is gone leaves the copy shown, as the only page.
+ * copy shows as the page's. A record whose page is gone folds into the one page that took its
+ * place (same folder, named by no record, changed since the copy); otherwise the copy stays shown.
  */
 export function markSiteCopies(entries, records) {
   const byPath = new Map(entries.map((f) => [f.path, f]))
-  for (const { folder, page } of records ?? []) {
-    if (typeof folder !== 'string' || !folder || typeof page !== 'string') continue
-    const src = byPath.get(page.replace(/^\.\//, ''))
-    if (!src || src.path.startsWith(`${folder}/`) || !isPageFile(src.path)) continue
+  const valid = (records ?? []).filter((r) => typeof r?.folder === 'string' && r.folder && typeof r.page === 'string')
+  const folders = valid.map((r) => r.folder)
+  const named = new Set(valid.map((r) => r.page.replace(/^\.\//, '')))
+  const fold = (folder, src) => {
     for (const f of entries) if (f.path.startsWith(`${folder}/`)) f.siteCopy = folder
     src.copies = [...new Set([...(src.copies ?? []), folder])]
+  }
+  for (const { folder, page } of valid) {
+    const rel = page.replace(/^\.\//, '')
+    const src = byPath.get(rel)
+    if (src) {
+      if (!src.path.startsWith(`${folder}/`) && isPageFile(src.path)) fold(folder, src)
+      continue
+    }
+    // The page is gone (renamed or moved after it was published, the checker's chk244q on Nov 22:
+    // aspen.html renamed larch.html showed "Larch" and the copy "Aspen" as two pages). The page that
+    // took its place: the one page in the same folder, outside every copy, named by no record, and
+    // changed since the copy was made. Exactly one, or the copy stays shown as before.
+    const dir = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/') + 1) : ''
+    const copyAt = Math.max(0, ...entries.filter((f) => f.path.startsWith(`${folder}/`)).map((f) => Date.parse(f.modified ?? '') || 0))
+    const cands = entries.filter(
+      (f) =>
+        isPageFile(f.path) &&
+        f.path.startsWith(dir) &&
+        !f.path.slice(dir.length).includes('/') &&
+        !named.has(f.path) &&
+        !folders.some((d) => f.path.startsWith(`${d}/`)) &&
+        (Date.parse(f.modified ?? '') || 0) >= copyAt,
+    )
+    if (cands.length === 1) fold(folder, cands[0])
   }
   return entries
 }
