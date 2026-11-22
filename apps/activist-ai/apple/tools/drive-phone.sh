@@ -71,6 +71,8 @@ import json, sys
 f, out, pw, where, card, wait, says, pair = sys.argv[1:]
 s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "card": card, "waitSeconds": float(wait), "says": json.loads(says)}
 if pair: s["pairCodeFile"] = pair
+import os
+if os.environ.get("ANSWER_WORDS"): s["answerWords"] = os.environ["ANSWER_WORDS"]
 json.dump(s, open(f, "w"))
 PY
 echo "  driving the iPhone app $VERSION ($BUILD) from the live release $COMMIT in the simulator \"$NAME\" ($UDID), $WHERE"

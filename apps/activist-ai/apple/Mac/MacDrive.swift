@@ -72,6 +72,10 @@ enum MacDrive {
     /// phone's run ended), it opens the newest session and the run passes only when the phone's
     /// sentences and an answer to each show in this Mac's window.
     var phone: PhoneServe?
+    /// When Ola asks a question: New Session, then back to the asking session as a click in the
+    /// sidebar does (its selection), and the run fails unless the same question shows again before it
+    /// is answered (OLA-301 check 7).
+    var away: Bool?
   }
   struct PhoneServe: Decodable {
     var codeFile: String
@@ -373,6 +377,23 @@ enum MacDrive {
           said.questions.append(q.fields.map { $0.text + " [" + $0.options.map(\.label).joined(separator: " | ") + "]" }.joined(separator: " / "))
           try await settle(window, 0.8)
           step("question: \(f?.text ?? "")", shot: "say\(n)-question\(said.questions.count)")
+          if s.away == true, let here = store.selectedID {
+            // Away and back, before answering (OLA-301 check 7): New Session (Command-N, Return), then
+            // the asking session chosen again, as the sidebar's click sets the selection.
+            shortcut("n", code: 45, in: window)
+            let sheet = try await until(10, "Command-N did not open the New Session sheet") { window.attachedSheet }
+            try await settle(sheet, 0.8)
+            key(.return, in: sheet)
+            _ = try await until(10, "Return did not start the other session") { window.attachedSheet == nil ? true : nil }
+            _ = try await until(30, "the other session did not open") { store.selectedID != here ? true : nil }   // a new session is a draft, with no id, until its first request
+            try await settle(window, 1.5)
+            step("away: another session opened, the question not answered", shot: "say\(n)-question\(said.questions.count)-away")
+            store.selectedID = here
+            _ = try await until(30, "back in the asking session, its question did not show again") { store.selectedID == here && store.conversation?.question?.id == q.id ? true : nil }
+            try await settle(window, 1.5)
+            step("back in the asking session: the same question waits", shot: "say\(n)-question\(said.questions.count)-back")
+            said.answered.append("away and back")
+          }
           if let first = f?.options.first, q.single {
             shortcut("1", code: 18, in: window)
             said.answered.append("\(first.label) (Command-1)")

@@ -20,6 +20,9 @@ final class PhoneDrive: XCTestCase {
     /// The phone through the Mac (check 4): the file the Mac copy writes the pairing code into, typed
     /// on the phone's Pair with your Mac screen as a person types it from the Mac's Pair a Phone sheet.
     var pairCodeFile: String?
+    /// Ola's question answered by typing these words in the box and Send, not by a tap on a choice
+    /// (OLA-301 check 8: a person's own words instead of the choices).
+    var answerWords: String?
   }
   struct Entry: Encodable { var at: Double; var step: String; var shot: String? }
   struct Said: Encodable {
@@ -224,7 +227,15 @@ final class PhoneDrive: XCTestCase {
           let sendMine = app.buttons["Send my answers"]
           func button(_ w: String) -> XCUIElement { app.buttons.matching(NSPredicate(format: "label == %@", w)).firstMatch }
           var tapped: [String] = []
-          if !sendMine.exists {
+          if let words = s.answerWords, !words.isEmpty {
+            let box = composer()
+            guard box.waitForExistence(timeout: 10) else { throw Failed(why: "no box to type the answer in") }
+            try tap(box, "the box to type in")
+            box.typeText(words)
+            step("typed the answer \"\(words)\" in the box", shot: "say\(n)-question\(said.questions.count)-typed")
+            try tap(app.buttons["Send"], "Send (the typed answer)")
+            tapped.append("typed \"\(words)\", Send")
+          } else if !sendMine.exists {
             let w = choiceWords[0]
             try reveal(button(w), w)
             try tap(button(w), "the choice \(w)")

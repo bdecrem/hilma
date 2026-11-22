@@ -108,7 +108,10 @@ tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next se
   drag until the choice is wholly inside the card, then taps Send my answers; it never counts a run
   finished while a question waits (OLA-360). Before Nov 21 it tapped a pick-one question's choices one
   after another (each replacing the last, so the fourth was picked) and swiped the window, which did not
-  scroll the card. `transcript.json` lists them under `questions`. They are not yes cards: `--card` does not count them.
+  scroll the card. `--away` (Mac): when a question comes, New Session, then back to
+  the asking session as a click in the sidebar does; the run fails unless the same question shows again,
+  then it is answered (check 7). `--answer-words "<words>"` (phone): the question is answered by typing
+  those words in the box and Send instead of a tap (check 8). `transcript.json` lists them under `questions`. They are not yes cards: `--card` does not count them.
 - **The made-up person** is `appdriver` with its one project `appdriver` on the live test server
   (`tools/drive-account.mjs`, made with the live release's `frontdesk/admin.mjs` the first time).
   Each run gives it a fresh password nobody sees, in a file with mode 600 that the app reads (never
