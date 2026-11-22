@@ -1,5 +1,5 @@
 {
-  "_note": "Candidates for the ticket model (OLA-300): the strongest coding models Together serves, picked by the trial alone (Bart, Nov 20: 'performance is the only criteria', Chinese models allowed for this use only). Prices in USD per million tokens, from Together's /v1/models on Nov 21; `cached` is the price of a prompt-cache hit (together.ai/pricing, Nov 21, OLA-356; a model with none listed is billed as new input). `provider: openrouter` (OLA-370): served at OpenRouter (prices from openrouter.ai/api/v1/models, Nov 21), the two that could run on the Mac Studio: Recursive Flint 40B (the free listing) and Inkling 2 Mini 26B.",
+  "_note": "Candidates for the ticket model (OLA-300): the strongest coding models Together serves, picked by the trial alone (Bart, Nov 20: 'performance is the only criteria', Chinese models allowed for this use only). Prices in USD per million tokens, from Together's /v1/models on Nov 21; `cached` is the price of a prompt-cache hit (together.ai/pricing, Nov 21, OLA-356; a model with none listed is billed as new input). `provider: openrouter` (OLA-370): served at OpenRouter (prices from openrouter.ai/api/v1/models, Nov 21), the two that could run on the Mac Studio: Recursive Flint 40B (the free listing) and Inkling 2 Mini 26B. Nemotron 3.5 Super VL, gpt-oss-120b and Muse Glimmer 30B (OLA-370, Together /v1/models Nov 21; gpt-oss lists no cached price): the three Ola already uses that fit the Mac Studio.",
   "_ticket_model": "kimi-k3.1-pro",
   "_trial": "Nov 21 trial (results in ~/ola-trials/results.jsonl on the mini): Kimi K3.1 Pro 2 of 3 (clock 4/4, gateway 54/54, select 2/8 at the 3M-token cap), all three runs ended before Together's credit ran out at about 9:08 am. Muse Spark 1 of 3 (clock 4/4; select cut by the token cap; gateway by the 402). GLM-5.3 and DeepSeek V4 Pro: 0 of 3, but five of their six runs were cut off by the 402 'credit limit exceeded', so they are not measured yet. Kimi is the ticket model until the cut runs are redone (OLA-346). Nov 21 afternoon, the builder: kept Kimi (the only model measured on all three; per-run numbers on OLA-300).",
   "kimi-k3.1-pro": {
@@ -52,5 +52,25 @@
     "cached": 0.015,
     "out": 0.3,
     "context": 1048576
+  },
+  "nemotron-3.5-super": {
+    "id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+    "in": 0.15,
+    "cached": 0.02,
+    "out": 0.5,
+    "context": 262144
+  },
+  "gpt-oss-120b": {
+    "id": "openai/gpt-oss-120b",
+    "in": 0.15,
+    "out": 0.6,
+    "context": 131072
+  },
+  "muse-glimmer-30b": {
+    "id": "meta-models/Muse-Glimmer-30B",
+    "in": 0.35,
+    "cached": 0.04,
+    "out": 1.5,
+    "context": 131072
   }
 }

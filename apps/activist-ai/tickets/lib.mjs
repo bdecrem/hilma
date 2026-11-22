@@ -80,7 +80,9 @@ export function runFolders(dir) {
   return { dir, work, home }
 }
 
-export function opencodeConfig(model, { lean = false, baseURL = `http://127.0.0.1:${portOf(model)}/v1` } = {}) {
+// steps (lean only): the step cap instead of LEAN's 60 (OLA-370: every failed Flint and Inkling run ended at
+// the cap with no edit, so a run at 120 shows whether steps are the limit).
+export function opencodeConfig(model, { lean = false, steps = null, baseURL = `http://127.0.0.1:${portOf(model)}/v1` } = {}) {
   const m = MODELS[model]
   return {
     $schema: 'https://opencode.ai/config.json',
@@ -89,7 +91,7 @@ export function opencodeConfig(model, { lean = false, baseURL = `http://127.0.0.
     model: 'box/m', update: 'disable',
     permissions: [{ action: '*', resource: '*', effect: 'allow' }, { action: 'webfetch', resource: '*', effect: 'deny' }, { action: 'websearch', resource: '*', effect: 'deny' }, { action: 'external_directory', resource: '*', effect: 'deny' },
       ...(lean ? LEAN.permissions : [])],
-    ...(lean ? LEAN.config : {}),
+    ...(lean ? { ...LEAN.config, ...(steps ? { agents: { build: { steps } } } : {}) } : {}),
   }
 }
 

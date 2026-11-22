@@ -43,6 +43,9 @@ const concurrency = Number(args.concurrency || 4)
 const runUsd = Number(args['run-usd'] || 10)
 // --lean (OLA-356): the ticket-work configuration that reads parts of files (lib.mjs leanConfig).
 const lean = args.lean === true
+// --steps n (with --lean, OLA-370): the step cap instead of 60; the row records it.
+const steps = args.steps ? Number(args.steps) : null
+if (steps && (!lean || !(steps > 0))) die('--steps needs --lean and a positive number')
 const paid = models.filter((m) => LISTED[m])
 const worst = cases.length * paid.reduce((a, m) => a + Math.min(runUsd, tokenLimit * Math.max(MODELS[m].in, MODELS[m].out) / 1e6), 0)
 if (paid.length) {
@@ -69,7 +72,7 @@ function prepare(c, model) {
   if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
   writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
   sh('git init -q && git add -A && git commit -qm base', work)
-  if (LISTED[model]) writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean }), null, 2))
+  if (LISTED[model]) writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean, steps }), null, 2))
   else writeFileSync(path.join(work, 'opencode.jsonc'), '{}')
   // Tagged: change.diff and changes.txt are `git diff config`, and a commit message is not a ref
   // (before OLA-356 every change.diff came out empty).
@@ -106,7 +109,7 @@ async function one(c, model) {
   const cost = LISTED[model] ? priced(model, s) : 0
   const passed = tests.every((t) => t.exit === 0 && t.total > 0 && t.pass === t.total)
   const row = { at: new Date().toISOString(), case: c.id, ticket: c.ticket, level: c.level, model, model_id: m.id, passed, tests, end: s.end, error: s.error, minutes,
-    requests: s.requests, tokens_in: s.tokens_in, tokens_cached: s.tokens_cached || 0, tokens_out: s.tokens_out, lean, cost_usd: cost, tools: s.tools, tool_errors: s.tool_errors, dir: path.relative(root, run.dir) }
+    requests: s.requests, tokens_in: s.tokens_in, tokens_cached: s.tokens_cached || 0, tokens_out: s.tokens_out, lean, steps: lean ? steps || LEAN.config.agents.build.steps : null, cost_usd: cost, tools: s.tools, tool_errors: s.tool_errors, dir: path.relative(root, run.dir) }
   // The self-test rows (reference, empty) go apart; a free model (Recursive Flint, OLA-370) is a real run.
   if (!LISTED[model]) appendFileSync(path.join(root, 'selftest.jsonl'), JSON.stringify(row) + '\n')
   else appendFileSync(results, JSON.stringify(row) + '\n')

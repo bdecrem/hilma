@@ -37,6 +37,11 @@ test('OLA-356: the lean configuration caps tool output, drops skills and spare t
   assert.equal(full.tool_output, undefined)
   assert.equal(full.permissions.length, 4)
   assert.equal(LEAN.env.OPENCODE_DISABLE_CLAUDE_CODE, '1')
+  assert.equal(lean.agents.build.steps, 60)
+  const more = opencodeConfig('kimi-k3.1-pro', { lean: true, steps: 120 })
+  assert.equal(more.agents.build.steps, 120, 'OLA-370: --steps raises the cap')
+  assert.equal(more.tool_output.max_bytes, lean.tool_output.max_bytes, 'and keeps the rest of the lean setup')
+  assert.equal(opencodeConfig('kimi-k3.1-pro', { steps: 120 }).agents, undefined, 'steps apply to the lean setup only')
 })
 
 test('overLimit: the dollar and token ceilings', () => {
