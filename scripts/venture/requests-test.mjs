@@ -101,24 +101,30 @@ try {
     assert.equal(s.requests.find((x) => x.ticket === 'OLA-3').opened, true)
   })
 
-  ok('a rerun that no longer names the opened ticket keeps it listed, and the counts still add up', () => {
-    const fewer = file('answer-fewer.json', { requests: JSON.parse(readFileSync(answer(null), 'utf8')).requests.slice(0, 4) })
-    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', fewer)
+  ok('a rerun never decides a request again: whatever the matcher now says about read messages (new, done, another ticket) changes nothing (four checkers, Nov 22)', () => {
+    const before = readFileSync(fake, 'utf8')
+    const s0 = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    const hostile = file('answer-hostile.json', { requests: [
+      R(6, 'A dark mode in the phone app.', 'new', null, 'no ticket', { title: 'Dark mode again', area: 'apps' }),
+      R(6, 'Dark mode.', 'done', null, 'done that evening'),
+      R(3, 'Is the test server up?', 'ticket', 'OLA-3', 'moved'),
+    ] })
+    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', hostile)
     assert.equal(r.status, 0, r.stderr)
+    assert.match(r.stdout, /5 request\(s\) kept from the run of .*; 0 of 6 message\(s\) not read by it/)
+    assert.equal(db().venture_issues.length, 3, 'nothing opened again')
     const s = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
-    assert.deepEqual(s.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 })
-    assert.match(s.requests.find((x) => x.ticket === 'OLA-3').note, /kept from the run of/)
-    assert.equal(db().venture_issues.length, 3)
+    assert.deepEqual(s.counts, s0.counts)
+    assert.deepEqual(s.requests, s0.requests)
+    assert.ok(before.length > 0)
   })
 
-  ok('a ticket id the matcher made up counts as no ticket (and on a rerun, the request keeps the ticket opened for it)', () => {
-    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-99'), '--dry')
+  ok('a ticket id the matcher made up counts as no ticket', () => {
+    const tr = file('tracker-fresh.json', { venture_issues: [T(1, 'a'), T(2, 'b')], venture_state: [], venture_issue_activity: [], venture_commits: [] })
+    const r = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-99'), '--dry')
     assert.equal(r.status, 0, r.stderr)
-    assert.match(r.stdout, /0 would be opened/)
-    assert.match(r.stdout, /the matcher named OLA-99, which is not in the list; OLA-3 was opened for it by the run of/)
-    const first = node({ VENTURE_TRACKER_FAKE: file('tracker-fresh.json', { venture_issues: [T(1, 'a'), T(2, 'b')], venture_state: [], venture_issue_activity: [], venture_commits: [] }), STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', answer('OLA-99'), '--dry')
-    assert.match(first.stdout, /1 would be opened/)
-    assert.match(first.stdout, /the matcher named OLA-99, which is not in the list/)
+    assert.match(r.stdout, /1 would be opened/)
+    assert.match(r.stdout, /the matcher named OLA-99, which is not in the list/)
   })
 
   ok('a collector that read no machine and no message is a failure, never a quiet day', () => {
@@ -148,17 +154,6 @@ try {
     assert.doesNotMatch(p2.stderr, /before that day ended/)
   })
 
-  ok('a rerun that puts the opened request as done keeps it as the one opened, never counted twice', () => {
-    const a = JSON.parse(readFileSync(answer(null), 'utf8'))
-    a.requests[4] = { ...a.requests[4], outcome: 'done', ticket: null, why: 'Kit built it that evening.' }
-    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--answer', file('answer-done.json', a))
-    assert.equal(r.status, 0, r.stderr)
-    const s = db().venture_state.find((x) => x.key === 'requests').value.days[DAY]
-    assert.deepEqual(s.counts, { requests: 5, matched: 2, done: 1, answered: 1, opened: 1 })
-    assert.equal(s.requests.length, 5)
-    assert.match(s.requests.find((x) => x.ticket === 'OLA-3').note, /OLA-3 was opened for it by the run of .*; this run put it as done/)
-  })
-
   ok('an early match five days back is matched again by the next run (the same seven days post checks)', () => {
     const st = db()
     const row = st.venture_state.find((x) => x.key === 'requests')
@@ -186,32 +181,42 @@ try {
     assert.doesNotMatch(p2.stderr, /before that day ended/)
   })
 
-  ok('two asks in one message, numbers shifted on the rerun: the opened ticket stays with its own request (third checker, Nov 22)', () => {
-    const tr = file('tracker-two.json', { venture_issues: [T(1, 'The Mac app gets a Cloud setting')], venture_state: [], venture_issue_activity: [], venture_commits: [] })
-    const two = [{ id: 1, at: '2026-11-19T17:05:00Z', source: 'terminal', where: 'm1', text: 'add the cloud setting, and the phone app needs dark mode' }]
-    const a1 = file('two-a1.json', { requests: [R(1, 'A Cloud setting in the Mac app.', 'ticket', 'OLA-1', 'OLA-1.'), R(1, 'A dark mode in the phone app.', 'new', null, 'none', { title: 'The phone app gets a dark mode', area: 'apps' })] })
-    const r1 = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('two-m1.json', two) }, 'requests.mjs', '--day', DAY, '--answer', a1)
+  ok('an early match and his evening messages: the rerun matches only the messages it had not read, with the earlier requests shown to the matcher; numbers shifted by another machine change nothing', () => {
+    const tr = file('tracker-eve.json', { venture_issues: [T(1, 'The Mac app gets a Cloud setting')], venture_state: [], venture_issue_activity: [], venture_commits: [] })
+    const day1 = [{ id: 1, at: '2026-11-19T17:05:00Z', source: 'terminal', where: 'm1', text: 'add the cloud setting, and the phone app needs dark mode' }]
+    const a1 = file('eve-a1.json', { requests: [R(1, 'A Cloud setting in the Mac app.', 'ticket', 'OLA-1', 'OLA-1.'), R(1, 'A dark mode in the phone app.', 'new', null, 'none', { title: 'The phone app gets a dark mode', area: 'apps' })] })
+    const r1 = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('eve-m1.json', day1) }, 'requests.mjs', '--day', DAY, '--answer', a1)
     assert.match(r1.stdout, /1 opened \(OLA-2\)/, r1.stderr)
-    // the rerun: an earlier message from another machine shifts every number by one; dark mode is now called done
-    const shifted = [{ id: 1, at: '2026-11-19T16:00:00Z', source: 'terminal', where: 'm4', text: 'thanks' }, { ...two[0], id: 2 }]
-    const a2 = file('two-a2.json', { requests: [R(2, 'A Cloud setting in the Mac app.', 'ticket', 'OLA-1', 'OLA-1.'), R(2, 'Dark mode for the phone app.', 'done', null, 'built that evening')] })
-    const r2 = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('two-m2.json', shifted) }, 'requests.mjs', '--day', DAY, '--answer', a2)
+    // later: the M4's export adds a morning message (every number shifts) and he asks two more things in the evening
+    const later = [
+      { id: 1, at: '2026-11-19T16:00:00Z', source: 'terminal', where: 'm4', text: 'thanks' },
+      { ...day1[0], id: 2 },
+      { id: 3, at: '2026-11-20T06:20:00Z', source: 'terminal', where: 'm1', text: 'the dark mode again please, and add a help page' },
+    ]
+    const p = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('eve-m2.json', later) }, 'requests.mjs', '--day', DAY, '--dry', '--prompt-only')
+    assert.match(p.stdout, /Requests already listed from his earlier messages this day[^]*A dark mode in the phone app\. -> opened OLA-2/)
+    assert.match(p.stdout, /#1 8:00 am terminal\nBart: thanks/)
+    assert.match(p.stdout, /#3 10:20 pm terminal/)
+    assert.doesNotMatch(p.stdout, /#2 9:05 am/, 'a message read before is not asked about again')
+    const a2 = file('eve-a2.json', { requests: [
+      R(2, 'Dark mode (an old message, numbered anew).', 'done', null, 'ignored: read before'),
+      R(3, 'Dark mode in the phone app, asked again.', 'ticket', 'OLA-2', 'OLA-2 was opened for it'),
+      R(3, 'A help page.', 'new', null, 'no ticket', { title: 'A help page', area: 'web' }),
+    ] })
+    const r2 = node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('eve-m2.json', later) }, 'requests.mjs', '--day', DAY, '--answer', a2)
     assert.equal(r2.status, 0, r2.stderr)
-    const s = JSON.parse(readFileSync(tr, 'utf8')).venture_state.find((x) => x.key === 'requests').value.days[DAY]
-    assert.deepEqual(s.counts, { requests: 2, matched: 1, done: 0, answered: 0, opened: 1 })
-    assert.deepEqual(s.requests.map((x) => `${x.ticket} ${x.opened}`).sort(), ['OLA-1 false', 'OLA-2 true'])
-    assert.equal(JSON.parse(readFileSync(tr, 'utf8')).venture_issues.length, 2, 'nothing opened twice')
-    // both asks without a ticket on a rerun: the one whose words match the earlier sentence gets it
-    const a3 = file('two-a3.json', { requests: [R(2, 'Cloud setting for the Mac app.', 'done', null, 'done'), R(2, 'The phone app needs a dark mode.', 'answered', null, 'answered')] })
-    node({ VENTURE_TRACKER_FAKE: tr, STUB_MESSAGES: file('two-m2.json', shifted) }, 'requests.mjs', '--day', DAY, '--answer', a3)
-    const s3 = JSON.parse(readFileSync(tr, 'utf8')).venture_state.find((x) => x.key === 'requests').value.days[DAY]
-    assert.equal(s3.requests.find((x) => x.opened).request, 'The phone app needs a dark mode.')
-    assert.deepEqual(s3.counts, { requests: 2, matched: 0, done: 1, answered: 0, opened: 1 })
-  })
-
-  ok('the matcher is told which tickets an earlier run of the day opened', () => {
-    const r = node({ STUB_MESSAGES: messages }, 'requests.mjs', '--day', DAY, '--dry', '--prompt-only')
-    assert.match(r.stdout, /Tickets an earlier run of this match opened for requests of this same day: OLA-3\./)
+    const st = JSON.parse(readFileSync(tr, 'utf8'))
+    const s = st.venture_state.find((x) => x.key === 'requests').value.days[DAY]
+    assert.deepEqual(s.requests.map((x) => `${x.request} ${x.opened ? 'opened' : x.outcome} ${x.ticket}`), [
+      'A Cloud setting in the Mac app. ticket OLA-1',
+      'A dark mode in the phone app. opened OLA-2',
+      'Dark mode in the phone app, asked again. ticket OLA-2',
+      'A help page. opened OLA-3',
+    ])
+    assert.deepEqual(s.counts, { requests: 4, matched: 2, done: 0, answered: 0, opened: 2 })
+    assert.deepEqual(s.opened, ['OLA-2', 'OLA-3'])
+    assert.equal(st.venture_issues.length, 3)
+    assert.equal(s.seen.length, 3)
   })
 
   ok('a failure of the tool: --dry stores nothing; a real run stores it; post names it and the two ways on', () => {

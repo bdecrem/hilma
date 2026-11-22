@@ -21,7 +21,8 @@
 // that evening has no outcome yet. So a real run first reruns each of the three days before it whose
 // stored match is early, and `sweep.mjs post` refuses a day while an earlier day's match is early
 // (Nov 22: the Nov 21 match ran at 6:30 pm with 13 requests; he typed until 11:22 pm, 24 requests).
-// A rerun of a day keeps the tickets an earlier run opened, and counts each once, as opened.
+// A rerun of a day keeps every request an earlier run listed as it was, and matches only the messages that
+// run had not read (stored as `seen`): no request is decided twice, no ticket opened twice.
 // A run that fails for its own reasons (the collector, the model call, a crash) is stored as failed, so
 // `sweep.mjs post` says so and names the two ways on; a --dry run stores nothing, its failure included.
 // What he said comes from the same place as the grader's (steers.mjs --collect: what he typed in this
@@ -29,6 +30,7 @@
 // what he said on the calls), through a file: no size limit. The matching is one question to Claude
 // Opus on the machine's own Claude login (_claude.mjs: the Max plan, never the API key).
 import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -57,6 +59,8 @@ const OUTCOMES = ['ticket', 'done', 'answered', 'new']
 const TZ = 'America/Los_Angeles'
 const STEERS = process.env.VENTURE_STEERS_SCRIPT || root + 'scripts/venture/steers.mjs'
 const hhmm = (t) => new Date(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).replace(' AM', ' am').replace(' PM', ' pm')
+// a message's identity across runs (its number is only its place in one run's list)
+const keyOf = (m) => createHash('sha256').update(`${m.at}|${m.source}|${String(m.text).slice(0, 500)}`).digest('hex').slice(0, 16)
 class Failed extends Error {}
 const fail = (m) => { throw new Failed(m) }
 
@@ -201,14 +205,24 @@ async function earlierDays() {
 async function run() {
   await earlierDays()
   const prev = (await getState(db, 'requests'))?.value?.days?.[day]
-  const before = new Set(prev?.failed ? [] : prev?.opened ?? [])
-  const msgs = messages()
+  // a rerun never decides an earlier request again: what an earlier good run listed stays as it was (its
+  // outcome, its ticket, the ticket it opened), and only the messages that run had not read are matched
+  // now (Nov 22: four checkers found reruns that moved an opened ticket, counted a request twice or opened
+  // one again, each time because a rerun matched the whole day afresh). A stored day from before the
+  // record of read messages counts as having read them all.
+  const kept = prev && !prev.failed ? prev.requests ?? [] : []
+  const before = new Set(prev && !prev.failed ? prev.opened ?? [] : [])
+  const all = messages()
+  const readBefore = prev && !prev.failed ? new Set(prev.seen ?? all.map(keyOf)) : new Set()
+  const msgs = all.filter((m) => !readBefore.has(keyOf(m)))
+  if (prev && !prev.failed) console.log(`${day}: ${kept.length} request(s) kept from the run of ${hhmm(prev.at)}; ${msgs.length} of ${all.length} message(s) not read by it`)
   const list = await tickets()
   let answer = { requests: [] }
   if (msgs.length) {
     if (opt('--answer')) answer = JSON.parse(readFileSync(opt('--answer'), 'utf8'))
     else {
-      const user = `The day: ${day} (Pacific).\n\nThe tickets (id [status] title: description):\n${list.map((t) => `${t.id} [${t.status}${t.status === 'done' && t.day ? ` ${t.day}` : ''}] ${t.title}${t.what ? `: ${String(t.what).replace(/\s+/g, ' ').slice(0, 220)}` : ''}`).join('\n')}${before.size ? `\n\nTickets an earlier run of this match opened for requests of this same day: ${[...before].join(', ')}. The request each was opened for gets outcome "ticket" with that id, even when it was done or answered later that day.` : ''}\n\nThe day's commits (Pacific time, subject):\n${commits().join('\n') || '(none)'}\n\nBart's messages that day (number, time, where; after "Kit before:" the end of what the agent had said just before):\n${msgs.map((m) => `#${m.id} ${hhmm(m.at)} ${m.source}${m.kit ? `\nKit before: ${String(m.kit).replace(/\s+/g, ' ').slice(-600)}` : ''}\nBart: ${String(m.text).slice(0, 6000)}`).join('\n\n')}`
+      const earlier = kept.length ? `\n\nRequests already listed from his earlier messages this day (do not list them again; a new message that repeats or continues one gets that request's ticket when it has one):\n${kept.map((r) => `- ${r.time}: ${r.request} -> ${r.opened ? `opened ${r.ticket}` : r.outcome}${r.ticket && !r.opened ? ` ${r.ticket}` : ''}`).join('\n')}` : ''
+      const user = `The day: ${day} (Pacific).\n\nThe tickets (id [status] title: description):\n${list.map((t) => `${t.id} [${t.status}${t.status === 'done' && t.day ? ` ${t.day}` : ''}] ${t.title}${t.what ? `: ${String(t.what).replace(/\s+/g, ' ').slice(0, 220)}` : ''}`).join('\n')}${earlier}\n\nThe day's commits (Pacific time, subject):\n${commits().join('\n') || '(none)'}\n\nBart's messages that day${kept.length ? ' not read before' : ''} (number, time, where; after "Kit before:" the end of what the agent had said just before):\n${msgs.map((m) => `#${m.id} ${hhmm(m.at)} ${m.source}${m.kit ? `\nKit before: ${String(m.kit).replace(/\s+/g, ' ').slice(-600)}` : ''}\nBart: ${String(m.text).slice(0, 6000)}`).join('\n\n')}`
       if (args.includes('--prompt-only')) return console.log(user) // for tests: the question, never asked
       const r = await askClaude({ system: SYSTEM, user, schema: SCHEMA, effort: 'medium' }).catch((e) => fail(`the matcher failed (on the Max login, _claude.mjs): ${e.message}`))
       answer = r.json
@@ -230,34 +244,17 @@ async function run() {
     r.opened = true
     opened.push(id)
   }
-  // a ticket an earlier run of this day opened is that night's opened ticket, not one it already had
-  for (const r of found) if (r.outcome === 'ticket' && before.has(r.ticket)) r.opened = true
-  const requests = found.map((r) => {
-    const m = byNum.get(r.messages[0])
-    return { time: hhmm(m.at), at: m.at, source: m.source, messages: r.messages, request: r.request.trim(), outcome: r.outcome, ticket: r.ticket, opened: !!r.opened, why: r.why, ...(r.outcome === 'new' ? { title: r.title, area: r.area } : {}), ...(r.note ? { note: r.note } : {}) }
-  })
-  // an earlier run's opened ticket this run did not name stays listed, with that run's line
-  for (const id of before) if (!requests.some((r) => r.ticket === id)) {
-    // the same request under another outcome (done or answered later that evening): it stays the opened one
-    const w = prev.requests?.find((r) => r.ticket === id)
-    // found by the first message's time (message numbers shift between runs), only among requests with no
-    // ticket, and only when exactly one such request starts at that message (two asks in one message are ambiguous)
-    const cands = w ? requests.filter((r) => !r.opened && r.outcome !== 'ticket' && r.at === w.at) : []
-    // (or, when several do, the one whose words are closest to the earlier run's sentence, if one is clearly closest)
-    const words = (t) => new Set(String(t).toLowerCase().match(/[a-z0-9]{3,}/g) ?? [])
-    const score = (r) => { const a = words(w.request); return [...words(r.request)].filter((x) => a.has(x)).length }
-    const ranked = cands.map((r) => [score(r), r]).sort((x, y) => y[0] - x[0])
-    const same = ranked.length === 1 ? ranked[0][1] : ranked.length > 1 && ranked[0][0] > ranked[1][0] ? ranked[0][1] : null
-    if (same) { same.note = `${same.note ? `${same.note}; ` : ''}${id} was opened for it by the run of ${hhmm(prev.at)}; this run put it as ${same.outcome}`; same.outcome = 'ticket'; same.ticket = id; same.opened = true; continue }
-    const was = w ?? { time: hhmm(prev.at), at: prev.at, source: 'earlier run', messages: [], request: `the request ${id} was opened for`, outcome: 'new', ticket: id, why: `opened by the run of ${hhmm(prev.at)}` }
-    requests.push({ ...was, opened: true, note: `kept from the run of ${hhmm(prev.at)}: this run did not name it` })
-  }
-  // one opened ticket is one request opened; another request the matcher put on it had a ticket by then
-  { const seen = new Set(); for (const r of requests) if (r.opened) { if (seen.has(r.ticket)) { r.opened = false; r.outcome = 'ticket' } else seen.add(r.ticket) } }
+  const requests = [
+    ...kept,
+    ...found.map((r) => {
+      const m = byNum.get(r.messages[0])
+      return { time: hhmm(m.at), at: m.at, key: keyOf(m), source: m.source, messages: r.messages, request: r.request.trim(), outcome: r.outcome, ticket: r.ticket, opened: !!r.opened, why: r.why, ...(r.outcome === 'new' ? { title: r.title, area: r.area } : {}), ...(r.note ? { note: r.note } : {}) }
+    }),
+  ]
   const n = (o) => requests.filter((r) => r.outcome === o && !r.opened).length
   const nOpened = requests.filter((r) => r.opened).length
-  console.log(`${day}: ${requests.length} requests in ${msgs.length} messages: ${n('ticket')} on a ticket, ${n('done')} done that day, ${n('answered')} answered, ${dry ? `${n('new')} would be opened` : `${nOpened} opened${nOpened ? ` (${requests.filter((r) => r.opened).map((r) => r.ticket).join(', ')})` : ''}`}`)
-  for (const r of requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${(r.opened ? "opened" : r.outcome).padEnd(8)} ${r.outcome === 'new' ? (dry ? `would open "${r.title}" (${r.area})` : `${r.ticket} "${r.title}"`) : r.ticket ?? ''}  ${r.request}  [${r.why}]${r.note ? `  [${r.note}]` : ''}`)
+  console.log(`${day}: ${requests.length} requests in ${all.length} messages: ${n('ticket')} on a ticket, ${n('done')} done that day, ${n('answered')} answered, ${dry ? `${n('new')} would be opened${nOpened ? `, ${nOpened} opened before` : ''}` : `${nOpened} opened${nOpened ? ` (${requests.filter((r) => r.opened).map((r) => r.ticket).join(', ')})` : ''}`}`)
+  for (const r of requests) console.log(`  ${r.time} ${r.source.padEnd(8)} ${(r.opened ? "opened" : r.outcome).padEnd(8)} ${r.outcome === 'new' && !r.opened ? `would open "${r.title}" (${r.area})` : r.ticket ?? ''}  ${r.request}  [${r.why}]${r.note ? `  [${r.note}]` : ''}${kept.includes(r) ? '  (kept)' : ''}`)
   if (dry) return console.log('--dry: nothing opened, nothing stored, nothing exported')
   const old = (await getState(db, 'requests'))?.value ?? { days: {} }
   // a rerun keeps the tickets an earlier run of the same day opened, each counted once, as opened
@@ -265,7 +262,7 @@ async function run() {
   const counts = { requests: requests.length, matched: n('ticket'), done: n('done'), answered: n('answered'), opened: openedAll.length }
   if (counts.matched + counts.done + counts.answered + counts.opened !== counts.requests) fail(`the counts do not add up (${JSON.stringify(counts)}): requests.mjs is wrong, nothing stored`)
   const at = new Date().toISOString()
-  const stored = { day, at, final: !matchEarly({ day, at }), messages: msgs.length, newest: msgs.map((m) => m.at).sort().pop() ?? null, requests, opened: openedAll, counts }
+  const stored = { day, at, final: !matchEarly({ day, at }), messages: all.length, newest: all.map((m) => m.at).sort().pop() ?? null, seen: [...new Set([...readBefore, ...all.map(keyOf)])], requests, opened: openedAll, counts }
   await setState(db, 'requests', { at: stored.at, days: { ...(old.days ?? {}), [day]: stored } })
   console.log(`stored in venture_state "requests" for ${day}; sweep.mjs post puts the counts in the day's entry${stored.final ? '' : `; the day is not over, so the next run (or tomorrow's) matches it again`}`)
 }
