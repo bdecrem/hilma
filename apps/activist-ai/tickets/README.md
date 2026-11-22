@@ -100,6 +100,15 @@ Harder cases, lean: `ola-337-deepseek` (54 tests) Kimi PASS 54/54, 30 calls, 68k
 cached, $0.50 (the Nov 21 full run: 3.1M tokens, $6.30 at list); V4.1 Flash FAIL 53/54, $0.14.
 `ola-283-select` (8 tests, the hard one) Kimi FAIL 5/8 at the 40-step cap, 142k new + 4.09M cached, $1.44 (Nov 21 full: 2/8 at 3M tokens); the cap is 60 since.
 
+**The Mac Studio candidates, Nov 21 (OLA-370), lean, through OpenRouter.** Recursive Flint 40B (free): small
+0/24 then 24/24 (60 calls each, 18.6 and 7.3 min; the pass is correct, a little wordier than main), medium
+53/54 (no edit, the 60-step cap, 4.5 min), hard not measured: the first run "passed" 8/8 by copying main's
+`select.mjs` from the mini's backup disk (now closed, see the sandbox above), the rerun was cut at 16 min
+by the ticket gateway's own 20M-token weekly cap. Inkling 2 Mini 26B: 0 of 4, $0.48 in all (small 0/24
+twice, medium 53/54, hard 0/8); in every run it explored with shell commands until the step cap or the
+clock and never made an edit. Both sent well-formed tool calls (no format errors, no rate limits). Neither
+takes a ticket alone: Flint passes a small one about half the time.
+
 So a small ticket is about $0.20 on Kimi and $0.50 a medium one. The cheaper models are cheaper
 again (V4 Pro $0.13), but only Kimi met main's bar on every case; Flash fails a medium one.
 Other hosts of the same models, prices only (Nov 21, per M in / cached / out): DeepSeek's own API
