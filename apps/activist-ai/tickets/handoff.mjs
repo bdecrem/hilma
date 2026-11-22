@@ -6,7 +6,7 @@
 //
 //   node apps/activist-ai/tickets/handoff.mjs list                    open tickets marked for Ola
 //   node apps/activist-ai/tickets/handoff.mjs run OLA-n --test "<cmd>" [--test "<cmd>" ...] [--claimed <who>]
-//        [--model <alias>] [--time 2400] [--tokens 4000000] [--max-usd 10] [--dry]
+//        [--model <alias>] [--time 2400] [--tokens 4000000] [--max-usd 10] [--full] [--dry]
 //
 // run: the ticket and its whole thread (issues.mjs show) become the request. origin/main is exported
 // into ~/ola-trials/handoff/OLA-n-<time>/work (its own git, no link to this checkout); Ola's opencode
@@ -23,7 +23,7 @@
 import { writeFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { hostname } from 'node:os'
-import { MODELS, repo, root, sh, q, freeGb, MIN_FREE_GB, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, cost, tracker } from './lib.mjs'
+import { MODELS, repo, root, sh, q, freeGb, MIN_FREE_GB, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, cost, tracker, LEAN } from './lib.mjs'
 
 const argv = process.argv.slice(2)
 const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true) }
@@ -36,12 +36,15 @@ if (argv[0] === 'list') {
   console.log(mine.length ? mine.join('\n') : 'no open ticket is marked for Ola (issues.mjs edit OLA-n --who ola)')
   process.exit(0)
 }
-if (argv[0] !== 'run' || !/^OLA-\d+$/.test(argv[1] || '')) die('usage: handoff.mjs list | run OLA-n --test "<cmd>" [--claimed <who>] [--model <alias>] [--time s] [--tokens n] [--max-usd n] [--dry]')
+if (argv[0] !== 'run' || !/^OLA-\d+$/.test(argv[1] || '')) die('usage: handoff.mjs list | run OLA-n --test "<cmd>" [--claimed <who>] [--model <alias>] [--time s] [--tokens n] [--max-usd n] [--full] [--dry]')
 
 const id = argv[1]
 const model = flag('model', MODELS._ticket_model)
 if (!model || !MODELS[model] || model.startsWith('_')) die(`no ticket model: --model <one of ${Object.keys(MODELS).filter((k) => !k.startsWith('_')).join(', ')}>, or set _ticket_model in models.json`)
 const dry = flag('dry', false) === true
+// Lean by default (OLA-356): tool output capped, no skills, no auto-loaded 80 KB CLAUDE.md, search then
+// read line ranges. --full runs the configuration of before (whole files, every instruction file).
+const lean = flag('full', false) !== true
 const tests = flags('test')
 if (!tests.length) die('--test "<cmd>" is required (one per command): the ticket\'s tests decide whether Ola\'s change works')
 const show = issues('show', id)
@@ -60,7 +63,7 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
 const run = runFolders(path.join(root, 'handoff', `${id}-${stamp}`))
 sh(`git -C ${q(repo)} archive ${base} | tar -x -C ${q(run.work)}`)
 sh(`ln -s ${q(path.join(repo, 'node_modules'))} node_modules && ln -s ${q(path.join(repo, 'apps/activist-ai/node_modules'))} apps/activist-ai/node_modules`, run.work)
-writeFileSync(path.join(run.work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model), null, 2))
+writeFileSync(path.join(run.work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean }), null, 2))
 sh(`printf 'node_modules\\nopencode.jsonc\\n' >> .git-info-exclude; git init -q && mv .git-info-exclude .git/info/exclude && git add -A && git commit -qm base`, run.work)
 
 const request = `You are Ola, building a ticket of our own tracker. Kit, the lead, reviews your change, runs its checks and merges it; a checker then checks it on the live thing.
@@ -72,7 +75,7 @@ ${show}
 The tests that decide it (they run after you stop; make them pass, and add to them where the ticket needs a new behavior tested): ${tests.join('; ')}
 
 How to work:
-- Read the repo's CLAUDE.md first, then the CLAUDE.md and README of every folder you touch. Follow their conventions.
+${lean ? `- ${LEAN.reading} Follow the conventions of the files around your change.` : "- Read the repo's CLAUDE.md first, then the CLAUDE.md and README of every folder you touch. Follow their conventions."}
 - Make the change the ticket asks for, and only that. Small, plain code in the style of the files around it.
 - Run the tests above yourself, and add a test for the new behavior in the folder's test file. There is no network here except your model; a check that needs the network or the live server is left for Kit, and you say so.
 - Never print or read a secret; there is none here to read.
@@ -81,7 +84,7 @@ writeFileSync(path.join(run.dir, 'request.md'), request)
 
 console.log(`${id}: Ola on ${model} (${MODELS[model].id}) in ${path.relative(root, run.dir)}, from main ${base.slice(0, 8)}; stops at ${tokenLimit.toLocaleString()} tokens or $${usdLimit}`)
 const t0 = Date.now()
-const s = await runOpencode(run, request, { timeLimit: Number(flag('time', 2400)), tokenLimit, usdLimit, model, token: gatewayToken() })
+const s = await runOpencode(run, request, { timeLimit: Number(flag('time', 2400)), tokenLimit, usdLimit, model, token: gatewayToken(), lean })
 const minutes = +((Date.now() - t0) / 60000).toFixed(1)
 const usd = cost(model, s)
 sh('git add -A && (git diff --cached --quiet || git commit -qm "uncommitted at the end of the run")', run.work)
@@ -94,7 +97,7 @@ const results = []
 for (const [i, cmd] of tests.entries()) results.push(await runTest(run, `t${i + 1}`, cmd))
 const passed = results.every((t) => t.exit === 0)
 const testLine = results.map((t) => `${t.cmd}: ${t.exit === 0 ? 'pass' : `FAIL (exit ${t.exit})`}${t.total ? `, ${t.pass} of ${t.total}` : ''}`).join('; ')
-const summary = { id, model, model_id: MODELS[model].id, base, end: s.end, minutes, requests: s.requests, tokens_in: s.tokens_in, tokens_out: s.tokens_out, cost_usd: usd, files: stat.split('\n').slice(-1)[0] || 'no change', passed, tests: results }
+const summary = { id, model, model_id: MODELS[model].id, base, end: s.end, minutes, requests: s.requests, tokens_in: s.tokens_in, tokens_cached: s.tokens_cached, tokens_out: s.tokens_out, lean, cost_usd: usd, files: stat.split('\n').slice(-1)[0] || 'no change', passed, tests: results }
 writeFileSync(path.join(run.dir, 'summary.json'), JSON.stringify({ ...summary, final: s.final }, null, 2))
 console.log(`${id}: ${s.end}, ${minutes} min, ${s.requests} model calls, $${usd}; ${summary.files}`)
 console.log(`${id}: tests ${passed ? 'PASS' : 'FAIL'}: ${testLine}`)

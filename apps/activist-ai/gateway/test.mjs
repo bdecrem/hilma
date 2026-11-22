@@ -552,6 +552,25 @@ test('the reply to the caller is rebuilt from an allowlist; upstream extras and 
   await g.stop()
 })
 
+test('OLA-356: the ticket lane alone gets the prompt-cache hit count; the log keeps it', async () => {
+  const up = await fakeUpstream()
+  // refused with more than one caller: a hit count is a side channel between them
+  const many = run({ ...baseEnv(up.url), GATEWAY_REPORT_CACHED: '1' })
+  await waitFor(() => many.code !== undefined, 5000, 'the gateway to refuse')
+  assert.notEqual(many.code, 0)
+  assert.match(many.err, /GATEWAY_REPORT_CACHED needs exactly one caller/)
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_TOKENS: `tickets:${T.a}`, GATEWAY_REPORT_CACHED: '1' })
+  const r = await call(g, T.a, chat({ usage: [1000, 5], usageExtra: { prompt_tokens_details: { cached_tokens: 800 } } }))
+  assert.equal(r.status, 200)
+  assert.deepEqual(r.json.usage.prompt_tokens_details, { cached_tokens: 800 })
+  // a model that reports them at the top level of usage, streamed
+  const s = await call(g, T.a, chat({ usage: [1000, 5], usageExtra: { cached_tokens: 600 } }, 'general', { stream: true, stream_options: { include_usage: true } }))
+  assert.ok(s.text.includes('"prompt_tokens_details":{"cached_tokens":600}'))
+  const logs = await waitFor(() => (g.logs().length >= 2 ? g.logs() : null), 3000, 'two log lines')
+  assert.deepEqual(logs.map((l) => l.tokens_cached), [800, 600])
+  await g.stop()
+})
+
 // ---------------------------------------------------------------- review 2026-11-16: quota re-check (no overshoot)
 
 test('a burst cannot run the whole queue past the quota; retries re-check too', async () => {

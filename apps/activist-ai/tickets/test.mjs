@@ -9,7 +9,7 @@ import { existsSync, mkdtempSync, writeFileSync, rmSync, realpathSync } from 'no
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { cost, here, overLimit, runFolders, runOpencode, runTest, tracker } from './lib.mjs'
+import { LEAN, cost, here, opencodeConfig, overLimit, runFolders, runOpencode, runTest, tracker } from './lib.mjs'
 
 // A stand-in for opencode: one model call every 20 ms, each 200,000 tokens in and 1,000 out, until
 // it is killed or has made `steps` calls. At Kimi K3.1 Pro's prices ($2 in, $10 out) a call is $0.41.
@@ -21,6 +21,23 @@ function fakeRun(steps = 1000) {
   writeFileSync(bin, `#!/bin/sh\ni=0\nwhile [ $i -lt ${steps} ]; do echo '${line}'; i=$((i+1)); sleep 0.02; done\necho '{"type":"text","part":{"text":"done"}}'\n`, { mode: 0o755 })
   return { run, bin, dir }
 }
+
+test('OLA-356: cache hits are priced at the cached rate and count toward the token ceiling', () => {
+  // Kimi: 100k new at $2, 900k cached at $0.20, 10k out at $10 = 0.20 + 0.18 + 0.10
+  const s = { tokens_in: 100_000, tokens_cached: 900_000, tokens_out: 10_000 }
+  assert.equal(cost('kimi-k3.1-pro', s), 0.48)
+  assert.equal(cost('qwen3.7-max', s), +((1_000_000 * 2.5 + 10_000 * 7.5) / 1e6).toFixed(2), 'no cached rate listed: billed as new input')
+  assert.equal(overLimit('kimi-k3.1-pro', s, { tokenLimit: 1_000_000 }), 'token_limit')
+})
+
+test('OLA-356: the lean configuration caps tool output, drops skills and spare tools; the default is unchanged', () => {
+  const lean = opencodeConfig('kimi-k3.1-pro', { lean: true }), full = opencodeConfig('kimi-k3.1-pro')
+  assert.ok(lean.tool_output.max_bytes <= 12000)
+  for (const t of ['skill', 'subagent', 'question', 'experimental_image_generate']) assert.ok(lean.permissions.some((p) => p.action === t && p.effect === 'deny'), t)
+  assert.equal(full.tool_output, undefined)
+  assert.equal(full.permissions.length, 4)
+  assert.equal(LEAN.env.OPENCODE_DISABLE_CLAUDE_CODE, '1')
+})
 
 test('overLimit: the dollar and token ceilings', () => {
   const s = { tokens_in: 1_000_000, tokens_out: 100_000 } // Kimi: $2 + $1 = $3
@@ -75,7 +92,7 @@ test('runTest: exit code and node:test counts, in the sandbox', async () => {
 
 test('the trial refuses runs whose worst case is over --max-usd', () => {
   // three cases on Kimi, each stopping at $10: a worst case of $30
-  const r = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--max-usd', '29'], { encoding: 'utf8' })
+  const r = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--cases', 'ola-324-clock,ola-283-select,ola-337-deepseek', '--max-usd', '29'], { encoding: 'utf8' })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /can cost up to \$30\.00, over --max-usd 29/)
   const one = spawnSync(process.execPath, [path.join(here, 'trial.mjs'), '--models', 'kimi-k3.1-pro', '--cases', 'ola-324-clock', '--run-usd', '6'], { encoding: 'utf8' })

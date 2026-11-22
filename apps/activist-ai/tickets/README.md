@@ -18,8 +18,9 @@ files given, the test commands); `models.json` the candidates with Together's pr
 apps/activist-ai/tickets/gateway.sh kimi-k3.1-pro glm-5.3        # one loopback gateway per model (port 4460 + its place in models.json)
 node apps/activist-ai/tickets/trial.mjs --models reference,empty # self-test: the real commit must pass every case, no change must fail
 node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro,glm-5.3 --max-usd 30 [--run-usd 10] --time 1500 --tokens 3000000
+node apps/activist-ai/tickets/trial.mjs --models kimi-k3.1-pro --cases ola-351-ready --lean --max-usd 2.5 --run-usd 2.5   # the lean configuration (OLA-356)
 node apps/activist-ai/tickets/trial.mjs --report                 # pass count, cost and minutes per model
-node apps/activist-ai/tickets/test.mjs                           # the stops and refusals, offline (9 tests)
+node apps/activist-ai/tickets/test.mjs                           # the stops, refusals, cache pricing and lean config, offline (11 tests)
 ```
 
 **Spending stops (Nov 21, after the $45 morning).** Every run, trial or hand-off, stops itself after
@@ -53,6 +54,52 @@ at 3M tokens; the next round gives it 6M.
 Candidates (Nov 21, Together serverless): Kimi K3.1 Pro, DeepSeek V4 Pro, GLM-5.3, Muse Spark Open.
 Qwen3.7-Max is listed but Together refuses it on the serverless API ("the model server rejected the
 request"), so it is not in the trial.
+
+## Cost: the lean configuration and cache hits (OLA-356, Nov 21)
+
+The OLA-351 hand-off was recorded at $4.78 (2.35M tokens in, 8k out, 20 calls). Two causes, both fixed:
+
+- **Cache hits were hidden.** Together caches repeated input by itself and bills a hit at about a
+  tenth (Kimi K3.1 Pro $0.20 against $2.00 per M; together.ai/pricing), but the gateway strips
+  `prompt_tokens_details`, so opencode saw "cache read 0" and our cost line priced every token as
+  new. `gateway.sh` now starts the ticket lane's gateways with `GATEWAY_REPORT_CACHED=1` (refused on
+  a gateway with more than one caller: a hit count is a side channel between callers), opencode
+  reports input as the new tokens and the hits apart, and `lib.mjs cost` prices hits at
+  `models.json` `cached`. The same run, measured again: 90% of its input was hits.
+- **Too much was read.** opencode puts the 80 KB root CLAUDE.md into every call's system prompt
+  (22k of call 1's 28k tokens), and Ola then read it again, whole files and a skill on top. The
+  lean configuration (`lib.mjs LEAN`; the hand-off's default, `--full` for the old one, `--lean` in
+  the trial): no Claude-compat instruction files or skills (`OPENCODE_DISABLE_CLAUDE_CODE`), tool
+  output capped at 12 KB, the subagent, question and image tools denied, 60 steps at most (40 cut the hard case short), and a
+  request that says to search first and read line ranges. Call 1 is 4.7k tokens.
+
+`node apps/activist-ai/tickets/probe.mjs [--default]` shows what a run sends before the model reads
+anything, against a stand-in server (no model money).
+
+Measured on case `ola-351-ready` (OLA-351 from ef725577, the test file given, 24 tests):
+
+| setup | passed | calls | new in | cached in | out | dollars |
+|---|---|---|---|---|---|---|
+| Nov 21 record, Kimi, full (hits not counted) | 24/24 | 20 | 2.35M | (hidden) | 8k | 4.78 at list |
+| Kimi K3.1 Pro, full, hits counted | 24/24 | 16 | 136k | 1.25M | 5k | 0.57 |
+| Kimi K3.1 Pro, lean | 24/24 | 16 | 39k | 373k | 5k | 0.20 |
+| DeepSeek V4 Pro 0813, lean | 24/24 | 20 | 21k | 344k | 14k | 0.13 |
+| DeepSeek V4.1 Flash, lean | 24/24 | 21 | 26k | 355k | 12k | 0.02 |
+
+Kimi's change matches main's (runner.mjs byte for byte); DeepSeek V4 Pro's is correct but wordier;
+V4.1 Flash's is correct but put the new function between `deployGate` and its doc comment.
+
+Harder cases, lean: `ola-337-deepseek` (54 tests) Kimi PASS 54/54, 30 calls, 68k new + 1.30M
+cached, $0.50 (the Nov 21 full run: 3.1M tokens, $6.30 at list); V4.1 Flash FAIL 53/54, $0.14.
+`ola-283-select` (8 tests, the hard one) Kimi FAIL 5/8 at the 40-step cap, 142k new + 4.09M cached, $1.44 (Nov 21 full: 2/8 at 3M tokens); the cap is 60 since.
+
+So a small ticket is about $0.20 on Kimi and $0.50 a medium one. The cheaper models are cheaper
+again (V4 Pro $0.13), but only Kimi met main's bar on every case; Flash fails a medium one.
+Other hosts of the same models, prices only (Nov 21, per M in / cached / out): DeepSeek's own API
+V4 Pro 1.32 / 0.044 / 3.96, half off-peak (api-docs.deepseek.com/quick_start/pricing); DeepInfra Kimi
+K3.1 Pro 1.90 / 0.19 / 9.50, GLM-5.3 0.563 / 0.125 / 2.50 (deepinfra.com); Fireworks Kimi K3.1 Pro the
+same as Together (fireworks.ai/pricing). With 90% of input cached, output and new input dominate, so
+none of them is more than about 10% cheaper for Kimi.
 
 ## Step 2: the hand-off (`handoff.mjs`)
 

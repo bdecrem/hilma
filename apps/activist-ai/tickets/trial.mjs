@@ -16,7 +16,7 @@
 // never counts), the tests run in the same sandbox, and one line goes to ~/ola-trials/results.jsonl.
 import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, symlinkSync } from 'node:fs'
 import path from 'node:path'
-import { here, repo, root, nmRoot, nmOla, MODELS as LISTED, MIN_FREE_GB, sh, freeGb, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken } from './lib.mjs'
+import { here, repo, root, nmRoot, nmOla, MODELS as LISTED, MIN_FREE_GB, sh, freeGb, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, cost as priced, LEAN } from './lib.mjs'
 
 const results = path.join(root, 'results.jsonl')
 
@@ -41,6 +41,8 @@ const concurrency = Number(args.concurrency || 4)
 // Each run also stops itself at --run-usd (default 10, lib.mjs overLimit), so a run's worst case is
 // the smaller of that and its tokens at the dearer of the two prices.
 const runUsd = Number(args['run-usd'] || 10)
+// --lean (OLA-356): the ticket-work configuration that reads parts of files (lib.mjs leanConfig).
+const lean = args.lean === true
 const paid = models.filter((m) => LISTED[m])
 const worst = cases.length * paid.reduce((a, m) => a + Math.min(runUsd, tokenLimit * Math.max(MODELS[m].in, MODELS[m].out) / 1e6), 0)
 if (paid.length) {
@@ -61,21 +63,23 @@ function prepare(c, model) {
   const { work } = run
   // Only the folders the ticket needs (cases.json `paths`): a whole copy of the repo is gigabytes,
   // and twelve of them filled the mini's disk on Nov 21.
-  sh(`git -C ${JSON.stringify(repo)} archive ${c.commit}^ -- ${c.paths.map((x) => `'${x}'`).join(' ')} | tar -x -C ${JSON.stringify(work)}`)
+  sh(`git -C ${JSON.stringify(repo)} archive ${c.base || `${c.commit}^`} -- ${c.paths.map((x) => `'${x}'`).join(' ')} | tar -x -C ${JSON.stringify(work)}`)
   for (const f of c.give) sh(`git -C ${JSON.stringify(repo)} show ${c.commit}:${f} > ${JSON.stringify(path.join(work, f))}`)
   symlinkSync(nmRoot, path.join(work, 'node_modules'))
   if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
   writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
   sh('git init -q && git add -A && git commit -qm base', work)
-  if (LISTED[model]) writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model), null, 2))
+  if (LISTED[model]) writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean }), null, 2))
   else writeFileSync(path.join(work, 'opencode.jsonc'), '{}')
-  sh('git add opencode.jsonc .gitignore && git commit -qm config', work)
+  // Tagged: change.diff and changes.txt are `git diff config`, and a commit message is not a ref
+  // (before OLA-356 every change.diff came out empty).
+  sh('git add opencode.jsonc .gitignore && git commit -qm config && git tag config', work)
   return run
 }
 
 function instruction(c) {
   return `${c.request}\n\nThe ticket's tests are already in place: ${c.give.join(', ')}. Make them pass without changing them, and keep the code's existing tests passing. ` +
-    `Run them yourself: ${c.tests.map((t) => t.cmd).join('; ')}. Read the CLAUDE.md of each folder you touch first. ` +
+    `Run them yourself: ${c.tests.map((t) => t.cmd).join('; ')}. ${lean ? LEAN.reading : 'Read the CLAUDE.md of each folder you touch first.'} ` +
     `Work only in this folder. When it is done, commit your change with git and say in two sentences what you changed.`
 }
 
@@ -91,21 +95,21 @@ async function one(c, model) {
   const run = prepare(c, model)
   const t0 = Date.now()
   console.log(`start ${c.id} on ${model} in ${path.relative(root, run.dir)}`)
-  const s = model === 'reference' ? (sh(`git -C ${JSON.stringify(repo)} diff ${c.commit}^ ${c.commit} -- . ${c.give.map((f) => `':!${f}'`).join(' ')} | git apply --whitespace=nowarn`, run.work), { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 })
-    : model === 'empty' ? { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 } : await runOpencode(run, instruction(c), { timeLimit, tokenLimit, usdLimit: runUsd, model, token: gwToken })
+  const s = model === 'reference' ? (sh(`git -C ${JSON.stringify(repo)} diff ${c.base || `${c.commit}^`} ${c.commit} -- ${c.paths.map((x) => `'${x}'`).join(' ')} ${c.give.map((f) => `':!${f}'`).join(' ')} | git apply --whitespace=nowarn`, run.work), { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 })
+    : model === 'empty' ? { end: 'done', requests: 0, tokens_in: 0, tokens_out: 0, tools: 0, tool_errors: 0 } : await runOpencode(run, instruction(c), { timeLimit, tokenLimit, usdLimit: runUsd, model, token: gwToken, lean })
   const minutes = +((Date.now() - t0) / 60000).toFixed(1)
   let diff = ''
   try { diff = sh('git add -A >/dev/null 2>&1; git diff --cached --shortstat HEAD~0 2>/dev/null; git diff --shortstat 2>/dev/null; git log --oneline config..HEAD 2>/dev/null | wc -l', run.work) } catch {}
   try { sh('git add -A && git diff --cached --stat > ../changes-uncommitted.txt; git diff config..HEAD --stat > ../changes.txt; git diff config > ../change.diff', run.work) } catch {}
   const tests = await runTests(run, c)
   const m = MODELS[model]
-  const cost = +((s.tokens_in * m.in + s.tokens_out * m.out) / 1e6).toFixed(2)
+  const cost = LISTED[model] ? priced(model, s) : 0
   const passed = tests.every((t) => t.exit === 0 && t.total > 0 && t.pass === t.total)
   const row = { at: new Date().toISOString(), case: c.id, ticket: c.ticket, level: c.level, model, model_id: m.id, passed, tests, end: s.end, error: s.error, minutes,
-    requests: s.requests, tokens_in: s.tokens_in, tokens_out: s.tokens_out, cost_usd: cost, tools: s.tools, tool_errors: s.tool_errors, dir: path.relative(root, run.dir) }
+    requests: s.requests, tokens_in: s.tokens_in, tokens_cached: s.tokens_cached || 0, tokens_out: s.tokens_out, lean, cost_usd: cost, tools: s.tools, tool_errors: s.tool_errors, dir: path.relative(root, run.dir) }
   if (!MODELS[model].in && !MODELS[model].out) appendFileSync(path.join(root, 'selftest.jsonl'), JSON.stringify(row) + '\n')
   else appendFileSync(results, JSON.stringify(row) + '\n')
-  console.log(`${passed ? 'PASS' : 'FAIL'} ${c.id} on ${model}: ${tests.map((t) => `${t.name} ${t.pass}/${t.total}`).join(', ')}; ${s.end}, ${minutes} min, ${(s.tokens_in / 1e6).toFixed(2)}M in, $${cost}`)
+  console.log(`${passed ? 'PASS' : 'FAIL'} ${c.id} on ${model}: ${tests.map((t) => `${t.name} ${t.pass}/${t.total}`).join(', ')}; ${s.end}, ${minutes} min, ${(s.tokens_in / 1e6).toFixed(2)}M in + ${((s.tokens_cached || 0) / 1e6).toFixed(2)}M cached, $${cost}`)
 }
 
 function report() {

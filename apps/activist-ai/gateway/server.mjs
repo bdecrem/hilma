@@ -30,7 +30,9 @@
 // milliseconds. Every field is a number, a name from the config, or a string from this
 // file; nothing a caller or the model server sends reaches the log. Never a prompt, a
 // file, a tool argument or a reply. That is the "no record of what you asked" promise,
-// kept in the one place that sees every request.
+// kept in the one place that sees every request. The log also keeps the prompt-cache hits
+// the model server reports (tokens_cached); a caller gets that count only from a gateway
+// with one caller and GATEWAY_REPORT_CACHED=1 (the ticket lane, OLA-356).
 //
 // What it repairs (measured 2026-11-15 with gpt-oss-120b on Together.ai):
 //   - a reply that calls tools and ALSO carries text was found to be the model
@@ -78,7 +80,7 @@ const SETTINGS = {
   // The model check's own caller (`probe`, OLA-214): its week's tokens, apart from everyone else's.
   GATEWAY_PROBE_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PROBE_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PROBE_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_BACKUP_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', 'GATEWAY_REPORT_CACHED', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS, ...DESIGN_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -224,6 +226,12 @@ function loadConfig(env) {
   const db = resolve(env.GATEWAY_DB || `${homedir()}/.local/state/ola-gateway/usage.db`)
   const textWithCalls = env.TEXT_WITH_CALLS || 'drop'
   if (!['drop', 'keep'].includes(textWithCalls)) bad('TEXT_WITH_CALLS must be drop or keep')
+  // GATEWAY_REPORT_CACHED=1 (OLA-356, the ticket lane only): the reply's usage keeps the model
+  // server's prompt-cache hit count, so the caller can price repeated input at the cheaper cached
+  // rate. A hit count is a side channel between callers, so it is refused unless the gateway has
+  // exactly one caller and no people or tokens file.
+  const reportCached = env.GATEWAY_REPORT_CACHED === '1'
+  if (env.GATEWAY_REPORT_CACHED && !['0', '1'].includes(env.GATEWAY_REPORT_CACHED)) bad('GATEWAY_REPORT_CACHED must be 0 or 1')
   // Fallback to Claude (claude.mjs): its own upstream, credentials and grants file.
   const claude = claudeConfig(env, bad)
   // Fallback to a hosted open model (hosted.mjs): the model name `hosted`, its own upstream and grants.
@@ -238,6 +246,7 @@ function loadConfig(env) {
   const web = webConfig(env, bad)
   // Batch jobs (batch.mjs): the job grants file the front desk writes, and the lane's limits.
   const batch = batchConfig(env, bad)
+  if (reportCached && (tokens.length !== 1 || tokensFile || peopleFile)) bad('GATEWAY_REPORT_CACHED needs exactly one caller in GATEWAY_TOKENS and no tokens or people file: a cache hit count is a side channel between callers')
 
   if (problems.length) {
     for (const p of problems) console.error(`config: ${p}`)
@@ -266,6 +275,7 @@ function loadConfig(env) {
     host,
     db,
     keepText: textWithCalls === 'keep',
+    reportCached,
     sp,
     claude,
     hosted,
@@ -750,6 +760,9 @@ const pause = (ms, signal) =>
     signal.addEventListener('abort', () => (clearTimeout(t), r()), { once: true })
   })
 const count = (v) => (Number.isSafeInteger(v) && v >= 0 && v < 1e9 ? v : 0)
+// The prompt-cache hits a model server reports: Together puts them in prompt_tokens_details for
+// Kimi and at the top level of usage for some models (docs.together.ai, prompt caching).
+const cachedOf = (u) => Math.min(count(u?.prompt_tokens_details?.cached_tokens) || count(u?.cached_tokens), count(u?.prompt_tokens))
 
 // A fixed message per status class for an upstream failure. Never the model server's own words.
 function upstreamMessage(status) {
@@ -790,6 +803,7 @@ function sanitizeCompletion(json, modelName) {
   const u = json.usage
   if (u && typeof u === 'object') {
     out.usage = { prompt_tokens: count(u.prompt_tokens), completion_tokens: count(u.completion_tokens), total_tokens: count(u.total_tokens) || count(u.prompt_tokens) + count(u.completion_tokens) }
+    if (C.reportCached) out.usage.prompt_tokens_details = { cached_tokens: cachedOf(u) }
   }
   return out
 }
@@ -852,6 +866,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
       if (reported) {
         tally.in += count(u.prompt_tokens)
         tally.out += count(u.completion_tokens)
+        tally.cached = (tally.cached || 0) + cachedOf(u)
       } else {
         // A model server that reports no usage must not be free: charge an estimate from the
         // bytes on the wire (~4 bytes per token) so the quota still bites. Flagged for the log.
@@ -1278,6 +1293,7 @@ async function handle(req, res, rec, signal) {
     rec.tries = tally.tries
     rec.tokens_in = tally.in
     rec.tokens_out = tally.out
+    if (tally.cached) rec.tokens_cached = tally.cached
     rec.estimated = tally.estimated ? 'bytes' : null
     if (tally.tries && lane) batch.record(who, lane, tally.in, tally.out)
     else if (tally.tries) addUsage.run(weekKey(weekStart()), who, rec.design === 'failed' ? 'design' : served, tally.in, tally.out)

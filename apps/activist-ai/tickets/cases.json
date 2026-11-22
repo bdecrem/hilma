@@ -73,5 +73,29 @@
       ":!apps/activist-ai/site",
       ":!apps/activist-ai/brand"
     ]
+  },
+  {
+    "id": "ola-351-ready",
+    "ticket": "OLA-351",
+    "commit": "81b9772e",
+    "base": "ef725577",
+    "level": "small",
+    "request": "Ticket OLA-351, with its thread:\n\nOLA-351  runner: a work run on a ticket that had no checks leaves it 'next', so runner.mjs deploy never sees it as ready in that run\nOLA-235, Nov 21 1:10 pm: the run wrote the checks, built, pushed and marked it ready, but the ticket stayed 'next' (the runner's start had been refused for missing checks), the session cannot start it under the runner's live claim (another caller), and the deploy gate takes only in_progress tickets: 'no ticket is ready with commits that are not in the live version'. Either the runner starts the ticket once checks exist, or the gate counts a ready ticket whatever its status.\n\narea Operations · P2 · doing · builder\n\nthread:\n  Nov 21, 3:51 PM      kit      started by builder; will change scripts/venture/runner.mjs, scripts/venture/_plate.mjs, scripts/venture/runner-test.mjs",
+    "give": [
+      "scripts/venture/runner-test.mjs"
+    ],
+    "tests": [
+      {
+        "name": "runner-test",
+        "cmd": "node scripts/venture/runner-test.mjs",
+        "count": "ok lines"
+      }
+    ],
+    "paths": [
+      "CLAUDE.md",
+      "package.json",
+      "scripts/venture",
+      "apps/venture"
+    ]
   }
 ]

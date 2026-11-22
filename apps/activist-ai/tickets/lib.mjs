@@ -62,15 +62,29 @@ export function runFolders(dir) {
   return { dir, work, home }
 }
 
-export function opencodeConfig(model) {
+export function opencodeConfig(model, { lean = false, baseURL = `http://127.0.0.1:${portOf(model)}/v1` } = {}) {
   const m = MODELS[model]
   return {
     $schema: 'https://opencode.ai/config.json',
-    providers: { box: { name: 'Ola tickets', env: ['BOX_API_KEY'], package: '@opencode/ai/providers/openai-compatible', settings: { baseURL: `http://127.0.0.1:${portOf(model)}/v1` },
+    providers: { box: { name: 'Ola tickets', env: ['BOX_API_KEY'], package: '@opencode/ai/providers/openai-compatible', settings: { baseURL },
       models: { m: { modelID: 'code', name: model, capabilities: { tools: true, input: ['text'], output: ['text'] }, limit: { context: m.context || 200000, output: 32000 } } } } },
     model: 'box/m', update: 'disable',
-    permissions: [{ action: '*', resource: '*', effect: 'allow' }, { action: 'webfetch', resource: '*', effect: 'deny' }, { action: 'websearch', resource: '*', effect: 'deny' }, { action: 'external_directory', resource: '*', effect: 'deny' }],
+    permissions: [{ action: '*', resource: '*', effect: 'allow' }, { action: 'webfetch', resource: '*', effect: 'deny' }, { action: 'websearch', resource: '*', effect: 'deny' }, { action: 'external_directory', resource: '*', effect: 'deny' },
+      ...(lean ? LEAN.permissions : [])],
+    ...(lean ? LEAN.config : {}),
   }
+}
+
+// The lean ticket-work configuration (OLA-356), for the trial and the hand-off only, never Ola's
+// product chat. The OLA-351 hand-off of Nov 21 cost $4.78 at list prices: Ola read whole files (the
+// 80 KB root CLAUDE.md, runner.mjs, issues.mjs three times, a skill), its context grew from 28k to
+// 130k tokens by call 7, and every later call resent all of it. Lean: tool output capped so one read
+// cannot add 40 KB, no skills, and a request that says to search first and read line ranges.
+export const LEAN = {
+  config: { tool_output: { max_lines: 250, max_bytes: 12000 }, agents: { build: { steps: 60 } } },
+  permissions: ['skill', 'experimental_image_generate', 'question', 'subagent'].map((action) => ({ action, resource: '*', effect: 'deny' })),
+  env: { OPENCODE_DISABLE_CLAUDE_CODE: '1' },
+  reading: 'How to read: search first (grep, glob) and then read only the lines you need (read with offset and limit, at most 200 lines at a time); never read a whole large file. Do not read the root CLAUDE.md whole (80 KB): grep it for the folder or file you touch. Do not load skills. Run the tests once your change is made, not before.',
 }
 
 export function sandboxed(run, argv, extra = {}) {
@@ -83,16 +97,16 @@ export function sandboxed(run, argv, extra = {}) {
 // had only a token stop (3M), which at Kimi's prices is $6 to $30 a run, and twelve such runs
 // (about $45) emptied the Together account. Returns null, 'token_limit' or 'usd_limit'.
 export function overLimit(model, s, { tokenLimit = Infinity, usdLimit = Infinity } = {}) {
-  if (s.tokens_in + s.tokens_out > tokenLimit) return 'token_limit'
+  if (s.tokens_in + (s.tokens_cached || 0) + s.tokens_out > tokenLimit) return 'token_limit'
   if (usdLimit !== Infinity && cost(model, s) >= usdLimit) return 'usd_limit'
   return null
 }
 
-export async function runOpencode(run, text, { timeLimit, tokenLimit, usdLimit = Infinity, model, token, bin = opencodeBin }) {
+export async function runOpencode(run, text, { timeLimit, tokenLimit, usdLimit = Infinity, model, token, bin = opencodeBin, lean = false }) {
   if (usdLimit !== Infinity && !MODELS[model]) throw new Error(`a dollar stop needs the model's prices: unknown model ${model}`)
-  const s = { requests: 0, tokens_in: 0, tokens_out: 0, end: 'done', final: '', tools: 0, tool_errors: 0 }
+  const s = { requests: 0, tokens_in: 0, tokens_cached: 0, tokens_out: 0, end: 'done', final: '', tools: 0, tool_errors: 0 }
   const out = createWriteStream(path.join(run.dir, 'events.jsonl'))
-  const child = sandboxed(run, [bin, 'run', '--standalone', '--auto', '--format', 'json', '--model', 'box/m', text], { BOX_API_KEY: token })
+  const child = sandboxed(run, [bin, 'run', '--standalone', '--auto', '--format', 'json', '--model', 'box/m', text], { BOX_API_KEY: token, ...(lean ? LEAN.env : {}) })
   const kill = (why) => { if (s.end === 'done') s.end = why; try { process.kill(-child.pid, 'SIGKILL') } catch {} }
   const timer = setTimeout(() => kill('timeout'), timeLimit * 1000)
   let buf = '', err = '', texts = []
@@ -106,6 +120,8 @@ export async function runOpencode(run, text, { timeLimit, tokenLimit, usdLimit =
       const p = e.part || {}
       if (e.type === 'step_finish') {
         s.requests++; s.tokens_in += p.tokens?.input || 0; s.tokens_out += (p.tokens?.output || 0) + (p.tokens?.reasoning || 0)
+        s.tokens_cached += p.tokens?.cache?.read || 0
+        s.cache_seen ||= p.tokens || null
         const over = overLimit(model, s, { tokenLimit, usdLimit })
         if (over) kill(over)
       } else if (e.type === 'step_start') texts = []
@@ -139,4 +155,9 @@ export async function runTest(run, name, cmd, limitMs = 600000) {
   return { name, cmd, exit: code, pass, total }
 }
 
-export const cost = (model, s) => +((s.tokens_in * MODELS[model].in + s.tokens_out * MODELS[model].out) / 1e6).toFixed(2)
+// Dollars at list prices. opencode reports input as the tokens the model server did not have cached,
+// and the cache hits apart (probe.mjs: a usage of 1000 in with 600 cached reads as input 400, cache
+// read 600); hits are billed at the model's cached rate (Together: about a tenth), or at the full
+// input price when models.json lists none. Before OLA-356 the gateway hid the hit count, so every
+// token was priced as new.
+export const cost = (model, s) => { const m = MODELS[model]; return +((s.tokens_in * m.in + (s.tokens_cached || 0) * (m.cached ?? m.in) + s.tokens_out * m.out) / 1e6).toFixed(2) }
