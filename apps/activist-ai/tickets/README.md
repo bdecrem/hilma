@@ -109,6 +109,24 @@ twice, medium 53/54, hard 0/8); in every run it explored with shell commands unt
 clock and never made an edit. Both sent well-formed tool calls (no format errors, no rate limits). Neither
 takes a ticket alone: Flint passes a small one about half the time.
 
+**The Studio-sized models Ola already uses, Nov 21 (OLA-370), lean, through Together** (small, small at
+`--steps 120`, medium, small #2, hard; $1.58 for the 15):
+
+| model (4-bit size) | small | small, 120 steps | medium | small #2 | hard | dollars |
+|---|---|---|---|---|---|---|
+| Nemotron 3.5 Super VL 120B-A12B (72 GB Q4_0 + 1 GB vision) | 24/24, 4 min | 24/24, 1.5 min | 53/54, timeout | 24/24, 6 min | 0/8, timeout, no edit | 0.47 |
+| gpt-oss-120b (about 63 GB, MXFP4) | 24/24, 8.6 min | Together 500s | 53/54, timeout | Together 500s | Together 500s | 0.19 |
+| Muse Glimmer 30B (about 17 GB) | 0/24, step cap | 24/24, 5.4 min | 53/54, step cap | 0/24, step cap | 0/8, step cap | 0.92 |
+
+Nemotron passed the small ticket three times out of three; the first change matches main's (the function
+and the runner using it), the other two fix the runner inline beside an unused function (one with a latent
+bug). Its medium and hard runs ran out of clock, not steps: Together's calls took up to 284 s (p90 84 s),
+so 20 to 23 calls in 25 to 30 minutes. gpt-oss-120b's one pass is weaker than main (it drops
+`in_progress` tickets, which the tests miss, and does not wire the runner); Together answered 500 on 39
+of its 75 calls (the harmony parser, as on Nov 15), so its other runs died. Muse Glimmer explores until the
+60-step cap; at 120 it passed, with the function added but the runner left unchanged. Flint at 120 steps
+was not run: its ticket gateway had used its 20M-token weekly cap.
+
 So a small ticket is about $0.20 on Kimi and $0.50 a medium one. The cheaper models are cheaper
 again (V4 Pro $0.13), but only Kimi met main's bar on every case; Flash fails a medium one.
 Other hosts of the same models, prices only (Nov 21, per M in / cached / out): DeepSeek's own API
