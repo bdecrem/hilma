@@ -422,6 +422,33 @@ function Ideas({ days, base, issues, claims }: { days: Sweep[]; base: string; is
   )
 }
 
+// OLA-213: the day's requests from Bart, each matched to a ticket by requests.mjs (stored by sweep.mjs post).
+// Exported for scripts/venture/learning-requests-test.tsx, which renders it from made-up entries.
+export function RequestsLine({ r, base }: { r: Sweep['requests']; base: string }) {
+  if (!r) return null
+  return (
+    <>
+      {r?.failed && (
+        <p className="bd-sweep-count">
+          Requests from Bart: <b>not matched</b> <span className="faint">(the matching failed: {r.failed}; posted anyway because {r.why})</span>
+        </p>
+      )}
+      {r && !r.failed && (
+        <p className="bd-sweep-count">
+          Requests from Bart: <b>{r.n}</b>, each accounted for <span className="faint">({r.matched} had one{r.done ? `, ${r.done} done the same day` : ''}{r.answered ? `, ${r.answered} answered` : ''}{r.opened.length ? `, ${r.opened.length} opened that night: ` : ', none opened'}</span>
+          {r.opened.map((id, k) => (
+            <span key={id} className="faint">
+              {k > 0 && ', '}
+              <a href={`${href(base, '/issues')}/${id}`} className="m">{id}</a>
+            </span>
+          ))}
+          <span className="faint">)</span>
+        </p>
+      )}
+    </>
+  )
+}
+
 function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string; weak: Weakness[]; open: { n: number; yesterday: number } }) {
   return (
     <>
@@ -434,23 +461,7 @@ function Day({ s, now, base, weak, open }: { s: Sweep; now: string; base: string
       <p className="bd-sweep-count">
         Open issues: <b>{open.n}</b> <span className="faint">(yesterday: {open.yesterday})</span>
       </p>
-      {s.requests?.failed && (
-        <p className="bd-sweep-count">
-          Requests from Bart: <b>not matched</b> <span className="faint">(the matching failed: {s.requests.failed}; posted anyway because {s.requests.why})</span>
-        </p>
-      )}
-      {s.requests && !s.requests.failed && (
-        <p className="bd-sweep-count">
-          Requests from Bart: <b>{s.requests.n}</b>, each accounted for <span className="faint">({s.requests.matched} had one{s.requests.done ? `, ${s.requests.done} done the same day` : ''}{s.requests.answered ? `, ${s.requests.answered} answered` : ''}{s.requests.opened.length ? `, ${s.requests.opened.length} opened that night: ` : ', none opened'}</span>
-          {s.requests.opened.map((id, k) => (
-            <span key={id} className="faint">
-              {k > 0 && ', '}
-              <a href={`${href(base, '/issues')}/${id}`} className="m">{id}</a>
-            </span>
-          ))}
-          <span className="faint">)</span>
-        </p>
-      )}
+      <RequestsLine r={s.requests} base={base} />
       <p className="bd-sweep-sum">{inline(s.summary)}</p>
       {s.pattern && (
         <p className="bd-sweep-sum pattern">
