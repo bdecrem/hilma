@@ -1,0 +1,577 @@
+/* bartin16.xyz/seminar — the seminar handout.
+   Same family as the homepage beside it: paper #fff6ea, ink #2b2118, clay #d64a22,
+   Inter Tight light against semibold. The one thing of its own is the "Say" bubble:
+   every line you type to Claude looks like a message you sent.
+
+   Measures (desktop, 1297 wide): side padding 7% = 91px, text column 700,
+   gap 80, side list 240 -> 1020 of the 1115 available. */
+
+.sem {
+  --paper: #fff6ea;
+  --ink: #2b2118;
+  --soft: #5b4d3f;
+  --muted: #8a7862;
+  --clay: #d64a22;
+  --line: #ead9c2;
+  --bubble: #fde5cc;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-tight), 'Inter Tight', Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.55;
+  padding: env(safe-area-inset-top) calc(7% + env(safe-area-inset-right)) env(safe-area-inset-bottom)
+    calc(7% + env(safe-area-inset-left));
+  -webkit-font-smoothing: antialiased;
+}
+
+.sem *,
+.sem *::before,
+.sem *::after {
+  box-sizing: border-box;
+}
+
+/* The reset carries no weight of its own (:where), so every class below wins over it. */
+:where(.sem) :where(p, h1, h2, h3, ul, ol) {
+  margin: 0;
+  padding: 0;
+}
+
+:where(.sem) :where(ul, ol) {
+  list-style: none;
+}
+
+:where(.sem) a {
+  color: inherit;
+}
+
+.sem :focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.sem-main {
+  max-width: 1110px;
+  margin: 0 auto;
+  padding: 104px 0 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 700px) 240px;
+  column-gap: 80px;
+}
+
+.sem-main > * {
+  grid-column: 1;
+}
+
+/* Head */
+
+.sem-kicker,
+.sem-small {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clay);
+}
+
+.sem-title {
+  margin-top: 20px;
+  font-size: clamp(44px, 6.2vw, 84px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.016em;
+}
+
+.sem-title em {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -0.024em;
+}
+
+.sem-intro {
+  margin-top: 36px;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.sem-intro + .sem-intro {
+  margin-top: 18px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* What you need */
+
+.sem-need {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.sem-need ul {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.sem-need li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.sem-need li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+/* The list of parts: beside the text on a wide screen, under "what you need" on a narrow one */
+
+.sem-toc {
+  grid-column: 2;
+  grid-row: 1 / span 12;
+  align-self: start;
+  position: sticky;
+  top: 40px;
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+}
+
+.sem-toc a {
+  display: grid;
+  gap: 2px;
+  padding: 14px 0 14px 18px;
+  border-left: 2px solid var(--line);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.sem-toc a:hover {
+  border-left-color: var(--clay);
+}
+
+.sem-toc-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clay);
+}
+
+.sem-toc-title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.sem-toc-time {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* Parts */
+
+.sem-part,
+.sem-stuck,
+.sem-next {
+  margin-top: 88px;
+  padding-top: 56px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 16px;
+}
+
+.sem-part-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clay);
+}
+
+.sem-part-label span {
+  margin-left: 10px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.sem-part-title {
+  margin-top: 10px;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+}
+
+.sem-stuck .sem-part-title,
+.sem-next .sem-part-title {
+  margin-top: 0;
+}
+
+.sem-part-lede {
+  margin-top: 16px;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+/* Steps: a 44px number you can tick, 20px, then the words */
+
+.sem-steps {
+  margin-top: 48px;
+  display: grid;
+  gap: 40px;
+}
+
+.sem-step {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: start;
+}
+
+.sem-tick {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(43, 33, 24, 0.28);
+  background: transparent;
+  color: var(--ink);
+  font: 600 17px/1 var(--font-tight), Arial, sans-serif;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sem-tick:hover {
+  border-color: var(--clay);
+}
+
+.sem-tick[aria-pressed='true'] {
+  background: var(--clay);
+  border-color: var(--clay);
+  color: #fff;
+  font-size: 20px;
+}
+
+.sem-step-body {
+  padding-top: 7px;
+}
+
+.sem-step-body h3 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+.sem-step-body > p {
+  margin-top: 8px;
+}
+
+/* A line you say to Claude: shaped like a message you sent */
+
+.sem-say {
+  position: relative;
+  margin-top: 16px;
+  padding: 16px 20px 18px;
+  background: var(--bubble);
+  border-radius: 20px 20px 20px 5px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  row-gap: 4px;
+  align-items: start;
+}
+
+.sem-say-label {
+  grid-column: 1;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b53a16;
+}
+
+.sem-say-text {
+  grid-column: 1;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+
+.sem-copy {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+  min-width: 64px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(43, 33, 24, 0.22);
+  background: transparent;
+  color: var(--ink);
+  font: 600 14px/1 var(--font-tight), Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sem-copy:hover {
+  background: #fff6ea;
+  border-color: var(--ink);
+}
+
+.sem-trap {
+  margin-top: 14px;
+  padding-left: 14px;
+  border-left: 3px solid var(--clay);
+  font-weight: 500;
+}
+
+.sem-trap strong {
+  color: #b53a16;
+  font-weight: 700;
+}
+
+/* What it ends up as: a print of the finished page, like the pictures on the homepage */
+
+.sem-example {
+  margin: 64px 0 0 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  column-gap: 32px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.sem-example img {
+  width: 100%;
+  height: auto;
+  border: 8px solid #fff;
+  border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(60, 40, 20, 0.16), 0 1px 3px rgba(60, 40, 20, 0.14);
+  transform: rotate(-1.6deg);
+  transition: transform 0.2s;
+}
+
+.sem-example:hover img {
+  transform: rotate(0deg);
+}
+
+.sem-example > span {
+  display: grid;
+  gap: 6px;
+}
+
+.sem-example-url {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: underline;
+  text-decoration-color: rgba(214, 74, 34, 0.45);
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+
+/* When you get stuck */
+
+.sem-stuck ul {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 28px;
+}
+
+.sem-stuck-when {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  min-height: 2.7em;
+}
+
+.sem-stuck .sem-say {
+  margin-top: 10px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sem-stuck .sem-copy {
+  grid-column: 1;
+  grid-row: auto;
+  justify-self: start;
+  margin-top: 10px;
+}
+
+/* What next, and the foot */
+
+.sem-next p {
+  margin-top: 16px;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.sem-foot {
+  margin-top: 88px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 20px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.sem-foot a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(214, 74, 34, 0.45);
+  text-underline-offset: 4px;
+}
+
+/* One column */
+
+@media (max-width: 1040px) {
+  .sem-main {
+    display: block;
+    max-width: 700px;
+    margin: 0;
+  }
+
+  .sem-toc {
+    position: static;
+    margin-top: 40px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sem {
+    font-size: 17px;
+    padding-left: calc(20px + env(safe-area-inset-left));
+    padding-right: calc(20px + env(safe-area-inset-right));
+  }
+
+  .sem-main {
+    padding: 56px 0 64px;
+  }
+
+  .sem-intro {
+    margin-top: 24px;
+    font-size: 19px;
+  }
+
+  .sem-need {
+    margin-top: 40px;
+  }
+
+  .sem-part,
+  .sem-stuck,
+  .sem-next {
+    margin-top: 64px;
+    padding-top: 40px;
+  }
+
+  .sem-part-lede,
+  .sem-next p {
+    font-size: 18px;
+  }
+
+  .sem-steps {
+    margin-top: 36px;
+    gap: 34px;
+  }
+
+  .sem-step {
+    grid-template-columns: 38px minmax(0, 1fr);
+    column-gap: 14px;
+  }
+
+  .sem-tick {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .sem-step-body {
+    padding-top: 5px;
+  }
+
+  .sem-step-body h3 {
+    font-size: 20px;
+  }
+
+  .sem-say {
+    padding: 14px 16px 16px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sem-say-text {
+    font-size: 18px;
+  }
+
+  .sem-copy {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    margin-top: 10px;
+  }
+
+  .sem-example {
+    margin: 48px 0 0;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 24px;
+  }
+
+  .sem-stuck ul {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .sem-stuck-when {
+    min-height: 0;
+  }
+
+  .sem-foot {
+    margin-top: 64px;
+  }
+}
+
+@media (max-width: 560px) {
+  .sem-toc {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+@media print {
+  .sem {
+    background: #fff;
+    padding: 0;
+    font-size: 12pt;
+  }
+
+  .sem-main {
+    display: block;
+    padding: 0;
+  }
+
+  .sem-toc,
+  .sem-copy {
+    display: none;
+  }
+
+  .sem-step,
+  .sem-say {
+    break-inside: avoid;
+  }
+}

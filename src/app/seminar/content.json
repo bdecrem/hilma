@@ -1,0 +1,185 @@
+{
+  "title": "Build your own work website",
+  "kicker": "CASBS hands-on seminar",
+  "intro": "You've probably used Claude as a chat window: you ask, it answers, and then you copy the text somewhere and do the rest yourself. Claude Code is the same Claude with its sleeves rolled up. It works directly on your computer. You tell it what you want in plain English, and it makes the files, runs them, fixes what breaks, and puts the result on the internet. By the end of this sheet you'll have a personal website with an office-hours sign-up page, plus two free accounts: GitHub, which stores your site's files, and Vercel, which publishes them. Keep both. The same setup will build a course site, a page for your next paper, or a small tool that sorts the interview data your RA keeps emailing you.",
+  "shape": "It comes in two parts. Part 1 gets a page built on your own laptop in about half an hour. Part 2 puts it on the internet, and takes about another hour.",
+  "need": [
+    "A Mac or Windows laptop with the Claude desktop app installed.",
+    "Your Stanford sign-in, called a SUNet ID. You don't need a Stanford mailbox; visiting fellows use their SUNet ID the same way.",
+    "Nothing else. The GitHub and Vercel accounts get created along the way in Part 2, and both are free."
+  ],
+  "parts": [
+    {
+      "label": "Part 1",
+      "title": "Build the page",
+      "time": "About 30 minutes",
+      "lede": "No new accounts. You sign in, describe the page you want, and watch Claude build it on your own computer.",
+      "steps": [
+        {
+          "title": "Sign in on the web",
+          "body": "Go to claude.ai, type YOUR-SUNET-ID@stanford.edu, click \"Continue with SSO\", and sign in with your SUNet ID and password. If it drops you into a personal account, sign out first and do it again this way.",
+          "say": null,
+          "trap": "Use \"Continue with SSO\", not Google and not \"Continue with email\". Google with a personal gmail always lands you in your personal account."
+        },
+        {
+          "title": "Sign in to the app",
+          "body": "Open the Claude desktop app on your Mac (or, god forbid, Windows) and sign in the same way: SUNet-ID@stanford.edu, then \"Continue with SSO\". If it says \"there was a problem sending you a login link\", update the app (Claude menu, Check for Updates), reopen it, and try again.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Pick Opus 5.5, Medium",
+          "body": "Set the model to Opus 5.5, Medium. The free education account doesn't include the Fable models, so Opus 5.5 is the one to pick.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Open the Code tab",
+          "body": "Go into the Code tab and tell Claude what you're after.",
+          "say": "Hi Claude, I want to make a real website with GitHub and Vercel.",
+          "trap": null
+        },
+        {
+          "title": "Answer its first questions",
+          "body": "When it asks what kind of website, choose Other and type \"for work!\". If it asks how the site should be built, hand that decision back to it.",
+          "say": "You decide, I'm not that technical.",
+          "trap": null
+        },
+        {
+          "title": "Choose a folder",
+          "body": "Claude will ask where to keep the site on your computer. Pick a folder.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Say what it's for",
+          "body": "If it asks what the site is for, tell it in your own words. A good start: a personal work page that shows what you're working on, where students can sign up for office hours, and so on.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Allow access",
+          "body": "When Claude asks for permission to access things, click \"Allow Once\". If it offers a longer-lasting option, that works too.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Tell it about your work",
+          "body": "It will ask about your work, as if it were writing your faculty page. Answer its questions, and then it builds the page.",
+          "say": null,
+          "trap": null
+        }
+      ]
+    },
+    {
+      "label": "Part 2",
+      "title": "Make it real",
+      "time": "Roughly another hour",
+      "lede": "You add an office-hours sign-up and put the site on the internet. The building is the easy part. The account sign-ups are the fiddly part, so do this with a helper nearby if you can.",
+      "steps": [
+        {
+          "title": "Ask for office hours",
+          "body": "Once the page is built, ask for an office-hours sign-up in your own words. Then watch: it builds a mini Calendly, with slots you set, a sign-up for students, and a private page for you. It's fun to watch.",
+          "say": "Hey, make a nice office hours signup thing for me. Vercel has a thing we can use for that, right? Give me a private page with a passcode where I can set the slots, see who signed up, etc. But also, I want to be able to add those student signups to my calendar. What's the easiest way?",
+          "trap": null
+        },
+        {
+          "title": "Say GitHub is scary",
+          "body": "At some point Claude says you need to sign in to GitHub, which is where your site's files are kept. If that sounds scary, tell it so.",
+          "say": "HELP! GitHub is scary!",
+          "trap": null
+        },
+        {
+          "title": "Say no to the shortcut",
+          "body": "It may offer a shortcut that skips GitHub. Turn it down: GitHub is how the pros do it, and it's what lets you build the next thing.",
+          "say": "No, I want to use GitHub, but it's scary. Explain it in one sentence and then make it really easy for me to sign up.",
+          "trap": null
+        },
+        {
+          "title": "Create your GitHub account",
+          "body": "Claude explains GitHub in one sentence and opens the GitHub page for you, right inside the Claude app. Create your account there.",
+          "say": null,
+          "trap": "Click SIGN UP, not LOG IN."
+        },
+        {
+          "title": "Connect Claude to GitHub",
+          "body": "Next Claude wants to connect itself to your new GitHub account, and the instructions look complicated. They may mention a terminal. Don't try to follow them. Ask for help instead, and it opens a web page and gives you a short code to enter there.",
+          "say": "That's too complicated for me. Open the page for me and just tell me what to type.",
+          "trap": null
+        },
+        {
+          "title": "Create your Vercel account",
+          "body": "Then Vercel, the service that puts your site on the internet. The page shows a big LOG IN, and the SIGN UP you need is small, at the bottom. Click Sign Up, then \"Continue with Google\".",
+          "say": null,
+          "trap": "Same trap as GitHub: click SIGN UP, not LOG IN."
+        },
+        {
+          "title": "Link Vercel to GitHub",
+          "body": "Claude works for a while, then asks you to log into Vercel once more and connect Vercel to your GitHub. This is the fiddliest part of the whole thing.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Click Install",
+          "body": "One more Vercel page asks you to \"Install\" the GitHub connection. Click Install. Everyone gets confused here; it's Vercel asking permission to read your site's files on GitHub.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Connect your repo",
+          "body": "And one more: Vercel asks you to connect your repo, which is your site's folder on GitHub. Pick the one Claude made a few minutes ago.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Keep it inside Vercel",
+          "body": "Claude may try to sign you up for yet another service to store the sign-ups. Mine suggested one called Upstash. Refuse, and it picks the easy route: one small file in Blob, Vercel's own storage.",
+          "say": "No, simpler. Keep everything inside Vercel.",
+          "trap": null
+        },
+        {
+          "title": "Let Claude publish it",
+          "body": "Claude takes over again, sets up that storage, and publishes the site. There's nothing for you to do. When it's finished, it gives you the address of your site, live on the internet, with the office-hours sign-up working.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Add your open times",
+          "body": "Open your private page (Claude tells you its address and passcode) and add your open times. Until you do, the sign-up page says \"No open times right now.\"",
+          "say": null,
+          "trap": null
+        }
+      ]
+    }
+  ],
+  "stuck": {
+    "title": "When you get stuck",
+    "lede": "Talk to it the way you'd talk to a patient colleague. These are the lines that got me unstuck.",
+    "items": [
+      {
+        "when": "The instructions look too complicated, or mention a terminal",
+        "say": "That's too complicated for me. Open the page for me and just tell me what to type."
+      },
+      {
+        "when": "You don't understand what something is",
+        "say": "Explain it in one sentence."
+      },
+      {
+        "when": "It wants to sign you up for one more service",
+        "say": "No, simpler. Keep everything inside Vercel."
+      },
+      {
+        "when": "It asks you to choose between technical options",
+        "say": "You decide, I'm not that technical."
+      }
+    ]
+  },
+  "next": {
+    "title": "What to build next",
+    "body": "You now have the same setup the pros use, and the next project starts from the Code tab with a sentence. Try a site for your course, a page for your next paper, or a small tool for a research project, like the one that sorts the interview data your RA keeps emailing you."
+  },
+  "example": {
+    "label": "What I ended up with",
+    "url": "https://bart-at-casbs.vercel.app/"
+  }
+}
