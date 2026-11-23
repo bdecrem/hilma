@@ -1884,7 +1884,8 @@ await check('ola-publish in the VM: no yes, no publish; the front desk’s outco
   const again = run('site', '--files', 'index.html,style.css')
   assert(again.status === 1, `the same outcome again: ${again.status} ${again.stdout}`)
   const st = run('status')
-  assert(st.status === 0 && st.stdout.includes('https://sites.example/fd-a/'), `status: ${st.stdout}`)
+  // Once shown, status is only a record, never a claim about the address now (OLA-421, image 2.3.2-71): exit 5.
+  assert(st.status === 5 && /^Record only: /.test(st.stdout) && st.stdout.includes('https://sites.example/fd-a/'), `status: ${st.status} ${st.stdout}`)
   spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-rf', '/work/.ola/publish'])
 })
 
