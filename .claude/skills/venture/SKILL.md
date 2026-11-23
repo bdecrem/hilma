@@ -221,7 +221,8 @@ the ones marked so:
 between 10 pm and 7 am Pacific). Its standard wording:
 
 > Hourly check. If it is between 10 pm and 7 am Pacific, do nothing and stop. Otherwise:
-> `node scripts/venture/runner.mjs status` and `node scripts/venture/issues.mjs unchecked`. If an
+> `node scripts/venture/runner.mjs status` (its last line is plan usage, every machine: say it to Bart when
+> a window is past 90% or a limit is recorded) and `node scripts/venture/issues.mjs unchecked`. If an
 > update of the test server went live with ready tickets, start ONE checker for all of them
 > (apps/venture/CHECKER.md brief, three tries of his exact path per check unless a check says more).
 > Never start a checker for an internal ticket: the project's own tools close on the builder's tests

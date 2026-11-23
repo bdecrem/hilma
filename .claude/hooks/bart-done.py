@@ -84,7 +84,21 @@ def owed_fixes():
         return ""
 
 
-remind = "\n\n".join(x for x in (most_seen(), owed_fixes()) if x)
+def plan_usage():
+    """Plan usage (OLA-319, Bart Nov 20: "You need to keep an eye on usage- we may hit usage limits and
+    need to resume after 2am"): the one line from `usage.mjs line`, every machine, cached ten minutes and
+    refreshed in the background, so no prompt waits for it."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import usage_cache
+        d = usage_cache.read(600, probe=True)
+        return ("Plan usage (start an agent only if this allows it; agent-guard.py refuses one while a limit holds): "
+                + d["line"]) if d and d.get("line") else ""
+    except Exception:
+        return ""
+
+
+remind = "\n\n".join(x for x in (plan_usage(), most_seen(), owed_fixes()) if x)
 if not isinstance(data, dict):
     if remind:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": remind}}))

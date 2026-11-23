@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline checks of the runner's choices (OLA-211): node scripts/venture/runner-test.mjs
 import assert from 'node:assert/strict'
-import { afterRun, caseKey, deployGate, deployPending, caseState, ideaTickets, laneHolder, laneOf, leadLine, limitFrom, openCounts, parseReset, pickTicket, plateOrder, releasesIn, unbuiltIdeas, zonedTime } from './_plate.mjs'
+import { afterRun, caseKey, deployGate, deployPending, caseState, ideaTickets, laneHolder, laneOf, leadLine, limitFrom, limitInTranscript, mergePlan, openCounts, parseReset, pickTicket, planFrom, resumeList, usageLine, plateOrder, releasesIn, unbuiltIdeas, zonedTime } from './_plate.mjs'
 
 let n = 0
 const ok = (name, f) => { f(); n++; console.log(`ok ${name}`) }
@@ -235,6 +235,61 @@ ok('unbuilt ideas of earlier reviews: neither done nor dropped, the day itself e
   assert.deepEqual(unbuiltIdeas(days, issues.map((i) => ({ ...i, status: 'dropped', proof: '' })), '2026-11-21', new Set(['OLA-213', 'OLA-214', 'OLA-324', 'OLA-325'])), [], 'dropped by Bart on the board')
   const none = unbuiltIdeas([{ day: '2026-11-20', ideas: { kit: { text: 'x' }, ola: { text: 'y', issue: 'OLA-325' } } }], [I(325, 'P1', 'done')], '2026-11-21')
   assert.deepEqual(none.map((x) => [x.id, x.status]), [[null, 'no ticket']], 'an idea with no ticket is not built')
+})
+
+// ------------------------------------------------------------------ plan usage (OLA-319)
+const EV = (u, extra = {}) => JSON.stringify({ type: 'rate_limit_event', rate_limit_info: { status: 'allowed_warning', resetsAt: 1795773600, rateLimitType: 'seven_day', utilization: u, unifiedWindows: { seven_day: { utilization: u, resetsAt: 1795773600, status: 'allowed' }, ...extra } } })
+ok('planFrom keeps the last rate_limit_event of a run', () => {
+  const p = planFrom(['noise', EV(0.5), '{"type":"assistant"}', EV(0.58)].join('\n'), NOW)
+  assert.equal(p.windows.seven_day.utilization, 0.58)
+  assert.equal(p.windows.seven_day.resetsAt, 1795773600e3)
+  assert.equal(planFrom('{"type":"result"}'), null)
+  const five = planFrom(EV(0.6, { five_hour: { utilization: 0.97, resetsAt: 1795700000, status: 'allowed_warning' } }), NOW)
+  assert.equal(five.windows.five_hour.utilization, 0.97)
+})
+ok('mergePlan: a new reading replaces its windows, a window past its reset drops', () => {
+  const kept = { windows: { five_hour: { utilization: 0.9, resetsAt: NOW - 1000 }, seven_day: { utilization: 0.4, resetsAt: NOW + 1e9 } }, at: ago(90) }
+  const m = mergePlan(kept, { status: 'allowed', windows: { seven_day: { utilization: 0.6, resetsAt: NOW + 1e9 } }, at: ago(0) }, NOW)
+  assert.deepEqual(Object.keys(m.windows), ['seven_day'])
+  assert.equal(m.windows.seven_day.utilization, 0.6)
+})
+ok('usageLine: plan, every machine, a recorded limit first', () => {
+  const plan = { windows: { seven_day: { utilization: 0.93, resetsAt: Date.parse('2026-11-27T10:00:00Z') } }, at: ago(12) }
+  const hosts = { 'admins-Mac-mini': { h5: 302000, d7: 4.5e6, at: ago(1) }, 'Barts-iMac': { h5: 1200, d7: 900000, at: ago(300) }, old: { h5: 1, d7: 1, at: ago(9 * 1440) } }
+  const l = usageLine({ plan, hosts, now: NOW })
+  assert.match(l, /week 93% \(resets Fri, Nov 27, 2 AM\)/)
+  assert.match(l, /5 h not reported/)
+  assert.match(l, /read 12 min ago/)
+  assert.match(l, /Barts-iMac 1k \/ 900k \(counted 5 h ago\), admins-Mac-mini 302k \/ 4\.5M/)
+  assert.doesNotMatch(l, /\bold\b/, 'a machine not counted for 8 days is left out')
+  assert.match(l, /near the limit/)
+  const lim = { kind: 'limit', until: new Date(NOW + 3 * 3600e3).toISOString(), text: "You've hit your session limit · resets 2am", by: 'a session on Barts-iMac', cut: ['OLA-12'] }
+  assert.match(usageLine({ plan, hosts, limit: lim, now: NOW }), /^LIMIT HIT .*recorded by a session on Barts-iMac\): no new agent until 9:30 PM Pacific.*continues OLA-12 first/)
+  assert.match(usageLine({ now: NOW }), /^Plan: no reading yet/)
+})
+const T = (o) => JSON.stringify(o)
+const LIMIT_MSG = { type: 'assistant', isApiErrorMessage: true, message: { model: '<synthetic>', content: [{ type: 'text', text: "You've hit your session limit · resets 2am (America/Los_Angeles)" }] } }
+ok('limitInTranscript: a session whose last turn ended at the limit, and only that', () => {
+  const real = { type: 'assistant', message: { model: 'claude-opus-5-5', content: [{ type: 'text', text: 'done' }] } }
+  const lim = limitInTranscript([T(real), T(LIMIT_MSG), T({ type: 'system' })], NOW)
+  assert.equal(lim.resetsAt, Date.parse('2026-11-20T10:00:00Z'))
+  assert.equal(limitInTranscript([T(LIMIT_MSG), T(real)], NOW), null, 'a real reply after it')
+  assert.equal(limitInTranscript([T(LIMIT_MSG), T({ type: 'user', message: { content: 'go on' } })], NOW), null, 'he wrote after it')
+  const quoted = { type: 'assistant', message: { model: 'claude-opus-5-5', content: [{ type: 'text', text: "the CLI says: You've hit your session limit" }] } }
+  assert.equal(limitInTranscript([T(quoted)], NOW), null, 'a real reply quoting the message is not the limit')
+  assert.equal(limitInTranscript([T({ ...LIMIT_MSG, message: { model: '<synthetic>', content: [{ type: 'text', text: 'API Error: 500' }] } })], NOW), null)
+})
+ok('resumeList and pickTicket: the tickets a limit cut off go first for a day after the reset', () => {
+  const issues = [I(4, 'P0'), I(30, 'P2', 'in_progress', { who: 'runner' }), I(31, 'P1', 'done')]
+  const lim = { kind: 'limit', until: ago(10), cut: ['OLA-30', 'OLA-31'] }
+  assert.deepEqual(resumeList(lim, issues, NOW), ['OLA-30'], 'a finished one is left out')
+  assert.deepEqual(resumeList({ ...lim, until: new Date(NOW + 60e3).toISOString() }, issues, NOW), [], 'not before the reset')
+  assert.deepEqual(resumeList({ ...lim, until: ago(25 * 60) }, issues, NOW), [], 'not a day after it')
+  assert.deepEqual(resumeList({ ...lim, kind: 'error' }, issues, NOW), [])
+  assert.equal(pickTicket(issues, { resume: ['OLA-30'], now: NOW }).pick.id, 'OLA-30')
+  assert.equal(pickTicket(issues, { now: NOW }).pick.id, 'OLA-4')
+  const held = pickTicket(issues, { resume: ['OLA-30'], claims: { 'OLA-30': { who: 'builder', at: ago(5) } }, now: NOW })
+  assert.equal(held.pick.id, 'OLA-4', 'a live claim still holds it')
 })
 
 console.log(`${n} checks passed`)

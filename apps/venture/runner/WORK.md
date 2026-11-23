@@ -94,7 +94,10 @@ and stop.
 
 You have about 80 minutes. Before you stop: the ticket's comment, a line in
 `apps/venture/private/JOURNAL.md` under today (the time from `date`, "while you were away"), and a
-line in `LOG.md` starting "runner:". The runner pushes the private folder when you exit.
+line in `LOG.md` starting "runner:", which ends with the plan-usage line from
+`node scripts/venture/usage.mjs line` (OLA-319). The runner pushes the private folder when you exit.
+An Agent call shows that line first and is refused while a recorded plan limit holds: then do the
+work yourself or leave it on the ticket; the runner continues cut-off tickets first after the reset.
 
 End with a short plain summary of what you did (it goes to a log file), and as its last line one of:
 `RUNNER: done`, `RUNNER: waiting on Bart`, `RUNNER: progress`, `RUNNER: blocked by OLA-n`, `RUNNER: waiting until <ISO time>`.

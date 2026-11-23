@@ -10,6 +10,10 @@
 //   leadLine(...)             the one line `runner.mjs status` prints and the board shows
 //   ideaTickets(days)         the latest reviews' idea tickets, which the pick puts right after P0 (OLA-331)
 //   unbuiltIdeas(days, issues, day)  earlier reviews' ideas not done or dropped, which stop sweep.mjs post
+//   planFrom(out, now)        how near the plan's limits a `claude -p` run said the login is (OLA-319)
+//   usageLine(...)            the one line about plan usage: the prompt hook, runner status, before an Agent call
+//   limitInTranscript(lines)  did an interactive session's last turn end at the plan's limit (the Stop hook)
+//   resumeList(limit, issues) the tickets a limit cut off, which the pick puts first once it has reset
 
 export const MIN = 60e3
 export const CLAIM_TTL = 45 * MIN // a claim not renewed for this long has expired
@@ -38,13 +42,14 @@ export const isRecurring = (i, recurring = []) => /^(daily|weekly) task\b/i.test
  * tickets: the runner's own record per ticket ({ runs, fails, skippedAt, blockedBy });
  * sessionOpen: an interactive session's heartbeat is fresh.
  */
-export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, waiters = {}, lanes = {}, building = {}, ideas = [], now = Date.now() } = {}) {
+export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recurring = [], sessionOpen = false, waiters = {}, lanes = {}, building = {}, ideas = [], resume = [], now = Date.now() } = {}) {
   const passed = []
   const byId = new Map(issues.map((i) => [i.id, i]))
   const age = (iso) => (iso ? now - Date.parse(iso) : Infinity)
   const pos = (id) => (order.includes(id) ? order.indexOf(id) : Infinity)
   // OLA-331: the reviews' daily ideas (ideaTickets) come right after P0, before every other P1 and P2
-  const rank = (i) => (i.priority === 'P0' ? 0 : ideas.includes(i.id) ? 1 : 2 + (PRI[i.priority] ?? 9))
+  // OLA-319: the tickets the plan's limit cut off go first once it has reset (resumeList)
+  const rank = (i) => (resume.includes(i.id) ? -1 : i.priority === 'P0' ? 0 : ideas.includes(i.id) ? 1 : 2 + (PRI[i.priority] ?? 9))
   const ipos = (id) => (ideas.includes(id) ? ideas.indexOf(id) : Infinity)
   const cand = issues
     .filter((i) => i.status === 'open' || i.status === 'in_progress')
@@ -214,6 +219,92 @@ export function limitFrom(out = '', now = Date.now()) {
   return { resetsAt, text }
 }
 
+// ------------------------------------------------------------------ plan usage (OLA-319)
+// Bart, Nov 20, 7:15 pm: "You need to keep an eye on usage- we may hit usage limits and need to resume
+// after 2am". Every `claude -p --output-format stream-json` run carries rate_limit_event lines with the
+// login's own numbers (one Max login for every machine): { status, rateLimitType, utilization, resetsAt,
+// unifiedWindows: { seven_day: { utilization, resetsAt, status }, five_hour?: … } }. The latest one is
+// the plan's state; venture_state "plan_usage" keeps it, so every machine reads the same numbers.
+
+/** The plan's windows the run's last rate_limit_event reported, or null: { status, windows: { [name]: { utilization, resetsAt (ms), status } }, at }. */
+export function planFrom(out = '', now = Date.now()) {
+  let info = null
+  for (const line of out.split('\n')) {
+    if (!line.startsWith('{') || !line.includes('rate_limit_event')) continue
+    try { const j = JSON.parse(line); if (j.type === 'rate_limit_event' && j.rate_limit_info) info = j.rate_limit_info } catch {}
+  }
+  if (!info) return null
+  const windows = {}
+  for (const [k, w] of Object.entries(info.unifiedWindows ?? {})) windows[k] = { utilization: w.utilization ?? null, resetsAt: w.resetsAt ? w.resetsAt * 1000 : null, status: w.status ?? null }
+  const k = info.rateLimitType
+  if (k && !windows[k]) windows[k] = { utilization: info.utilization ?? null, resetsAt: info.resetsAt ? info.resetsAt * 1000 : null, status: info.status ?? null }
+  return { status: info.status ?? null, windows, at: new Date(now).toISOString() }
+}
+
+/** A newer reading on top of the kept one: windows it names replace the kept ones; a kept window whose reset has passed is dropped. */
+export function mergePlan(kept, fresh, now = Date.now()) {
+  const windows = {}
+  for (const [k, w] of Object.entries(kept?.windows ?? {})) if (!w.resetsAt || w.resetsAt > now) windows[k] = w
+  Object.assign(windows, fresh?.windows ?? {})
+  return { status: fresh?.status ?? kept?.status ?? null, windows, at: fresh?.at ?? kept?.at ?? null }
+}
+
+const WINDOW_NAMES = { five_hour: '5 h', seven_day: 'week', seven_day_opus: 'week (Opus)', seven_day_sonnet: 'week (Sonnet)' }
+const pct = (u) => `${Math.round(u * 100)}%`
+const tok = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n))
+const atPT = (t, now) => {
+  const o = { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }
+  if (t - now > 20 * 3600e3) Object.assign(o, { weekday: 'short', month: 'short', day: 'numeric' })
+  return new Date(t).toLocaleString('en-US', o).replace(':00', '')
+}
+const agoPT = (iso, now) => { const m = Math.round((now - Date.parse(iso)) / MIN); return m < 90 ? `${m} min ago` : `${Math.round(m / 60)} h ago` }
+
+/**
+ * The one line about plan usage. plan: venture_state "plan_usage" ({ windows, at }); hosts: { [host]: { h5, d7, at } }
+ * (output tokens this machine's transcripts count); limit: venture_state "runner_limit" while it holds (kind "limit").
+ */
+export function usageLine({ plan = null, hosts = {}, limit = null, now = Date.now() } = {}) {
+  const parts = []
+  if (limit?.kind === 'limit' && Date.parse(limit.until) > now) parts.push(`LIMIT HIT (${limit.text}${limit.by ? `, recorded by ${limit.by}` : ''}): no new agent until ${atPT(Date.parse(limit.until), now)} Pacific, when the runner starts again by itself${limit.cut?.length ? ` and continues ${limit.cut.join(', ')} first` : ''}`)
+  const ws = Object.entries(plan?.windows ?? {}).filter(([, w]) => w.utilization != null && (!w.resetsAt || w.resetsAt > now))
+  if (ws.length) {
+    const order = (k) => (k === 'five_hour' ? 0 : 1)
+    const seen = ws.sort((a, b) => order(a[0]) - order(b[0])).map(([k, w]) => `${WINDOW_NAMES[k] ?? k} ${pct(w.utilization)}${w.resetsAt ? ` (resets ${atPT(w.resetsAt, now)})` : ''}`)
+    if (!ws.some(([k]) => k === 'five_hour')) seen.unshift('5 h not reported')
+    parts.push(`Plan, one login for every machine: ${seen.join(', ')}, read ${agoPT(plan.at, now)}`)
+  } else parts.push('Plan: no reading yet (`node scripts/venture/usage.mjs line --probe` takes one)')
+  const hs = Object.entries(hosts).filter(([, h]) => h?.at && now - Date.parse(h.at) < 8 * 24 * 3600e3).sort()
+  if (hs.length) parts.push(`output tokens, last 5 h / 7 days: ${hs.map(([n, h]) => `${n.replace(/\.local$/, '')} ${tok(h.h5)} / ${tok(h.d7)}${now - Date.parse(h.at) > 2 * 3600e3 ? ` (counted ${agoPT(h.at, now)})` : ''}`).join(', ')}`)
+  const top = ws.reduce((m, [, w]) => Math.max(m, w.utilization), 0)
+  if (!parts[0].startsWith('LIMIT') && top >= 0.9) parts.push('near the limit: no new agent unless it is needed now')
+  return parts.join(' · ')
+}
+
+/** Did an interactive session's transcript (its .jsonl lines) end at the plan's limit? null, or { resetsAt, text } as limitFrom gives it. */
+export function limitInTranscript(lines = [], now = Date.now()) {
+  for (let i = lines.length - 1; i >= 0 && i >= lines.length - 40; i--) {
+    let j
+    try { j = JSON.parse(lines[i]) } catch { continue }
+    if (j.type === 'user' && !j.isMeta && typeof j.message?.content === 'string') return null // he wrote after it
+    if (j.type !== 'assistant') continue
+    const m = j.message ?? {}
+    const text = (Array.isArray(m.content) ? m.content : []).filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+    if (m.model !== '<synthetic>' && !j.isApiErrorMessage) return null // the last reply was a real one
+    if (!LIMIT_TEXT.test(text)) return null
+    return limitFrom(JSON.stringify({ type: 'result', subtype: 'success', is_error: true, result: text }), now)
+  }
+  return null
+}
+
+/** The tickets a limit cut off, to continue first for a day after it reset (they are still open). */
+export function resumeList(limit, issues = [], now = Date.now()) {
+  if (!limit?.cut?.length || limit.kind !== 'limit' || !limit.until) return []
+  const until = Date.parse(limit.until)
+  if (until > now || now - until > 24 * 3600e3) return []
+  const open = new Set(issues.filter((i) => i.status === 'open' || i.status === 'in_progress').map((i) => i.id))
+  return limit.cut.filter((id) => open.has(id))
+}
+
 // ------------------------------------------------------------------ the count and the line
 const closedBy = (i, t) => (i.status === 'done' || i.status === 'dropped') && i.finished_at && Date.parse(i.finished_at) < t
 /** Tickets open at time t: opened before it, and not finished (done or dropped) before it. */
@@ -255,7 +346,7 @@ export function leadLine(issues, { runner = null, claims = {}, limit = null, now
   else if (runner?.running && !runStale) parts.push(`Running since ${when(runner.started, now)} (${(runner.why ?? []).join('; ').slice(0, 80)})`)
   else if (idle) parts.push(`IDLE since ${lastActive ? when(lastActive, now) : 'ever'}`)
   else parts.push(`idle since ${lastActive ? when(lastActive, now) : 'ever'}`)
-  if (limit?.until && Date.parse(limit.until) > now) parts.push(`${limit.kind === 'error' ? 'paused after an error' : 'limit reached'}, starts again ${when(Date.parse(limit.until), now)}`)
+  if (limit?.until && Date.parse(limit.until) > now) parts.push(`${limit.kind === 'error' ? 'paused after an error' : 'limit reached'}, starts again ${atPT(Date.parse(limit.until), now)}`)
   return { text: parts.join(' · '), idle, working, lastActive }
 }
 

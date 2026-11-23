@@ -53,7 +53,7 @@ import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { checkDeploys } from './_overrides.mjs'
 import { sshArgs } from './_olassh.mjs'
-import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, pickTicket, plateOrder } from './_plate.mjs'
+import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, mergePlan, pickTicket, planFrom, plateOrder, resumeList } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -198,7 +198,10 @@ function claude(prompt, { readOnly = false, limit = ANSWER_RUN_LIMIT, work = fal
       writeFileSync(log, out + extra)
       let result = ''
       for (const l of out.split('\n')) if (l.startsWith('{') && l.includes('"result"')) { try { const j = JSON.parse(l); if (j.type === 'result') result = String(j.result ?? '') } catch {} }
-      done({ code, out, log, ms: Date.now() - t0, result: result || out.trim().split('\n').slice(-3).join(' ').slice(0, 400) })
+      // OLA-319: the run's last rate_limit_event is the plan's own reading (one login for every machine)
+      const plan = planFrom(out)
+      const saved = plan ? getState(db, 'plan_usage').then((k) => setState(db, 'plan_usage', mergePlan(k?.value, plan))).catch(() => {}) : Promise.resolve()
+      saved.then(() => done({ code, out, log, ms: Date.now() - t0, result: result || out.trim().split('\n').slice(-3).join(' ').slice(0, 400) }))
     }
     p.on('error', (e) => finish(-1, `\n${e.message}\n`))
     p.on('close', (code) => finish(code))
@@ -238,11 +241,13 @@ async function limitState() {
 }
 
 /** After any run: was it stopped by the usage limit, or did it fail before it started? Records the pause. */
-async function pauseIfNeeded(res) {
+async function pauseIfNeeded(res, ticket = null) {
   const lim = limitFrom(res.out)
   if (lim) {
     const until = new Date((lim.resetsAt ?? Date.now() + LIMIT_RETRY - AFTER_RESET) + AFTER_RESET).toISOString()
-    await setState(db, 'runner_limit', { kind: 'limit', until, text: lim.text, resetKnown: !!lim.resetsAt, at: new Date().toISOString() })
+    // OLA-319: the tickets being worked when the limit hit (this run's, and any a session's builder held) are continued first after the reset
+    const cut = [...new Set([ticket, ...Object.entries(await claims()).filter(([, c]) => age(c.at) < CLAIM_TTL).map(([id]) => id)].filter(Boolean))]
+    await setState(db, 'runner_limit', { kind: 'limit', until, text: lim.text, resetKnown: !!lim.resetsAt, by: 'runner', cut, at: new Date().toISOString() })
     say(`limit reached, resets at ${lim.resetsAt ? at(lim.resetsAt) : 'an unnamed time'}; starting again ${at(until)} ("${lim.text}")`)
     return 'limit'
   }
@@ -278,7 +283,7 @@ async function answerRun(seen, why) {
     const prompt = `${readFileSync(root + 'apps/venture/runner/PROMPT.md', 'utf8')}\n\n## This run\n\nIt is ${new Date().toString()}. You were woken because: ${why.join('; ')}.${voice}`
     res = await claude(prompt)
     say(`answer run finished, exit ${res.code}, log ${res.log}`)
-    paused = await pauseIfNeeded(res)
+    paused = await pauseIfNeeded(res, id)
     if (res.code === 0 && !paused) await markSeen(db, minutes.map((m) => m.id))
     const pushed = run('node', ['scripts/venture/sync.mjs', 'push'])
     if (pushed.status !== 0) say(`push failed: ${pushed.stderr}`)
@@ -414,8 +419,10 @@ async function decide(seen) {
   const lanes = Object.fromEntries((acc.data ?? []).filter((x) => x.value?.lane).map((x) => [x.key.slice('accept:'.length), x.value.lane]))
   // the latest reviews' daily ideas go right after P0 (OLA-331: "They should always be built")
   const ideas = ideaTickets((await getState(db, 'sweeps'))?.value?.days ?? [])
-  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, waiters, lanes, ideas, now: Date.now() })
-  return { lim, live, issues, tickets, plate: p, choice, ideas }
+  // OLA-319: for a day after a limit reset, the tickets it cut off go first
+  const resume = resumeList((await getState(db, 'runner_limit'))?.value, issues)
+  const choice = pickTicket(issues, { claims: live, tickets, order: p.order, recurring: p.recurring, sessionOpen: seen.sessionOpen, waiters, lanes, ideas, resume, now: Date.now() })
+  return { lim, live, issues, tickets, plate: p, choice, ideas, resume }
 }
 
 // ------------------------------------------------------------------ updates of the test server (OLA-272)
@@ -467,6 +474,8 @@ if (cmd === 'status') {
   const limit = await limitState()
   const issues = await openIssues()
   console.log(leadLine(issues, { runner, claims: live, limit }).text)
+  // OLA-319: plan usage, every machine, in the hourly check (`usage.mjs line --probe`: a fresh reading when the kept one is an hour old)
+  { const u = run('node', ['scripts/venture/usage.mjs', 'line', '--probe'], { timeout: 120000 }); console.log(u.status === 0 ? u.stdout.trim() : `plan usage: not read (${(u.stderr || '').trim().split('\n')[0]})`) }
   {
     const f = await deployFacts()
     const g = deployGate(f)
@@ -554,7 +563,7 @@ if (cmd === 'status') {
       if (await replayDue()) say('would run the nightly replay test (steer-replay.mjs --nightly) before the tracker')
       else if (seen.why.length) say(`would not answer (the open session does): ${seen.why.join('; ')}`)
       for (const x of d.choice.passed) say(`  passed over ${x.id}: ${x.why}`)
-      if (d.choice.pick) { const i = d.choice.pick; say(`would start a work run on ${i.id} (${i.priority}, ${i.status === 'open' ? 'next up' : 'doing'}, opened ${i.opened_at.slice(0, 10)}${d.plate.order.includes(i.id) ? `, #${d.plate.order.indexOf(i.id) + 1} on ${d.plate.file}` : ''}${d.ideas.includes(i.id) ? ', a daily idea' : ''}): ${i.title}`) }
+      if (d.choice.pick) { const i = d.choice.pick; say(`would start a work run on ${i.id} (${i.priority}, ${i.status === 'open' ? 'next up' : 'doing'}, opened ${i.opened_at.slice(0, 10)}${d.plate.order.includes(i.id) ? `, #${d.plate.order.indexOf(i.id) + 1} on ${d.plate.file}` : ''}${d.ideas.includes(i.id) ? ', a daily idea' : ''}${d.resume.includes(i.id) ? ', cut off by the plan limit' : ''}): ${i.title}`) }
       else say('no ticket to work')
       break
     }
