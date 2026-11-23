@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
+import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -2273,6 +2274,40 @@ test('design: the person answering the design work’s question, and the designe
     assert.equal(line.served, 'design')
     await call(g, T.a, { model: 'general', max_tokens: 4000, messages: ask('done') }, { headers: { 'X-Session-Id': 'ses_answer1' } })
     assert.equal(up.st.seen.at(-1).model, 'up/general-1')
+  } finally {
+    await g.stop()
+  }
+})
+
+// OLA-325, the checkers' Nov 21 runs of Bart's check ("make a page for the block party, but ask me two
+// things first"): Ola asked its two questions as words in its answer about 2 times in 3, so there was
+// no card to answer. The request that follows such a message carries a note to ask with the question
+// tool, until the tool is called; nothing else changes.
+test('ask first: a person who asks to be asked first gets a card, through a note to the model (OLA-325)', async () => {
+  for (const s of ['make a page for the block party, but ask me two things first', 'Make us a block party page. Ask me two questions before you start.', 'ask me a few questions', 'before you start, ask me what the date is', 'Ask us 3 questions before you build it'])
+    assert.ok(asksToBeAsked(s), s)
+  for (const s of ['make a page for our block party on Saturday', 'ask me if anything is unclear', 'publish it on ola', 'thanks', 'what did you ask me?'])
+    assert.ok(!asksToBeAsked(s), s)
+  const tools = [{ type: 'function', function: { name: 'question', parameters: { type: 'object' } } }, { type: 'function', function: { name: 'bash', parameters: { type: 'object' } } }]
+  const said = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: [{ type: 'text', text: 'make a page for the block party, but ask me two things first' }] }]
+  const offered = new Set(['question', 'bash'])
+  assert.match(askFirstNote(said, offered), /question tool/)
+  assert.equal(askFirstNote(said, new Set(['bash'])), null, 'no question tool offered: no note')
+  const carded = [...said, { role: 'assistant', content: '', tool_calls: [{ id: 'q1', type: 'function', function: { name: 'question', arguments: '{"questions":[]}' } }] }, { role: 'tool', tool_call_id: 'q1', content: 'User has answered your questions' }]
+  assert.equal(askFirstNote(carded, offered), null, 'after the card: no note')
+  const inWords = [...said, { role: 'assistant', content: 'What date? What street?' }, { role: 'user', content: 'Saturday, Elm Street' }]
+  assert.equal(askFirstNote(inWords, offered), null, 'an answer in words is a new message that asks nothing')
+  const up = await fakeUpstream()
+  const g = await gateway(baseEnv(up.url))
+  try {
+    const r = await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: said })
+    assert.equal(r.status, 200)
+    assert.match(up.st.seen.at(-1).system, /asked you to ask them something before you start/)
+    await waitFor(() => g.logs().find((l) => l.ask_first === 1), 3000, 'the log line says the note was added')
+    await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: carded })
+    assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
+    await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }] })
+    assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
   } finally {
     await g.stop()
   }

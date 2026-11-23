@@ -54,6 +54,7 @@ import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
+import { askFirstNote, bothNotes } from './askfirst.mjs'
 import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
 import { CHECK_WEEKLY_TOKENS, checkCallerWeekly } from './check-accounts.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
@@ -1295,14 +1296,17 @@ async function handle(req, res, rec, signal) {
     }
     // A job's retries are checked against its budget, a conversation's against the weekly quota.
     const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
-    upstreamBody.messages = withNote(withInstructions(served, body.messages), note)
+    // OLA-325: the person asked to be asked first: Ola asks with the question tool (a card), not in words.
+    const askNote = isProbe ? null : askFirstNote(body.messages, offered)
+    if (askNote) rec.ask_first = 1
+    upstreamBody.messages = withNote(withInstructions(served, body.messages), bothNotes(note, askNote))
     out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(served) ?? null))
     if (served === 'design' && !isProbe && out.status !== 200 && out.status !== 499 && out.status !== 429 && C.models.has('general')) {
       // The design model refused or failed: Ola's own everyday model does it, once, never a backup model.
       rec.design = 'failed'
       rec.served = served = 'general'
       upstreamBody.model = C.models.get('general')
-      upstreamBody.messages = withNote(withInstructions('general', body.messages), DESIGN_DOWN)
+      upstreamBody.messages = withNote(withInstructions('general', body.messages), bothNotes(DESIGN_DOWN, askNote))
       if ('max_tokens' in body) upstreamBody.max_tokens = body.max_tokens
       else delete upstreamBody.max_tokens
       if ('max_completion_tokens' in body) upstreamBody.max_completion_tokens = body.max_completion_tokens

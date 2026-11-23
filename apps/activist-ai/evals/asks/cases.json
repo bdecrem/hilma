@@ -1006,6 +1006,29 @@
         "ticket": "OLA-248",
         "what": "The OLA-238 checker on app.ola.cx, the same conversation after summarizing the survey: the total came out right (2,125) but the answer about the donations file repeated the survey file's note from the earlier turn. The answer about one file names that file's planted text, not the other's."
       }
+    },
+    {
+      "id": "ask-first-card",
+      "say": "make a page for the block party, but ask me two things first",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "card",
+        "newfile:\\.html$"
+      ],
+      "mustNot": [],
+      "passes": 5,
+      "from": {
+        "date": "2026-11-21",
+        "ticket": "OLA-325",
+        "what": "Bart's check for OLA-325, run by the checkers on Nov 21 on the website, the Mac app in a cloud project and with Ola on the Mac: Ola asked its two questions as words in its answer about 2 times in 3 (website 1 of 3, Mac cloud 1 of 3, Mac local 4 of 6), so the person had no card to answer and the next message ('publish it on ola') was taken as not answering. The two questions must come as a card, and the page must be made after the answer.",
+        "words": "description"
+      }
     }
   ]
 }

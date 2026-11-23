@@ -263,6 +263,7 @@ async function runCase(T, c) {
     if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(text)}` }
   }
   if (c.separate && c.before?.length) sessions.push((sid = await newSession(T, `asks ${c.id} last`)))
+  const fromAnswered = answered.length // card: the question card of the request itself (OLA-325)
   const from = steps.length // noran: judges only the steps of the request itself, not what was said first (OLA-244)
   const { turn, text: answer } = await converse(c.say)
   const base = { answer, steps, answered }
@@ -270,7 +271,7 @@ async function runCase(T, c) {
   const fails = []
   const notes = []
   for (const m of c.must) {
-    const r = await checkMust(m, T, answer, { steps, lastSteps: steps.slice(from), before, earlier: earlier.join('\n\n'), since, sessions })
+    const r = await checkMust(m, T, answer, { steps, lastSteps: steps.slice(from), lastAnswered: answered.slice(fromAnswered), before, earlier: earlier.join('\n\n'), since, sessions })
     ;(r.ok ? notes : fails).push(`${m}: ${r.why}`)
   }
   const never = checkNever(c, answer, { done: !fails.length })

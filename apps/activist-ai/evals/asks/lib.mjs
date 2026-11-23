@@ -666,12 +666,20 @@ export function whoVerdict(row, answer) {
  *   ran:<regex>          a step of this request matches; noran:<regex>: none does (OLA-244)
  *   served:<name>        the model connection's own record says <name> served at least one of this
  *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
+ *   card                 the request itself asked the person with the question tool (a card they
+ *                        answer), not only in the words of its answer (OLA-325)
  *   record:made|last     the answer names whoever the project's own record says made (or last
  *                        changed) the newest page (OLA-303); the design model as an outside model
  */
-export async function checkMust(must, T, answer, { steps = [], lastSteps = steps, before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
+export async function checkMust(must, T, answer, { steps = [], lastSteps = steps, lastAnswered = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
   const [kind, ...rest] = must.split(':')
   const arg = rest.join(':')
+  if (kind === 'card') {
+    // OLA-325: "ask me two things first" asked in words leaves the person no card to answer; the
+    // runner's typed yes would go on and hide it.
+    const q = lastAnswered.find((a) => a.startsWith('question: '))
+    return { ok: !!q, why: q ? `a card: ${q.slice(10, 200)}` : 'no question card in this request; Ola asked in words or not at all' }
+  }
   if (kind === 'served') {
     const not = arg.startsWith('!')
     const name = arg.replace(/^!/, '')

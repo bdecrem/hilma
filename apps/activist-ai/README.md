@@ -2225,6 +2225,14 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   ending in "?"). On the live server the design model had asked "What should the block party page
   say?" and from the answer on `general` built the whole page (5 design steps, then 27 general). The
   log line says why: `design_why: skill | answer`.
+- **"Ask me first"** (`gateway/askfirst.mjs`, OLA-325, Nov 22): when the person's last message asks
+  to be asked something before Ola starts ("make a page for the block party, but ask me two things
+  first", "ask me a few questions"), the request offers the question tool and Ola has not called it
+  since, the gateway adds a note telling Ola to ask with the question tool (the card), never in the
+  words of its answer. On Nov 21 the same sentence got its questions as words about 2 times in 3 on
+  the website, the Mac app in a cloud project and with Ola on the Mac, so there was no card to answer.
+  Every runtime's model requests come through here, so this is the one place. Log line:
+  `ask_first: 1`. Case `ask-first-card` in the asks checks it (`must: card`).
 - **Limits**: the same caps, log line and weekly allowance as every name (usage `by_model.design`);
   the log line has `served: design` and `design: served | withheld | failed`, never content. The
   design model is never asked with less than 16,000 output tokens (with 50 and its reasoning on it
