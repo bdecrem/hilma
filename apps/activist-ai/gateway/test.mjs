@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
-import { publishedChangeNote, publishedIn } from './publishedchange.mjs'
+import { publishedChangeNote, publishedIn, ASKS_PUBLISH as GW_ASKS_PUBLISH, ASKS_CHANGE as GW_ASKS_CHANGE } from './publishedchange.mjs'
+import { ASKS_PUBLISH as FD_ASKS_PUBLISH, ASKS_CHANGE as FD_ASKS_CHANGE } from '../frontdesk/publishednote.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -2521,6 +2522,8 @@ test('published change: a change to a page this conversation published is not a 
     { role: 'assistant', content: 'It is up at https://sites.ola.cx/picnic/' },
   ]
   const ask = (text) => [...pub, { role: 'user', content: [{ type: 'text', text }] }]
+  assert.equal(String(GW_ASKS_PUBLISH), String(FD_ASKS_PUBLISH), 'the same words as the web server')
+  assert.equal(String(GW_ASKS_CHANGE), String(FD_ASKS_CHANGE), 'the same words as the web server')
   assert.equal(publishedIn(pub, pub.length), 'https://sites.ola.cx/picnic/')
   for (const s of ['now change the words to Maple Street Picnic, bring a blanket', 'make the heading say Willow instead', 'change the page so it says Cedar'])
     assert.match(publishedChangeNote(ask(s)) ?? '', /This change is not public yet: https:\/\/sites\.ola\.cx\/picnic\/ still shows the earlier page/, s)

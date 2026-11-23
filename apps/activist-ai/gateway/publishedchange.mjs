@@ -11,7 +11,11 @@
 // ola-publish earlier and its result says the page went up (with the address), the request carries the same rule.
 // A cloud request that already carries the web server's fact gets nothing more (no doubled sentence).
 
-import { asksChangeNotPublish } from '../frontdesk/publishednote.mjs'
+// The same two patterns as the web server's (frontdesk/publishednote.mjs), copied: the gateway is its
+// own folder and imports nothing outside it (ops/restart-test.mjs). gateway/test.mjs keeps them equal.
+export const ASKS_PUBLISH = /\bpublish|\bunpublish|\b(?:put|get|bring)\s+(?:it\s+|this\s+|that\s+|the\s+\w+\s+)?(?:back\s+)?(?:up|online|live)\b|\bgo(?:es)?\s+live\b|\bmake\s+(?:it|this|the\s+\w+)\s+(?:public|live)\b|\btake\s+(?:it\s+|this\s+|the\s+\w+\s+)?down\b|\blink\s+anyone\b/i
+export const ASKS_CHANGE = /\b(?:change|changes|edit|update|make|turn|rename|replace|fix|add|remove|delete|drop|move|swap|redo|rewrite|reword|say|says|instead|heading|headline|title|colou?r|font|text|words?|bigger|smaller|darker|lighter)\b/i
+const asksChangeNotPublish = (t) => ASKS_CHANGE.test(t) && !ASKS_PUBLISH.test(t)
 
 const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((p) => p?.type === 'text' && typeof p.text === 'string').map((p) => p.text).join('\n') : '')
 
