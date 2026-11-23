@@ -59,6 +59,19 @@ The university is closed Nov 26 and 27 for Thanksgiving. Signing in afterwards i
 visiting fellows have no Stanford mailbox and do not need one. The free Standard tier has no
 Fable models. The sign-in commands that worked are in the memory note `stanford-claude-login`.
 
+## The app's sign-in screens, as seen (2026-11-23, Claude for Mac 6.28899.6)
+
+1. First window: "Claude for Mac", one button, **Get started**.
+2. "Sign In": **Continue with Google**, OR, a box **Enter your email**, **Continue with email**.
+3. Type an `@stanford.edu` address in the box and a third button appears under
+   "Continue with email": **Continue with SSO**. That is the one; it goes to Stanford's page.
+
+I wrote these steps twice from memory and Bart said both were wrong (there is no email box
+on the first window). To see the signed-out screens without touching his own app:
+`open -g -n -a /Applications/Claude.app --args --user-data-dir=<empty scratch folder>`,
+look at it, then kill that one process. claude.ai/login in a headless browser shows a robot
+check as soon as an address is typed, so it cannot be read that way.
+
 ## Checking a change
 
 `npx next dev --turbopack -p 3288`, open `/seminar` at 1297 and 390 wide, look at the whole

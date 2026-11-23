@@ -23,9 +23,9 @@
         },
         {
           "title": "Sign in to the app",
-          "body": "Open the Claude desktop app on your Mac (or, god forbid, Windows) and sign in the same way: SUNet-ID@stanford.edu, then \"Continue with SSO\". If it says \"there was a problem sending you a login link\", update the app (Claude menu, Check for Updates), reopen it, and try again.",
+          "body": "Open the Claude desktop app on your Mac (or, god forbid, Windows). If it is already signed in to a personal account, log out first: click your name at the bottom left, then Log out. Click \"Get started\" if you see it. On the Sign In screen, click \"Enter your email\" and type your Stanford SUNet ID as an email address, something like jdoe@stanford.edu. A new button, \"Continue with SSO\", appears under it: click that one, then sign in on the Stanford page with your SUNet ID and password. If it says \"there was a problem sending you a login link\", update the app (Claude menu, Check for Updates), reopen it, and try again.",
           "say": null,
-          "trap": null
+          "trap": "\"Continue with SSO\" only shows up after you type the stanford.edu address. Don't click \"Continue with email\" or \"Continue with Google\"."
         },
         {
           "title": "Pick Opus 5.5, Medium",
