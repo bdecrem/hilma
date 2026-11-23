@@ -881,7 +881,11 @@ a gateway caller `p-<their id>` with its own random token, in `OLA_FD_PEOPLE_TOK
 (`~/.ola/gateway-people`, mode 600, written by rename), which the gateway reads beside its tokens file
 (`GATEWAY_PEOPLE_TOKENS_FILE`; see the gateway's "People, from a second file"). The file follows the
 database: a person with at least one live computer who is active and allowed has an entry, anyone else
-has none (their last computer removed, disallowed, suspended). The platform database holds no secret:
+has none (their last computer removed, disallowed, suspended). The gateway takes a new token on its
+next reload, about 100 ms after the file changes; until it answers that token once, a computer's
+request waits for it (up to 3 s, else `503 not_ready`), and a gateway 401 for a computer the front
+desk accepted is answered `503 not_ready`, never 401, which every app reads as signed out (OLA-289;
+`frontdesk/test/devices-gw.test.mjs`). The platform database holds no secret:
 the file is the only copy of the people's tokens. The weekly cap and the usage log are per person, all
 their computers together. A person's caller has a standing web grant in the gateway itself, by where
 the caller came from (the people file), never by a file anyone writes: in local folder mode the person

@@ -24,7 +24,9 @@
 // What a device can do (all under /api/device/, nothing else):
 //   GET  /api/device/me          who, which device, until when
 //   POST /api/device/signout     this device is revoked
-//   ANY  /api/device/gw/<rest>   the model gateway, as the person's own caller p-<id> (GW_ALLOWED)
+//   ANY  /api/device/gw/<rest>   the model gateway, as the person's own caller p-<id> (GW_ALLOWED);
+//        never 401 for a device accepted here: a token the gateway has not loaded yet (a first
+//        sign-in, its reload is ~100 ms behind) is waited for, up to 3 s, else 503 not_ready (OLA-289)
 //   GET  /api/device/projects    the person's projects, and under /api/device/w/<project>/ the
 //        project's conversations, files and event stream, with the web's own membership checks
 //        (the cloud of the Mac and iPhone apps, OLA-150: server.mjs, deviceCloud)
@@ -275,8 +277,16 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
   // (hosted.mjs writeHostedGrants: only while a computer is signed in), so that file follows too
   // (OLA-337: a Mac signed in after the grants were written was refused the hosted model and its
   // picks until something else rewrote them).
+  // OLA-289: a token minted by this sync is not in the gateway's hands yet (it reloads the file on a
+  // watch, 100 ms after the change). Until the gateway has answered it once, a request with it waits
+  // for the gateway to know it (ready below), so a first sign-in is never told it is signed out.
+  const fresh = new Map() // person id -> { at, ready: Promise|null }
   const sync = () => {
+    const before = readPeopleFile(cfg.peopleFile)
     const out = syncPeopleFile(db, cfg.peopleFile)
+    const now = Date.now()
+    for (const [id, t] of out) if (before.get(id) !== t) fresh.set(id, { at: now, ready: null })
+    for (const id of fresh.keys()) if (!out.has(id)) fresh.delete(id)
     try {
       onPeople?.()
     } catch (e) {
@@ -482,7 +492,49 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
 
   // ------------------------------------------------ the gateway, as the person's own caller
 
-  function toGateway(req, res, dev, rest) {
+  // The answer for a device deviceOf() accepted whose token the gateway does not take (yet): never
+  // 401, which every client reads as signed out (OLA-289), but a short wait.
+  const notReady = (res) => json(res, 503, { error: 'not_ready', message: 'Ola is still setting up this sign-in. Try again in a moment.' }, { 'retry-after': '1' })
+  const READY_MS = cfg.readyMs ?? 3000
+  const READY_EVERY_MS = cfg.readyEveryMs ?? 50
+  const FRESH_MS = 60_000
+
+  /** Does the gateway take this token? GET /v1/models with it: anything but 401 is yes. */
+  const gatewayKnows = (token) =>
+    new Promise((resolve) => {
+      const gw = new URL(gateway)
+      const q = http.request({ host: gw.hostname, port: gw.port, method: 'GET', path: '/v1/models', headers: { authorization: `Bearer ${token}`, host: '127.0.0.1' }, agent: false, timeout: 2000 })
+      q.on('response', (r) => (r.resume(), resolve(r.statusCode !== 401)))
+      q.on('timeout', () => q.destroy())
+      q.on('error', () => resolve(false))
+      q.end()
+    })
+
+  /** Resolves true once the gateway takes a person's newly minted token (at most READY_MS), at once for any other. */
+  function ready(personId, token) {
+    const f = fresh.get(personId)
+    if (!f) return true
+    if (Date.now() - f.at > FRESH_MS) return fresh.delete(personId), true
+    if (!f.ready)
+      f.ready = (async () => {
+        const end = Date.now() + READY_MS
+        for (;;) {
+          if (await gatewayKnows(token)) {
+            if (fresh.get(personId) === f) fresh.delete(personId)
+            return true
+          }
+          if (Date.now() >= end) {
+            f.ready = null // the next request tries again
+            log(`device: the gateway did not take p${personId}'s new token within ${READY_MS} ms`)
+            return false
+          }
+          await new Promise((r) => setTimeout(r, READY_EVERY_MS))
+        }
+      })()
+    return f.ready
+  }
+
+  async function toGateway(req, res, dev, rest) {
     if (!GW_ALLOWED.has(`${req.method} ${rest}`)) return json(res, 403, { error: 'not_allowed' })
     const maxBody = cfg.maxBody ?? GW_ALLOWED.get(`${req.method} ${rest}`)
     const declared = req.headers['content-length'] === undefined ? null : Number(req.headers['content-length'])
@@ -491,7 +543,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     if ((inflight.device.get(dev.id) ?? 0) >= cfg.perDevice || (inflight.person.get(dev.personId) ?? 0) >= cfg.perPerson) return json(res, 429, { error: 'too_many' }, { 'retry-after': '5' })
     let token = readPeopleFile(cfg.peopleFile).get(dev.personId)
     if (!token) token = sync().get(dev.personId) // the file lost the entry (a hand edit): made again; the gateway picks it up within seconds
-    if (!token) return json(res, 401, { error: 'signed_out' })
+    if (!token) return notReady(res) // could not be written: the device is signed in all the same
     bump(inflight.device, dev.id, 1)
     bump(inflight.person, dev.personId, 1)
     let done = false
@@ -500,6 +552,16 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
       done = true
       bump(inflight.device, dev.id, -1)
       bump(inflight.person, dev.personId, -1)
+    }
+    // A token minted moments ago: wait until the gateway takes it (OLA-289). The body waits unread.
+    if (fresh.has(dev.personId)) {
+      let gone = false
+      const onClose = () => (gone = true)
+      res.once('close', onClose)
+      const ok = await ready(dev.personId, token)
+      res.off('close', onClose)
+      if (gone || res.destroyed) return release()
+      if (!ok) return release(), notReady(res)
     }
     // Only what the gateway needs: never the device's own headers (its pass, cookies, a batch lane).
     const headers = { authorization: `Bearer ${token}`, host: '127.0.0.1' }
@@ -521,6 +583,15 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     const end = () => (clearInterval(timer), release())
     res.on('close', () => (up.destroy(), end()))
     up.on('response', (r) => {
+      // The gateway does not know the token though this device is signed in (a reload still on its
+      // way): a wait, never a sign-out (OLA-289); the next request waits for the gateway to take it.
+      if (r.statusCode === 401) {
+        r.resume()
+        up.destroy()
+        if (!fresh.has(dev.personId)) fresh.set(dev.personId, { at: Date.now(), ready: null })
+        log(`device: the gateway refused p${dev.personId}'s token; answered not_ready`)
+        return notReady(res)
+      }
       const out = { 'cache-control': 'no-store' }
       for (const h of GW_REPLY_HEADERS) if (r.headers[h] !== undefined) out[h] = r.headers[h]
       res.writeHead(r.statusCode, out)
