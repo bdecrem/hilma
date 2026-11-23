@@ -353,12 +353,13 @@ enum MacDrive {
       }
       if s.typeOnly == true {
         said.status = "in the box"
-        // Wiped as a person does: Command-A, Delete. Nothing is sent.
-        shortcut("a", code: 0, in: window)
-        press("\u{8}", code: 51, in: window, shortcuts: false)
+        // Wiped as a person holding Delete does: one Delete per character, from the end (the insertion
+        // point is there after typing). Nothing is sent. (Command-A as a key event does not reach the
+        // box's editor here; the menu's Select All is not a key the drive can press.)
+        for _ in 0..<inBox.count { press("\u{7F}", code: 51, in: window, shortcuts: false) }
         try await settle(window, 0.5)
         let left = box.currentEditor()?.string ?? box.stringValue
-        guard trimmed(left).isEmpty else { throw Failed(why: "sentence \(n) was whole in the box, but the box still holds \(quoted(left)) after Command-A, Delete") }
+        guard trimmed(left).isEmpty else { throw Failed(why: "sentence \(n) was whole in the box, but the box still holds \(quoted(left)) after one Delete per character") }
         if !(store.conversation?.turns.isEmpty ?? true) { throw Failed(why: "--type-only, yet the conversation has a turn") }
         step("sentence \(n) whole in the box (\(Int(box.frame.height)) pt tall), wiped", shot: "say\(n)-wiped")
         continue
