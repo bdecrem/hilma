@@ -80,6 +80,11 @@ sources read for it, each link opens and says what the text says it says, and it
 on this project's own notes. Bart, Nov 20, about the review of the learning system: "did the agent
 do any web searches to understand what best practices are?" It had not.
 
+A design result (pages made by several models or skills, before and after a redo) reaches him as
+the pages themselves, each one a link he can open and scroll on his phone, never only as a sheet of
+screenshots (correction 109, Nov 20: "i want to view the web pages not the mockup"). The checker
+opens each link at phone width; a handover that is only a contact sheet or a folder path fails.
+
 ## For the lead
 
 - Start one checker per update of the test server, once it is live: it gets every ticket
