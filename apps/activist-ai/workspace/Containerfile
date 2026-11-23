@@ -78,6 +78,11 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-71 (OLA-421): the plugin ola-skillcue 2.0.0 puts the standing rule a request calls for in the
+# system prompt with it (Claude where the web server gave no fact, something on a schedule, a real-world
+# sound), and a link to send loads the publish skill; the publish skill 10 (a link to a page is a publish
+# of it); `ola-publish status` prints an outcome it already showed as a record, never as the address now;
+# AGENTS.md's publish line says the same. Builds on 2.3.2-70.
 # 2.3.2-70 (OLA-168): the designer skill 9: a Bold page copied from a worked example gets a palette of
 # its own (scripts/deal.py; look.py calls out an example's colors), and the first page is made before
 # any question; AGENTS.md: a page, site or app screen is never a reason to ask first. Builds on 2.3.2-69.

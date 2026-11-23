@@ -12,10 +12,15 @@
 #       Takes the project's published pages down, after the person's yes (also always asked).
 #   ola-publish status
 #       The last publish's outcome (never asked): use it when the publish above was still going.
+#       An outcome already shown, or older than 15 minutes, is printed as a record of the past, never
+#       as the address's state now (OLA-421): this computer cannot look at the address, and on Nov 23
+#       Ola gave a link "currently live and shows Bart" from such a record while the address was 404
+#       (the page had been taken down with the button) and the page asked about said Garden Club.
 #
 # The front desk writes the outcome with `ola-publish --result` (the JSON on stdin), into
 # /work/.ola/publish/result.json. Exit 0 published (and the address shows it), 1 not published,
-# 2 used wrongly, 3 still going, 4 sent but the address does not show it yet.
+# 2 used wrongly, 3 still going, 4 sent but the address does not show it yet, 5 (status) only a record
+# of an earlier publish, not a look at the address now.
 import json, os, sys, tempfile, time
 
 DIR = os.environ.get("OLA_PUBLISH_DIR", "/work/.ola/publish")
@@ -82,6 +87,25 @@ def tell(r):
     return 1
 
 
+def past(r):
+    """An outcome already shown (or old): a record, never a claim about the address now (OLA-421)."""
+    when = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(float(r.get("written") or 0))) if r.get("written") else "an earlier time"
+    if r.get("state") == "done" and r.get("unpublished"):
+        what = f"the pages at {r.get('url')} were taken down"
+    elif r.get("state") == "done":
+        shows = (r.get("shows") or "").strip()
+        what = f"{r.get('url')} was published" + (f", showing “{shows}”" if shows else "")
+    else:
+        what = "a publish was not done (" + str(r.get("message") or "Ola's server did not publish it") + ")"
+    say(f"Record only: the last publish from this project's conversation, at {when}, said {what}.",
+        "This is not a look at the address now. This computer cannot look, and since then the page may have been taken down"
+        " (with the Unpublish button, or by an admin) or published again, and the page in the project may say something else.",
+        "Never tell the person a page is live, or give them an address as working, from this record.",
+        "To give them a link to a page, publish the page they mean now (the publish skill: prepare, check, then"
+        " `ola-publish <folder> --files <list>`): its result says what the address shows.")
+    return 5
+
+
 HELP = """ola-publish puts a page from this project on the public web, at https://sites.ola.cx/<project>/.
 Follow the publish skill first (the skill tool, id "publish"; its text is /opt/ola/skills/publish/SKILL.md):
 `publish.py where`, then `prepare` and `check`, then this command with the list `check` printed.
@@ -90,7 +114,8 @@ Follow the publish skill first (the skill tool, id "publish"; its text is /opt/o
                                                   the list `publish.py check site` printed. Run it as a
                                                   command of its own: the person is asked, with the list.
   ola-publish unpublish                           take the project's pages down (also asked)
-  ola-publish status                              the last publish's outcome (never asked)
+  ola-publish status                              the last publish's outcome (never asked); once shown,
+                                                  only a record, never what the address shows now
 Publishing again: run prepare again first. site/ is a copy and does not change when the page does."""
 
 
@@ -112,9 +137,16 @@ def main(argv):
     if argv == ["status"]:
         r = read()
         if not r:
-            say("Nothing has been published from this project's conversation yet.")
+            say("Nothing has been published from this project's conversation yet.",
+                "To give the person a link to a page, publish that page (the publish skill: prepare, check, then ola-publish).")
             return 1
-        return tell(r)
+        if r.get("state") != "publishing" and (r.get("used") or time.time() - float(r.get("written") or 0) > FRESH):
+            return past(r)
+        code = tell(r)
+        if code != 3 and r.get("state") != "publishing":
+            r["used"] = True
+            write(r)
+        return code
     if argv == ["unpublish"]:
         argv, target_fixed = [], "(unpublish)"
     else:

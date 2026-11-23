@@ -1234,6 +1234,19 @@ print(json.dumps({"mib": n, "stopped": why}))
   t('ola-twin: a made-up copy of a made-up project is made, clean and scored; a planted name is refused, a rare word held (twin.test.mjs)', tt.status === 0, `${(tt.stdout ?? '').trim().split('\n').pop()}${tt.status ? ` ${(tt.stdout ?? '').split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')}` : ''}`)
 }
 
+// OLA-421, on the host: `ola-publish status` prints an outcome already shown as a record, never as the
+// address's state now (publish-status.test.mjs). (The plugin ola-skillcue's own test reads the asks' cases
+// and the web server's Claude pattern, so it runs in the asks suite, evals/asks/test.mjs.)
+for (const [label, file] of [
+  ['ola-publish status: an outcome already shown, or old, is a record, never "live" (publish-status.test.mjs)', 'publish-status.test.mjs'],
+]) {
+  const r = spawnSync(process.execPath, ['--test', '--test-reporter=tap', path.join(path.dirname(fileURLToPath(import.meta.url)), file)], { encoding: 'utf8', timeout: 120_000, maxBuffer: 4 * 1024 * 1024 })
+  const pass = /# pass (\d+)/.exec(r.stdout ?? '')?.[1]
+  const fail = /# fail (\d+)/.exec(r.stdout ?? '')?.[1]
+  const why = r.status === 0 ? '' : `; exit ${r.status} ${r.signal ?? ''}: ${(r.stdout ?? '').split('\n').filter((l) => /not ok|Error|expected|actual/.test(l)).slice(0, 4).join(' | ').slice(0, 400)} ${(r.stderr ?? '').slice(-300)}`
+  t(label, r.status === 0, `${pass ?? '?'} passed, ${fail ?? '?'} failed${why}`)
+}
+
 console.log(`\nmeasured: ${JSON.stringify(measured)}`)
 const passed = results.filter(Boolean).length
 console.log(`${passed} of ${results.length} checks passed  (files: ${run})`)

@@ -3,7 +3,7 @@ name: publish
 description: Use whenever a person wants something put on the public web, for real - "publish this", "put this online", "make it live", "publish this to Ola", "put it on sites.ola.cx", "share it with a link anyone can open", "host our page", "deploy the site", "send the public a link", "publish again", "unpublish", "take it down", "get it on our own domain", "connect our domain", "buy a domain" - and when they ask how to set up GitHub or Vercel for a page. Prepares a clean site folder, checks it for passwords and private data, and gets it published - in Ola's cloud with `ola-publish`, after the person's yes to the exact list in the conversation; on their own Mac at Ola's own address sites.ola.cx/<name> (signed in to Ola) or through GitHub and Vercel, step by step.
 license: Proprietary
 metadata:
-  ola/version: "9"
+  ola/version: "10"
   ola/specialists: "none"
   ola/evals: "w1-publish-ready w2-publish-secret"
   ola/owner: "ola"
@@ -142,6 +142,13 @@ ola-publish site --files index.html,style.css,picture.png
   when the page does, and an old one publishes the earlier page. `check` and Ola's server refuse an
   old copy ("an old copy", "changed after site/ was made") and say the `prepare` line to run: run
   it, `check` again, then `ola-publish`. That is the whole fix; do not tell the person about it.
+- **A link to a page** ("can you give me a link to this page that I can send to my group", "share
+  it with a link"): that is a request to publish the page they mean, also in a project that published
+  before. Do Step 2, Step 3 and `ola-publish` (the person's yes is the card), and give the address its
+  result checked. `ola-publish status` is only a record of an earlier publish, never a look at the
+  address: the page may have been taken down or changed since. Never give a link, or say a page is
+  live or what it shows, from `status`, from a file or from memory (OLA-421: Ola gave
+  `https://sites.ola.cx/askcases/` "currently live and shows Bart" from an old record; it was 404).
 - **What you say comes from the command's lines, never from what you believe.** "Checked: the
   address answers with exactly the page just published; it shows: …": say it is live, with the
   address and what it shows. If what it shows is not what the person asked for, say so in one

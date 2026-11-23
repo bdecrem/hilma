@@ -19,6 +19,9 @@
 // note on an earlier step of the same conversation is in the system prompt again anyway). OLA_SKILLCUE=off turns
 // it off for one process; OLA_SKILLS_DIR names another skills folder (tests).
 //
+// 2.0.0 (OLA-421): also the standing rule that applies to a request (RULES below: Claude on the Mac, something
+// on a schedule, a real-world sound), and "a link to this page I can send" counts as a request to publish.
+//
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process.
 
@@ -46,11 +49,85 @@ export const CUES = [
       String.raw`\btake (?:it|this|that|them|the page|the site|our page|my page) (?:down|offline)\b`,
       String.raw`\b(?:host|deploy) (?:it|this)\b|\b(?:host|deploy) (?:our|my|the|this) (?:page|site|website)\b`,
       String.raw`\b(?:a )?link (?:that )?anyone can open\b`,
+      // OLA-421: "can you give me a link to this page that I can send to my group" loaded nothing, and Ola
+      // answered from an old publish record with an address that was 404.
+      String.raw`\b(?:give|get|send|share|make)\b(?: \w+){0,3}? (?:a |the )?(?:public |shareable |sharable |web )?link\b`,
+      String.raw`\blink to (?:this|the|my|our|that|their) (?:page|site|website|flyer|poster)\b`,
+      String.raw`\bshar(?:e|eable|able) link\b`,
       String.raw`\b(?:connect|use|buy) (?:a |our |my |the )?(?:own )?domain\b`,
       String.raw`\bon (?:our|my|their) own domain\b`,
     ].join('|'), 'i'),
   },
 ]
+
+// Rules for a request (OLA-421, 2.0.0). Three of Ola's standing rules (workspace/AGENTS.md, OlaKit Abilities.swift,
+// both written from evals/asks/abilities.json) were followed about half the time when they sat only in the long
+// instructions: in the request tests of Nov 23 Ola on the Mac wrote hello.txt itself when asked to "have claude
+// code do this one" (0 of 2; it had passed 2 of 3 the run before), answered "every monday morning, check the city
+// council agenda" without the sentence it is given (and on Nov 23 03:08 in a cloud project promised to "look it
+// up each Monday morning"), and opened the birdsong page's reply with "The page is done and the sound check
+// passed". The rule that applies is now put in the system prompt of that request, on every step, like a skill
+// above. Each one is worded for the case it fits, so a request it matched by accident is told nothing false.
+export const RULE_HEAD = '[Ola rule for this request:'
+
+// abilities.json's `notOffered` sentence for "schedule", word for word (skillcue.test.mjs keeps them equal).
+export const SCHEDULE_SENTENCE = 'Ola can\'t do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it.'
+
+// The cloud's web server puts the fact about Claude in this project in front of such a request
+// (frontdesk/claude.mjs claudeNote); that fact is followed, and this rule stays out.
+export const CLAUDE_FACT = 'About Claude in this project (from the app'
+// The same pattern as the web server's (frontdesk/claude.mjs NAMES_CLAUDE), copied: the plugin is its own
+// folder in the image. skillcue.test.mjs keeps them equal.
+export const NAMES_CLAUDE = /\b(?:have|ask|let|get|use|try|want|need|prefer|switch to|hand (?:it |this |that )?(?:over )?to|send (?:it |this |that )?to|give (?:it |this |that )?to)\s+claude\b|\bclaude(?: code)?,?\s+(?:(?:can|could|should|would|will|to|please)\s+)?(?:do|handle|take|build|make|write|fix|try|finish)\b/i
+
+const DAYS = '(?:mon|tues|wednes|thurs|fri|satur|sun)day'
+const WHEN = new RegExp([
+  String.raw`\b(?:every|each)\s+(?:other\s+)?(?:${DAYS}s?|day|morning|afternoon|evening|night|week|weekday|weekend|month|year|hour|quarter|\d+\s+(?:minutes?|hours?|days?|weeks?|months?))\b`,
+  String.raw`\b${DAYS}s\b`,
+  String.raw`\b(?:daily|weekly|monthly|hourly|nightly)\b`,
+  String.raw`\bremind (?:me|us)\b`,
+  String.raw`\bkeep (?:an eye on|checking|watching|track of)\b`,
+  String.raw`\bon a (?:schedule|timer)\b|\bschedule (?:it|this|that|a|the)\b`,
+  String.raw`\b(?:later today|tomorrow (?:morning|afternoon|evening|at)|tonight at|next (?:${DAYS}|week|month) (?:morning|at)|in (?:an?|one|two|three|\d+) (?:hours?|minutes?|days?|weeks?))\b`,
+].join('|'), 'i')
+// Something done by Ola then, not a schedule written into a page ("a page for our weekly meeting").
+const DO_THEN = /\b(?:check|look (?:at|up|for|into)|tell (?:me|us)|let (?:me|us) know|send|remind|watch|monitor|e-?mail|text|post|tweet|run|notify|alert|scan|search|fetch|download|summari[sz]e|report|update (?:me|us)|ping)\b/i
+
+// A real-world sound: what Ola can only come close to in code.
+const REAL_SOUND = /\bbird ?songs?\b|\bbirds? (?:singing|chirping|calls?|sounds?|tweeting)\b|\b(?:chirp|tweet|song)(?:s|ing)? of (?:a |the )?birds?\b|\b(?:sounds? of|recording of|real) (?:rain|thunder|waves|the ocean|the sea|wind|a river|a stream|birds?|a dog|dogs|a cat|cats|a crowd|people|a voice|someone)\b|\b(?:rain|thunder|ocean|wave|wind|nature|forest|crowd|cheering|applause|barking|meowing|frog|cricket|whale) (?:sounds?|noises?)\b|\b(?:recorded|real) (?:sound|voice|audio)\b|\bsays? (?:it )?(?:out loud|aloud)\b|\b(?:a |in a )?voice (?:that )?(?:says|reads|saying|reading)\b/i
+const SOUNDING = /\b(?:plays?|playing|sounds?|audio|hear|noises?|music|tune|tap|click|press|button|aloud|loud|voice)\b/i
+
+export const RULES = [
+  {
+    id: 'claude',
+    when: (r) => NAMES_CLAUDE.test(r) && !r.includes(CLAUDE_FACT),
+    text: 'The person asked for Claude (Claude Code) to do this request. Do not do it yourself: write, change or delete no file for it and run nothing for it. ' +
+      'Tell them, in one or two plain sentences, to type /claude followed by the request (for example "/claude <their request>"), or to turn on Fallback to Claude in Settings. ' +
+      'Never say you cannot hand it over. If you offer to do it yourself instead, do it only after they say yes.',
+  },
+  {
+    id: 'schedule',
+    when: (r) => WHEN.test(r) && DO_THEN.test(r),
+    text: 'If the person asks you to do something by yourself on a schedule or later (every Monday, each morning, remind me tomorrow), and not only to write a schedule into a page or a document: Ola cannot do that. ' +
+      `Put this sentence in your reply, word for word (in the person's language if they write in another): "${SCHEDULE_SENTENCE}" ` +
+      'Then do the part you can now, or ask the one thing you need for it. Never say or imply that you will do it later, every week or on any schedule.',
+  },
+  {
+    id: 'real-sound',
+    when: (r) => REAL_SOUND.test(r) && SOUNDING.test(r),
+    text: 'If the person asked for a real-world sound (birdsong, rain, waves, an animal, a voice, a recording of anything): every sound Ola makes is made in code and only comes close. ' +
+      'The first sentence of your final reply says so, before anything about the page, the checks or the files, in about these words: "I can\'t use a recording; this is a sound made in code that comes close to <the sound>." ' +
+      'Never say it is exactly what they asked, and label the button or the page for what it really plays (a bird-like tune, not birdsong).',
+  },
+]
+
+/** The rules a request calls for, by id. */
+export function rulesFor(request) {
+  const r = String(request ?? '')
+  return RULES.filter((x) => x.when(r))
+}
+
+export const ruleNote = (rule) => `${RULE_HEAD} ${rule.id}] ${rule.text}`
 
 /** The text of the newest message the person typed. */
 export function newestRequest(messages) {
@@ -121,6 +198,11 @@ export function onContext(event, env = process.env) {
     if (event.system.some((p) => p?.text?.startsWith?.(`${NOTE_HEAD} ${id}]`))) continue
     const note = noteFor(id, env, about)
     if (note) event.system.push({ type: 'text', text: note })
+  }
+  // OLA-421: the standing rule that applies to this request, on every step of it.
+  for (const rule of rulesFor(request)) {
+    if (event.system.some((p) => p?.text?.startsWith?.(`${RULE_HEAD} ${rule.id}]`))) continue
+    event.system.push({ type: 'text', text: ruleNote(rule) })
   }
 }
 

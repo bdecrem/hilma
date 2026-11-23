@@ -3,6 +3,7 @@
 // 127.0.0.1 that records each request and answers "ok". Proves what the unit tests cannot: opencode loads the
 // plugin, calls its context hook, and the publish skill is in the system prompt the model receives for a request
 // to publish (OLA-284); with OLA_SKILLCUE=off it is not; and a request that is not about publishing gets none.
+// OLA-421: a request for Claude and one for something every Monday get their rule; a change to a page gets none.
 // No real model is called.
 import http from 'node:http'
 
@@ -65,8 +66,14 @@ const b = await run('make a page that says Bart and publish it on ola', { OLA_SK
 check('OLA_SKILLCUE=off: the model received no skill note', b.code === 0 && b.sent.length > 0 && !b.sent.includes('[Ola skill loaded:'))
 const c = await run('make the heading say Willow instead', { OLA_SKILLS_DIR: SKILLS })
 check('a change to a page, not a request to publish: no skill note', c.code === 0 && c.sent.length > 0 && !c.sent.includes('[Ola skill loaded:'))
+// OLA-421: the rule for a request is in what the model receives, and only for that request.
+const d = await run('have claude code do this one: write a file called hello.txt that says hi', { OLA_SKILLS_DIR: SKILLS })
+check('a request for Claude: the Claude rule is in what the model received', d.code === 0 && d.sent.includes('[Ola rule for this request: claude]') && !d.sent.includes('[Ola skill loaded:'))
+const e = await run('every monday morning, check the city council agenda and tell me what is new', { OLA_SKILLS_DIR: SKILLS })
+check('something every Monday: the schedule rule with its sentence', e.code === 0 && e.sent.includes('[Ola rule for this request: schedule]') && e.sent.includes('it works when you ask. Ask me again then and I will do it.'))
+check('a change to a page: no rule either', !c.sent.includes('[Ola rule for this request:'))
 
 server.close()
 rmSync(root, { recursive: true, force: true })
-console.log(failed ? `${failed} of 4 failed` : '4 of 4 passed')
+console.log(failed ? `${failed} of 7 failed` : '7 of 7 passed')
 process.exit(failed ? 1 : 0)

@@ -6,3 +6,14 @@
   `which ola-publish` and `ola-publish --help` and published without prepare. Now a request to publish gets the
   publish skill's text in the system prompt, in the skill tool's shape. Tests: skillcue.test.mjs 6 of 6,
   opencode.check.mjs 4 of 4 (real opencode, stand-in model).
+- 2.0.0 (2026-11-23, OLA-421): the request tests on release 5a3a4555734f found three standing rules followed about
+  half the time from the long instructions alone: with Ola on the Mac, "have claude code do this one: write a file
+  called hello.txt that says hi" wrote hello.txt itself (0 of 2), "every monday morning, check the city council
+  agenda" got no schedule sentence (0 of 2; in a cloud project on Nov 23 it once promised to look "each Monday
+  morning"), and the birdsong page's reply opened with "The page is done and the sound check passed" (0 of 2). Now
+  the rule that applies (`RULES`: claude, schedule, real-sound) is put in the system prompt of that request, on
+  every step, worded for the case it fits. The Claude rule stays out when the cloud's web server already put its
+  fact about Claude in front of the request. "Can you give me a link to this page that I can send to my group"
+  now loads the publish skill (it loaded nothing, and Ola answered from an old publish record with a dead
+  address). Copies kept equal by the test: the Claude pattern (frontdesk/claude.mjs) and the schedule sentence
+  (evals/asks/abilities.json). Tests: skillcue.test.mjs 10 of 10, opencode.check.mjs 7 of 7.
