@@ -121,8 +121,14 @@
         },
         {
           "title": "Ask it something",
-          "body": "Type a question. Mine pulled 640 papers, and Claude answers from those papers only, in 10 to 20 seconds, with the paper named next to each claim and a link to the full text. I asked how trust is repaired after a betrayal, and why people distrust science. The answers count toward your normal Claude usage.",
+          "body": "Type a question. Mine pulled 640 papers, and Claude answers from those papers only, in 10 to 20 seconds, with the paper named next to each claim and a link to the full text. I asked how trust is repaired after a betrayal, and why people distrust science. It has read the abstracts, not the whole papers, which is the right size for half an hour. The answers count toward your normal Claude usage.",
           "say": null,
+          "trap": null
+        },
+        {
+          "title": "Ask for more",
+          "body": "If you want it to do more, say so in as few words as you like. I asked for this, and it built that too, at a second address in my browser.",
+          "say": "Make it a full chat bot.",
           "trap": null
         }
       ]
