@@ -50,7 +50,7 @@ export async function POST(req: Request) {
           .slice(0, 20)
           .map((x) => (x && typeof x === 'object' ? (x as Record<string, unknown>) : {}))
           .filter((x) => str(x.case, 64))
-          .map((x) => ({ case: str(x.case, 64) as string, ticket: str(x.ticket, 12), tries: str(x.tries, 20) }))
+          .map((x) => ({ case: str(x.case, 64) as string, ticket: str(x.ticket, 12), tries: str(x.tries, 60) }))
       : []
   const asks =
     a && typeof a === 'object'
