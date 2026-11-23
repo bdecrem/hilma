@@ -555,7 +555,7 @@ export function boardStatus(S, state, r, conds, now) {
   let asks = null
   try {
     const a = JSON.parse(readFileSync(path.join(S.STAGING, 'asks-latest.json'), 'utf8'))
-    const pick = (st) => Object.values(a.cases ?? {}).filter((c) => c.status === st).slice(0, 20).map((c) => ({ case: `${String(c.id).slice(0, 40)}@${String(c.place).slice(0, 20)}`, ticket: c.ticket ? String(c.ticket).slice(0, 12) : null, tries: c.tries ? String(c.tries).slice(0, 20) : null }))
+    const pick = (st) => Object.values(a.cases ?? {}).filter((c) => c.status === st).slice(0, 20).map((c) => ({ case: `${String(c.id).slice(0, 40)}@${String(c.place).slice(0, 20)}`, ticket: c.ticket ? String(c.ticket).slice(0, 12) : null, tries: c.tries ? String(c.tries).slice(0, 60) : null }))
     asks = { release: String(a.release ?? ''), at: a.lastRun?.at ?? a.updated ?? null, summary: a.summary ?? null, stoppedWorking: pick('STOPPED WORKING'), notWorkingYet: pick('not working yet'), worksSometimes: pick('works sometimes') }
   } catch {}
   // Everything Ola can be asked to do, by place (OLA-232, evals/asks/abilities.json): how many lines,
