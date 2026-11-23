@@ -39,9 +39,9 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || m === 'card' || m === 'nocard' || /^(site|says|opens|file|ran|noran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || m === 'card' || m === 'nocard' || /^(site|says|opens|file|ran|ranlast|noran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
-    for (const m of c.must.filter((m) => /^(says|opens|nonewfile|noran):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
+    for (const m of c.must.filter((m) => /^(says|opens|nonewfile|noran|ranlast):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
     assert.ok(/^\d{4}-\d\d-\d\d$/.test(c.from?.date) && /^OLA-\d+$/.test(c.from?.ticket), `${c.id}: the date and ticket of the failure it came from`)
   }
@@ -956,7 +956,7 @@ test('OLA-421: the link cases after the Unpublish button: cloud-web only, the bu
     assert.ok(c.must.includes('site:Garden Club'), `${id}: the address given answers with the page`)
   }
   // Every between step is one the runner knows.
-  for (const c of cs) for (const s of c.between ?? []) assert.deepEqual(Object.keys(s), ['unpublishButton'], c.id)
+  for (const c of cs) for (const s of c.between ?? []) assert.ok(Object.keys(s).length === 1 && ['unpublishButton', 'publishStillChecking'].includes(Object.keys(s)[0]), c.id)
   const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
   assert.match(run, /for \(const step of c\.between \?\? \[\]\)/, 'run.mjs runs the between steps')
   assert.ok(run.indexOf('c.between') > run.indexOf('for (const [i, said] of (c.before ?? []).entries())') && run.indexOf('c.between') < run.indexOf('await converse(c.say)'), 'after before, before the request')
@@ -985,4 +985,38 @@ test('OLA-421: unpublishButton posts to the website\'s own route and waits for 4
   } finally {
     globalThis.fetch = real
   }
+})
+
+// OLA-285 check #2: with the project's publish still being checked, "is my page live yet?" and "hey did that page
+// actually go up or not" were answered from .ola/publish/result.json, never with `ola-publish status`.
+test('OLA-285: the cases of a publish still being checked: the checker\'s sentences, status run in the request, the outcome reported', async () => {
+  const cs = readCases()
+  for (const [id, say] of [['live-yet-while-checking', 'is my page live yet?'], ['went-up-while-checking', 'hey did that page actually go up or not']]) {
+    const c = cs.find((x) => x.id === id)
+    assert.ok(c, id)
+    assert.equal(c.say, say, `${id}: the checker's sentence, word for word`)
+    assert.deepEqual(c.places, ['cloud-web:chat'], id)
+    assert.deepEqual(c.between, [{ publishStillChecking: { outcomeAfterS: 45 } }], id)
+    assert.ok(c.before?.length && c.separate, `${id}: published first, asked in a new conversation`)
+    for (const m of ['ranlast:ola-publish\\s+status', 'says:sites\\.ola\\.cx/askcases', 'site:Sorrel']) assert.ok(c.must.includes(m), `${id}: ${m}`)
+    assert.ok(c.mustNot.some((x) => new RegExp(x, 'i').test('open https://sites.ola.cx/askcases/ in your own browser')), `${id}: never sends the person to look`)
+  }
+  const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(run, /step\.publishStillChecking/)
+  assert.ok(run.indexOf('await Promise.all(later)') > run.indexOf('await converse(c.say)'), 'the outcome is checked after the request')
+})
+
+test('OLA-285: publishStillChecking writes "still checking" from the live record, then the outcome; refuses when the publish said first did not end live', async () => {
+  const lib = await import('./lib.mjs')
+  const { checkMust } = lib
+  const r1 = await checkMust('ranlast:ola-publish\\s+status', {}, '', { steps: ['bash: ola-publish status'], lastSteps: ['read: /work/.ola/publish/result.json'] })
+  assert.equal(r1.ok, false, 'a status run by the publish said first does not count')
+  const r2 = await checkMust('ranlast:ola-publish\\s+status', {}, '', { steps: [], lastSteps: ['bash: ola-publish status'] })
+  assert.equal(r2.ok, true)
+  const src = readFileSync(path.join(HERE, 'lib.mjs'), 'utf8')
+  const body = src.slice(src.indexOf('async publishStillChecking('), src.indexOf('async unpublishButton('))
+  assert.match(body, /state: 'publishing', stage: 'checking'/)
+  assert.match(body, /was\.state !== 'done' \|\| !was\.live/, 'refuses when the publish said first did not end live')
+  assert.match(body, /ola-publish --result/, 'written the way the web server hands it')
+  assert.match(body, /state: 'done', url: was\.url[^}]*live: true/)
 })

@@ -23,6 +23,8 @@
 // on a schedule, a real-world sound), and "a link to this page I can send" counts as a request to publish.
 // 2.1.0 (OLA-421, check #1): any request for a page's link, address or whether it is up (LINK_ASK) loads the publish
 // skill and gets the `link` rule; and a sites.ola.cx address in what a step read gets a note beside it (onToolAfter).
+// 2.2.0 (OLA-285, check #2): "did that page go up" counts too, and while this project's publish is still being checked
+// (its record says publishing) such a request gets the `pending` rule: run `ola-publish status`, answer from it.
 //
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process.
@@ -81,6 +83,11 @@ export const LINK_ASK = new RegExp([
   // "is the page still live", "is our flyer online", "is it up on the web" (not "up to date")
   String.raw`\b(?:is|are) (?:the |our |my |this |that )?(?:[\w'-]+ ){0,3}?(?:page|site|website|flyer) (?:still )?(?:live|online|public|published|up(?! to\b))\b`,
   String.raw`\bis it (?:still )?(?:live|online|public|published|up on the (?:web|internet))\b`,
+  // 2.2.0 (OLA-285, check #2): "hey did that page actually go up or not", "did it publish", "has the site gone live yet",
+  // "is it live yet", "did the publish work"
+  String.raw`\b(?:did|has|have) (?:the |our |my |this |that )?(?:[\w'-]+ ){0,2}?(?:page|site|website|flyer|poster|it|that|this) (?:actually |really |ever )?(?:go(?:ne)? (?:up|live|online|public|out)|get (?:published|posted|put up)|been (?:published|posted|put up)|publish(?:ed)?)\b`,
+  String.raw`\bdid (?:the |my |our |that )?(?:publish(?:ing)?|upload) (?:work|go through|finish|succeed)\b`,
+  String.raw`\bis it (?:live|up|online|public|published|there) yet\b`,
 ].join('|'), 'i')
 // A change to a link on the page ("fix the link to the survey", "add a link to the city's site") is not one,
 // unless it goes on to send or share it ("make me a link I can send").
@@ -163,10 +170,41 @@ export const RULES = [
   },
 ]
 
+// 2.2.0 (OLA-285, check #2): a publish of this project still being checked. On app.ola.cx (release 9310a7a0789d,
+// Nov 23) the checker set the project's publish record to "publishing, checking" and asked "is my page live yet?"
+// (twice) and "hey did that page actually go up or not": Ola read .ola/publish/result.json itself, answered within
+// seconds ("Not quite yet ... it isn't live", "open it in your own browser") and never ran `ola-publish status`,
+// which waits for the outcome. While the record says publishing, such a request gets the `pending` rule instead of
+// `link` (which would publish the same files again): run status, answer from what it prints.
+// The record is the one ola-publish keeps (OLA_PUBLISH_DIR, /work/.ola/publish in a cloud project); ola-publish
+// itself treats a "publishing" record older than FRESH + WAIT as stale, and so does this.
+const PUBLISH_FRESH_S = 15 * 60 + 110
+export function publishPending(env = process.env, now = Date.now()) {
+  const file = path.join(env.OLA_PUBLISH_DIR || '/work/.ola/publish', 'result.json')
+  let r
+  try { r = JSON.parse(readFileSync(file, 'utf8')) } catch { return false }
+  if (!r || typeof r !== 'object' || r.state !== 'publishing') return false
+  const written = Number(r.written) || 0
+  return now / 1000 - written < PUBLISH_FRESH_S
+}
+
+export const PENDING_RULE = {
+  id: 'pending',
+  text: 'A publish of this project is still going: Ola\'s server has not finished checking the address yet. ' +
+    'Before you answer, run `ola-publish status` as a command of its own (no other step first): it waits for the outcome and prints it. ' +
+    'Answer from what it prints, in plain words: say the page is live, and give the address, only if it prints that the address answers with the page; ' +
+    'if it prints that the address does not show it yet, say so. If it prints NOT CHECKED YET or NOT PUBLISHED YET, say the check is still running and is not confirmed, ' +
+    'then run `ola-publish status` once more and answer from that. ' +
+    'Do not read .ola/publish/result.json or any file for the answer, do not say what the page shows from a record, do not run ola-publish for the files again, ' +
+    'and never ask the person to open the address to check it themselves.',
+}
+
 /** The rules a request calls for, by id. */
-export function rulesFor(request) {
+export function rulesFor(request, env = process.env) {
   const r = String(request ?? '')
-  return RULES.filter((x) => x.when(r))
+  const rules = RULES.filter((x) => x.when(r))
+  if (!rules.some((x) => x.id === 'link') || !publishPending(env)) return rules
+  return rules.map((x) => (x.id === 'link' ? PENDING_RULE : x))
 }
 
 export const ruleNote = (rule) => `${RULE_HEAD} ${rule.id}] ${rule.text}`
@@ -242,7 +280,7 @@ export function onContext(event, env = process.env) {
     if (note) event.system.push({ type: 'text', text: note })
   }
   // OLA-421: the standing rule that applies to this request, on every step of it.
-  for (const rule of rulesFor(request)) {
+  for (const rule of rulesFor(request, env)) {
     if (event.system.some((p) => p?.text?.startsWith?.(`${RULE_HEAD} ${rule.id}]`))) continue
     event.system.push({ type: 'text', text: ruleNote(rule) })
   }
@@ -279,6 +317,12 @@ export const addressNote = (urls) =>
   'Never tell the person it is live, published or working, or give it to them as the link to send, from this. ' +
   'To give them a link to a page, publish the page now (the publish skill; `ola-publish <folder> --files <list>` as a command of its own): its result says what the address shows.'
 
+// 2.2.0 (OLA-285): while a publish is still being checked, the next step is its status, not a new publish.
+export const pendingAddressNote = (urls) =>
+  `${ADDRESS_HEAD} What this step read names ${urls.join(', ')}. That is text in a file or a record, not a look at the address, ` +
+  'and a publish of this project is still being checked by Ola\'s server. Never tell the person it is live, or what it shows, from this. ' +
+  'Run `ola-publish status` now, as a command of its own: it waits for the outcome and prints it. Answer from what it prints.'
+
 export function onToolAfter(event, env = process.env) {
   if (String(env.OLA_SKILLCUE ?? '').toLowerCase() === 'off') return
   if (event?.status && event.status !== 'completed') return
@@ -297,7 +341,8 @@ export function onToolAfter(event, env = process.env) {
   told.set(sid, seen)
   const c = event.result?.content
   const parts = typeof c === 'string' ? [{ type: 'text', text: c }] : Array.isArray(c) && c.length ? [...c] : [{ type: 'text', text }]
-  event.result = { ...event.result, content: [...parts, { type: 'text', text: '\n\n' + addressNote(fresh.slice(0, 3)) }] }
+  const note = publishPending(env) ? pendingAddressNote(fresh.slice(0, 3)) : addressNote(fresh.slice(0, 3))
+  event.result = { ...event.result, content: [...parts, { type: 'text', text: '\n\n' + note }] }
 }
 
 /** For tests: forget the read skills and the addresses already noted. */

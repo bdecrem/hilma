@@ -1,5 +1,5 @@
 {
-  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, opens:<regex> on the first 300 characters, file:<path>[:<words>], newfile:<regex>, nonewfile:<regex>); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; between runs after the sentences said first (before) and before the request (unpublishButton: the website's Unpublish button, then the address waited on until it answers 404; cloud-web only); from is the failure it came from. Add one with evals/asks/add-case.mjs.",
+  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, opens:<regex> on the first 300 characters, file:<path>[:<words>], newfile:<regex>, nonewfile:<regex>, ran:<regex> on any step, ranlast:<regex> on a step of the request itself); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; between runs after the sentences said first (before) and before the request (unpublishButton: the website's Unpublish button, then the address waited on until it answers 404; publishStillChecking: {outcomeAfterS}, the project's publish record set to what the web server hands while it still checks the address, and the outcome, live, handed that many seconds later while the request runs; both cloud-web only); from is the failure it came from. Add one with evals/asks/add-case.mjs.",
   "cases": [
     {
       "id": "publish-bart",
@@ -1184,6 +1184,94 @@
         "date": "2026-11-23",
         "ticket": "OLA-421",
         "what": "The OLA-421 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:35 and 11:42 am, a cloud project, a new conversation each: after the garden club page was published and then taken down with the Unpublish button (the address answered 404), 'whats the link for the garden club page? i want to text it to everyone' got no card and no publish: Ola read the project's files and answered 'The garden club page is published here: https://sites.ola.cx/chk421a-test/' and 'The garden club page is already live' (twice). The exact sentence of share-link published in the same state. A link to a page is a publish of it, whatever the words: the address Ola gives must answer with the page. Another wording (is it up, url, post), the builder's."
+      }
+    },
+    {
+      "id": "live-yet-while-checking",
+      "say": "is my page live yet?",
+      "places": [
+        "cloud-web:chat"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Sorrel</title>\n<h1>Sorrel</h1>\n<p>Seed swap at the library, Saturday at 10.</p>\n"
+          }
+        }
+      ],
+      "before": [
+        "publish this page on ola"
+      ],
+      "separate": true,
+      "between": [
+        {
+          "publishStillChecking": {
+            "outcomeAfterS": 45
+          }
+        }
+      ],
+      "must": [
+        "ranlast:ola-publish\\s+status",
+        "says:sites\\.ola\\.cx/askcases",
+        "site:Sorrel"
+      ],
+      "mustNot": [
+        "\\b(?:open|check|visit|try) (?:it|the (?:link|address|page|url)|https?://\\S+)\\s+(?:yourself|in your (?:own )?browser)",
+        "\\bnot (?:quite )?(?:live|up) yet\\b",
+        "\\bisn'?t live\\b"
+      ],
+      "limitMin": 16,
+      "passes": 5,
+      "ability": "publish",
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-285",
+        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must run `ola-publish status` and answer from the outcome: here live, with the address."
+      }
+    },
+    {
+      "id": "went-up-while-checking",
+      "say": "hey did that page actually go up or not",
+      "places": [
+        "cloud-web:chat"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Sorrel</title>\n<h1>Sorrel</h1>\n<p>Seed swap at the library, Saturday at 10.</p>\n"
+          }
+        }
+      ],
+      "before": [
+        "publish this page on ola"
+      ],
+      "separate": true,
+      "between": [
+        {
+          "publishStillChecking": {
+            "outcomeAfterS": 45
+          }
+        }
+      ],
+      "must": [
+        "ranlast:ola-publish\\s+status",
+        "says:sites\\.ola\\.cx/askcases",
+        "site:Sorrel"
+      ],
+      "mustNot": [
+        "\\b(?:open|check|visit|try) (?:it|the (?:link|address|page|url)|https?://\\S+)\\s+(?:yourself|in your (?:own )?browser)",
+        "\\bnot (?:quite )?(?:live|up) yet\\b",
+        "\\bisn'?t live\\b"
+      ],
+      "limitMin": 16,
+      "passes": 5,
+      "ability": "publish",
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-285",
+        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must run `ola-publish status` and answer from the outcome: here live, with the address."
       }
     }
   ]

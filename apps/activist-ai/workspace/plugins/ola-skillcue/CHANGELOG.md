@@ -26,3 +26,12 @@
   or shell output that names a sites.ola.cx address gets an `[Ola address note]` beside it (execute.after hook), once per
   conversation, not for ola-publish or the publish script themselves. Tests: skillcue.test.mjs 13 of 13, opencode.check.mjs
   9 of 9 (the note reached the model in the tool result through real opencode 2.3.2; its read tool takes `path`).
+- 2.2.0 (2026-11-23, OLA-285 check #2): on app.ola.cx (release 9310a7a0789d) the checker set a cloud project's publish record
+  to "publishing, checking" (what the web server hands while it checks the address) and asked "is my page live yet?" (twice)
+  and "hey did that page actually go up or not": Ola read .ola/publish/result.json itself, answered in seconds ("Not quite yet",
+  once "open it in your own browser") and never ran `ola-publish status`, which waits for the outcome (0 of 3). The link rule
+  would have said to publish again. Now, while the record says publishing (and is not older than ola-publish's own 15 min +
+  wait), such a question gets the `pending` rule instead of `link`: run `ola-publish status` as a command, answer from what it
+  prints, never from the record, never publish again, never send the person to look. The address note says the same while a
+  publish is pending. "did that page go up", "did it publish", "is it live yet" now count as link questions. Tests:
+  skillcue.test.mjs 14 of 14, opencode.check.mjs 10 of 10 (the pending rule reached the model through real opencode 2.3.2).

@@ -376,10 +376,17 @@ async function runCase(T, c) {
   }
   // OLA-421: what the person did between, outside the conversation (the Unpublish button after the page
   // went up), before the request itself. A place that cannot do it refuses the case, never skips the step.
+  // OLA-285: or a publish still being checked by the web server, its outcome handed while the request runs.
+  const later = []
   for (const step of c.between ?? []) {
-    if (!step.unpublishButton) throw new Error(`unknown between step ${JSON.stringify(step)}`)
-    if (!T.unpublishButton) throw new Error(`${c.id}: the Unpublish button cannot be pressed at this place (${T.runtime})`)
-    await T.unpublishButton()
+    if (step.unpublishButton) {
+      if (!T.unpublishButton) throw new Error(`${c.id}: the Unpublish button cannot be pressed at this place (${T.runtime})`)
+      await T.unpublishButton()
+    } else if (step.publishStillChecking) {
+      if (!T.publishStillChecking) throw new Error(`${c.id}: a publish still being checked cannot be set up at this place (${T.runtime})`)
+      const { outcome } = await T.publishStillChecking(step.publishStillChecking)
+      later.push(outcome.then(() => null, (e) => `the outcome could not be handed to the project (${e?.message ?? e})`))
+    } else throw new Error(`unknown between step ${JSON.stringify(step)}`)
   }
   if (c.separate && c.before?.length) sessions.push((sid = await newSession(T, `asks ${c.id} last`)))
   const fromAnswered = answered.length // card: the question card of the request itself (OLA-325)
@@ -389,6 +396,8 @@ async function runCase(T, c) {
   if (turn.status !== 'done') return { ...base, ok: false, why: `the turn ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(answer)}` }
   const fails = []
   const notes = []
+  // A between step's outcome came while the request ran (OLA-285); one that could not be written fails the try.
+  for (const why of await Promise.all(later)) if (why) fails.push(why)
   for (const m of c.must) {
     const r = await checkMust(m, T, answer, { steps, lastSteps: steps.slice(from), lastAnswered: answered.slice(fromAnswered), before, earlier: earlier.join('\n\n'), since, sessions })
     ;(r.ok ? notes : fails).push(`${m}: ${r.why}`)

@@ -5,6 +5,7 @@
 // to publish (OLA-284); with OLA_SKILLCUE=off it is not; and a request that is not about publishing gets none.
 // OLA-421: a request for Claude and one for something every Monday get their rule; a change to a page gets none.
 // 2.1.0: the checker's link sentence gets the link rule; an address read from a file gets the address note (execute.after).
+// 2.2.0: with the project's publish still being checked, a status question gets the pending rule.
 // No real model is called.
 import http from 'node:http'
 
@@ -85,8 +86,15 @@ const f = await run('whats the link for the garden club page? i want to text it 
 check('the checker\'s link sentence: the publish skill and the link rule are in what the model received', f.code === 0 && has(f.sent) && f.sent.includes('[Ola rule for this request: link]'))
 const g = await run('READ-THE-PAGE and tell me its address', { OLA_SKILLS_DIR: SKILLS })
 check('an address read from a file: the tool result the model received carries the address note', g.code === 0 && g.sent.includes('sites.ola.cx/chk421a-test/') && g.sent.includes('[Ola address note] What this step read names https://sites.ola.cx/chk421a-test/'))
+// 2.2.0 (OLA-285 check #2): with this project's publish still being checked, the checker's sentence gets the pending
+// rule (run `ola-publish status`), not the link rule.
+const pub = path.join(root, 'pub')
+mkdirSync(pub)
+writeFileSync(path.join(pub, 'result.json'), JSON.stringify({ state: 'publishing', stage: 'checking', url: 'https://sites.ola.cx/ck9310k-test/', until: Date.now() / 1000 + 60, written: Date.now() / 1000 }))
+const h = await run('hey did that page actually go up or not', { OLA_SKILLS_DIR: SKILLS, OLA_PUBLISH_DIR: pub })
+check('a publish still being checked: the checker\'s sentence gets the pending rule, not the link rule', h.code === 0 && has(h.sent) && h.sent.includes('[Ola rule for this request: pending]') && !h.sent.includes('[Ola rule for this request: link]'))
 
 server.close()
 rmSync(root, { recursive: true, force: true })
-console.log(failed ? `${failed} of 9 failed` : '9 of 9 passed')
+console.log(failed ? `${failed} of 10 failed` : '10 of 10 passed')
 process.exit(failed ? 1 : 0)

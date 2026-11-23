@@ -120,7 +120,7 @@ test('a request for Claude, for something on a schedule and for a real-world sou
   for (const r of [...NOT, 'make a page for our weekly meeting on mondays', 'make a flyer for the cleanup every saturday', 'make a page with a button that plays a tune', 'was index.html made by claude?', 'who made this, Ola or Claude?']) assert.deepEqual(rules(r), [], r)
   // every kept request: only these three cases get a rule
   const got = cases.flatMap((c) => [...(c.before ?? []), c.say].filter((r) => rules(r).length).map(() => c.id))
-  assert.deepEqual([...new Set(got)].sort(), ['address-after-unpublish', 'ask-claude', 'birdsong', 'link-after-unpublish', 'schedule', 'share-link', 'url-after-unpublish'])
+  assert.deepEqual([...new Set(got)].sort(), ['address-after-unpublish', 'ask-claude', 'birdsong', 'link-after-unpublish', 'live-yet-while-checking', 'schedule', 'share-link', 'url-after-unpublish', 'went-up-while-checking'])
 })
 
 test('in a cloud project the web server\'s fact about Claude is followed, and the Claude rule stays out', async () => {
@@ -256,4 +256,52 @@ test('2.1.0: an address of Ola\'s sites in what a read, a search or the shell re
   onToolAfter(out, {})
   assert.ok(noted(out))
   assert.ok(out.result.content[0].text.includes('x5'), 'the output is kept as the first part')
+})
+
+// 2.2.0 (OLA-285, check #2, release 9310a7a0789d, Nov 23): with the project's record at "publishing, checking", the
+// checker's "is my page live yet?" (twice) and "hey did that page actually go up or not" each got an answer from
+// Ola reading .ola/publish/result.json itself; `ola-publish status` (which waits for the outcome) never ran.
+test('2.2.0: while this project\'s publish is still being checked, a status question gets the pending rule (run status), not the link rule', async () => {
+  const { rulesFor, asksForLink, publishPending, onContext, onToolAfter, ADDRESS_HEAD, RULE_HEAD, reset } = await import('./index.js')
+  const { mkdtempSync, writeFileSync } = await import('node:fs')
+  const os = await import('node:os')
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'skillcue-pub-'))
+  const env = { OLA_PUBLISH_DIR: dir }
+  const put = (r) => writeFileSync(path.join(dir, 'result.json'), JSON.stringify(r))
+  const asks = ['is my page live yet?', 'hey did that page actually go up or not', 'did it publish', 'has the site gone live yet', 'did the publish work', 'is it live yet']
+  for (const r of asks) assert.ok(asksForLink(r), r)
+  // no record: the link rule, as before
+  assert.equal(publishPending(env), false)
+  for (const r of asks) assert.deepEqual(rulesFor(r, env).map((x) => x.id), ['link'], r)
+  // the checker's record: publishing, stage checking, written now
+  put({ state: 'publishing', stage: 'checking', url: 'https://sites.ola.cx/ck9310k-test/', shows: 'Sorrel', until: Date.now() / 1000 + 60, written: Date.now() / 1000 })
+  assert.equal(publishPending(env), true)
+  for (const r of asks) assert.deepEqual(rulesFor(r, env).map((x) => x.id), ['pending'], r)
+  // a request that is not a status question is told nothing
+  assert.deepEqual(rulesFor('make the heading bigger', env).map((x) => x.id), [])
+  const t = rulesFor('is my page live yet?', env)[0].text
+  for (const w of ['still going', 'run `ola-publish status` as a command of its own', 'waits for the outcome', 'only if it prints that the address answers with the page', 'NOT CHECKED YET', 'once more', 'Do not read .ola/publish/result.json', 'do not run ola-publish for the files again', 'never ask the person to open the address'])
+    assert.ok(t.includes(w), w)
+  // in the system prompt, beside the publish skill
+  const e = { system: [{ type: 'text', text: 'base' }], messages: [{ role: 'user', content: 'is my page live yet?' }] }
+  onContext(e, env)
+  assert.ok(e.system.some((p) => p.text.startsWith(`${RULE_HEAD} pending]`)))
+  assert.ok(!e.system.some((p) => p.text.startsWith(`${RULE_HEAD} link]`)))
+  // reading the record while it is pending: the note says run status, not publish again
+  reset()
+  const g = { tool: 'read', input: { filePath: '/work/.ola/publish/result.json' }, sessionID: 'p1', status: 'completed', result: { content: [{ type: 'text', text: '{"state": "publishing", "url": "https://sites.ola.cx/ck9310k-test/"}' }] } }
+  onToolAfter(g, env)
+  const note = g.result.content.at(-1).text.trim()
+  assert.ok(note.startsWith(ADDRESS_HEAD))
+  assert.match(note, /still being checked/)
+  assert.match(note, /Run `ola-publish status` now/)
+  assert.doesNotMatch(note, /publish the page now/)
+  // an outcome, or a stale "publishing" (older than ola-publish's own FRESH + WAIT): not pending
+  put({ state: 'done', live: true, url: 'https://sites.ola.cx/ck9310k-test/', written: Date.now() / 1000 })
+  assert.equal(publishPending(env), false)
+  assert.deepEqual(rulesFor('is my page live yet?', env).map((x) => x.id), ['link'])
+  put({ state: 'publishing', written: Date.now() / 1000 - 20 * 60 })
+  assert.equal(publishPending(env), false)
+  writeFileSync(path.join(dir, 'result.json'), 'not json')
+  assert.equal(publishPending(env), false)
 })

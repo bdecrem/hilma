@@ -337,6 +337,19 @@ export function cloudTransport({ cookie, csrf }) {
     },
     // The Unpublish button (OLA-421): the website's own route, as the person's click sends it (web/src/lib/api.ts
     // site.unpublish), then the address read until it answers 404, so the request starts from a page that is gone.
+    // A publish still being checked (OLA-285, check #2): the project's record set to what the web server hands the
+    // VM while it checks the address (frontdesk/chatpublish.mjs onLook: publishing, stage checking), and the outcome
+    // handed outcomeAfterS later, the way the web server writes it. Built on the record of the publish said first
+    // (its address, files and words), so the outcome is true: the address does answer with that page. Resolves once
+    // the "still checking" record is in, with { outcome }: the promise of the outcome's write, checked after the request.
+    async publishStillChecking({ outcomeAfterS = 45 } = {}) {
+      const was = JSON.parse((await inProject('cat /work/.ola/publish/result.json 2>/dev/null || true')).trim() || '{}')
+      if (was.state !== 'done' || !was.live || !was.url) throw new Error(`publishStillChecking: the publish said first did not end live (${JSON.stringify(was).slice(0, 160)})`)
+      const base = { target: was.target || 'index.html', files: Array.isArray(was.files) ? was.files : [] }
+      const hand = (o) => inProject(`echo ${Buffer.from(JSON.stringify({ ...base, ...o })).toString('base64')} | base64 -d | ola-publish --result`)
+      await hand({ state: 'publishing', stage: 'checking', url: was.url, status: '200', shows: was.shows || '', challenged: false, until: Math.round(Date.now() / 1000 + outcomeAfterS + 60) })
+      return { outcome: sleep(outcomeAfterS * 1000).then(() => hand({ state: 'done', url: was.url, count: was.count || base.files.length || 1, live: true, again: true, shows: was.shows || '', expected: was.expected || '' })) }
+    },
     async unpublishButton({ waitMs = 180_000 } = {}) {
       const res = await steady(() => fetch(`${ORIGIN}/api/site/unpublish`, { method: 'POST', headers: { ...headers, accept: 'application/json', 'content-type': 'application/json' }, body: '{}' }), 'POST')
       const body = await res.json().catch(() => null)
@@ -843,6 +856,13 @@ export async function checkMust(must, T, answer, { steps = [], lastSteps = steps
     const re = new RegExp(arg, 'i')
     const hit = lastSteps.find((x) => re.test(x))
     return { ok: !hit, why: hit ? `a step ran ${hit.slice(0, 120)} without being asked to` : `no step matches /${arg}/ (${lastSteps.length} steps of this request)` }
+  }
+  if (kind === 'ranlast') {
+    // ranlast:<regex>: a step of this request itself matches (OLA-285: the publish said first may run the same
+    // command, so `ran` could pass on it).
+    const re = new RegExp(arg, 'i')
+    const hit = lastSteps.find((x) => re.test(x))
+    return { ok: !!hit, why: hit ? `this request ran ${hit.slice(0, 120)}` : `no step of this request matches /${arg}/ (${lastSteps.length} steps)` }
   }
   if (kind === 'ran') {
     const re = new RegExp(arg, 'i')
