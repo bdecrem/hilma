@@ -19,14 +19,23 @@ export const bartWords = (text) => fold(String(text ?? '').replace(/^\s*(dropped
 const pacific = (t) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
 
 /** Did Bart type, text or say these words in the last `days` days? messagesOf(day) gives a day's messages. */
-export function findIn(words, messages) {
+/** OLA-331, third pass: with `ticket` the message must also name it (OLA-213, or 213 as a word), and with
+ *  `after` be newer than that time; words he said about something else are not his word on this ticket. */
+export const namesTicket = (text, ticket) => {
+  const n = String(ticket ?? '').replace(/\D/g, '')
+  return !!n && new RegExp(`(^|[^0-9])(ola[- ]?)?${n}([^0-9]|$)`, 'i').test(String(text ?? ''))
+}
+export function findIn(words, messages, { ticket, after } = {}) {
   const w = bartWords(words)
   if (w.length < MIN_CHARS) return { ok: false, why: `"${w}" is under ${MIN_CHARS} characters: quote enough of what he said to find it` }
-  const hit = messages.find((m) => fold(m.text).includes(w))
-  return hit ? { ok: true, why: '', quote: { at: hit.at, source: hit.source } } : { ok: false, why: `"${w}" is not in anything Bart typed, texted or said in the last ${LOOKBACK_DAYS} days` }
+  const said = messages.filter((m) => fold(m.text).includes(w))
+  const hit = said.find((m) => (!ticket || namesTicket(m.text, ticket)) && (!after || !m.at || Date.parse(m.at) >= Date.parse(after)))
+  if (hit) return { ok: true, why: '', quote: { at: hit.at, source: hit.source } }
+  if (said.length) return { ok: false, why: `"${w}" is in what Bart said, but not in a message that names ${ticket}${after ? ` after it was opened` : ''}` }
+  return { ok: false, why: `"${w}" is not in anything Bart typed, texted or said in the last ${LOOKBACK_DAYS} days` }
 }
 
-export function bartSaid(words, { days = LOOKBACK_DAYS, now = Date.now() } = {}) {
+export function bartSaid(words, { days = LOOKBACK_DAYS, now = Date.now(), ticket, after } = {}) {
   const steers = process.env.VENTURE_STEERS_SCRIPT || fileURLToPath(new URL('./steers.mjs', import.meta.url))
   const dir = mkdtempSync(join(tmpdir(), 'bartwords-'))
   const all = []
@@ -42,5 +51,5 @@ export function bartSaid(words, { days = LOOKBACK_DAYS, now = Date.now() } = {})
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
-  return findIn(words, all)
+  return findIn(words, all, { ticket, after })
 }

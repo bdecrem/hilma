@@ -144,11 +144,16 @@ const die = (m) => {
 /** Words given as Bart's on a daily idea ticket must be his (OLA-331): looked up in what he typed, texted
  *  or said in the last days (_bartwords.mjs); refused otherwise, with a line in the overrides. */
 async function mustBeBarts(id, text, what) {
-  const r = bartSaid(text)
+  // OLA-331, third pass (checker, Nov 23): any 12 characters of anything he said passed. The message the
+  // words come from must also name this ticket (OLA-n or its number) and be newer than the ticket.
+  const row = check(await db.from('venture_issues').select('opened_at').eq('id', id).maybeSingle(), 'read')
+  const r = bartSaid(text, { ticket: id, after: row?.opened_at })
   if (r.ok) return
   await writeOverride(db, { ticket: id, what: `${what} of the daily idea ${id} gave words as Bart's that were not found in what he typed, texted or said in the last ${LOOKBACK_DAYS} days (${String(text).slice(0, 120)}); refused`, tool: 'issues.mjs' })
-  die(`Refused: ${r.why}. Words given as Bart's on a daily idea are looked up in his own messages; quote what he typed, texted or said (at least 12 characters of it).`)
+  die(`Refused: ${r.why}. Words given as Bart's on a daily idea are looked up in his own messages: quote at least 12 characters of a message he typed, texted or said after ${id} was opened that names ${id}. Otherwise he drops it on the board.`)
 }
+/** The review whose daily idea this ticket is, or undefined (OLA-331). */
+const ideaOf = async (id) => ((await getState(db, 'sweeps'))?.value?.days ?? []).find((d) => [d.ideas?.kit?.issue, d.ideas?.ola?.issue].includes(id))
 const check = (r, what) => {
   if (r.error) die(`${what}: ${r.error.message}`)
   return r.data
@@ -640,6 +645,8 @@ if (cmd === 'overrides') {
   if (textAhead(proof).length) die(aheadLine(textAhead(proof), 'the proof')) // OLA-324
   const r = await get(id)
   const byBart = /^\s*bart:/i.test(proof)
+  // OLA-331, third pass: "Bart: …" closes a daily idea without its checks only with words he said about it
+  if (byBart && (await ideaOf(id))) await mustBeBarts(id, proof, 'a close')
   if (!byBart) {
     // A ticket closes on its checks, each passed by someone who did not build it (see "Checks" above).
     const a = await accept(id)
@@ -1061,6 +1068,9 @@ if (cmd === 'overrides') {
     const num = it.num ?? next++
     const { commits = [], ...rest } = it
     const row = { project: 'ola', links: [], proof: '', what: '', who: 'lead', priority: 'P1', status: 'done', ...rest, id: `${PREFIX}-${num}`, num, updated_at: new Date().toISOString() }
+    // OLA-331, third pass: import is not a way to close or drop a daily idea past its checks and Bart's words
+    const idea = await ideaOf(row.id)
+    if (idea) die(`Refused: ${row.id} is the daily idea of the ${idea.day} review; import does not write over it. It closes on its checks (issues.mjs done) or Bart drops it.`)
     validate(row)
     check(await db.from('venture_issues').upsert(row), `import ${row.id}`)
     for (const h of commits) check(await db.from('venture_commits').upsert({ ...gitCommit(h), issue_id: row.id, ignored: false }), `commit ${h}`)
