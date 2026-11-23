@@ -29,76 +29,162 @@
 //                   does (its config, skills, web commands, ola-publish) in an empty folder, signed in
 //                   to the same made-up account; talked to the way the app talks to it.
 //
+// A run tests one release (OLA-401). It stops itself, giving the turn back, within ~20 s of a newer
+// update serving (OLA_ASKS_WATCH_SECS) or after OLA_ASKS_MAX_MIN (360) minutes; a newer update's run
+// asks it to stop (SIGTERM) and kills it 3 min later if it has not. The cases whose result is oldest
+// run first, so runs cut short still refresh every case in turn.
+//
 // Results (each case@place keeps its newest result; a run of some cases updates only those):
 //   ~/ola-staging/asks-latest.json   what the dashboard and the hourly check read; the board gets its
-//                                    summary in the status ops/watch.mjs pushes every 10 minutes
-//   ~/ola-asks/log.jsonl             one line per run, with Ola's words
+//                                    summary in the status ops/watch.mjs pushes every 10 minutes.
+//                                    Written after every case@place (OLA-401): a run stopped, broken or
+//                                    killed leaves what it ran; lastRun.state (running, finished,
+//                                    stopped, broke, died), `note` (one sentence) and `runs` (the last
+//                                    runs, each with its state and why) say what became of it.
+//   ~/ola-asks/log.jsonl             one line per run (finished, stopped or broke), with Ola's words
 // A case is cited in a ticket check by its id and place: issues.mjs check OLA-n pass k --case <id>@<place>.
-// Exit 0 only when every case that ran passed.
+// Exit 0 only when every case that ran passed; 3 when the run was stopped, 1 when it broke.
 import { spawnSync } from 'node:child_process'
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STATE, asksToPublishInWords, cardFaults, lostConnection, modelUsedUp, passesNeeded, ratchet, takeRunLock, triesDone, verdictOf, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, takeDownSites } from './lib.mjs'
+import { AI, HERE, PLACES_REACHED, STAGING, STATE, WHO, asksToPublishInWords, cardFaults, liveRelease, lostConnection, makeStopper, modelUsedUp, noteRun, passesNeeded, releaseWatch, signedOut, stalestFirst, stalestRuntime, takeRunLock, triesDone, verdictOf, writeRecord, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, stopProject, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
 const ONLY = arg('--case', null)?.split(',')
-const RUNTIMES = arg('--runtime', 'local,cloud').split(',')
-const STAGING = path.join(homedir(), 'ola-staging')
+const AFTER = args.includes('--after-deploy')
 const LATEST = process.env.OLA_ASKS_LATEST || path.join(STAGING, 'asks-latest.json')
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 mkdirSync(STATE, { recursive: true })
 
 // One run at a time: two would share the made-up account and empty each other's project (OLA-232:
 // a run is long now, and a deploy starts one after every deploy).
-// OLA-231 check 5: the run an update starts WAITS for a run that is going (a builder's or a checker's)
-// and then runs, so every update is tested: it never steps aside. Only a newer update's run replaces a
-// waiting one (it tests the newer release). While an update's run waits, a builder's run does not start
-// ahead of it. A builder's run still leaves it to a run that is going, and says so.
+// OLA-401 (was OLA-231 check 5): the run an update starts STOPS a run that is going for an older release
+// (it asks it to stop, and kills it if it has not after 3 min), then runs; a run for this same release is
+// waited for, as before. Only a newer update's run replaces a waiting one, and the replaced one leaves a
+// line in the record. A builder's run still leaves it to a run that is going, and says so.
 const LOST_MAX = 3 // connection losses in a row before a case is "did not run" at a place
-if (!(await takeRunLock({ after: args.includes('--after-deploy') }))) process.exit(0)
+const SIGNIN_MAX = 3 // OLA-401: the website signed the account out this often: something else uses it; the run stops
+const startedAt = new Date().toISOString()
+{
+  const lockedFor = liveRelease()
+  let got
+  try {
+    got = await takeRunLock({ after: args.includes('--after-deploy') })
+  } catch (e) {
+    if (AFTER) noteRun(LATEST, { id: `${lockedFor}-${process.pid}`, pid: process.pid, release: lockedFor, afterDeploy: true, startedAt, state: 'did not run', why: e.message })
+    throw e
+  }
+  if (!got) {
+    if (AFTER) noteRun(LATEST, { id: `${lockedFor}-${process.pid}`, pid: process.pid, release: lockedFor, afterDeploy: true, startedAt, state: 'left to a newer run', why: "a newer update's run tests the newer release" })
+    process.exit(0)
+  }
+}
 const cases = readCases(arg('--cases', undefined)).filter((c) => !ONLY || ONLY.includes(c.id))
 if (!cases.length) throw new Error(`no case ${ONLY?.join(', ')} in the cases`)
 
-// OLA-232: with a case per thing Ola can be asked, a run is long. Between cases it gives the turn
-// to a deploy that is waiting, and takes it back after, so a deploy never waits for the whole run.
+// OLA-232: with a case per thing Ola can be asked, a run is long. Between cases it gives the turn to
+// whoever waits for it (OLA-401: a checker too, not only a deploy), between tries to a deploy, and takes
+// it back after, so nobody waits for the whole run.
 const TURN = await import(path.join(AI, 'ops/turn.mjs'))
 let held = null
-async function yieldToDeploy() {
-  if (!held) return
-  if (!TURN.waiting().some((t) => t.deploy)) return
-  say('turn: a deploy is waiting; giving it the turn and taking it back after')
+const t0 = Date.now()
+// One turn on the machine at a time for anything that runs a project's VM, deploys first: the
+// cloud cases take it (below); the local ones run no VM and go without it.
+const turnLabel = AFTER ? 'asks after a deploy' : 'asks'
+// The release this run tests (an update writes deployed.json before it starts this run). What is live is
+// read again for each case (row), and watched (below).
+const release = liveRelease()
+writeFileSync(path.join(STATE, 'run.json'), JSON.stringify({ pid: process.pid, release, after: AFTER, at: startedAt }) + '\n')
+
+// OLA-401: what the record knew before this run: the cases whose result is oldest go first, and the
+// runtime whose oldest result is oldest (unless --runtime names the order), so runs cut short by the
+// next update still refresh every case in turn.
+const before = (() => {
+  try {
+    return JSON.parse(readFileSync(LATEST, 'utf8'))
+  } catch {
+    return { cases: {} }
+  }
+})()
+const RUNTIMES = arg('--runtime', null)?.split(',') ?? stalestRuntime(['local', 'cloud'], cases, before)
+const placeOf = (runtime) => Object.keys(PLACES_REACHED).find((p) => PLACES_REACHED[p] === runtime)
+const total = RUNTIMES.reduce((n, rt) => n + cases.filter((c) => placesOf(c).includes(placeOf(rt))).length, 0)
+const known = new Set(readCases(arg('--cases', undefined)).flatMap((c) => placesOf(c).map((p) => `${c.id}@${p}`)))
+say(`asks: ${cases.length} case(s), runtimes ${RUNTIMES.join(', ')}, against the server running ${release}`)
+
+// ---------------------------------------------------------------- the record, after every case (OLA-401)
+const results = [] // one per case@place that ran, and one per place not run
+let finished = 0 // case@place results so far, of `total`
+const run = { id: `${release}-${process.pid}`, pid: process.pid, release, afterDeploy: AFTER, startedAt, cases: ONLY ?? 'all', runtimes: RUNTIMES }
+const record = (state, why) => writeRecord(LATEST, { results, known, run: { ...run, state, ...(why ? { why } : {}), done: `${finished} of ${total}` } })
+const logRun = (state, why) => appendFileSync(path.join(STATE, 'log.jsonl'), JSON.stringify({ at: new Date().toISOString(), release, secs: Math.round((Date.now() - t0) / 1000), state, ...(why ? { why } : {}), results }) + '\n')
+function push(r) {
+  r.at = new Date().toISOString()
+  results.push(r)
+  finished++
+  try {
+    record('running')
+  } catch (e) {
+    say(`asks: writing the record FAILED: ${e.message}`)
+  }
+}
+record('running')
+
+let local = null
+let password = null
+let cleaned = null
+const cleanup = () =>
+  (cleaned ??= (async () => {
+    if (local) await local.stop().catch(() => {}), (local = null)
+    if (password) {
+      try {
+        for (const d of [...(await takeDownSites()), await signOutAccount()]) say(`cleanup: ${d}`)
+      } catch (e) {
+        say(`cleanup FAILED: ${e.message}`)
+      }
+    }
+  })())
+// OLA-401: the run stops itself when a newer update serves (the watch) or at its time limit, and on
+// SIGTERM / SIGINT (a newer update's run asks so): the record first, then the cleanup, then exit 3. The
+// turn goes back with the process (ops/turn.mjs).
+const stopper = makeStopper({
+  write: (why) => (record('stopped', why), logRun('stopped', why)),
+  cleanup,
+})
+const stopping = () => !!stopper.stopping()
+const endWatch = releaseWatch({ release, everyMs: Number(process.env.OLA_ASKS_WATCH_SECS || 20) * 1000, maxMs: Number(process.env.OLA_ASKS_MAX_MIN || 360) * 60_000, onStop: (why) => stopper.stop(why), t0 })
+
+/** Gives the turn to whoever waits (deployOnly: only to a deploy) and takes it back after. */
+async function yieldTurn({ deployOnly = false } = {}) {
+  if (!held || stopping()) return
+  const line = TURN.waiting()
+  const w = line.find((t) => t.deploy) ?? (deployOnly ? null : line[0])
+  if (!w) return
+  say(`turn: ${w.deploy ? 'a deploy' : w.label} is waiting; giving it the turn and taking it back after`)
   held.release()
   held = await TURN.acquire({ label: turnLabel, on: (m) => say(`turn: ${m}`) })
   process.on('exit', held.release)
+  // A deploy that served while this run waited: this run is for a release no longer live.
+  const now = liveRelease()
+  if (now !== 'unknown' && now !== release) stopper.stop(`the test server moved from ${release} to ${now} while this run gave the turn to a deploy`)
 }
-const t0 = Date.now()
-// One turn on the machine at a time for anything that runs a project's VM, deploys first: the
-// cloud cases take it (below); the local ones run no VM and go first, without it.
-const turnLabel = args.includes('--after-deploy') ? 'asks after a deploy' : 'asks'
-// After a deploy, the deploy kit installs and restarts the jobs once more: a minute for that first.
-if (args.includes('--after-deploy')) await new Promise((r) => setTimeout(r, 60_000))
-// What is live is read again for each case: a deploy can go first while the cloud cases wait for the turn.
-const liveRelease = () => {
-  try {
-    return String(JSON.parse(readFileSync(path.join(STAGING, 'deployed.json'), 'utf8')).commit ?? 'unknown').slice(0, 12)
-  } catch {
-    return 'unknown'
-  }
-}
-const release = liveRelease()
-say(`asks: ${cases.length} case(s), runtimes ${RUNTIMES.join(', ')}, against the server running ${release}`)
 
-const results = [] // one per case@place that ran, and one per place not run
-let local = null
-let password = null
+let broke = null
 try {
+  // After a deploy, the deploy kit installs and restarts the jobs once more: a minute for that first
+  // (OLA-401: with the stop and the record already in place, so a stop meanwhile is recorded too).
+  if (AFTER) await sleep(60_000)
+  if (stopping()) await stopper.stopping()
   password = await prepareAccount()
-  const signedIn = await signIn(password)
+  let signedIn = await signIn(password)
+  let signIns = 0
   for (const runtime of RUNTIMES) {
-    const place = Object.keys(PLACES_REACHED).find((p) => PLACES_REACHED[p] === runtime)
+    if (stopping()) break
+    const place = placeOf(runtime)
     if (!place) throw new Error(`unknown runtime ${runtime} (cloud or local)`)
-    const mine = cases.filter((c) => placesOf(c).includes(place))
+    const mine = stalestFirst(cases.filter((c) => placesOf(c).includes(place)), before, place)
     if (!mine.length) continue
     let T
     try {
@@ -113,14 +199,16 @@ try {
         say(`local runtime up; skills: ${(local.skills ?? []).join('; ').slice(0, 300)}`)
       }
     } catch (e) {
-      for (const c of mine) results.push(row(c, place, { ok: false, why: `the ${runtime} runtime did not start: ${e.message}`, tries: [] }))
+      if (stopping()) break
+      for (const c of mine) push(row(c, place, { ok: false, why: `the ${runtime} runtime did not start: ${e.message}`, tries: [] }))
       say(`FAIL  ${place}: did not start: ${e.message}`)
       continue
     }
     let usedUp = null // the made-up account's model allowance ran out at this place: the rest did not run
     for (const c of mine) {
+      if (stopping()) break
       if (usedUp) {
-        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}`, ticket: c.from?.ticket ?? null })
+        push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}`, ticket: c.from?.ticket ?? null })
         continue
       }
       // Until it has the passes it needs (two, or five for a request that failed for a person) or fails twice.
@@ -128,13 +216,17 @@ try {
       const tries = []
       const lost = [] // tries that could not reach Ola: did not run, tried again, never counted
       while (!triesDone(tries, need) && lost.length < LOST_MAX) {
+        if (stopping()) break
         const s0 = Date.now()
         let r
         try {
           r = await runCase(T, c)
         } catch (e) {
-          r = lostConnection(e) ? { ok: null, why: `did not run: the connection to Ola was lost (${e.message})` } : { ok: false, why: `the run broke: ${e.message}` }
+          // OLA-401: a 401 is the website no longer taking the run's sign-in (someone signed the account
+          // out, as a test did on Nov 22): not Ola's doing. Not counted; the run signs in again.
+          r = lostConnection(e) ? { ok: null, why: `did not run: the connection to Ola was lost (${e.message})` } : runtime === 'cloud' && signedOut(e) ? { ok: null, signedOut: true, why: `did not run: the website no longer took the run's sign-in (${e.message}); signed in again` } : { ok: false, why: `the run broke: ${e.message}` }
         }
+        if (stopping()) break // a try cut short by the stop is not counted
         r.secs = Math.round((Date.now() - s0) / 1000)
         // Refused for the account's model allowance, not by Ola: not counted, and nothing more runs here.
         if (r.ok === false && (usedUp = modelUsedUp(r))) {
@@ -144,7 +236,15 @@ try {
         if (r.ok === null) {
           lost.push(r)
           say(`  did not run  ${c.id}@${place} (${r.secs} s): ${r.why}; trying again in 20 s, not counted`)
-          await new Promise((res) => setTimeout(res, 20_000))
+          if (r.signedOut) {
+            if (++signIns > SIGNIN_MAX) {
+              stopper.stop(`the website signed the made-up account ${WHO} out ${signIns} times; something else is using it`)
+              break
+            }
+            signedIn = await signIn(password)
+            T = cloudTransport(signedIn)
+          }
+          await sleep(20_000)
         } else {
           tries.push(r)
           say(`  try ${tries.length}: ${r.ok ? 'pass' : 'fail'}  ${c.id}@${place} (${r.secs} s, ${tries.filter((t) => t.ok).length} of ${need} passes needed): ${r.why}`)
@@ -158,32 +258,44 @@ try {
         // OLA-250 then OLA-281: taking the pages down used to block this process for ~20 s, so it
         // could not see the server close its kept-open connections, and the next try's first POST
         // broke with ECONNRESET. Every command is awaited now (lib.mjs runChild); no read first.
+        await yieldTurn({ deployOnly: true })
       }
-      await yieldToDeploy()
+      if (stopping()) break
+      await yieldTurn()
       if (usedUp) {
-        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}; ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
+        push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: ${usedUp}; ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
         continue
       }
       if (!triesDone(tries, need)) {
         // The connection kept failing: the case did not run here; its earlier result stands.
-        results.push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: the connection to Ola was lost ${lost.length} times (${lost.at(-1)?.why ?? ''}); ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
+        push({ id: c.id, place, say: c.say, ok: null, didNotRun: true, release: liveRelease(), why: `did not run: the connection to Ola was lost ${lost.length} times (${lost.at(-1)?.why ?? ''}); ${tries.length} tr${tries.length === 1 ? 'y' : 'ies'} counted before that`, ticket: c.from?.ticket ?? null })
         continue
       }
       const v = verdictOf(tries, need)
       const last = tries.findLast((t) => t.ok === v.ok) ?? tries.at(-1)
-      results.push(row(c, place, { ...last, ok: v.ok, tries, verdict: v, lost: lost.length, need }))
+      push(row(c, place, { ...last, ok: v.ok, tries, verdict: v, lost: lost.length, need }))
     }
-    if (runtime === 'local' && local) say(`local runtime ${await local.stop()}`), (local = null)
+    if (runtime === 'local' && local && !stopping()) say(`local runtime ${await local.stop()}`), (local = null)
+    // The local cases run no VM: once the cloud ones are done the turn goes back (OLA-401: the cloud
+    // ones may go first now).
+    if (runtime === 'cloud' && !stopping()) {
+      await stopProject().catch((e) => say(`stopping the project's computer: ${e.message}`))
+      if (held) held.release(), (held = null)
+    }
   }
+} catch (e) {
+  broke = e
 } finally {
-  if (local) await local.stop().catch(() => {})
-  if (password) {
-    try {
-      for (const d of [...(await takeDownSites()), await signOutAccount()]) say(`cleanup: ${d}`)
-    } catch (e) {
-      say(`cleanup FAILED: ${e.message}`)
-    }
-  }
+  if (!stopping()) await cleanup()
+}
+endWatch()
+// A stop: the stopper writes the record, cleans up and exits; nothing below runs.
+if (stopping()) await stopper.stopping()
+if (broke) {
+  say(`asks: the run broke: ${broke.stack ?? broke.message}`)
+  record('broke', broke.message)
+  logRun('broke', broke.message)
+  process.exit(1)
 }
 // The places a case names that this runner cannot reach: listed, never passed.
 for (const c of cases) for (const p of placesOf(c)) if (!PLACES_REACHED[p] || !RUNTIMES.includes(PLACES_REACHED[p])) results.push({ id: c.id, place: p, status: 'not run', ok: null, why: PLACES_REACHED[p] ? 'not in this run (--runtime)' : 'this runner cannot reach it headlessly', ticket: c.from?.ticket ?? null, say: c.say })
@@ -296,16 +408,9 @@ function ensureLocalOpencode() {
 }
 
 // ---------------------------------------------------------------- the ratchet and the record
-const now = new Date().toISOString()
 const secs = Math.round((Date.now() - t0) / 1000)
-let table = { cases: {} }
-try {
-  table = JSON.parse(readFileSync(LATEST, 'utf8'))
-} catch {}
-table = ratchet(table, results, { now, release, known: new Set(readCases(arg('--cases', undefined)).flatMap((c) => placesOf(c).map((p) => `${c.id}@${p}`))), lastRun: { at: now, release, secs, afterDeploy: args.includes('--after-deploy'), cases: ONLY ?? 'all', runtimes: RUNTIMES } })
-mkdirSync(path.dirname(LATEST), { recursive: true })
-writeFileSync(LATEST, JSON.stringify(table, null, 2) + '\n')
-appendFileSync(path.join(STATE, 'log.jsonl'), JSON.stringify({ at: now, release, secs, results }) + '\n')
+record('finished')
+logRun('finished')
 
 const order = { 'STOPPED WORKING': 0, 'not working yet': 1, 'did not run': 2, 'works sometimes': 3, passing: 4, 'not run': 5 }
 const ran = results.filter((r) => r.ok !== null)

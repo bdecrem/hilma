@@ -1622,11 +1622,19 @@ many lines nobody has run (`ops/watch.mjs` pushes the count with the board statu
 kinds for these cases: `ran:<regex>` (a step's command matches) and `newfile:<regex>[:<words>]` (a
 file the request made, not there before); a setup step `wrote` puts a fixture from
 `evals/asks/fixtures/` into the folder. The never list adds "blames having no network". A run gives
-the machine's turn to a waiting deploy between cases, and only one asks run goes at a time
-(`~/ola-asks/run.pid`). **The run an update starts waits its turn** (OLA-231, Nov 20): when a
-builder's or a checker's run holds the made-up account, it waits (`~/ola-asks/after-deploy.waiting`)
-and runs after it, so every update is tested; only a newer update's run replaces a waiting one, and a
-builder's run does not start ahead of a waiting update's run (it says so and exits).
+the machine's turn to whoever waits for it between cases (a deploy also between tries), gives it back
+once the cloud cases are done, and only one asks run goes at a time (`~/ola-asks/run.pid`, with
+`run.json` saying which release it tests). **A run tests one release** (OLA-401, Nov 23): it stops
+itself within ~20 s of a newer update serving (`OLA_ASKS_WATCH_SECS`) or after `OLA_ASKS_MAX_MIN`
+(360) minutes, and **the run an update starts stops a run for an older release** (it asks with
+`~/ola-asks/stop-request.json` and SIGTERM, kills it 3 min later if it has not stopped); a run for
+the same release is waited for (`~/ola-asks/after-deploy.waiting`). Only a newer update's run replaces
+a waiting one, and a builder's run does not start ahead of a waiting update's run (it says so and
+exits). The cases whose result is oldest run first, and so does the runtime whose oldest result is
+oldest, so runs cut short by the next update still refresh every case in turn. Only the process
+holding the run lock may change the made-up account (OLA-401: on Nov 22 a builder's test signed it out
+mid-run and 32 cloud tries broke with "listing the project's files: 401"); a 401 during a try is
+**did not run**, and the run signs in again.
 
 **A lost connection is not Ola failing.** A try that could not reach Ola (`fetch failed`,
 `ECONNRESET`, refused, timed out) is **did not run**: printed so, tried again after 20 s, never
@@ -1648,7 +1656,10 @@ printed first; one that never passed is **not working yet**. A case is cited in 
 `<id>@<place>`: `issues.mjs check OLA-n pass <k> --case publish-bart@cloud-web:chat --on <release>`.
 
 Results: `~/ola-staging/asks-latest.json` on the mini (each case and place: status, tries, why,
-when it last and first passed, on which release; what the dashboard and the hourly check read), its
+when it last and first passed, on which release; what the dashboard and the hourly check read),
+written after every case and place, so a run that is stopped, breaks or is killed leaves what it ran;
+`lastRun.state` (running, finished, stopped, broke, died), `note` (one sentence) and `runs` (the last
+runs, a run left to a newer one included) say what became of each run. Its
 summary in the board status `ops/watch.mjs` pushes every 10 minutes (`asks`), and every run with
 Ola's words in `~/ola-asks/log.jsonl`. Offline checks of the runner itself: `node evals/asks/test.mjs`.
 

@@ -12,7 +12,7 @@
 // questions), POST .../permission/<id>/reply {decision} and .../form/<id>/reply {answer}.
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,6 +24,27 @@ export const SITES = process.env.OLA_ASKS_SITES || 'https://sites.ola.cx'
 // The live server's own code and settings: the deployed release, never a builder's copy.
 export const LIVE = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
 export const STATE = process.env.OLA_ASKS_HOME || path.join(homedir(), 'ola-asks')
+// The test server's record of what is live (ops/ola.mjs writes deployed.json when an update serves).
+export const STAGING = process.env.OLA_ASKS_STAGING || path.join(homedir(), 'ola-staging')
+/** The release the test server serves now: the first 12 characters of the deployed commit, or 'unknown'. */
+export function liveRelease(staging = STAGING) {
+  try {
+    return String(JSON.parse(readFileSync(path.join(staging, 'deployed.json'), 'utf8')).commit ?? 'unknown').slice(0, 12)
+  } catch {
+    return 'unknown'
+  }
+}
+
+// OLA-401: on Nov 22 at 18:47Z a builder's first version of a test called signOutAccount() for real on
+// the test server; the run going then (e22f2b7ac99a) lost its sign-in mid-case and 32 cloud tries broke
+// with "listing the project's files: 401" (the audit: sessions_revoked by admin re askcases at
+// 18:47:34.811Z, 10 s before that run's own cleanup). What changes the made-up account (its password,
+// its sign-ins, its pages, its project's files) now runs only in the process that holds the asks run
+// lock in the real state folder (takeRunLock): never from a test, a builder's script or a second run.
+let runHeld = false
+export function mustHoldRun(what) {
+  if (!runHeld) throw new Error(`${what} acts on the live made-up account (${WHO}); only the asks run that holds the run lock (${path.join(STATE, 'run.pid')}) may do it`)
+}
 // The made-up person and their one project. Kept between runs (the admin tool cannot delete a
 // person, and a new one each run would pile up); each run gives it a new password nobody sees,
 // empties the project, and at the end signs it out everywhere and takes its pages down.
@@ -74,6 +95,7 @@ export const admin = (...a) => live('frontdesk/admin.mjs', a)
 
 /** The person and project exist, the project is empty, and the person has a fresh password (returned). */
 export async function prepareAccount() {
+  mustHoldRun('prepareAccount')
   const listed = await admin('list')
   if (!new RegExp(`^person ${WHO} `, 'm').test(listed)) await admin('add-person', WHO, '--name', WHO_NAME)
   if (new RegExp(`^person ${WHO} .*\\bsuspended`, 'm').test(listed)) throw new Error(`${WHO} is suspended on the live server; nothing here lifts that`)
@@ -109,6 +131,7 @@ async function post(p, body, cookie) {
 
 /** Takes down every page of the made-up person's (the project's site and their Mac sites). */
 export async function takeDownSites() {
+  mustHoldRun('takeDownSites')
   const done = []
   // `admin sites` lines: "<name> project <url> …", "<name> mac site of <handle> <url> …",
   // "<name> held by <handle> nothing up".
@@ -131,14 +154,23 @@ export async function takeDownSites() {
 
 /** Signs the person out everywhere (sessions and Macs) and stops the project's computer. */
 export async function signOutAccount() {
+  mustHoldRun('signOutAccount')
   const said = await admin('revoke-sessions', WHO)
   // It would stop itself after 30 idle minutes.
   await live('workspace/ws.mjs', ['stop', PROJECT], { ok: true })
   return `${said}; the project's computer stopped`
 }
 
+/** Stops the project's computer (OLA-401: when the cloud cases are done and the local ones follow, it
+ *  would otherwise hold one of the machine's four VMs for hours without the turn). */
+export async function stopProject() {
+  mustHoldRun('stopProject')
+  await live('workspace/ws.mjs', ['stop', PROJECT], { ok: true })
+}
+
 /** Empties the project's folder (its database and Ola's own record stay), so a case starts from nothing. */
 export async function emptyProject() {
+  mustHoldRun('emptyProject')
   await live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
   const r = await runChild('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'])
   if (r.status !== 0) throw new Error(`emptying the project: ${(r.stderr || '').trim().slice(0, 200)}`)
@@ -146,6 +178,7 @@ export async function emptyProject() {
 
 /** Runs a shell line inside the project's computer (a case's setup). */
 export async function inProject(script) {
+  mustHoldRun('inProject')
   const r = await runChild('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', script])
   if (r.status !== 0) throw new Error(`in the project: ${(r.stderr || r.stdout || '').trim().slice(0, 200)}`)
   return r.stdout
@@ -879,13 +912,14 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
   for (const r of results) {
     const key = `${r.id}@${r.place}`
     const was = table.cases[key] ?? {}
+    const at = r.at ?? now // OLA-401: when this result was decided; the record is written after every case
     // A fail whose reason is the model refusing (the allowance, the provider's credits) did not run, by
     // whatever path it came (OLA-323): never STOPPED WORKING, never not working yet, never a pass.
     const refused = r.ok === false && modelUsedUp(r)
     if (refused) Object.assign(r, { ok: null, didNotRun: true, why: `did not run: ${refused}` })
     if (r.ok === null && r.didNotRun) {
       // It was tried but never reached Ola (OLA-231 check 7): what it had stands, and the record says so.
-      table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status ?? 'not run', everPassed: !!was.everPassed, didNotRun: { at: now, release: r.release, why: r.why } }
+      table.cases[key] = { ...was, id: r.id, place: r.place, say: r.say, ticket: r.ticket, status: was.status ?? 'not run', everPassed: !!was.everPassed, didNotRun: { at, release: r.release, why: r.why } }
       r.status = 'did not run'
       continue
     }
@@ -907,11 +941,11 @@ export function ratchet(table, results, { now, release, known, lastRun }) {
       tries: r.tries,
       verdict: r.verdict,
       why: r.why,
-      at: now,
+      at,
       release: r.release,
       everPassed: ever,
-      firstPassed: was.firstPassed ?? (r.ok ? { at: now, release: r.release } : null),
-      lastPassed: r.ok ? { at: now, release: r.release } : was.lastPassed ?? null,
+      firstPassed: was.firstPassed ?? (r.ok ? { at, release: r.release } : null),
+      lastPassed: r.ok ? { at, release: r.release } : was.lastPassed ?? null,
       didNotRun: null,
     }
   }
@@ -971,13 +1005,182 @@ export function modelUsedUp(r) {
   return `the made-up account's model allowance is used up${when ? ` (it starts again on ${when[1].trim()})` : ''}`
 }
 
-/** One asks run at a time (they share the made-up account). The run an update starts (after: true)
- *  WAITS for a run that is going and then runs, so every update is tested (OLA-231 check 5); only a
- *  newer update's run replaces a waiting one. A builder's run (after: false) leaves it to a run that is
- *  going or an update's run that is waiting. Returns true when this process holds the lock. */
-export async function takeRunLock({ after, state = STATE, pollMs = 15_000, maxMs = 4 * 3600_000, log = say } = {}) {
+/** The website no longer takes the run's sign-in (401): someone signed the made-up account out. Not a
+ *  result about Ola (OLA-401): the try did not run, and the runner signs in again. */
+export function signedOut(e) {
+  return /: 401\b/.test(String(e?.message ?? e ?? ''))
+}
+
+/**
+ * OLA-401: a run is stopped when a newer update serves, so a run may not reach every case. The cases
+ * whose newest result is oldest go first (never run first; ties keep the file's order), so runs that
+ * are cut short still refresh every case in turn instead of the first ones over and over.
+ */
+export function stalestFirst(cases, table, place) {
+  const age = (c) => {
+    const at = table?.cases?.[`${c.id}@${place}`]?.at
+    const t = at ? Date.parse(at) : NaN
+    return Number.isFinite(t) ? t : -Infinity
+  }
+  return cases.map((c, i) => [c, age(c), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(([c]) => c)
+}
+/** The runtimes, the one whose oldest result is oldest first (a runtime never run first). */
+export function stalestRuntime(runtimes, cases, table) {
+  const oldest = (rt) => {
+    const place = Object.keys(PLACES_REACHED).find((p) => PLACES_REACHED[p] === rt)
+    const mine = cases.filter((c) => placesOf(c).includes(place))
+    if (!mine.length) return Infinity
+    const first = stalestFirst(mine, table, place)[0]
+    const at = table?.cases?.[`${first.id}@${place}`]?.at
+    const t = at ? Date.parse(at) : NaN
+    return Number.isFinite(t) ? t : -Infinity
+  }
+  return runtimes.map((r, i) => [r, oldest(r), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(([r]) => r)
+}
+
+// ---------------------------------------------------------------- the record (OLA-401)
+// asks-latest.json is written after every case and place, not once at the end: a run that is stopped
+// (a newer update serves, its time limit, a signal), breaks, or is killed outright still leaves what it
+// ran, and the file says what became of the run: `lastRun.state` running | finished | stopped | broke |
+// died, `note` in one sentence, and `runs`, the last runs with their state (a run left to a newer one
+// included). A run whose process is gone while its record still says running is shown as died.
+const alivePid = (pid) => {
+  if (!(pid > 0)) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (e) {
+    return e.code === 'EPERM'
+  }
+}
+function readTable(file) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'))
+  } catch {
+    return { cases: {} }
+  }
+}
+function writeAtomic(file, data) {
+  mkdirSync(path.dirname(file), { recursive: true })
+  const tmp = `${file}.${process.pid}.tmp`
+  writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n')
+  renameSync(tmp, file)
+}
+const clock = (iso) => (iso ? `${String(iso).slice(0, 16).replace('T', ' ')} UTC` : 'an unknown time')
+/** One sentence on what became of a run, for the board and for whoever reads the file. */
+export function runNote(run) {
+  const n = Number(String(run.done ?? '').split(' ')[0]) || 0
+  const ran = n ? `; ${run.done} case-places had run (their results are in, the rest keep their earlier result)` : '; no case had run yet (every case keeps its earlier result)'
+  if (run.state === 'running') return `The run for release ${run.release} is going (started ${clock(run.startedAt)})${ran}.`
+  if (run.state === 'finished') return `The run for release ${run.release} finished at ${clock(run.endedAt)}: ${run.done} case-places had run.`
+  if (run.state === 'stopped') return `The run for release ${run.release} was stopped at ${clock(run.endedAt)} (${run.why})${ran}.`
+  if (run.state === 'broke') return `The run for release ${run.release} broke at ${clock(run.endedAt)} (${run.why})${ran}.`
+  if (run.state === 'died') return `The run for release ${run.release} (pid ${run.pid}) ended without finishing; last written ${clock(run.updatedAt)}${ran}.`
+  return `The run for release ${run.release} did not run: ${run.why}.`
+}
+function mergeRuns(table, run, now) {
+  const runs = (Array.isArray(table.runs) ? table.runs : []).filter((r) => r && r.id !== run?.id)
+  for (const r of runs) if (r.state === 'running' && r.pid !== process.pid && !alivePid(r.pid)) Object.assign(r, { state: 'died', why: 'its process ended without finishing (killed, or the machine restarted)', endedAt: r.updatedAt ?? null })
+  if (run) runs.push({ ...run, updatedAt: now })
+  return runs.slice(-12)
+}
+/**
+ * Writes the run's results so far into the record: the file as it is now, the ratchet applied to
+ * `results` (the same result applied twice gives the same row), `lastRun` and `note` for this run, and
+ * the run in `runs`. `run`: { id, pid, release, afterDeploy, startedAt, state, why?, done, cases, runtimes }.
+ */
+export function writeRecord(file, { results, known, run, now = new Date().toISOString() }) {
+  const was = readTable(file)
+  const t = ratchet(was, results, { now, release: run.release, known, lastRun: { at: now, release: run.release, secs: Math.round((Date.parse(now) - Date.parse(run.startedAt)) / 1000), afterDeploy: run.afterDeploy, cases: run.cases, runtimes: run.runtimes, state: run.state, ...(run.why ? { why: run.why } : {}), done: run.done, pid: run.pid, startedAt: run.startedAt } })
+  const full = { ...t, note: runNote({ ...run, updatedAt: now, endedAt: run.state === 'running' ? null : now }), runs: mergeRuns(was, { ...run, ...(run.state === 'running' ? {} : { endedAt: now }) }, now) }
+  writeAtomic(file, full)
+  return full
+}
+/** A run that ran nothing (left to a newer update's run): only `runs` gets a line; the results, `lastRun`
+ *  and `note` stay those of the last run that ran. */
+export function noteRun(file, run, now = new Date().toISOString()) {
+  const was = readTable(file)
+  if (!was.cases) was.cases = {}
+  writeAtomic(file, { ...was, runs: mergeRuns(was, { ...run, endedAt: now }, now) })
+}
+
+/**
+ * OLA-401: what stops a run that is going. Every everyMs it reads what is live; when the live release is
+ * no longer the run's (a newer update serves) or the run has gone on for maxMs, it calls onStop(why) once.
+ * Returns a function that ends the watch.
+ */
+export function releaseWatch({ release, read = () => liveRelease(), everyMs = 20_000, maxMs = 6 * 3600_000, onStop, t0 = Date.now() }) {
+  let done = false
+  const tick = () => {
+    if (done) return
+    const now = read()
+    if (now !== 'unknown' && release !== 'unknown' && now !== release) {
+      done = true
+      return onStop(`the test server moved from ${release} to ${now}; a run for ${now} replaces this one`)
+    }
+    if (Date.now() - t0 > maxMs) {
+      done = true
+      return onStop(`its time limit of ${Math.round(maxMs / 60_000)} min (OLA_ASKS_MAX_MIN) was reached`)
+    }
+  }
+  const timer = setInterval(tick, everyMs)
+  timer.unref?.()
+  return () => {
+    done = true
+    clearInterval(timer)
+  }
+}
+
+/**
+ * OLA-401: stops the run in an orderly way, once: writes the record first (so a stop that hangs or is
+ * killed still leaves it), then cleans up (capped at capMs), then exits with `code`. SIGTERM and SIGINT
+ * stop the run the same way; a newer update's run says why in `<state>/stop-request.json`.
+ */
+export function makeStopper({ write, cleanup, exit = (c) => process.exit(c), log = say, capMs = 120_000, state = STATE, signals = true }) {
+  let stopping = null
+  const stop = (why, code = 3) => {
+    if (stopping) return stopping
+    log(`asks: STOPPING: ${why}`)
+    stopping = (async () => {
+      try {
+        write(why)
+      } catch (e) {
+        log(`asks: writing the record while stopping FAILED: ${e.message}`)
+      }
+      try {
+        await Promise.race([Promise.resolve().then(cleanup), sleep(capMs).then(() => log(`asks: cleanup took over ${Math.round(capMs / 1000)} s; leaving it`))])
+      } catch (e) {
+        log(`asks: cleanup while stopping FAILED: ${e.message}`)
+      }
+      exit(code)
+    })()
+    return stopping
+  }
+  if (signals)
+    for (const sig of ['SIGTERM', 'SIGINT'])
+      process.on(sig, () => {
+        let why = `it was sent ${sig}`
+        try {
+          const q = JSON.parse(readFileSync(path.join(state, 'stop-request.json'), 'utf8'))
+          if (q.target === process.pid && q.why) why = `${q.why} (${sig})`
+        } catch {}
+        stop(why)
+      })
+  return { stop, stopping: () => stopping }
+}
+
+/** One asks run at a time (they share the made-up account). OLA-401: the run an update starts
+ *  (after: true) STOPS a run that is going for another release (or one that does not say: a run of the
+ *  code before OLA-401): it asks it to stop (stop-request.json, SIGTERM), so that run writes its record,
+ *  signs the account out and gives the turn back; after stopWaitMs it is killed. A run going for this
+ *  same release is waited for, as before (OLA-231 check 5), up to maxMs. Only a newer update's run
+ *  replaces a waiting one. A builder's run (after: false) leaves it to a run that is going or an update's
+ *  run that is waiting. Returns true when this process holds the lock; `<state>/run.json` then says
+ *  which release it runs for. */
+export async function takeRunLock({ after, state = STATE, release = liveRelease(), pollMs = 15_000, maxMs = 4 * 3600_000, stopWaitMs = 180_000, log = say } = {}) {
   mkdirSync(state, { recursive: true })
   const LOCK = path.join(state, 'run.pid')
+  const INFO = path.join(state, 'run.json')
   const WAITER = path.join(state, 'after-deploy.waiting')
   const pidIn = (f) => {
     try {
@@ -986,33 +1189,55 @@ export async function takeRunLock({ after, state = STATE, pollMs = 15_000, maxMs
       return 0
     }
   }
-  const alive = (pid) => {
-    try {
-      return !!pid && pid !== process.pid && (process.kill(pid, 0), true)
-    } catch {
-      return false
-    }
-  }
+  const alive = (pid) => !!pid && pid !== process.pid && alivePid(pid)
   const drop = (f) => () => {
     try {
       if (pidIn(f) === process.pid) rmSync(f)
     } catch {}
+  }
+  const infoOf = (pid) => {
+    try {
+      const j = JSON.parse(readFileSync(INFO, 'utf8'))
+      return j.pid === pid ? j : null
+    } catch {
+      return null
+    }
   }
   if (after) {
     writeFileSync(WAITER, String(process.pid))
     process.on('exit', drop(WAITER))
     const since = Date.now()
     let told = false
+    let asked = null // { pid, at, killed }
     while (alive(pidIn(LOCK))) {
+      const other = pidIn(LOCK)
       if (pidIn(WAITER) !== process.pid) {
         log(`asks: a newer update's run (pid ${pidIn(WAITER)}) is waiting to test the newer release; this one leaves it to that run`)
         return false
       }
-      if (!told) log(`asks: another run is going (pid ${pidIn(LOCK)}); this one waits its turn and runs after it`), (told = true)
-      if (Date.now() - since > maxMs) throw new Error(`asks: the run holding the lock (pid ${pidIn(LOCK)}) has gone on for ${Math.round(maxMs / 60_000)} min; this update's run stops waiting (a stuck run: look at it)`)
-      await sleep(pollMs)
+      const info = infoOf(other)
+      if (info && info.release === release) {
+        if (!told) log(`asks: another run for this same release ${release} is going (pid ${other}); this one waits its turn and runs after it`), (told = true)
+        if (Date.now() - since > maxMs) throw new Error(`asks: the run holding the lock (pid ${other}) has gone on for ${Math.round(maxMs / 60_000)} min; this update's run stops waiting (a stuck run: look at it)`)
+      } else if (!asked || asked.pid !== other) {
+        const why = `a newer update's run (pid ${process.pid}, release ${release}) replaces it`
+        writeFileSync(path.join(state, 'stop-request.json'), JSON.stringify({ target: other, by: process.pid, release, at: new Date().toISOString(), why }) + '\n')
+        try {
+          process.kill(other, 'SIGTERM')
+        } catch {}
+        asked = { pid: other, at: Date.now(), killed: false }
+        log(`asks: a run for ${info ? `release ${info.release}` : 'an older release (it does not say which)'} is going (pid ${other}); this run for ${release} asked it to stop`)
+      } else if (!asked.killed && Date.now() - asked.at > stopWaitMs) {
+        try {
+          process.kill(other, 'SIGKILL')
+        } catch {}
+        asked.killed = true
+        log(`asks: the run (pid ${other}) had not stopped ${Math.round(stopWaitMs / 1000)} s after it was asked; it was killed`)
+      }
+      await sleep(asked ? Math.min(pollMs, 2000) : pollMs)
     }
-    if (told) log(`asks: the other run finished after ${Math.round((Date.now() - since) / 60_000)} min; this one runs now`)
+    if (asked) log(`asks: the older run (pid ${asked.pid}) ended after ${Math.round((Date.now() - asked.at) / 1000)} s; this one runs now`)
+    else if (told) log(`asks: the other run finished after ${Math.round((Date.now() - since) / 60_000)} min; this one runs now`)
   } else {
     const other = alive(pidIn(LOCK)) ? pidIn(LOCK) : alive(pidIn(WAITER)) ? pidIn(WAITER) : 0
     if (other) {
@@ -1022,6 +1247,12 @@ export async function takeRunLock({ after, state = STATE, pollMs = 15_000, maxMs
   }
   writeFileSync(LOCK, String(process.pid))
   process.on('exit', drop(LOCK))
+  writeFileSync(INFO, JSON.stringify({ pid: process.pid, release, after: !!after, at: new Date().toISOString() }) + '\n')
+  process.on('exit', () => {
+    if (infoOf(process.pid)) rmSync(INFO, { force: true })
+  })
+  // Only the real lock lets this process change the live made-up account (mustHoldRun).
+  if (path.resolve(state) === path.resolve(STATE)) runHeld = true
   return true
 }
 

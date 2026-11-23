@@ -4,13 +4,13 @@
 // the way the apps fold it, and add-case writes a case the runner reads.
 //   node evals/asks/test.mjs
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
-import { copyFileSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, ask, asksToPublishInWords, cardFaults, rawPublishingCard, websiteCards, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock } from './lib.mjs'
+import { AI, HERE, PLACES, ask, asksToPublishInWords, cardFaults, rawPublishingCard, websiteCards, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock, liveRelease, mustHoldRun, noteRun, releaseWatch, signedOut, stalestFirst, stalestRuntime, writeRecord } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -430,43 +430,280 @@ test('OLA-231 check 7: a try that could not reach Ola did not run; it is never a
   assert.ok(src.includes('lost.push(r)'), 'and kept apart from the tries')
 })
 
-test('OLA-231 check 5: the run an update starts waits for a run that is going, then runs', async () => {
-  const state = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+// A stand-in for a run that holds the lock: a node child that, on SIGTERM, writes a file and exits (or,
+// with ignore, keeps going, as a stuck run would).
+function standIn({ ignore = false, marker = null } = {}) {
+  const code = ignore ? "process.on('SIGTERM', () => {}); setInterval(() => {}, 1000)" : `process.on('SIGTERM', () => { ${marker ? `require('fs').writeFileSync(${JSON.stringify(marker)}, 'stopped')` : ''}; process.exit(3) }); setInterval(() => {}, 1000)`
+  return spawn(process.execPath, ['-e', code], { stdio: 'ignore' })
+}
+const exited = (child) => new Promise((r) => (child.exitCode !== null || child.signalCode !== null ? r() : child.on('exit', r)))
+const settle = (ms) => new Promise((r) => setTimeout(r, ms))
+
+test('OLA-401: the run an update starts stops a run for an older release, waits for one of its own release, and at most one runs', async () => {
   const said = []
   const log = (s) => said.push(s)
-  // a builder's run holds the lock: a child process standing in for it
-  const { spawn } = await import('node:child_process')
-  const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
-  writeFileSync(path.join(state, 'run.pid'), String(holder.pid))
-  // a second builder's run leaves it (as before)
-  assert.equal(await takeRunLock({ after: false, state, log }), false)
-  // the update's run waits, and runs once the other finishes
+  // 1. A run for an older release (Nov 22-23: 5a3a4555734f's run 4 hours on while 823ba71e waited):
+  //    the update's run asks it to stop (stop-request.json, SIGTERM), and runs once it has ended.
+  const state = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+  const marker = path.join(state, 'old-run-stopped')
+  const old = standIn({ marker })
+  await settle(150)
+  writeFileSync(path.join(state, 'run.pid'), String(old.pid))
+  writeFileSync(path.join(state, 'run.json'), JSON.stringify({ pid: old.pid, release: 'r1' }))
+  // a builder's run leaves it to the run that is going, as before
+  assert.equal(await takeRunLock({ after: false, state, release: 'r2', log }), false)
   const t0 = Date.now()
-  setTimeout(() => holder.kill(), 600)
-  const got = await takeRunLock({ after: true, state, pollMs: 100, log })
-  assert.equal(got, true)
-  assert.ok(Date.now() - t0 >= 500, 'it waited')
-  assert.ok(said.some((s) => /waits its turn/.test(s)), said.join(' | '))
-  assert.equal(Number(readFileSync(path.join(state, 'run.pid'), 'utf8')), process.pid)
-  // while an update's run waits, a builder's run does not go ahead of it
+  assert.equal(await takeRunLock({ after: true, state, release: 'r2', pollMs: 50, log }), true)
+  await exited(old)
+  assert.ok(Date.now() - t0 < 5000, 'it did not wait for the old run to finish its cases')
+  assert.equal(readFileSync(marker, 'utf8'), 'stopped', 'the old run was asked to stop (SIGTERM) and stopped itself')
+  const q = JSON.parse(readFileSync(path.join(state, 'stop-request.json'), 'utf8'))
+  assert.equal(q.target, old.pid)
+  assert.match(q.why, /newer update's run .*release r2/)
+  assert.ok(said.some((x) => /a run for release r1 is going .* asked it to stop/.test(x)), said.join(' | '))
+  assert.equal(Number(readFileSync(path.join(state, 'run.pid'), 'utf8')), process.pid, 'this run holds the lock')
+  assert.equal(JSON.parse(readFileSync(path.join(state, 'run.json'), 'utf8')).release, 'r2', 'and says which release it runs for')
+
+  // 2. A run of the code before OLA-401 (no run.json) that does not stop when asked: killed after stopWaitMs.
   const state2 = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
-  const waiter = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
-  writeFileSync(path.join(state2, 'after-deploy.waiting'), String(waiter.pid))
-  assert.equal(await takeRunLock({ after: false, state: state2, log }), false)
+  const stuck = standIn({ ignore: true })
+  await settle(150)
+  writeFileSync(path.join(state2, 'run.pid'), String(stuck.pid))
+  const t1 = Date.now()
+  assert.equal(await takeRunLock({ after: true, state: state2, release: 'r2', pollMs: 50, stopWaitMs: 300, log }), true)
+  await exited(stuck)
+  assert.equal(stuck.signalCode, 'SIGKILL', 'killed once it ignored the request')
+  assert.ok(Date.now() - t1 >= 300 && Date.now() - t1 < 5000)
+  assert.ok(said.some((x) => /an older release \(it does not say which\)/.test(x)) && said.some((x) => /it was killed/.test(x)), said.join(' | '))
+
+  // 3. A run for this same release (a checker's run a minute before the update's own): waited for, as before.
+  const state3 = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+  const same = standIn()
+  await settle(150)
+  writeFileSync(path.join(state3, 'run.pid'), String(same.pid))
+  writeFileSync(path.join(state3, 'run.json'), JSON.stringify({ pid: same.pid, release: 'r2' }))
+  setTimeout(() => same.kill('SIGKILL'), 500)
+  const t2 = Date.now()
+  assert.equal(await takeRunLock({ after: true, state: state3, release: 'r2', pollMs: 50, log }), true)
+  assert.ok(Date.now() - t2 >= 400, 'it waited')
+  assert.equal(same.signalCode, 'SIGKILL', 'killed by the test, never asked to stop')
+  assert.equal(existsSync(path.join(state3, 'stop-request.json')), false)
+  assert.ok(said.some((x) => /same release r2 is going .* waits its turn/.test(x)), said.join(' | '))
+
+  // 4. While an update's run waits, a builder's run does not go ahead of it; a newer update's run replaces a waiting one.
+  const state4 = mkdtempSync(path.join(tmpdir(), 'asks-lock-'))
+  const waiter = standIn()
+  await settle(150)
+  writeFileSync(path.join(state4, 'after-deploy.waiting'), String(waiter.pid))
+  assert.equal(await takeRunLock({ after: false, state: state4, release: 'r2', log }), false)
   assert.ok(said.at(-1).includes("an update's run is waiting"))
-  // a newer update's run replaces a waiting one
-  const holder2 = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' })
-  writeFileSync(path.join(state2, 'run.pid'), String(holder2.pid))
-  const waiting = takeRunLock({ after: true, state: state2, pollMs: 100, log })
-  await new Promise((r) => setTimeout(r, 300))
-  writeFileSync(path.join(state2, 'after-deploy.waiting'), String(waiter.pid))
+  const holder = standIn()
+  await settle(150)
+  writeFileSync(path.join(state4, 'run.pid'), String(holder.pid))
+  writeFileSync(path.join(state4, 'run.json'), JSON.stringify({ pid: holder.pid, release: 'r2' }))
+  const waiting = takeRunLock({ after: true, state: state4, release: 'r2', pollMs: 50, log })
+  await settle(200)
+  writeFileSync(path.join(state4, 'after-deploy.waiting'), String(waiter.pid))
   assert.equal(await waiting, false)
   assert.ok(said.at(-1).includes('newer update'))
-  holder2.kill()
-  waiter.kill()
-  // the runner calls it, and no longer steps aside after an update
+  holder.kill('SIGKILL')
+  waiter.kill('SIGKILL')
+  // the runner calls it, and writes a line for a run that was left to a newer one
   const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
   assert.ok(src.includes("takeRunLock({ after: args.includes('--after-deploy') })"))
+  assert.match(src, /state: 'left to a newer run'/)
+})
+
+test('OLA-401: a run stops itself when the live release changes or its time runs out, never on an unreadable one', async () => {
+  const stops = []
+  let live = 'r1'
+  const end = releaseWatch({ release: 'r1', read: () => live, everyMs: 20, maxMs: 60_000, onStop: (why) => stops.push(why) })
+  await settle(100)
+  assert.deepEqual(stops, [], 'the same release: going on')
+  live = 'unknown'
+  await settle(100)
+  assert.deepEqual(stops, [], 'deployed.json unreadable for a moment: going on')
+  live = 'r2'
+  await settle(100)
+  end()
+  assert.equal(stops.length, 1, 'once')
+  assert.match(stops[0], /moved from r1 to r2/)
+  const timed = []
+  const end2 = releaseWatch({ release: 'r1', read: () => 'r1', everyMs: 20, maxMs: 50, onStop: (why) => timed.push(why) })
+  await settle(200)
+  end2()
+  assert.equal(timed.length, 1)
+  assert.match(timed[0], /time limit/)
+  // liveRelease reads the deploy's record
+  const staging = mkdtempSync(path.join(tmpdir(), 'asks-staging-'))
+  assert.equal(liveRelease(staging), 'unknown')
+  writeFileSync(path.join(staging, 'deployed.json'), JSON.stringify({ commit: '823ba71e4c78abcdef' }))
+  assert.equal(liveRelease(staging), '823ba71e4c78')
+  // the runner watches, stops on SIGTERM, and stops between tries and cases
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(src, /releaseWatch\(\{ release,/)
+  assert.match(src, /makeStopper\(\{/)
+  assert.ok((src.match(/if \(stopping\(\)\) break/g) ?? []).length >= 4, 'it checks between runtimes, cases and tries')
+})
+
+// The stop end to end, in a child process standing in for the runner: the record first, then the
+// cleanup, then exit 3; on a release change and on SIGTERM; and a run killed outright shows as died.
+function runnerChild(dir, { results = 1, extra = '' } = {}) {
+  const lib = path.join(HERE, 'lib.mjs')
+  const file = path.join(dir, 'child.mjs')
+  writeFileSync(file, `
+import { writeFileSync } from 'node:fs'
+import { liveRelease, makeStopper, releaseWatch, writeRecord } from ${JSON.stringify(lib)}
+const dir = ${JSON.stringify(dir)}
+const LATEST = dir + '/asks-latest.json'
+const known = new Set(['a@cloud-web:chat', 'b@cloud-web:chat'])
+const results = []
+for (let i = 0; i < ${results}; i++) results.push({ id: 'a', place: 'cloud-web:chat', say: 'x', ok: true, verdict: 'works (2 of 2)', tries: '2 of 2 passed', release: 'r1', at: new Date().toISOString() })
+const run = { id: 'r1-' + process.pid, pid: process.pid, release: 'r1', afterDeploy: true, startedAt: new Date().toISOString(), cases: 'all', runtimes: ['cloud'] }
+const record = (state, why) => writeRecord(LATEST, { results, known, run: { ...run, state, ...(why ? { why } : {}), done: results.length + ' of 2' } })
+record('running')
+const stopper = makeStopper({ write: (why) => record('stopped', why), cleanup: async () => writeFileSync(dir + '/cleaned', 'yes'), state: dir, log: () => {} })
+releaseWatch({ release: 'r1', read: () => liveRelease(dir), everyMs: 50, onStop: (why) => stopper.stop(why) })
+${extra}
+writeFileSync(dir + '/ready', 'yes')
+setInterval(() => {}, 1000)
+`)
+  return spawn(process.execPath, [file], { stdio: 'ignore' })
+}
+async function until(f, ms = 5000) {
+  const end = Date.now() + ms
+  while (!f()) {
+    if (Date.now() > end) throw new Error('timed out')
+    await settle(30)
+  }
+}
+
+test('OLA-401: a run stopped by a newer update, by SIGTERM, or killed outright leaves an honest record', async () => {
+  // 1. the live release changes: stopped within the watch interval, record first, cleanup, exit 3
+  const d1 = mkdtempSync(path.join(tmpdir(), 'asks-stop-'))
+  writeFileSync(path.join(d1, 'deployed.json'), JSON.stringify({ commit: 'r1' }))
+  const c1 = runnerChild(d1)
+  await until(() => existsSync(path.join(d1, 'ready')))
+  writeFileSync(path.join(d1, 'deployed.json'), JSON.stringify({ commit: 'r2' }))
+  await exited(c1)
+  assert.equal(c1.exitCode, 3)
+  const t1 = JSON.parse(readFileSync(path.join(d1, 'asks-latest.json'), 'utf8'))
+  assert.equal(t1.lastRun.state, 'stopped')
+  assert.match(t1.lastRun.why, /moved from r1 to r2/)
+  assert.equal(t1.lastRun.done, '1 of 2')
+  assert.equal(t1.cases['a@cloud-web:chat'].status, 'passing', 'what it ran is in')
+  assert.match(t1.note, /^The run for release r1 was stopped at .* UTC \(the test server moved from r1 to r2; .*\); 1 of 2 case-places had run \(their results are in/)
+  assert.equal(t1.runs.at(-1).state, 'stopped')
+  assert.equal(readFileSync(path.join(d1, 'cleaned'), 'utf8'), 'yes', 'and it cleaned up (signed out, pages down)')
+
+  // 2. SIGTERM from a newer update's run, which says why
+  const d2 = mkdtempSync(path.join(tmpdir(), 'asks-stop-'))
+  writeFileSync(path.join(d2, 'deployed.json'), JSON.stringify({ commit: 'r1' }))
+  const c2 = runnerChild(d2)
+  await until(() => existsSync(path.join(d2, 'ready')))
+  writeFileSync(path.join(d2, 'stop-request.json'), JSON.stringify({ target: c2.pid, why: "a newer update's run (pid 1, release r3) replaces it" }))
+  c2.kill('SIGTERM')
+  await exited(c2)
+  assert.equal(c2.exitCode, 3)
+  const t2 = JSON.parse(readFileSync(path.join(d2, 'asks-latest.json'), 'utf8'))
+  assert.equal(t2.lastRun.state, 'stopped')
+  assert.match(t2.lastRun.why, /newer update's run .* release r3\) replaces it \(SIGTERM\)/)
+
+  // 3. killed outright (SIGKILL, a reboot): the file still holds what it ran, and the next run's
+  //    first write shows it as died, never as still running
+  const d3 = mkdtempSync(path.join(tmpdir(), 'asks-stop-'))
+  writeFileSync(path.join(d3, 'deployed.json'), JSON.stringify({ commit: 'r1' }))
+  const c3 = runnerChild(d3)
+  await until(() => existsSync(path.join(d3, 'ready')))
+  c3.kill('SIGKILL')
+  await exited(c3)
+  const t3 = JSON.parse(readFileSync(path.join(d3, 'asks-latest.json'), 'utf8'))
+  assert.equal(t3.lastRun.state, 'running')
+  assert.equal(t3.cases['a@cloud-web:chat'].status, 'passing', 'its results are in')
+  const next = { id: 'r2-1', pid: process.pid, release: 'r2', afterDeploy: true, startedAt: new Date().toISOString(), cases: 'all', runtimes: ['cloud'], state: 'running', done: '0 of 2' }
+  const t4 = writeRecord(path.join(d3, 'asks-latest.json'), { results: [], known: new Set(['a@cloud-web:chat']), run: next })
+  const dead = t4.runs.find((r) => r.pid === c3.pid)
+  assert.equal(dead.state, 'died')
+  assert.match(dead.why, /ended without finishing/)
+  assert.equal(t4.cases['a@cloud-web:chat'].status, 'passing', 'and a new run keeps them')
+})
+
+test('OLA-401: the record written after every case is the record written once at the end; a run left to a newer one leaves a line', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'asks-rec-'))
+  const known = new Set(['a@cloud-web:chat', 'b@cloud-web:chat', 'c@local-mac:chat'])
+  const old = { cases: { 'b@cloud-web:chat': { id: 'b', place: 'cloud-web:chat', status: 'passing', everPassed: true, at: '2026-11-20T00:00:00.000Z', lastPassed: { at: '2026-11-20T00:00:00.000Z', release: 'r0' } } } }
+  const mk = () => [
+    { id: 'a', place: 'cloud-web:chat', say: 'x', ok: true, verdict: 'works (2 of 2)', tries: '2 of 2 passed', release: 'r1', at: '2026-11-23T10:00:00.000Z' },
+    { id: 'b', place: 'cloud-web:chat', say: 'x', ok: false, verdict: 'fails (0 of 2)', tries: '0 of 2 passed', release: 'r1', why: 'no page', at: '2026-11-23T10:10:00.000Z' },
+    { id: 'c', place: 'local-mac:chat', say: 'x', ok: null, didNotRun: true, release: 'r1', why: 'did not run: the connection to Ola was lost 3 times', at: '2026-11-23T10:20:00.000Z' },
+  ]
+  const run = { id: 'r1-1', pid: process.pid, release: 'r1', afterDeploy: true, startedAt: '2026-11-23T09:59:00.000Z', cases: 'all', runtimes: ['cloud', 'local'] }
+  const once = path.join(dir, 'once.json')
+  const each = path.join(dir, 'each.json')
+  writeFileSync(once, JSON.stringify(old))
+  writeFileSync(each, JSON.stringify(old))
+  writeRecord(once, { results: mk(), known, run: { ...run, state: 'finished', done: '3 of 3' }, now: '2026-11-23T10:30:00.000Z' })
+  const rs = mk()
+  for (let i = 1; i <= rs.length; i++) writeRecord(each, { results: rs.slice(0, i), known, run: { ...run, state: 'running', done: `${i} of 3` }, now: `2026-11-23T10:2${i}:00.000Z` })
+  writeRecord(each, { results: rs, known, run: { ...run, state: 'finished', done: '3 of 3' }, now: '2026-11-23T10:30:00.000Z' })
+  const A = JSON.parse(readFileSync(once, 'utf8'))
+  const B = JSON.parse(readFileSync(each, 'utf8'))
+  assert.deepEqual(B.cases, A.cases)
+  assert.equal(B.cases['b@cloud-web:chat'].status, 'STOPPED WORKING')
+  assert.equal(B.cases['a@cloud-web:chat'].at, '2026-11-23T10:00:00.000Z', 'a row keeps the time its case was decided')
+  assert.deepEqual(B.summary, A.summary)
+  assert.equal(B.lastRun.state, 'finished')
+  assert.match(B.note, /finished at 2026-11-23 10:30 UTC: 3 of 3 case-places had run/)
+  assert.equal(B.runs.length, 1, 'one line per run, replaced as it goes')
+  // a run that ran nothing: a line in runs; the results, lastRun and note stay the last run's
+  noteRun(each, { id: 'r2-9', pid: 9, release: 'r2', afterDeploy: true, startedAt: 'x', state: 'left to a newer run', why: "a newer update's run tests the newer release" })
+  const C = JSON.parse(readFileSync(each, 'utf8'))
+  assert.deepEqual(C.cases, B.cases)
+  assert.deepEqual(C.lastRun, B.lastRun)
+  assert.equal(C.note, B.note)
+  assert.equal(C.runs.at(-1).state, 'left to a newer run')
+  // the runner writes after every case and when it stops or breaks
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(src, /function push\(r\) \{[\s\S]*?record\('running'\)/)
+  assert.match(src, /write: \(why\) => \(record\('stopped', why\)/)
+  assert.match(src, /record\('broke', broke\.message\)/)
+  assert.doesNotMatch(src, /results\.push\(row\(/, 'every result goes through push (and the record)')
+})
+
+test('OLA-401: the cases whose result is oldest go first, and so does the runtime whose oldest result is oldest', () => {
+  const cs = [{ id: 'a', runtimes: ['cloud', 'local'] }, { id: 'b', runtimes: ['cloud', 'local'] }, { id: 'c', runtimes: ['cloud'] }, { id: 'd', runtimes: ['local'] }]
+  const table = { cases: {
+    'a@cloud-web:chat': { at: '2026-11-23T10:00:00Z' }, 'b@cloud-web:chat': { at: '2026-11-22T10:00:00Z' },
+    'a@local-mac:chat': { at: '2026-11-23T11:00:00Z' }, 'b@local-mac:chat': { at: '2026-11-23T12:00:00Z' }, 'd@local-mac:chat': { at: '2026-11-23T09:00:00Z' },
+  } }
+  assert.deepEqual(stalestFirst(cs.filter((c) => c.id !== 'd'), table, 'cloud-web:chat').map((c) => c.id), ['c', 'b', 'a'], 'never run, then oldest')
+  assert.deepEqual(stalestFirst(cs.filter((c) => c.id !== 'c'), table, 'local-mac:chat').map((c) => c.id), ['d', 'a', 'b'])
+  assert.deepEqual(stalestRuntime(['local', 'cloud'], cs, table), ['cloud', 'local'], 'cloud has a case never run')
+  table.cases['c@cloud-web:chat'] = { at: '2026-11-23T13:00:00Z' }
+  assert.deepEqual(stalestRuntime(['local', 'cloud'], cs, table), ['cloud', 'local'], "cloud's oldest (Nov 22) is older than local's (Nov 23 9:00)")
+  table.cases['b@cloud-web:chat'] = { at: '2026-11-23T13:00:00Z' }
+  assert.deepEqual(stalestRuntime(['local', 'cloud'], cs, table), ['local', 'cloud'])
+  assert.deepEqual(stalestFirst(cs, { cases: {} }, 'cloud-web:chat').map((c) => c.id), ['a', 'b', 'c', 'd'], 'an empty record keeps the file order')
+})
+
+test('OLA-401: the Nov 22 401: nothing but the run holding the lock changes the live made-up account, and a 401 is not counted against Ola', () => {
+  // Nov 22, 18:47:34Z: a builder's test called signOutAccount() for real; the run going then lost its
+  // sign-in and 32 cloud tries broke with "listing the project's files: 401".
+  assert.throws(() => mustHoldRun('signOutAccount'), /only the asks run that holds the run lock/)
+  const lib = readFileSync(path.join(HERE, 'lib.mjs'), 'utf8')
+  for (const f of ['prepareAccount', 'takeDownSites', 'signOutAccount', 'emptyProject', 'inProject', 'stopProject']) {
+    const body = lib.match(new RegExp(`export async function ${f}\\([^)]*\\) \\{\\n([^\\n]*)`))
+    assert.ok(body && body[1].includes(`mustHoldRun('${f}')`), `${f} checks first that this process holds the run`)
+  }
+  // only the real state folder's lock gives it (the tests' temporary ones never do)
+  assert.match(lib, /if \(path\.resolve\(state\) === path\.resolve\(STATE\)\) runHeld = true/)
+  assert.equal(signedOut(new Error("listing the project's files: 401")), true)
+  assert.equal(signedOut(new Error('reading the conversation: 401 {"error":"signed_out"}')), true)
+  assert.equal(signedOut(new Error('reading the conversation: 502')), false)
+  assert.equal(signedOut(new Error('the turn ended failed (4010 tokens)')), false)
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(src, /signedOut\(e\) \? \{ ok: null, signedOut: true/, 'a 401 is did-not-run, never a fail')
+  assert.match(src, /signedIn = await signIn\(password\)\n\s*T = cloudTransport\(signedIn\)/, 'and the run signs in again')
 })
 
 test('a try refused for the model allowance did not run (Nov 20, 44ec5d68e931: 34 Mac tries counted as fails)', () => {
