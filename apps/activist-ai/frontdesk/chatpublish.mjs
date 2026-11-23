@@ -48,7 +48,7 @@ export function makeChatPublish(deps) {
         const r = await sites.publish(ctx, ask.sel, fingerprint || look.body.fingerprint, { fresh: true })
         deps.audited?.(ws, sess, ask.sel, r, was)
         if (r.status !== 200) return fail(r.body?.message ?? 'The page could not be published just now. Nothing changed.')
-        return hand({ state: 'done', url: r.body.url, count: r.body.files, live: r.body.live, again: r.body.again, shows: r.body.shows ?? '', expected: r.body.expected ?? '', ...(r.body.message ? { message: r.body.message } : {}) })
+        return hand({ state: 'done', url: r.body.url, count: r.body.files, live: r.body.live, again: r.body.again, shows: r.body.shows ?? '', expected: r.body.expected ?? '', ...(r.body.unconfirmed ? { unconfirmed: true } : {}), ...(r.body.message ? { message: r.body.message } : {}) })
       } finally {
         release()
       }
@@ -65,7 +65,7 @@ export function makeChatPublish(deps) {
       const r = await sites.unpublish(ws.slug)
       deps.unaudited?.(ws, sess, was, r)
       if (r.status !== 200) return hand({ state: 'failed', message: r.body?.message ?? 'The pages could not be taken down just now. They are still public.' })
-      return hand({ state: 'done', unpublished: true, url: r.body.url, live: r.body.gone !== false, ...(r.body.message ? { message: r.body.message } : {}) })
+      return hand({ state: 'done', unpublished: true, url: r.body.url, live: r.body.gone !== false, ...(r.body.unconfirmed ? { unconfirmed: true } : {}), ...(r.body.message ? { message: r.body.message } : {}) })
     })().catch((e) => (log(`${ws.slug}: an unpublish from the conversation failed (${e?.message ?? e})`), hand({ state: 'failed', message: 'The pages could not be taken down just now. They are still public.' })))
     return { decision: 'once', done }
   }

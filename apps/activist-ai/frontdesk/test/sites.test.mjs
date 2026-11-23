@@ -25,7 +25,7 @@ async function setup() {
   const v = await startFakeVercel({ token })
   const d = tmp()
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_VERCEL_TOKEN=${token}\nOLA_SITES_PROJECT=ola-sites\n`, { mode: 0o600 })
-  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
+  const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: v.origin, OLA_FD_SITES_API: v.api, OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_VERIFY_MS: '3000', OLA_FD_SITES_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50', OLA_FD_SITES_CHALLENGE_MS: '200' })
   return { v, sites: makeSites({ cfg, dataDir: path.join(d, 'fd') }), d }
 }
 
@@ -191,11 +191,12 @@ async function gitSetup({ delayMs = 0 } = {}) {
   execFileSync('git', ['init', '-q', '--bare', bare])
   let pushedAt = 0
   let conns = 0
-  const edges = { stale: () => null, requests: 0, connections: 0 }
+  const edges = { stale: () => null, challenge: false, requests: 0, connections: 0 }
   const server = http.createServer((req, res) => {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\//, '')
     if (p === '' || p.endsWith('/')) p += 'index.html'
     edges.requests += 1
+    if (edges.challenge) return res.writeHead(403, { 'x-vercel-mitigated': 'challenge' }).end('<title>Vercel Security Checkpoint</title>')
     const old = req.socket.n % 3 === 0 ? edges.stale(p) : null
     if (old) return res.writeHead(200).end(old)
     let body = null
@@ -309,6 +310,38 @@ test('git mode: one edge server still on the old page means not live; live once 
     const { readAsReader } = await import('../sites.mjs')
     assert.match((await readAsReader(`${g.origin}/git-edges/`)).body.toString(), /again/)
   }
+  g.server.close()
+})
+
+test('the host\'s bot check answering instead of the page: unconfirmed, said plainly, read slowly; never "still shows" (OLA-230)', async () => {
+  const { isChallenge } = await import('../sites.mjs')
+  assert.equal(isChallenge(403, { 'x-vercel-mitigated': 'challenge' }), true)
+  assert.equal(isChallenge(403, {}, Buffer.from('<title>Vercel Security Checkpoint</title>')), true)
+  assert.equal(isChallenge(403, {}, Buffer.from('<title>Forbidden</title>')), false)
+  assert.equal(isChallenge(404, { 'x-vercel-mitigated': 'challenge' }), false)
+  const g = await gitSetup()
+  const root = project({ 'site/index.html': '<!doctype html><title>Oak</title>' })
+  const ctx = folderCtx('git-checkpoint', root)
+  const pre = await g.sites.preview(ctx, { folder: 'site' })
+  assert.equal((await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)).body.live, true)
+  fs.writeFileSync(path.join(root, 'site/index.html'), '<!doctype html><title>Persimmon</title>')
+  const pre2 = await g.sites.preview(ctx, { folder: 'site' })
+  g.edges.challenge = true
+  const before = g.edges.requests
+  const pub = await g.sites.publish(ctx, { folder: 'site' }, pre2.body.fingerprint)
+  assert.equal(pub.status, 200)
+  assert.equal(pub.body.live, false)
+  assert.equal(pub.body.unconfirmed, true)
+  assert.equal(pub.body.shows, '', 'nothing is said about what the address shows')
+  assert.match(pub.body.message, /could not read .* to confirm/)
+  assert.doesNotMatch(pub.body.message, /does not show it|still shows/)
+  // 3 s of waiting at one read per 200 ms after a challenge: about 15 reads, not 60 at the 50 ms poll.
+  assert.ok(g.edges.requests - before <= 20, `${g.edges.requests - before} reads into the bot check`)
+  // Taking it down while the check still answers: also unconfirmed, never "still shows it".
+  const down = await g.sites.unpublish('git-checkpoint')
+  assert.equal(down.body.unconfirmed, true, JSON.stringify(down.body))
+  assert.doesNotMatch(down.body.message, /still shows it/)
+  g.edges.challenge = false
   g.server.close()
 })
 

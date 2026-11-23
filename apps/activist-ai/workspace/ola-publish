@@ -60,6 +60,10 @@ def write(r):
 def tell(r):
     """Prints an outcome for the agent; returns the exit code."""
     st = r.get("state")
+    if st == "done" and r.get("unpublished") and r.get("unconfirmed"):
+        say(f"Taken down from Ola's address. Ola could not read {r.get('url')} just now to confirm it (the host answered with its bot check).",
+            "Tell the person the page was taken down and to open the address to see that it is gone.")
+        return 0
     if st == "done" and r.get("unpublished"):
         say(f"Taken down: {r.get('url')} now shows nothing." if r.get("live") else (r.get("message") or f"Taken down; {r.get('url')} stops showing it within a few minutes."),
             "Tell the person the page is no longer on the web.")
@@ -75,6 +79,13 @@ def tell(r):
                 "Tell the person it is live" + (f" and what it shows (“{shows}”)" if shows else "")
                 + f", with the address exactly as it is here, on its own (no bold, quotes or other marks around it): {r.get('url')}",
                 "If that is not the page the person asked for, say so plainly instead, make the right page, then publish it.")
+            return 0
+        if r.get("unconfirmed"):
+            # The host's bot check answered Ola's server instead of the page (OLA-230): nothing is
+            # known about the page, so neither "live" nor "not live" is said.
+            say(head,
+                "Not checked: Ola's server could not read the address just now (the host answered with its bot check instead of the page).",
+                f"Tell the person it was published at {r.get('url')} (the address on its own, no marks around it), that Ola could not double-check it just now, and to open it to see. Do not publish again and do not run anything else for it.")
             return 0
         say(head,
             "NOT LIVE YET: the address does not show the page just published" + (f"; it still shows: “{shows}”." if shows else "."),

@@ -41,6 +41,17 @@ const posix = path.posix
  * itself (fetch's `cache: 'no-store'` sends `Cache-Control: no-cache`, which a reader never does).
  * Follows up to 5 redirects. Returns { status, ok, body }.
  */
+/**
+ * The host's bot check answered instead of the page (OLA-230, Nov 23: after many reads from the
+ * mini, Vercel's "Security Checkpoint" answered 403 to every read for about ten minutes, and Ola
+ * told the person a live page was not up). Such an answer says nothing about the page.
+ */
+export function isChallenge(status, headers = {}, body = Buffer.alloc(0)) {
+  if (status !== 403 && status !== 429) return false
+  if (/challenge|deny|rate/i.test(String(headers['x-vercel-mitigated'] ?? ''))) return true
+  return /Vercel Security Checkpoint/i.test(body.subarray(0, 64 * 1024).toString('utf8'))
+}
+
 export function readAsReader(url, hops = 5) {
   const u = new URL(url)
   const mod = u.protocol === 'https:' ? https : http
@@ -52,7 +63,10 @@ export function readAsReader(url, hops = 5) {
       }
       const parts = []
       res.on('data', (c) => parts.push(c))
-      res.on('end', () => resolve({ status: res.statusCode, ok: res.statusCode >= 200 && res.statusCode < 300, body: Buffer.concat(parts) }))
+      res.on('end', () => {
+        const body = Buffer.concat(parts)
+        resolve({ status: res.statusCode, ok: res.statusCode >= 200 && res.statusCode < 300, body, challenged: isChallenge(res.statusCode, res.headers, body) })
+      })
       res.on('error', reject)
     })
     req.on('timeout', () => req.destroy(Object.assign(new Error('timed out'), { code: 'TimeoutError' })))
@@ -86,6 +100,8 @@ export function sitesConfig(env = process.env) {
     settleMs: Number(env.OLA_FD_SITES_SETTLE_MS) || 15_000,
     settleReads: Number(env.OLA_FD_SITES_SETTLE_READS) || 8,
     pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
+    // After the host's bot check answers instead of the page, the next read waits this long.
+    challengeMs: Number(env.OLA_FD_SITES_CHALLENGE_MS) || 10_000,
   }
 }
 
@@ -654,10 +670,19 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     let shows = ''
     let since = null
     let streak = 0
+    let challenged = false
     while (Date.now() < until) {
       try {
         const r = await readAsReader(url)
         last = String(r.status)
+        challenged = !!r.challenged
+        if (challenged) {
+          // Reading faster only keeps the host's bot check on: wait, and keep the last real words.
+          since = null
+          streak = 0
+          await new Promise((res) => setTimeout(res, cfg.challengeMs))
+          continue
+        }
         shows = r.ok ? wordsOf(r.body) : ''
         if (expect === null ? r.status === 404 : r.ok && sha1(r.body) === expect) {
           since ??= Date.now()
@@ -674,8 +699,8 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       }
       await new Promise((r) => setTimeout(r, since === null ? cfg.pollMs : Math.max(cfg.pollMs, Math.min(2000, settleMs / cfg.settleReads))))
     }
-    log(`sites: ${url} did not show the change yet (${last})`)
-    return { ok: false, shows }
+    log(`sites: ${url} did not show the change yet (${last}${challenged ? ', the host’s bot check answered' : ''})`)
+    return { ok: false, shows, challenged }
   }
 
   // ------------------------------------------------ what would leave
@@ -847,8 +872,12 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       // address says now) are what Ola's answer is written from (OLA-267), never what it believes.
       const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)
       const live = seen.ok
-      const notYet = live ? {} : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet${seen.shows ? ` (it still shows “${seen.shows}”)` : ''}. It usually appears within a few minutes; check the address again then.` }
-      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, shows: seen.shows, expected: wordsOf(buffers.get(index.path)), ...notYet, fingerprint: plan.fingerprint }, plan }
+      // When the host's bot check answered the last read, nothing is known about the page: say that,
+      // never "it still shows the earlier page" (OLA-230, Nov 23).
+      const notYet = live ? {} : seen.challenged
+        ? { unconfirmed: true, message: `It was sent to ${cfg.origin}. Ola could not read ${plan.url} to confirm it just now: the host answered with its bot check instead of the page. Open the address to see it.` }
+        : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet${seen.shows ? ` (it still shows “${seen.shows}”)` : ''}. It usually appears within a few minutes; check the address again then.` }
+      return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, shows: seen.challenged ? '' : seen.shows, expected: wordsOf(buffers.get(index.path)), ...notYet, fingerprint: plan.fingerprint }, plan }
     },
     /** Takes a project's pages down (the owner's Unpublish, or `admin.mjs unpublish`). */
     async unpublish(slug) {
@@ -870,8 +899,11 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         log(`sites: unpublish of ${slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
         return { status: 502, body: { error: 'unpublish_failed', message: 'The pages could not be taken down just now. They are still public. Try again in a minute.' } }
       }
-      const gone = (await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)).ok
-      const notYet = gone ? {} : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
+      const seenGone = await verify(m.url, null, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)
+      const gone = seenGone.ok
+      const notYet = gone ? {} : seenGone.challenged
+        ? { unconfirmed: true, message: `It was taken off ${cfg.origin}. Ola could not read ${m.url} to confirm it just now: the host answered with its bot check instead. Open the address to see that it is gone.` }
+        : { message: `It was taken off ${cfg.origin}, but ${m.url} still shows it. It usually goes within a few minutes; check the address again then.` }
       return { status: 200, body: { unpublished: true, url: m.url, gone, ...notYet, files: m.files.length } }
     },
   }
