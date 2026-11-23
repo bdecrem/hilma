@@ -146,7 +146,10 @@ enum MacDrive {
     var questions: [String] = []
     var answered: [String] = []
     var answerOnScreen: String = ""
+    /// The answer as the app shows it: Ola's markers taken out (OLA-322).
     var answerInApp: String = ""
+    /// The reaction the reply put on the person's message, if any ("thanks").
+    var reaction: String?
     var wordsOnScreen: String = ""
     var steps: [String] = []
     /// Who made the answer, as the app marks it ("Ola", "DeepSeek V4 Pro", ...) (OLA-337).
@@ -389,7 +392,7 @@ enum MacDrive {
         let turn = store.conversation?.turns.last(where: mine)
         if Date() > end {
           said.status = "timeout"
-          said.answerInApp = turn?.answer ?? ""
+          said.answerInApp = turn?.shownAnswer ?? ""
           throw Failed(why: "no finished answer to sentence \(n) after \(Int(wait)) s")
         }
         if let a = store.conversation?.approval, a.id != lastCard {
@@ -461,7 +464,7 @@ enum MacDrive {
         }
         if let t = turn, !t.isRunning {
           said.endedAt = now
-          said.answerInApp = t.answer
+          said.answerInApp = t.shownAnswer
           said.steps = t.steps.map { "\($0.verb) \($0.object) [\($0.status.rawValue)]" }
           if t.status != .done {
             said.status = t.status.rawValue
@@ -482,6 +485,16 @@ enum MacDrive {
       record.steps.append(Entry(at: now, step: "answer \(n) on the screen", shot: file))
       let lines = file.flatMap { readText(out.appendingPathComponent($0)) } ?? []
       record.screenText = lines
+      // Ola's own markers ([[ola:done]], [[ola:react thanks]]) never show (OLA-322).
+      if let m = lines.first(where: { $0.lowercased().contains("[[ola") || $0.lowercased().contains("ola:react") }) { said.status = "marker on screen"; throw Failed(why: "the screen shows Ola's marker as text: \(quoted(m))") }
+      said.reaction = store.conversation?.turns.last(where: mine)?.ownReaction?.rawValue
+      // A thank-you is answered by a reaction alone, no text (README, "Slash commands and reactions").
+      if let t = store.conversation?.turns.last(where: mine), t.reactionOnly {
+        said.answerOnScreen = "(reaction \(said.reaction ?? ""), no text)"
+        said.status = "answered with a reaction"
+        say("answer \(n): only the reaction \(said.reaction ?? ""), no text, no marker on the screen")
+        continue
+      }
       guard !words(said.answerInApp).isEmpty else { said.status = "no answer"; throw Failed(why: "sentence \(n) finished with no answer in words") }
       let (seen, of, shown) = onScreen(said.answerInApp, lines: lines)
       said.answerOnScreen = shown
@@ -509,7 +522,7 @@ enum MacDrive {
         return t
       }
       said.endedAt = now
-      said.answerInApp = t.answer
+      said.answerInApp = t.shownAnswer
       said.by = MadeByWords.name(t.engine, model: t.model)
       guard t.status == .done else { said.status = t.status.rawValue; throw Failed(why: "Try again with \(c.name) ended \(t.status.rawValue)\(t.error.map { ": \($0.text)" } ?? "")") }
       guard EngineChoice.of(t) == c else { said.status = "wrong model"; throw Failed(why: "Try again with \(c.name) was answered by \(said.by)") }
@@ -562,10 +575,10 @@ enum MacDrive {
       guard let t = store.conversation?.turns.last(where: { $0.request.trimmingCharacters(in: .whitespacesAndNewlines) == sentence.trimmingCharacters(in: .whitespacesAndNewlines) }) else {
         said.status = "not on the Mac"; throw Failed(why: "sentence \(n) from the phone is not in the conversation on this Mac")
       }
-      said.answerInApp = t.answer
+      said.answerInApp = t.shownAnswer
       said.steps = t.steps.map { "\($0.verb) \($0.object) [\($0.status.rawValue)]" }
       said.by = MadeByWords.name(t.engine, model: t.model)
-      guard t.status == .done, !words(t.answer).isEmpty else { said.status = t.status.rawValue; throw Failed(why: "sentence \(n) from the phone shows on this Mac without a finished answer (\(t.status.rawValue))") }
+      guard t.status == .done, !words(t.shownAnswer).isEmpty || t.reactionOnly else { said.status = t.status.rawValue; throw Failed(why: "sentence \(n) from the phone shows on this Mac without a finished answer (\(t.status.rawValue))") }
       said.status = "answered, on the Mac too"
     }
     // The last answer as this Mac's window shows it.

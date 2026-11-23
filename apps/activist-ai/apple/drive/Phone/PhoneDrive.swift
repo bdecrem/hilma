@@ -323,6 +323,15 @@ final class PhoneDrive: XCTestCase {
       said.answerOnScreen = answer.joined(separator: "\n")
       step("answer \(n) on the screen", shot: "say\(n)-answer")
       try? app.debugDescription.write(to: out.appendingPathComponent("tree-say\(n).txt"), atomically: true, encoding: .utf8)
+      // Ola's own markers ([[ola:done]], [[ola:react thanks]]) never show (OLA-322).
+      if let m = after.first(where: { $0.lowercased().contains("[[ola") }) { said.status = "marker on screen"; throw Failed(why: "the screen shows Ola's marker as text: \(one(m))") }
+      // A thank-you is answered by a reaction alone (README, "Slash commands and reactions"): the
+      // chip on the person's message ("Reaction thanks") is the whole answer, and passes.
+      if answer.isEmpty, let r = after.first(where: { $0.hasPrefix("Reaction ") }) {
+        said.answerOnScreen = "(\(r), no text)"
+        said.status = "answered with a reaction"
+        continue
+      }
       if answer.isEmpty { said.status = "no answer"; throw Failed(why: "no answer in words on the screen after sentence \(n)") }
       if let failed = after.first(where: { $0.contains("did not finish") || $0.contains("stopped before it finished") }) { said.status = "failed"; throw Failed(why: "the screen says: \(failed)") }
       // The turn's error line (ProblemView): marked "ola-problem" in builds after Nov 21, and known by
