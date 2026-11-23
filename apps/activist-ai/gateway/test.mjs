@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
+import { publishedChangeNote, publishedIn } from './publishedchange.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -2502,6 +2503,50 @@ test('probe: the name is reserved, and a probe file that does not check out is k
     assert.match(g.err, /GATEWAY_PROBE_FILE must be readable by this account only/)
     assert.ok(!g.err.includes(P))
     assert.equal((await call(g, P, null, { method: 'GET', path: '/v1/models' })).status, 401)
+  } finally {
+    await g.stop()
+  }
+})
+
+// OLA-244, the OLA-302 checker, Nov 22 ~6:30 pm, Mac app 0.1 (34), Ola working on the Mac: a page
+// published from the chat, then "now change the words to Maple Street Picnic, bring a blanket" was
+// changed and published again. With no web server in between, the gateway carries the rule when the
+// conversation published a page and the person asks only for a change.
+test('published change: a change to a page this conversation published is not a request to publish (OLA-244)', async () => {
+  const pub = [
+    { role: 'system', content: 'You are Ola.' },
+    { role: 'user', content: 'make a page for our picnic and publish it on ola' },
+    { role: 'assistant', content: '', tool_calls: [{ id: 'p1', type: 'function', function: { name: 'bash', arguments: JSON.stringify({ command: 'ola-publish publish site --name picnic --fingerprint ab12' }) } }] },
+    { role: 'tool', tool_call_id: 'p1', content: '{\n "url": "https://sites.ola.cx/picnic/",\n "files": 1\n}' },
+    { role: 'assistant', content: 'It is up at https://sites.ola.cx/picnic/' },
+  ]
+  const ask = (text) => [...pub, { role: 'user', content: [{ type: 'text', text }] }]
+  assert.equal(publishedIn(pub, pub.length), 'https://sites.ola.cx/picnic/')
+  for (const s of ['now change the words to Maple Street Picnic, bring a blanket', 'make the heading say Willow instead', 'change the page so it says Cedar'])
+    assert.match(publishedChangeNote(ask(s)) ?? '', /This change is not public yet: https:\/\/sites\.ola\.cx\/picnic\/ still shows the earlier page/, s)
+  for (const s of ['publish it again', 'put it back up', 'take it down', 'thanks'])
+    assert.equal(publishedChangeNote(ask(s)), null, s)
+  // Nothing published in this conversation (a preview only, or nothing at all): no note.
+  const preview = pub.map((m) => (m.tool_calls ? { ...m, tool_calls: [{ id: 'p1', type: 'function', function: { name: 'bash', arguments: '{"command":"ola-publish preview site --name picnic"}' } }] } : m))
+  assert.equal(publishedChangeNote([...preview, { role: 'user', content: 'change the page so it says Cedar' }]), null)
+  assert.equal(publishedChangeNote([{ role: 'user', content: 'change the page so it says Cedar' }]), null)
+  // Taken down after: no note.
+  const down = [...pub, { role: 'assistant', content: '', tool_calls: [{ id: 'u1', type: 'function', function: { name: 'bash', arguments: '{"command":"ola-publish unpublish --name picnic"}' } }] }, { role: 'tool', tool_call_id: 'u1', content: 'taken down: https://sites.ola.cx/picnic/ now answers 404. The name stays yours.' }]
+  assert.equal(publishedChangeNote([...down, { role: 'user', content: 'change the page so it says Cedar' }]), null)
+  // The cloud's form of the command and its words.
+  const cloud = [{ role: 'user', content: 'publish it' }, { role: 'assistant', content: '', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'bash', arguments: '{"command":"ola-publish site --files index.html"}' } }] }, { role: 'tool', tool_call_id: 'c1', content: 'Published: https://sites.ola.cx/oak-test/ (1 file(s)).' }]
+  assert.match(publishedChangeNote([...cloud, { role: 'user', content: 'make the heading say Willow instead' }]) ?? '', /sites\.ola\.cx\/oak-test\//)
+  // A cloud request already carrying the web server's fact: no second note (no doubled sentence).
+  assert.equal(publishedChangeNote(ask('<ola-engines>A page of this project is published at https://sites.ola.cx/picnic/ (from the copy in site/).</ola-engines>\n\nchange the page so it says Cedar')), null)
+  const up = await fakeUpstream()
+  const g = await gateway(baseEnv(up.url))
+  try {
+    const r = await call(g, T.a, { model: 'general', max_tokens: 400, messages: ask('now change the words to Maple Street Picnic, bring a blanket') })
+    assert.equal(r.status, 200)
+    assert.match(up.st.seen.at(-1).system, /do not run ola-publish and do not offer to/)
+    await waitFor(() => g.logs().find((l) => l.published_change === 1), 3000, 'the log line says the note was added')
+    await call(g, T.a, { model: 'general', max_tokens: 400, messages: ask('publish it again') })
+    assert.doesNotMatch(up.st.seen.at(-1).system ?? '', /not public yet/)
   } finally {
     await g.stop()
   }
