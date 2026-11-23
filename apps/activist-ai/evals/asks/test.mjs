@@ -939,3 +939,50 @@ test('OLA-421: the plugin ola-skillcue\'s own test passes (skillcue.test.mjs)', 
   assert.equal(r.status, 0, (r.stdout ?? '').split('\n').filter((l) => /not ok|Error|expected|actual/.test(l)).slice(0, 6).join('\n'))
   assert.match(r.stdout, /# fail 0/)
 })
+
+// OLA-421 check #1: after the page was taken down with the Unpublish button, "whats the link for the garden club
+// page? i want to text it to everyone" got the dead address as "already live". Three wordings keep it, each
+// started from that state (between: the button, then the address waited on until 404), in a new conversation.
+test('OLA-421: the link cases after the Unpublish button: cloud-web only, the button between, the address must answer', async () => {
+  const cs = readCases()
+  const ids = ['link-after-unpublish', 'address-after-unpublish', 'url-after-unpublish']
+  assert.equal(cs.find((c) => c.id === ids[0]).say, 'whats the link for the garden club page? i want to text it to everyone', 'the checker\'s sentence, word for word')
+  for (const id of ids) {
+    const c = cs.find((x) => x.id === id)
+    assert.ok(c, id)
+    assert.deepEqual(c.places, ['cloud-web:chat'], `${id}: only the website can press the button headlessly`)
+    assert.deepEqual(c.between, [{ unpublishButton: true }], id)
+    assert.ok(c.before?.length && c.separate, `${id}: published first, asked in a new conversation`)
+    assert.ok(c.must.includes('site:Garden Club'), `${id}: the address given answers with the page`)
+  }
+  // Every between step is one the runner knows.
+  for (const c of cs) for (const s of c.between ?? []) assert.deepEqual(Object.keys(s), ['unpublishButton'], c.id)
+  const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(run, /for \(const step of c\.between \?\? \[\]\)/, 'run.mjs runs the between steps')
+  assert.ok(run.indexOf('c.between') > run.indexOf('for (const [i, said] of (c.before ?? []).entries())') && run.indexOf('c.between') < run.indexOf('await converse(c.say)'), 'after before, before the request')
+})
+
+test('OLA-421: unpublishButton posts to the website\'s own route and waits for 404; a refusal or an address still up fails loudly', async () => {
+  const { cloudTransport } = await import('./lib.mjs')
+  const real = globalThis.fetch
+  const calls = []
+  try {
+    let reads = 0
+    globalThis.fetch = async (url, opts = {}) => {
+      calls.push({ url: String(url), method: opts.method ?? 'GET', headers: opts.headers ?? {} })
+      if (String(url).endsWith('/api/site/unpublish')) return new Response(JSON.stringify({ unpublished: true, url: 'https://sites.ola.cx/askcases/', gone: false }), { status: 200 })
+      return new Response('x', { status: ++reads < 2 ? 200 : 404 })
+    }
+    const T = cloudTransport({ cookie: 'c=1', csrf: 'k' })
+    assert.equal(await T.unpublishButton({ waitMs: 20_000 }), 'https://sites.ola.cx/askcases/')
+    assert.equal(calls[0].method, 'POST')
+    assert.equal(calls[0].headers['x-ola-csrf'], 'k')
+    assert.equal(calls.filter((c) => c.url === 'https://sites.ola.cx/askcases/').length, 2, 'read until 404')
+    globalThis.fetch = async () => new Response(JSON.stringify({ error: 'owner_only' }), { status: 403 })
+    await assert.rejects(T.unpublishButton({ waitMs: 1000 }), /answered 403/)
+    globalThis.fetch = async (url) => String(url).endsWith('/api/site/unpublish') ? new Response(JSON.stringify({ unpublished: true, url: 'https://sites.ola.cx/askcases/' }), { status: 200 }) : new Response('x', { status: 200 })
+    await assert.rejects(T.unpublishButton({ waitMs: 10 }), /still answers 200/)
+  } finally {
+    globalThis.fetch = real
+  }
+})

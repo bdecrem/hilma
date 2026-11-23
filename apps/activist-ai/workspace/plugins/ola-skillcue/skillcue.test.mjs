@@ -120,7 +120,7 @@ test('a request for Claude, for something on a schedule and for a real-world sou
   for (const r of [...NOT, 'make a page for our weekly meeting on mondays', 'make a flyer for the cleanup every saturday', 'make a page with a button that plays a tune', 'was index.html made by claude?', 'who made this, Ola or Claude?']) assert.deepEqual(rules(r), [], r)
   // every kept request: only these three cases get a rule
   const got = cases.flatMap((c) => [...(c.before ?? []), c.say].filter((r) => rules(r).length).map(() => c.id))
-  assert.deepEqual([...new Set(got)].sort(), ['ask-claude', 'birdsong', 'schedule'])
+  assert.deepEqual([...new Set(got)].sort(), ['address-after-unpublish', 'ask-claude', 'birdsong', 'link-after-unpublish', 'schedule', 'share-link', 'url-after-unpublish'])
 })
 
 test('in a cloud project the web server\'s fact about Claude is followed, and the Claude rule stays out', async () => {
@@ -151,12 +151,109 @@ test('onContext adds a request\'s rule once, beside a skill, and not for another
   assert.ok(a.system[1].text.startsWith(`${RULE_HEAD} claude]`) && a.system[1].text.includes('/claude'))
   const b = ev('can you give me a link to this page that I can send to my group')
   onContext(b, env)
-  assert.equal(b.system.length, 2)
+  assert.equal(b.system.length, 3)
   assert.ok(b.system[1].text.includes('<skill_content name="publish">'), 'a link to send is a request to publish')
+  assert.ok(b.system[2].text.startsWith(`${RULE_HEAD} link]`), 'and the link rule beside it')
   const c = ev('every monday morning, check the city council agenda and tell me what is new')
   onContext(c, env)
   assert.ok(c.system[1].text.includes('"Ola can\'t do things on a schedule or later by itself: it works when you ask. Ask me again then and I will do it."'))
   const d = ev('publish it')
   onContext(d, { ...env, OLA_SKILLCUE: 'off' })
   assert.equal(d.system.length, 1)
+})
+
+// 2.1.0 (OLA-421, check #1): "whats the link for the garden club page? i want to text it to everyone", after the page
+// was taken down with the Unpublish button, loaded nothing and got the 404 address as "already live".
+const LINKS = [
+  'whats the link for the garden club page? i want to text it to everyone',
+  'where can people find our garden club page online? i want to email the address to the members',
+  'is the garden club page still up? send me the url so i can post it in the group chat',
+  "what's the url for our flyer",
+  'where is the web address for the sign-up form',
+  'the link to the bake sale page please',
+  'text everyone the link',
+  'can I share the link with the board?',
+  'is our site live?',
+  'is it online yet',
+  'whats the address of the garden club page',
+]
+const NOT_LINKS = [
+  'fix the link to the survey on the page',
+  'add a link to the city website at the bottom',
+  'change the page so the link goes to the sign-up form',
+  'make a flyer with our address and phone number',
+  'put our address on the sign-up page',
+  'is the page up to date with the new times?',
+  'is it working now?',
+]
+
+test('2.1.0: a request for the link, the address or whether the page is up loads the publish skill and gets the link rule, in any of these words', async () => {
+  const { rulesFor, asksForLink } = await import('./index.js')
+  for (const r of LINKS) {
+    assert.ok(asksForLink(r), r)
+    assert.deepEqual(ids(r), ['publish'], r)
+    assert.deepEqual(rulesFor(r).map((x) => x.id), ['link'], r)
+  }
+  for (const r of NOT_LINKS) {
+    assert.deepEqual(rulesFor(r).map((x) => x.id), [], r)
+    assert.deepEqual(ids(r), [], r)
+  }
+  for (const id of ['link-after-unpublish', 'address-after-unpublish', 'url-after-unpublish', 'share-link']) assert.ok(asksForLink(cases.find((c) => c.id === id).say), id)
+})
+
+test('2.1.0: the link rule says the address cannot be looked at, names what is not a look, and makes the link a publish with the card', async () => {
+  const { RULES } = await import('./index.js')
+  const t = RULES.find((x) => x.id === 'link').text
+  for (const w of ['cannot look at the web', '.ola/publish/result.json', 'ola-publish status', 'Unpublish button', 'request to publish', 'ola-publish <folder> --files <list>', 'gets the card', 'Never call an address live', 'cannot tell whether the address works'])
+    assert.ok(t.includes(w), w)
+})
+
+test('2.1.0: an address of Ola\'s sites in what a read, a search or the shell returned gets the note once per conversation; not ola-publish, not Ola\'s own files', async () => {
+  const { onToolAfter, ADDRESS_HEAD, reset } = await import('./index.js')
+  reset()
+  const ev = (tool, input, text, sessionID = 's1') => ({ tool, input, sessionID, status: 'completed', result: { content: [{ type: 'text', text }] } })
+  const noted = (e) => e.result.content.map((p) => p.text).join('').includes(ADDRESS_HEAD)
+  // What the checker's Ola read: a search of the project for the address (L5), and the old record.
+  const g = ev('grep', { pattern: 'ola-publish|publish|sites\\.ola\\.cx' }, '/work/.ola/publish/result.json: {"state": "done", "url": "https://sites.ola.cx/chk421a-test/", "live": true}\n/work/index.html:  <meta property="og:url" content="https://sites.ola.cx/chk421a-test/">')
+  onToolAfter(g, {})
+  assert.ok(noted(g))
+  const note = g.result.content.at(-1).text
+  assert.match(note, /names https:\/\/sites\.ola\.cx\/chk421a-test\/\. That is text in a file or a record, not a look at the address/)
+  assert.match(note, /Never tell the person it is live, published or working/)
+  assert.match(note, /publish the page now/)
+  assert.equal(g.result.content[0].text.includes('og:url'), true, 'the output itself is kept')
+  // once per conversation for the same address; again in another conversation
+  const r = ev('read', { filePath: '/work/index.html' }, 'share: "https://sites.ola.cx/chk421a-test/"')
+  onToolAfter(r, {})
+  assert.ok(!noted(r))
+  const other = ev('read', { filePath: '/work/index.html' }, 'see sites.ola.cx/chk421a-test', 's2')
+  onToolAfter(other, {})
+  assert.ok(noted(other))
+  // ola-publish's own runs (its publish says what the address showed, checked by Ola's server) and the publish skill's scripts
+  for (const cmd of ['ola-publish site --files index.html', 'ola-publish status', 'python3 /opt/ola/skills/publish/scripts/publish.py where']) {
+    const b = ev('bash', { command: cmd }, 'Published: https://sites.ola.cx/x1/ (1 file(s)).', 's3')
+    onToolAfter(b, {})
+    assert.ok(!noted(b), cmd)
+  }
+  // Ola's own files, a writing tool, a failed step, nothing to note, OLA_SKILLCUE=off
+  const own = ev('read', { filePath: '/opt/ola/skills/publish/SKILL.md' }, 'at https://sites.ola.cx/example/', 's4')
+  onToolAfter(own, {})
+  assert.ok(!noted(own))
+  const w = ev('write', { filePath: '/work/a.html' }, 'https://sites.ola.cx/x2/', 's4')
+  onToolAfter(w, {})
+  assert.ok(!noted(w))
+  const failed = { ...ev('read', { filePath: '/work/a.html' }, 'https://sites.ola.cx/x3/', 's4'), status: 'error' }
+  onToolAfter(failed, {})
+  assert.ok(!noted(failed))
+  const plain = ev('read', { filePath: '/work/a.html' }, 'no address here; sites.ola.cx on its own is the host', 's4')
+  onToolAfter(plain, {})
+  assert.ok(!noted(plain))
+  const off = ev('read', { filePath: '/work/a.html' }, 'https://sites.ola.cx/x4/', 's5')
+  onToolAfter(off, { OLA_SKILLCUE: 'off' })
+  assert.ok(!noted(off))
+  // a result that came as a string output
+  const out = { tool: 'bash', input: { command: 'cat /work/.ola/publish/result.json' }, sessionID: 's6', status: 'completed', result: { output: '{"url": "https://sites.ola.cx/x5/"}' } }
+  onToolAfter(out, {})
+  assert.ok(noted(out))
+  assert.ok(out.result.content[0].text.includes('x5'), 'the output is kept as the first part')
 })

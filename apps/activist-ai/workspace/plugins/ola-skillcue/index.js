@@ -21,6 +21,8 @@
 //
 // 2.0.0 (OLA-421): also the standing rule that applies to a request (RULES below: Claude on the Mac, something
 // on a schedule, a real-world sound), and "a link to this page I can send" counts as a request to publish.
+// 2.1.0 (OLA-421, check #1): any request for a page's link, address or whether it is up (LINK_ASK) loads the publish
+// skill and gets the `link` rule; and a sites.ola.cx address in what a step read gets a note beside it (onToolAfter).
 //
 // It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
 // opencode process.
@@ -59,6 +61,35 @@ export const CUES = [
     ].join('|'), 'i'),
   },
 ]
+
+// 2.1.0 (OLA-421, check #1): any request for the address of a page, or whether it is up, in any wording.
+// The checker's "whats the link for the garden club page? i want to text it to everyone", after the page was
+// taken down with the Unpublish button, matched none of the patterns above: no skill, no rule, and Ola gave
+// the dead address as "published here" and "already live" (twice), from an address found in the project's
+// files. It loads the publish skill (below) and gets the `link` rule (RULES).
+export const LINK_ASK = new RegExp([
+  // "whats the link", "what's the url for it", "where is the web address"
+  String.raw`\b(?:what'?s|whats|what is|where'?s|wheres|where is)\s+(?:the |a |our |my |its |their |that )?(?:[\w'-]+ ){0,3}?(?:link|url|web ?address)\b`,
+  // "the link for the garden club page", "the address of our flyer"
+  String.raw`\b(?:(?:link|url|web ?address)\s+(?:for|of|to)|address\s+(?:for|of))\s+(?:the|this|our|my|that|their|its)\s+(?:[\w'-]+\s+){0,3}?(?:page|site|website|flyer|poster|form|survey|sign-?up)\b`,
+  // "email the link to the board", "text everyone the url", "post the web address"
+  String.raw`\b(?:text|texting|send|sending|share|sharing|e-?mail|post|forward|paste|copy)\b(?:\s+[\w'-]+){0,3}?\s+(?:the |a |our |my |its |that )?(?:link|url|web ?address)\b`,
+  // "the link ... i want to text it to everyone"
+  String.raw`\b(?:link|url)\b[^.?!\n]{0,80}?\b(?:text|send|share|e-?mail|post|forward)\s+(?:it|them|this|that)\b`,
+  // "where can people see the page", "where do folks find our flyer online"
+  String.raw`\bwhere (?:can|do|will|could|would|should) (?:people|they|everyone|folks|others|members|neighbou?rs|we|i|my [\w-]+|our [\w-]+) (?:see|find|open|view|go to|get to|visit|read)\b(?:\s+[\w'-]+){0,4}?\s+(?:page|site|website|flyer|poster|it)\b`,
+  // "is the page still live", "is our flyer online", "is it up on the web" (not "up to date")
+  String.raw`\b(?:is|are) (?:the |our |my |this |that )?(?:[\w'-]+ ){0,3}?(?:page|site|website|flyer) (?:still )?(?:live|online|public|published|up(?! to\b))\b`,
+  String.raw`\bis it (?:still )?(?:live|online|public|published|up on the (?:web|internet))\b`,
+].join('|'), 'i')
+// A change to a link on the page ("fix the link to the survey", "add a link to the city's site") is not one,
+// unless it goes on to send or share it ("make me a link I can send").
+export const EDITS_LINK = /\b(?:add|put|insert|include|remove|delete|change|fix|update|edit|make|turn)\b[^.?!\n]{0,30}\b(?:link|url)s?\b(?![^.?!\n]{0,60}\b(?:text|send|share|e-?mail|post|forward|give)\b)/i
+export const asksForLink = (r) => LINK_ASK.test(r) && !EDITS_LINK.test(r)
+{
+  const publish = CUES[0].when
+  CUES[0].when = { source: publish.source, test: (r) => publish.test(r) || asksForLink(r) }
+}
 
 // Rules for a request (OLA-421, 2.0.0). Three of Ola's standing rules (workspace/AGENTS.md, OlaKit Abilities.swift,
 // both written from evals/asks/abilities.json) were followed about half the time when they sat only in the long
@@ -118,6 +149,17 @@ export const RULES = [
     text: 'If the person asked for a real-world sound (birdsong, rain, waves, an animal, a voice, a recording of anything): every sound Ola makes is made in code and only comes close. ' +
       'The first sentence of your final reply says so, before anything about the page, the checks or the files, in about these words: "I can\'t use a recording; this is a sound made in code that comes close to <the sound>." ' +
       'Never say it is exactly what they asked, and label the button or the page for what it really plays (a bird-like tune, not birdsong).',
+  },
+  {
+    // 2.1.0 (OLA-421, check #1): the dead address given as "already live" from the project's files.
+    id: 'link',
+    when: (r) => asksForLink(r),
+    text: 'If the person wants the address of a page from this project (to open, share, text or send it), or asks whether it is up: Ola\'s computer cannot look at the web, so nothing you can read here says what an address shows now. ' +
+      'An address in a file, a search result, the page\'s own code, .ola/publish/result.json, the output of `ola-publish status`, a note in front of the request or your memory is not a look at it ' +
+      '(on Nov 23 an address found in the project was given as "already live" while it answered 404: the page had been taken down with the Unpublish button). ' +
+      'So a request for a link to a page is a request to publish it, even when a note in front of the request says not to run ola-publish (that note is about changing the page): follow the publish skill (prepare, check, then `ola-publish <folder> --files <list>` as a command of its own, so the person gets the card) and give the address its result says it checked. ' +
+      'Never call an address live, published, up or working, and never hand it over as the link to send, unless ola-publish printed in this request that it answers with the page. ' +
+      'If they say no to the card, or there is no page to publish, say plainly that Ola cannot tell whether the address works without publishing it, and do not give it as a working link.',
   },
 ]
 
@@ -206,12 +248,65 @@ export function onContext(event, env = process.env) {
   }
 }
 
-/** For tests: forget the read skills. */
-export function reset() { cache.clear() }
+// 2.1.0 (OLA-421, check #1): an address of Ola's sites in what a step read, whatever the request said. On Nov 23
+// the checker's Ola grepped the project for "sites\.ola\.cx", found the address (in the page's files and the old
+// publish record) and gave it as "already live"; it had been taken down with the Unpublish button minutes
+// before and answered 404. So every read, search or shell output that names such an address gets one note next
+// to it, at the moment the model sees it: this is text, not a look at the address. Not for ola-publish itself
+// (its publish prints what the address showed, checked by Ola's server; its status prints its own warning) nor
+// the publish skill's scripts, and not for Ola's own files (skills, config).
+export const ADDRESS_HEAD = '[Ola address note]'
+const SITE_ADDRESS = /https?:\/\/sites\.ola\.cx\/[A-Za-z0-9][A-Za-z0-9._-]*\/?|\bsites\.ola\.cx\/[A-Za-z0-9][A-Za-z0-9._-]*\/?/g
+const LOOKING_TOOLS = /^(?:read|grep|glob|list|ls|shell|bash|view|cat|webfetch)$/i
+// A command that runs ola-publish or the publish skill's script (not a search whose pattern names it: the
+// checker's Ola searched for "ola-publish|publish|sites\.ola\.cx").
+const PUBLISH_RUN = /^\s*(?:\S*\/)?ola-publish\b|\bpublish\.py\b/
+const OURS = /(?:^|\s|["'])\/(?:opt\/ola|etc\/opencode)\/|\/Library\/Ola\/(?:skills|plugins)\//
+const told = new Map() // sessionID -> Set of addresses already noted
+
+function textOfResult(result) {
+  const c = result?.content
+  if (typeof c === 'string') return c
+  if (Array.isArray(c)) return c.filter((p) => p?.type === 'text' && typeof p.text === 'string').map((p) => p.text).join('\n')
+  const o = result?.output
+  if (typeof o === 'string') return o
+  try { return JSON.stringify(o ?? '') } catch { return '' }
+}
+
+export const addressNote = (urls) =>
+  `${ADDRESS_HEAD} What this step read names ${urls.join(', ')}. That is text in a file or a record, not a look at the address: ` +
+  'Ola\'s computer cannot see what it shows now (a page can be taken down with the Unpublish button, and nothing in the project changes). ' +
+  'Never tell the person it is live, published or working, or give it to them as the link to send, from this. ' +
+  'To give them a link to a page, publish the page now (the publish skill; `ola-publish <folder> --files <list>` as a command of its own): its result says what the address shows.'
+
+export function onToolAfter(event, env = process.env) {
+  if (String(env.OLA_SKILLCUE ?? '').toLowerCase() === 'off') return
+  if (event?.status && event.status !== 'completed') return
+  if (!LOOKING_TOOLS.test(String(event?.tool || ''))) return
+  const i = event?.input && typeof event.input === 'object' ? event.input : {}
+  const command = typeof i.command === 'string' ? i.command : typeof event?.input === 'string' ? event.input : ''
+  const file = [i.filePath, i.file_path, i.path, i.file].find((x) => typeof x === 'string') ?? ''
+  if (PUBLISH_RUN.test(command) || OURS.test(` ${file}`) || OURS.test(command)) return
+  const text = textOfResult(event.result)
+  if (!text || text.includes(ADDRESS_HEAD)) return
+  const sid = String(event.sessionID || '')
+  const seen = told.get(sid) ?? new Set()
+  const fresh = [...new Set((text.match(SITE_ADDRESS) ?? []).map((u) => 'https://' + u.replace(/^https?:\/\//, '').replace(/\/?$/, '/')))].filter((u) => !seen.has(u))
+  if (!fresh.length) return
+  for (const u of fresh) seen.add(u)
+  told.set(sid, seen)
+  const c = event.result?.content
+  const parts = typeof c === 'string' ? [{ type: 'text', text: c }] : Array.isArray(c) && c.length ? [...c] : [{ type: 'text', text }]
+  event.result = { ...event.result, content: [...parts, { type: 'text', text: '\n\n' + addressNote(fresh.slice(0, 3)) }] }
+}
+
+/** For tests: forget the read skills and the addresses already noted. */
+export function reset() { cache.clear(); told.clear() }
 
 export default {
   id: 'ola-skillcue',
   async setup(ctx) {
     await ctx.session.hook('context', (ev) => onContext(ev))
+    await ctx.tool.hook('execute.after', (ev) => onToolAfter(ev))
   },
 }

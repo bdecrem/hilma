@@ -17,6 +17,9 @@
 #       as the address's state now (OLA-421): this computer cannot look at the address, and on Nov 23
 #       Ola gave a link "currently live and shows Bart" from such a record while the address was 404
 #       (the page had been taken down with the button) and the page asked about said Garden Club.
+#       A take-down record (ola-publish unpublish, or one the web server writes for its Unpublish button,
+#       {"state": "done", "unpublished": true, "url": ..., "live": <gone confirmed>, "by": "button"}) prints
+#       NOT LIVE with when, and the one next step: publish it again, with the card (OLA-421, check #1).
 #
 # The front desk writes the outcome with `ola-publish --result` (the JSON on stdin), into
 # /work/.ola/publish/result.json. Exit 0 published (and the address shows it), 1 not published,
@@ -123,8 +126,15 @@ def past(r):
     """An outcome already shown (or old): a record, never a claim about the address now (OLA-421)."""
     when = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(float(r.get("written") or 0))) if r.get("written") else "an earlier time"
     if r.get("state") == "done" and r.get("unpublished"):
-        what = f"the pages at {r.get('url')} were taken down"
-    elif r.get("state") == "done":
+        # A take-down is the one record that can only point one way (OLA-421, check #1): nothing is up there
+        # unless the page was published again since, and then a publish now says so with the card.
+        by = " with the Unpublish button" if r.get("by") == "button" else (" from the conversation" if r.get("by") == "chat" else "")
+        say(f"NOT LIVE: {r.get('url')} was taken down at {when}{by}" + ("; Ola's server then read it answering 404." if r.get("live") else "."),
+            "This is a record, not a look at the address now. Do not give this address to the person as a working link, and do not say the page is live or published.",
+            "If they want a link to the page: publish it again (the publish skill: prepare, check, then"
+            " `ola-publish <folder> --files <list>` as a command of its own, so they say yes on the card); its result says what the address shows.")
+        return 5
+    if r.get("state") == "done":
         shows = (r.get("shows") or "").strip()
         what = f"{r.get('url')} was published" + (f", showing “{shows}”" if shows else "")
     else:
@@ -178,7 +188,8 @@ def main(argv):
             say("Nothing has been published from this project's conversation yet.",
                 "To give the person a link to a page, publish that page (the publish skill: prepare, check, then ola-publish).")
             return 1
-        if r.get("state") != "publishing" and (r.get("used") or time.time() - float(r.get("written") or 0) > FRESH):
+        # A record of the person's button (by: "button") is never the outcome of a command Ola ran: always a record.
+        if r.get("state") != "publishing" and (r.get("used") or r.get("by") == "button" or time.time() - float(r.get("written") or 0) > FRESH):
             return past(r)
         code = tell(r)
         if code != 3 and r.get("state") != "publishing":

@@ -4,6 +4,7 @@
 // plugin, calls its context hook, and the publish skill is in the system prompt the model receives for a request
 // to publish (OLA-284); with OLA_SKILLCUE=off it is not; and a request that is not about publishing gets none.
 // OLA-421: a request for Claude and one for something every Monday get their rule; a change to a page gets none.
+// 2.1.0: the checker's link sentence gets the link rule; an address read from a file gets the address note (execute.after).
 // No real model is called.
 import http from 'node:http'
 
@@ -24,6 +25,11 @@ const server = http.createServer((q, r) => {
     if (q.method === 'POST') bodies.push(b)
     const chunk = (delta, finish) => 'data: ' + JSON.stringify({ id: 'x', object: 'chat.completion.chunk', created: 1, model: 'general', choices: [{ index: 0, delta, finish_reason: finish }], usage: finish ? { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } : undefined }) + '\n\n'
     r.setHeader('content-type', 'text/event-stream')
+    // 2.1.0: a request that names READ-THE-PAGE gets one read of page.html first (a tool call), then "ok".
+    if (q.method === 'POST' && b.includes('READ-THE-PAGE') && !b.includes('"role":"tool"')) {
+      const call = { tool_calls: [{ index: 0, id: 'call_1', type: 'function', function: { name: 'read', arguments: JSON.stringify({ path: path.join(root, "work", "page.html") }) } }] }
+      return r.end(chunk({ role: 'assistant', ...call }, null) + chunk({}, 'tool_calls') + 'data: [DONE]\n\n')
+    }
     r.end(chunk({ role: 'assistant', content: 'ok' }, null) + chunk({}, 'stop') + 'data: [DONE]\n\n')
   })
 })
@@ -33,6 +39,7 @@ const port = server.address().port
 const root = mkdtempSync(path.join(tmpdir(), 'olaskill-oc-'))
 mkdirSync(path.join(root, 'cfg/opencode'), { recursive: true })
 mkdirSync(path.join(root, 'work'))
+writeFileSync(path.join(root, 'work', 'page.html'), '<!doctype html><title>Garden Club</title><meta property="og:url" content="https://sites.ola.cx/chk421a-test/"><h1>Garden Club</h1>')
 writeFileSync(path.join(root, 'cfg/opencode/opencode.jsonc'), JSON.stringify({
   providers: { ola: { name: 'Ola', env: ['BOX_API_KEY'], package: '@opencode/ai/providers/openai-compatible', settings: { baseURL: `http://127.0.0.1:${port}/v1` },
     models: { general: { modelID: 'general', name: 'general', capabilities: { tools: true, input: ['text'], output: ['text'] }, limit: { context: 131072, output: 16000 } } } } },
@@ -72,8 +79,14 @@ check('a request for Claude: the Claude rule is in what the model received', d.c
 const e = await run('every monday morning, check the city council agenda and tell me what is new', { OLA_SKILLS_DIR: SKILLS })
 check('something every Monday: the schedule rule with its sentence', e.code === 0 && e.sent.includes('[Ola rule for this request: schedule]') && e.sent.includes('it works when you ask. Ask me again then and I will do it.'))
 check('a change to a page: no rule either', !c.sent.includes('[Ola rule for this request:'))
+// 2.1.0 (OLA-421 check #1): the checker's sentence gets the publish skill and the link rule; an address read from a
+// file comes back to the model with the note beside it.
+const f = await run('whats the link for the garden club page? i want to text it to everyone', { OLA_SKILLS_DIR: SKILLS })
+check('the checker\'s link sentence: the publish skill and the link rule are in what the model received', f.code === 0 && has(f.sent) && f.sent.includes('[Ola rule for this request: link]'))
+const g = await run('READ-THE-PAGE and tell me its address', { OLA_SKILLS_DIR: SKILLS })
+check('an address read from a file: the tool result the model received carries the address note', g.code === 0 && g.sent.includes('sites.ola.cx/chk421a-test/') && g.sent.includes('[Ola address note] What this step read names https://sites.ola.cx/chk421a-test/'))
 
 server.close()
 rmSync(root, { recursive: true, force: true })
-console.log(failed ? `${failed} of 7 failed` : '7 of 7 passed')
+console.log(failed ? `${failed} of 9 failed` : '9 of 9 passed')
 process.exit(failed ? 1 : 0)

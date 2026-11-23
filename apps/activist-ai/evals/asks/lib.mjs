@@ -335,6 +335,21 @@ export function cloudTransport({ cookie, csrf }) {
     async madeBy(rel = null) {
       return JSON.parse(await inProject(`ola-db made-by --json --limit 50${rel ? ` '/work/${rel.replace(/'/g, '')}'` : ''}`) || '[]')
     },
+    // The Unpublish button (OLA-421): the website's own route, as the person's click sends it (web/src/lib/api.ts
+    // site.unpublish), then the address read until it answers 404, so the request starts from a page that is gone.
+    async unpublishButton({ waitMs = 180_000 } = {}) {
+      const res = await steady(() => fetch(`${ORIGIN}/api/site/unpublish`, { method: 'POST', headers: { ...headers, accept: 'application/json', 'content-type': 'application/json' }, body: '{}' }), 'POST')
+      const body = await res.json().catch(() => null)
+      if (res.status !== 200 || !body?.unpublished) throw new Error(`the Unpublish button's route answered ${res.status} ${JSON.stringify(body ?? {}).slice(0, 160)}`)
+      const url = body.url || `${SITES}/${PROJECT}/`
+      const stop = Date.now() + waitMs
+      for (;;) {
+        const s = (await fetchText(url)).status
+        if (s === 404) return url
+        if (Date.now() >= stop) throw new Error(`${url} still answers ${s} ${Math.round(waitMs / 60000)} minutes after the Unpublish button`)
+        await sleep(5000)
+      }
+    },
   }
 }
 

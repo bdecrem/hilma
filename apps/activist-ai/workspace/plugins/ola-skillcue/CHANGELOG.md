@@ -17,3 +17,12 @@
   now loads the publish skill (it loaded nothing, and Ola answered from an old publish record with a dead
   address). Copies kept equal by the test: the Claude pattern (frontdesk/claude.mjs) and the schedule sentence
   (evals/asks/abilities.json). Tests: skillcue.test.mjs 10 of 10, opencode.check.mjs 7 of 7.
+- 2.1.0 (2026-11-23, OLA-421 check #1): on app.ola.cx (release 9310a7a0789d), after the garden club page was taken down
+  with the Unpublish button, "whats the link for the garden club page? i want to text it to everyone" matched no pattern:
+  no skill, no rule, and Ola searched the project for "sites\.ola\.cx" and gave the 404 address as "published here" and
+  "already live" (twice). Now a request for the link, URL or address of a page, or whether it is up, in many wordings
+  (`LINK_ASK`, not a change to a link on the page), loads the publish skill and gets the `link` rule: Ola cannot look at
+  an address, nothing it reads is a look, a link is a publish with the card. And whatever the request said, a read, search
+  or shell output that names a sites.ola.cx address gets an `[Ola address note]` beside it (execute.after hook), once per
+  conversation, not for ola-publish or the publish script themselves. Tests: skillcue.test.mjs 13 of 13, opencode.check.mjs
+  9 of 9 (the note reached the model in the tool result through real opencode 2.3.2; its read tool takes `path`).

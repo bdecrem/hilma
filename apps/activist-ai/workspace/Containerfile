@@ -78,6 +78,11 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-74 (OLA-421, check #1): the plugin ola-skillcue 2.1.0: a request for a page's link, URL or address, or
+# whether it is up, in any of many wordings, loads the publish skill and gets the link rule (a link is a publish, with
+# the card; nothing Ola reads is a look at an address), and a sites.ola.cx address in what a read, a search or the shell
+# returned gets a note beside it. `ola-publish status` prints a take-down record as NOT LIVE with when (and the
+# Unpublish button, when the web server writes one with by: "button") and the one next step. Builds on 2.3.2-73.
 # 2.3.2-73 (OLA-285): ola-publish never lets "still going" (exit 3) read as live: it prints NOT CHECKED
 # YET with the last look at the address said as not the result (the front desk now hands what the
 # address shows while its check runs), and `ola-publish status` waits for the outcome. Skill publish 11.

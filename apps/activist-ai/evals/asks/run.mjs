@@ -374,6 +374,13 @@ async function runCase(T, c) {
     // 'ended failed; Ola said: (nothing)', and counted as Ola failing (publish-again and two more, Nov 22).
     if (turn.status !== 'done') return { answer: earlier.join('\n\n'), steps, answered, ok: false, why: `"${said}", said first, ended ${turn.status}${turn.error ? ` (${turn.error})` : ''}; Ola said: ${oneLine(text)}` }
   }
+  // OLA-421: what the person did between, outside the conversation (the Unpublish button after the page
+  // went up), before the request itself. A place that cannot do it refuses the case, never skips the step.
+  for (const step of c.between ?? []) {
+    if (!step.unpublishButton) throw new Error(`unknown between step ${JSON.stringify(step)}`)
+    if (!T.unpublishButton) throw new Error(`${c.id}: the Unpublish button cannot be pressed at this place (${T.runtime})`)
+    await T.unpublishButton()
+  }
   if (c.separate && c.before?.length) sessions.push((sid = await newSession(T, `asks ${c.id} last`)))
   const fromAnswered = answered.length // card: the question card of the request itself (OLA-325)
   const from = steps.length // noran: judges only the steps of the request itself, not what was said first (OLA-244)

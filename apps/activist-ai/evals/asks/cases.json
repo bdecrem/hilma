@@ -1,5 +1,5 @@
 {
-  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, opens:<regex> on the first 300 characters, file:<path>[:<words>], newfile:<regex>, nonewfile:<regex>); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; from is the failure it came from. Add one with evals/asks/add-case.mjs.",
+  "about": "Real requests to Ola that did not do what was asked, kept forever and sent again after every update (evals/asks/run.mjs, OLA-231). say is the person's sentence, word for word; places is where a person would ask it, as the tracker names them (the runner reaches cloud-web:chat and local-mac:chat and lists the rest as not run); must is what has to be true afterwards (site:<words>, says:<regex>, opens:<regex> on the first 300 characters, file:<path>[:<words>], newfile:<regex>, nonewfile:<regex>); mustNot adds to the built-in never list (it cannot from here, press a button yourself, not switched on); setup runs before the request; between runs after the sentences said first (before) and before the request (unpublishButton: the website's Unpublish button, then the address waited on until it answers 404; cloud-web only); from is the failure it came from. Add one with evals/asks/add-case.mjs.",
   "cases": [
     {
       "id": "publish-bart",
@@ -1076,6 +1076,114 @@
         "ticket": "OLA-325",
         "what": "Bart's check for OLA-325, run by the checkers on Nov 21 on the website, the Mac app in a cloud project and with Ola on the Mac: Ola asked its two questions as words in its answer about 2 times in 3 (website 1 of 3, Mac cloud 1 of 3, Mac local 4 of 6), so the person had no card to answer and the next message ('publish it on ola') was taken as not answering. The two questions must come as a card, and the page must be made after the answer.",
         "words": "description"
+      }
+    },
+    {
+      "id": "link-after-unpublish",
+      "say": "whats the link for the garden club page? i want to text it to everyone",
+      "places": [
+        "cloud-web:chat"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Garden Club</title>\n<h1>Garden Club</h1>\n<p>We meet Wednesdays at 7 in the community garden.</p>\n"
+          }
+        }
+      ],
+      "before": [
+        "publish this page on ola"
+      ],
+      "separate": true,
+      "between": [
+        {
+          "unpublishButton": true
+        }
+      ],
+      "must": [
+        "site:Garden Club"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "passes": 5,
+      "ability": "publish",
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-421",
+        "what": "The OLA-421 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:35 and 11:42 am, a cloud project, a new conversation each: after the garden club page was published and then taken down with the Unpublish button (the address answered 404), 'whats the link for the garden club page? i want to text it to everyone' got no card and no publish: Ola read the project's files and answered 'The garden club page is published here: https://sites.ola.cx/chk421a-test/' and 'The garden club page is already live' (twice). The exact sentence of share-link published in the same state. A link to a page is a publish of it, whatever the words: the address Ola gives must answer with the page. This is the checker's sentence word for word."
+      }
+    },
+    {
+      "id": "address-after-unpublish",
+      "say": "where can people find our garden club page online? i want to email the address to the members",
+      "places": [
+        "cloud-web:chat"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Garden Club</title>\n<h1>Garden Club</h1>\n<p>We meet Wednesdays at 7 in the community garden.</p>\n"
+          }
+        }
+      ],
+      "before": [
+        "publish this page on ola"
+      ],
+      "separate": true,
+      "between": [
+        {
+          "unpublishButton": true
+        }
+      ],
+      "must": [
+        "site:Garden Club"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "passes": 5,
+      "ability": "publish",
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-421",
+        "what": "The OLA-421 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:35 and 11:42 am, a cloud project, a new conversation each: after the garden club page was published and then taken down with the Unpublish button (the address answered 404), 'whats the link for the garden club page? i want to text it to everyone' got no card and no publish: Ola read the project's files and answered 'The garden club page is published here: https://sites.ola.cx/chk421a-test/' and 'The garden club page is already live' (twice). The exact sentence of share-link published in the same state. A link to a page is a publish of it, whatever the words: the address Ola gives must answer with the page. Another wording (where, address, email), the builder's."
+      }
+    },
+    {
+      "id": "url-after-unpublish",
+      "say": "is the garden club page still up? send me the url so i can post it in the group chat",
+      "places": [
+        "cloud-web:chat"
+      ],
+      "setup": [
+        {
+          "wrote": {
+            "path": "index.html",
+            "text": "<!doctype html>\n<title>Garden Club</title>\n<h1>Garden Club</h1>\n<p>We meet Wednesdays at 7 in the community garden.</p>\n"
+          }
+        }
+      ],
+      "before": [
+        "publish this page on ola"
+      ],
+      "separate": true,
+      "between": [
+        {
+          "unpublishButton": true
+        }
+      ],
+      "must": [
+        "site:Garden Club"
+      ],
+      "mustNot": [],
+      "limitMin": 16,
+      "passes": 5,
+      "ability": "publish",
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-421",
+        "what": "The OLA-421 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:35 and 11:42 am, a cloud project, a new conversation each: after the garden club page was published and then taken down with the Unpublish button (the address answered 404), 'whats the link for the garden club page? i want to text it to everyone' got no card and no publish: Ola read the project's files and answered 'The garden club page is published here: https://sites.ola.cx/chk421a-test/' and 'The garden club page is already live' (twice). The exact sentence of share-link published in the same state. A link to a page is a publish of it, whatever the words: the address Ola gives must answer with the page. Another wording (is it up, url, post), the builder's."
       }
     }
   ]
