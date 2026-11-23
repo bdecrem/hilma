@@ -63,7 +63,7 @@
       "label": "The steps",
       "title": "Build the library",
       "time": "About 30 minutes",
-      "lede": "You type one paragraph and Claude does the rest. The paragraph below is the one I used, word for word.",
+      "lede": "You type one paragraph and Claude does most of the rest. The lines below are the ones I used, word for word, including the three times I had to say no.",
       "steps": [
         {
           "title": "Start a new project",
@@ -105,6 +105,24 @@
           "title": "Keep it on your laptop",
           "body": "Mine then offered to build the chatbot as a Claude artifact, which is a page that lives on Claude's site instead of in your folder. Say no: the point is a library that is yours.",
           "say": "No, make it local.",
+          "trap": null
+        },
+        {
+          "title": "Ask for a page, not an app",
+          "body": "A chatbot needs some way to reach Claude, so mine next wanted to set up a helper app. I asked for a web page instead, still on my laptop.",
+          "say": "Make me a web page instead, still hosted locally.",
+          "trap": null
+        },
+        {
+          "title": "Open your library",
+          "body": "It built the page plus one small launcher file in the folder. Mine is called \"Open Trust Shelf\". Double-click it and the chat page opens in your browser. A small Terminal window opens too: leave it open while you chat and close it when you are done.",
+          "say": null,
+          "trap": "The first time, macOS may block the launcher. Right-click the file, choose Open, then Open again."
+        },
+        {
+          "title": "Ask it something",
+          "body": "Type a question. Mine pulled 640 papers, and Claude answers from those papers only, in 10 to 20 seconds, with the paper named next to each claim and a link to the full text. I asked how trust is repaired after a betrayal, and why people distrust science. The answers count toward your normal Claude usage.",
+          "say": null,
           "trap": null
         }
       ]

@@ -90,10 +90,15 @@ judged it a better fit for 30 minutes than the website: no accounts.
   mentioning, over 1.6 billion statements; Zotero: free, Word and Google Docs, BibTeX/RIS).
   Prices were left out on purpose: the sources disagreed.
 - His dictated notes: `~/Desktop/seminar/paper-library-cheat-sheet.md`. The run was still
-  going when the page went up: the steps stop where his reports stop (after "No, make it
-  local."). Add the rest as he gives it, and nothing he has not met.
-- Open: whether the local chatbot page needs anything installed or a key; whether a plain
-  Mac (not a developer's) can run what Claude builds; a Windows run. arXiv and OpenAlex both
+  finished the same afternoon: 640 papers, and a chat page on the Mac opened by double-clicking
+  a launcher ("Open Trust Shelf") that passes questions to the signed-in Claude Code, so no
+  API key. He had to say no three times on the way (Python scripts, a Claude artifact, a
+  helper app). His verdict: "it works, but the user has to double click on a little script."
+  The "Make me a web page instead, still hosted locally." line on the page is my wording of
+  what he reported asking; the other lines are his own.
+- Open: whether the seminar should stop before the chatbot (asking questions in the Code tab
+  itself needs no launcher); whether a plain Mac (not a developer's) can run what Claude
+  builds; a Windows run (the launcher and the macOS warning are Mac things). arXiv and OpenAlex both
   answered without a key from this iMac, and the Mac's own `sqlite3` has full-text search.
 
 ## Checking a change
