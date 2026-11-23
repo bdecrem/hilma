@@ -773,6 +773,31 @@
       }
     },
     {
+      "id": "design-again-cloud",
+      "say": "make a page for our block party on Saturday",
+      "before": [
+        "make a page for our block party on Saturday"
+      ],
+      "separate": true,
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "newfile:\\.html$",
+        "served:design",
+        "nocard"
+      ],
+      "mustNot": [],
+      "from": {
+        "date": "2026-11-23",
+        "ticket": "OLA-168",
+        "what": "The checker on live 8ea2fd33a8c7, Nov 23: the second 'make a page for our block party on Saturday' in the same project, in a new conversation, found the draft page the first one made and put up a question card ('What details should replace the draft lines?') and made no new page. The page is made again (a fresh version beside the first), with no card.",
+        "words": "description"
+      }
+    },
+    {
       "id": "design-who-made-cloud",
       "say": "who made that page?",
       "before": [

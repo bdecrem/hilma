@@ -55,7 +55,7 @@ import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
 import { askFirstNote, bothNotes } from './askfirst.mjs'
-import { firstDraftNote } from './firstdraft.mjs'
+import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
 import { CHECK_WEEKLY_TOKENS, checkCallerWeekly } from './check-accounts.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
@@ -1302,7 +1302,16 @@ async function handle(req, res, rec, signal) {
     if (askNote) rec.ask_first = 1
     // OLA-168: design work makes the first version before it asks anything (firstdraft.mjs).
     const draftNote = isProbe || !rec.design ? null : firstDraftNote(body.messages, why || 'name')
-    if (draftNote) rec.first_draft = 1
+    if (draftNote) {
+      rec.first_draft = 1
+      // No question card in a design turn: the question tool is not offered (firstdraft.mjs).
+      const trimmed = withoutQuestion(upstreamBody)
+      if (trimmed !== upstreamBody) {
+        for (const k of ['tools', 'tool_choice']) { if (k in trimmed) upstreamBody[k] = trimmed[k]; else delete upstreamBody[k] }
+        offered.delete('question')
+        rec.no_question = 1
+      }
+    }
     upstreamBody.messages = withNote(withInstructions(served, body.messages), bothNotes(note, askNote, draftNote))
     out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(served) ?? null))
     if (served === 'design' && !isProbe && out.status !== 200 && out.status !== 499 && out.status !== 429 && C.models.has('general')) {

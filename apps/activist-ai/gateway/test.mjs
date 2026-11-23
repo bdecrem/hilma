@@ -13,7 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
-import { firstDraftNote } from './firstdraft.mjs'
+import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -52,7 +52,7 @@ async function fakeUpstream() {
     try {
       cmd = JSON.parse(body.messages.at(-1).content)
     } catch {}
-    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization, maxTokens: body.max_tokens, system: body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n') })
+    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization, maxTokens: body.max_tokens, system: body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n'), tools: Array.isArray(body.tools) ? body.tools.map((t) => t?.function?.name) : undefined })
     st.inflight++
     st.max = Math.max(st.max, st.inflight)
     res.on('close', () => {
@@ -2319,7 +2319,7 @@ test('ask first: a person who asks to be asked first gets a card, through a note
 // note to make the first version now and ask after, unless the person asked to be asked first.
 test('design: the page first, questions after (OLA-168)', async () => {
   const said = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
-  assert.match(firstDraftNote(said, 'skill'), /Do not ask them anything before the page exists/)
+  assert.match(firstDraftNote(said, 'skill'), /Do not ask them anything before the page is made/)
   assert.equal(firstDraftNote(said, null), null, 'not design work: no note')
   assert.equal(firstDraftNote([{ role: 'user', content: 'make a page for the block party, but ask me two things first' }], 'skill'), null, 'asked to be asked first: that wins')
   const up = await fakeUpstream()
@@ -2331,6 +2331,15 @@ test('design: the page first, questions after (OLA-168)', async () => {
     await waitFor(() => g.logs().find((l) => l.first_draft === 1), 3000, 'the log line says the note was added')
     await call(g, T.a, turn({ tag: 'plain2' }))
     assert.doesNotMatch(up.st.seen.at(-1).system ?? '', /first version of the page/, 'work that is not design: no note')
+    // Nov 23: the second request in a project with a draft page asked a card. The question tool is gone.
+    const withTools = { ...turn({ tag: 'fdq' }, { skill: 'designer' }), tools: [{ type: 'function', function: { name: 'question', parameters: {} } }, { type: 'function', function: { name: 'write', parameters: {} } }] }
+    await call(g, T.a, withTools)
+    assert.deepEqual(up.st.seen.at(-1).tools, ['write'], 'no question tool in a design turn')
+    assert.match(up.st.seen.at(-1).system, /make a fresh version as a new file/)
+    await waitFor(() => g.logs().find((l) => l.no_question === 1), 3000, 'the log line says the question tool was taken out')
+    await call(g, T.a, { ...turn({ tag: 'plainq' }), tools: withTools.tools })
+    assert.deepEqual(up.st.seen.at(-1).tools, ['question', 'write'], 'work that is not design keeps the question tool')
+    assert.equal(withoutQuestion({ tools: [{ function: { name: 'question' } }], tool_choice: { type: 'function', function: { name: 'question' } } }).tools, undefined)
     const askFirst = turn({ tag: 'af' }, { skill: 'designer' })
     askFirst.messages[1] = { role: 'user', content: 'make a page for the block party, but ask me two things first' }
     await call(g, T.a, askFirst)

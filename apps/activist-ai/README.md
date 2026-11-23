@@ -2240,6 +2240,10 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   website put up a question card before any page. Log line: `first_draft: 1`. Case
   `design-first-page-cloud` and `design-page-local` check it (`must: nocard`). The designer skill 9
   says the same, and gives each Bold page its own palette (`skills/designer/scripts/deal.py`).
+  Since Nov 23 the same request also goes without the `question` tool (log line `no_question: 1`):
+  the second block-party request in one project found the first draft page and asked a card about
+  its draft lines instead of making a page. The note now says to make a fresh version beside a page
+  that is already there. Case `design-again-cloud` (two requests, separate conversations).
 - **Limits**: the same caps, log line and weekly allowance as every name (usage `by_model.design`);
   the log line has `served: design` and `design: served | withheld | failed`, never content. The
   design model is never asked with less than 16,000 output tokens (with 50 and its reasoning on it
