@@ -58,6 +58,9 @@ enum MacDrive {
     var size: String?
     /// Picks the model this many times more, back and forth with Ola, before the first sentence (OLA-344).
     var pickRounds: Int?
+    /// Each sentence typed, read back from the box and wiped, never sent: no model, no card (OLA-275,
+    /// the Mac twin of the phone's --type-only; tools/drive-box-test.sh mac).
+    var typeOnly: Bool?
     /// The window stays on the screen, behind the others, at the size it opens with (OLA-344: the crash
     /// came in a window on the screen, macOS 27).
     var visible: Bool?
@@ -135,6 +138,9 @@ enum MacDrive {
     var sentAt: Double?
     var endedAt: Double?
     var status: String
+    /// What the box held after typing, and how tall it was then (points) (OLA-275).
+    var inBox: String?
+    var boxHeight: Double?
     var cards: [String] = []
     /// Ola's questions (OLA-301), each answered with its first choice (Command-1).
     var questions: [String] = []
@@ -202,7 +208,7 @@ enum MacDrive {
       do {
         try await run(s, delegate: delegate)
         record.ok = true
-        record.verdict = "every sentence got a finished answer on the screen"
+        record.verdict = s.typeOnly == true ? "every sentence was whole in the box, then wiped (nothing sent)" : "every sentence got a finished answer on the screen"
         finish(0)
       } catch let e as Failed {
         record.verdict = e.why
@@ -339,8 +345,23 @@ enum MacDrive {
       // The box must hold the whole sentence, line breaks included, before Return (OLA-275).
       let trimmed = { (x: String) in x.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines) }
       let inBox = box.currentEditor()?.string ?? box.stringValue
+      said.inBox = inBox
+      said.boxHeight = Double(box.frame.height)
       if trimmed(inBox) != trimmed(sentence) {
+        said.status = "not whole in the box"
         throw Failed(why: "the box holds \(quoted(inBox)), not sentence \(n) \(quoted(sentence)); nothing was sent")
+      }
+      if s.typeOnly == true {
+        said.status = "in the box"
+        // Wiped as a person does: Command-A, Delete. Nothing is sent.
+        shortcut("a", code: 0, in: window)
+        press("\u{8}", code: 51, in: window, shortcuts: false)
+        try await settle(window, 0.5)
+        let left = box.currentEditor()?.string ?? box.stringValue
+        guard trimmed(left).isEmpty else { throw Failed(why: "sentence \(n) was whole in the box, but the box still holds \(quoted(left)) after Command-A, Delete") }
+        if !(store.conversation?.turns.isEmpty ?? true) { throw Failed(why: "--type-only, yet the conversation has a turn") }
+        step("sentence \(n) whole in the box (\(Int(box.frame.height)) pt tall), wiped", shot: "say\(n)-wiped")
+        continue
       }
       let mine = { (t: Turn) in trimmed(t.request) == trimmed(sentence) }
       let before = store.conversation?.turns.filter(mine).count ?? 0
@@ -471,7 +492,7 @@ enum MacDrive {
     }
 
     // "Try again with" on the latest answer, by its shortcut (OLA-340).
-    if let name = s.tryAgain, let last = s.says.last {
+    if s.typeOnly != true, let name = s.tryAgain, let last = s.says.last {
       guard let c = EngineChoice.named(name) else { throw Failed(why: "no model called \(name)") }
       var said = Said(sentence: "Try again with \(c.name): \(last)", status: "not sent")
       defer { record.said.append(said) }

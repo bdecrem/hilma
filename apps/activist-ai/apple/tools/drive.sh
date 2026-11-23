@@ -37,8 +37,9 @@
 #          (OLA-301 check 7).
 #   --answer-words "<words>"  (phone) Ola's question is answered by typing these words in the box and
 #          Send, not by tapping a choice (OLA-301 check 8).
-#   --type-only     (phone) each sentence typed, read back from the box and wiped, never sent: no model,
-#          no card (OLA-402; tools/drive-box-test.sh). Passes when every sentence was whole in the box.
+#   --type-only     (mac or phone, --where cloud) each sentence typed, read back from the box and wiped,
+#          never sent: no model, no card (OLA-402 phone, OLA-275 mac; tools/drive-box-test.sh). Passes when
+#          every sentence was whole in the box.
 #   A line break in --say is typed as Option-Return (a new line in the box), not Return (OLA-275).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
@@ -88,7 +89,7 @@ case "$WHERE" in cloud|local) ;; *) echo "--where cloud or local"; exit 2 ;; esa
 case "$CARD" in yes|any|no) ;; *) echo "--card yes, any or no"; exit 2 ;; esac
 [ -n "$OUT" ] || { echo "--out <dir> is needed"; exit 2; }
 [ ${#SAYS[@]} -gt 0 ] || { echo "at least one --say"; exit 2; }
-[ -z "$TYPE_ONLY" ] || [ "$APPKIND" = phone ] || { echo "--type-only is for phone"; exit 2; }
+[ -z "$TYPE_ONLY" ] || [ "$WHERE" = cloud ] || { echo "--type-only is for --where cloud"; exit 2; }
 [ "$PROJECT" = appdriver ] || fail "the made-up person has one project, appdriver (asked for $PROJECT)"
 [ -d "$LIVE" ] || fail "no live release at $LIVE: run this on the test server (the Mac mini)"
 
@@ -230,9 +231,9 @@ if [ "$APPKIND" = mac ]; then
   FOLDER=""
   if [ "$WHERE" = local ]; then FOLDER="$RUN/folder"; mkdir -p "$FOLDER"; fi
   mkdir -p "$RUN/home"
-  python3 - "$RUN/script.json" "$RUN/out" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$PICK" "$TRYAGAIN" "$SMALL" "$SIZE" "$ROUNDS" "$AWAY" <<'PY'
+  python3 - "$RUN/script.json" "$RUN/out" "$PW" "$WHERE" "$PROJECT" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$PICK" "$TRYAGAIN" "$SMALL" "$SIZE" "$ROUNDS" "$AWAY" "$TYPE_ONLY" <<'PY'
 import json, sys
-f, out, pw, where, project, folder, card, wait, says, pick, again, small, size, rounds, away = sys.argv[1:]
+f, out, pw, where, project, folder, card, wait, says, pick, again, small, size, rounds, away, typeonly = sys.argv[1:]
 s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "project": project, "says": json.loads(says), "card": card, "waitSeconds": float(wait)}
 if folder: s["folder"] = folder
 if pick: s["pick"] = pick
@@ -241,6 +242,7 @@ if small: s["small"] = True
 if size: s["size"] = size
 if rounds: s["pickRounds"] = int(rounds)
 if away: s["away"] = True
+if typeonly: s["typeOnly"] = True
 json.dump(s, open(f, "w"))
 PY
   prepare_account
