@@ -1,4 +1,31 @@
-# Seminar handout (bartin16.xyz/seminar)
+# The Seminar (bartin16.xyz/seminar)
+
+**Where things are, since the afternoon of 2026-11-23** (the sections below were written as
+the day went and still say "the page" for the website sheet):
+
+| Address | What | Words in |
+|---|---|---|
+| `/seminar` | Landing page: the three projects, and "Before you come" (request the Stanford Claude account, install the app, the five sign-in steps Bart approved) | `home.json` (drawn by `page.tsx`) |
+| `/seminar/website` | Project 1, the work website (was at `/seminar` until that afternoon) | `website/content.json` |
+| `/seminar/library` | Project 2, the paper library, with the Consensus / Scite / Zotero section | `library/content.json` |
+| `/seminar/fact-checker` | Project 3, John Markoff's fact-checking skill; the file itself is served at `/seminar/fact-checker/SKILL.md` (`public/seminar/fact-checker/`) | `fact-checker/content.json` |
+
+`Sheet.tsx` draws the three project sheets, `SHEETS` in it is the row of links on top of each.
+Bart's numbering is his: website 1, library 2, fact checker 3 (I had the last two the other
+way round for an hour). On every sheet he wants the answer to "how do I use this tomorrow,
+after I shut my laptop": for the library, double-click Open Trust Shelf; and everywhere,
+**rename and pin the project** in the Claude app.
+
+**The fact-checker sheet has not been run by anyone.** Bart gave the headline ("Working on
+your book? Use this skill and Claude will be your fact checker", by CASBS alum John Markoff)
+and the skill file (it arrived by iMessage; five passes, flags and never rewrites, saves
+`<file>_factcheck.md` beside the document). The seven steps are my best plain route (put
+SKILL.md in the manuscript folder, open the folder in the Code tab, tell Claude it is there).
+Have him or a fellow run it on a real chapter and correct the steps from what happens.
+
+The prose of the landing page and the fact-checker sheet is mine, not Opus's: the plan was at
+96% of its week when they were written. If Bart finds it stiff, that is the first thing to
+hand to Opus.
 
 Bart's hands-on seminar for the CASBS fellows is **Wednesday, December 2, 2026**. The
 exercise: each fellow builds and publishes their own work website with Claude Code (the

@@ -1,0 +1,67 @@
+{
+  "kicker": "CASBS · Wednesday, December 2",
+  "title": "The Seminar",
+  "intro": "Three things to build with Claude, hands on, on your own laptop. You will not write any code. You say what you want in plain English and Claude does the work, and you leave with something you can use the next morning.",
+  "before": {
+    "title": "Before you come",
+    "lede": "Three small things, best done this week. Stanford IT is closed on Thanksgiving and the day after.",
+    "items": [
+      {
+        "title": "Request your Stanford Claude account",
+        "body": "It is free for fellows. Choose \"Request a Claude for Education Standard account\" and sign in with your SUNet ID. Mine took four hours to arrive.",
+        "link": {
+          "label": "uit.stanford.edu/service/claude",
+          "href": "https://uit.stanford.edu/service/claude"
+        }
+      },
+      {
+        "title": "Install the Claude desktop app",
+        "body": "On the laptop you will bring. Mac or Windows.",
+        "link": {
+          "label": "claude.com/download",
+          "href": "https://claude.com/download"
+        }
+      },
+      {
+        "title": "Sign in with your Stanford account",
+        "body": "This is the step people trip on, so here it is in full.",
+        "link": null
+      }
+    ],
+    "signin": [
+      "Open the Claude app. If it's signed in to your personal account, log out first: click your name at the bottom left, then Log out.",
+      "Click \"Get started\" if you see it.",
+      "Click \"Enter your email\" and type your Stanford SUNet ID as an email address, something like jdoe@stanford.edu. You don't need a Stanford mailbox.",
+      "A \"Continue with SSO\" button appears under it. Click that one (not \"Continue with email\", not \"Continue with Google\").",
+      "Sign in on the Stanford page with your SUNet ID and password."
+    ]
+  },
+  "projectsTitle": "The three projects",
+  "projects": [
+    {
+      "n": 1,
+      "href": "/seminar/website",
+      "title": "Your own work website",
+      "body": "A personal page with what you are working on and an office-hours sign-up, built and put on the internet.",
+      "time": "30 minutes to build, another hour to publish"
+    },
+    {
+      "n": 2,
+      "href": "/seminar/library",
+      "title": "Your own paper library",
+      "body": "A few hundred papers on trust in a small database on your laptop, with a chat page that answers from them. And how that sits next to Consensus, Scite and Zotero.",
+      "time": "About 30 minutes"
+    },
+    {
+      "n": 3,
+      "href": "/seminar/fact-checker",
+      "title": "Your own fact checker",
+      "body": "Working on your book? A skill by CASBS alum John Markoff that checks every claim in a chapter and shows its sources.",
+      "time": "About 20 minutes"
+    }
+  ],
+  "tip": {
+    "title": "One habit worth having",
+    "body": "Each thing you build is a project in the Claude app. Rename it to something you will recognise and pin it. Tomorrow it is the first thing you see, and you pick up where you stopped."
+  }
+}

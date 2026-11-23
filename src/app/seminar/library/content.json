@@ -133,5 +133,9 @@
         }
       ]
     }
-  ]
+  ],
+  "next": {
+    "title": "How do I use this tomorrow?",
+    "body": "Shut your laptop whenever you like. The library is still in its folder tomorrow: double-click Open Trust Shelf and you are back in the chat page. Before you close the Claude app today, rename the project to something you will recognise and pin it, so it is easy to find the day you want Claude to add papers or change something."
+  }
 }

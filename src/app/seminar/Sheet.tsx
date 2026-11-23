@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { Say, Tick } from './Bits'
 
 // One seminar sheet. Every word comes from the sheet's content.json; this only draws.
-// /seminar (the website) and /seminar/library (the paper library) are both one of these.
+// /seminar/website, /seminar/library and /seminar/fact-checker are each one of these;
+// /seminar itself is the landing page (page.tsx, home.json).
 
 type Step = { title: string; body: string; say: string | null; trap: string | null }
 type Part = { label: string; title: string; time: string; lede: string; steps: Step[] }
@@ -22,6 +23,8 @@ export type SheetContent = {
   kicker: string
   intro: string
   shape: string
+  byline?: string
+  download?: { label: string; href: string; note: string }
   need: string[]
   why?: Why
   parts: Part[]
@@ -32,8 +35,9 @@ export type SheetContent = {
 
 // The sheets, in the order of the seminar. `id` is also what a tick is stored under.
 export const SHEETS = [
-  { id: 'website', href: '/seminar', name: 'A work website' },
-  { id: 'library', href: '/seminar/library', name: 'A paper library' },
+  { id: 'website', href: '/seminar/website', n: 1, name: 'A work website' },
+  { id: 'library', href: '/seminar/library', n: 2, name: 'A paper library' },
+  { id: 'fact-checker', href: '/seminar/fact-checker', n: 3, name: 'A fact checker' },
 ] as const
 
 // The two words every headline leans on, set heavier, as on the homepage.
@@ -41,27 +45,41 @@ export const EMPH = 'your own'
 
 export function Sheet({ id, content }: { id: (typeof SHEETS)[number]['id']; content: SheetContent }) {
   const { parts, why, stuck, next, example } = content
-  const [before, after] = content.title.split(EMPH)
+  // "your own" is set heavier wherever it sits in the title, capital or not.
+  const at = content.title.toLowerCase().indexOf(EMPH)
+  const before = at < 0 ? content.title : content.title.slice(0, at)
+  const emph = at < 0 ? '' : content.title.slice(at, at + EMPH.length)
+  const after = at < 0 ? '' : content.title.slice(at + EMPH.length)
   let n = 0
 
   return (
     <main className="sem-main">
       <header className="sem-head">
         <nav className="sem-sheets" aria-label="Seminar projects">
+          <Link href="/seminar">The Seminar</Link>
           {SHEETS.map((sheet) => (
             <Link key={sheet.id} href={sheet.href} aria-current={sheet.id === id ? 'page' : undefined}>
-              {sheet.name}
+              {sheet.n} · {sheet.name}
             </Link>
           ))}
         </nav>
         <p className="sem-kicker">{content.kicker}</p>
         <h1 className="sem-title">
           {before}
-          <em>{EMPH}</em>
+          {emph && <em>{emph}</em>}
           {after}
         </h1>
+        {content.byline && <p className="sem-byline">{content.byline}</p>}
         <p className="sem-intro">{content.intro}</p>
         <p className="sem-intro">{content.shape}</p>
+        {content.download && (
+          <p className="sem-download">
+            <a href={content.download.href} download>
+              {content.download.label}
+            </a>
+            <span>{content.download.note}</span>
+          </p>
+        )}
       </header>
 
       <section className="sem-need" aria-labelledby="sem-need-h">

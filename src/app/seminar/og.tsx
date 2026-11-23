@@ -10,7 +10,10 @@ export async function sheetOg({ kicker, title, say }: { kicker: string; title: s
     ogFont('inter-tight/InterTight-600.ttf'),
     ogFont('inter-tight/InterTight-900.ttf'),
   ])
-  const [before, after] = title.split('your own')
+  const at = title.toLowerCase().indexOf('your own')
+  const before = at < 0 ? title : title.slice(0, at)
+  const emph = at < 0 ? '' : title.slice(at, at + 8)
+  const after = at < 0 ? '' : title.slice(at + 8)
 
   return new ImageResponse(
     (
@@ -43,9 +46,9 @@ export async function sheetOg({ kicker, title, say }: { kicker: string; title: s
           }}
         >
           {/* Satori drops the spaces between spans: the gap is the word space. */}
-          <span>{before.trim()}</span>
-          <span style={{ fontWeight: 900 }}>your own</span>
-          <span>{after.trim()}</span>
+          {before.trim() ? <span>{before.trim()}</span> : null}
+          {emph ? <span style={{ fontWeight: 900 }}>{emph}</span> : null}
+          {after.trim() ? <span>{after.trim()}</span> : null}
         </div>
         <div
           style={{
