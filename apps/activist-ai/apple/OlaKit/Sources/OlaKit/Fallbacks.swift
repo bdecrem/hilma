@@ -169,6 +169,10 @@ public enum Stretch {
   /// "Design a…" outright ("the design of this survey" is a question, not a request to make).
   static let designAsk = try! NSRegularExpression(pattern: #"\b(re)?design (a|an|the|me|us|our|my|some|this|that)\b"#, options: .caseInsensitive)
 
+  /// A design request gets no card before a run and goes to Ola, which hands it to the design model
+  /// (OLA-168, Bart, Nov 20; the website's STRETCH_CHECKS.designBeforeRun is false too).
+  public static let designBeforeRun = false
+
   static func has(_ r: NSRegularExpression, _ s: String) -> Bool { r.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil }
 
   /// Before a run: does the request alone look like a stretch? `files` are the folder's files with
@@ -187,7 +191,7 @@ public enum Stretch {
     if has(allOfThem, request), files.filter({ has(docLike, $0.path) }).count >= manyDocs { return .manyFiles }
     let parts = request.split(separator: "\n", omittingEmptySubsequences: false).filter { has(listed, String($0)) }.count
     if request.count >= buildMinChars && parts >= buildParts && has(buildVerb, request) { return .longBuild }
-    if has(designAsk, request) || (has(designThing, request) && has(designVerb, request)) { return .design }
+    if designBeforeRun, has(designAsk, request) || (has(designThing, request) && has(designVerb, request)) { return .design }
     return nil
   }
 
