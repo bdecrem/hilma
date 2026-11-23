@@ -41,5 +41,5 @@ export function askFirstNote(messages, offered) {
   return ASK_FIRST
 }
 
-/** Two notes for one request, either may be null. */
-export const bothNotes = (a, b) => [a, b].filter(Boolean).join('\n\n') || null
+/** The notes for one request, any may be null. */
+export const bothNotes = (...notes) => notes.filter(Boolean).join('\n\n') || null

@@ -740,13 +740,35 @@
       ],
       "must": [
         "newfile:\\.html$",
-        "served:design"
+        "served:design",
+        "nocard"
       ],
       "mustNot": [],
       "from": {
         "date": "2026-11-20",
         "ticket": "OLA-168",
         "what": "Bart's decision, Nov 20: design requests go to the design model, Inkling-2-Small, with Ola working on the Mac too (its engine sends its model requests to the same model connection). The model connection's own record must say the design model served it. The Mac's record of who made the file names the design model only with a new Mac app build (OLA-168 comment), so who-made is not asked here.",
+        "words": "description"
+      }
+    },
+    {
+      "id": "design-first-page-cloud",
+      "say": "make a page for our block party on Saturday",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "newfile:\\.html$",
+        "served:design",
+        "nocard"
+      ],
+      "mustNot": [],
+      "from": {
+        "date": "2026-11-22",
+        "ticket": "OLA-168",
+        "what": "The checker on live fc468fede085, Nov 22: 4 of 4 'make a page for our block party on Saturday' on the website, 2 of 3 on the iPhone and every time with Ola on the Mac put up a question card ('What are the details for the block party (Saturday's date, time, place/street...)?') before any page existed. The page is made first, with marked draft lines for what was not said, and questions come after.",
         "words": "description"
       }
     },

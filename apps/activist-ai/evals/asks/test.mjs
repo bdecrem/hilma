@@ -39,7 +39,7 @@ test('every case is well formed, and its patterns compile', () => {
     assert.ok(/^[a-z0-9][a-z0-9-]{0,39}$/.test(c.id) && !ids.has(c.id), c.id)
     ids.add(c.id)
     assert.ok(c.say && c.places.length && c.places.every((p) => PLACES.includes(p)), c.id)
-    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || m === 'card' || /^(site|says|opens|file|ran|noran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
+    assert.ok(c.must.length && c.must.every((m) => m === 'gone' || m === 'card' || m === 'nocard' || /^(site|says|opens|file|ran|noran|newfile|nonewfile|served):./.test(m) || /^record:(made|last)$/.test(m)), c.id)
     assert.ok(!c.must.includes('gone') || c.before?.length, `${c.id}: gone needs a page published first (before)`)
     for (const m of c.must.filter((m) => /^(says|opens|nonewfile|noran):/.test(m))) new RegExp(m.slice(m.indexOf(':') + 1), 'i')
     for (const s of c.mustNot ?? []) new RegExp(s, 'i')
@@ -666,3 +666,12 @@ test('OLA-250: in the cloud the runner reads the website\'s own cards from the e
   push.close()
 })
 
+
+// OLA-168, Nov 22: a page request asked a question card before any page existed.
+test('nocard: a question card in the request fails it; none passes', async () => {
+  const no = await checkMust('nocard', {}, 'Here is the page.', { lastAnswered: ['question: What are the details for the block party?'] })
+  assert.equal(no.ok, false)
+  assert.match(no.why, /What are the details/)
+  assert.equal((await checkMust('nocard', {}, 'Here is the page.', { lastAnswered: ['said in the conversation: Yes, go ahead.'] })).ok, true)
+  assert.equal((await checkMust('nocard', {}, 'Here is the page.', { lastAnswered: [] })).ok, true)
+})

@@ -668,6 +668,8 @@ export function whoVerdict(row, answer) {
  *                        case's requests (design, general); served:!<name>: none of them (OLA-168)
  *   card                 the request itself asked the person with the question tool (a card they
  *                        answer), not only in the words of its answer (OLA-325)
+ *   nocard               the request put up no question card (OLA-168: a page request is made
+ *                        first, with draft lines, and questions come after)
  *   record:made|last     the answer names whoever the project's own record says made (or last
  *                        changed) the newest page (OLA-303); the design model as an outside model
  */
@@ -679,6 +681,12 @@ export async function checkMust(must, T, answer, { steps = [], lastSteps = steps
     // runner's typed yes would go on and hide it.
     const q = lastAnswered.find((a) => a.startsWith('question: '))
     return { ok: !!q, why: q ? `a card: ${q.slice(10, 200)}` : 'no question card in this request; Ola asked in words or not at all' }
+  }
+  if (kind === 'nocard') {
+    // OLA-168, Nov 22: 4 of 4 page requests on the website asked "What are the details ...?" as a card
+    // before any page existed; the runner's answer went on and hid it.
+    const q = lastAnswered.filter((a) => a.startsWith('question: '))
+    return { ok: !q.length, why: q.length ? `a question card before the work: ${q.map((x) => x.slice(10, 160)).join(' | ')}` : 'no question card' }
   }
   if (kind === 'served') {
     const not = arg.startsWith('!')

@@ -2233,6 +2233,13 @@ Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stay
   the website, the Mac app in a cloud project and with Ola on the Mac, so there was no card to answer.
   Every runtime's model requests come through here, so this is the one place. Log line:
   `ask_first: 1`. Case `ask-first-card` in the asks checks it (`must: card`).
+- **The page first, questions after** (`gateway/firstdraft.mjs`, OLA-168, Nov 22): every design
+  request (designWhy, or a caller naming `design`) carries a note to make the first version now from
+  what was said, with marked draft lines for missing facts, and to ask after; not when the person
+  asked to be asked first (that wins). The checker on Nov 22 saw 4 of 4 block-party requests on the
+  website put up a question card before any page. Log line: `first_draft: 1`. Case
+  `design-first-page-cloud` and `design-page-local` check it (`must: nocard`). The designer skill 9
+  says the same, and gives each Bold page its own palette (`skills/designer/scripts/deal.py`).
 - **Limits**: the same caps, log line and weekly allowance as every name (usage `by_model.design`);
   the log line has `served: design` and `design: served | withheld | failed`, never content. The
   design model is never asked with less than 16,000 output tokens (with 50 and its reasoning on it

@@ -201,6 +201,14 @@ def main():
     # a page started from a worked example must not keep the example's words
     leftover = [x for x in ("Example page for the designer skill", "EXAMPLE for the designer skill", "Halsey Avenue Merchants", "Linden Place Tenants Union",
                             "Spoke Collective") if x in src] if not page.name.startswith("bold-") else []
+    # ... nor the example's colors (OLA-137, OLA-168: three block parties in three projects, one candy palette)
+    if bold and not page.name.startswith("bold-"):
+        spots = lambda t: {m.group(2).lower() for m in re.finditer(r"--(c\d)\s*:\s*(#[0-9a-fA-F]{6})", (re.search(r":root\s*\{([^}]*)\}", t, re.S) or [None, ""])[1])}
+        mine = spots(src)
+        for ex in sorted((Path(__file__).resolve().parent.parent / "assets").glob("bold-*.html")):
+            theirs = spots(ex.read_text(errors="replace"))
+            if theirs and len(mine & theirs) >= 2:
+                leftover.append(f"the colors of {ex.name}; give the page its own: python3 /opt/ola/skills/designer/scripts/deal.py {page.name} --for \"<its title>\"")
     print(f"Register: {reg}" + (" (Bold rules, references/bold.md)" if bold else ""))
     shots = page.parent / ".shots"  # hidden: the front desk lists no path segment starting with "."
     shots.mkdir(exist_ok=True)
@@ -218,7 +226,7 @@ def main():
             made[tag] = shot
             r = json.loads(js.read_text())
             t = r.get("taste") or {}
-            groups = [("broken", broken(r, w) + [f"words left from the worked example ({x!r}): rewrite or delete them" for x in leftover]),("readable", readable(r, w, bold)), ("order", order(t, w, bold)), ("decorated", decorated(t, bold)),
+            groups = [("broken", broken(r, w) + [x if x.startswith("the colors of ") else f"words left from the worked example ({x!r}): rewrite or delete them" for x in leftover]),("readable", readable(r, w, bold)), ("order", order(t, w, bold)), ("decorated", decorated(t, bold)),
                       ("bare", bare(t, r, w, bold)), ("usable", usable(t, w))]
             n = sum(len(g) for _, g in groups)
             total += n

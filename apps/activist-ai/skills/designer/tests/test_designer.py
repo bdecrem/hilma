@@ -154,5 +154,28 @@ r = run(HERE / "scripts" / "sheet.py", d / "one-a.html", d / "one-b.html", "--ou
 case("sheet.py says SAME LAYOUT for one page in two palettes, and exits 3", r.returncode == 3 and "SAME LAYOUT: A and B" in r.stdout, r.stdout[-400:] + r.stderr[-200:])
 r = run(HERE / "scripts" / "sheet.py", d / "one-a.html", d / "poster.html", d / "split.html", "--out", d / "differ.png")
 case("sheet.py passes three different layouts of the same facts", r.returncode == 0 and "SAME LAYOUT" not in r.stdout, r.stdout[-400:] + r.stderr[-200:])
+# deal.py (OLA-137, OLA-168): a copy of a worked example gets its own colors, readable, and two pages of one folder differ.
+import re as _re
+def spots_of(f):
+    return set(_re.findall(r"--c\d\s*:\s*(#[0-9a-f]{6})", _re.search(r":root\s*\{([^}]*)\}", f.read_text(), _re.S).group(1)))
+for ex in sorted((HERE / "assets").glob("bold-*.html")):
+    dd = d / f"deal-{ex.stem}"
+    dd.mkdir()
+    shutil.copy(ex, dd / "party.html")
+    shutil.copy(ex, dd / "fair.html")
+    r1 = run(HERE / "scripts" / "deal.py", dd / "party.html", "--for", "Maple Street block party, Saturday")
+    r2 = run(HERE / "scripts" / "deal.py", dd / "fair.html", "--for", "Elm Street fair, Sunday afternoon")
+    a, b, o = spots_of(dd / "party.html"), spots_of(dd / "fair.html"), spots_of(ex)
+    case(f"deal.py gives a copy of {ex.name} its own readable colors", r1.returncode == 0 and r2.returncode == 0 and not (a & o) and not (b & o) and "FAIL" not in r1.stdout + r2.stdout, r1.stdout[-500:] + r2.stdout[-300:])
+    case(f"two pages from {ex.name} in one folder do not share a color", not (a & b), f"{a} {b}")
+    left = [c for c in o if c in (dd / "party.html").read_text()]
+    case(f"no color of {ex.name} is left anywhere in the dealt page (the drawing's too)", not left, str(left))
+r = run(HERE / "scripts" / "deal.py", d / "boldok.html", "--for", "x")
+case("deal.py refuses a page with no :root palette", r.returncode == 2)
+shutil.copy(HERE / "assets" / "bold-bike-day.html", d / "kept.html")
+(d / "kept.html").write_text((d / "kept.html").read_text().replace("Spoke Collective", "Maple Street neighbors").replace("EXAMPLE for the designer skill", ""))
+r = run(*look, d / "kept.html", "--name", "kept", "--no-see")
+case("look.py calls out a Bold page that kept a worked example's colors", "the colors of bold-bike-day.html" in r.stdout and "deal.py kept.html" in r.stdout, r.stdout[-600:])
+
 print(f"designer tests: {sum(results)} of {len(results)} passed")
 sys.exit(0 if all(results) else 1)

@@ -13,6 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
+import { firstDraftNote } from './firstdraft.mjs'
 
 const SERVER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs')
 const TMP = mkdtempSync(path.join(tmpdir(), 'ola-gw-test-'))
@@ -2308,6 +2309,32 @@ test('ask first: a person who asks to be asked first gets a card, through a note
     assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
     await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }] })
     assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
+  } finally {
+    await g.stop()
+  }
+})
+
+// OLA-168, the checker on live fc468fede085 (Nov 22): 4 of 4 'make a page for our block party on
+// Saturday' on the website put up a question card before any page existed. Design work carries a
+// note to make the first version now and ask after, unless the person asked to be asked first.
+test('design: the page first, questions after (OLA-168)', async () => {
+  const said = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
+  assert.match(firstDraftNote(said, 'skill'), /Do not ask them anything before the page exists/)
+  assert.equal(firstDraftNote(said, null), null, 'not design work: no note')
+  assert.equal(firstDraftNote([{ role: 'user', content: 'make a page for the block party, but ask me two things first' }], 'skill'), null, 'asked to be asked first: that wins')
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV })
+  try {
+    await call(g, T.a, turn({ tag: 'fd' }, { skill: 'designer' }))
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1')
+    assert.match(up.st.seen.at(-1).system, /make the first version of the page now/)
+    await waitFor(() => g.logs().find((l) => l.first_draft === 1), 3000, 'the log line says the note was added')
+    await call(g, T.a, turn({ tag: 'plain2' }))
+    assert.doesNotMatch(up.st.seen.at(-1).system ?? '', /first version of the page/, 'work that is not design: no note')
+    const askFirst = turn({ tag: 'af' }, { skill: 'designer' })
+    askFirst.messages[1] = { role: 'user', content: 'make a page for the block party, but ask me two things first' }
+    await call(g, T.a, askFirst)
+    assert.doesNotMatch(up.st.seen.at(-1).system ?? '', /first version of the page/, 'ask first wins')
   } finally {
     await g.stop()
   }

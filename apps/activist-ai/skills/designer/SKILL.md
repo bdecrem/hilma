@@ -3,7 +3,7 @@ name: designer
 description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
-  ola/version: "8"
+  ola/version: "9"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
@@ -41,6 +41,9 @@ Pick one first, from the person's words and the subject:
    `cp /opt/ola/skills/designer/assets/bold-rent-party.html index.html`
    `python3 /opt/ola/skills/designer/scripts/fonts.py add "Bricolage Grotesque" "Space Grotesk" --to .`
    (Fraunces is there too for a gorgeous dinner or gala, as the display face with Space Grotesk.)
+   Then give the copy its own colors, named for THIS page (every page gets a palette of its own;
+   the example's colors are never kept, and two pages in one folder never share one):
+   `python3 /opt/ola/skills/designer/scripts/deal.py index.html --for "Maple Street block party, Saturday"`
 3. Rewrite every word for this subject from the person's files: their title, their date as the
    giant numeral (the `.day` element, never only inside the SVG), the place, every fact; nothing invented, nothing left from the example. Delete the
    example's top comment and its "Example page" footer. The example's bands, times, names and
@@ -60,6 +63,14 @@ Pick one first, from the person's words and the subject:
 Work in small edits to keep within the budget: after `cp`, replace the example's words and drawing
 with the edit tool a section at a time; never write the whole file out again, and never print it.
 
+
+## First the page, then questions
+
+Make the first version from what the person said, in this request; never ask before a page exists.
+A fact they did not give (the date, the time, the street) goes on the page as a marked draft line
+(`<p data-draft>Draft: the street goes here</p>`), never an invented one. When you hand off, say in
+one sentence which lines are drafts, so they can tell you. Ask first only when they asked you to
+("ask me two things first").
 
 ## Three modes
 

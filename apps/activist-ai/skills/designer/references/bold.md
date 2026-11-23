@@ -31,6 +31,9 @@ python3 /opt/ola/skills/designer/scripts/palette.py --bold --preset riso --css p
 python3 /opt/ola/skills/designer/scripts/palette.py --bold --scheme triadic --hue 25 --css palette.css
 ```
 
+A page copied from a worked example gets its own palette from `deal.py` (section 9); the presets
+are the examples' starting points, not the look of every page.
+
 | Preset | Character | Good for |
 |---|---|---|
 | `riso` | vermillion #ff4b1f, ultramarine #3d3bff, sunflower #ffc31f, lime #b6f23a on cream #f7efdf, ink #16121c (approved by the owner) | rent parties, zines, campaigns, anything indie and hand-made |
@@ -157,8 +160,10 @@ Always:
 (SKILL.md, "Bold, step by step", is the same in commands.)
 
 1. The idea: what is the giant (the date or the number) and what is the shape (from section 4)?
-2. Copy the closest example above to `index.html` and `fonts.py add` its two families (or another
-   preset: `palette.py --bold --preset ...` and replace the `:root`).
+2. Copy the closest example above to `index.html` and `fonts.py add` its two families, then give
+   it a palette of its own: `deal.py index.html --for "<this page's title>"` (every color in the
+   file, the drawing's too, moved to new hues at the same lightness; never the example's colors,
+   never the colors of another page in the folder; `look.py` calls a page with an example's colors).
 3. Rewrite every word from the person's files and redraw the shape for this subject; delete the
    example's top comment and its "Example page" footer. Keep its structure: hero field with title and
    giant, the shape, a band with the one action, sections that alternate fields, a footer.
