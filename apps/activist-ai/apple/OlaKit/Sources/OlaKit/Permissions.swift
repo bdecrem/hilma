@@ -53,11 +53,31 @@ public enum PermissionSettings {
   /// Whether a command runs `ola-publish publish|unpublish`, however it is written (a path to the
   /// command, a `cd` before it, extra spaces, quotes).
   public static func alwaysAsks(_ command: String) -> Bool {
+    if isRefusedFilesForm(command) { return false }
     let words = command.split(whereSeparator: { " \t\n;&|()'\"".contains($0) }).map(String.init)
     for (i, w) in words.enumerated() where (w as NSString).lastPathComponent == "ola-publish" {
       if i + 1 < words.count, alwaysAsk.contains(words[i + 1]) { return true }
     }
     return false
+  }
+
+  /// `ola-publish publish|unpublish … --files …`, one command and nothing else: the cloud project's
+  /// form, which the Mac's own ola-publish (../bart/ola-publish) refuses without sending anything
+  /// (any `--files` keeps it off its publish and unpublish paths) and answers with the Mac's two
+  /// steps. Asking a yes for it showed a raw "Ola wants to run a command" box for a step that
+  /// publishes nothing (OLA-250, request test publish-bart@local-mac:chat try 4 on f9dc1cc2a90e);
+  /// under Lots it now goes ahead, and the real publish that follows asks as always.
+  /// Anything chained (; & | $( ` or a line break) is never this form, so still asks.
+  static func isRefusedFilesForm(_ whole: String) -> Bool {
+    var command = whole.trimmingCharacters(in: .whitespaces)
+    // One `cd <folder> &&` before it, as the model often writes it (the folder: no spaces or marks).
+    if let cd = command.range(of: #"^cd\s+[^\s;&|`$()<>'"]+\s*&&\s*"#, options: .regularExpression) { command.removeSubrange(cd) }
+    if command.hasSuffix(" 2>&1") { command = String(command.dropLast(5)) }
+    if command.contains(where: { ";&|`\n<>".contains($0) }) || command.contains("$(") { return false }
+    let words = command.split(whereSeparator: { " \t".contains($0) }).map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "'\"")) }
+    guard let first = words.first, (first as NSString).lastPathComponent == "ola-publish",
+          words.count >= 3, alwaysAsk.contains(words[1]) else { return false }
+    return words.dropFirst(2).contains("--files")
   }
 
   /// Whether an opencode approval goes ahead without asking under Lots (the caller checks the mode).

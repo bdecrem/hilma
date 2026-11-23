@@ -49,6 +49,20 @@ final class PermissionsTests: XCTestCase {
       XCTAssertFalse(PermissionSettings.alwaysAsks(c), c)
       XCTAssertTrue(PermissionSettings.goesAhead(action: "bash", resources: [c]), c)
     }
+    // The cloud's --files form on the Mac publishes nothing (bart/ola-publish refuses it and prints
+    // the Mac's two steps): no yes is asked for it (OLA-250, publish-bart@local-mac try 4, f9dc1cc2a90e).
+    for c in ["ola-publish publish site --files index.html", "cd /Users/x/proj && ola-publish publish site --files index.html,style.css 2>&1",
+              "/x/web-tools/ola-publish unpublish --files index.html"] {
+      XCTAssertFalse(PermissionSettings.alwaysAsks(c), c)
+      XCTAssertTrue(PermissionSettings.goesAhead(action: "shell", resources: [c]), c)
+    }
+    // Chained with anything else, or the real publish beside it, it still asks.
+    for c in ["ola-publish publish site --files a.html; ola-publish publish site --name b --fingerprint f",
+              "ola-publish publish site --name b --fingerprint f && echo --files", "ola-publish publish site --name b --fingerprint f | tee --files",
+              "ola-publish publish site --name b --fingerprint $(echo --files)", "cd a b && ola-publish publish site --files x",
+              "ola-publish publish site --name b --fingerprint f\necho --files"] {
+      XCTAssertTrue(PermissionSettings.alwaysAsks(c), c)
+    }
     let config = LocalServer.config(modelURL: "http://127.0.0.1:1/v1", instructionsPath: "/x", askFirst: false)
     XCTAssertTrue(config.contains(#"{ "action": "bash", "resource": "*ola-publish publish*", "effect": "ask" }"#))
     XCTAssertTrue(config.contains(#"{ "action": "shell", "resource": "*ola-publish unpublish*", "effect": "ask" }"#))
