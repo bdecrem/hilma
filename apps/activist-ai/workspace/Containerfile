@@ -78,6 +78,9 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.2-73 (OLA-285): ola-publish never lets "still going" (exit 3) read as live: it prints NOT CHECKED
+# YET with the last look at the address said as not the result (the front desk now hands what the
+# address shows while its check runs), and `ola-publish status` waits for the outcome. Skill publish 11.
 # 2.3.2-72 (OLA-230): ola-publish says "Not checked" (exit 0, publish nothing again) when Ola's server
 # could not read the address because the host's bot check answered instead of the page, never
 # "NOT LIVE YET" about a page it could not see. Builds on 2.3.2-71.

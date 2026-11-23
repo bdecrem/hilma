@@ -264,10 +264,14 @@ test('git mode: a host slower than the wait says so plainly; a push that fails c
   const ctx = folderCtx('git-slow', project({ 'site/index.html': '<title>Slow</title>' }))
   const pre = await g.sites.preview(ctx, { folder: 'site' })
   g.markPush()
-  const pub = await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  // OLA-285: each read during the check is heard (what the address answers so far, and when the check ends).
+  const looks = []
+  const pub = await g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint, { onLook: (l) => looks.push(l) })
   assert.equal(pub.status, 200)
   assert.equal(pub.body.live, false)
   assert.match(pub.body.message, /does not show it yet/)
+  assert.ok(looks.length >= 1, 'the check reported its reads')
+  assert.ok(looks.every((l) => typeof l.until === 'number' && 'status' in l && 'shows' in l && l.challenged === false), JSON.stringify(looks[0]))
   // The remote goes away: the publish fails, plainly, and nothing is recorded as published.
   fs.rmSync(g.bare, { recursive: true, force: true })
   const ctx2 = folderCtx('git-fail', project({ 'site/index.html': '<title>Fail</title>' }))

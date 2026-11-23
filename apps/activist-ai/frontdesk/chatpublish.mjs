@@ -17,6 +17,9 @@
 // those are, so the agent can ask again with the right list).
 import { publishAskOf, sameFiles } from '../web/server/publishask.mjs'
 
+// How often, at most, what the address shows during the check is handed to the VM (OLA-285).
+export const PROGRESS_MS = 15_000
+
 export const OWNER_ONLY = 'Only the project’s owner can publish its pages. Nothing was published; ask the owner to say yes to it.'
 
 /**
@@ -45,7 +48,22 @@ export function makeChatPublish(deps) {
         const names = look.body.items.map((i) => i.as)
         if (!fingerprint && !sameFiles(ask.files, names)) return fail(`The files named are not the ones that would go public. Those are: ${names.join(', ')}. Nothing was published; ask the person again with exactly that list.`)
         const was = sites.status(ws.slug)
-        const r = await sites.publish(ctx, ask.sel, fingerprint || look.body.fingerprint, { fresh: true })
+        // While Ola's server checks the address (up to five minutes for a git deploy, longer than the
+        // command waits), what the address shows so far goes to the VM, so `ola-publish status` says
+        // it, and never "live" before the check ends (OLA-285). One write at a time, at most one every
+        // PROGRESS_MS, and none after the outcome.
+        let chain = Promise.resolve()
+        let lastAt = 0
+        let over = false
+        const onLook = (l) => {
+          if (over || Date.now() - lastAt < (deps.progressMs ?? PROGRESS_MS)) return
+          lastAt = Date.now()
+          const note = { state: 'publishing', stage: 'checking', url: look.body.url, status: String(l.status ?? ''), shows: l.shows ?? '', challenged: !!l.challenged, until: Math.round(l.until / 1000) }
+          chain = chain.then(() => (over ? null : hand(note))).catch(() => null)
+        }
+        const r = await sites.publish(ctx, ask.sel, fingerprint || look.body.fingerprint, { fresh: true, onLook })
+        over = true
+        await chain
         deps.audited?.(ws, sess, ask.sel, r, was)
         if (r.status !== 200) return fail(r.body?.message ?? 'The page could not be published just now. Nothing changed.')
         return hand({ state: 'done', url: r.body.url, count: r.body.files, live: r.body.live, again: r.body.again, shows: r.body.shows ?? '', expected: r.body.expected ?? '', ...(r.body.unconfirmed ? { unconfirmed: true } : {}), ...(r.body.message ? { message: r.body.message } : {}) })

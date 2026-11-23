@@ -161,3 +161,66 @@ test('"take it down" in the conversation: ola-publish unpublish, the owner’s y
   assert.equal(no.decision, 'reject')
   assert.equal(down, 1)
 })
+
+// OLA-285: a git deploy's check of the address takes up to five minutes, longer than the command
+// waits. What the address shows during the check goes to the VM as "publishing, checking", one write at
+// a time, and the outcome is always the last write (a slow progress write never lands after it).
+test('during the check, what the address shows goes to the VM as still checking; the outcome is written last', async () => {
+  const outcomes = []
+  let slow = 0
+  const cp = makeChatPublish({
+    sites: {
+      configured: () => true,
+      status: () => null,
+      async preview() { return { status: 200, body: { items: ITEMS, fingerprint: FP, url: 'https://sites.ola.cx/tenants/' } } },
+      async publish(ctx, sel, fp, opts) {
+        const until = Date.now() + 300_000
+        opts.onLook({ status: 200, shows: 'Old page', challenged: false, until })
+        opts.onLook({ status: 200, shows: 'Old page again', challenged: false, until })
+        opts.onLook({ status: 403, shows: '', challenged: true, until })
+        return { status: 200, body: { url: 'https://sites.ola.cx/tenants/', files: 2, live: true, again: false, shows: 'New page', fingerprint: FP } }
+      },
+    },
+    siteCtx: () => ({}),
+    heldByPerson: () => false,
+    progressMs: 0,
+    // Progress writes are slow (a container exec); the outcome must still land last.
+    publishResult: async (slug, o) => { if (o.stage) await new Promise((r) => setTimeout(r, 30 * ++slow)); outcomes.push(o); return true },
+  })
+  const pending = { json: [{ id: 'per_1', action: 'shell', resources: ['ola-publish site --files index.html,style.css'] }] }
+  const oc = async () => pending
+  const r = await cp.onReply({ slug: 'tenants', id: 1, role: 'owner' }, { personId: 7 }, 'ses_1', 'per_1', 'once', {}, oc)
+  await r.done
+  assert.equal(outcomes[0].state, 'publishing')
+  assert.equal(outcomes[0].stage, undefined, 'the first note is the plain "publishing" before the command runs')
+  const checking = outcomes.filter((o) => o.stage === 'checking')
+  assert.ok(checking.length >= 1, JSON.stringify(outcomes))
+  assert.equal(checking[0].url, 'https://sites.ola.cx/tenants/')
+  assert.equal(checking[0].shows, 'Old page')
+  assert.equal(checking[0].status, '200')
+  assert.ok(checking[0].until > Date.now() / 1000)
+  assert.equal(outcomes.at(-1).state, 'done', 'the outcome is the last write')
+  assert.equal(outcomes.at(-1).live, true)
+})
+
+test('progress during the check is at most one write per PROGRESS_MS', async () => {
+  const outcomes = []
+  const cp = makeChatPublish({
+    sites: {
+      configured: () => true,
+      status: () => null,
+      async preview() { return { status: 200, body: { items: ITEMS, fingerprint: FP, url: 'https://sites.ola.cx/tenants/' } } },
+      async publish(ctx, sel, fp, opts) {
+        for (let i = 0; i < 20; i++) opts.onLook({ status: 200, shows: `read ${i}`, challenged: false, until: Date.now() + 1000 })
+        return { status: 200, body: { url: 'https://sites.ola.cx/tenants/', files: 2, live: false, shows: 'read 19', fingerprint: FP } }
+      },
+    },
+    siteCtx: () => ({}),
+    heldByPerson: () => false,
+    publishResult: async (slug, o) => (outcomes.push(o), true),
+  })
+  const r = await cp.onReply({ slug: 'tenants', id: 1, role: 'owner' }, { personId: 7 }, 'ses_1', 'per_1', 'once', {}, async () => ({ json: [{ id: 'per_1', action: 'shell', resources: ['ola-publish site --files index.html,style.css'] }] }))
+  await r.done
+  assert.equal(outcomes.filter((o) => o.stage === 'checking').length, 1)
+  assert.equal(outcomes.at(-1).state, 'done')
+})

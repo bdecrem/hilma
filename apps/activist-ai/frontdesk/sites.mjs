@@ -664,8 +664,12 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
 
   // The public address answers with what was published (or, after an unpublish, with 404).
   // `shows` is what the address said last (the old words while it still has them).
-  async function verify(url, expect, ms = cfg.verifyMs, settleMs = cfg.settleMs) {
+  // `onLook` (optional) hears each read while the check goes on, { status, shows, challenged, until }:
+  // a check of a git deploy can take five minutes, longer than the conversation's command waits, so the
+  // front desk hands what the address shows so far to the VM (OLA-285).
+  async function verify(url, expect, ms = cfg.verifyMs, settleMs = cfg.settleMs, onLook = null) {
     const until = Date.now() + ms
+    const heard = (look) => { try { onLook?.({ ...look, until }) } catch {} }
     let last = ''
     let shows = ''
     let since = null
@@ -676,6 +680,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         const r = await readAsReader(url)
         last = String(r.status)
         challenged = !!r.challenged
+        heard({ status: r.status, shows: challenged ? '' : r.ok ? wordsOf(r.body) : '', challenged })
         if (challenged) {
           // Reading faster only keeps the host's bot check on: wait, and keep the last real words.
           since = null
@@ -694,6 +699,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         }
       } catch (e) {
         last = e.code ?? e.name
+        heard({ status: last, shows: '', challenged: false })
         since = null
         streak = 0
       }
@@ -870,7 +876,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       const index = plan.items.find((i) => i.as === plan.page)
       // The address itself, fetched, against the page just published: `live` and `shows` (what the
       // address says now) are what Ola's answer is written from (OLA-267), never what it believes.
-      const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs)
+      const seen = await verify(plan.url, index.sha, c.git ? cfg.gitVerifyMs : cfg.verifyMs, c.git ? cfg.gitSettleMs : cfg.settleMs, opts.onLook)
       const live = seen.ok
       // When the host's bot check answered the last read, nothing is known about the page: say that,
       // never "it still shows the earlier page" (OLA-230, Nov 23).

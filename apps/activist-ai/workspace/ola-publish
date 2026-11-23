@@ -11,7 +11,8 @@
 #   ola-publish unpublish
 #       Takes the project's published pages down, after the person's yes (also always asked).
 #   ola-publish status
-#       The last publish's outcome (never asked): use it when the publish above was still going.
+#       The last publish's outcome (never asked): use it when the publish above was still going; while
+#       it still is, it waits for it (up to OLA_PUBLISH_WAIT) the way the publish does (OLA-285).
 #       An outcome already shown, or older than 15 minutes, is printed as a record of the past, never
 #       as the address's state now (OLA-421): this computer cannot look at the address, and on Nov 23
 #       Ola gave a link "currently live and shows Bart" from such a record while the address was 404
@@ -19,7 +20,7 @@
 #
 # The front desk writes the outcome with `ola-publish --result` (the JSON on stdin), into
 # /work/.ola/publish/result.json. Exit 0 published (and the address shows it), 1 not published,
-# 2 used wrongly, 3 still going, 4 sent but the address does not show it yet, 5 (status) only a record
+# 2 used wrongly, 3 still going (never live: the check has not ended), 4 sent but the address does not show it yet, 5 (status) only a record
 # of an earlier publish, not a look at the address now.
 import json, os, sys, tempfile, time
 
@@ -92,7 +93,27 @@ def tell(r):
             "Do not tell the person it is live. Tell them in one plain sentence that it was sent but the address still shows the earlier page, and that it usually appears within a few minutes; offer to publish it again if it does not.")
         return 4
     if st == "publishing":
-        say("It is still being published. Run `ola-publish status` in a minute to see whether it is live; do not run ola-publish again for the same files.")
+        # Exit 3 is never "live" (OLA-285): on Nov 20 the command stopped waiting while Ola's server was
+        # still checking the address (a git deploy's check takes up to five minutes) and Ola told the
+        # person the publish "confirmed it answers with the new page". What the address showed so far
+        # is said as that, never as the outcome.
+        if r.get("stage") == "checking":
+            st_, shows = str(r.get("status") or ""), (r.get("shows") or "").strip()
+            if r.get("challenged"):
+                seen = "the host answered with its bot check instead of the page"
+            elif shows:
+                seen = f"it answered {st_} and showed “{shows}”"
+            else:
+                seen = f"it answered {st_ or 'nothing'}"
+            left = max(0, int(float(r.get("until") or 0) - time.time()))
+            say(f"NOT CHECKED YET: the page was sent to {r.get('url')}, and Ola's server is still checking that the address shows it"
+                + (f" (for up to {max(1, round(left / 60))} more minute(s))." if left else "."),
+                f"The last look at the address: {seen}. That is not the result of the check.",
+                "Do not tell the person it is live, that it answers with the new page, or what it shows. Run `ola-publish status` now:"
+                " it waits for the check and prints the outcome. Do not run ola-publish again for the same files.")
+            return 3
+        say("NOT PUBLISHED YET: Ola's server is still sending the page. Do not tell the person it is live, or give the address as working.",
+            "Run `ola-publish status` now: it waits for the outcome and prints it. Do not run ola-publish again for the same files.")
         return 3
     say("Not published: " + str(r.get("message") or "Ola's server did not publish it."), "Tell the person this in plain words. Nothing went public.")
     return 1
@@ -147,6 +168,12 @@ def main(argv):
         return 0
     if argv == ["status"]:
         r = read()
+        # Still going: wait for the outcome here as the publish itself does, so one `status` covers the
+        # rest of the check (OLA-285).
+        end = time.time() + WAIT
+        while r and r.get("state") == "publishing" and time.time() < end and time.time() - float(r.get("written") or 0) < FRESH + WAIT:
+            time.sleep(1)
+            r = read()
         if not r:
             say("Nothing has been published from this project's conversation yet.",
                 "To give the person a link to a page, publish that page (the publish skill: prepare, check, then ola-publish).")
