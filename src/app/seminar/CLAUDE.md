@@ -72,9 +72,35 @@ on the first window). To see the signed-out screens without touching his own app
 look at it, then kill that one process. claude.ai/login in a headless browser shows a robot
 check as soon as an address is typed, so it cannot be read that way.
 
+## The second sheet: the paper library (bartin16.xyz/seminar/library), 2026-11-23
+
+Bart's third seminar project (the second, a fact checker for a folder of your own work, has
+no page yet; the prompt I gave him is in this session's history and untested). Each fellow
+pulls a few hundred papers on one topic from arXiv and OpenAlex into a small database
+(SQLite) in a folder on their laptop and searches it. Topic for the seminar: **trust**. He
+judged it a better fit for 30 minutes than the website: no accounts.
+
+- `Sheet.tsx` draws any sheet from its `content.json` (`SheetContent`); `/seminar` and
+  `/seminar/library` are each a few lines. `SHEETS` is the row of links at the top of every
+  sheet: add a sheet there. `og.tsx` is the shared share image. A sheet may have a `why`
+  section (here: "Why build your own when Consensus, Scite and Zotero exist", which Bart asked
+  for by name), and may leave out `stuck`, `next` and `example`.
+- The facts in the `why` section were looked up on 2026-11-23 (Consensus: over 200 million
+  papers, answers with citations; Scite: citations sorted supporting / contrasting /
+  mentioning, over 1.6 billion statements; Zotero: free, Word and Google Docs, BibTeX/RIS).
+  Prices were left out on purpose: the sources disagreed.
+- His dictated notes: `~/Desktop/seminar/paper-library-cheat-sheet.md`. The run was still
+  going when the page went up: the steps stop where his reports stop (after "No, make it
+  local."). Add the rest as he gives it, and nothing he has not met.
+- Open: whether the local chatbot page needs anything installed or a key; whether a plain
+  Mac (not a developer's) can run what Claude builds; a Windows run. arXiv and OpenAlex both
+  answered without a key from this iMac, and the Mac's own `sqlite3` has full-text search.
+
 ## Checking a change
 
 `npx next dev --turbopack -p 3288`, open `/seminar` at 1297 and 390 wide, look at the whole
 page (cut the tall screenshot into pieces), click a tick and a Copy, fetch
-`/seminar/opengraph-image`. Then `pnpm build`, `rm -rf .next`, commit, push, and load
+`/seminar/opengraph-image`. Run the dev server and `tsc` under `nice -n 19` when Bart is working at this machine, and no
+full `pnpm build` there while he is (Nov 23: it took the machine from him; OLA-430). Then commit, push, watch the deployment
+(`npx vercel ls hilma`, `npx vercel inspect <url>`), and load
 https://bartin16.xyz/seminar once it is out.

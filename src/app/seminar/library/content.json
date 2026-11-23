@@ -1,0 +1,113 @@
+{
+  "title": "Build your own paper library",
+  "kicker": "CASBS hands-on seminar",
+  "intro": "By the end of this you will have a few hundred papers on trust in a small database in a folder on your own laptop: who people trust, why, and what breaks it. You can search it and ask it questions in plain English. Claude does the fetching and the building. You describe what you want, the way you would brief a research assistant. I think it is worth half an hour for two reasons. A library you built answers your own questions, in the categories you use. And the same move works for any body of material you care about. Trust is the seminar topic. Swap in yours.",
+  "shape": "About half an hour, on the Claude account you already have, with no new accounts to open.",
+  "need": [
+    "A Mac or Windows laptop with the Claude desktop app, signed in to your Stanford account.",
+    "An internet connection for the first pull of papers.",
+    "Nothing else: no new accounts, no subscription."
+  ],
+  "why": {
+    "title": "Why build your own when Consensus, Scite and Zotero exist",
+    "lede": "These are good tools and I use them. Here is what each one does well, and what a library of your own gives you that they don't.",
+    "tools": [
+      {
+        "name": "Consensus",
+        "url": "https://consensus.app",
+        "does": "An AI search engine over more than 200 million academic papers. You ask a question in plain words and it finds the top papers and writes an answer with citations, with filters for study design, population, date and field."
+      },
+      {
+        "name": "Scite",
+        "url": "https://scite.ai",
+        "does": "Shows how a paper has been cited: the sentence around each citation, sorted into supporting, contrasting or just mentioning, across more than 1.6 billion citation statements. The quickest way to see how a finding was received."
+      },
+      {
+        "name": "Zotero",
+        "url": "https://www.zotero.org",
+        "does": "The free reference manager nearly every academic uses. It collects sources from the browser, keeps your PDFs and notes, and puts citations and bibliographies into Word and Google Docs in any journal's style."
+      }
+    ],
+    "reasonsTitle": "What your own library adds",
+    "reasons": [
+      {
+        "title": "Exactly what you chose",
+        "body": "It holds one topic from the sources you picked. That can include things the big tools cover thinly or not at all, like working papers, a niche archive, or your own PDFs and notes."
+      },
+      {
+        "title": "Your columns, your codebook",
+        "body": "Add fields for method, sample, country, whether it replicated, or your own coding categories, and Claude reads each abstract and fills them in. The big tools give you their fields. Here you get yours."
+      },
+      {
+        "title": "Questions no search box has",
+        "body": "Ask which papers use field experiments outside the US and what they found. Ask for a count per year, as a table or a chart."
+      },
+      {
+        "title": "It stays yours",
+        "body": "No subscription to lapse and no monthly cap halfway through a literature review. Nothing is uploaded anywhere, and the file will still be there in five years."
+      },
+      {
+        "title": "You can see how it searched",
+        "body": "You can see everything in it and why a paper came back, and you can run the search again. That helps when a reviewer asks how you searched."
+      },
+      {
+        "title": "The recipe carries over",
+        "body": "The same three sentences build a library of court opinions, archival records, speeches or survey waves. Papers are the easy first case."
+      }
+    ],
+    "limits": "Consensus has already read 200 million papers, and yours will have a few hundred. Scite's sorted citations took years to build, and you will not rebuild that in an afternoon. Zotero is still where your references live when you write.",
+    "together": "Find with Consensus, check how a paper was received with Scite, keep and cite with Zotero, and build your own library for the question that is yours. When you want its papers in Zotero, ask Claude for a BibTeX file, which Zotero imports."
+  },
+  "parts": [
+    {
+      "label": "The steps",
+      "title": "Build the library",
+      "time": "About 30 minutes",
+      "lede": "You type one paragraph and Claude does the rest. The paragraph below is the one I used, word for word.",
+      "steps": [
+        {
+          "title": "Start a new project",
+          "body": "Open the Claude desktop app, go to the Code tab and start a new project.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Pick a folder",
+          "body": "Choose a folder for the library, or make a new one. Everything Claude builds goes in there, including the database.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Trust the workspace",
+          "body": "When it asks, say you trust the workspace. That is Claude asking permission to work in that folder.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Say what you want",
+          "body": "Type this, or paste it. To build a library on your own topic, swap \"trust\" and the words after it for your subject.",
+          "say": "Hi Claude. I'm a researcher and I want my own little library of papers about trust: who people trust, why, and what breaks it. Grab a few hundred from arXiv and from OpenAlex (title, authors, year, abstract, link) and keep them in a small database in this folder so I can search it. Keep it simple, I'm not technical, you decide how. When it's done, show me how to ask it a question.",
+          "trap": null
+        },
+        {
+          "title": "Let it work",
+          "body": "Claude gets to work and tells you what it is doing as it goes. Let it run. Mine finished by telling me a lot about Python scripts I could run to search the library.",
+          "say": null,
+          "trap": null
+        },
+        {
+          "title": "Ask for a page instead",
+          "body": "You don't have to run anyone's scripts. Tell it you want something you can use.",
+          "say": "Now make me a little webpage that's a chatbot that I can use instead of your weird scripts.",
+          "trap": null
+        },
+        {
+          "title": "Keep it on your laptop",
+          "body": "Mine then offered to build the chatbot as a Claude artifact, which is a page that lives on Claude's site instead of in your folder. Say no: the point is a library that is yours.",
+          "say": "No, make it local.",
+          "trap": null
+        }
+      ]
+    }
+  ]
+}

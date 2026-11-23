@@ -66,6 +66,36 @@
 
 /* Head */
 
+.sem-sheets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.sem-sheets a {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(43, 33, 24, 0.2);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  color: var(--soft);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sem-sheets a:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.sem-sheets a[aria-current='page'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 .sem-kicker,
 .sem-small {
   font-size: 14px;
@@ -181,6 +211,7 @@
 /* Parts */
 
 .sem-part,
+.sem-why,
 .sem-stuck,
 .sem-next {
   margin-top: 88px;
@@ -211,6 +242,7 @@
   letter-spacing: -0.022em;
 }
 
+.sem-why .sem-part-title,
 .sem-stuck .sem-part-title,
 .sem-next .sem-part-title {
   margin-top: 0;
@@ -382,6 +414,82 @@
   overflow-wrap: anywhere;
 }
 
+/* Why build your own: the three tools as a short table, then what yours adds */
+
+.sem-tools {
+  margin: 40px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.sem-tools > div {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  column-gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sem-tools dt {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sem-tools dt a {
+  text-decoration: underline;
+  text-decoration-color: rgba(214, 74, 34, 0.45);
+  text-underline-offset: 4px;
+}
+
+.sem-tools dd {
+  margin: 0;
+}
+
+.sem-why-sub {
+  margin-top: 56px;
+}
+
+.sem-reasons {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px 32px;
+}
+
+.sem-reason-n {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--clay);
+  margin-bottom: 6px;
+}
+
+.sem-reasons h4 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+}
+
+.sem-reasons p {
+  margin-top: 8px;
+}
+
+.sem-why-limits {
+  margin-top: 56px;
+  padding-left: 16px;
+  border-left: 3px solid var(--line);
+  color: var(--soft);
+}
+
+.sem-why-together {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
 /* When you get stuck */
 
 .sem-stuck ul {
@@ -475,10 +583,34 @@
   }
 
   .sem-part,
+  .sem-why,
   .sem-stuck,
   .sem-next {
     margin-top: 64px;
     padding-top: 40px;
+  }
+
+  .sem-sheets {
+    margin-bottom: 28px;
+  }
+
+  .sem-tools > div {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 4px;
+  }
+
+  .sem-reasons {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .sem-why-sub,
+  .sem-why-limits {
+    margin-top: 40px;
+  }
+
+  .sem-why-together {
+    font-size: 18px;
   }
 
   .sem-part-lede,
@@ -566,6 +698,7 @@
   }
 
   .sem-toc,
+  .sem-sheets,
   .sem-copy {
     display: none;
   }
