@@ -23,6 +23,9 @@ final class PhoneDrive: XCTestCase {
     /// Ola's question answered by typing these words in the box and Send, not by a tap on a choice
     /// (OLA-301 check 8: a person's own words instead of the choices).
     var answerWords: String?
+    /// Each sentence typed, read back from the box and wiped, never sent (OLA-402: the box test,
+    /// tools/drive-box-test.sh; no model, no card).
+    var typeOnly: Bool?
   }
   struct Entry: Encodable { var at: Double; var step: String; var shot: String? }
   struct Said: Encodable {
@@ -35,6 +38,11 @@ final class PhoneDrive: XCTestCase {
     var questions: [String] = []
     var answered: [String] = []
     var answerOnScreen: String = ""
+    /// What the box held before Send, as what element XCUITest calls it, and its height in points
+    /// (one line 21, two lines 41 on the drive's phone) (OLA-402).
+    var inBox: String?
+    var boxKind: String?
+    var boxHeight: Double?
   }
   struct Record: Encodable {
     var app = "phone"
@@ -79,7 +87,7 @@ final class PhoneDrive: XCTestCase {
     do {
       try run(s)
       record.ok = true
-      record.verdict = "every sentence got a finished answer on the screen"
+      record.verdict = s.typeOnly == true ? "every sentence was whole in the box, then wiped (nothing sent)" : "every sentence got a finished answer on the screen"
     } catch let e as Failed {
       record.verdict = e.why
       shot("stopped-here")
@@ -187,14 +195,26 @@ final class PhoneDrive: XCTestCase {
       step("typed sentence \(n)", shot: "say\(n)-typed")
       // The box must hold the whole sentence, line breaks included, before Send (OLA-275): the
       // keyboard's return key could send the first line alone.
-      let norm = { (x: String) in x.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines) }
-      // Looked up again: the box is a text field on one line and a text view once it holds two.
-      let boxes = app.textViews.allElementsBoundByIndex + app.textFields.allElementsBoundByIndex
-      let values = boxes.compactMap { $0.value as? String }
-      let inBox = values.first { norm($0) == norm(sentence) } ?? (composer().exists ? (composer().value as? String ?? "") : values.joined(separator: " | "))
-      if norm(inBox) != norm(sentence) {
-        let one = { (x: String) in "'" + String(x.replacingOccurrences(of: "\n", with: "⏎").prefix(120)) + "'" }
-        throw Failed(why: "the box holds \(one(inBox)), not sentence \(n) \(one(sentence)) (a line break may have sent the first line)")
+      let held = boxText(sentence)
+      said.inBox = held.text
+      said.boxKind = held.kind
+      said.boxHeight = held.height
+      if norm(held.text) != norm(sentence) {
+        throw Failed(why: "the box holds \(one(held.text)), not sentence \(n) \(one(sentence)) (a line break may have sent the first line)")
+      }
+      step("sentence \(n) is whole in the box (\(held.kind), \(Int(held.height)) pt tall)")
+      if s.typeOnly == true {
+        // The box test: wiped as a person deletes it, and empty again (Send off), nothing sent.
+        let b = composer()
+        try tap(b, "the box, to wipe it")
+        b.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: sentence.count + 4))
+        let left = boxText(sentence).text
+        if !(norm(left).isEmpty || left.hasPrefix("Ask, or tell it")) || app.buttons["Send"].isEnabled {
+          throw Failed(why: "the box still holds \(one(left)) after deleting sentence \(n)")
+        }
+        said.status = "in the box"
+        step("wiped sentence \(n) from the box (not sent)", shot: "say\(n)-wiped")
+        continue
       }
       try tap(app.buttons["Send"], "Send")
       said.sentAt = now
@@ -207,17 +227,18 @@ final class PhoneDrive: XCTestCase {
       var quietSince: Date?
       while true {
         if Date() > end { said.status = "timeout"; throw Failed(why: "no finished answer to sentence \(n) after \(Int(wait)) s") }
-        let yes = app.buttons["Yes, this once"]
+        let yes = yesButton()
         if yes.exists {
           let title = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Ola wants'")).firstMatch
           said.cards.append(title.exists ? title.label : "a card")
           step("card: \(said.cards.last!)", shot: "say\(n)-card\(said.cards.count)")
           if s.card == "no" { said.status = "card"; throw Failed(why: "a card came and the script says no card may come") }
-          try tap(yes, "Yes, this once")
-          said.answered.append("Yes, this once")
+          let word = yes.label
+          try tap(yes, word)
+          said.answered.append(word)
           let gone = Date().addingTimeInterval(20)
           while yes.exists, Date() < gone { sleep(1) }
-          if yes.exists { throw Failed(why: "the card stayed after Yes, this once") }
+          if yes.exists { throw Failed(why: "the card stayed after \(word)") }
           step("answered the card", shot: "say\(n)-card\(said.cards.count)-answered")
           quietSince = nil
           continue
@@ -314,11 +335,69 @@ final class PhoneDrive: XCTestCase {
 
   // MARK: helpers
 
+  /// What the conversation's box holds, and as what element, looked up afresh. The box is SwiftUI's
+  /// TextField(axis: .vertical): XCUITest sees a text field while it holds one line and a text view
+  /// once the words wrap to two (its log: "Automation type mismatch: computed TextField from legacy
+  /// attributes vs TextView from modern attribute") that shows no placeholder, so the box found by its
+  /// placeholder before typing no longer resolves after. OLA-402: the driver of release e22f2b7a read that element's value after typing
+  /// a sentence that wraps ('make a page that says Bart and publish it on ola') and stopped with
+  /// "No matches found ... Descendants matching type TextField" (PhoneDrive.swift:191), 3 of 3 runs.
+  /// Every box on the screen is read (the question card has its own fields), the one holding the
+  /// sentence first; else the conversation's box.
+  func boxText(_ sentence: String) -> (text: String, kind: String, height: Double) {
+    var seen: [(text: String, kind: String, height: Double)] = []
+    for (q, kind) in [(app.textViews, "text view"), (app.textFields, "text field")] {
+      for e in q.allElementsBoundByIndex where e.exists {
+        if let v = e.value as? String { seen.append((v, kind, Double(e.frame.height))) }
+      }
+    }
+    if let hit = seen.first(where: { norm($0.text) == norm(sentence) }) { return hit }
+    let c = composer()
+    if c.exists { return ((c.value as? String) ?? "", c.elementType == .textView ? "text view" : "text field", Double(c.frame.height)) }
+    return (seen.map(\.text).joined(separator: " | "), "no box", 0)
+  }
+
+  func norm(_ x: String) -> String {
+    x.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  func one(_ x: String) -> String { "'" + String(x.replacingOccurrences(of: "\n", with: "⏎").prefix(120)) + "'" }
+
+  /// A yes card's yes button: "Yes, this once", or a publish card's own yes ("Publish this file",
+  /// "Publish these three files", "... again", "Publish the folder", "Yes, take it down"; CardsJS
+  /// publishYes, ConversationViews yesButtons). Until Nov 22 only "Yes, this once" was known, so a
+  /// phone run that came to a publish card (builds 33 and on) waited the whole --wait for an answer
+  /// (run-9583: "Publish this file" on the screen, 600 s, no finished answer).
+  func yesButton() -> XCUIElement {
+    app.buttons.matching(NSPredicate(format: "label == 'Yes, this once' OR label == 'Publish this file' OR label BEGINSWITH 'Publish these ' OR label BEGINSWITH 'Publish this file ' OR label == 'Publish the folder' OR label == 'Yes, take it down'")).firstMatch
+  }
+
   /// The conversation's box: the field whose placeholder is "Ask, or tell it what to do next".
+  /// Found by its placeholder while it holds one line. Holding two or more it is a text view that
+  /// shows no placeholder (the tree: `TextField ... {308.0, 41.0}, value: make a page that s...,
+  /// Keyboard Focused`, no placeholderValue), so it is then the text box with the keyboard, or the
+  /// text box on the row of Send / Stop (OLA-402).
   func composer() -> XCUIElement {
     let p = NSPredicate(format: "placeholderValue BEGINSWITH 'Ask, or tell it' OR label BEGINSWITH 'Ask, or tell it'")
     let tv = app.textViews.matching(p).firstMatch
-    return tv.exists ? tv : app.textFields.matching(p).firstMatch
+    if tv.exists { return tv }
+    let tf = app.textFields.matching(p).firstMatch
+    if tf.exists { return tf }
+    let typed = NSPredicate(format: "elementType == %d OR elementType == %d", XCUIElement.ElementType.textView.rawValue, XCUIElement.ElementType.textField.rawValue)
+    let all = app.descendants(matching: .any).matching(typed)
+    let focused = all.matching(NSPredicate(format: "hasKeyboardFocus == true")).firstMatch
+    if focused.exists { return focused }
+    let send = app.buttons["Send"].exists ? app.buttons["Send"] : app.buttons["Stop"]
+    if send.exists {
+      let s = send.frame
+      let row = all.allElementsBoundByIndex.filter { e in
+        guard e.exists else { return false }
+        let f = e.frame
+        return f.maxY >= s.minY && f.minY <= s.maxY && f.maxX <= s.minX + 1
+      }
+      if let e = row.last { return e }
+    }
+    return tf
   }
 
   /// The question card's first line (cards.mjs questionCard kicker), when a question waits.

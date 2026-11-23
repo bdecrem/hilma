@@ -102,8 +102,19 @@ tools/drive.sh mac|phone --where cloud|local --say "<sentence>" [--say "<next se
   and a Return that sends other words (part of it) fails as `Return sent '…', not sentence n '…'` with
   what was left in the box (OLA-275; before, a line break was Return, half was sent, and the run said
   "not taken").
-- `--card yes`: a card must come and is answered "Yes, this once"; `any` (default): any card is
-  answered yes; `no`: a card fails the run. `--wait`: seconds per answer (default 600).
+- `--card yes`: a card must come and is answered with its yes ("Yes, this once", or on the phone a
+  publish card's own yes, "Publish this file", "Publish these three files", "Yes, take it down": until
+  Nov 22 the phone drive knew only the first and sat out `--wait` at a publish card); `any` (default):
+  any card is answered yes; `no`: a card fails the run. `--wait`: seconds per answer (default 600).
+- **The box on the phone** is a text field while it holds one line and a text view once the words wrap
+  to two, and a two-line box shows no placeholder, so the drive finds it by the keyboard or the row of
+  Send and reads it back afresh after typing (`PhoneDrive.boxText`, `composer`; OLA-402: the driver of
+  release e22f2b7a read the element found before typing and stopped with "No matches found ...
+  TextField", PhoneDrive.swift:191, on 'make a page that says Bart and publish it on ola').
+  `tools/drive-box-test.sh [<out>]` proves it without a model: `drive.sh phone --type-only` types a
+  sentence that wraps and one with a line break into a Cloud session's box, reads each back whole from
+  a box two lines tall and wipes it, nothing sent. A checker's copy of `apple/` taken from the live release carries
+  the driver of that release, not of main.
 - Ola's questions (its `question` tool; OLA-301) show as their own card with the choices as buttons,
   Command-1 to Command-9 on the Mac. The Mac drive answers one with its first choice (Command-1); a
   single pick-several question with its first two boxes (Command-1, Command-2) and Send my answers;

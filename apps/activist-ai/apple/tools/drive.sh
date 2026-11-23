@@ -20,8 +20,9 @@
 #          of the Mac in <dir>/mac). The Mac copy listens on 127.0.0.1, not the Tailscale address: a
 #          listener there never completes a connection from the same Mac (Mac/PhoneLink.swift,
 #          driveHost), so the Tailscale leg is the one part a real phone uses that this does not.
-#   --card yes      a card must come, and is answered "Yes, this once"; any (default): any card that comes
-#          is answered yes; no: a card that comes fails the run.
+#   --card yes      a card must come, and is answered with its yes ("Yes, this once", or a publish card's
+#          "Publish this file" and the like); any (default): any card that comes is answered yes; no: a
+#          card that comes fails the run.
 #   --wait          seconds for each answer (default 600).
 #   --file <name>   (local) the run fails unless the scratch folder has this file afterwards.
 #   --pick <model>  (mac) the model for the session, picked at the box before the first sentence by its
@@ -36,6 +37,8 @@
 #          (OLA-301 check 7).
 #   --answer-words "<words>"  (phone) Ola's question is answered by typing these words in the box and
 #          Send, not by tapping a choice (OLA-301 check 8).
+#   --type-only     (phone) each sentence typed, read back from the box and wiped, never sent: no model,
+#          no card (OLA-402; tools/drive-box-test.sh). Passes when every sentence was whole in the box.
 #   A line break in --say is typed as Option-Return (a new line in the box), not Return (OLA-275).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
@@ -58,7 +61,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; export ANSWER_WORDS=""
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; export ANSWER_WORDS="" TYPE_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -76,6 +79,7 @@ while [ $# -gt 0 ]; do
     --pick-rounds) ROUNDS="$2"; shift 2 ;;
     --away) AWAY=1; shift ;;
     --answer-words) ANSWER_WORDS="$2"; shift 2 ;;
+    --type-only) TYPE_ONLY=1; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -84,6 +88,7 @@ case "$WHERE" in cloud|local) ;; *) echo "--where cloud or local"; exit 2 ;; esa
 case "$CARD" in yes|any|no) ;; *) echo "--card yes, any or no"; exit 2 ;; esac
 [ -n "$OUT" ] || { echo "--out <dir> is needed"; exit 2; }
 [ ${#SAYS[@]} -gt 0 ] || { echo "at least one --say"; exit 2; }
+[ -z "$TYPE_ONLY" ] || [ "$APPKIND" = phone ] || { echo "--type-only is for phone"; exit 2; }
 [ "$PROJECT" = appdriver ] || fail "the made-up person has one project, appdriver (asked for $PROJECT)"
 [ -d "$LIVE" ] || fail "no live release at $LIVE: run this on the test server (the Mac mini)"
 

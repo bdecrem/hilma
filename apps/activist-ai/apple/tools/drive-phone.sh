@@ -73,6 +73,7 @@ s = {"out": out, "handle": "appdriver", "passwordFile": pw, "where": where, "car
 if pair: s["pairCodeFile"] = pair
 import os
 if os.environ.get("ANSWER_WORDS"): s["answerWords"] = os.environ["ANSWER_WORDS"]
+if os.environ.get("TYPE_ONLY"): s["typeOnly"] = True
 json.dump(s, open(f, "w"))
 PY
 echo "  driving the iPhone app $VERSION ($BUILD) from the live release $COMMIT in the simulator \"$NAME\" ($UDID), $WHERE"
