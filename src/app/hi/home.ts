@@ -14,13 +14,12 @@ const FLOW = `<main class="three-main">
 </main>
 <footer class="three-footer">@@LINKS@@<span class="foot-sep" aria-hidden="true">|</span> <a href="https://aixus.substack.com" target="_blank" rel="noopener">Substack</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
 
-// bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
-// swaps them for a message form (posts to /api/contact).
-// Both hosts carry the CASBS line; bartin16.xyz follows it with the invitation plus the
-// email and phone number, decremental.com puts the message form behind “talk to you”.
+// Both hosts carry the CASBS line; bartin16.xyz follows it with a link to the seminar
+// (since 2026-11-24, in place of the email and phone number), decremental.com puts the
+// message form behind “talk to you” (posts to /api/contact).
 export const body = FLOW
   .replace('@@LINKS@@', `<a href="/hi/about">About me</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a>`)
-  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, spending my tokens on AI × human flourishing.</p><p>Come say hi, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, spending my tokens on AI × human flourishing.</p><p>Fellows: here’s <a href="/seminar">my December 2 seminar</a>.</p></div></div>`)
 
 // decremental.com: one line, and the message form lives behind "talk to you" in a dialog.
 export const bodyWithForm = FLOW
