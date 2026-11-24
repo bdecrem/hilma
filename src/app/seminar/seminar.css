@@ -637,6 +637,10 @@
   margin-bottom: 48px;
 }
 
+.sem-last {
+  margin-top: 28px;
+}
+
 .sem-card-first {
   grid-template-columns: minmax(0, 1fr) auto;
   background: transparent;

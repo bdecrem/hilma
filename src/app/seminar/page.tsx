@@ -46,6 +46,19 @@ export default function SeminarHome() {
         </ol>
       </section>
 
+      <section className="sem-last" aria-label="Roll your own">
+        <div className="sem-cards">
+          <Link href={home.last.href} className="sem-card sem-card-first">
+            <span className="sem-card-text">
+              <span className="sem-card-title">{home.last.title}</span>
+            </span>
+            <span className="sem-card-go" aria-hidden="true">
+              →
+            </span>
+          </Link>
+        </div>
+      </section>
+
       <footer className="sem-foot">
         <a href="https://bartin16.xyz">Bart Decrem</a>
         <span>CASBS, 2026–27</span>

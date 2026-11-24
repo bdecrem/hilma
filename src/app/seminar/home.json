@@ -26,13 +26,10 @@
       "title": "Your own fact checker",
       "body": "John Markoff's skill checks every claim in a chapter.",
       "time": "20 min"
-    },
-    {
-      "n": 4,
-      "href": "/seminar/tips",
-      "title": "Roll your own",
-      "body": "Or build whatever you want. A few tips to get started.",
-      "time": ""
     }
-  ]
+  ],
+  "last": {
+    "href": "/seminar/tips",
+    "title": "Or build whatever you want. A few tips to get started."
+  }
 }
