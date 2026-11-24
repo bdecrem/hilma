@@ -6,6 +6,7 @@ the day went and still say "the page" for the website sheet):
 | Address | What | Words in |
 |---|---|---|
 | `/seminar` | Landing page: the three projects, and "Before you come" (request the Stanford Claude account, install the app, the five sign-in steps Bart approved) | `home.json` (drawn by `page.tsx`) |
+| `/seminar/claude` | How to get the free Claude account (fellows: Stanford's Claude for Education request; visiting scholars: a month of Pro at claude.ai that Bart reimburses) and the six sign-in steps, from his Nov 23 mail to the fellows; linked from the "Do this first" card at the very top of `/seminar` (`home.first`). Added 2026-11-24 in a cloud session that had no browser to look at it: check it at both widths | `claude/content.json` |
 | `/seminar/website` | Project 1, the work website (was at `/seminar` until that afternoon) | `website/content.json` |
 | `/seminar/library` | Project 2, the paper library, with the Consensus / Scite / Zotero section | `library/content.json` |
 | `/seminar/fact-checker` | Project 3, John Markoff's fact-checking skill; the file itself is served at `/seminar/fact-checker/SKILL.md` (`public/seminar/fact-checker/`) | `fact-checker/content.json` |
