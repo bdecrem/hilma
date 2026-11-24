@@ -22,6 +22,7 @@ export type SheetContent = {
   title: string
   intro: string
   byline?: string
+  hero?: { src: string; alt: string; width: number; height: number }
   download?: { label: string; href: string; note: string }
   why?: Why
   parts: Part[]
@@ -50,6 +51,17 @@ export function Sheet({ id, content }: { id: (typeof SHEETS)[number]['id']; cont
         </Link>{' '}
         · Project {sheet?.n}
       </p>
+      {content.hero && (
+        <Image
+          className="sem-s-hero"
+          src={content.hero.src}
+          alt={content.hero.alt}
+          width={content.hero.width}
+          height={content.hero.height}
+          sizes="(max-width: 700px) 100vw, 700px"
+          priority
+        />
+      )}
       <h1 className="sem-s-title">{content.title}</h1>
       {content.byline && <p className="sem-s-byline">{content.byline}</p>}
       <p className="sem-s-intro">{content.intro}</p>

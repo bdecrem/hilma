@@ -1,5 +1,11 @@
 {
   "title": "Your own fact checker",
+  "hero": {
+    "src": "/seminar/fact-checker/hero.png",
+    "alt": "A fact-check report: each claim from a book chapter with a verdict, what was found, and the source",
+    "width": 1454,
+    "height": 928
+  },
   "byline": "A skill by CASBS alum John Markoff",
   "intro": "Working on your book? This skill checks every number, date, name and quote in a chapter and shows its sources. It flags, it never rewrites. About 20 minutes.",
   "download": {

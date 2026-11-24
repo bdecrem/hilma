@@ -1180,3 +1180,16 @@
   font-size: 17px;
   font-weight: 500;
 }
+
+/* A sheet's hero screenshot, under the red line. */
+.sem-s-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 16px;
+  border-radius: 12px;
+}
+
+.sem-s-hero + .sem-s-title {
+  margin-top: 28px;
+}
