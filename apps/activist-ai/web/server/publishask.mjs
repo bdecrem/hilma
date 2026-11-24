@@ -14,6 +14,7 @@ import { shellWords } from './webask.mjs'
 
 const TOOLS = new Set(['ola-publish', '/opt/ola/bin/ola-publish'])
 const HELP = new Set(['--help', '-h', 'help'])
+export const STATUS_ALONE = 'it says nothing about whether the page is live or was ever published. Run `ola-publish status` by itself, with nothing after it (no pipe, no tail, no ;); it prints the outcome.'
 
 /** True when a shell command is (or starts as) a call of ola-publish. */
 export const isPublishCommand = (cmd) => TOOLS.has(String(cmd ?? '').trim().split(/\s+/)[0])
@@ -27,6 +28,8 @@ export function publishRequestOf(cmd) {
   if (!isPublishCommand(cmd)) return null
   // `2>&1` at the end changes nothing about what is published (OLA-267: a card showed the raw command for it).
   const w = shellWords(String(cmd).trim().replace(/\s+2>&1$/, ''))
+  // A status with something after it (a pipe, tail): never run, and it is not a publish (OLA-421).
+  if (/^\s*\S+\s+status(?![\w-])/.test(String(cmd)) && !(w && w.length === 2 && w[1] === 'status')) return { bad: STATUS_ALONE, statusBad: true }
   if (!w || !TOOLS.has(w[0])) return { bad: 'Run ola-publish as a command of its own, with nothing before or after it (no pipes, ; or &&).' }
   if (w[1] === 'status' && w.length === 2) return { status: true }
   // Its help (OLA-267: a yes was asked for `ola-publish --help`): never asked, prints the usage.

@@ -121,14 +121,49 @@ test('not switched on, or the address held by a Mac site: said plainly, nothing 
   }
 })
 
-test('a command in a form we do not act on (a pipe, no --files): it runs and prints its own usage; nothing published', async () => {
+test('a command in a form we do not act on (a pipe, no --files): a yes is answered no with the reason, never yes; nothing published (OLA-421)', async () => {
   for (const command of ['ola-publish site --files index.html | cat', 'ola-publish site']) {
     const { answer, outcomes, calls } = setup({ command })
     const r = await answer('once', { fingerprint: FP })
-    assert.equal(r.decision, 'once')
+    assert.equal(r.decision, 'reject')
+    assert.match(r.message, /^Not published, though the person said yes: /)
     await r.done
     assert.equal(calls.publish.length + outcomes.length, 0)
   }
+})
+
+test('a status with a pipe after it (the OLA-421 check: ola-publish status 2>&1 | tail -20): never run, and the reason says it tells nothing about the page', async () => {
+  for (const command of ['ola-publish status 2>&1 | tail -20', 'ola-publish status | head', 'ola-publish status; ls']) {
+    const { answer, outcomes, calls } = setup({ command })
+    const r = await answer('once')
+    assert.equal(r.decision, 'reject')
+    assert.match(r.message, /^Not run: it says nothing about whether the page is live/)
+    assert.match(r.message, /`ola-publish status` by itself/)
+    assert.doesNotMatch(r.message, /Not published/)
+    assert.equal(calls.publish.length + outcomes.length, 0)
+  }
+  // The plain status, with or without 2>&1, is still never asked: the usual path.
+  assert.equal(await setup({ command: 'ola-publish status 2>&1' }).answer('once'), null)
+})
+
+test('every publish yes and every refusal leaves a line in the log; an answer to no pending ask too (OLA-421)', async () => {
+  const lines = []
+  const outcomes = []
+  const sites = { configured: () => true, status: () => null, preview: async () => ({ status: 200, body: { items: ITEMS, fingerprint: FP, url: 'u' } }), publish: async () => ({ status: 200, body: { url: 'u', files: 2, live: true } }) }
+  const mk = (publishResult, role = 'owner', pending = [{ id: 'per_1', action: 'shell', resources: ['ola-publish site --files index.html,style.css'] }]) => {
+    const cp = makeChatPublish({ sites, siteCtx: () => ({}), heldByPerson: () => false, publishResult, log: (l) => lines.push(l) })
+    const oc = async (m, p) => (m === 'GET' ? { status: 200, json: pending } : { status: 200 })
+    return cp.onReply({ slug: 'tenants', id: 1, role }, { personId: 7 }, 'ses_1', 'per_1', 'once', { fingerprint: FP }, oc)
+  }
+  await (await mk(async (s, o) => (outcomes.push(o), true))).done
+  assert.ok(lines.some((l) => /tenants: a publish yes from the conversation \(2 files, with the card's fingerprint\)/.test(l)), lines.join('\n'))
+  lines.length = 0
+  await (await mk(async () => false, 'member')).done
+  assert.ok(lines.some((l) => /was refused \(Only the project/.test(l)), lines.join('\n'))
+  assert.ok(lines.some((l) => /the publish outcome \(failed\) did not reach the project/.test(l)), lines.join('\n'))
+  lines.length = 0
+  assert.equal(await mk(async () => true, 'owner', []), null)
+  assert.ok(lines.some((l) => /an answer to ask per_1 matched none of the 0 pending/.test(l)), lines.join('\n'))
 })
 
 test('a page instead of a folder: published as that page', async () => {

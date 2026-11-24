@@ -31,8 +31,14 @@ export const OWNER_ONLY = 'Only the project’s owner can publish its pages. Not
 export function makeChatPublish(deps) {
   const { sites, log = () => {} } = deps
   async function run(ws, sess, ask, fingerprint) {
-    const hand = (outcome) => deps.publishResult(ws.slug, { target: ask.target, files: ask.files, ...outcome })
-    const fail = (message) => hand({ state: 'failed', message })
+    // A write the VM did not take is said in the log (OLA-421: a yes on the Mac app published nothing
+    // and left no line, so the command's "no yes" was the only trace).
+    const hand = async (outcome) => {
+      const ok = await deps.publishResult(ws.slug, { target: ask.target, files: ask.files, ...outcome })
+      if (!ok) log(`${ws.slug}: the publish outcome (${outcome.state}) did not reach the project`)
+      return ok
+    }
+    const fail = (message) => (log(`${ws.slug}: a publish from the conversation was refused (${String(message).slice(0, 120)})`), hand({ state: 'failed', message }))
     if (ws.role !== 'owner') return fail(OWNER_ONLY)
     if (deps.heldByPerson(ws.slug)) return fail(`sites.ola.cx/${ws.slug}/ already holds a site someone published from their Mac, so this project’s pages cannot go there. Write to Ola’s team.`)
     if (!sites.configured()) return fail('Publishing to sites.ola.cx is not switched on yet on Ola’s server. The page is still in the project.')
@@ -93,14 +99,18 @@ export function makeChatPublish(deps) {
       const list = await ocAsk('GET', `/api/session/${sessionID}/permission`)
       const all = Array.isArray(list.json) ? list.json : Array.isArray(list.json?.data) ? list.json.data : []
       const req = all.find((p) => p?.id === requestID) ?? null
+      // Not among the pending asks: whatever it was, it goes on as before, but it is said (OLA-421).
+      if (!req) log(`${ws.slug}: an answer to ask ${requestID} matched none of the ${all.length} pending (list ${list.status ?? '?'})`)
       const parsed = req ? publishAskOf(req.action, req.resources) : null
       if (!parsed || parsed.status) return null
       if (decision === 'reject' || !['once', 'always'].includes(decision)) return { decision, done: Promise.resolve() }
-      // A command in a form we do not act on runs and prints its own usage sentence; nothing is published.
-      if (parsed.bad) return { decision: 'once', done: Promise.resolve() }
+      // A command in a form we do not act on is answered no with the reason, never yes (OLA-421: a
+      // yes let it run, and its "no yes from the person" told Ola the person had not said yes).
+      if (parsed.bad) return (log(`${ws.slug}: a yes to a publish ask in a form we do not act on was answered no`), { decision: 'reject', message: `${parsed.statusBad ? 'Not run' : 'Not published, though the person said yes'}: ${parsed.bad}`, done: Promise.resolve() })
       if (parsed.unpublish) return takeDown(ws, sess)
       const ask = { sel: parsed.sel, files: parsed.files, target: parsed.sel.page ?? parsed.sel.folder }
       const fingerprint = typeof body?.fingerprint === 'string' && /^[0-9a-f]{64}$/.test(body.fingerprint) ? body.fingerprint : ''
+      log(`${ws.slug}: a publish yes from the conversation (${ask.files.length} files, ${fingerprint ? 'with' : 'without'} the card's fingerprint)`)
       let later
       try {
         later = await run(ws, sess, ask, fingerprint)

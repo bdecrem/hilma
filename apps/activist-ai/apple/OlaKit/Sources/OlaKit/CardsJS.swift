@@ -3,7 +3,7 @@
 
 enum CardsJS {
   /// SHA-256 of the three sources, in order.
-  static let sourceHash = "97cdcfb3a3a42c26125433d6d27894670868f88dc201310ac84b6eb936e10baa"
+  static let sourceHash = "71dc12ee2d21a2ac87364f4309c0994417f5e1a57f64a42f7eab6c5b2b97653c"
   static let script = ##"""
 const __webask = (() => {
 // What a web approval is about: the search words, the address or the reference in an `ola-search` /
@@ -118,6 +118,7 @@ const { shellWords } = __webask;
 
 const TOOLS = new Set(['ola-publish', '/opt/ola/bin/ola-publish'])
 const HELP = new Set(['--help', '-h', 'help'])
+const STATUS_ALONE = 'it says nothing about whether the page is live or was ever published. Run `ola-publish status` by itself, with nothing after it (no pipe, no tail, no ;); it prints the outcome.'
 
 /** True when a shell command is (or starts as) a call of ola-publish. */
 const isPublishCommand = (cmd) => TOOLS.has(String(cmd ?? '').trim().split(/\s+/)[0])
@@ -131,6 +132,8 @@ function publishRequestOf(cmd) {
   if (!isPublishCommand(cmd)) return null
   // `2>&1` at the end changes nothing about what is published (OLA-267: a card showed the raw command for it).
   const w = shellWords(String(cmd).trim().replace(/\s+2>&1$/, ''))
+  // A status with something after it (a pipe, tail): never run, and it is not a publish (OLA-421).
+  if (/^\s*\S+\s+status(?![\w-])/.test(String(cmd)) && !(w && w.length === 2 && w[1] === 'status')) return { bad: STATUS_ALONE, statusBad: true }
   if (!w || !TOOLS.has(w[0])) return { bad: 'Run ola-publish as a command of its own, with nothing before or after it (no pipes, ; or &&).' }
   if (w[1] === 'status' && w.length === 2) return { status: true }
   // Its help (OLA-267: a yes was asked for `ola-publish --help`): never asked, prints the usage.
@@ -182,7 +185,7 @@ function publishRules() {
   return out
 }
 
-return { isPublishCommand, publishRequestOf, publishAskOf, sameFiles, publishRules };
+return { STATUS_ALONE, isPublishCommand, publishRequestOf, publishAskOf, sameFiles, publishRules };
 })();
 const __cards = (() => {
 // Ola's cards, described once (OLA-325). A question Ola asks (opencode's `question` tool raises a

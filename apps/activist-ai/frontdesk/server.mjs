@@ -292,7 +292,9 @@ export function makeFrontDesk(cfg = config()) {
     }
     if (!why) return
     log(`${slug}: a publish ask was answered no for the person (${parsed.bad ? 'not a form we act on' : 'its check refused it'})`)
-    await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: `Not published, and the person was not asked: ${why}` })
+    // A status in a form we do not act on was never run: it says nothing about the page (OLA-421: Ola
+    // read "Not published" for `ola-publish status 2>&1 | tail -20` as "the page was never published").
+    await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: parsed.statusBad ? `Not run: ${why}` : `Not published, and the person was not asked: ${why}` })
   }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => {
     madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' })
@@ -541,7 +543,7 @@ export function makeFrontDesk(cfg = config()) {
         // A publish (ola-publish): the front desk publishes on the yes, and the command prints how it went.
         const pub = await chatPublish.onReply(ws, sess, reply[1], reply[2], body.decision, body, ask)
         if (pub) {
-          const r = await ask('POST', `/api/session/${reply[1]}/permission/${reply[2]}/reply`, { decision: pub.decision, ...(pub.decision === 'reject' && typeof body.message === 'string' ? { message: body.message.slice(0, 2000) } : {}) })
+          const r = await ask('POST', `/api/session/${reply[1]}/permission/${reply[2]}/reply`, { decision: pub.decision, ...(pub.decision === 'reject' && typeof (pub.message ?? body.message) === 'string' ? { message: (pub.message ?? body.message).slice(0, 2000) } : {}) })
           if (r.status >= 400) return json(res, r.status === 404 ? 404 : 502, { error: 'reply_failed', message: 'Your answer did not reach Ola. Try again.' })
           return res.writeHead(204, { 'cache-control': 'no-store' }).end()
         }

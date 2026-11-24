@@ -136,8 +136,8 @@ ola-publish site --files index.html,style.css,picture.png
   (a key in the page, a file that is not in the folder, a different list of files) and, if the
   person still wants it, run `ola-publish` again with the list it names. **NOT CHECKED YET** or
   **NOT PUBLISHED YET** (the command stopped waiting before Ola's server finished): it is not live
-  as far as anyone knows. Run `ola-publish status` at once (it is never asked; it waits for the
-  outcome) and tell the person what that prints. Never say it is live, that it answers with the new
+  as far as anyone knows. Run `ola-publish status` at once, by itself (no pipe, no `tail` after it: then it is not run
+  at all; it is never asked; it waits for the outcome) and tell the person what that prints. Never say it is live, that it answers with the new
   page, or what it shows, from these lines (OLA-285).
 - If they say not now, nothing was published: say so in one line and leave the page in the project.
 - **Every publish starts with `prepare`**, from the page the person asked for, also "publish it
