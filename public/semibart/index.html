@@ -83,6 +83,8 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #slide .rule { position: absolute; left: 7.7%; right: 7.7%; top: 24.5%; height: 0.35cqw; background: #1d2a5a; }
 #slide .rule::after { content: ''; position: absolute; left: 0; right: 0; top: 0.75cqw; height: 0.12cqw; background: #1d2a5a; }
 #slide ul { --k: 1; position: absolute; left: 7.7%; right: 9%; top: 34%; margin: 0; padding: 0; list-style: none; font: calc(2.55cqw * var(--k))/1.28 Arial, Helvetica, sans-serif; color: #2a2a2a; }
+#slide ul.two { columns: 2; column-gap: 4cqw; }
+#slide ul.two li { break-inside: avoid; }
 #slide li { position: relative; padding-left: 3.2cqw; margin-bottom: calc(2.3cqw * var(--k)); }
 #slide li::before { content: ''; position: absolute; left: 0.3cqw; top: calc(1.05cqw * var(--k)); width: calc(1cqw * var(--k)); height: calc(1cqw * var(--k)); background: #1d2a5a; }
 #slide .foot { position: absolute; left: 7.7%; right: 7.7%; bottom: 4.5%; display: flex; justify-content: space-between; border-top: 0.1cqw solid #b5ad9c; padding-top: 0.8cqw; font: 1.45cqw/1 Arial, Helvetica, sans-serif; color: #8a8273; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1314,6 +1316,7 @@ function showSlide(i, cut) {
     const sl = TALK[DECK.i];
     $('sTitle').textContent = sl.title;
     $('sList').replaceChildren(...sl.bullets.map(b => { const li = document.createElement('li'); li.textContent = b; return li; }));
+    $('sList').classList.toggle('two', sl.bullets.length > 8); // a long list (the groups slide) sets in two columns
     $('sNum').textContent = (DECK.i + 1) + ' / ' + n;
     fitList();
   };

@@ -25,3 +25,17 @@
 - It's already pretty amazing
 - It's weird and jagged. You still have to check. Think: an RA
 - One key thing: you are learning how to best use this weird new tech
+
+# Groups of four
+- Group 1: Daniel, Brooke, Garance, Heeju
+- Group 2: Graeme, James, Toussaint, Jamie
+- Group 3: Mikael, Bryn, Lawrence, Forrest
+- Group 4: Luke, Alison, Frances, Summerson
+- Group 5: Corey, Milena, Ralph, Lynda
+- Group 6: Joseph, Raul, Kevin, Salman
+- Group 7: Kepa, Eli, Katharyne, John
+- Group 8: T.L., Jūratė, Lewis, Mary
+- Group 9: Shigehiro, Inbal, Juliana, Dessislava
+- Group 10: Ishara, Lana, Kah-Wee, Frederick
+- Group 11: Henry, Jacqueline, Matthew, Andrius
+- Group 12: Brian, Robert, June, Ian
