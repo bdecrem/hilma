@@ -1193,3 +1193,48 @@
 .sem-s-hero + .sem-s-title {
   margin-top: 28px;
 }
+
+.sem-s-hero-wrap {
+  margin: 0;
+}
+
+.sem-s-hero-bar {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.sem-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.sem-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--line);
+  cursor: pointer;
+}
+
+.sem-dot[aria-pressed='true'] {
+  background: var(--clay);
+}
+
+.sem-s-hero-link {
+  color: var(--soft);
+  text-decoration: none;
+}
+
+.sem-s-hero-link:hover {
+  text-decoration: underline;
+}
+
+.sem-s-hero-wrap + .sem-s-title {
+  margin-top: 24px;
+}

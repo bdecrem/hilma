@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 const KEY = 'seminar-done-v1'
@@ -66,5 +67,51 @@ export function Say({ text }: { text: string }) {
         {copied ? 'Copied' : 'Copy'}
       </button>
     </div>
+  )
+}
+
+export type Slide = { src: string; alt: string; width: number; height: number }
+
+// A sheet's hero: one screenshot, or several shown one at a time with a dot for each.
+export function Slides({ slides, caption }: { slides: Slide[]; caption?: { label: string; url: string } }) {
+  const [at, setAt] = useState(0)
+  const slide = slides[at]
+  return (
+    <figure className="sem-s-hero-wrap">
+      <Image
+        className="sem-s-hero"
+        src={slide.src}
+        alt={slide.alt}
+        width={slide.width}
+        height={slide.height}
+        sizes="(max-width: 700px) 100vw, 700px"
+        priority
+        onClick={slides.length > 1 ? () => setAt((at + 1) % slides.length) : undefined}
+        style={slides.length > 1 ? { cursor: 'pointer' } : undefined}
+      />
+      {(slides.length > 1 || caption) && (
+        <figcaption className="sem-s-hero-bar">
+          {slides.length > 1 && (
+            <span className="sem-dots">
+              {slides.map((s, i) => (
+                <button
+                  key={s.src}
+                  type="button"
+                  className="sem-dot"
+                  aria-label={`Screenshot ${i + 1} of ${slides.length}`}
+                  aria-pressed={i === at}
+                  onClick={() => setAt(i)}
+                />
+              ))}
+            </span>
+          )}
+          {caption && (
+            <a className="sem-s-hero-link" href={caption.url}>
+              {caption.label}: {caption.url.replace(/^https:\/\/|\/$/g, '')}
+            </a>
+          )}
+        </figcaption>
+      )}
+    </figure>
   )
 }

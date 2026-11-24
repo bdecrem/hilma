@@ -1,5 +1,19 @@
 {
   "title": "Your own work website",
+  "hero": [
+    {
+      "src": "/seminar/website/hero-1.png",
+      "alt": "Bart's work website: his name, office hours Monday to Friday with a sign-up button, and a projects card",
+      "width": 810,
+      "height": 643
+    },
+    {
+      "src": "/seminar/website/hero-2.png",
+      "alt": "The office-hours sign-up page: open 15-minute times for each day",
+      "width": 1674,
+      "height": 1322
+    }
+  ],
   "intro": "A work page with an office-hours sign-up, live on the internet. Part 1 builds it on your laptop. Part 2 publishes it.",
   "parts": [
     {
@@ -162,7 +176,7 @@
     ]
   },
   "example": {
-    "label": "What I ended up with",
+    "label": "Mine",
     "url": "https://bart-at-casbs.vercel.app/"
   }
 }

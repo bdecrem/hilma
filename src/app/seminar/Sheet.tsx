@@ -1,6 +1,5 @@
-import Image from 'next/image'
 import Link from 'next/link'
-import { Say, Tick } from './Bits'
+import { Say, Slides, Tick, type Slide } from './Bits'
 
 // One seminar sheet, drawn as a short checklist like /seminar/claude. Every word comes from
 // the sheet's content.json. /seminar/website, /seminar/library and /seminar/fact-checker are
@@ -22,7 +21,7 @@ export type SheetContent = {
   title: string
   intro: string
   byline?: string
-  hero?: { src: string; alt: string; width: number; height: number }
+  hero?: Slide[]
   download?: { label: string; href: string; note: string }
   why?: Why
   parts: Part[]
@@ -51,17 +50,7 @@ export function Sheet({ id, content }: { id: (typeof SHEETS)[number]['id']; cont
         </Link>{' '}
         · Project {sheet?.n}
       </p>
-      {content.hero && (
-        <Image
-          className="sem-s-hero"
-          src={content.hero.src}
-          alt={content.hero.alt}
-          width={content.hero.width}
-          height={content.hero.height}
-          sizes="(max-width: 700px) 100vw, 700px"
-          priority
-        />
-      )}
+      {content.hero && <Slides slides={content.hero} caption={example} />}
       <h1 className="sem-s-title">{content.title}</h1>
       {content.byline && <p className="sem-s-byline">{content.byline}</p>}
       <p className="sem-s-intro">{content.intro}</p>
@@ -133,20 +122,6 @@ export function Sheet({ id, content }: { id: (typeof SHEETS)[number]['id']; cont
               )
             })}
           </ol>
-          {example && i === parts.length - 1 && (
-            <a className="sem-s-example" href={example.url}>
-              <Image
-                src="/seminar/example.jpg"
-                alt="A personal page with an office hours card and a projects card"
-                width={1297}
-                height={802}
-                sizes="(max-width: 700px) 100vw, 700px"
-              />
-              <span>
-                {example.label}: {example.url.replace(/^https:\/\/|\/$/g, '')}
-              </span>
-            </a>
-          )}
         </section>
       ))}
 

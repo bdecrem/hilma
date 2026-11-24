@@ -1,11 +1,13 @@
 {
   "title": "Your own paper library",
-  "hero": {
-    "src": "/seminar/library/hero.png",
-    "alt": "Trust Shelf, a chat page over 640 papers on trust from arXiv and OpenAlex, with suggested questions",
-    "width": 1804,
-    "height": 1286
-  },
+  "hero": [
+    {
+      "src": "/seminar/library/hero.png",
+      "alt": "Trust Shelf, a chat page over 640 papers on trust from arXiv and OpenAlex, with suggested questions",
+      "width": 1804,
+      "height": 1286
+    }
+  ],
   "intro": "A few hundred papers on trust in a small database on your laptop, with a chat page that answers from them. About 30 minutes, no new accounts.",
   "why": {
     "title": "Other research tools",
