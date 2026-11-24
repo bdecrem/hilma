@@ -33,6 +33,9 @@
 // update serving (OLA_ASKS_WATCH_SECS) or after OLA_ASKS_MAX_MIN (360) minutes; a newer update's run
 // asks it to stop (SIGTERM) and kills it 3 min later if it has not. The cases whose result is oldest
 // run first, so runs cut short still refresh every case in turn.
+// OLA-292: every request to Ola ends after OLA_ASKS_CALL_SECS (300) with no answer (a lost connection,
+// tried again), a run where nothing moves for OLA_ASKS_STALL_MIN (40) minutes stops (waiting for the
+// turn does not count), and the turn goes to whoever waits between tries as well as between cases.
 //
 // Results (each case@place keeps its newest result; a run of some cases updates only those):
 //   ~/ola-staging/asks-latest.json   what the dashboard and the hourly check read; the board gets its
@@ -85,7 +88,7 @@ const cases = readCases(arg('--cases', undefined)).filter((c) => !ONLY || ONLY.i
 if (!cases.length) throw new Error(`no case ${ONLY?.join(', ')} in the cases`)
 
 // OLA-232: with a case per thing Ola can be asked, a run is long. Between cases it gives the turn to
-// whoever waits for it (OLA-401: a checker too, not only a deploy), between tries to a deploy, and takes
+// whoever waits for it (OLA-401: a checker too, not only a deploy), between tries too (OLA-292), and takes
 // it back after, so nobody waits for the whole run.
 const TURN = await import(path.join(AI, 'ops/turn.mjs'))
 let held = null
@@ -124,6 +127,7 @@ function push(r) {
   r.at = new Date().toISOString()
   results.push(r)
   finished++
+  progressed()
   try {
     record('running')
   } catch (e) {
@@ -154,17 +158,37 @@ const stopper = makeStopper({
   cleanup,
 })
 const stopping = () => !!stopper.stopping()
-const endWatch = releaseWatch({ release, everyMs: Number(process.env.OLA_ASKS_WATCH_SECS || 20) * 1000, maxMs: Number(process.env.OLA_ASKS_MAX_MIN || 360) * 60_000, onStop: (why) => stopper.stop(why), t0 })
+// OLA-292: when the run last moved; null while it waits for the turn (then it is not hung, only queued).
+let moved = Date.now()
+const progressed = () => (moved = Date.now())
+async function waitForTurn(take) {
+  moved = null
+  try {
+    return await take()
+  } finally {
+    progressed()
+  }
+}
+const endWatch = releaseWatch({
+  release,
+  everyMs: Number(process.env.OLA_ASKS_WATCH_SECS || 20) * 1000,
+  maxMs: Number(process.env.OLA_ASKS_MAX_MIN || 360) * 60_000,
+  progress: () => moved,
+  stallMs: Number(process.env.OLA_ASKS_STALL_MIN || 40) * 60_000,
+  onStop: (why) => stopper.stop(why),
+  t0,
+})
 
-/** Gives the turn to whoever waits (deployOnly: only to a deploy) and takes it back after. */
-async function yieldTurn({ deployOnly = false } = {}) {
+/** Gives the turn to whoever waits (a deploy first) and takes it back after. OLA-292: between tries
+ *  too, not only between cases, so a checker waits one try (minutes), never a case of five tries. */
+async function yieldTurn() {
   if (!held || stopping()) return
   const line = TURN.waiting()
-  const w = line.find((t) => t.deploy) ?? (deployOnly ? null : line[0])
+  const w = line.find((t) => t.deploy) ?? line[0]
   if (!w) return
   say(`turn: ${w.deploy ? 'a deploy' : w.label} is waiting; giving it the turn and taking it back after`)
   held.release()
-  held = await TURN.acquire({ label: turnLabel, on: (m) => say(`turn: ${m}`) })
+  held = await waitForTurn(() => TURN.acquire({ label: turnLabel, on: (m) => say(`turn: ${m}`) }))
   process.on('exit', held.release)
   // A deploy that served while this run waited: this run is for a release no longer live.
   const now = liveRelease()
@@ -189,7 +213,7 @@ try {
     let T
     try {
       if (runtime === 'cloud') {
-        held = await TURN.takeTurn(turnLabel)
+        held = await waitForTurn(() => TURN.takeTurn(turnLabel))
         T = cloudTransport(signedIn)
       }
       else {
@@ -227,6 +251,7 @@ try {
           r = lostConnection(e) ? { ok: null, why: `did not run: the connection to Ola was lost (${e.message})` } : runtime === 'cloud' && signedOut(e) ? { ok: null, signedOut: true, why: `did not run: the website no longer took the run's sign-in (${e.message}); signed in again` } : { ok: false, why: `the run broke: ${e.message}` }
         }
         if (stopping()) break // a try cut short by the stop is not counted
+        progressed()
         r.secs = Math.round((Date.now() - s0) / 1000)
         // Refused for the account's model allowance, not by Ola: not counted, and nothing more runs here.
         if (r.ok === false && (usedUp = modelUsedUp(r))) {
@@ -258,7 +283,7 @@ try {
         // OLA-250 then OLA-281: taking the pages down used to block this process for ~20 s, so it
         // could not see the server close its kept-open connections, and the next try's first POST
         // broke with ECONNRESET. Every command is awaited now (lib.mjs runChild); no read first.
-        await yieldTurn({ deployOnly: true })
+        await yieldTurn()
       }
       if (stopping()) break
       await yieldTurn()

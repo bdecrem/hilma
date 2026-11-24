@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { AI, HERE, PLACES, ask, asksToPublishInWords, cardFaults, rawPublishingCard, websiteCards, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock, liveRelease, mustHoldRun, noteRun, releaseWatch, signedOut, stalestFirst, stalestRuntime, writeRecord } from './lib.mjs'
+import { AI, HERE, PLACES, ask, asksToPublishInWords, cardFaults, rawPublishingCard, websiteCards, emptyProject, inProject, live, runChild, takeDownSites, signOutAccount, checkMust, checkNever, commandsNotTheApps, readCases, siteAddresses, siteLinks, turnsOf, verdictOf, ratchet, triesDone, passesNeeded, lostConnection, modelUsedUp, takeRunLock, liveRelease, mustHoldRun, noteRun, releaseWatch, signedOut, timedFetch, stalestFirst, stalestRuntime, writeRecord } from './lib.mjs'
 import { instructions, lines, problems, readAbilities, summary } from './abilities.mjs'
 
 test('the never list catches the answers that were failures', () => {
@@ -541,9 +541,58 @@ test('OLA-401: a run stops itself when the live release changes or its time runs
   assert.equal(liveRelease(staging), '823ba71e4c78')
   // the runner watches, stops on SIGTERM, and stops between tries and cases
   const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
-  assert.match(src, /releaseWatch\(\{ release,/)
+  assert.match(src, /releaseWatch\(\{\s*release,/)
   assert.match(src, /makeStopper\(\{/)
   assert.ok((src.match(/if \(stopping\(\)\) break/g) ?? []).length >= 4, 'it checks between runtimes, cases and tries')
+})
+
+test('OLA-292: a hang gives the test turn back: a request with no answer ends, a run that does not move stops, waiting for the turn is not a hang', async () => {
+  // Nov 22, f9dc1cc2a90e: 3 h 43 min, no child process, the turn held. A server that never answers:
+  const { createServer } = await import('node:http')
+  const server = createServer(() => {}) // takes the request, never answers
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  const url = `http://127.0.0.1:${server.address().port}/oc/api/session`
+  const t = Date.now()
+  const err = await timedFetch(url, {}, 300).then(() => null, (e) => e)
+  assert.ok(err, 'it ends')
+  assert.ok(Date.now() - t < 3000, 'at its limit')
+  assert.match(err.message, /no answer from .* in 0 s \(ETIMEDOUT\)/)
+  assert.ok(lostConnection(err), 'counted as a lost connection: did not run, tried again, never a fail')
+  // the event stream passes its own signal and stays open
+  const ac = new AbortController()
+  const open = timedFetch(url, { signal: ac.signal }, 50).then(() => 'answered', (e) => e.name)
+  await settle(200)
+  ac.abort()
+  assert.equal(await open, 'AbortError', 'not cut at 50 ms; only its own abort ended it')
+  server.closeAllConnections?.()
+  server.close()
+  // a run that does not move stops; one waiting for the turn (progress null) does not
+  let moved = Date.now()
+  const stalled = []
+  const end = releaseWatch({ release: 'r1', read: () => 'r1', everyMs: 20, maxMs: 60_000, progress: () => moved, stallMs: 500, onStop: (why) => stalled.push(why) })
+  await settle(100)
+  assert.deepEqual(stalled, [], 'moved 0.1 s ago, limit 0.5 s: going on')
+  end()
+  moved = null
+  const waited = []
+  const end2 = releaseWatch({ release: 'r1', read: () => 'r1', everyMs: 20, maxMs: 60_000, progress: () => moved, stallMs: 50, onStop: (why) => waited.push(why) })
+  await settle(200)
+  assert.deepEqual(waited, [], 'waiting for the turn is not a hang')
+  moved = Date.now() - 100
+  await settle(100)
+  end2()
+  assert.equal(waited.length, 1)
+  assert.match(waited[0], /nothing moved for .*giving the test turn back/)
+  // the runner wires it: progress after each try and case, the turn's waits paused, and the turn
+  // offered to anyone waiting between tries, not only to a deploy
+  const src = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')
+  assert.match(src, /progress: \(\) => moved/)
+  assert.match(src, /waitForTurn\(\(\) => TURN\.takeTurn/)
+  assert.match(src, /waitForTurn\(\(\) => TURN\.acquire/)
+  assert.doesNotMatch(src, /deployOnly/)
+  // every fetch in lib.mjs goes through the limit
+  const lib = readFileSync(path.join(HERE, 'lib.mjs'), 'utf8')
+  assert.match(lib, /^const fetch = timedFetch$/m)
 })
 
 // The stop end to end, in a child process standing in for the runner: the record first, then the

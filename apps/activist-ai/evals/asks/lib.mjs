@@ -26,6 +26,27 @@ export const LIVE = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
 export const STATE = process.env.OLA_ASKS_HOME || path.join(homedir(), 'ola-asks')
 // The test server's record of what is live (ops/ola.mjs writes deployed.json when an update serves).
 export const STAGING = process.env.OLA_ASKS_STAGING || path.join(homedir(), 'ola-staging')
+
+// OLA-292: no request to Ola waits forever. On Nov 22 a run (release f9dc1cc2a90e) sat 3 h 43 min with
+// no child process, holding the machine's test turn, while checkers waited and withdrew: a fetch with no
+// time limit that never got an answer. Every fetch in this file now ends after CALL_MS (5 min; one
+// request to Ola is a second or two, a prompt is taken at once and answered by polling) with an
+// ETIMEDOUT error, which the runner counts as a lost connection (did not run, tried again, never a pass
+// or a fail). A call that passes its own `signal` (the event stream, which stays open) keeps it.
+export const CALL_MS = Number(process.env.OLA_ASKS_CALL_SECS || 300) * 1000
+export async function timedFetch(url, opts = {}, ms = CALL_MS) {
+  if ('signal' in opts) return globalThis.fetch(url, opts)
+  try {
+    return await globalThis.fetch(url, { ...opts, signal: AbortSignal.timeout(ms) })
+  } catch (e) {
+    if (e?.name !== 'TimeoutError') throw e
+    const err = new Error(`no answer from ${String(url).replace(/\?.*/, '')} in ${Math.round(ms / 1000)} s (ETIMEDOUT)`)
+    err.code = 'ETIMEDOUT'
+    throw err
+  }
+}
+const fetch = timedFetch
+
 /** The release the test server serves now: the first 12 characters of the deployed commit, or 'unknown'. */
 export function liveRelease(staging = STAGING) {
   try {
@@ -295,7 +316,7 @@ export function cloudTransport({ cookie, csrf }) {
   const headers = { cookie, origin: ORIGIN, 'x-ola-workspace': PROJECT, 'x-ola-csrf': csrf }
   return {
     runtime: 'cloud',
-    cards: websiteCards(() => fetch(`${ORIGIN}/oc/api/event`, { headers: { ...headers, accept: 'text/event-stream' } })),
+    cards: websiteCards(() => fetch(`${ORIGIN}/oc/api/event`, { headers: { ...headers, accept: 'text/event-stream' }, signal: undefined })),
     async call(method, p, body) {
       const res = await steady(() => fetch(`${ORIGIN}/oc${p}`, {
         method,
@@ -1144,7 +1165,10 @@ export function noteRun(file, run, now = new Date().toISOString()) {
  * no longer the run's (a newer update serves) or the run has gone on for maxMs, it calls onStop(why) once.
  * Returns a function that ends the watch.
  */
-export function releaseWatch({ release, read = () => liveRelease(), everyMs = 20_000, maxMs = 6 * 3600_000, onStop, t0 = Date.now() }) {
+// OLA-292: `progress` returns when the run last moved (a try ended, the turn came back), or null while it
+// waits for the turn (waiting is not a hang). No move for stallMs (40 min: the longest case is 24 min)
+// stops the run, so a hang gives the test turn back instead of holding it for hours.
+export function releaseWatch({ release, read = () => liveRelease(), everyMs = 20_000, maxMs = 6 * 3600_000, progress = null, stallMs = 40 * 60_000, onStop, t0 = Date.now() }) {
   let done = false
   const tick = () => {
     if (done) return
@@ -1152,6 +1176,11 @@ export function releaseWatch({ release, read = () => liveRelease(), everyMs = 20
     if (now !== 'unknown' && release !== 'unknown' && now !== release) {
       done = true
       return onStop(`the test server moved from ${release} to ${now}; a run for ${now} replaces this one`)
+    }
+    const last = progress?.()
+    if (last != null && Date.now() - last > stallMs) {
+      done = true
+      return onStop(`nothing moved for ${Math.round((Date.now() - last) / 60_000)} min (a hang; OLA_ASKS_STALL_MIN is ${Math.round(stallMs / 60_000)}): giving the test turn back`)
     }
     if (Date.now() - t0 > maxMs) {
       done = true
