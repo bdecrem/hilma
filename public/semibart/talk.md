@@ -1,9 +1,18 @@
+# What I believe
+- AI is Alien Intelligence, now
+- Jensen Huang's actions were ~treacherous 
+- Anthropic is weird
+- I love building with AI
+- Wouldn't mind if we slowed down by 80% for a decade
+
+
 # Data and Privacy
-- The only way to keep your data truly under your control is Local AI. ~A year away
+- The only way to keep your data truly under your control is Local AI.
 - Anthropic: by default, all of your conversations MAY be used to train future models. Turn that toggle off. OpenAI has a similar one
 - Even so, some of your data will still end up on their servers
 - Ask yourself: How much do I trust this company? What is their history? Business model? My answer: OpenAI and Meta are in the business of collecting and selling your data. Google, really, is as well. Apple and Anthropics much less so.
 - Anthropic comp: it's not unlike using iCloud. 
+- Ola.cx
  
 # Which AI Systems to Use
 - Vertical resources for scholars: Google Scholar, Consensus, Zotero etc
