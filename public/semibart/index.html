@@ -55,8 +55,8 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #screenBar a { color: var(--choice); }
 #screenBar a:hover { color: var(--hot); }
 #screenBack { color: var(--hot); font-size: 2.2cqw; border: 0.25cqw solid var(--hot); padding: 0.4cqw 1.4cqw; }
-#phones { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; gap: 5cqw; padding: 1cqw 0 3cqw; background: #1a1a18; }
-.phone { height: 100%; aspect-ratio: 640 / 1247; padding: 0.8cqw; background: #0c0c0c; border-radius: 3cqw; box-shadow: 0 0 0 0.3cqw #3a3a3a; }
+#phones { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; gap: 4cqw; padding: 1cqw 0 3cqw; background: #1a1a18; }
+.phone { height: 100%; aspect-ratio: 644 / 1400; padding: 0.8cqw; background: #0c0c0c; border-radius: 3cqw; box-shadow: 0 0 0 0.3cqw #3a3a3a; }
 .phone img { width: 100%; height: 100%; display: block; border-radius: 2.2cqw; object-fit: cover; }
 #title { position: absolute; inset: 0; display: grid; place-items: center; }
 #title[hidden] { display: none; }
@@ -139,8 +139,9 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
   <div id="screen" hidden>
     <div id="screenBar"><span></span><button id="screenBack" type="button">Back</button></div>
     <div id="phones">
-      <div class="phone"><img src="/semibart/takt-splash.png" alt="Takt opening screen: TAKT spelled down the side, eins zwei drei vier"></div>
-      <div class="phone"><img src="/semibart/takt-map.png" alt="Takt map screen: The Blues, episode 1, The Delta"></div>
+      <div class="phone"><img src="/semibart/rocky-cold.png" alt="Rocky Road, set to 60 degrees: Rocky is cold. A dog in a scarf, shivering, snow around him"></div>
+      <div class="phone"><img src="/semibart/rocky-happy.png" alt="Rocky Road, set to 69 degrees: Rocky is happy. A dog sitting, tongue out, tail wagging"></div>
+      <div class="phone"><img src="/semibart/rocky-hot.png" alt="Rocky Road, set to 76 degrees: Rocky is too hot. A dog panting under a sun"></div>
     </div>
   </div>
   <div id="deck" hidden role="dialog" aria-label="Bart's talk: How to use AI">
@@ -490,10 +491,20 @@ function makeRoomBg(bart, lay) {
   rect(m, 70, 17, 2, 52, '#5c2e18'); rect(m, 95, 17, 2, 52, '#5c2e18');
   rect(m, 42, 72, 82, 3, '#5c2e18'); rect(m, 42, 72, 82, 1, '#c27e52');
   if (bart) {
-  // Takt poster
-  rect(m, 130, 16, 22, 32, '#141414');
-  rect(m, 134, 19, 14, 3, '#f0efea'); rect(m, 139, 22, 4, 9, '#f0efea');
-  rect(m, 134, 33, 14, 3, '#ff5a1f'); rect(m, 139, 36, 4, 9, '#ff5a1f');
+  // Ola poster: the app icon in pixels. A cream luggage tag lettered "Ola," on navy, a mustard string off the top left.
+  // The tag is three steps rising to the right (its tilt), and each letter sits on one step.
+  { const at = (x, y, w, h, c) => rect(m, 130 + x, 18 + y, w, h, c), C = '#f5efe4', I = '#1b2550', M = '#e9b44c', O = '#e8704a', SH = '#141c42';
+    rect(m, 130, 16, 22, 32, '#2b3a6e');
+    for (let y = -2; y < 11; y++) for (let x = 11; x < 22; x++) if ((x - 18) ** 2 + (y - 4) ** 2 <= 36) at(x, y, 1, 1, '#34467f');
+    at(16, 5, 1, 3, M); at(15, 6, 3, 1, M); at(19, 9, 1, 1, C);
+    at(4, 23, 5, 1, SH); at(9, 22, 6, 1, SH); at(15, 21, 6, 1, SH); at(20, 13, 1, 8, SH);
+    at(3, 15, 1, 7, C); at(4, 14, 4, 9, C); at(8, 13, 6, 9, C); at(14, 12, 6, 9, C);
+    at(4, 17, 3, 3, M); at(5, 18, 1, 1, '#2b3a6e');
+    [[5, 16], [5, 15], [4, 14], [4, 13], [3, 12], [3, 11], [3, 10], [2, 9], [2, 8], [1, 7], [0, 7]].forEach(([x, y]) => at(x, y, 1, 1, M));
+    at(9, 15, 1, 1, I); at(8, 16, 1, 3, I); at(10, 16, 1, 3, I); at(9, 19, 1, 1, I);
+    at(12, 14, 1, 6, I);
+    at(15, 16, 2, 1, I); at(14, 17, 1, 1, I); at(16, 17, 1, 1, I); at(15, 18, 2, 1, I);
+    at(18, 17, 1, 2, O); at(17, 19, 1, 1, O); }
   // pinboard: the notes people leave Bart are pinned here (notes.js), so it starts empty
   rect(m, 155, 12, 40, 38, '#5c2e18'); rect(m, 157, 14, 36, 34, '#d9b48a'); rect(m, 157, 14, 36, 1, '#c29a6e'); rect(m, 157, 14, 1, 34, '#c29a6e');
   [[162, 19], [171, 41], [183, 24], [188, 44], [166, 33], [179, 36]].forEach(([x, y]) => rect(m, x, y, 1, 1, '#c29a6e'));
@@ -1241,7 +1252,7 @@ async function exitRoom() {
 async function ringPhone() {
   if (S.phoneOn) return;
   S.phoneOn = true; S.phoneT = 0; SFX.beat(); await wait(1.5);
-  await say('bart', "That's Takt. Go on, pick it up.");
+  await say('bart', "That's Rocky Road. Go on, pick it up.");
 }
 async function lookPhone() {
   if (!S.phoneOn) { await say('you', "It's Bart's phone. I should ask first."); return; }
@@ -1252,8 +1263,8 @@ async function lookPhone() {
   await new Promise(res => { S.screenDone = res; });
   SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
   await say('bart', 'Well?');
-  await say('you', 'Eins, zwei, drei, vier.');
-  await say('bart', 'You found it. Fifty-three more studies. Go knock.');
+  await say('you', 'Rocky is cold.');
+  await say('bart', 'Then turn it up. Fifty-three more studies. Go knock.');
 }
 /* ---------- Bart's talk, on his monitor: three slides ---------- */
 // the slides live in talk.md next to this page: '# Title' starts a slide, '- ' lines are its bullets.
@@ -1367,8 +1378,8 @@ async function talkBart() {
     const c = opts[await choose(opts.map(o => o.t))];
     await say('you', c.t);
     if (c.k === 'work') {
-      await say('bart', 'Takt. It teaches you to find the beat.');
-      await say('bart', 'Eins, zwei, drei, vier. Takt is German for the beat.');
+      await say('bart', 'Ola. An AI agent for activists and academics.');
+      await say('bart', 'And Rocky Road. It runs the heating at home. There is a dog.');
     } else if (c.k === 'shades') {
       await say('bart', 'These?');
       await wait(0.3); S.bart.shades = true; SFX.sparkle(); await wait(0.6);
@@ -1719,7 +1730,7 @@ const ROOM = [
     look: () => say('you', S.bart.shades ? 'Bart Decrem. Fellow. Builder of things. Currently cool.' : 'Bart Decrem. Fellow. Builder of things. Owner of sunglasses.'),
     talk: talkBart
   } },
-  { name: 'Takt poster', r: [130, 16, 22, 32], walk: { x: 142, y: 130 }, def: 'look', on: { look: async () => { await say('you', 'A poster for Takt. Eins, zwei, drei, vier.'); await ringPhone(); } } },
+  { name: 'Ola poster', r: [130, 16, 22, 32], walk: { x: 142, y: 130 }, def: 'open', href: 'https://ola.cx', on: { look: 'A poster for Ola. A luggage tag on a string. It is going somewhere.', open: 'Ola. Opening in a new tab.' } },
   { name: 'Gegenlicht', r: [196, 12, 34, 32], walk: { x: 212, y: 130 }, def: 'play', href: 'https://www.daskollektiv.rip/dk024.html', on: { look: 'A framed record. Das Kollektiv, Gegenlicht. Techno with an acid riff, one warm light behind the blinds.', play: 'Gegenlicht. Playing in a new tab.' } },
   { name: 'pinboard', r: [155, 12, 40, 38], walk: { x: 174, y: 130 }, def: 'look', on: { look: 'A pinboard. Cork, mostly.' } },
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
@@ -2180,8 +2191,11 @@ function drawRoom(t) {
     const px = 252 + jig;
     rect(g, 250, 94, 13, 2, '#6f3a20');
     rect(g, px, 80, 9, 15, '#141414'); rect(g, px + 1, 81, 7, 13, on ? '#ff5a1f' : '#0c0c0c');
-    rect(g, px + 2, 83, 5, 1, on ? '#141414' : '#f0efea'); rect(g, px + 4, 84, 1, 3, on ? '#141414' : '#f0efea');
-    rect(g, px + 2, 88, 5, 1, on ? '#141414' : '#ff5a1f'); rect(g, px + 4, 89, 1, 3, on ? '#141414' : '#ff5a1f');
+    // Rocky Road on the screen: Rocky sitting, one ear up, one flopped, tail out to the right, an orange nose
+    { const fg = '#f0efea', sx = px + 1;
+      rect(g, sx + 4, 82, 1, 2, fg); rect(g, sx + 1, 84, 4, 3, fg); rect(g, sx, 85, 1, 1, fg);
+      rect(g, sx + 2, 87, 3, 2, fg); rect(g, sx + 1, 89, 4, 4, fg); rect(g, sx + 6, 90, 1, 3, fg); rect(g, sx + 5, 92, 1, 1, fg);
+      rect(g, sx + 3, 86, 1, 1, on ? '#141414' : '#ff5a1f'); }
     if (on) { rect(g, px - 3, 82, 2, 1, '#ff5a1f'); rect(g, px + 10, 82, 2, 1, '#ff5a1f'); rect(g, px - 3, 90, 2, 1, '#ff5a1f'); rect(g, px + 10, 90, 2, 1, '#ff5a1f'); } }
   const mh = B.mode === 'startle' && B.t < 0.4 && !calm ? Math.round(Math.sin(B.t / 0.4 * Math.PI) * 5) : 0;
   rect(g, 206, 88 - mh, 7, 8, '#141414'); rect(g, 207, 89 - mh, 5, 6, '#fff7e6'); rect(g, 207, 91 - mh, 5, 2, '#ff5a1f'); rect(g, 213, 90 - mh, 2, 3, '#141414');
