@@ -9,12 +9,13 @@ description: >
   rewrites sentence by sentence), internal consistency checking, and an
   editorial read (structure, clarity, argument). Use this skill whenever the
   user asks to fact-check, copy edit, proofread, tighten, or review a memo,
-  essay, article, or document — or asks whether something they wrote is
-  accurate, consistent, wordy, or well-argued. Also trigger on phrases like
-  "check my memo", "is this accurate?", "verify the stats", "check the
-  quotes", "look at the grammar", "check grammar", "make this tighter",
-  "clean up my prose", "give this an edit", or "review what I wrote". Works
-  on pasted text and on .txt, .md, .docx, and .pdf files.
+  essay, article, or other prose document — or asks whether something they
+  wrote is accurate, consistent, wordy, or well-argued. Also trigger on
+  phrases like "check my memo", "is this accurate?", "verify the stats",
+  "check the quotes", "look at the grammar", "check grammar", "make this
+  tighter", "clean up my prose", "give this an edit", or "review my draft".
+  Not for code review. Works on pasted text and on .txt, .md, .docx, and
+  .pdf files.
 ---
 
 # Memo Fact-Checker
@@ -72,14 +73,20 @@ rather than duplicating it in both.
 Unless the user has already said which pass(es) they want, present a menu
 before doing anything else.
 
-- **If an interactive question tool is available** (e.g. `ask_user_input_v0`
-  in claude.ai, or an equivalent elicitation tool), use it: one multi-select
-  question, "Which review passes would you like?", with the five passes as
-  options. Label the third one "Check grammar (clarity & concision)" so it
-  isn't confused with copy edit.
-- **Otherwise** (Claude Code, Cowork, or any plain-text environment), ask in
-  plain text with a numbered list and let the user reply with numbers or
-  names, e.g. "1 and 3" or "all five".
+- **If an interactive question tool is available** (most environments have
+  one; tool names vary and change, so use whatever multi-select question or
+  elicitation tool you have), use it. Label the third pass "Check grammar
+  (clarity & concision)" so it isn't confused with copy edit.
+  - If the tool allows five or more options in one question, ask one
+    multi-select question, "Which review passes would you like?", with the
+    five passes as options.
+  - If it caps options at four (some do), ask two multi-select questions in
+    the same call: "Accuracy passes" (Fact-check, Internal consistency) and
+    "Writing passes" (Copy edit, Check grammar, Editorial read). Tell the
+    user that skipping a question means none from that group.
+- **Otherwise** (any plain-text environment), ask in plain text with a
+  numbered list and let the user reply with numbers or names, e.g. "1 and 3"
+  or "all five".
 
 If the user's request already implies the passes ("fact-check this" →
 fact-check only; "proofread this" → copy edit; "tighten this up", "make it
@@ -100,13 +107,16 @@ preference:
 
 Supported file types: `.txt`, `.md`, `.docx`, `.pdf`.
 
-- For `.docx` and `.pdf`, use the document-reading skills or tools available
-  in your environment (e.g. the docx and pdf-reading skills in claude.ai;
-  appropriate converters or readers elsewhere). Read the *full* text before
-  reviewing.
-- If the user points you at a folder, review each supported file in it. Skip
-  any file that already has a companion `_factcheck.md` report (see Step 6)
-  unless the user asks you to re-check.
+- For `.docx` and `.pdf`, use whatever document-reading skill, tool, or
+  converter your environment provides (for example a docx or pdf skill, or a
+  command-line converter such as `pandoc` or `pdftotext`). Read the *full*
+  text before reviewing.
+- If the user points you at a folder, review each supported file in it, with
+  two exclusions:
+  - Never review a report this skill produced: skip every file whose name
+    ends in `_factcheck.md`.
+  - Skip any document that already has a companion `_factcheck.md` report
+    (see Step 6) unless the user asks you to re-check.
 
 Never go hunting for documents in locations the user hasn't mentioned. If no
 document has been provided and no path named, just ask for it.
@@ -132,13 +142,22 @@ Identify every claim that could be checked externally:
 - Scientific or technical claims
 
 Search for each claim independently using whichever web-search tool is
-available (`web_search`, `WebSearch`, etc.). Look for:
+available. When a search result's snippet doesn't settle the claim, open the
+source page itself with whatever page-fetching tool you have. Look for:
 
 - Whether the number/date/name is accurate
 - Whether cited sources actually exist and say what the document claims
 - Whether there's important context the document omits or distorts
 
-Internal or proprietary data (e.g., "our Q3 revenue was $4.2M") can't be
+**Never verify from memory.** Your training data has a cutoff and may be
+wrong or outdated, especially for recent events, current officeholders and
+job titles, and figures that change over time (prices, populations, user
+counts, records). A ✅ or ❌ verdict needs a source you found during this
+check. If you can't find one, the verdict is 🔍, whatever you believe. When
+the true answer has changed over time, say what was true as of the
+document's apparent date and what is true now.
+
+Internal or proprietary data (e.g., "our Q3 revenue was 4.2 million dollars") can't be
 verified externally — mark it 🔍 Unverifiable and move on.
 
 Be fair: a claim that's broadly right but slightly imprecise deserves ⚠️,
@@ -151,7 +170,10 @@ claim is true:
 
 - **Verbatim accuracy** — does the quote appear in the cited or findable
   source with the same wording? Flag paraphrases presented inside quotation
-  marks.
+  marks. Search snippets are truncated and sometimes reworded, so they can't
+  confirm exact wording: open the source page (or a transcript, book
+  excerpt, or archived copy) and compare word for word before marking a
+  quote ✅. If you can only see a snippet, the verdict is at most ⚠️.
 - **Correct attribution** — is it attributed to the right person? Watch for
   famous misattributions (Twain, Einstein, and Churchill attract quotes they
   never said).
@@ -227,7 +249,12 @@ your replacement drops a qualification, changes a hedge into a certainty, or
 loses a nuance, it is wrong — mark it Low or discard it.
 
 Close the section with a word-count line: original count, count if all
-High-confidence suggestions were accepted, and the percentage saved.
+High-confidence suggestions were accepted, and the percentage saved. Don't
+estimate these. Compute them with a tool where one is available (e.g.
+`wc -w`, or a short script that applies the High-confidence replacements to
+a scratch copy and counts the result). If you have no tool, label the
+numbers as approximate. Use the same method for the per-finding word counts
+in the "Why" lines.
 
 ### Internal consistency pass
 
@@ -341,8 +368,8 @@ the conversation.
 
 ## Tips for a good report
 
-- **Cite your sources.** Every fact-check finding should have a URL or named
-  reference.
+- **Cite your sources.** Every ✅ or ❌ finding needs a URL or named
+  reference that you actually consulted during this check.
 - **Explain your reasoning.** Don't just say "verified" — say what you found
   and where.
 - **Be proportionate.** Minor wording imprecision isn't the same as a
