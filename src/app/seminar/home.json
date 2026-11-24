@@ -1,49 +1,10 @@
 {
-  "kicker": "CASBS · Wednesday, December 2",
-  "title": "The Seminar",
-  "intro": "Three things to build with Claude, hands on, on your own laptop. You will not write any code. You say what you want in plain English and Claude does the work, and you leave with something you can use the next morning.",
+  "kicker": "CASBS · 12/2 Seminar",
   "first": {
-    "label": "Do this first",
     "href": "/seminar/claude",
-    "title": "Get your free Claude account",
-    "body": "Fellows get Claude for Education from Stanford, free. Visiting scholars get a month of Pro reimbursed. Then sign in to it on your laptop.",
-    "time": "Request it today: it takes a day or so"
+    "title": "Setting up Claude"
   },
-  "before": {
-    "title": "Before you come",
-    "lede": "Three small things, best done this week. Stanford IT is closed on Thanksgiving and the day after.",
-    "items": [
-      {
-        "title": "Request your Stanford Claude account",
-        "body": "It is free for fellows. Choose \"Request a Claude for Education Standard account\" and sign in with your SUNet ID. Mine took four hours to arrive.",
-        "link": {
-          "label": "uit.stanford.edu/service/claude",
-          "href": "https://uit.stanford.edu/service/claude"
-        }
-      },
-      {
-        "title": "Install the Claude desktop app",
-        "body": "On the laptop you will bring. Mac or Windows.",
-        "link": {
-          "label": "claude.com/download",
-          "href": "https://claude.com/download"
-        }
-      },
-      {
-        "title": "Sign in with your Stanford account",
-        "body": "This is the step people trip on, so here it is in full.",
-        "link": null
-      }
-    ],
-    "signin": [
-      "Open the Claude app. If it's signed in to your personal account, log out first: click your name at the bottom left, then Log out.",
-      "Click \"Get started\" if you see it.",
-      "Click \"Enter your email\" and type your Stanford SUNet ID as an email address, something like jdoe@stanford.edu. You don't need a Stanford mailbox.",
-      "A \"Continue with SSO\" button appears under it. Click that one (not \"Continue with email\", not \"Continue with Google\").",
-      "Sign in on the Stanford page with your SUNet ID and password."
-    ]
-  },
-  "projectsTitle": "The three projects",
+  "projectsTitle": "Projects",
   "projects": [
     {
       "n": 1,
@@ -65,10 +26,13 @@
       "title": "Your own fact checker",
       "body": "Working on your book? A skill by CASBS alum John Markoff that checks every claim in a chapter and shows its sources.",
       "time": "About 20 minutes"
+    },
+    {
+      "n": 4,
+      "href": "/seminar/tips",
+      "title": "Roll your own",
+      "body": "Or build whatever you want. A few tips to get started.",
+      "time": ""
     }
-  ],
-  "tip": {
-    "title": "One habit worth having",
-    "body": "Each thing you build is a project in the Claude app. Rename it to something you will recognise and pin it. Tomorrow it is the first thing you see, and you pick up where you stopped."
-  }
+  ]
 }

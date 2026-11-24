@@ -1,133 +1,112 @@
 {
-  "title": "Build your own paper library",
-  "kicker": "CASBS hands-on seminar",
-  "intro": "By the end of this you will have a few hundred papers on trust in a small database in a folder on your own laptop: who people trust, why, and what breaks it. You can search it and ask it questions in plain English. Claude does the fetching and the building. You describe what you want, the way you would brief a research assistant. I think it is worth half an hour for two reasons. A library you built answers your own questions, in the categories you use. And the same move works for any body of material you care about. Trust is the seminar topic. Swap in yours.",
-  "shape": "About half an hour, on the Claude account you already have, with no new accounts to open.",
-  "need": [
-    "A Mac or Windows laptop with the Claude desktop app, signed in to your Stanford account.",
-    "An internet connection for the first pull of papers.",
-    "Nothing else: no new accounts, no subscription."
-  ],
+  "title": "Your own paper library",
+  "intro": "A few hundred papers on trust in a small database on your laptop, with a chat page that answers from them. About 30 minutes, no new accounts.",
   "why": {
-    "title": "Why build your own when Consensus, Scite and Zotero exist",
-    "lede": "These are good tools and I use them. Here is what each one does well, and what a library of your own gives you that they don't.",
+    "title": "Why not just Consensus, Scite or Zotero?",
+    "lede": "",
     "tools": [
       {
         "name": "Consensus",
         "url": "https://consensus.app",
-        "does": "An AI search engine over more than 200 million academic papers. You ask a question in plain words and it finds the top papers and writes an answer with citations, with filters for study design, population, date and field."
+        "does": "AI search over 200 million papers, with cited answers."
       },
       {
         "name": "Scite",
         "url": "https://scite.ai",
-        "does": "Shows how a paper has been cited: the sentence around each citation, sorted into supporting, contrasting or just mentioning, across more than 1.6 billion citation statements. The quickest way to see how a finding was received."
+        "does": "How a paper was cited: supporting, contrasting or just mentioning."
       },
       {
         "name": "Zotero",
         "url": "https://www.zotero.org",
-        "does": "The free reference manager nearly every academic uses. It collects sources from the browser, keeps your PDFs and notes, and puts citations and bibliographies into Word and Google Docs in any journal's style."
+        "does": "Free reference manager. Citations into Word and Google Docs."
       }
     ],
-    "reasonsTitle": "What your own library adds",
+    "reasonsTitle": "Your own library adds",
     "reasons": [
       {
-        "title": "Exactly what you chose",
-        "body": "It holds one topic from the sources you picked. That can include things the big tools cover thinly or not at all, like working papers, a niche archive, or your own PDFs and notes."
+        "title": "Your sources",
+        "body": "One topic, from sources you pick, including working papers or your own PDFs."
       },
       {
-        "title": "Your columns, your codebook",
-        "body": "Add fields for method, sample, country, whether it replicated, or your own coding categories, and Claude reads each abstract and fills them in. The big tools give you their fields. Here you get yours."
+        "title": "Your columns",
+        "body": "Method, sample, country, your own codes. Claude reads each abstract and fills them in."
       },
       {
-        "title": "Questions no search box has",
-        "body": "Ask which papers use field experiments outside the US and what they found. Ask for a count per year, as a table or a chart."
+        "title": "Your questions",
+        "body": "Which papers use field experiments outside the US? A count per year, as a chart."
       },
       {
-        "title": "It stays yours",
-        "body": "No subscription to lapse and no monthly cap halfway through a literature review. Nothing is uploaded anywhere, and the file will still be there in five years."
-      },
-      {
-        "title": "You can see how it searched",
-        "body": "You can see everything in it and why a paper came back, and you can run the search again. That helps when a reviewer asks how you searched."
-      },
-      {
-        "title": "The recipe carries over",
-        "body": "The same three sentences build a library of court opinions, archival records, speeches or survey waves. Papers are the easy first case."
+        "title": "Yours to keep",
+        "body": "No subscription, nothing uploaded, and you can see how it searched."
       }
     ],
-    "limits": "Consensus has already read 200 million papers, and yours will have a few hundred. Scite's sorted citations took years to build, and you will not rebuild that in an afternoon. Zotero is still where your references live when you write.",
-    "together": "Find with Consensus, check how a paper was received with Scite, keep and cite with Zotero, and build your own library for the question that is yours. When you want its papers in Zotero, ask Claude for a BibTeX file, which Zotero imports."
+    "limits": "It holds hundreds of papers, not millions. Use them together: find with Consensus, check with Scite, cite with Zotero. Claude can export your library as BibTeX for Zotero.",
+    "together": ""
   },
   "parts": [
     {
-      "label": "The steps",
+      "label": "Steps",
       "title": "Build the library",
-      "time": "About 30 minutes",
-      "lede": "You type one paragraph and Claude does most of the rest. The lines below are the ones I used, word for word, including the three times I had to say no.",
+      "time": "30 minutes",
+      "lede": "",
       "steps": [
         {
           "title": "Start a new project",
-          "body": "Open the Claude desktop app, go to the Code tab and start a new project.",
-          "say": null,
-          "trap": null
-        },
-        {
-          "title": "Pick a folder",
-          "body": "Choose a folder for the library, or make a new one. Everything Claude builds goes in there, including the database.",
+          "body": "Code tab, new project, then pick or make a folder.",
           "say": null,
           "trap": null
         },
         {
           "title": "Trust the workspace",
-          "body": "When it asks, say you trust the workspace. That is Claude asking permission to work in that folder.",
+          "body": "When it asks.",
           "say": null,
           "trap": null
         },
         {
           "title": "Say what you want",
-          "body": "Type this, or paste it. To build a library on your own topic, swap \"trust\" and the words after it for your subject.",
+          "body": "Swap \"trust\" for your own topic if you like.",
           "say": "Hi Claude. I'm a researcher and I want my own little library of papers about trust: who people trust, why, and what breaks it. Grab a few hundred from arXiv and from OpenAlex (title, authors, year, abstract, link) and keep them in a small database in this folder so I can search it. Keep it simple, I'm not technical, you decide how. When it's done, show me how to ask it a question.",
           "trap": null
         },
         {
           "title": "Let it work",
-          "body": "Claude gets to work and tells you what it is doing as it goes. Let it run. Mine finished by telling me a lot about Python scripts I could run to search the library.",
+          "body": "Mine ended by suggesting Python scripts. Skip those.",
           "say": null,
           "trap": null
         },
         {
           "title": "Ask for a page instead",
-          "body": "You don't have to run anyone's scripts. Tell it you want something you can use.",
+          "body": "",
           "say": "Now make me a little webpage that's a chatbot that I can use instead of your weird scripts.",
           "trap": null
         },
         {
           "title": "Keep it on your laptop",
-          "body": "Mine then offered to build the chatbot as a Claude artifact, which is a page that lives on Claude's site instead of in your folder. Say no: the point is a library that is yours.",
+          "body": "If it offers a Claude artifact, a page on Claude's site, say no.",
           "say": "No, make it local.",
           "trap": null
         },
         {
           "title": "Ask for a page, not an app",
-          "body": "A chatbot needs some way to reach Claude, so mine next wanted to set up a helper app. I asked for a web page instead, still on my laptop.",
+          "body": "If it wants to set up a helper app.",
           "say": "Make me a web page instead, still hosted locally.",
           "trap": null
         },
         {
           "title": "Open your library",
-          "body": "It built the page plus one small launcher file in the folder. Mine is called \"Open Trust Shelf\". Double-click it and the chat page opens in your browser. A small Terminal window opens too: leave it open while you chat and close it when you are done.",
+          "body": "Double-click the launcher it made (mine is called Open Trust Shelf). Leave the small Terminal window open while you chat.",
           "say": null,
-          "trap": "The first time, macOS may block the launcher. Right-click the file, choose Open, then Open again."
+          "trap": "If macOS blocks it: right-click, Open, then Open again."
         },
         {
           "title": "Ask it something",
-          "body": "Type a question. Mine pulled 640 papers, and Claude answers from those papers only, in 10 to 20 seconds, with the paper named next to each claim and a link to the full text. I asked how trust is repaired after a betrayal, and why people distrust science. It has read the abstracts, not the whole papers, which is the right size for half an hour. The answers count toward your normal Claude usage.",
+          "body": "It answers from your papers only, names the paper behind each claim and links to it. It has read the abstracts, not the full papers.",
           "say": null,
           "trap": null
         },
         {
           "title": "Ask for more",
-          "body": "If you want it to do more, say so in as few words as you like. I asked for this, and it built that too, at a second address in my browser.",
+          "body": "",
           "say": "Make it a full chat bot.",
           "trap": null
         }
@@ -135,7 +114,7 @@
     }
   ],
   "next": {
-    "title": "How do I use this tomorrow?",
-    "body": "Shut your laptop whenever you like. The library is still in its folder tomorrow: double-click Open Trust Shelf and you are back in the chat page. Before you close the Claude app today, rename the project to something you will recognise and pin it, so it is easy to find the day you want Claude to add papers or change something."
+    "title": "Tomorrow",
+    "body": "Double-click Open Trust Shelf. In Claude, rename and pin the project so you find it."
   }
 }

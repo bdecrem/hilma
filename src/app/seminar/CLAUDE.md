@@ -1,5 +1,7 @@
 # The Seminar (bartin16.xyz/seminar)
 
+**Since 2026-11-24 every page is a short checklist** (Bart: "everything is too wordy", "it's just simple steps"). One centered column, a small red line on top that links back, no pills, no side list, no big titles, no intro paragraphs; steps are one line each with the tick, and his typed lines stay word for word in Say bubbles. `/seminar` is the red line, the "Setting up Claude" box (`/seminar/claude`, seven steps) and four project cards; card 4, "Roll your own", opens `/seminar/tips` (Chat or Code, and getting good results; my words, not yet read by him). Keep it this light: cut before adding.
+
 **Where things are, since the afternoon of 2026-11-23** (the sections below were written as
 the day went and still say "the page" for the website sheet):
 

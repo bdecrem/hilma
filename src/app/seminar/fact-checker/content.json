@@ -1,73 +1,60 @@
 {
   "title": "Your own fact checker",
-  "kicker": "CASBS hands-on seminar",
   "byline": "A skill by CASBS alum John Markoff",
-  "intro": "Working on your book? Use this skill and Claude will be your fact checker. A skill is one file of instructions that teaches Claude a job. This one was written by John Markoff, and it reads a chapter the way a careful checker would: every number, date, name, quote and citation gets looked up, and each one comes back with a verdict and the source it was checked against. It flags and it never rewrites. The revising stays yours.",
-  "shape": "About twenty minutes for a first chapter, on the Claude account you already have.",
+  "intro": "Working on your book? This skill checks every number, date, name and quote in a chapter and shows its sources. It flags, it never rewrites. About 20 minutes.",
   "download": {
     "label": "Download the skill",
     "href": "/seminar/fact-checker/SKILL.md",
-    "note": "One small text file, SKILL.md. You can open it and read exactly what it tells Claude to do."
+    "note": "One text file, SKILL.md."
   },
-  "need": [
-    "A Mac or Windows laptop with the Claude desktop app, signed in to your Stanford account.",
-    "A folder with something you wrote: a chapter, an article, a memo. Word, PDF and plain text files all work.",
-    "The skill file from this page."
-  ],
   "parts": [
     {
-      "label": "The steps",
+      "label": "Steps",
       "title": "Check a chapter",
-      "time": "About 20 minutes",
-      "lede": "Start with one chapter you know well, so you can judge the checker before you trust it with the rest.",
+      "time": "20 minutes",
+      "lede": "",
       "steps": [
         {
-          "title": "Download the skill",
-          "body": "Use the button at the top of this page. You get one file, SKILL.md.",
-          "say": null,
-          "trap": null
-        },
-        {
           "title": "Put it with your writing",
-          "body": "Drag SKILL.md from your Downloads into the folder that holds your manuscript.",
+          "body": "Drag SKILL.md into the folder with your chapter. Word, PDF and text files all work.",
           "say": null,
           "trap": null
         },
         {
           "title": "Open the folder in Claude",
-          "body": "In the Claude desktop app, go to the Code tab, start a new project and pick that folder. When it asks, trust the workspace.",
+          "body": "Code tab, new project, pick that folder. Trust the workspace.",
           "say": null,
           "trap": null
         },
         {
           "title": "Hand Claude the skill",
-          "body": "Tell it the file is there and what you want checked. Use the name of your own file.",
+          "body": "Use your own file's name.",
           "say": "There's a file called SKILL.md in this folder. It's a fact-checking skill. Set it up so I can use it any time, then fact-check chapter-3.docx.",
           "trap": null
         },
         {
-          "title": "Choose what it checks",
-          "body": "The skill has five passes: a fact-check, a copy edit, a clarity pass that suggests plainer sentences, a check of the chapter against itself, and an editor's read. Ask for the fact-check alone the first time, and click Allow when Claude asks to search the web.",
+          "title": "Start with the fact-check",
+          "body": "It can also copy edit, suggest plainer sentences, check the chapter against itself and give an editor's read. Click Allow when it asks to search the web.",
           "say": null,
           "trap": null
         },
         {
           "title": "Read the report",
-          "body": "The report is saved next to your chapter, with _factcheck added to its name. Each claim gets a verdict: verified, partly accurate, inaccurate, or could not be verified, with what it found and a link to the source. Your chapter itself is left untouched.",
+          "body": "Saved next to your chapter as …_factcheck. Each claim: verified, partly accurate, inaccurate or could not be verified, with a source link.",
           "say": null,
           "trap": null
         },
         {
           "title": "Check the checker",
-          "body": "Open three or four of its sources yourself, starting with anything it marked inaccurate. That tells you how far to trust it on the next chapter.",
+          "body": "Open a few of its sources, starting with anything marked inaccurate.",
           "say": null,
-          "trap": "\"Could not be verified\" is an honest answer, not a failure. It means look this one up yourself."
+          "trap": "\"Could not be verified\" means look it up yourself."
         }
       ]
     }
   ],
   "next": {
-    "title": "How do I use this tomorrow?",
-    "body": "Open the same project in the Code tab and say \"fact-check chapter 4\". Rename the project to something you will recognise and pin it, so it is the first thing you see. The other four passes are there when you want them: say \"copy edit this\" or \"give chapter 4 a full review\"."
+    "title": "Tomorrow",
+    "body": "Same project: say \"fact-check chapter 4\". In Claude, rename and pin the project so you find it."
   }
 }

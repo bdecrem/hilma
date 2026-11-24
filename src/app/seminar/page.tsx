@@ -1,21 +1,18 @@
 import Link from 'next/link'
 import home from './home.json'
 
-// The landing page of the seminar: what to do before you come, and the three sheets.
+// The landing page of the seminar: the setup link, and the three sheets.
 // Every word is in home.json.
 export default function SeminarHome() {
   return (
     <main className="sem-main sem-home">
-      <section className="sem-first" aria-labelledby="sem-first-h">
-        <h2 id="sem-first-h" className="sem-small">
-          {home.first.label}
-        </h2>
+      <h1 className="sem-kicker sem-home-kicker">{home.kicker}</h1>
+
+      <section className="sem-first" aria-label={home.first.title}>
         <div className="sem-cards">
           <Link href={home.first.href} className="sem-card sem-card-first">
             <span className="sem-card-text">
               <span className="sem-card-title">{home.first.title}</span>
-              <span className="sem-card-body">{home.first.body}</span>
-              <span className="sem-card-time">{home.first.time}</span>
             </span>
             <span className="sem-card-go" aria-hidden="true">
               →
@@ -23,29 +20,6 @@ export default function SeminarHome() {
           </Link>
         </div>
       </section>
-
-      <header className="sem-head">
-        <p className="sem-kicker">{home.kicker}</p>
-        <h1 className="sem-title">
-          <em>{home.title}</em>
-        </h1>
-        <p className="sem-intro">{home.intro}</p>
-      </header>
-
-      <nav className="sem-toc" aria-label="On this page">
-        <a href="#before">
-          <span className="sem-toc-label">This week</span>
-          <span className="sem-toc-title">{home.before.title}</span>
-          <span className="sem-toc-time">Account, app, sign-in</span>
-        </a>
-        {home.projects.map((project) => (
-          <Link key={project.href} href={project.href}>
-            <span className="sem-toc-label">Project {project.n}</span>
-            <span className="sem-toc-title">{project.title}</span>
-            <span className="sem-toc-time">{project.time}</span>
-          </Link>
-        ))}
-      </nav>
 
       <section className="sem-cards-wrap" aria-labelledby="sem-projects-h">
         <h2 id="sem-projects-h" className="sem-small">
@@ -61,7 +35,7 @@ export default function SeminarHome() {
                 <span className="sem-card-text">
                   <span className="sem-card-title">{project.title}</span>
                   <span className="sem-card-body">{project.body}</span>
-                  <span className="sem-card-time">{project.time}</span>
+                  {project.time && <span className="sem-card-time">{project.time}</span>}
                 </span>
                 <span className="sem-card-go" aria-hidden="true">
                   →
@@ -70,47 +44,6 @@ export default function SeminarHome() {
             </li>
           ))}
         </ol>
-      </section>
-
-      <section id="before" className="sem-part" aria-labelledby="sem-before-h">
-        <h2 id="sem-before-h" className="sem-part-title sem-flush">
-          {home.before.title}
-        </h2>
-        <p className="sem-part-lede">{home.before.lede}</p>
-        <ol className="sem-steps">
-          {home.before.items.map((item, i) => (
-            <li key={item.title} className="sem-step">
-              <span className="sem-tick sem-tick-plain" aria-hidden="true">
-                {i + 1}
-              </span>
-              <div className="sem-step-body">
-                <h3>{item.title}</h3>
-                <p>
-                  {item.body}{' '}
-                  {item.link && (
-                    <a className="sem-link" href={item.link.href}>
-                      {item.link.label}
-                    </a>
-                  )}
-                </p>
-                {i === home.before.items.length - 1 && (
-                  <ol className="sem-signin">
-                    {home.before.signin.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="sem-next" aria-labelledby="sem-tip-h">
-        <h2 id="sem-tip-h" className="sem-part-title">
-          {home.tip.title}
-        </h2>
-        <p>{home.tip.body}</p>
       </section>
 
       <footer className="sem-foot">

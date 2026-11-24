@@ -1,0 +1,25 @@
+{
+  "kicker": "Tips",
+  "groups": [
+    {
+      "title": "Chat or Code?",
+      "items": [
+        "Chat is for words: questions, drafts, reading a paper you drop in. The answer stays in the chat.",
+        "Code is for making things. Claude works in a folder on your laptop: it makes files, runs them and fixes what breaks.",
+        "Want words back? Chat. Want a thing made? Code."
+      ]
+    },
+    {
+      "title": "Getting good results",
+      "items": [
+        "Talk to it like a smart assistant. Say what it's for and who will use it.",
+        "Give it your stuff: your CV, a paper, a spreadsheet.",
+        "Start small, then ask for changes. \"Make it simpler.\" \"Add a page for my book.\"",
+        "When something looks wrong, say what you see, or paste the error.",
+        "In Code, it asks before doing things on your laptop. Read it, then say yes.",
+        "Pick Opus 5.5. The Stanford account doesn't include the Fable models.",
+        "One project per thing you build. Rename it and pin it, so you find it tomorrow."
+      ]
+    }
+  ]
+}

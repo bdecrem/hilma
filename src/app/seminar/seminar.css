@@ -64,6 +64,14 @@
   grid-column: 1;
 }
 
+/* The landing page and the setup page have no side list: one centered column. */
+.sem-main.sem-home,
+.sem-main.sem-single {
+  display: block;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
 /* Head */
 
 .sem-sheets {
@@ -631,8 +639,11 @@
 
 .sem-card-first {
   grid-template-columns: minmax(0, 1fr) auto;
-  background: var(--bubble);
-  border-color: transparent;
+  background: transparent;
+}
+
+.sem-card-first .sem-card-title {
+  font-weight: 400;
 }
 
 .sem-card-first:hover {
@@ -954,4 +965,218 @@
   .sem-say {
     break-inside: avoid;
   }
+}
+
+/* /seminar/claude: one short checklist. */
+.sem-back {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sem-back:hover {
+  text-decoration: underline;
+}
+
+.sem-checklist {
+  list-style: none;
+  margin-top: 32px;
+  padding: 0;
+}
+
+.sem-checklist li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.sem-checklist li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.sem-checklist .sem-tick {
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
+}
+
+.sem-checklist p {
+  margin: 0;
+  padding-top: 6px;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* Landing page top: the small red line, then the setup box. */
+.sem-home-kicker {
+  margin: 0 0 20px;
+}
+
+.sem-home .sem-first {
+  margin-bottom: 40px;
+}
+
+/* /seminar/tips: two short lists under small headings. */
+.sem-tips + .sem-tips {
+  margin-top: 40px;
+}
+
+.sem-tips-title {
+  margin: 32px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sem-bullets {
+  margin-top: 12px;
+}
+
+.sem-bullets li {
+  display: block;
+}
+
+.sem-bullets p {
+  padding-top: 0;
+}
+
+/* The three project sheets, drawn like /seminar/claude: a short checklist. */
+.sem-s-title {
+  margin: 16px 0 0;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.sem-s-byline {
+  margin-top: 6px;
+  font-size: 17px;
+  color: var(--soft);
+}
+
+.sem-s-intro {
+  margin-top: 14px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.sem-s-download {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.sem-s-download a {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sem-s-download a:hover {
+  background: var(--clay);
+}
+
+.sem-s-download span {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.sem-s-why,
+.sem-s-part {
+  margin-top: 44px;
+}
+
+.sem-s-sub {
+  margin: 24px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.sem-s-time {
+  margin-left: 6px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.sem-s-note {
+  margin-top: 14px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.sem-s-step p {
+  margin: 0;
+  padding-top: 6px;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.sem-s-step strong,
+.sem-bullets strong {
+  font-weight: 600;
+}
+
+.sem-s-step .sem-s-trap {
+  padding-top: 4px;
+  font-size: 16px;
+  color: #b53a16;
+}
+
+.sem-s-step .sem-say {
+  margin-top: 10px;
+}
+
+.sem-s-when {
+  font-size: 16px;
+  color: var(--soft);
+}
+
+.sem-bullets .sem-say {
+  margin-top: 8px;
+}
+
+.sem-s-example {
+  display: block;
+  margin-top: 24px;
+  color: var(--soft);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.sem-s-example img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+/* Lighter Say bubbles on the checklist pages. */
+.sem-single .sem-say {
+  padding: 10px 14px 12px;
+  border-radius: 14px 14px 14px 4px;
+  row-gap: 2px;
+}
+
+.sem-single .sem-say-label {
+  font-size: 11px;
+}
+
+.sem-single .sem-say-text {
+  font-size: 17px;
+  font-weight: 500;
 }

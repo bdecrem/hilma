@@ -6,5 +6,5 @@ export const contentType = 'image/png'
 export const alt = 'Your own fact checker: a skill by John Markoff for Claude'
 
 export default function OgImage() {
-  return sheetOg({ kicker: content.kicker, title: content.title, say: 'Fact-check chapter 3.' })
+  return sheetOg({ kicker: 'The Seminar · December 2', title: content.title, say: 'Fact-check chapter 3.' })
 }

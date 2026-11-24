@@ -6,5 +6,5 @@ export const contentType = 'image/png'
 export const alt = 'Build your own work website: a step-by-step sheet for Claude Code'
 
 export default function OgImage() {
-  return sheetOg({ kicker: content.kicker, title: content.title, say: 'Hi Claude, I want to make a real website.' })
+  return sheetOg({ kicker: 'The Seminar · December 2', title: content.title, say: 'Hi Claude, I want to make a real website.' })
 }

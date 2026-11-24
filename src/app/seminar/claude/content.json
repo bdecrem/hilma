@@ -1,75 +1,28 @@
 {
-  "kicker": "The Seminar · Before you come",
-  "titleBefore": "Get your free ",
-  "titleEmph": "Claude",
-  "titleAfter": " account",
-  "intro": "My seminar on Wednesday, December 2, at 11 has a hands-on part, so please bring your laptop. If you don't have a paid or education Claude plan yet, here's how to get one for free, and then how to sign in to it on your laptop.",
-  "urgent": "Do it today if you can. The request takes a day or so, and Stanford is closed for Thanksgiving.",
-  "get": {
-    "label": "Step one",
-    "title": "Get the account",
-    "paths": [
-      {
-        "who": "Fellows and practitioner fellows",
-        "body": "Go to the Stanford IT page for Claude and click \"Get Claude For Education Standard\". You'll sign in with your SUNet ID. It's a simple request form, and it takes a day or so to be approved. You get the equivalent of the $20 a month Pro plan, free of charge.",
-        "link": {
-          "label": "uit.stanford.edu/service/claude",
-          "href": "https://uit.stanford.edu/service/claude"
-        }
-      },
-      {
-        "who": "Visiting scholars",
-        "body": "You don't qualify for the Stanford plan, but you can still get Claude for free. Sign up for the $20 a month Pro plan at claude.ai, then email me and I'll get you reimbursed. Cancel after a month if you don't need it anymore.",
-        "link": {
-          "label": "claude.ai",
-          "href": "https://claude.ai"
-        }
-      }
-    ]
-  },
-  "signin": {
-    "label": "Step two",
-    "title": "Sign in on your laptop",
-    "lede": "Once your Stanford account is approved, this is how you log in to it from the Claude desktop app. If you signed up at claude.ai instead, just sign in the way you signed up.",
-    "steps": [
-      {
-        "title": "Download the Claude desktop app",
-        "body": "Mac or Windows, on the laptop you'll bring.",
-        "link": {
-          "label": "claude.ai/download",
-          "href": "https://claude.ai/download"
-        }
-      },
-      {
-        "title": "Open the Claude app",
-        "body": "If it's signed in to your personal account, log out first: click your name at the bottom left, then Log out.",
-        "link": null
-      },
-      {
-        "title": "Click \"Get started\"",
-        "body": "If you see it.",
-        "link": null
-      },
-      {
-        "title": "Type your SUNet ID as an email address",
-        "body": "Click \"Enter your email\" and type your Stanford SUNet ID as an email address, something like yoursunetid@stanford.edu.",
-        "link": null
-      },
-      {
-        "title": "Click \"Continue with SSO\"",
-        "body": "A \"Continue with SSO\" button appears under the box. Click that one, not \"Continue with email\" and not \"Continue with Google\".",
-        "link": null
-      },
-      {
-        "title": "Sign in on the Stanford page",
-        "body": "With your SUNet ID and password. That's it, you're in.",
-        "link": null
-      }
-    ]
-  },
-  "help": {
-    "title": "Need a hand?",
-    "body": "Contact me by email, telepathy or any other way if you get stuck on any of this.",
-    "thanks": "Thanks to Laurenn for setting this up for us!"
-  }
+  "kicker": "Setting up Claude",
+  "steps": [
+    {
+      "link": { "label": "Request Claude for Education Standard", "href": "https://uit.stanford.edu/service/claude" },
+      "after": ". Free for fellows and practitioner fellows. Takes about a day."
+    },
+    {
+      "link": { "label": "Download the Claude app", "href": "https://claude.ai/download" },
+      "after": "."
+    },
+    {
+      "before": "Open it. Signed in to a personal account? Log out first: your name, bottom left, then Log out."
+    },
+    {
+      "before": "Click Get started, if you see it."
+    },
+    {
+      "before": "In Enter your email, type yoursunetid@stanford.edu."
+    },
+    {
+      "before": "Click Continue with SSO. Not email, not Google."
+    },
+    {
+      "before": "Sign in on the Stanford page. You're in."
+    }
+  ]
 }
