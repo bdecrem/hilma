@@ -5,7 +5,7 @@ export const ogSize = { width: 1200, height: 630 }
 
 // A sheet's share image: its own head on its paper (the kicker, the headline with
 // "your own" set heavier), and one "Say" bubble.
-export async function sheetOg({ kicker, title, say }: { kicker: string; title: string; say: string }) {
+export async function sheetOg({ kicker, title, say, titleSize = 104 }: { kicker: string; title: string; say?: string; titleSize?: number }) {
   const [semi, black] = await Promise.all([
     ogFont('inter-tight/InterTight-600.ttf'),
     ogFont('inter-tight/InterTight-900.ttf'),
@@ -39,7 +39,7 @@ export async function sheetOg({ kicker, title, say }: { kicker: string; title: s
             flexWrap: 'wrap',
             columnGap: 26,
             marginTop: 22,
-            fontSize: 104,
+            fontSize: titleSize,
             fontWeight: 600,
             lineHeight: 1.04,
             letterSpacing: '-0.02em',
@@ -50,7 +50,7 @@ export async function sheetOg({ kicker, title, say }: { kicker: string; title: s
           {emph ? <span style={{ fontWeight: 900 }}>{emph}</span> : null}
           {after.trim() ? <span>{after.trim()}</span> : null}
         </div>
-        <div
+        {say ? <div
           style={{
             display: 'flex',
             alignSelf: 'flex-start',
@@ -66,7 +66,7 @@ export async function sheetOg({ kicker, title, say }: { kicker: string; title: s
           }}
         >
           {say}
-        </div>
+        </div> : null}
       </div>
     ),
     {

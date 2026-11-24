@@ -1,10 +1,9 @@
-import home from './home.json'
 import { ogSize, sheetOg } from './og'
 
 export const size = ogSize
 export const contentType = 'image/png'
-export const alt = 'The Seminar: three things to build with Claude'
+export const alt = 'CASBS 12/2 seminar'
 
 export default function OgImage() {
-  return sheetOg({ kicker: home.kicker, title: 'The Seminar', say: 'Hi Claude.' })
+  return sheetOg({ kicker: 'CASBS', title: '12/2 seminar', titleSize: 72 })
 }
