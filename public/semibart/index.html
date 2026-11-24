@@ -1255,13 +1255,16 @@ async function ringPhone() {
   await say('bart', "That's Rocky Road. Go on, pick it up.");
 }
 async function lookPhone() {
-  if (!S.phoneOn) { await say('you', "It's Bart's phone. I should ask first."); return; }
-  await say('you', "Let's see it.");
+  // a click always opens it (Bart, 2026-11-23: "nothing happens when I click on the iPhone"); in his own study Bart does not talk to himself
+  const mine = roomOf(me()) === 'bart';
+  if (!S.phoneOn) { S.phoneOn = true; S.phoneT = 2; }
+  if (!mine) await say('you', "Let's see it.");
   cv.style.transformOrigin = '80.3% 58.3%';
   SFX.zoom(); S.zoomT = 0; await wait(1.0);
   screenEl.hidden = false; $('screenBack').focus({ preventScroll: true });
   await new Promise(res => { S.screenDone = res; });
   SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
+  if (mine) return;
   await say('bart', 'Well?');
   await say('you', 'Rocky is cold.');
   await say('bart', 'Then turn it up. Fifty-three more studies. Go knock.');
