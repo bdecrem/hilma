@@ -623,6 +623,62 @@
   padding-left: 4px;
 }
 
+/* The card on top of the landing page: the one thing to do first, on the bubble color */
+
+.sem-first {
+  margin-bottom: 48px;
+}
+
+.sem-card-first {
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: var(--bubble);
+  border-color: transparent;
+}
+
+.sem-card-first:hover {
+  border-color: var(--clay);
+}
+
+.sem-card-first .sem-card-time {
+  color: #b53a16;
+  font-weight: 600;
+}
+
+/* The account page: who gets which account, side by side */
+
+.sem-paths {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.sem-path {
+  padding: 24px 24px 26px;
+  background: #fffaf2;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.sem-path h3 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+}
+
+.sem-path .sem-link {
+  justify-self: start;
+}
+
+.sem-next .sem-thanks {
+  font-weight: 600;
+  color: var(--ink);
+}
+
 /* When you get stuck */
 
 .sem-stuck ul {
@@ -757,6 +813,28 @@
 
   .sem-signin {
     padding: 16px 16px 16px 36px;
+  }
+
+  .sem-first {
+    margin-bottom: 36px;
+  }
+
+  .sem-card-first {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sem-paths {
+    margin-top: 32px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .sem-path {
+    padding: 20px 18px 22px;
+  }
+
+  .sem-path h3 {
+    font-size: 20px;
   }
 
   .sem-byline {

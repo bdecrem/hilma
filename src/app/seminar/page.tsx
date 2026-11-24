@@ -6,6 +6,24 @@ import home from './home.json'
 export default function SeminarHome() {
   return (
     <main className="sem-main sem-home">
+      <section className="sem-first" aria-labelledby="sem-first-h">
+        <h2 id="sem-first-h" className="sem-small">
+          {home.first.label}
+        </h2>
+        <div className="sem-cards">
+          <Link href={home.first.href} className="sem-card sem-card-first">
+            <span className="sem-card-text">
+              <span className="sem-card-title">{home.first.title}</span>
+              <span className="sem-card-body">{home.first.body}</span>
+              <span className="sem-card-time">{home.first.time}</span>
+            </span>
+            <span className="sem-card-go" aria-hidden="true">
+              →
+            </span>
+          </Link>
+        </div>
+      </section>
+
       <header className="sem-head">
         <p className="sem-kicker">{home.kicker}</p>
         <h1 className="sem-title">

@@ -2,6 +2,13 @@
   "kicker": "CASBS · Wednesday, December 2",
   "title": "The Seminar",
   "intro": "Three things to build with Claude, hands on, on your own laptop. You will not write any code. You say what you want in plain English and Claude does the work, and you leave with something you can use the next morning.",
+  "first": {
+    "label": "Do this first",
+    "href": "/seminar/claude",
+    "title": "Get your free Claude account",
+    "body": "Fellows get Claude for Education from Stanford, free. Visiting scholars get a month of Pro reimbursed. Then sign in to it on your laptop.",
+    "time": "Request it today: it takes a day or so"
+  },
   "before": {
     "title": "Before you come",
     "lede": "Three small things, best done this week. Stanford IT is closed on Thanksgiving and the day after.",
