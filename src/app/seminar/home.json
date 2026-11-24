@@ -10,22 +10,22 @@
       "n": 1,
       "href": "/seminar/website",
       "title": "Your own work website",
-      "body": "A personal page with what you are working on and an office-hours sign-up, built and put on the internet.",
-      "time": "30 minutes to build, another hour to publish"
+      "body": "A work page with an office-hours sign-up, live on the internet.",
+      "time": "30 min to build, 1 hour to publish"
     },
     {
       "n": 2,
       "href": "/seminar/library",
       "title": "Your own paper library",
-      "body": "A few hundred papers on trust in a small database on your laptop, with a chat page that answers from them. And how that sits next to Consensus, Scite and Zotero.",
-      "time": "About 30 minutes"
+      "body": "Papers on trust in a database on your laptop, with a chat page.",
+      "time": "30 min"
     },
     {
       "n": 3,
       "href": "/seminar/fact-checker",
       "title": "Your own fact checker",
-      "body": "Working on your book? A skill by CASBS alum John Markoff that checks every claim in a chapter and shows its sources.",
-      "time": "About 20 minutes"
+      "body": "John Markoff's skill checks every claim in a chapter.",
+      "time": "20 min"
     },
     {
       "n": 4,
