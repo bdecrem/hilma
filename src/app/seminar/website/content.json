@@ -36,7 +36,7 @@
         },
         {
           "title": "Open the Code tab",
-          "body": "",
+          "body": "Tell it what you want to do, in your own words, or you can try to sound real nerdy, like Bart:",
           "say": "Hi Claude, I want to make a real website with GitHub and Vercel.",
           "trap": null
         },
