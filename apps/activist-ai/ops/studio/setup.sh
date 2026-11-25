@@ -225,7 +225,9 @@ t_envs() {
   [ -d "$OLA/tls/current" ]
 }
 gw_models() { local s="" n; for n in $GATEWAY_NAMES; do s="$s${s:+,}$n=$MODEL_ALIAS"; done; echo "$s"; }
+MINI_ONLY="GATEWAY_QUOTAS|GATEWAY_BACKUP_MODELS|GATEWAY_HOSTED_FILE|GATEWAY_HOSTED_PRICES|HOSTED_[A-Z_]*"
 t_gateway_local() {
+  ! grep -qE "^($MINI_ONLY)=" "$GWENV" 2>/dev/null &&
   [ -f "$GWENV" ] && grep -qx "UPSTREAM_BASE_URL=http://127.0.0.1:$MODEL_PORT/v1" "$GWENV" && grep -qx "GATEWAY_MODELS=$(gw_models)" "$GWENV" &&
     [ "$(grep '^UPSTREAM_API_KEY=' "$GWENV" | cut -d= -f2-)" = "$(cat "$KEYFILE" 2>/dev/null)" ]
 }
@@ -238,6 +240,10 @@ d_gateway_local() {
   set_env "$GWENV" UPSTREAM_BASE_URL "http://127.0.0.1:$MODEL_PORT/v1"
   set_env "$GWENV" UPSTREAM_API_KEY "$(cat "$KEYFILE")"
   set_env "$GWENV" GATEWAY_MODELS "$(gw_models)"
+  # Settings that are the mini's own and stop the gateway here (Nov 24): a weekly allowance for a caller
+  # that stays on the mini, a backup model the local server does not have, and the hosted fallback
+  # (its models need Bart's yes before they are on this machine). The originals are in .before-studio.
+  local tmp; tmp=$(mktemp "$GWENV.XXXX") && chmod 600 "$tmp" && grep -vE "^($MINI_ONLY)=" "$GWENV" > "$tmp"; mv "$tmp" "$GWENV"
 }
 # The first deploy builds the workspace image, before `install` has made the job that keeps Apple's
 # container services up: start them once here (Nov 24: "Plugins are unavailable", nothing deployed).
