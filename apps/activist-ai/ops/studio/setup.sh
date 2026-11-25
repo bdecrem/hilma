@@ -30,7 +30,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 HERE=$(cd "$(dirname "$0")" && pwd)
 
 # ---------------------------------------------------------------- what is installed (one place)
-BREW_FORMULAE="node age llama.cpp"          # node: every service; age: backups; llama.cpp: the model server
+BREW_FORMULAE="node age llama.cpp poppler"  # node: every service; age: backups; llama.cpp: the model server; poppler: pdftotext, for documents (ola-db)
 BREW_CASKS="ngrok"                          # the public address (ops/tunnel.mjs)
 CONTAINER_VERSION=1.7.1                     # Apple's container, the version staging runs
 CONTAINER_PKG="https://github.com/apple/container/releases/download/${CONTAINER_VERSION}/container-${CONTAINER_VERSION}-installer-signed.pkg"
