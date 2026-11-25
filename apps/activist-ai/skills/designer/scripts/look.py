@@ -25,7 +25,7 @@ Then, when `ola-see` exists, one model looks at a sheet of the laptop view, the 
 laptop view blurred (as if squinting) and says what it sees first and what is wrong. Without it, it
 says so in one line. Writes .shots/<page>-<name>.json with the counts, so rounds can be compared.
 """
-import argparse, html, json, re, shutil, subprocess, sys
+import argparse, html, json, os, re, shutil, subprocess, sys
 from pathlib import Path
 
 QUESTION_BOLD = ("This sheet shows one web page meant to be bold, fun and colorful: the laptop view (left), the phone view (middle), and the laptop view blurred as if squinting (right). "
@@ -176,8 +176,43 @@ def usable(t, w):
 
 def run_page(page, w, shot, js, dark):
     cmd = ["ola-page", str(page), "--width", str(w), "--out", str(shot), "--json", str(js)] + (["--dark"] if dark else [])
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=200)
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=200, env={**os.environ, "OLA_FROM_LOOK": "1"})
     return p.returncode, p.stderr.strip()
+
+
+# A hard stop on checking (OLA-447; Bart, Nov 25: "ENOUGH WITH THE FUSSING - the engine needs to stop
+# doing that"): a model looked at one finished page round after round for more than ten minutes.
+# Two looks at a page per request; the third does nothing and says to hand over. A request is told
+# from the next by a quiet gap: ten minutes without a look starts a new count.
+LOOKS_MAX = 2
+LOOKS_GAP_S = 600
+LOOKED_ENOUGH = ("look: you have looked at this page twice already, and that is the limit. Do not check it again, "
+                 "with this or any other command. Tell the person now, in two or three sentences, that the page is "
+                 "ready, and name anything you saw and did not fix.")
+
+
+def look_allowed(page, now=None, state=None):
+    """True, and counted, when this page may be looked at once more."""
+    import time
+    now = time.time() if now is None else now
+    f = Path(state) if state else Path(".shots") / ".looks.json"
+    try:
+        seen = json.loads(f.read_text())
+    except Exception:
+        seen = {}
+    key = str(Path(page).resolve())
+    times = [t for t in seen.get(key, []) if isinstance(t, (int, float))]
+    if times and now - times[-1] > LOOKS_GAP_S:
+        times = []
+    if len(times) >= LOOKS_MAX:
+        return False
+    seen[key] = times + [now]
+    try:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(seen))
+    except OSError:
+        pass
+    return True
 
 
 def main():
@@ -193,6 +228,9 @@ def main():
     if not page.is_file():
         print(f"look: no such page: {a.page}")
         return 2
+    if not look_allowed(page):
+        print(LOOKED_ENOUGH)
+        return 0
     reg = a.register
     if reg == "auto":
         reg = "bold" if re.search(r"""<meta[^>]+name=["']?ola-register["']?[^>]+content=["']?bold""", page.read_text(errors="replace"), re.I) else "calm"
@@ -244,7 +282,7 @@ def main():
 img{{display:block;background:#fff}} .l{{width:1000px}} .p{{width:300px}} .s{{width:1000px;filter:blur(7px) grayscale(1)}} div{{overflow:hidden;max-height:780px}}</style>
 <div><img class="l" src="{html.escape(made['1280'].name)}"></div><div><img class="p" src="{html.escape(made['390'].name)}"></div><div><img class="s" src="{html.escape(made['1280'].name)}"></div>""")
         out = shots / f"{page.stem}-{a.name}-sheet.png"
-        p = subprocess.run(["ola-page", str(sheet), "--width", "2400", "--height", "820", "--viewport", "--out", str(out)], capture_output=True, text=True, timeout=200)
+        p = subprocess.run(["ola-page", str(sheet), "--width", "2400", "--height", "820", "--viewport", "--out", str(out)], capture_output=True, text=True, timeout=200, env={**os.environ, "OLA_FROM_LOOK": "1"})
         sheet.unlink(missing_ok=True)  # only the picture is kept; an .html here would look like one of the person's pages
         if p.returncode == 0:
             s = subprocess.run([see, str(out), QUESTION_BOLD if bold else QUESTION], capture_output=True, text=True, timeout=300)

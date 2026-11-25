@@ -1,9 +1,9 @@
 ---
 name: designer
-description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens; a fun, colorful, gorgeous, playful, bold or modern page for a party, festival, fundraiser, celebration or campaign; whenever a page looks bad, plain, boring, generic, cluttered, amateur or broken on a phone; and every request for two or more design concepts, options or versions to choose from. Works the way a careful designer does, in a calm or a bold register, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
+description: Only when the person asks by name for Ola's designer skill, Ola's house style, or two or more design concepts compared side by side as pictures. Not for an ordinary request to make or fix a web page: design those yourself (AGENTS.md).
 license: Proprietary
 metadata:
-  ola/version: "9"
+  ola/version: "10"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow u8-three-concepts u9-block-party u10-youth-strike u11-garden-fundraiser"
   ola/owner: "ola"
@@ -56,7 +56,8 @@ Pick one first, from the person's words and the subject:
    bullhorn or the march route for a strike, a long table or a plate for a dinner, the fund's goal as
    blocks. Simple shapes in the palette's inks, the arithmetic in a comment.
 5. `python3 /opt/ola/skills/designer/scripts/look.py index.html --name check` and fix every line it
-   lists; run it once more only if you changed the layout, then hand off. Check in the shots that
+   lists; run it once more only if you changed the layout, then hand off (`look.py` refuses a third
+   look: two is the limit, the person is waiting). Check in the shots that
    nothing overlaps the title (a drawing goes beside or below it, never on top). More on any part:
    `/opt/ola/skills/designer/references/bold.md`.
 
@@ -106,7 +107,7 @@ you decided in `design/notes.md` in a few lines.
    `/opt/ola/skills/designer/assets/components.html` (`references/components.md` says which to use).
 6. **Look and polish** (`references/polish.md`, `references/slop-and-plain.md`): round by round,
    `python3 /opt/ola/skills/designer/scripts/look.py index.html --name round1`
-   and fix what it lists, most important first. At most three rounds; never hand over a round with
+   and fix what it lists, most important first. At most two rounds (`look.py` refuses a third); never hand over a round with
    more problems than the one before.
 7. **Honest and usable** (`references/honest.md`): contrast, focus, real headings, alt text,
    reduced motion, charts with honest axes. `look.py` checks most of it.
