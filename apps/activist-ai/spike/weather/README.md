@@ -24,6 +24,7 @@ After a run, put Nemotron back: `launchctl bootstrap gui/$(id -u) ~/Library/Laun
 | Inkling 2 Mini, 8-bit (28 GB) | 58 min | 61 | ~106,000 | works, polished |
 | Inkling 2 Mini, 4-bit IQ4_NL (18 GB) | 30 min | 33 | ~61,000 | works; on desktop the moon covers the forecast |
 | the same, reply cap 48,000 instead of 16,000 | 50 min | 35 | ~103,000 | works |
+| the same 4-bit, thinking on medium (cap 16,000) | 15 min | 23 | ~33,000 | works; day names one day off, the 12-hour chart too tall on desktop |
 | Nemotron 3.5 Super 120B, Q4 (72 GB) | 20 min | 9 | ~25,000 to 30,000 | works; clouds over the text, a black curve on a dark sky, day names one day off |
 | Claude Opus 5.5, in Claude Code | 2 min | 3 | ~5,000 of code (thinking not counted) | works |
 
@@ -36,6 +37,8 @@ The pages and screenshots are on the M1 iMac in `~/Desktop/Ola/hello-weather/` a
    (none, minimal, low, medium, high) and defaults to high (0.9). On `speed-prompt.txt`: high wrote
    12,000 tokens and was cut off unfinished, medium 4,162, low 2,928, both complete.
    llama.cpp sets it per request (`reasoning_effort`) or for the server (`--reasoning-effort`).
+   On the weather page, medium halved both time and tokens against high (15 min and ~33,000 against
+   30 min and ~61,000) and the page is about as good. One run each.
 2. **Where Inkling's tokens went (8-bit run):** about 60% thinking; the page written in chunks after
    the first whole-file reply hit the 16,000-token cap; 56 shell commands, mostly test rigs of its own.
 3. **Raising the reply cap did not help.** A runaway reply simply ran to the new cap (47,945 tokens).
