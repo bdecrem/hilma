@@ -14,8 +14,8 @@ the day went and still say "the page" for the website sheet):
 | `/seminar/fact-checker` | Project 3, John Markoff's fact-checking skill; the file itself is served at `/seminar/fact-checker/SKILL.md` (`public/seminar/fact-checker/`) | `fact-checker/content.json` |
 
 `Sheet.tsx` draws the three project sheets, `SHEETS` in it is the row of links on top of each.
-Bart's numbering is his: website 1, library 2, fact checker 3 (I had the last two the other
-way round for an hour). On every sheet he wants the answer to "how do I use this tomorrow,
+Bart's numbering is his: since 2026-11-24 fact checker 1, library 2, website 3 (before
+that website 1, library 2, fact checker 3), on the landing page (`home.json`) and in `SHEETS`. On every sheet he wants the answer to "how do I use this tomorrow,
 after I shut my laptop": for the library, double-click Open Trust Shelf; and everywhere,
 **rename and pin the project** in the Claude app.
 

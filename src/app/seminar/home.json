@@ -8,10 +8,10 @@
   "projects": [
     {
       "n": 1,
-      "href": "/seminar/website",
-      "title": "Your own work website",
-      "body": "A work page with an office-hours sign-up, live on the internet.",
-      "time": "30 min to build, 1 hour to publish"
+      "href": "/seminar/fact-checker",
+      "title": "Your own fact checker",
+      "body": "John Markoff's skill checks every claim in a chapter.",
+      "time": "20 min"
     },
     {
       "n": 2,
@@ -22,10 +22,10 @@
     },
     {
       "n": 3,
-      "href": "/seminar/fact-checker",
-      "title": "Your own fact checker",
-      "body": "John Markoff's skill checks every claim in a chapter.",
-      "time": "20 min"
+      "href": "/seminar/website",
+      "title": "Your own work website",
+      "body": "A work page with an office-hours sign-up, live on the internet.",
+      "time": "30 min to build, 1 hour to publish"
     }
   ],
   "last": {
