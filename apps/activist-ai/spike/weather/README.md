@@ -93,6 +93,36 @@ On the Studio: packs in `~admin/.mtplx/models` (36 GB), everything else in `~adm
 (`results.jsonl`, the server logs, both pages). Pages and screenshots on the M1 iMac in
 `~/Desktop/Ola/hello-weather/inkling-mtplx-bare` and `inkling-mtplx-quality`.
 
+## The game: a second brief on the same setup (Nov 25, 2026, OLA-441)
+
+`mtplx/game-task.txt` asks for "Paper Boat", a one-file canvas game (steer a paper boat past rocks,
+gather lanterns, start and game-over screens, touch and keyboard, sound, `window.game` for testing).
+Run with `mtplx/run-page.sh game-<name> ~/mtplx-test/game-task.txt`; played afterwards by
+`node apps/activist-ai/spike/weather/mtplx/play-game.mjs <url or file> <out dir> [seconds]`, which
+taps, drags and uses the keyboard as a person would and reports errors, runs, score and frames a second.
+
+| | Inkling, compressed pack (Bare Speed) | Inkling, official weights | Claude Fable 5.2, in the session that ran the test |
+|---|---|---|---|
+| Prompt to finished game | 5 min 24 s | 11 min 36 s | 4 min 55 s, its own tests and two fixes included |
+| Model calls, tokens written | 22, 33,377 | 44, 55,477 | |
+| Requests refused for memory | 0 | 10, each retried | |
+| Played by the script | no errors; 61 frames/s phone, 56 desktop | no errors; 61 phone, 14 desktop | no errors; 61 phone, 58 desktop |
+| Seen | a real game; the wake is drawn sideways, a darker band across the bottom | plays; the boat is drawn bow-down, rocks are faint outlines, the wake sits ahead of the boat | Bart: "SO GOOD"; of the compressed pack's: "really nice too" |
+
+One run each. Frames a second are from headless Chromium without a graphics card, so they compare
+the three, they do not predict a real Mac.
+
+- **Opus was not run**: the usage guard refused a new agent until Nov 27. The third column is the
+  session itself (Fable 5.2), which is a stronger model than Opus and saw the other two games' results.
+- **The official weights' time is not a fair reading of that pack.** It is 4 GB larger, Ola's model
+  held 74 GB beside it, and ten requests were refused for memory and retried; on the weather page
+  the same pack had one refusal and finished first. A clean time needs Ola's model unloaded or a
+  smaller session bank (`MTPLX_SESSION_BANK_MAX_BYTES`).
+- **A leftover in /tmp cost it steps**: the model wrote its test rig to `/tmp/harness.js`, which a
+  run under the `ola` account had left there the day before, and could not overwrite it.
+- All three, with the weather pages, are served from `~/Desktop/Ola/play` on the M1 iMac through a
+  tunn3l address while that iMac is on; copies in `~/Desktop/Ola/hello-game/`.
+
 ## Not done (OLA-436, OLA-437, OLA-438, OLA-439)
 
 - The weather page at medium and low thinking, three runs each, to learn the spread and the effect on quality.

@@ -1,0 +1,15 @@
+Build a small, original browser game called "Paper Boat". Write it as one file, index.html, in this folder: HTML, CSS and JavaScript together, drawn on a canvas, no build step, no libraries, no web fonts, no images or sounds from the network.
+
+The game: seen from above, a folded paper boat drifts down a river at night. The river scrolls toward the player; the boat stays near the bottom of the screen and moves only left and right. Rocks come down the river and must be dodged: touching one ends the run. Floating paper lanterns can be collected: each one adds to the score and glows a little brighter than the last. The river slowly speeds up and gets busier the longer the run lasts, so a run is easy for the first ten seconds and hard after a minute. The banks of the river are the left and right limits.
+
+Controls: on a keyboard, the left and right arrow keys or A and D steer, Space or Enter starts and restarts, P pauses. On a touch screen, dragging a finger left and right anywhere steers the boat (the boat follows the finger), and a tap starts and restarts. Steering must feel smooth: the boat eases toward where it is going and leans a little into the turn.
+
+Screens: a start screen with the name of the game, one line saying how to play, and the best score; the game itself with the score at the top; a game-over screen with the score, the best score (kept in localStorage) and how to play again. The game pauses by itself when the tab is hidden.
+
+Sound: a few small sounds made in code with WebAudio (a soft chime for a lantern, a low thud for a rock), starting only after the first key press or tap, with a mute button in a corner.
+
+Design: this must look like the work of a professional designer with taste, not a template. One visual idea: everything is cut paper lit by lantern light. A deep ink-blue river with slow ripples, a cream paper boat with a visible fold, warm sunflower-yellow lanterns that light the water around them, dark paper rocks with a pale edge, reeds on the banks. No emoji, no purple gradients, no neon. Confident typography with system fonts. A wake behind the boat and a small burst of light when a lantern is collected. It must fill the whole screen, run smoothly at 60 frames a second, look right on a phone held upright (390 px wide) and on a desktop, stay sharp on high-density screens (cap the device pixel ratio at 2), and set a theme-color meta tag that matches the river.
+
+For testing, the page must set window.game to an object with two fields kept up to date: state (one of "start", "playing", "paused", "over") and score (a number).
+
+When the file is written, read it once more and fix any JavaScript error. Finish by saying in one sentence what you built.
