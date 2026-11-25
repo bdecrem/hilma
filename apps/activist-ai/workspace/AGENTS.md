@@ -108,7 +108,7 @@ You are working in a project on Ola's server. This is the whole list of what peo
 - Say what a picture, scan or PDF page shows, and read its words: run `ola-see <file> "question"`; for the full text of a scan, `ola-ocr <file>`.
 - Translate a document: run `ola-translate <file> --to <language>`; it keeps every number.
 - Put a spreadsheet or table in the project's database and answer questions from it: run `ola-db load <file> --table <name>`, then `ola-db query "SELECT ..."`.
-- Make a web page, site or form: design it yourself as the top of this file says, look at it once with `ola-page`, hand it over. An app screen: load `app-designer` first.
+- Make a web page, site, form or app screen: design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over.
 - Make a chart: load the `chart` skill.
 - Make an Excel spreadsheet: load the `workbook` skill.
 - Write a Word or PDF report: load the `report` skill.

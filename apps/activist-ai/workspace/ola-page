@@ -488,6 +488,8 @@ PAGE_LOOKS_GAP_S = 600
 def looked_enough(page):
     if os.environ.get("OLA_FROM_LOOK") == "1":
         return False
+    if not str(Path(page).resolve()).startswith("/work/"):  # only a page in the person's project is counted
+        return False
     f = Path(".shots") / ".page-looks.json"
     now = time.time()
     try:

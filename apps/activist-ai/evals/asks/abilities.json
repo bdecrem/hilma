@@ -78,10 +78,10 @@
       "id": "page",
       "what": "Make a web page, site, form or app screen",
       "cloud": {
-        "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`"
+        "tell": "design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over"
       },
       "local": {
-        "tell": "load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`"
+        "tell": "design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over"
       }
     },
     {

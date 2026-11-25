@@ -1,6 +1,6 @@
 ---
 name: designer
-description: Only when the person asks by name for Ola's designer skill, Ola's house style, or two or more design concepts compared side by side as pictures. Not for an ordinary request to make or fix a web page: design those yourself (AGENTS.md).
+description: Only when the person asks by name for Ola's designer skill, Ola's house style, or two or more design concepts compared side by side as pictures. Not for an ordinary request to make or fix a web page, which you design yourself (AGENTS.md).
 license: Proprietary
 metadata:
   ola/version: "10"

@@ -191,10 +191,13 @@ LOOKED_ENOUGH = ("look: you have looked at this page twice already, and that is 
                  "ready, and name anything you saw and did not fix.")
 
 
-def look_allowed(page, now=None, state=None):
+def look_allowed(page, now=None, state=None, root="/work/"):
     """True, and counted, when this page may be looked at once more."""
     import time
     now = time.time() if now is None else now
+    # Only a page in the person's project (/work) is counted: the skill's own tests look at their pages freely.
+    if root and not str(Path(page).resolve()).startswith(root):
+        return True
     f = Path(state) if state else Path(".shots") / ".looks.json"
     try:
         seen = json.loads(f.read_text())

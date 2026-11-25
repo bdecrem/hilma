@@ -12,7 +12,7 @@ You are working on the person's own Mac. This is the whole list of what people a
 - Say what a picture, scan or PDF page shows, and read its words: run `ola-see <file> "question"` (it also reads the words on a picture or scan).
 - Translate a document: translate it yourself, keeping every number, and save the translation as a file beside it.
 - Put a spreadsheet or table in the project's database and answer questions from it: run `ola-db load <file> --table <name>`, then `ola-db query "SELECT ..."`.
-- Make a web page, site, form or app screen: load the `designer` skill (`app-designer` for app screens) first, then check it with `ola-page`.
+- Make a web page, site, form or app screen: design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over.
 - Make a chart: load the `chart` skill.
 - Make an Excel spreadsheet: load the `workbook` skill.
 - Write a Word or PDF report: load the `report` skill.
