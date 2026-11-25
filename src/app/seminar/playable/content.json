@@ -9,6 +9,10 @@
     {
       "label": "What you end up with:",
       "text": "an interactive artifact built around your own idea. Good for a class, a talk, or a curious colleague."
+    },
+    {
+      "label": "As of 11/25:",
+      "text": "installing the artifact as an app on your computer works on a regular Claude account, but not (yet) on the Claude for Education accounts."
     }
   ],
   "steps": [
