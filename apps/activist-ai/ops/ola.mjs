@@ -721,7 +721,11 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   const baseRef = base ?? before?.commit ?? null
   const baseCommit = baseRef ? git('rev-parse', '--verify', '--quiet', `${baseRef}^{commit}`).stdout.trim() || null : null
   // --no-apps: a check from an ssh session, where the apps' keychain test cannot reach the login keychain.
-  const names = [...(check && !noApps ? ['apps'] : []), ...SUITES.map(([n]) => n)]
+  // No Xcode on this machine (the Studio has only the Command Line Tools, OLA-443): swift test cannot
+  // find XCTest there, so the apps' suite is left to a machine that has it (the mini) and the log says so.
+  const xctest = !check || noApps || sh('/usr/bin/xcrun', ['--find', 'xctest']).status === 0
+  if (!xctest) say("suite apps: not run on this machine (no Xcode: xcrun finds no xctest); the Mac and iPhone apps' shared code is checked where Xcode is installed")
+  const names = [...(check && !noApps && xctest ? ['apps'] : []), ...SUITES.map(([n]) => n)]
   const changed = all ? null : changedFiles(git, baseCommit, commit)
   const pick = all
     ? { run: names, skip: [], all: '--all was asked for', why: {} }
