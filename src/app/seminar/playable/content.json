@@ -1,0 +1,80 @@
+{
+  "title": "Make Your Idea Playable",
+  "intro": "A hands-on Claude session for CASBS fellows. In about five messages you will turn one idea from your own research into a small interactive simulation or demo that anyone can play with, then save it as an app on your computer.",
+  "facts": [
+    {
+      "label": "What you need:",
+      "text": "a Claude Pro account and the Claude app or claude.ai open. About 20 minutes."
+    },
+    {
+      "label": "What you end up with:",
+      "text": "an interactive artifact built around your own idea. Good for a class, a talk, or a curious colleague."
+    }
+  ],
+  "steps": [
+    {
+      "title": "Step 1: Pitch it",
+      "before": "Start a new chat and paste this, filling in the brackets.",
+      "prompt": "I study [field]. One idea from my work is: [2-3 sentences, for example \"small individual preferences can produce large-scale segregation\"]. Suggest three different ways to turn this into a small interactive artifact someone could play with in two minutes. Don't build yet.",
+      "after": "Read the three options and pick the one you would most want to show someone."
+    },
+    {
+      "title": "Step 2: Build it",
+      "before": "",
+      "prompt": "Build option [number] as an artifact. Give it sliders or controls for the key assumptions, and a one-paragraph \"what you're looking at\" panel.",
+      "after": "Play with it. Move every control. Notice what feels wrong."
+    },
+    {
+      "title": "Step 3: Argue with it",
+      "before": "",
+      "prompt": "Now act as a skeptical reviewer in my field. What does this model oversimplify or get wrong? Then add one control that lets the viewer switch on the most important complication.",
+      "after": "This is the step to pay attention to. Judge the critique the way you would judge a referee report. Where is it right? Where is it shallow? Tell Claude."
+    },
+    {
+      "title": "Step 4: Make it yours",
+      "before": "",
+      "prompt": "Add a \"try this\" section with three experiments for the viewer, give it a memorable name, and make the design feel like [a 1970s journal / a board game / a field notebook].",
+      "after": ""
+    },
+    {
+      "title": "Step 5: Keep it",
+      "before": "Ask for any last changes in plain words, for example \"make the text larger\" or \"the default settings should show the surprising case first\". When you are happy, open the artifact and install it as a desktop app on your Mac or Windows computer. You can also copy its link to share it.",
+      "prompt": null,
+      "after": ""
+    }
+  ],
+  "ideas": {
+    "title": "Stuck for an idea?",
+    "lede": "Use one of these in Step 1.",
+    "items": [
+      {
+        "name": "Schelling's segregation model.",
+        "text": "Mild preferences, stark outcomes."
+      },
+      {
+        "name": "A public goods game.",
+        "text": "Watch cooperation collapse, or hold once punishment is allowed."
+      },
+      {
+        "name": "Anchoring.",
+        "text": "A demo that tests the viewer first, then reveals the effect."
+      },
+      {
+        "name": "Diffusion on a network.",
+        "text": "How a norm or a rumor spreads."
+      },
+      {
+        "name": "The replication crisis.",
+        "text": "Run 100 underpowered studies and see what gets \"published\"."
+      }
+    ]
+  },
+  "tips": {
+    "title": "Tips",
+    "items": [
+      "Talk to Claude the way you would brief a sharp research assistant. Say what you want and why.",
+      "If the result is wrong, say exactly what is wrong. \"The curve should flatten after the threshold\" works better than \"fix it\".",
+      "You are the expert on the idea. Claude builds fast, and you decide whether the model is honest."
+    ]
+  }
+}

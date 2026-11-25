@@ -1242,3 +1242,58 @@
 .sem-s-hero-wrap + .sem-s-title {
   margin-top: 24px;
 }
+
+/* /seminar/playable: each prompt as a code block with a Copy button. */
+.sem-code {
+  margin-top: 12px;
+  padding: 14px 14px 14px 18px;
+  background: var(--bubble);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 14px;
+  align-items: start;
+}
+
+.sem-code pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.sem-code .sem-copy {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  margin-top: 0;
+}
+
+@media (max-width: 700px) {
+  .sem-code {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sem-code .sem-copy {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    margin-top: 10px;
+  }
+}
+
+.sem-p-facts {
+  margin-top: 16px;
+  display: grid;
+  gap: 6px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.sem-p-text {
+  margin-top: 10px;
+  font-size: 17px;
+  line-height: 1.55;
+}

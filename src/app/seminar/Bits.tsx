@@ -115,3 +115,29 @@ export function Slides({ slides, caption }: { slides: Slide[]; caption?: { label
     </figure>
   )
 }
+
+// A prompt to paste into Claude: a code block with a Copy button.
+export function Prompt({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    } catch {
+      /* no clipboard access: the text is on the page to select */
+    }
+  }
+
+  return (
+    <div className="sem-code">
+      <pre>
+        <code>{text}</code>
+      </pre>
+      <button type="button" className="sem-copy" onClick={copy}>
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  )
+}

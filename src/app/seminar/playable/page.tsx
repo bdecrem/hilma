@@ -1,0 +1,81 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import content from './content.json'
+import { Prompt } from '../Bits'
+
+// bartin16.xyz/seminar/playable: project 4, turn one research idea into a small interactive
+// artifact in claude.ai. Bart's text, word for word, in content.json; every prompt is a code
+// block with a Copy button.
+
+const title = 'Make your idea playable'
+const description =
+  'Turn one idea from your own research into a small interactive simulation anyone can play with, in about five messages to Claude.'
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: '/seminar/playable' },
+  openGraph: { title, description, url: '/seminar/playable', type: 'article' },
+  twitter: { card: 'summary_large_image', title, description },
+}
+
+export default function PlayablePage() {
+  return (
+    <main className="sem-main sem-single">
+      <p className="sem-kicker">
+        <Link href="/seminar" className="sem-back">
+          The Seminar
+        </Link>{' '}
+        · Project 4
+      </p>
+      <h1 className="sem-s-title">{content.title}</h1>
+      <p className="sem-s-intro">{content.intro}</p>
+      <div className="sem-p-facts">
+        {content.facts.map((f) => (
+          <p key={f.label}>
+            <strong>{f.label}</strong> {f.text}
+          </p>
+        ))}
+      </div>
+
+      {content.steps.map((step) => (
+        <section key={step.title} aria-label={step.title}>
+          <h2 className="sem-tips-title">{step.title}</h2>
+          {step.before && <p className="sem-p-text">{step.before}</p>}
+          {step.prompt && <Prompt text={step.prompt} />}
+          {step.after && <p className="sem-p-text">{step.after}</p>}
+        </section>
+      ))}
+
+      <section aria-label={content.ideas.title}>
+        <h2 className="sem-tips-title">{content.ideas.title}</h2>
+        <p className="sem-p-text">{content.ideas.lede}</p>
+        <ul className="sem-checklist sem-bullets">
+          {content.ideas.items.map((item) => (
+            <li key={item.name}>
+              <p>
+                <strong>{item.name}</strong> {item.text}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-label={content.tips.title}>
+        <h2 className="sem-tips-title">{content.tips.title}</h2>
+        <ul className="sem-checklist sem-bullets">
+          {content.tips.items.map((item) => (
+            <li key={item}>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <footer className="sem-foot">
+        <a href="https://bartin16.xyz">Bart Decrem</a>
+        <span>CASBS, 2026–27</span>
+      </footer>
+    </main>
+  )
+}

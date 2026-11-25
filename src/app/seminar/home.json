@@ -26,6 +26,13 @@
       "title": "Your own work website",
       "body": "A work page with an office-hours sign-up, live on the internet.",
       "time": "30 min to build, 1 hour to publish"
+    },
+    {
+      "n": 4,
+      "href": "/seminar/playable",
+      "title": "Make your idea playable",
+      "body": "One idea from your research as a small simulation anyone can play with.",
+      "time": "20 min"
     }
   ],
   "last": {
