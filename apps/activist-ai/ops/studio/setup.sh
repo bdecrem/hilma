@@ -216,7 +216,14 @@ d_model_job() {
 # The model answers, with the key, on loopback (loading 73 GB takes a minute or two).
 t_model_up() { curl -fsS -m 5 -H "Authorization: Bearer $(cat "$KEYFILE")" "http://127.0.0.1:$MODEL_PORT/v1/models" | grep -q "\"$MODEL_ALIAS\""; }
 d_model_up() { for _ in $(seq 1 60); do t_model_up && return 0; sleep 5; done; return 1; }
-t_envs() { for f in gateway frontdesk tls tunnel; do [ "$(mode_of "$OLA/$f.env")" = 600 ] || return 1; done; [ -d "$OLA/tls/current" ]; }
+# The tunnel settings start the public address wherever they exist (ola.mjs install), so until README
+# step 10 they wait under another name: the first deploy must not take app.ola.cx from the mini.
+TUNNEL_WAITING=tunnel.env.waiting-for-step-10
+t_envs() {
+  for f in gateway frontdesk tls; do [ "$(mode_of "$OLA/$f.env")" = 600 ] || return 1; done
+  [ "$(mode_of "$OLA/tunnel.env")" = 600 ] || [ "$(mode_of "$OLA/$TUNNEL_WAITING")" = 600 ] || return 1
+  [ -d "$OLA/tls/current" ]
+}
 gw_models() { local s="" n; for n in $GATEWAY_NAMES; do s="$s${s:+,}$n=$MODEL_ALIAS"; done; echo "$s"; }
 t_gateway_local() {
   [ -f "$GWENV" ] && grep -qx "UPSTREAM_BASE_URL=http://127.0.0.1:$MODEL_PORT/v1" "$GWENV" && grep -qx "GATEWAY_MODELS=$(gw_models)" "$GWENV" &&
