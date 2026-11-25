@@ -58,6 +58,17 @@ export default function PlayablePage() {
               </ul>
             </div>
           )}
+          {'note' in step && step.note && <p className="sem-p-text">{step.note}</p>}
+          {'noteImage' in step && step.noteImage && (
+            <Image
+              className="sem-p-shot sem-p-shot-wide"
+              src={step.noteImage.src}
+              alt={step.noteImage.alt}
+              width={step.noteImage.width}
+              height={step.noteImage.height}
+              sizes="560px"
+            />
+          )}
           {step.after && <p className="sem-p-text">{step.after}</p>}
           {'how' in step && step.how && (
             <ol className="sem-p-how">

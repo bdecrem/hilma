@@ -1332,3 +1332,7 @@
   margin-top: 16px;
   border-radius: 12px;
 }
+
+.sem-p-shot-wide {
+  max-width: 560px;
+}

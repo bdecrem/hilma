@@ -7,6 +7,10 @@
       "text": "a Claude Pro account and the Claude app or claude.ai open. About 20 minutes."
     },
     {
+      "label": "Chat or Cowork?",
+      "text": "If your Claude app has both, use Chat."
+    },
+    {
       "label": "What you end up with:",
       "text": "an interactive artifact built around your own idea. Good for a class, a talk, or a curious colleague."
     },
@@ -26,13 +30,20 @@
       "title": "Step 2: Build it",
       "before": "",
       "prompt": "Build option [number] as an artifact. Give it sliders or controls for the key assumptions, and a one-paragraph \"what you're looking at\" panel.",
-      "after": "Play with it. Move every control. Notice what feels wrong."
+      "after": "Play with it. Move every control. Notice what feels wrong.",
+      "note": "Claude asks before it publishes the artifact, and the box notes that artifacts aren't HIPAA eligible. Note that artifacts are hosted on Anthropic servers.",
+      "noteImage": {
+        "src": "/seminar/playable/publish.png",
+        "alt": "Claude's Publish artifact box: uploads the file to claude.ai as a new artifact, which stays private until you share it, with a note that artifacts are not HIPAA eligible; buttons Publish and Deny",
+        "width": 1342,
+        "height": 692
+      }
     },
     {
       "title": "Step 3: Argue with it",
       "before": "",
       "prompt": "Now act as a skeptical reviewer in my field. What does this model oversimplify or get wrong? Then add one control that lets the viewer switch on the most important complication.",
-      "after": "This is the step to pay attention to. Judge the critique the way you would judge a referee report. Where is it right? Where is it shallow? Tell Claude."
+      "after": "Read the critique like a peer review. Where is it right? Where is it shallow? Tell Claude."
     },
     {
       "title": "Step 4: Make it yours",
