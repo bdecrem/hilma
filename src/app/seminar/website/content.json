@@ -91,9 +91,9 @@
           "trap": null
         },
         {
-          "title": "Say GitHub is scary",
+          "title": "Ask for help with GitHub",
           "body": "When it asks you to sign in to GitHub, where your site's files live.",
-          "say": "HELP! GitHub is scary!",
+          "say": "I've never used GitHub and it seems a bit scary. Can you help me?",
           "trap": null
         },
         {
