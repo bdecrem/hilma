@@ -42,7 +42,7 @@
         },
         {
           "title": "Answer its first questions",
-          "body": "What kind of site? Choose Other and type \"for work!\". How to build it?",
+          "body": "What kind of site? Choose Other and type \"for work!\", or whatever makes the most sense. How to build it?",
           "say": "You decide, I'm not that technical.",
           "trap": null
         },
