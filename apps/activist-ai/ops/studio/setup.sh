@@ -208,6 +208,7 @@ EOF
 }
 t_model_job() { [ -f "$AGENT" ] && [ "$(model_plist)" = "$(cat "$AGENT")" ] && launchctl print "gui/$(id -u)/cx.ola.model"; }
 d_model_job() {
+  mkdir -p "$(dirname "$AGENT")"   # a new account has no ~/Library/LaunchAgents (Nov 24)
   model_plist > "$AGENT"
   launchctl bootout "gui/$(id -u)/cx.ola.model" 2>/dev/null
   launchctl bootstrap "gui/$(id -u)" "$AGENT"
