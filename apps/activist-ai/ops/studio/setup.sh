@@ -224,11 +224,13 @@ d_model_job() {
   mkdir -p "$(dirname "$AGENT")"   # a new account has no ~/Library/LaunchAgents (Nov 24)
   model_plist > "$AGENT"
   launchctl bootout "gui/$(id -u)/cx.ola.model" 2>/dev/null
+  # The old server takes a few seconds to leave; a bootstrap before that fails with error 5 (Nov 25).
+  for _ in $(seq 1 30); do launchctl print "gui/$(id -u)/cx.ola.model" >/dev/null 2>&1 || break; sleep 1; done
   launchctl bootstrap "gui/$(id -u)" "$AGENT"
 }
 # The model answers, with the key, on loopback (loading 20 GB takes under a minute).
 t_model_up() { curl -fsS -m 5 -H "Authorization: Bearer $(cat "$KEYFILE")" "http://127.0.0.1:$MODEL_PORT/v1/models" | grep -q "\"$MODEL_ALIAS\""; }
-d_model_up() { for _ in $(seq 1 60); do t_model_up && return 0; sleep 5; done; return 1; }
+d_model_up() { for _ in $(seq 1 60); do t_model_up 2>/dev/null && return 0; sleep 5; done; return 1; }
 # The tunnel settings start the public address wherever they exist (ola.mjs install), so until README
 # step 10 they wait under another name: the first deploy must not take app.ola.cx from the mini.
 TUNNEL_WAITING=tunnel.env.waiting-for-step-10
