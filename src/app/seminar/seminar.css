@@ -1297,3 +1297,18 @@
   font-size: 17px;
   line-height: 1.55;
 }
+
+/* /seminar/playable: the idea list inside Step 1, under the prompt. */
+.sem-p-ideas {
+  margin-top: 18px;
+}
+
+.sem-p-ideas-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.sem-p-ideas .sem-bullets p {
+  font-size: 16px;
+}

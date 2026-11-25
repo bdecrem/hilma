@@ -38,28 +38,28 @@ export default function PlayablePage() {
         ))}
       </div>
 
-      {content.steps.map((step) => (
+      {content.steps.map((step, i) => (
         <section key={step.title} aria-label={step.title}>
           <h2 className="sem-tips-title">{step.title}</h2>
           {step.before && <p className="sem-p-text">{step.before}</p>}
           {step.prompt && <Prompt text={step.prompt} />}
+          {i === 0 && (
+            <div className="sem-p-ideas">
+              <h3 className="sem-p-ideas-title">{content.ideas.title}</h3>
+              <ul className="sem-checklist sem-bullets">
+                {content.ideas.items.map((item) => (
+                  <li key={item.name}>
+                    <p>
+                      <strong>{item.name}</strong> {item.text}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {step.after && <p className="sem-p-text">{step.after}</p>}
         </section>
       ))}
-
-      <section aria-label={content.ideas.title}>
-        <h2 className="sem-tips-title">{content.ideas.title}</h2>
-        <p className="sem-p-text">{content.ideas.lede}</p>
-        <ul className="sem-checklist sem-bullets">
-          {content.ideas.items.map((item) => (
-            <li key={item.name}>
-              <p>
-                <strong>{item.name}</strong> {item.text}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <section aria-label={content.tips.title}>
         <h2 className="sem-tips-title">{content.tips.title}</h2>
