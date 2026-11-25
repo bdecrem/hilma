@@ -1,0 +1,14 @@
+This folder has a subfolder, minutes/, with 40 sets of city council minutes from the City of Marrow Creek, January 2025 to July 2026, one text file per meeting.
+
+Find every recorded Council vote on a housing matter: zoning or permits for homes and apartments, tenants and evictions, rents and rental assistance, shelters and supportive housing, housing funds and housing plans, short-term rentals of homes, mobile home parks. Count every motion that was voted on, including amendments and motions that failed. Do not count items where housing was discussed but no vote was taken, and do not count votes on other subjects.
+
+Write two files in this folder.
+
+1. votes.json, in exactly this shape:
+{"votes": [{"motion": "25-031", "date": "2025-03-11", "title": "the agenda item", "result": "passed", "yes": ["Okonkwo"], "no": ["Tollefsen"], "abstain": [], "absent": []}],
+ "totals": {"votes": 0, "passed": 0, "failed": 0, "most_no": "last name of the member who voted no most often on these votes"}}
+"motion" is the motion number as printed in the minutes. "result" is "passed" or "failed". Members are given by last name as in the roll call. "absent" lists the members absent from that meeting. For each vote, every one of the seven councilmembers appears in exactly one of the four lists.
+
+2. report.html, one page a busy resident could read on a phone: three or four sentences on what the Council did on housing over these months; the totals; one chart drawn in SVG or canvas (no libraries, nothing from the network) showing each member's yes and no counts on housing votes; and the full table (date, motion, item, result, the count). Plain, well-set typography with system fonts.
+
+Work only from the files: do not guess, and read every meeting. When you are done, check that votes.json parses, that every vote in it appears in the minutes with those names, and that the totals match the list. Finish by saying in one sentence what you found.
