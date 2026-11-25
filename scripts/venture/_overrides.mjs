@@ -65,13 +65,14 @@ export const overrideLine = (v) => `${new Date(v.at).toLocaleTimeString('en-US',
 // once (its key is the line's time). runner.mjs status and issues.mjs unchecked (the hourly check) do it.
 export const GATE_SINCE = '2026-11-20T21:20:32Z' // a9d7cbee, the gate (OLA-272)
 const DEPLOY_SPAN = 90 * 60e3
-export function ungatedDeploys(logText = '', starts = [], since = GATE_SINCE) {
+export function ungatedDeploys(logText = '', starts = [], since = GATE_SINCE, allow = []) {
   const lines = String(logText).split('\n').map((l) => ({ l: l.trim(), at: /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\s/.exec(l.trim())?.[1] })).filter((x) => x.at && x.at > since)
   const free = [...starts].map((s) => s.at).sort()
   const out = []
   for (const x of lines.sort((a, b) => a.at.localeCompare(b.at))) {
     // since OLA-279 each line ends " via <caller>": one that names another caller is outside the gate whatever its time
     const via = / via (.+)$/.exec(x.l)?.[1]
+    if (via && allow.includes(via)) continue // a caller in order on this machine (the Studio's first install, OLA-448)
     if (via && via !== 'runner.mjs deploy') {
       out.push(x)
       continue
@@ -82,15 +83,17 @@ export function ungatedDeploys(logText = '', starts = [], since = GATE_SINCE) {
   }
   return out
 }
-export async function checkDeploys(db, logText, { tool = 'runner.mjs' } = {}) {
-  const st = (await db.from('venture_state').select('value').eq('key', 'runner_deploys').maybeSingle()).data?.value ?? { starts: [] }
-  const bad = ungatedDeploys(logText, st.starts ?? [])
+// key, allow, machine, since: another machine's record and list, and when the gate began there (the Mac Studio, OLA-448);
+// the default is the mini's test server.
+export async function checkDeploys(db, logText, { tool = 'runner.mjs', key: stateKey = 'runner_deploys', allow = [], machine = 'test server', since = GATE_SINCE } = {}) {
+  const st = (await db.from('venture_state').select('value').eq('key', stateKey).maybeSingle()).data?.value ?? { starts: [] }
+  const bad = ungatedDeploys(logText, st.starts ?? [], since, allow)
   const fresh = []
   for (const x of bad) {
-    const key = `deploy:${x.at}`
+    const key = `deploy${stateKey.slice('runner_deploys'.length)}:${x.at}`
     if (await hasOverride(db, key)) continue
     fresh.push(x)
-    await writeOverride(db, { key, at: x.at, tool, who: 'not known (run on the test server, outside a hook)', what: `the test server was updated outside runner.mjs deploy (no update allowed by the gate in the 90 minutes before): ${x.l.slice(0, 200)}` })
+    await writeOverride(db, { key, at: x.at, tool, who: `not known (run on the ${machine}, outside a hook)`, what: `the ${machine} was updated outside runner.mjs deploy (no update allowed by the gate in the 90 minutes before): ${x.l.slice(0, 200)}` })
   }
   return { bad, fresh }
 }

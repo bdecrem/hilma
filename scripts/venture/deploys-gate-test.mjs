@@ -25,3 +25,12 @@ test('a line that says via runner.mjs deploy with no allowed start (the variable
 test('lines before the gate are not counted', () => {
   assert.equal(ungatedDeploys('2026-11-19T12:00:00.000Z deployed aaaaaaaaaaaa (origin/main) via by hand', [], since).length, 0)
 })
+test('on a machine where another caller is in order (the Studio\'s first install, OLA-448), its line is not counted; a hand-typed one still is', () => {
+  const log = [
+    '2026-11-26T10:40:00.000Z deployed cccccccccccc (origin/main) UNSIGNED; web 1 of 1 via studio setup.sh',
+    '2026-11-26T11:40:00.000Z deployed dddddddddddd (origin/main) UNSIGNED; web 1 of 1 via by hand',
+    '2026-11-26T12:10:00.000Z deployed eeeeeeeeeeee (origin/main) UNSIGNED; web 1 of 1 via runner.mjs deploy',
+  ].join('\n')
+  const out = ungatedDeploys(log, [{ at: '2026-11-26T12:00:00.000Z' }], since, ['studio setup.sh'])
+  assert.deepEqual(out.map((x) => x.at), ['2026-11-26T11:40:00.000Z'])
+})

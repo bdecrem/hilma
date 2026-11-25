@@ -32,7 +32,8 @@
 //   node scripts/venture/runner.mjs tick --force "why"   an answer run now, whatever the state (a test, or by hand)
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
 //   node scripts/venture/runner.mjs replay          the nightly replay test now, as the night runs it (by hand, or to prove it)
-//   node scripts/venture/runner.mjs deploy [--dry]  update the test server, only when allowed (OLA-272): a ticket is ready
+//   node scripts/venture/runner.mjs deploy [--dry] [--on studio]   update the test server (or, with --on studio, the Mac
+//                                                   Studio's Ola over ssh, OLA-448), only when allowed (OLA-272): a ticket is ready
 //                                                   with server commits not live, no other update running, no checker on
 //                                                   the live server in the last 15 min (OLA-338: no spacing between updates);
 //                                                   else one line why, exit 3
@@ -430,22 +431,38 @@ async function decide(seen) {
 // ola.mjs deploy only when deployGate (_plate.mjs) allows it, and otherwise logs one line saying why.
 const STAGING = `${homedir()}/ola-staging`
 const onMini = existsSync(`${STAGING}/deploys.log`)
-function mini(command) {
-  if (onMini) return spawnSync('/bin/sh', ['-c', command], { encoding: 'utf8', timeout: 20000 }).stdout ?? ''
-  for (const h of ['admin@171.66.240.175', 'admin@100.95.51.98']) {
+// The machine an update goes to (OLA-448): the mini's test server (the default), or the Mac Studio with
+// `--on studio`. Same gate for both; each has its own record of the updates the gate allowed (state
+// keys runner_deploy and runner_deploys, ending ":studio" for the Studio), which status compares with
+// that machine's own deploys.log. `allow`: callers besides this gate whose lines are in order there
+// (the Studio's first install, ops/studio/setup.sh).
+const TARGETS = {
+  mini: { name: 'test server', hosts: ['admin@171.66.240.175', 'admin@100.95.51.98'], local: onMini, key: '', allow: [] },
+  // since: the gate reached the Studio with OLA-448; the lines before it are its first install's attempts
+  studio: { name: "Studio's Ola", hosts: ['ola@100.100.60.59'], local: false, key: ':studio', allow: ['studio setup.sh'], since: '2026-11-25T23:16:00Z' },
+}
+const ON = optv('--on') ?? 'mini'
+if (!TARGETS[ON]) {
+  console.error(`--on takes ${Object.keys(TARGETS).join(' or ')}, not "${ON}"`)
+  process.exit(2)
+}
+const target = TARGETS[ON]
+function mini(command, t = target) {
+  if (t.local) return spawnSync('/bin/sh', ['-c', command], { encoding: 'utf8', timeout: 20000 }).stdout ?? ''
+  for (const h of t.hosts) {
     const r = spawnSync('ssh', sshArgs(h, command, 8), { encoding: 'utf8', timeout: 25000 })
     if (r.status === 0) return r.stdout
   }
   return null
 }
-async function deployFacts() {
-  const live = /([0-9a-f]{12})\s*$/.exec((mini('readlink ~/ola-staging/current') ?? '').trim())?.[1] ?? null
-  const lastLine = (mini('tail -1 ~/ola-staging/deploys.log') ?? '').trim()
-  const own = (await getState(db, 'runner_deploy'))?.value ?? null
+async function deployFacts(t = target) {
+  const live = /([0-9a-f]{12})\s*$/.exec((mini('readlink ~/ola-staging/current', t) ?? '').trim())?.[1] ?? null
+  const lastLine = (mini('tail -1 ~/ola-staging/deploys.log', t) ?? '').trim()
+  const own = (await getState(db, `runner_deploy${t.key}`))?.value ?? null
   const fromLog = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/.exec(lastLine)?.[1] ?? null
   const lastAttempt = [fromLog, own?.at].filter(Boolean).sort().at(-1) ?? null
   // OLA-338: one update at a time (ola.mjs deploy holds ~/ola-staging/deploy.lock with its pid)
-  const lockPid = (mini('p=$(cat ~/ola-staging/deploy.lock 2>/dev/null) && kill -0 "$p" 2>/dev/null && echo "$p"') ?? '').trim()
+  const lockPid = (mini('p=$(cat ~/ola-staging/deploy.lock 2>/dev/null) && kill -0 "$p" 2>/dev/null && echo "$p"', t) ?? '').trim()
   const updating = /^\d+$/.test(lockPid) ? `ola.mjs deploy, pid ${lockPid}` : null
   run('git', ['fetch', '--quiet', 'origin', 'main'])
   const acc = (await db.from('venture_state').select('key, value').like('key', 'accept:%')).data ?? []
@@ -476,16 +493,16 @@ if (cmd === 'status') {
   console.log(leadLine(issues, { runner, claims: live, limit }).text)
   // OLA-319: plan usage, every machine, in the hourly check (`usage.mjs line --probe`: a fresh reading when the kept one is an hour old)
   { const u = run('node', ['scripts/venture/usage.mjs', 'line', '--probe'], { timeout: 120000 }); console.log(u.status === 0 ? u.stdout.trim() : `plan usage: not read (${(u.stderr || '').trim().split('\n')[0]})`) }
-  {
-    const f = await deployFacts()
+  for (const t of Object.values(TARGETS)) {
+    const f = await deployFacts(t)
     const g = deployGate(f)
-    console.log(`test server: ${f.live ?? 'release not read'}; last update attempt ${f.lastAttempt ? at(f.lastAttempt) : 'none on record'}; ${g.ok ? 'an update may start now' : `next allowed ${at(g.nextAllowed)} (${g.why})`}`)
-    // OLA-279: the test server's own list of updates against the updates this gate allowed
-    const log = mini('tail -20 ~/ola-staging/deploys.log')
-    if (log === null) console.log("test server's list of updates: not read")
+    console.log(`${t.name}: ${f.live ?? 'release not read'}; last update attempt ${f.lastAttempt ? at(f.lastAttempt) : 'none on record'}; ${g.ok ? 'an update may start now' : `next allowed ${at(g.nextAllowed)} (${g.why})`}`)
+    // OLA-279: the machine's own list of updates against the updates this gate allowed
+    const log = mini('tail -20 ~/ola-staging/deploys.log', t)
+    if (log === null) console.log(`${t.name}'s list of updates: not read`)
     else {
-      const d = await checkDeploys(db, log)
-      console.log(d.bad.length ? `UPDATES OUTSIDE runner.mjs deploy: ${d.bad.length} (${d.fresh.length} new, each a line in issues.mjs overrides): ${d.bad.map((x) => x.at).join(', ')}` : "test server's list of updates: every update since the gate went through runner.mjs deploy")
+      const d = await checkDeploys(db, log, { key: `runner_deploys${t.key}`, allow: t.allow, machine: t.name, ...(t.since ? { since: t.since } : {}) })
+      console.log(d.bad.length ? `UPDATES OUTSIDE runner.mjs deploy on the ${t.name}: ${d.bad.length} (${d.fresh.length} new, each a line in issues.mjs overrides): ${d.bad.map((x) => x.at).join(', ')}` : `${t.name}'s list of updates: every update since the gate went through runner.mjs deploy`)
     }
   }
   if (has('--long')) {
@@ -499,24 +516,32 @@ if (cmd === 'status') {
 } else if (cmd === 'deploy') {
   const f = await deployFacts()
   const g = deployGate(f)
-  if (!g.ok) {
-    say(`skipped the update of the test server: ${g.why}; next allowed ${at(g.nextAllowed)}`)
+  const T = target.name
+  if (f.live === null) {
+    say(`skipped the update of the ${T}: its live release could not be read (${target.local ? 'no ~/ola-staging/current here' : `no answer over ssh from ${target.hosts.join(' or ')}`})`)
     process.exit(3)
   }
-  say(`update of the test server${DRY ? ' would start' : ''}: ${g.why}`)
-  if (DRY) process.exit(0)
-  await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() })
-  // every update the gate allows, kept, so the test server's list can be checked against it (OLA-279)
-  {
-    const prev = (await getState(db, 'runner_deploys'))?.value ?? { starts: [] }
-    await setState(db, 'runner_deploys', { starts: [...(prev.starts ?? []), { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() }].slice(-200) })
+  if (!g.ok) {
+    say(`skipped the update of the ${T}: ${g.why}; next allowed ${at(g.nextAllowed)}`)
+    process.exit(3)
   }
-  // OLA_DEPLOY_VIA: for the gate inside ola.mjs deploy, once the server's code checks it (OLA-279)
-  const r = spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit', env: { ...process.env, OLA_DEPLOY_VIA: 'runner.mjs deploy' } })
-  await setState(db, 'runner_deploy', { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
-  // OLA-334: the test server's own line for this update (it names a failed suite, its kept output, and any suite that passed only on the rerun)
+  say(`update of the ${T}${DRY ? ' would start' : ''}: ${g.why}`)
+  if (DRY) process.exit(0)
+  await setState(db, `runner_deploy${target.key}`, { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() })
+  // every update the gate allows, kept, so the machine's list can be checked against it (OLA-279)
+  {
+    const prev = (await getState(db, `runner_deploys${target.key}`))?.value ?? { starts: [] }
+    await setState(db, `runner_deploys${target.key}`, { starts: [...(prev.starts ?? []), { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname() }].slice(-200) })
+  }
+  // OLA_DEPLOY_VIA: for the gate inside ola.mjs deploy (OLA-279). On another machine the update runs
+  // there over ssh; if the connection drops it stops before anything is served (ola.mjs serves last).
+  const r = target.local
+    ? spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit', env: { ...process.env, OLA_DEPLOY_VIA: 'runner.mjs deploy' } })
+    : spawnSync('ssh', ['-o', 'ServerAliveInterval=30', ...sshArgs(target.hosts[0], 'OLA_DEPLOY_VIA="runner.mjs deploy" PATH=/opt/homebrew/bin:/usr/local/bin:$PATH node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy --unsigned', 10)], { stdio: 'inherit' })
+  await setState(db, `runner_deploy${target.key}`, { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
+  // OLA-334: the machine's own line for this update (it names a failed suite, its kept output, and any suite that passed only on the rerun)
   const outcome = (mini('tail -1 ~/ola-staging/deploys.log') ?? '').trim()
-  if (outcome) say(`update of the test server ended (exit ${r.status}): ${outcome.slice(0, 600)}`)
+  if (outcome) say(`update of the ${T} ended (exit ${r.status}): ${outcome.slice(0, 600)}`)
   process.exit(r.status ?? 1)
 } else if (cmd === 'probe') {
   const pulled = run('node', ['scripts/venture/sync.mjs', 'pull'])
