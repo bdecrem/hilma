@@ -239,6 +239,10 @@ d_gateway_local() {
   set_env "$GWENV" UPSTREAM_API_KEY "$(cat "$KEYFILE")"
   set_env "$GWENV" GATEWAY_MODELS "$(gw_models)"
 }
+# The first deploy builds the workspace image, before `install` has made the job that keeps Apple's
+# container services up: start them once here (Nov 24: "Plugins are unavailable", nothing deployed).
+t_container_up() { /usr/local/bin/container system status | grep -q running; }
+d_container_up() { /usr/local/bin/container system start --enable-kernel-install; }
 t_signers() { [ -s "$OLA/allowed-signers" ]; }
 t_deployed() { [ -f "$STAGING/current/apps/activist-ai/web/dist/index.html" ] && [ -f "$STAGING/deployed.json" ]; }
 d_deployed() {
@@ -269,6 +273,7 @@ run_ola() {
   human "the settings moved from the mini" t_envs "on the iMac: ops/studio/move-env.sh ola@<studio> (README step 6)"
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi
   human "Bart's signing key in ~/.ola/allowed-signers" t_signers "README step 7 (or run once with OLA_UNSIGNED=1; deploys.log records it)"
+  step "Apple's container services running (for the first image build)" t_container_up d_container_up
   if t_envs && { t_signers || [ "${OLA_UNSIGNED:-}" = 1 ]; }; then step "first deploy and the jobs (ola.mjs deploy, install)" t_deployed d_deployed
   elif [ $CHECK = 1 ] && ! t_deployed; then echo "would  first deploy and the jobs (after the settings and the signing key)"; N_DO=$((N_DO + 1)); fi
   if t_deployed; then
