@@ -110,7 +110,7 @@
         },
         {
           "title": "Connect Claude to GitHub",
-          "body": "If the instructions mention a terminal, ask. It opens a page and gives you a code to type.",
+          "body": "Claude needs your OK to put files on GitHub. It gives you a short code and a GitHub page to type it into. If it starts talking about a terminal, say:",
           "say": "That's too complicated for me. Open the page for me and just tell me what to type.",
           "trap": null
         },
