@@ -54,7 +54,7 @@
         },
         {
           "title": "Say what it's for",
-          "body": "In your own words: what you're working on, for instance an office-hours sign-up.",
+          "body": "In your own words: what you're working on, for instance an office-hours sign-up (it'll look real, but sign-ups only save once it's online).",
           "say": null,
           "trap": null
         },
@@ -69,6 +69,12 @@
           "body": "Answer its questions. Then it builds the page.",
           "say": null,
           "trap": null
+        },
+        {
+          "title": "Look at it",
+          "body": "Claude opens it in your browser. It lives only on your laptop for now, so nobody else can see it yet.",
+          "say": null,
+          "trap": null
         }
       ]
     },
@@ -76,7 +82,7 @@
       "label": "Part 2",
       "title": "Publish it",
       "time": "About an hour",
-      "lede": "The accounts are the fiddly part. Have a helper nearby.",
+      "lede": "Optional today. This is where the account sign-ups get fiddly, so do it here with a helper or at home later. Part 1 is already a win.",
       "steps": [
         {
           "title": "Ask for office hours",
