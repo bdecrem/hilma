@@ -72,7 +72,12 @@ const insideJSON = (id, code, opts) => {
 
 // ---------------------------------------------------------------- the gateway
 
+// The test gateway's key for the outside model. Only the two live runs call out (the real task
+// without --no-live, and OLA_CHECK_SEE_LIVE); without either, no key is read at all and the gateway
+// gets a placeholder, so the suite runs on a machine that holds no key (the Studio, OLA-443) and
+// cannot make a paid call. A live run without a key still fails here.
 function together() {
+  if (!LIVE && !SEE_LIVE) return 'no-key-this-run-makes-no-outside-call'
   if (process.env.TOGETHER_API_KEY) return process.env.TOGETHER_API_KEY
   const f = path.join(homedir(), 'Documents/code/hilma/.env.local')
   const line = readFileSync(f, 'utf8').split('\n').find((l) => l.startsWith('TOGETHER_API_KEY='))
