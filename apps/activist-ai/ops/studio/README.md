@@ -26,36 +26,38 @@ What the mini runs today, and where each part goes, is at the end.
 
 ## The local model
 
-**One model: NVIDIA Nemotron 3.5 Super VL** (120B, 12B active, a hybrid Mamba/attention MoE; it
-reads pictures). It is the only good candidate that fits: on Together it passed opencode's real
-request and the survey task 16/16 three times and read the chart and the scan (README, "Specialists
-and paper lookup"). **No Chinese models**, Bart's rule: Qwen, GLM, DeepSeek, Kimi and MiniMax are not
-installed or tried, whatever a benchmark says; any new candidate needs his yes first.
+**One model: Inkling 2 Mini** (Thinking Machines Lab, Apache 2.0, 26B, reads pictures), the official
+weights unchanged, served by MTPLX (Bart, Nov 25, OLA-444: "install the Inkling on the ola as the new
+principal model ... that version we have on admin"). Measured on this machine the same day
+(`spike/weather/README.md`, `spike/docs-test/README.md`): about 98 tokens/s writing against 51 under
+llama.cpp, a page in 5 minutes against 15 to 20 on Nemotron, 24 of 24 on the documents test.
+**No Chinese models**, Bart's rule: Qwen, GLM, DeepSeek, Kimi and MiniMax are not installed or tried,
+whatever a benchmark says; any new candidate needs his yes first. MTPLX's own `mtplx start` offers Qwen
+first on a 128 GB Mac: always name the Inkling pack.
 
-- **Files:** `ggml-org/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF` (NVIDIA's own GGUFs, published by
-  the llama.cpp maintainers): `…-Q4_0.gguf`, 72.1 GB, and the picture encoder `mmproj-…-Q8_0.gguf`,
-  1.0 GB, in `~ola/ola-models`. Q4_0 is the format of llama.cpp's Apple Silicon table the Studio was
-  chosen on (3,220 tokens/s prompt reading on a small model; this model's own speed is measured on arrival).
-- **Server:** `llama-server` from Homebrew's `llama.cpp`, launchd job `cx.ola.model` in the ola
-  account, `127.0.0.1:8080` only, with a key (`~/.ola/model-key`, 600) so nothing else on the machine
-  can call it; `--jinja` for tool calls, 4 slots (the machine runs at most 4 projects) sharing a
-  524,288-token context, 128k each. Its log: `~/Library/Logs/ola/model.log`.
+- **Files:** `Youssofal/Inkling-2-Mini-MTPLX-Optimized-Quality` (20 GB: the makers' weights, their
+  draft head, the picture encoder), in `~ola/ola-models/Inkling-2-Mini-MTPLX-Optimized-Quality`,
+  checked against the pack's `SHA256SUMS`.
+- **Server:** `mtplx serve` (Homebrew tap `youssofal/mtplx`, one developer's Apache-2.0 engine on MLX),
+  launchd job `cx.ola.model` in the ola account, `127.0.0.1:8080` only, with the key
+  (`~/.ola/model-key`, 600), served as `inkling`, thinking on medium. It serves one request at a time
+  and the rest wait: three people at once each took about 20 minutes for a 5 to 10 minute job.
+  Its log: `~/Library/Logs/ola/model.log`.
 - **The gateway:** `UPSTREAM_BASE_URL=http://127.0.0.1:8080/v1` and every name, `general`, `see`,
-  `ocr`, `read`, `translate`, `route`, mapped to the one model (`GATEWAY_MODELS`). The specialists
-  ran on Muse Glimmer 30B on Together; on the Studio Nemotron takes those names, so no project's
-  file leaves the machine for them. The two fallbacks (Claude, a hosted model) stay off by default
-  and per project, as now. The gateway's old settings are kept as `gateway.env.before-studio`.
-- **Memory:** 73 GB of weights, about 25 GB for the context and compute, leaves about 30 GB for macOS,
-  the services and four project VMs. `iogpu.wired_limit_mb=102400` (100 GiB) lets the GPU hold that
-  much (the default on 128 GB is about 96 GiB); set at every boot by `cx.ola.wiredlimit`.
-- **First thing to measure, before any real file:** the gateway's tool-call probe and the survey
-  task through the local model (the same 16 checks as on Together), and the planted-instruction set
-  (`evals/run-instructions.sh`). If tool calls fail under llama.cpp, try an MLX server
-  (vllm-metal, LM Studio's MLX engine) with the same model; do not switch models without Bart.
+  `ocr`, `read`, `translate`, `route`, mapped to the one model (`GATEWAY_MODELS`). The two fallbacks
+  (Claude, a hosted model) stay off by default and per project. The gateway's old settings are kept
+  as `gateway.env.before-studio`.
+- **Memory:** about 20 GB of weights; MTPLX may use up to 90 GB for its caches and gives it back under
+  pressure. One model at a time: beside Nemotron (74 GB) it refused requests for memory.
+- **The way back to Nemotron:** its files are still in `~/ola-models` and `llama.cpp` is installed.
+  Check out the commit before OLA-444 and run its `ops/studio/setup.sh ola`: it rewrites the job and
+  the gateway's names (about 5 minutes to load).
+- **Its makers' warning:** less reliable than large models at following detailed instructions, and it
+  may misreport what it did. Ola's request tests against it are the next measurement.
 
 Check by hand, as ola:
 ```bash
-curl -s -H "Authorization: Bearer $(cat ~/.ola/model-key)" http://127.0.0.1:8080/v1/models | grep -o '"nemotron"'
+curl -s -H "Authorization: Bearer $(cat ~/.ola/model-key)" http://127.0.0.1:8080/v1/models | grep -o '"inkling"'
 ```
 
 ## Where everything the mini runs goes (surveyed 2026-11-20)

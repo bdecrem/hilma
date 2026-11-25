@@ -30,19 +30,20 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 HERE=$(cd "$(dirname "$0")" && pwd)
 
 # ---------------------------------------------------------------- what is installed (one place)
-BREW_FORMULAE="node age llama.cpp poppler"  # node: every service; age: backups; llama.cpp: the model server; poppler: pdftotext, for documents (ola-db)
+BREW_FORMULAE="node age youssofal/mtplx/mtplx llama.cpp poppler"  # node: every service; age: backups; mtplx: the model server; llama.cpp: the server before it, kept as the way back; poppler: pdftotext, for documents (ola-db)
 BREW_CASKS="ngrok"                          # the public address (ops/tunnel.mjs)
 CONTAINER_VERSION=1.7.1                     # Apple's container, the version staging runs
 CONTAINER_PKG="https://github.com/apple/container/releases/download/${CONTAINER_VERSION}/container-${CONTAINER_VERSION}-installer-signed.pkg"
 WIRED_MB=102400                             # GPU may wire 100 GiB (default ~96 GiB); README, "Memory"
 REPO=https://github.com/bdecrem/hilma
-MODEL_REPO=ggml-org/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF
-MODEL_FILE=NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_0.gguf        # 72.1 GB
-MMPROJ_FILE=mmproj-NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q8_0.gguf # 1.0 GB, the picture encoder
-MODEL_ALIAS=nemotron
+# The model (OLA-444, Nov 25): Inkling 2 Mini, the official weights unchanged, in MTPLX's pack.
+# Before it: Nemotron 3.5 Super VL under llama-server; its two files stay in ~/ola-models and the
+# way back is in the README ("The local model").
+MODEL_REPO=Youssofal/Inkling-2-Mini-MTPLX-Optimized-Quality
+MODEL_DIR=Inkling-2-Mini-MTPLX-Optimized-Quality   # 20 GB, in ~/ola-models
+MODEL_ALIAS=inkling
 MODEL_PORT=8080
-MODEL_CTX=524288                            # shared by MODEL_SLOTS: 128k tokens each
-MODEL_SLOTS=4                               # the machine runs at most 4 projects at once
+MODEL_EFFORT=medium                         # thinking: half the time and tokens of the default (high) on the same page
 GATEWAY_NAMES="general see ocr read translate route"   # every name the local model answers
 
 # ---------------------------------------------------------------- the step helper
@@ -170,12 +171,22 @@ t_home() { [ "$(mode_of "$HOME")" = 700 ] && [ "$(mode_of "$OLA")" = 700 ] && [ 
 d_home() { chmod 700 "$HOME" && mkdir -p "$OLA" "$HOME/Library/Logs/ola" "$MODELS" && chmod 700 "$OLA" "$HOME/Library/Logs/ola" "$MODELS"; }
 t_clone() { [ -d "$STAGING/.git" ] && git -C "$STAGING" remote get-url origin | grep -q 'bdecrem/hilma'; }
 d_clone() { git clone --no-checkout "$REPO" "$STAGING"; }
-hf_size() { curl -fsS "https://huggingface.co/api/models/$MODEL_REPO/tree/main" | /opt/homebrew/bin/node -e 'let t="";process.stdin.on("data",d=>t+=d).on("end",()=>{const f=JSON.parse(t).find(x=>x.path===process.argv[1]);console.log(f?f.size:0)})' "$1"; }
-t_file() { [ -f "$MODELS/$F" ] && [ "$(stat -f %z "$MODELS/$F")" = "$(hf_size "$F")" ]; }
-d_file() {
-  local free; free=$(df -k "$MODELS" | awk 'NR==2{print $4*1024}')
-  [ "$free" -gt "$(hf_size "$F")" ] || { echo "not enough disk for $F"; return 1; }
-  curl -fL --retry 5 -C - -o "$MODELS/$F" "https://huggingface.co/$MODEL_REPO/resolve/main/$F"
+# Every file of the pack as published, "size<TAB>path" per line.
+hf_files() { curl -fsS "https://huggingface.co/api/models/$MODEL_REPO/tree/main?recursive=true" | /opt/homebrew/bin/node -e 'let t="";process.stdin.on("data",d=>t+=d).on("end",()=>{for(const f of JSON.parse(t))if(f.type==="file")console.log(f.size+"\t"+f.path)})'; }
+t_pack() {
+  local list; list=$(hf_files) && [ -n "$list" ] || return 1
+  while IFS=$'\t' read -r size f; do [ "$(stat -f %z "$MODELS/$MODEL_DIR/$f" 2>/dev/null)" = "$size" ] || return 1; done <<< "$list"
+}
+d_pack() {
+  local list total free; list=$(hf_files) && [ -n "$list" ] || return 1
+  total=$(awk -F'\t' '{s+=$1} END{print s}' <<< "$list"); free=$(df -k "$MODELS" | awk 'NR==2{print $4*1024}')
+  [ "$free" -gt "$total" ] || { echo "not enough disk for $MODEL_DIR"; return 1; }
+  while IFS=$'\t' read -r size f; do
+    [ "$(stat -f %z "$MODELS/$MODEL_DIR/$f" 2>/dev/null)" = "$size" ] && continue
+    mkdir -p "$(dirname "$MODELS/$MODEL_DIR/$f")"
+    curl -fL --retry 5 -C - -o "$MODELS/$MODEL_DIR/$f" "https://huggingface.co/$MODEL_REPO/resolve/main/$f" || return 1
+  done <<< "$list"
+  (cd "$MODELS/$MODEL_DIR" && shasum -a 256 -c SHA256SUMS >/dev/null)
 }
 t_key() { [ -s "$KEYFILE" ] && [ "$(mode_of "$KEYFILE")" = 600 ]; }
 d_key() { (umask 077; openssl rand -hex 32 > "$KEYFILE"); }
@@ -186,18 +197,20 @@ model_plist() {
 <plist version="1.0"><dict>
   <key>Label</key><string>cx.ola.model</string>
   <key>ProgramArguments</key><array>
-    <string>/opt/homebrew/bin/llama-server</string>
-    <string>--model</string><string>$MODELS/$MODEL_FILE</string>
-    <string>--mmproj</string><string>$MODELS/$MMPROJ_FILE</string>
-    <string>--alias</string><string>$MODEL_ALIAS</string>
+    <string>/opt/homebrew/bin/mtplx</string><string>serve</string>
+    <string>--model</string><string>$MODELS/$MODEL_DIR</string>
+    <string>--model-id</string><string>$MODEL_ALIAS</string>
     <string>--host</string><string>127.0.0.1</string>
     <string>--port</string><string>$MODEL_PORT</string>
     <string>--api-key-file</string><string>$KEYFILE</string>
-    <string>--ctx-size</string><string>$MODEL_CTX</string>
-    <string>--parallel</string><string>$MODEL_SLOTS</string>
-    <string>--n-gpu-layers</string><string>999</string>
-    <string>--jinja</string>
+    <string>--reasoning-effort</string><string>$MODEL_EFFORT</string>
+    <string>--no-stats-footer</string>
+    <string>--yes</string>
   </array>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>$HOME</string>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>30</integer>
@@ -213,7 +226,7 @@ d_model_job() {
   launchctl bootout "gui/$(id -u)/cx.ola.model" 2>/dev/null
   launchctl bootstrap "gui/$(id -u)" "$AGENT"
 }
-# The model answers, with the key, on loopback (loading 73 GB takes a minute or two).
+# The model answers, with the key, on loopback (loading 20 GB takes under a minute).
 t_model_up() { curl -fsS -m 5 -H "Authorization: Bearer $(cat "$KEYFILE")" "http://127.0.0.1:$MODEL_PORT/v1/models" | grep -q "\"$MODEL_ALIAS\""; }
 d_model_up() { for _ in $(seq 1 60); do t_model_up && return 0; sleep 5; done; return 1; }
 # The tunnel settings start the public address wherever they exist (ola.mjs install), so until README
@@ -272,9 +285,9 @@ run_ola() {
   [ -x /opt/homebrew/bin/node ] && [ -x /usr/local/bin/container ] || { echo "BART   run the admin part first: setup.sh admin"; N_HUMAN=$((N_HUMAN + 1)); summary ola; return; }
   step "home, ~/.ola, logs and ~/ola-models mode 700" t_home d_home
   step "staging clone ~/ola-staging (no working tree)" t_clone d_clone
-  for F in $MMPROJ_FILE $MODEL_FILE; do step "model file $F" t_file d_file; done
+  step "the model's files ~/ola-models/$MODEL_DIR" t_pack d_pack
   step "the model server's key ~/.ola/model-key (600)" t_key d_key
-  step "launchd job cx.ola.model: llama-server on 127.0.0.1:$MODEL_PORT" t_model_job d_model_job
+  step "launchd job cx.ola.model: mtplx serve on 127.0.0.1:$MODEL_PORT" t_model_job d_model_job
   step "the model answers as \"$MODEL_ALIAS\"" t_model_up d_model_up
   human "the settings moved from the mini" t_envs "on the iMac: ops/studio/move-env.sh ola@<studio> (README step 6)"
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi
