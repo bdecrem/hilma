@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import content from './content.json'
+import Image from 'next/image'
 import { Prompt } from '../Bits'
 
 // bartin16.xyz/seminar/playable: project 4, turn one research idea into a small interactive
@@ -58,6 +59,23 @@ export default function PlayablePage() {
             </div>
           )}
           {step.after && <p className="sem-p-text">{step.after}</p>}
+          {'how' in step && step.how && (
+            <ol className="sem-p-how">
+              {step.how.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ol>
+          )}
+          {'image' in step && step.image && (
+            <Image
+              className="sem-p-shot"
+              src={step.image.src}
+              alt={step.image.alt}
+              width={step.image.width}
+              height={step.image.height}
+              sizes="420px"
+            />
+          )}
         </section>
       ))}
 

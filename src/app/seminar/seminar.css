@@ -1312,3 +1312,23 @@
 .sem-p-ideas .sem-bullets p {
   font-size: 16px;
 }
+
+/* /seminar/playable Step 5: how to install or share, and the menu it happens in. */
+.sem-p-how {
+  margin: 10px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+  font-size: 17px;
+  line-height: 1.55;
+  list-style: decimal;
+}
+
+.sem-p-shot {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin-top: 16px;
+  border-radius: 12px;
+}

@@ -38,9 +38,19 @@
     },
     {
       "title": "Step 5: Keep it",
-      "before": "Ask for any last changes in plain words, for example \"make the text larger\" or \"the default settings should show the surprising case first\". When you are happy, open the artifact and install it as a desktop app on your Mac or Windows computer. You can also copy its link to share it.",
+      "before": "Ask for any last changes in plain words, for example \"make the text larger\" or \"the default settings should show the surprising case first\".",
       "prompt": null,
-      "after": ""
+      "after": "",
+      "how": [
+        "When you are happy, click the artifact's name at the top of it to open its menu.",
+        "Choose Install as app to keep it as a desktop app on your Mac or Windows computer, or Share to copy its link."
+      ],
+      "image": {
+        "src": "/seminar/playable/menu.png",
+        "alt": "The artifact's menu, opened from its name at the top: Share, Export, Pop out, Open in web, Pin, Install as app (Beta), Rename, Duplicate, Move to",
+        "width": 842,
+        "height": 720
+      }
     }
   ],
   "ideas": {
