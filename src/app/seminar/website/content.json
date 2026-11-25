@@ -87,7 +87,7 @@
         {
           "title": "Ask for office hours",
           "body": "Only if you want them. Be specific, or it can get clunky or very technical. Stick close to this:",
-          "say": "Hey, make a nice office hours signup thing for me. Vercel has a thing we can use for that, right? Give me a private page with a passcode where I can set the slots, see who signed up, etc. But also, I want to be able to add those student signups to my calendar. What's the easiest way?",
+          "say": "Hey, make a nice office hours signup thing for me. Vercel has a thing called Blob we can use for that, right? Give me a private page with a passcode where I can set the slots, see who signed up, etc. But also, I want to be able to add those student signups to my calendar. What's the easiest way?",
           "trap": null
         },
         {
