@@ -51,6 +51,48 @@ The pages and screenshots are on the M1 iMac in `~/Desktop/Ola/hello-weather/` a
 6. **Tool failures cost steps:** a shell that rejected long here-documents, a file write that failed
    on large content, and no network from the shell.
 
+## MTPLX: the same model on a faster engine (Nov 25, 2026, OLA-440)
+
+Bart asked how fast Inkling 2 Mini can run on the Studio apart from Ola. MTPLX 2.13.3 (one
+developer's MLX engine, Apache 2.0) uses the draft head the model ships with, so it writes several
+tokens per step. Run on the Studio's `admin` account, Ola's model loaded beside it the whole time.
+
+- `mtplx/serve.sh <pack> [effort] [flags]`: one pack on 127.0.0.1:8000 (`Bare-Speed`, `Optimized-Quality`).
+- `mtplx/speed.mjs <prompt file> …`: times one request at the client (first token, tokens a second).
+- `mtplx/run-page.sh <name>`: the weather brief through OpenCode 2.3.2, the settings of `run-inkling.sh`.
+
+| | llama.cpp, 4-bit (Nov 24) | MTPLX Bare Speed (16 GB) | MTPLX Optimized Quality (20 GB, the official weights) |
+|---|---|---|---|
+| Writing, speed prompt, thinking medium | 51 tok/s | 119, 115, 121 tok/s | 99, 96, 98 tok/s |
+| The same with the draft head off | | 66, 66 tok/s | |
+| Reading a long prompt | 457 tok/s (32,600 tokens) | 1,810, 1,907, 1,890 tok/s (39,800 tokens) | 1,893, 1,926, 1,926 tok/s |
+| Weather page: time | 15 min | 5 min 25 s | 5 min 0 s |
+| Weather page: model calls, tokens written | 23, ~33,000 | 18, 33,177 | 25, 25,285 |
+| Weather page: speed while writing | | 100 tok/s | 86 tok/s |
+| The page | works; day names one day off, chart too tall | works; the moon sits behind the big temperature | works; the moon covers "Overcast" and the update time |
+
+Page builds are one run each. Two conditions differ from Nov 24: the shell had network (the model
+fetched the live weather reply itself), and MTPLX samples at temperature 1.0.
+
+What was learned:
+
+1. **The developer's speed claims hold on this machine.** He lists 128.8 tok/s at peak for Bare
+   Speed and 103.8 for Optimized Quality on an M5 Max; over whole 4,000 to 5,000-token answers the
+   Studio wrote 115 to 121 and 96 to 99.
+2. **The draft head is most of it.** With it off the same engine writes 66 tok/s: 1.8 times from the
+   draft head, 1.3 times from the engine against llama.cpp.
+3. **Beside Ola's model it needs a memory cap.** Left to its own plan (90 GB) it refused a request
+   for lack of memory on the first page build. With `--memory-limit 22G` (Bare Speed) and `28G`
+   (Optimized Quality) both builds finished; the second had one request refused and retried.
+   Ola's model job kept the same process throughout.
+4. `mtplx start` on a 128 GB Mac offers Qwen models first: always name the Inkling pack.
+5. `mtplx inspect <repo id>` reports on the copy on Hugging Face and says "cannot run"; give it the
+   local folder.
+
+On the Studio: packs in `~admin/.mtplx/models` (36 GB), everything else in `~admin/mtplx-test`
+(`results.jsonl`, the server logs, both pages). Pages and screenshots on the M1 iMac in
+`~/Desktop/Ola/hello-weather/inkling-mtplx-bare` and `inkling-mtplx-quality`.
+
 ## Not done (OLA-436, OLA-437, OLA-438, OLA-439)
 
 - The weather page at medium and low thinking, three runs each, to learn the spread and the effect on quality.
