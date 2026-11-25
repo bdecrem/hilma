@@ -1,0 +1,1 @@
+Write a complete, single-file HTML page with inline CSS and JavaScript that draws an analog clock on a canvas, with hour, minute and second hands, hour marks, and a day/night background that follows the local time. Then explain in five sentences how the drawing code works.

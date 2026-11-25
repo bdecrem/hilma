@@ -1,0 +1,11 @@
+Build a gorgeous "Hello, world" web page that shows the current weather in Palo Alto, California. Write it as one file, index.html, in this folder: HTML, CSS and JavaScript together, no build step, no libraries, no web fonts, no images from the network.
+
+Data: the page fetches live weather in the browser from Open-Meteo (free, no key). Use exactly this URL:
+https://api.open-meteo.com/v1/forecast?latitude=37.4419&longitude=-122.143&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles&forecast_days=3
+The reply is JSON with "current" (temperature_2m, apparent_temperature, relative_humidity_2m, wind_speed_10m, weather_code, is_day), "hourly" (arrays: time, temperature_2m, weather_code) and "daily" (arrays: time, temperature_2m_max, temperature_2m_min, sunrise, sunset, weather_code). weather_code is the WMO code (0 clear, 1-3 partly cloudy to overcast, 45/48 fog, 51-67 drizzle and rain, 71-77 snow, 80-82 showers, 95-99 thunderstorm).
+
+What the page shows: the words "Hello, world" and "Palo Alto"; the temperature now, very large; the conditions in words; feels-like, humidity and wind; today's high and low, sunrise and sunset; the next 12 hours as a small temperature curve drawn in SVG or canvas; the next three days. If the fetch fails, say so plainly on the page.
+
+Design: this must look like the work of a professional designer with taste, not a template. One visual idea: the whole page is the sky over Palo Alto right now, drawn in code, and it changes with the time of day and the weather code (a dawn, noon, dusk and night palette; a sun or moon; drifting clouds, rain or fog when the code says so). Text sits on the sky directly, no cards with rounded corners and drop shadows, no purple gradients, no emoji icons. Confident typography with system fonts, generous space, a subtle animation. It must look right on a phone (390 px wide) and on a desktop, fill the whole screen, and set a theme-color meta tag that matches the sky.
+
+When the file is written, read it once more and fix any JavaScript error. Finish by saying in one sentence what you built.

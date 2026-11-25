@@ -1,0 +1,10 @@
+(version 1)
+(allow default)
+; untested code from an open pull request: no access to Ola's keys, settings, logs or the SSH folder
+(deny file-read* file-write* (subpath "/Users/ola/.ola") (subpath "/Users/ola/.ssh") (subpath "/Users/ola/Library/Keychains") (subpath "/Users/ola/Library/Logs/ola") (subpath "/Users/ola/ola-staging") (subpath "/Users/ola/hello-weather") (subpath "/Users/ola/ola-spike"))
+; and nothing may be written outside its own folder
+(deny file-write* (subpath "/Users/ola") )
+(allow file-write* (subpath "/Users/ola/mlx-test"))
+; the model is on disk: no network except this machine
+(deny network*)
+(allow network* (local ip "localhost:*") (remote ip "localhost:*") (remote unix-socket))
