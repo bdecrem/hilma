@@ -181,6 +181,10 @@
       }
     ]
   },
+  "next": {
+    "title": "P.S. Your own name",
+    "body": "Want yourname.com instead of a vercel.app address? Vercel sells domain names too, and once you've gotten this far it's pretty simple: ask Claude to help you buy one and hook it up."
+  },
   "example": {
     "label": "Mine",
     "url": "https://bart-at-casbs.vercel.app/"
