@@ -9,6 +9,11 @@
 #   setup.sh ola [--check]     signed in as the standard account `ola`: its folders, the staging clone,
 #                              the model files, the model server's job, the gateway pointed at it,
 #                              the first deploy, then ops/studio.mjs check.
+#   setup.sh account           at the Studio's own screen, as the administrator: makes the standard
+#                              account `ola`, lets it unlock the disk at boot and sign in over SSH.
+#                              It says which password each prompt wants, and on any machine that is
+#                              not the Studio it stops before changing anything (Nov 24: the same
+#                              lines pasted by hand ran on the iMac and made an account there).
 #   setup.sh check             both checks.
 #
 # --check reports what it would change and changes nothing (no sudo, no download, no file written).
@@ -103,6 +108,9 @@ d_ssh() { sudo systemsetup -f -setremotelogin on; }
 t_filevault() { fdesetup status | grep -q "FileVault is On."; }
 t_ola_user() { id ola && ! id -Gn ola | tr ' ' '\n' | grep -qx admin; }
 t_ola_unlocks() { sysadminctl -secureTokenStatus ola 2>&1 | grep -q ENABLED; }
+# Remote Login may be limited to a list (com.apple.access_ssh); then ola has to be on it.
+t_ola_ssh() { ! dscl . -read /Groups/com.apple.access_ssh >/dev/null 2>&1 || dseditgroup -o checkmember -m ola com.apple.access_ssh | grep -q "^yes"; }
+d_ola_ssh() { sudo dseditgroup -o edit -a ola -t user com.apple.access_ssh; }
 t_tailscale() { tailscale status --self --peers=false 2>/dev/null | grep -q '^100\.' || /Applications/Tailscale.app/Contents/MacOS/Tailscale status --self --peers=false 2>/dev/null | grep -q '^100\.'; }
 
 run_admin() {
@@ -118,9 +126,35 @@ run_admin() {
   step "never sleeps, restarts after a power cut, wakes on the network" t_power d_power
   step "GPU may wire $WIRED_MB MB, set again at every boot (cx.ola.wiredlimit)" t_wired d_wired
   step "Remote Login on (deploys and cert renewal from the iMac)" t_ssh d_ssh
-  human "a standard account named ola" t_ola_user "sudo sysadminctl -addUser ola -fullName Ola -password - (README step 4)"
-  human "ola can unlock the disk at boot" t_ola_unlocks "sudo fdesetup add -usertoadd ola (README step 4)"
+  human "a standard account named ola" t_ola_user "at the Studio's own screen: setup.sh account (README step 4)"
+  human "ola can unlock the disk at boot" t_ola_unlocks "at the Studio's own screen: setup.sh account (README step 4)"
+  if t_ola_user >/dev/null 2>&1; then step "ola may sign in over SSH" t_ola_ssh d_ola_ssh; fi
   summary admin
+}
+
+# The one part a person types passwords into. Never pasted as loose sudo lines: this refuses on the wrong machine.
+run_account() {
+  local name; name=$(scutil --get ComputerName 2>/dev/null || hostname)
+  if ! is_studio; then
+    echo "STOP. This computer is \"$name\", not the Mac Studio. Nothing was changed."
+    echo "Run this in Terminal on the Studio's own screen (in screen sharing: the Terminal inside that window)."
+    exit 2
+  fi
+  if ! id -Gn | tr ' ' '\n' | grep -qx admin; then echo "STOP. Sign in to the Studio as the administrator first. Nothing was changed."; exit 2; fi
+  echo "This is the Mac Studio ($name), signed in as $(whoami)."
+  if t_ola_user >/dev/null 2>&1; then echo "ok     the account ola exists"
+  else
+    echo "1. First prompt, \"Password:\": the password of $(whoami), this Studio account."
+    echo "   Second prompt: a NEW password for ola. Choose one and write it down."
+    sudo sysadminctl -addUser ola -fullName Ola -password - || { echo "FAILED making the account ola"; exit 1; }
+  fi
+  if t_ola_unlocks >/dev/null 2>&1; then echo "ok     ola can unlock the disk at boot"
+  else
+    echo "2. It asks for a user name: type $(whoami). Then the password of $(whoami). Then the password of ola."
+    sudo fdesetup add -usertoadd ola || { echo "FAILED letting ola unlock the disk"; exit 1; }
+  fi
+  t_ola_ssh >/dev/null 2>&1 || d_ola_ssh
+  if t_ola_user >/dev/null 2>&1 && t_ola_unlocks >/dev/null 2>&1; then echo "Done. Nothing else to type."; else echo "Not finished: run it again."; exit 1; fi
 }
 
 # ================================================================ ola: the account that runs Ola
@@ -239,7 +273,8 @@ run_ola() {
 case "$ROLE" in
   admin) run_admin ;;
   ola) run_ola ;;
+  account) run_account ;;
   check) run_admin; echo; run_ola ;;
-  *) echo "usage: setup.sh admin|ola [--check] | setup.sh check"; exit 2 ;;
+  *) echo "usage: setup.sh admin|ola [--check] | setup.sh account | setup.sh check"; exit 2 ;;
 esac
 [ $N_FAIL = 0 ]
