@@ -78,6 +78,8 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.4.2-2 (OLA-450): nothing new in the image; the tag moves so every project's computer is made again with the
+# machine's time zone in its settings (ws.mjs, TZ), and 'today' inside it is the person's today.
 # 2.4.2-1 (OLA-461; Bart, Nov 25: 'check that we are running the latest opencode'): opencode 2.4.2 in place of 2.3.2
 # (2.4.0, 2.4.1 and 2.4.2 came out Nov 23 to 25; 2.4.2 fixes tools staying visible to the model after a blanket deny followed
 # by narrower denies). The image tag follows opencode's version again. Builds on 2.3.2-81.

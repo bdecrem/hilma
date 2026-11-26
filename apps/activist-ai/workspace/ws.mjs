@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.4.2-1'
+export const IMAGE = 'ola-workspace:2.4.2-2'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -399,6 +399,11 @@ export async function create(id, opts = {}) {
   return { id, cpus, memory, disk }
 }
 
+// The project computer keeps this machine's time zone (OLA-450). It ran on UTC, so from 4 pm Pacific
+// "today" inside it was already tomorrow: Bart's Good Morning page, built at 4 pm on Nov 25, said
+// Thursday, November 26. The image carries the zone files; OLA_TZ names another zone.
+export const ZONE = process.env.OLA_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+
 function createArgs(id, { cpus, memory }) {
   const n = names(id)
   const p = paths(id)
@@ -422,6 +427,7 @@ function createArgs(id, { cpus, memory }) {
     // the agent or an upload put there changed its instructions and permissions (review 3, open
     // until review 4). Also in the image's ENV; here too so a container made by this ws.mjs has it.
     '--env', 'OPENCODE_DISABLE_PROJECT_CONFIG=1',
+    '--env', `TZ=${ZONE}`,
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
     IMAGE,

@@ -435,6 +435,13 @@ try {
     const active = (plugins?.data ?? []).filter((x) => x?.state?.status === 'active').map((x) => x.id)
     t('the moment a workspace has started, its opencode lists a model and Ola’s plugins are active', ws.engineLoaded(models, plugins) && ws.IMAGE_PLUGINS.includes('ola-planted'), `models ${models?.data?.length ?? 'none'}, plugins ${active.filter((n) => n.startsWith('ola-')).join(' ') || 'none'}`)
   }
+  // OLA-450: the project's computer tells the machine's date, not UTC's.
+  {
+    const here = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).format(new Date()).replace(', ', ' ')
+    const there = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'date', '+%Y-%m-%d %H'], { encoding: 'utf8' }).stdout.trim()
+    const py = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'python3', '-I', '-c', 'import datetime;print(datetime.datetime.now().strftime("%Y-%m-%d %H"))'], { encoding: 'utf8' }).stdout.trim()
+    t('the project’s computer keeps this machine’s date and hour (its time zone), in the shell and in Python', there === here && py === here, `here ${here} (${ws.ZONE}), date says ${there}, python says ${py}`)
+  }
   await ws.start(B)
   const third = await ws.start(C).then(() => 'started', (e) => e.message)
   t('a third workspace is refused while 2 run (OLA_MAX_RUNNING=2)', third !== 'started', third)
