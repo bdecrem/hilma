@@ -455,6 +455,12 @@ function mini(command, t = target) {
   }
   return null
 }
+/** The first of the machine's addresses that answers ssh now (OLA-461: from Bart's home the mini's office
+ * address does not answer and only its Tailscale one does; the update used hosts[0] and ended with exit 255). */
+function reachable(t = target) {
+  for (const h of t.hosts) if (spawnSync('ssh', sshArgs(h, 'true', 8), { encoding: 'utf8', timeout: 25000 }).status === 0) return h
+  return t.hosts[0]
+}
 async function deployFacts(t = target) {
   const live = /([0-9a-f]{12})\s*$/.exec((mini('readlink ~/ola-staging/current', t) ?? '').trim())?.[1] ?? null
   const lastLine = (mini('tail -1 ~/ola-staging/deploys.log', t) ?? '').trim()
@@ -537,7 +543,7 @@ if (cmd === 'status') {
   // there over ssh; if the connection drops it stops before anything is served (ola.mjs serves last).
   const r = target.local
     ? spawnSync('node', [`${STAGING}/current/apps/activist-ai/ops/ola.mjs`, 'deploy', '--unsigned'], { stdio: 'inherit', env: { ...process.env, OLA_DEPLOY_VIA: 'runner.mjs deploy' } })
-    : spawnSync('ssh', ['-o', 'ServerAliveInterval=30', ...sshArgs(target.hosts[0], 'OLA_DEPLOY_VIA="runner.mjs deploy" PATH=/opt/homebrew/bin:/usr/local/bin:$PATH node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy --unsigned', 10)], { stdio: 'inherit' })
+    : spawnSync('ssh', ['-o', 'ServerAliveInterval=30', ...sshArgs(reachable(target), 'OLA_DEPLOY_VIA="runner.mjs deploy" PATH=/opt/homebrew/bin:/usr/local/bin:$PATH node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy --unsigned', 10)], { stdio: 'inherit' })
   await setState(db, `runner_deploy${target.key}`, { at: new Date().toISOString(), tickets: f.pending.map((t) => t.id), host: hostname(), exit: r.status })
   // OLA-334: the machine's own line for this update (it names a failed suite, its kept output, and any suite that passed only on the rerun)
   const outcome = (mini('tail -1 ~/ola-staging/deploys.log') ?? '').trim()
