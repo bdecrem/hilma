@@ -319,6 +319,12 @@ public final class OpenCodeClient: @unchecked Sendable {
     }
   }
 
+  /// The ids of the plugins the engine has loaded and is running (`GET /api/plugin`).
+  public func activePlugins() async throws -> [String] {
+    if config.account { return [] }
+    return try await json("GET", "/api/plugin")["data"].array.filter { $0["state"]["status"].string == "active" }.map { $0["id"].str }
+  }
+
   public func defaultModel() async throws -> ModelInfo? {
     if config.account { return nil }
     let d = try await json("GET", "/api/model/default")["data"]

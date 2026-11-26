@@ -327,6 +327,43 @@ export function opencodeRequest(id, urlPath, { auth = true } = {}) {
   })
 }
 
+// One GET to the workspace's opencode through its desk socket: the JSON it answers, or null.
+export function opencodeJSON(id, urlPath) {
+  const { opencode } = paths(id)
+  const headers = { authorization: `Basic ${Buffer.from(`opencode:${secrets(id).OPENCODE_PASSWORD}`).toString('base64')}` }
+  return new Promise((resolve) => {
+    const req = http.request({ socketPath: opencode, path: urlPath, headers, timeout: 3000 }, (res) => {
+      let body = ''
+      res.setEncoding('utf8')
+      res.on('data', (d) => (body += d))
+      res.on('end', () => {
+        try {
+          resolve(res.statusCode === 200 ? JSON.parse(body) : null)
+        } catch {
+          resolve(null)
+        }
+      })
+    })
+    req.on('error', () => resolve(null))
+    req.on('timeout', () => (req.destroy(), resolve(null)))
+    req.end()
+  })
+}
+
+// opencode 2.4 answers before it has loaded (OLA-461; its release note: "plugins load in the background
+// again ... right after startup these endpoints answer with whatever has loaded, so a list can be empty").
+// Measured on 2.4.2: for about half a second after /api/info answers, no model is listed and none of
+// Ola's plugins is there; 2.3.2 answered only once both were. A request sent in that gap would find no
+// model, or run without ola-planted (the guard against instructions planted in a file). So a workspace
+// counts as started only when a model is listed and every plugin the image names is active.
+export const IMAGE_PLUGINS = (/"plugins":\s*\[([^\]]*)\]/.exec(readFileSync(path.join(here, 'opencode-system.jsonc'), 'utf8'))?.[1] ?? '')
+  .split(',').map((x) => path.basename(x.trim().replace(/^"|"$/g, ''))).filter(Boolean)
+export function engineLoaded(models, plugins, want = IMAGE_PLUGINS) {
+  if (!Array.isArray(models?.data) || !models.data.length) return false
+  const active = new Set((Array.isArray(plugins?.data) ? plugins.data : []).filter((x) => x?.state?.status === 'active').map((x) => x.id))
+  return want.every((n) => active.has(n))
+}
+
 // ---------------------------------------------------------------- commands
 
 export async function create(id, opts = {}) {
@@ -644,11 +681,11 @@ async function startLocked(id) {
   }
   await openRelay('desk', id) // the way in to opencode, through `container exec`
   for (let i = 0; i < 300; i++) {
-    if ((await opencodeRequest(id, '/api/info')) === 200) return { ms: Date.now() - t0 }
+    if ((await opencodeRequest(id, '/api/info')) === 200 && engineLoaded(await opencodeJSON(id, '/api/model'), await opencodeJSON(id, '/api/plugin'))) return { ms: Date.now() - t0 }
     if (i % 10 === 9 && stateOf(inspect(id)) !== 'running') refuse(`workspace ${id} stopped while starting; see: container logs ${names(id).container}`)
     await new Promise((r) => setTimeout(r, 100))
   }
-  refuse('the workspace started but opencode did not answer within 30 s')
+  refuse('the workspace started but opencode did not answer with its models and plugins loaded within 30 s')
 }
 
 export function stop(id) {

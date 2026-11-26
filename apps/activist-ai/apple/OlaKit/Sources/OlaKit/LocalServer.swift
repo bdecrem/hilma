@@ -408,6 +408,7 @@ public final class LocalServer: @unchecked Sendable {
     let offered = installed.isEmpty ? [] : skillStates.filter(\.ready).map(\.skill.name)
     // Ola's plugins, the same files as the sealed image's (OLA-228).
     let plugins = Self.installPlugins(into: Self.pluginsHome)
+    wantedPlugins = plugins.map(\.lastPathComponent)
     trace?(plugins.isEmpty ? "Ola's plugins NOT found (no planted-text note)" : "Ola's plugins in \(Self.pluginsHome.path): " + plugins.map(\.lastPathComponent).joined(separator: ", "))
     let settings = Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path, plugins: plugins.map(\.path), askFirst: askFirst)
     try settings.write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
@@ -460,6 +461,11 @@ public final class LocalServer: @unchecked Sendable {
     env["BOX_API_KEY"] = route.token
     return env
   }
+
+  /// How long after its first answer the engine may still be loading its models and plugins.
+  static let loadGrace: TimeInterval = 10
+  /// Ola's plugins this start put in the settings (their folder names are their ids).
+  private var wantedPlugins: [String] = []
 
   /// Starts opencode and waits until it answers. Returns where to reach it.
   public func start(route: ModelRoute, timeout: TimeInterval = 45, trace: (@Sendable (String) -> Void)? = nil) async throws -> ServerConfig {
@@ -524,6 +530,7 @@ public final class LocalServer: @unchecked Sendable {
     let client = OpenCodeClient(config)
     let t0 = Date()
     var lastError = ""
+    var firstAnswer: Date?
     while Date().timeIntervalSince(t0) < timeout {
       if !p.isRunning {
         throw Failure.didNotStart("opencode stopped (exit code \(p.terminationStatus)) after \(Int(Date().timeIntervalSince(t0))) seconds. \(lastLines)")
@@ -532,10 +539,27 @@ public final class LocalServer: @unchecked Sendable {
         _ = try await client.info()
         trace?("answered after \(String(format: "%.1f", Date().timeIntervalSince(t0))) s")
         // Before anything is sent: only Ola's models on offer (ModelGuard, OLA-249).
+        // opencode 2.4 answers before it has loaded (OLA-461): for about half a second no model is
+        // listed and Ola's plugins are not there yet (2.3 answered only once they were). Nothing is
+        // sent until a model is listed and every one of Ola's plugins is active; `loadGrace` after
+        // the first answer, an engine that still lists nothing is the damaged-settings case as
+        // before, and one without a plugin (ola-planted is the planted-text guard) does not start.
+        let answered = firstAnswer ?? Date()
+        firstAnswer = answered
+        let loading = Date().timeIntervalSince(answered) < Self.loadGrace
         switch await ModelGuard.check(client) {
         case .olas:
+          let active = (try? await client.activePlugins()) ?? []
+          let missing = wantedPlugins.filter { !active.contains($0) }
+          if !missing.isEmpty {
+            if loading { throw OlaError.unreachable("still loading: \(missing.joined(separator: ", "))") }
+            stop()
+            throw Failure.didNotStart("opencode did not load Ola's plugin \(missing.joined(separator: ", ")) in \(Int(Self.loadGrace)) seconds. \(lastLines)")
+          }
           startWatch(client, trace: trace)
           return config
+        case .foreign(let names) where names.isEmpty && loading:
+          throw OlaError.unreachable("still loading: no model listed yet")
         case .foreign(let names):
           trace?("the engine offers models that are not Ola's (\(names.joined(separator: ", "))): stopped")
           stop()

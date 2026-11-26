@@ -428,6 +428,13 @@ try {
   t0 = Date.now()
   const startA = await ws.start(A)
   measured.start_s = startA.ms / 1000
+  // OLA-461: opencode 2.4 answers before it has loaded; a workspace counts as started only when a model is
+  // listed and the image's plugins are active, so this holds the moment start returns.
+  {
+    const [models, plugins] = [await ws.opencodeJSON(A, '/api/model'), await ws.opencodeJSON(A, '/api/plugin')]
+    const active = (plugins?.data ?? []).filter((x) => x?.state?.status === 'active').map((x) => x.id)
+    t('the moment a workspace has started, its opencode lists a model and Ola’s plugins are active', ws.engineLoaded(models, plugins) && ws.IMAGE_PLUGINS.includes('ola-planted'), `models ${models?.data?.length ?? 'none'}, plugins ${active.filter((n) => n.startsWith('ola-')).join(' ') || 'none'}`)
+  }
   await ws.start(B)
   const third = await ws.start(C).then(() => 'started', (e) => e.message)
   t('a third workspace is refused while 2 run (OLA_MAX_RUNNING=2)', third !== 'started', third)
