@@ -535,3 +535,16 @@ test('the board never repeats an old alarm sentence its own reading contradicts 
   await watch(at('16:12'), [], board)
   assert.deepEqual(statuses.at(-1).alarm.says, ["the mini's disk is almost full (5 GB left)."])
 })
+
+test('a check that is turned off forgets the alarm it raised before (OLA-476)', async () => {
+  // The Studio, Nov 26: the Almanac (which lives on the mini) had been checked there and alarmed;
+  // after OFF=almanac the run still began "ALARM almanac", because nothing could clear it.
+  writeFileSync(path.join(OLA, 'watch-state.json'), JSON.stringify({ active: { almanac: { since: Date.parse(at('09:00')), item: 5, sentAt: Date.parse(at('09:00')), lastSentAt: Date.parse(at('09:00')), say: "Frances's service is not answering." } }, clears: {}, streak: { almanac: 9 }, lastDigest: '2026-11-17' }))
+  fakes()
+  const r = await watch(at('16:00'), [], { OLA_WATCH_OFF: 'models,almanac', OLA_WATCH_DISK_TEXTS: '0' })
+  assert.equal(r.sent.length, 0, `a text went out: ${JSON.stringify(r.sent)}`)
+  assert.match(r.out, /Z ok: /)
+  assert.doesNotMatch(r.out, /almanac/)
+  assert.equal(state().active.almanac, undefined, 'the old alarm is still in the state')
+  assert.equal(state().streak.almanac, undefined)
+})

@@ -691,6 +691,9 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   // The disk is not texted (DISK_TEXTS off): forget any alarm or all-clear for it that an earlier
   // run left in the state, so nothing downstream can repeat its old sentence (OLA-164).
   if (!S.DISK_TEXTS) for (const k of ['active', 'clears', 'streak']) if (state[k]) delete state[k].disk
+  // The same for a check that is turned off (OFF=almanac on the Studio, which does not host it): an
+  // alarm it raised before it was turned off would stay open forever, nothing could clear it (OLA-476).
+  for (const id of off) for (const k of ['active', 'clears', 'streak']) if (state[k]) delete state[k][id]
   const d = decide(S, state, conds.filter((c) => c.level !== 'test' && !c.quiet && !(c.id === 'disk' && !S.DISK_TEXTS)), now, { muted })
   let text = d.text
   if (force.includes('test')) text = 'Ola: test of the new alarm. Nothing is wrong.'

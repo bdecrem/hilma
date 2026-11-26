@@ -268,6 +268,14 @@ d_gateway_local() {
 LOCAL_FRONT=127.0.0.1:4743
 t_local_front() { [ "$(cat "$OLA/local-front" 2>/dev/null)" = "$LOCAL_FRONT" ]; }
 d_local_front() { (umask 077; printf '%s\n' "$LOCAL_FRONT" > "$OLA/local-front"); }
+# The Almanac (Frances's service) runs on the mini and stays there: this machine's health check must
+# not look for it here (Nov 26: an alarm every two minutes that it was "not answering", OLA-476).
+# The line is added to ~/.ola/watch.env, whatever else that file holds.
+t_watch_off() { grep -q '^OFF=.*almanac' "$OLA/watch.env" 2>/dev/null; }
+d_watch_off() {
+  if grep -q '^OFF=' "$OLA/watch.env" 2>/dev/null; then echo "~/.ola/watch.env has an OFF= line without almanac: add it by hand" >&2; return 1; fi
+  (umask 077; printf 'OFF=almanac\n' >> "$OLA/watch.env"); chmod 600 "$OLA/watch.env"
+}
 t_container_up() { /usr/local/bin/container system status | grep -q running; }
 d_container_up() { /usr/local/bin/container system start --enable-kernel-install; }
 t_signers() { [ -s "$OLA/allowed-signers" ]; }
@@ -300,6 +308,7 @@ run_ola() {
   human "the settings moved from the mini" t_envs "on the iMac: ops/studio/move-env.sh ola@<studio> (README step 6)"
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi
   step "Ola's own tests reach this machine's front ($LOCAL_FRONT in ~/.ola/local-front, until app.ola.cx moves here)" t_local_front d_local_front
+  step "the health check does not look for the Almanac here (OFF=almanac in ~/.ola/watch.env)" t_watch_off d_watch_off
   human "Bart's signing key in ~/.ola/allowed-signers" t_signers "README step 7 (or run once with OLA_UNSIGNED=1; deploys.log records it)"
   step "Apple's container services running (for the first image build)" t_container_up d_container_up
   if t_envs && { t_signers || [ "${OLA_UNSIGNED:-}" = 1 ]; }; then step "first deploy and the jobs (ola.mjs deploy, install)" t_deployed d_deployed
