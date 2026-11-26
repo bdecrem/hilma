@@ -69,10 +69,13 @@ const server = http.createServer((req, res) => {
     // A browser on this address keeps a cookie only without Secure and without the __Host- prefix's rules;
     // the apps use no cookie at all. Enough for choosing a password from an invitation link.
     if (out['set-cookie']) out['set-cookie'] = [].concat(out['set-cookie']).map((c) => c.replace(/;\s*Secure/gi, ''))
+    // One line per request, no content: when, from where, what, the answer (to see whether a phone gets here at all).
+    console.log(`${new Date().toISOString()} ${String(req.socket.remoteAddress).replace('::ffff:', '')} ${req.method} ${String(req.url).split('?')[0].slice(0, 80)} ${r.statusCode}`)
     res.writeHead(r.statusCode || 502, out)
     r.pipe(res)
   })
-  up.on('error', () => {
+  up.on('error', (e) => {
+    console.log(`${new Date().toISOString()} ${String(req.socket.remoteAddress).replace('::ffff:', '')} ${req.method} ${String(req.url).split('?')[0].slice(0, 80)} FAILED ${e.code || e.message}`)
     if (!res.headersSent) res.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' })
     res.end('The Ola on this machine did not answer.')
   })
