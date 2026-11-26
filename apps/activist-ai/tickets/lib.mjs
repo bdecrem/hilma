@@ -35,6 +35,10 @@ export const portOf = (model) => 4460 + Object.keys(MODELS).filter((k) => !k.sta
 export const PROVIDERS = {
   together: { base: 'https://api.together.xyz/v1', keyEnv: 'TOGETHER_API_KEY' },
   openrouter: { base: 'https://openrouter.ai/api/v1', keyFile: '.ola/openrouter.key' },
+  // OLA-482: a model served on the Mac Studio itself. `studio` is whichever bigger model ops/studio/big-model.sh
+  // has started on port 8090 (one at a time); `studio-ola` is Ola's own model server there.
+  studio: { base: 'http://127.0.0.1:8090/v1', keyFile: '.ola/bigmodel.key' },
+  'studio-ola': { base: 'http://127.0.0.1:8080/v1', keyFile: '.ola/model-key' },
 }
 export function upstreamOf(model, models = MODELS) {
   const m = models[model]

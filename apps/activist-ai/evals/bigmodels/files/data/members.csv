@@ -1,0 +1,401 @@
+id,name,email,joined,neighborhood,dues_paid,status
+1,Ivan Haddad,ivan.haddad26@example.org,2024-05-28,Eastside,25,lapsed
+2,Omar Ortiz,omar.ortiz6@example.org,2024-05-23,Hillcrest,60,active
+3,Omar Marsh,omar.marsh4@example.org,2026-03-23,Riverbend,25,active
+4,Tara Haddad,tara.haddad35@example.org,2025-09-23,Riverbend,60,lapsed
+5,Omar Brandt,omar.brandt7@example.org,2024-05-08,Riverbend,60,active
+6,Vera Brandt,vera.brandt30@example.org,2026-07-17,Riverbend,60,active
+7,Luis Marsh,luis.marsh20@example.org,2025-12-04,Old Town,25,active
+8,Jade Okafor,jade.okafor11@example.org,2024-11-07,Hillcrest,60,active
+9,Vera Lindqvist,vera.lindqvist37@example.org,2025-10-04,HILLCREST,$25.00,ACTIVE
+10,Sami Chen,sami.chen4@example.org,"September 26, 2025",Hillcrest,1200.5,Active
+11,Mei Marsh,mei.marsh8@example.org,2025-03-22,riverbend,12.5,ACTIVE
+12,Jade Silva,jade.silva57@example.org,2026-05-31,Hillcrest,12.50,active
+13,Mei Haddad,mei.haddad15@example.org,1/25/2024,Old Town,n/a,Lapsed
+14,Hugo Marsh, HUGO.MARSH21@EXAMPLE.ORG ,20 Apr 2024,hillcrest,25,active
+15,Omar Chen,omar.chen14@example.org,2024-08-13,EASTSIDE,25.00,lapsed
+16,Luis Novak,luis.novak40@example.org,5/31/2025,Hillcrest,12.50,ACTIVE
+17,Noor Silva,noor.silva6@example.org,2025-12-02,RIVERBEND,-,active
+18,Sami Lindqvist,sami.lindqvist59@example.org,02 Sep 2025,OLD TOWN,40,Active
+19,Lena Novak, LENA.NOVAK40@EXAMPLE.ORG ,03 Feb 2025,Riverbend,$60.00,Active
+20,Noor Silva,noor.silva13@example.org,"December 6, 2025",Old Town,25,Active
+21,Omar Reyes, OMAR.REYES40@EXAMPLE.ORG ,1/4/2024, Eastside ,$12.50,ACTIVE
+22,Zoe Haddad,zoe.haddad28@example.org,3/21/2026, Eastside ,40,LAPSED
+23,Vera Haddad, VERA.HADDAD40@EXAMPLE.ORG ,12/18/2025,Eastside,1200.50,lapsed
+24,Tara Novak,tara.novak53@example.org,2025-03-11,Old Town,40,Lapsed
+25,Zoe Reyes,Zoe.Reyes43@Example.Org,2026-10-24,eastside,100,active
+26,Mei Reyes,mei.reyes40@example.org,10/29/2025,Hillcrest,25,active
+27,Vera Chen,vera.chen33@example.org,5/9/2024, Riverbend ,100.00,active
+28,Sami Lindqvist, SAMI.LINDQVIST57@EXAMPLE.ORG ,2025-02-18,eastside,25.00,active
+29,Omar Silva,omar.silva51@example.org,19 Jan 2026,Hillcrest,25,active
+30,Lena Novak,Lena.Novak11@Example.Org,2026-05-12,Old Town,12.5,ACTIVE
+31,Ivan Lindqvist,Ivan.Lindqvist40@Example.Org,2025-04-13,Old Town,,active
+32,Raul Okafor,Raul.Okafor55@Example.Org,11/1/2024, Hillcrest ,60,lapsed
+33,Tara Chen,tara.chen18@example.org,17 Jun 2025,Eastside,12.5,LAPSED
+34,Zoe Silva,zoe.silva40@example.org,"May 3, 2025",Old Town,60.00,lapsed
+35,Rosa Reyes,rosa.reyes33@example.org,2024-02-07, Eastside ,40.00,ACTIVE
+36,Luis Okafor,Luis.Okafor43@Example.Org,2026-11-03,Riverbend,$1200.50,ACTIVE
+37,Ivan Ortiz,ivan.ortiz54@example.org,2025-06-07,HILLCREST,60.00,Lapsed
+38,Ana Reyes,ana.reyes12@example.org,2025-06-23,Old Town,n/a,Active
+39,Mei Ortiz,mei.ortiz22@example.org,2026-10-26,Eastside,25,lapsed
+40,Tara Ortiz,tara.ortiz20@example.org,11/13/2024,Hillcrest,12.5,lapsed
+41,Ana Lindqvist,ana.lindqvist41@example.org,11/1/2026, Eastside ,1200.50,lapsed
+42,Luis Ortiz,luis.ortiz3@example.org,2024-08-02, Eastside ,-,lapsed
+43,Noor Silva,noor.silva1@example.org,2026-10-27, Eastside ,$60.00,active
+44,Sami Novak,Sami.Novak15@Example.Org,"February 22, 2026",Old Town,1200.5,lapsed
+45,Ivan Silva,ivan.silva42@example.org,, Old Town ,40.00,Active
+46,Noor Reyes, NOOR.REYES30@EXAMPLE.ORG ,"September 30, 2025",Eastside,100.00,Active
+47,Tara Novak,tara.novak59@example.org,7/3/2024,Old Town,1200.50,Active
+48,Omar Reyes,omar.reyes58@example.org,,hillcrest,40,Active
+49,Luis Brandt,luis.brandt1@example.org,"March 26, 2026", Eastside ,60,active
+50,Ivan Okafor,ivan.okafor49@example.org,7/27/2024,Riverbend,12.50,Active
+51,Vera Okafor,luis.brandt1@example.org,2025-02-20,hillcrest,40.00,ACTIVE
+52,Ana Lindqvist,ana.lindqvist9@example.org,7/31/2025,old town,60,LAPSED
+53,Luis Haddad,luis.haddad42@example.org,2026-10-15,old town,100,active
+54,Ivan Lindqvist,ivan.lindqvist6@example.org,2/17/2025,hillcrest,100,Active
+55,Vera Ortiz,Vera.Ortiz32@Example.Org,10/27/2026,Riverbend,40,LAPSED
+56,Tara Silva,Tara.Silva55@Example.Org,20 May 2026,HILLCREST,25,LAPSED
+57,Noor Novak,noor.novak51@example.org,8/11/2024,Hillcrest,25,active
+58,Hugo Ortiz, HUGO.ORTIZ42@EXAMPLE.ORG ,2026-06-14,Eastside,100,active
+59,Vera Marsh,Noor.Silva13@Example.Org,09 Oct 2025,HILLCREST,40,Active
+60,Ana Ortiz,ana.ortiz13@example.org,2026-05-10,Hillcrest,25.00,LAPSED
+61,Ivan Okafor,lena.novak40@example.org,2026-10-30,Riverbend,40,Active
+62,Vera Silva,vera.silva7@example.org,2025-01-18,EASTSIDE,12.5,active
+63,Tara Ortiz,tara.ortiz46@example.org,"October 5, 2025",Riverbend,"1,200.50",LAPSED
+64,Ana Silva, ANA.SILVA43@EXAMPLE.ORG ,2026-06-25,Old Town,25.00,ACTIVE
+65,Ivan Silva,ivan.silva53@example.org,8/27/2026,Hillcrest,$1200.50,ACTIVE
+66,Omar Okafor,omar.okafor3@example.org,5/6/2024,Old Town,100,Lapsed
+67,Zoe Silva,vera.lindqvist37@example.org,4/23/2025,hillcrest,$12.50,ACTIVE
+68,Mei Ortiz,mei.ortiz52@example.org,2024-11-05,old town,100,ACTIVE
+69,Vera Haddad,vera.haddad16@example.org,2026-09-13,Hillcrest,60.00,active
+70,Tara Reyes,tara.reyes46@example.org,9/29/2024, Riverbend ,$1200.50,Active
+71,Rosa Marsh,rosa.marsh18@example.org,2025-02-11,Riverbend,100,ACTIVE
+72,Rosa Novak,rosa.novak33@example.org,"July 24, 2024",Eastside,$40.00,active
+73,Zoe Silva,zoe.silva15@example.org,2025-02-01,riverbend,"1,200.50",Active
+74,Omar Ortiz,omar.ortiz24@example.org,,Riverbend,12.50,Active
+75,Luis Novak,luis.novak3@example.org,5/9/2024, Riverbend ,1200.5,Lapsed
+76,Tara Silva,Tara.Silva43@Example.Org,2026-01-01, Old Town ,1200.5,ACTIVE
+77,Zoe Haddad,zoe.haddad28@example.org,2026-01-16,Eastside,$1200.50,active
+78,Hugo Marsh,hugo.marsh60@example.org,2024-10-25,Riverbend,$12.50,Active
+79,Mei Ortiz,mei.ortiz59@example.org,3/5/2026, Riverbend ,40.00,lapsed
+80,Raul Reyes,raul.reyes12@example.org,2024-11-16, Riverbend ,40,lapsed
+81,Lena Brandt,lena.brandt8@example.org,2025-09-19,riverbend,60,active
+82,Ana Ortiz,ana.ortiz40@example.org,7/4/2026,Hillcrest,12.5,Active
+83,Tara Brandt,tara.brandt6@example.org,2024-03-24, Old Town ,$25.00,active
+84,Ana Chen,Ana.Chen40@Example.Org,04 Oct 2026, Riverbend ,40,Active
+85,Mei Brandt,Mei.Brandt58@Example.Org,"June 4, 2025",RIVERBEND,100,active
+86,Omar Haddad, OMAR.HADDAD26@EXAMPLE.ORG ,2/10/2026,EASTSIDE,n/a,active
+87,Rosa Lindqvist,rosa.lindqvist41@example.org,"January 30, 2026",Riverbend,25,active
+88,Rosa Lindqvist, ROSA.LINDQVIST17@EXAMPLE.ORG ,10/2/2025,Riverbend,1200.5,Lapsed
+89,Zoe Ortiz,zoe.ortiz9@example.org,,Old Town,60.00,Active
+90,Hugo Haddad,Hugo.Haddad14@Example.Org,2024-01-29,riverbend,1200.5,Lapsed
+91,Tara Silva, ROSA.NOVAK33@EXAMPLE.ORG ,6/27/2026,Hillcrest,25,lapsed
+92,Tara Haddad,Tara.Haddad16@Example.Org,2025-02-07,HILLCREST,60,lapsed
+93,Zoe Reyes,zoe.reyes46@example.org,2026-06-13,Hillcrest,25,lapsed
+94,Luis Brandt,luis.brandt58@example.org,2025-06-23, Hillcrest ,100.00,active
+95,Luis Lindqvist, LUIS.LINDQVIST1@EXAMPLE.ORG ,2/19/2025,Old Town,60.00,ACTIVE
+96,Noor Lindqvist,tara.haddad35@example.org,2025-04-23,riverbend,25.00,active
+97,Ana Ortiz,Ana.Ortiz8@Example.Org,2024-10-17, Riverbend ,25.00,lapsed
+98,Luis Marsh, LUIS.MARSH49@EXAMPLE.ORG ,5/15/2024,Hillcrest,40,active
+99,Raul Silva,raul.silva31@example.org,2025-02-23,Old Town,60,Active
+100,Vera Marsh,vera.marsh33@example.org,2024-03-04,Eastside,25.00,active
+101,Hugo Silva,hugo.silva11@example.org,"August 13, 2025",Eastside,12.50,ACTIVE
+102,Hugo Brandt,hugo.brandt54@example.org,2024-11-21,riverbend,$1200.50,active
+103,Lena Brandt, LENA.BRANDT23@EXAMPLE.ORG ,6/25/2024,Old Town,12.50,lapsed
+104,Tara Novak,tara.novak30@example.org,2024-03-10,riverbend,1200.5,ACTIVE
+105,Sami Silva,sami.silva38@example.org,2025-05-02, Riverbend ,$40.00,Lapsed
+106,Mei Novak,mei.novak21@example.org,7/27/2024,riverbend,$40.00,Lapsed
+107,Tara Silva,Tara.Silva13@Example.Org,2026-03-06, Hillcrest ,1200.5,active
+108,Rosa Marsh,rosa.marsh48@example.org,5/30/2026,Hillcrest,$1200.50,lapsed
+109,Lena Haddad,lena.haddad42@example.org,2025-06-16,Hillcrest,$1200.50,Active
+110,Raul Okafor,raul.okafor31@example.org,4/18/2026, Riverbend ,25,active
+111,Ana Silva,ana.silva35@example.org,2025-02-13,HILLCREST,12.50,Lapsed
+112,Jade Brandt,jade.brandt27@example.org,1/11/2025, Eastside ,60.00,Active
+113,Tara Okafor, IVAN.LINDQVIST6@EXAMPLE.ORG ,2025-12-22, Old Town ,100.00,ACTIVE
+114,Omar Haddad,omar.haddad9@example.org,1/30/2025,Riverbend,$1200.50,ACTIVE
+115,Rosa Lindqvist,Rosa.Lindqvist42@Example.Org,2025-04-16,old town,12.5,Lapsed
+116,Ivan Novak,ivan.novak42@example.org,2026-05-27,Old Town,12.5,Lapsed
+117,Vera Haddad,vera.haddad34@example.org,2024-01-31, Eastside ,100,active
+118,Mei Reyes,mei.reyes23@example.org,2026-04-04, Eastside ,$100.00,active
+119,Noor Novak, NOOR.NOVAK34@EXAMPLE.ORG ,2024-08-27,Riverbend,100,active
+120,Sami Reyes,sami.reyes16@example.org,2024-01-14, Hillcrest ,12.5,active
+121,Mei Brandt,mei.brandt41@example.org,"April 3, 2024",Old Town,$12.50,active
+122,Omar Okafor,omar.okafor41@example.org,1/19/2026,Riverbend,12.5,Active
+123,Rosa Brandt,rosa.brandt53@example.org,2025-07-10, Riverbend ,25,Active
+124,Mei Marsh,Mei.Marsh41@Example.Org,2026-04-11,Old Town,,active
+125,Vera Lindqvist,vera.lindqvist59@example.org,10/28/2024,Eastside,-,active
+126,Luis Haddad,vera.marsh33@example.org,28 Jan 2024,OLD TOWN,60,Active
+127,Ana Okafor,Ana.Okafor37@Example.Org,3/21/2024,HILLCREST,12.5,ACTIVE
+128,Hugo Marsh,hugo.marsh43@example.org,2026-04-24,Hillcrest,1200.5,active
+129,Lena Chen,Lena.Chen55@Example.Org,2/6/2024, Hillcrest ,25,lapsed
+130,Sami Chen,sami.chen19@example.org,01 Aug 2026, Eastside ,,active
+131,Tara Silva,tara.silva20@example.org,2026-09-23,hillcrest,40.00,Active
+132,Lena Haddad,lena.haddad41@example.org,7/16/2026,Old Town,100.00,Lapsed
+133,Raul Marsh, RAUL.MARSH47@EXAMPLE.ORG ,"September 24, 2025",riverbend,12.50,ACTIVE
+134,Rosa Ortiz,rosa.ortiz21@example.org,2024-03-27,Riverbend,100.00,Active
+135,Jade Chen,jade.chen35@example.org,2/14/2025,Riverbend,1200.5,lapsed
+136,Zoe Silva,zoe.silva38@example.org,7/30/2026,Old Town,100.00,Active
+137,Noor Lindqvist,noor.lindqvist38@example.org,7/7/2024,OLD TOWN,$12.50,active
+138,Ana Reyes,ana.reyes24@example.org,2026-08-07,Eastside,100,active
+139,Raul Marsh,raul.marsh32@example.org,"July 27, 2025",Riverbend,60,ACTIVE
+140,Luis Ortiz,Luis.Lindqvist1@Example.Org,5/11/2024, Eastside ,60,active
+141,Zoe Lindqvist,Zoe.Lindqvist26@Example.Org,2025-04-26,Eastside,25.00,active
+142,Rosa Lindqvist,rosa.lindqvist46@example.org,2026-09-17,Eastside,60.00,active
+143,Noor Brandt,noor.brandt24@example.org,2026-09-12, Riverbend ,$12.50,active
+144,Mei Novak, MEI.NOVAK5@EXAMPLE.ORG ,"October 13, 2024",Hillcrest,12.50,active
+145,Noor Chen,noor.chen41@example.org,2024-04-26,riverbend,60,active
+146,Ana Silva,ana.silva37@example.org,2024-12-09,hillcrest,100,lapsed
+147,Jade Reyes,jade.reyes54@example.org,2025-02-16,Old Town,25,active
+148,Ana Silva,ana.silva10@example.org,2026-11-05,EASTSIDE,60,active
+149,Rosa Marsh,rosa.marsh12@example.org,2025-04-16,Eastside,1200.5,active
+150,Omar Haddad,omar.haddad40@example.org,2025-01-28, Eastside ,$12.50,Active
+151,Ivan Silva,Ivan.Silva54@Example.Org,2026-04-18,Old Town,60,Lapsed
+152,Hugo Marsh, ROSA.ORTIZ21@EXAMPLE.ORG ,5/26/2024, Old Town ,$100.00,Active
+153,Raul Chen,raul.chen47@example.org,,RIVERBEND,25,lapsed
+154,Ana Chen,ana.chen60@example.org,2/6/2024,HILLCREST,12.5,active
+155,Ana Silva,ana.silva8@example.org,2025-07-26,RIVERBEND,40,LAPSED
+156,Sami Okafor,sami.okafor11@example.org,3/7/2026,eastside,$25.00,ACTIVE
+157,Omar Brandt, OMAR.BRANDT46@EXAMPLE.ORG ,18 Oct 2025,Eastside,"1,200.50",ACTIVE
+158,Lena Ortiz,lena.ortiz24@example.org,10/26/2025,Eastside,$12.50,active
+159,Vera Ortiz,vera.ortiz3@example.org,13 Jul 2025,EASTSIDE,25.00,active
+160,Ana Silva,ana.silva8@example.org,"September 3, 2024",Old Town,100.00,active
+161,Jade Haddad,jade.haddad57@example.org,8/13/2025,old town,100,active
+162,Jade Brandt,jade.brandt30@example.org,2026-09-05,Riverbend,100.00,LAPSED
+163,Ana Brandt,ana.brandt11@example.org,2025-10-28,Riverbend,,active
+164,Hugo Brandt,hugo.brandt29@example.org,6/19/2026, Riverbend ,40,Lapsed
+165,Mei Novak,mei.novak40@example.org,7/13/2024,Hillcrest,1200.50,lapsed
+166,Tara Chen,tara.chen1@example.org,"August 28, 2024",riverbend,$60.00,lapsed
+167,Tara Reyes,tara.reyes45@example.org,8/22/2025, Hillcrest ,$1200.50,ACTIVE
+168,Noor Silva,Noor.Silva12@Example.Org,2026-02-11,Old Town,$100.00,active
+169,Tara Ortiz,Noor.Chen41@Example.Org,"October 1, 2025",hillcrest,25.00,ACTIVE
+170,Ana Chen,ana.chen34@example.org,10/22/2026,Riverbend,12.5,Lapsed
+171,Sami Lindqvist,sami.lindqvist48@example.org,2025-10-13,OLD TOWN,$1200.50,Lapsed
+172,Raul Lindqvist,raul.lindqvist57@example.org,2025-08-16,riverbend,1200.50,Active
+173,Hugo Ortiz,hugo.ortiz45@example.org,9/20/2025,old town,100,active
+174,Mei Reyes,mei.reyes50@example.org,2024-10-21,Eastside,100,active
+175,Mei Lindqvist,mei.lindqvist32@example.org,5/7/2024,Old Town,60,Active
+176,Lena Chen,lena.chen55@example.org,12/15/2025,Eastside,12.50,ACTIVE
+177,Ana Marsh,ana.marsh16@example.org,21 Dec 2024,Hillcrest,60.00,active
+178,Omar Okafor,omar.okafor44@example.org,9/25/2025,Eastside,40,active
+179,Zoe Silva,zoe.silva26@example.org,2/28/2026,eastside,60.00,active
+180,Noor Silva,noor.silva23@example.org,2024-02-21,Riverbend,$100.00,ACTIVE
+181,Noor Novak,noor.novak11@example.org,"April 9, 2026",Riverbend,100,active
+182,Sami Silva,sami.silva39@example.org,2026-01-23,Riverbend,25.00,Active
+183,Sami Okafor,sami.okafor2@example.org,,Riverbend,$1200.50,Active
+184,Vera Lindqvist,vera.lindqvist49@example.org,2025-09-29,Hillcrest,$12.50,lapsed
+185,Zoe Silva,mei.reyes50@example.org,2025-12-20,Hillcrest,12.5,lapsed
+186,Mei Silva,mei.silva8@example.org,2025-03-24,EASTSIDE,$40.00,ACTIVE
+187,Sami Ortiz,sami.ortiz36@example.org,2025-01-02, Hillcrest ,12.50,Lapsed
+188,Zoe Ortiz,zoe.ortiz8@example.org,09 Aug 2025,Eastside,$25.00,Active
+189,Sami Chen,sami.chen27@example.org,2025-03-28,hillcrest,1200.50,LAPSED
+190,Jade Ortiz,jade.ortiz44@example.org,11/14/2026,Hillcrest,-,Lapsed
+191,Mei Lindqvist,mei.lindqvist11@example.org,2025-06-17,Old Town,40.00,active
+192,Lena Reyes,lena.reyes43@example.org,2024-01-13, Old Town ,1200.5,lapsed
+193,Ivan Chen, IVAN.CHEN36@EXAMPLE.ORG ,2024-11-13,Hillcrest,60,active
+194,Ana Ortiz,ana.ortiz58@example.org,2025-09-24,old town,60,lapsed
+195,Ana Ortiz,ana.ortiz30@example.org,2024-06-20,Old Town,12.5,Lapsed
+196,Ana Brandt,ana.brandt59@example.org,2025-05-29,Eastside,40,active
+197,Luis Silva,luis.silva48@example.org,2025-12-30,Old Town,25,LAPSED
+198,Zoe Ortiz,zoe.ortiz14@example.org,11/18/2024,Eastside,40,LAPSED
+199,Luis Ortiz,luis.ortiz55@example.org,,Hillcrest,1200.5,LAPSED
+200,Zoe Brandt,zoe.brandt5@example.org,2024-12-27,Old Town,100.00,lapsed
+201,Noor Chen,noor.chen35@example.org,"November 12, 2024",Eastside,60.00,ACTIVE
+202,Ivan Reyes,ivan.reyes43@example.org,12/4/2025,Riverbend,12.50,Active
+203,Jade Marsh,jade.marsh27@example.org,2026-06-22,Riverbend,25,active
+204,Omar Lindqvist,omar.lindqvist43@example.org,7/27/2026, Eastside ,100.00,active
+205,Vera Reyes,vera.reyes9@example.org,"August 22, 2024",eastside,12.50,ACTIVE
+206,Vera Chen,vera.chen9@example.org,2026-04-08, Eastside ,40,active
+207,Tara Chen,tara.chen40@example.org,22 Aug 2024,Riverbend,$60.00,lapsed
+208,Raul Silva,raul.silva8@example.org,2026-01-01,Old Town,$60.00,active
+209,Zoe Novak,zoe.novak17@example.org,2/13/2024,Eastside,$25.00,active
+210,Jade Silva,jade.silva56@example.org,2024-10-22,old town,n/a,ACTIVE
+211,Jade Reyes,sami.chen4@example.org,"March 14, 2026",hillcrest,100.00,Active
+212,Jade Novak,jade.novak20@example.org,30 Mar 2024,Hillcrest,12.50,active
+213,Ivan Marsh,ivan.marsh31@example.org,7/29/2026, Riverbend ,60,Active
+214,Ivan Marsh, IVAN.MARSH37@EXAMPLE.ORG ,"March 10, 2024",Eastside,1200.50,Active
+215,Vera Silva, VERA.SILVA51@EXAMPLE.ORG ,5/27/2024,OLD TOWN,40,LAPSED
+216,Ivan Ortiz,ivan.ortiz46@example.org,13 Sep 2026,Riverbend,40,LAPSED
+217,Tara Reyes,tara.reyes26@example.org,2024-12-11,Old Town,100.00,active
+218,Zoe Novak,zoe.novak38@example.org,"September 15, 2025", Old Town ,$25.00,active
+219,Rosa Silva,noor.silva1@example.org,2025-04-30,hillcrest,100,lapsed
+220,Omar Novak,zoe.silva40@example.org,11 Jun 2024, Old Town ,40,lapsed
+221,Lena Brandt,tara.brandt6@example.org,2024-02-25,Old Town,n/a,active
+222,Lena Marsh,Lena.Marsh22@Example.Org,2026-08-06,OLD TOWN,60,Lapsed
+223,Mei Chen,mei.chen2@example.org,2024-07-03,OLD TOWN,100,Lapsed
+224,Omar Marsh,omar.marsh17@example.org,2024-03-05,HILLCREST,100.00,active
+225,Rosa Ortiz,rosa.ortiz36@example.org,1/12/2026,Hillcrest,100,active
+226,Jade Haddad,jade.haddad17@example.org,01 Nov 2024,RIVERBEND,-,ACTIVE
+227,Raul Reyes,raul.reyes14@example.org,2026-03-07,Eastside,25,LAPSED
+228,Lena Brandt,lena.brandt4@example.org,2/8/2026,Riverbend,$60.00,active
+229,Ivan Novak,ivan.novak21@example.org,2025-09-03,riverbend,60.00,Active
+230,Rosa Chen,Omar.Marsh17@Example.Org,2026-07-16, Riverbend ,12.5,Active
+231,Lena Ortiz,Lena.Ortiz52@Example.Org,9/11/2025,Eastside,12.5,ACTIVE
+232,Zoe Brandt,lena.novak40@example.org,,RIVERBEND,$25.00,Active
+233,Luis Chen, LUIS.CHEN8@EXAMPLE.ORG ,1/6/2024, Riverbend ,100.00,Lapsed
+234,Raul Reyes, RAUL.REYES59@EXAMPLE.ORG ,2025-04-03,Riverbend,25.00,active
+235,Tara Lindqvist,tara.lindqvist24@example.org,3/25/2024, Old Town ,$1200.50,ACTIVE
+236,Ivan Lindqvist,ivan.lindqvist27@example.org,28 Feb 2026,Eastside,60.00,LAPSED
+237,Omar Novak, OMAR.NOVAK43@EXAMPLE.ORG ,4/11/2024,HILLCREST,12.50,ACTIVE
+238,Sami Reyes,sami.reyes33@example.org,2/17/2026,Hillcrest,12.50,Active
+239,Luis Lindqvist,luis.lindqvist43@example.org,26 Jun 2025,OLD TOWN,100,active
+240,Zoe Lindqvist,zoe.lindqvist24@example.org,2026-01-19,Hillcrest,$1200.50,Active
+241,Tara Brandt,tara.brandt54@example.org,2026-04-19,Eastside,100.00,active
+242,Rosa Okafor,rosa.okafor19@example.org,7/9/2026,RIVERBEND,1200.5,active
+243,Hugo Brandt,hugo.brandt34@example.org,2024-02-06,Old Town,$60.00,Active
+244,Rosa Novak,rosa.novak17@example.org,2026-10-07,Hillcrest,60.00,LAPSED
+245,Tara Brandt,tara.brandt3@example.org,4/15/2026,Old Town,100,lapsed
+246,Raul Marsh,raul.marsh24@example.org,2024-05-24,HILLCREST,$1200.50,active
+247,Hugo Marsh,hugo.marsh30@example.org,2026-06-12,eastside,40.00,active
+248,Sami Novak,Sami.Novak26@Example.Org,11/7/2025,Eastside,25.00,active
+249,Noor Chen,noor.chen55@example.org,2024-04-22,old town,100.00,active
+250,Tara Ortiz,tara.ortiz56@example.org,2025-01-24,OLD TOWN,60,Lapsed
+251,Jade Okafor,jade.okafor33@example.org,20 Sep 2025,HILLCREST,40,Active
+252,Zoe Reyes,zoe.reyes43@example.org,2026-01-19, Hillcrest ,$25.00,active
+253,Tara Marsh,tara.marsh53@example.org,6/18/2026,hillcrest,12.5,active
+254,Mei Okafor,mei.okafor55@example.org,2024-05-27, Eastside ,40,Lapsed
+255,Vera Novak,vera.novak35@example.org,2025-02-27,Riverbend,12.5,ACTIVE
+256,Lena Okafor,Lena.Okafor10@Example.Org,2024-11-23,RIVERBEND,1200.50,Active
+257,Zoe Silva,zoe.silva21@example.org,2025-04-17,Hillcrest,40.00,lapsed
+258,Omar Reyes,omar.reyes10@example.org,02 Apr 2026, Eastside ,"1,200.50",lapsed
+259,Rosa Reyes, VERA.NOVAK35@EXAMPLE.ORG ,14 Feb 2025,Eastside,$60.00,Active
+260,Ana Marsh,ana.marsh39@example.org,2/2/2025,Eastside,12.5,Active
+261,Mei Chen, MEI.CHEN51@EXAMPLE.ORG ,7/20/2026,RIVERBEND,25,lapsed
+262,Tara Haddad,tara.haddad27@example.org,2/6/2026,Old Town,25,LAPSED
+263,Rosa Haddad,Rosa.Haddad17@Example.Org,10/13/2026,old town,100.00,Lapsed
+264,Ivan Novak,ivan.novak19@example.org,9/17/2024,Riverbend,,active
+265,Sami Novak,sami.novak6@example.org,2025-06-25,Eastside,25,lapsed
+266,Omar Novak,omar.novak39@example.org,2024-05-07,Old Town,-,lapsed
+267,Raul Silva,raul.silva22@example.org,,hillcrest,,active
+268,Mei Brandt,mei.brandt50@example.org,3/25/2025,Eastside,12.5,Lapsed
+269,Zoe Chen,zoe.chen49@example.org,4/13/2024, Eastside ,60.00,ACTIVE
+270,Mei Silva,mei.silva54@example.org,18 Apr 2024,riverbend,$1200.50,Lapsed
+271,Sami Marsh,sami.marsh35@example.org,5/19/2024,Old Town,100,ACTIVE
+272,Hugo Ortiz,hugo.ortiz26@example.org,2025-12-02,Eastside,60.00,Active
+273,Ana Silva, ANA.SILVA32@EXAMPLE.ORG ,8/31/2026,Hillcrest,40,ACTIVE
+274,Hugo Ortiz,Hugo.Ortiz19@Example.Org,6/24/2026,Riverbend,1200.5,ACTIVE
+275,Rosa Brandt,rosa.brandt10@example.org,2026-03-18,Riverbend,25,active
+276,Omar Reyes,omar.reyes37@example.org,"December 22, 2025",Hillcrest,60.00,Active
+277,Noor Silva,noor.silva19@example.org,08 Feb 2026, Eastside ,60.00,active
+278,Zoe Chen,zoe.chen36@example.org,11/15/2026,Hillcrest,12.5,active
+279,Omar Marsh,omar.marsh59@example.org,3/14/2026, Old Town ,$60.00,ACTIVE
+280,Jade Okafor, JADE.OKAFOR42@EXAMPLE.ORG ,10/6/2026,Old Town,100,Active
+281,Zoe Haddad,Zoe.Haddad13@Example.Org,"December 15, 2024",old town,60.00,Active
+282,Rosa Reyes,Rosa.Reyes13@Example.Org,2025-06-16,Hillcrest,100,active
+283,Vera Brandt,vera.brandt3@example.org,21 Aug 2026,Hillcrest,$60.00,Active
+284,Raul Chen,raul.chen17@example.org,"September 17, 2025",Old Town,100,LAPSED
+285,Raul Chen,raul.chen60@example.org,2024-08-29,old town,60,active
+286,Jade Lindqvist,Jade.Lindqvist27@Example.Org,"November 24, 2025",EASTSIDE,-,lapsed
+287,Hugo Okafor,hugo.okafor26@example.org,9/28/2024,RIVERBEND,$60.00,LAPSED
+288,Zoe Silva,Zoe.Silva9@Example.Org,7/17/2025,OLD TOWN,40,active
+289,Ivan Ortiz,ivan.ortiz45@example.org,2025-10-27,riverbend,25.00,lapsed
+290,Ana Lindqvist,ana.lindqvist53@example.org,2025-08-25,OLD TOWN,40.00,Active
+291,Raul Marsh,raul.marsh35@example.org,,Hillcrest,-,active
+292,Hugo Chen,Hugo.Chen26@Example.Org,"April 22, 2024", Old Town ,25.00,lapsed
+293,Tara Reyes,tara.reyes44@example.org,2025-01-25,Hillcrest,40,lapsed
+294,Noor Novak,noor.novak51@example.org,6/27/2025, Old Town ,25.00,lapsed
+295,Luis Brandt, LUIS.BRANDT14@EXAMPLE.ORG ,6/24/2025,Old Town,$25.00,Lapsed
+296,Tara Ortiz,tara.ortiz52@example.org,2025-12-03,hillcrest,$60.00,active
+297,Raul Chen,raul.chen34@example.org,3/4/2025, Riverbend ,100,LAPSED
+298,Mei Okafor,mei.okafor9@example.org,,eastside,$40.00,lapsed
+299,Raul Brandt,Raul.Brandt22@Example.Org,,old town,25.00,active
+300,Noor Reyes,noor.reyes37@example.org,6/19/2026,eastside,1200.50,lapsed
+301,Sami Reyes,sami.reyes45@example.org,8/30/2024, Eastside ,40,lapsed
+302,Lena Ortiz, LENA.ORTIZ16@EXAMPLE.ORG ,2024-03-18, Riverbend ,-,LAPSED
+303,Rosa Ortiz,rosa.ortiz10@example.org,31 Jul 2024,Eastside,100,Lapsed
+304,Luis Lindqvist,luis.lindqvist51@example.org,2024-01-05,EASTSIDE,100.00,lapsed
+305,Sami Ortiz,sami.ortiz43@example.org,3/23/2026,Riverbend,$100.00,active
+306,Luis Novak,luis.novak43@example.org,2024-06-25,Eastside,25,Active
+307,Rosa Silva,rosa.silva10@example.org,2025-11-16,Eastside,$1200.50,ACTIVE
+308,Noor Okafor,noor.okafor60@example.org,12 Jun 2024, Eastside ,$12.50,active
+309,Hugo Silva,hugo.silva29@example.org,2025-09-07,Hillcrest,40.00,LAPSED
+310,Vera Marsh,vera.marsh54@example.org,2025-10-29,HILLCREST,,Lapsed
+311,Zoe Brandt,zoe.brandt1@example.org,12/2/2025,Eastside,60,Active
+312,Luis Lindqvist,luis.lindqvist8@example.org,4/19/2024,HILLCREST,1200.5,active
+313,Rosa Ortiz,rosa.ortiz46@example.org,12/27/2024, Riverbend ,$60.00,Active
+314,Rosa Ortiz,rosa.ortiz6@example.org,6/15/2025, Riverbend ,,LAPSED
+315,Rosa Chen,rosa.chen5@example.org,2024-05-30, Eastside ,100.00,ACTIVE
+316,Mei Chen,mei.chen17@example.org,12/20/2024,eastside,40,active
+317,Raul Novak,raul.novak52@example.org,2024-01-21,Eastside,1200.50,Lapsed
+318,Mei Ortiz,Mei.Ortiz10@Example.Org,6/4/2025,Riverbend,,active
+319,Zoe Brandt,zoe.brandt24@example.org,2026-01-26,Old Town,$25.00,Active
+320,Vera Okafor,vera.okafor60@example.org,2/1/2025,Old Town,12.5,active
+321,Luis Okafor,luis.okafor54@example.org,2026-08-25,HILLCREST,25,ACTIVE
+322,Zoe Haddad,zoe.haddad59@example.org,2024-08-30,hillcrest,60.00,active
+323,Noor Novak, NOOR.NOVAK37@EXAMPLE.ORG ,"February 9, 2026",Eastside,$100.00,active
+324,Luis Reyes, LUIS.REYES17@EXAMPLE.ORG ,2024-09-26,Old Town,$1200.50,active
+325,Sami Reyes,sami.reyes31@example.org,2/20/2024,EASTSIDE,12.50,Active
+326,Mei Okafor,mei.okafor52@example.org,2024-03-26, Riverbend ,100,lapsed
+327,Noor Novak, ROSA.ORTIZ36@EXAMPLE.ORG ,9/15/2025,eastside,,Active
+328,Noor Novak,noor.novak5@example.org,2026-10-04,Riverbend,40,Active
+329,Omar Brandt,omar.brandt3@example.org,2/17/2024,Riverbend,60.00,ACTIVE
+330,Mei Silva,mei.silva16@example.org,2026-05-02,RIVERBEND,25,active
+331,Luis Marsh,luis.marsh53@example.org,"April 1, 2025", Old Town ,25,active
+332,Zoe Silva, ZOE.SILVA5@EXAMPLE.ORG ,2026-05-10, Old Town ,100.00,active
+333,Noor Lindqvist,noor.lindqvist38@example.org,1/29/2025,OLD TOWN,"1,200.50",lapsed
+334,Tara Brandt, TARA.BRANDT34@EXAMPLE.ORG ,2024-04-26,Old Town,60.00,lapsed
+335,Noor Brandt,Noor.Brandt51@Example.Org,2025-02-28, Riverbend ,$1200.50,ACTIVE
+336,Vera Brandt,vera.brandt9@example.org,6/28/2025,HILLCREST,25,Active
+337,Hugo Lindqvist,hugo.lindqvist23@example.org,2025-10-06, Eastside ,40,Active
+338,Raul Lindqvist,raul.lindqvist42@example.org,06 Feb 2025,Old Town,100,lapsed
+339,Omar Ortiz,omar.ortiz39@example.org,,Riverbend,25,Active
+340,Zoe Novak, NOOR.SILVA1@EXAMPLE.ORG ,2024-10-31,Old Town,1200.5,Active
+341,Ana Chen,ana.chen17@example.org,2024-04-17,Old Town,40,lapsed
+342,Vera Haddad,vera.haddad54@example.org,2/4/2024,Hillcrest,,ACTIVE
+343,Vera Reyes,vera.reyes51@example.org,2026-08-24,RIVERBEND,1200.5,ACTIVE
+344,Jade Lindqvist,jade.lindqvist22@example.org,2024-02-18,HILLCREST,40,Active
+345,Mei Haddad,mei.haddad4@example.org,9/26/2025,Old Town,60,Active
+346,Jade Novak,jade.novak10@example.org,2025-05-17,EASTSIDE,60.00,Active
+347,Vera Chen,vera.chen7@example.org,2026-06-14,riverbend,12.50,Active
+348,Jade Reyes, JADE.REYES50@EXAMPLE.ORG ,2024-08-02,Old Town,-,active
+349,Noor Marsh,noor.marsh3@example.org,2025-11-28, Hillcrest ,1200.5,active
+350,Jade Chen,jade.chen45@example.org,2026-04-12, Hillcrest ,$25.00,active
+351,Luis Silva,luis.silva48@example.org,"March 2, 2026",old town,$40.00,active
+352,Zoe Reyes,zoe.reyes7@example.org,,RIVERBEND,$40.00,active
+353,Lena Okafor, LENA.OKAFOR4@EXAMPLE.ORG ,2024-01-22,Eastside,60,Active
+354,Ivan Silva,ivan.silva24@example.org,2025-08-04, Hillcrest ,$100.00,active
+355,Zoe Haddad,zoe.haddad49@example.org,2026-10-30,Old Town,1200.5,Active
+356,Zoe Haddad,zoe.haddad55@example.org,08 Apr 2024,Hillcrest,$12.50,Active
+357,Ivan Novak,ivan.novak5@example.org,2024-02-23,Old Town,$12.50,ACTIVE
+358,Lena Okafor,Lena.Okafor20@Example.Org,2026-08-21, Old Town ,100.00,lapsed
+359,Noor Reyes,ana.chen17@example.org,2025-03-02, Eastside ,25,LAPSED
+360,Ana Haddad,ana.haddad28@example.org,8/18/2025,Old Town,1200.50,active
+361,Ivan Okafor,ivan.okafor11@example.org,2026-05-03,OLD TOWN,40,lapsed
+362,Lena Haddad, LENA.HADDAD39@EXAMPLE.ORG ,"December 2, 2024",EASTSIDE,25,active
+363,Jade Reyes,jade.reyes60@example.org,09 Nov 2024,Hillcrest,60.00,ACTIVE
+364,Omar Lindqvist,omar.lindqvist41@example.org,"January 12, 2024", Riverbend ,100,lapsed
+365,Omar Marsh,omar.marsh12@example.org,8/12/2024,Riverbend,12.50,ACTIVE
+366,Ana Reyes,ana.reyes56@example.org,2026-04-30,RIVERBEND,1200.5,active
+367,Mei Okafor,mei.okafor23@example.org,2024-11-27,Riverbend,25.00,ACTIVE
+368,Noor Reyes,noor.reyes50@example.org,2025-07-21,RIVERBEND,25,active
+369,Tara Chen,tara.chen23@example.org,2026-03-13,Eastside,1200.5,LAPSED
+370,Tara Marsh,tara.marsh20@example.org,2024-01-09, Old Town ,60.00,lapsed
+371,Ivan Haddad,ivan.haddad36@example.org,08 Aug 2025,EASTSIDE,12.5,Active
+372,Jade Ortiz,jade.ortiz23@example.org,2025-10-27,Old Town,100.00,active
+373,Ivan Okafor, IVAN.OKAFOR5@EXAMPLE.ORG ,2025-07-18,Hillcrest,12.5,active
+374,Ana Haddad,ana.haddad10@example.org,6/13/2026,Eastside,$25.00,ACTIVE
+375,Raul Novak,Raul.Novak3@Example.Org,7/9/2024,RIVERBEND,60,active
+376,Luis Ortiz,luis.ortiz2@example.org,2024-12-11,Riverbend,"1,200.50",Active
+377,Luis Okafor,luis.okafor21@example.org,2025-04-21,Riverbend,$40.00,lapsed
+378,Noor Lindqvist,noor.lindqvist40@example.org,19 Jun 2026,eastside,25.00,ACTIVE
+379,Jade Haddad,zoe.silva9@example.org,2026-10-14,EASTSIDE,1200.50,Active
+380,Tara Novak,tara.novak37@example.org,"November 14, 2025",Riverbend,40,active
+381,Hugo Brandt,hugo.brandt21@example.org,20 Nov 2025,Hillcrest,25,active
+382,Tara Chen,tara.chen37@example.org,"November 5, 2026",EASTSIDE,25,ACTIVE
+383,Noor Silva,noor.silva6@example.org,,Old Town,n/a,Active
+384,Omar Lindqvist,omar.lindqvist33@example.org,22 Jul 2025, Hillcrest ,12.50,active
+385,Vera Silva, VERA.SILVA4@EXAMPLE.ORG ,25 Sep 2024,Riverbend,25,active
+386,Luis Ortiz,luis.ortiz14@example.org,2024-06-13,Riverbend,25.00,Lapsed
+387,Ivan Haddad,ivan.haddad11@example.org,"April 3, 2025",Riverbend,100,ACTIVE
+388,Jade Marsh,jade.marsh55@example.org,02 May 2026, Eastside ,1200.5,lapsed
+389,Zoe Silva,zoe.silva11@example.org,2025-10-13,riverbend,60.00,ACTIVE
+390,Vera Marsh,Vera.Marsh22@Example.Org,2024-08-17,Old Town,100,Active
+391,Omar Reyes,omar.reyes8@example.org,"January 26, 2026",old town,1200.5,lapsed
+392,Ivan Novak,ivan.novak39@example.org,5/15/2025,Hillcrest,25,lapsed
+393,Vera Novak,vera.novak43@example.org,7/25/2024,Eastside,n/a,Active
+394,Ivan Marsh,ivan.marsh31@example.org,,Riverbend,25,Lapsed
+395,Lena Okafor,lena.okafor26@example.org,5/19/2026,OLD TOWN,$60.00,active
+396,Ana Okafor,ana.okafor40@example.org,1/31/2026,Old Town,40,active
+397,Luis Marsh,luis.marsh51@example.org,2026-10-26,hillcrest,$25.00,ACTIVE
+398,Mei Novak,mei.novak60@example.org,2026-01-01,HILLCREST,60,active
+399,Lena Ortiz,lena.ortiz29@example.org,2024-03-18,Eastside,$60.00,active
+400,Tara Silva,Tara.Silva5@Example.Org,2024-11-12, Eastside ,40.00,active

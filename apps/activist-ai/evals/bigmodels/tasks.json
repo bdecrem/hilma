@@ -1,0 +1,13 @@
+[
+  { "id": "website", "kind": "site", "level": 1,
+    "request": "Make a website for the Maple Street Tenants Association: who we are, the next meeting (December 9 at 7 pm in the library's community room), how to join, and a contact form with name, email and message. Make it look good, on a phone too.",
+    "says": ["Maple Street", "December 9|Dec\\.? 9", "7 ?(pm|p\\.m\\.)", "library"] },
+  { "id": "memory-game", "kind": "app", "level": 2,
+    "request": "make a simple memory game where you flip tiles to find matching pairs" },
+  { "id": "data", "kind": "data", "level": 3, "files": "data",
+    "request": "members.csv in this folder is our member list: 400 rows, typed in by volunteers over three years. Answer four questions from it and write the answers to a file named answers.json, one JSON object with exactly these keys: \"joined_2026\" (how many members joined in 2026), \"dues_by_neighborhood\" (an object: total dues paid per neighborhood; a blank or unreadable amount counts as 0), \"median_dues_active\" (the median dues among active members who have an amount), \"duplicate_emails\" (the sorted list of email addresses, in lowercase, that appear more than once). Then tell me the four answers in plain words." },
+  { "id": "debug", "kind": "engine", "level": 4, "files": "debug",
+    "request": "formula.mjs in this folder is the calculation engine of a small spreadsheet; SPEC.md says what it must do. People report that every formula with a function in it, like =SUM(A1:A3), shows an error instead of a number, and there may be other faults. Find what is wrong and fix it in formula.mjs. Keep the export computeSheet. Test your fix by running the code before you say it works." },
+  { "id": "spreadsheet", "kind": "app", "level": 5,
+    "request": "Build a tiny spreadsheet in one page: a 10 by 20 grid where a cell holds a number, text, or a formula like =A1+B2*3 or =SUM(A1:A5). Everything recalculates as I type, a circular reference shows an error in the cell, and the arrow keys move between cells." }
+]

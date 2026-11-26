@@ -72,5 +72,60 @@
     "cached": 0.04,
     "out": 1.5,
     "context": 131072
+  },
+  "_studio": "OLA-482 (Bart, voice call Nov 26: every bigger model that fits the Mac Studio, tested and left installed). `provider: studio`: the model the Studio serves on 127.0.0.1:8090 at that moment (ops/studio/big-model.sh start <name>; one at a time, Ola's own model is unloaded meanwhile); `studio-ola`: Ola's own model server there (127.0.0.1:8080). No prices: our own machine. Qwen and DeepSeek: Bart's yes for this test ('Yes, approved'; DeepSeek only if a build fits).",
+  "studio-inkling-2-mini": {
+    "id": "inkling",
+    "provider": "studio-ola",
+    "context": 131072,
+    "build": "Inkling 2 Mini, MTPLX Optimized Quality (20 GB)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
+  },
+  "studio-nemotron-3.5-super": {
+    "id": "big",
+    "provider": "studio",
+    "context": 131072,
+    "build": "Nemotron 3.5 Super VL 120B-A12B, Q4_0 GGUF (72 GB)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
+  },
+  "studio-gpt-oss-120b": {
+    "id": "big",
+    "provider": "studio",
+    "context": 131072,
+    "build": "gpt-oss-120b, MXFP4 GGUF (63 GB)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
+  },
+  "studio-qwen3.8-flash-next": {
+    "id": "big",
+    "provider": "studio",
+    "context": 131072,
+    "build": "Qwen3.8-Flash-Next, MTPLX Optimized Speed, 4-bit (115 GB on disk, about 83 GB in memory)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
+  },
+  "studio-inkling-small": {
+    "id": "big",
+    "provider": "studio",
+    "context": 65536,
+    "build": "Inkling Small (first generation, 264B), UD-IQ2_M GGUF, 2-bit (82 GB)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
+  },
+  "studio-deepseek-v4-flash": {
+    "id": "big",
+    "provider": "studio",
+    "context": 65536,
+    "build": "DeepSeek V4 Flash 0731, UD-IQ2_M GGUF, 2-bit (91 GB)",
+    "in": 0,
+    "cached": 0,
+    "out": 0
   }
 }

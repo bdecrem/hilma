@@ -1,0 +1,42 @@
+{
+ "joined_2026": 118,
+ "dues_by_neighborhood": {
+  "Eastside": 19176.5,
+  "Hillcrest": 19759.5,
+  "Riverbend": 28878.0,
+  "Old Town": 19148.5
+ },
+ "median_dues_active": 60.0,
+ "duplicate_emails": [
+  "ana.chen17@example.org",
+  "ana.silva8@example.org",
+  "ivan.lindqvist6@example.org",
+  "ivan.marsh31@example.org",
+  "lena.chen55@example.org",
+  "lena.novak40@example.org",
+  "luis.brandt1@example.org",
+  "luis.lindqvist1@example.org",
+  "luis.silva48@example.org",
+  "mei.reyes50@example.org",
+  "noor.chen41@example.org",
+  "noor.lindqvist38@example.org",
+  "noor.novak51@example.org",
+  "noor.silva13@example.org",
+  "noor.silva1@example.org",
+  "noor.silva6@example.org",
+  "omar.marsh17@example.org",
+  "rosa.novak33@example.org",
+  "rosa.ortiz21@example.org",
+  "rosa.ortiz36@example.org",
+  "sami.chen4@example.org",
+  "tara.brandt6@example.org",
+  "tara.haddad35@example.org",
+  "vera.lindqvist37@example.org",
+  "vera.marsh33@example.org",
+  "vera.novak35@example.org",
+  "zoe.haddad28@example.org",
+  "zoe.reyes43@example.org",
+  "zoe.silva40@example.org",
+  "zoe.silva9@example.org"
+ ]
+}
