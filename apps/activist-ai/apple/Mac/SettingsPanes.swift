@@ -133,7 +133,7 @@ struct SettingsView: View {
   /// no password of its own; signing out is Account's own control. A picker only when the person
   /// has more than one project.
   var machine: some View {
-    SettingsGroup(title: "Cloud: on the Ola machine") {
+    SettingsGroup(title: Runtime.cloud.label) {
       HStack(alignment: .firstTextBaseline) {
         StatusLine(kind: statusKind, text: statusText)
         Spacer(minLength: Space.s)
@@ -303,12 +303,12 @@ struct ModelsSettings: View {
         }
       }
     } header: {
-      Text("Local: on this Mac")
+      Text(Runtime.local.label)
     } footer: {
       Text("Off unless you turn them on. Type /claude or /hosted before a request to hand over just that one.")
         .font(.callout).foregroundStyle(.secondary)
     }
-    Section("Cloud: on the Ola machine") {
+    Section(Runtime.cloud.label) {
       LabeledContent("Fallbacks") { Text("Not yet").foregroundStyle(.secondary) }
       SettingNote("Cloud sessions from this Mac use Ola\u{2019}s own model only, for now.")
     }

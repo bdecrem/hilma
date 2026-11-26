@@ -90,7 +90,7 @@ struct RuntimeOptionRow: View {
         Image(systemName: runtime.symbol).font(.system(size: 18)).frame(width: 22)
           .foregroundStyle(picked && why == nil ? Ola.onAction : Ola.action)
         VStack(alignment: .leading, spacing: 2) {
-          Text("\(runtime.name): \(runtime.place(phone: false))").font(.system(size: 13, weight: .medium))
+          Text(runtime.label).font(.system(size: 13, weight: .medium))
           Text(why ?? runtime.detail(phone: false)).font(.system(size: 11))
             .foregroundStyle(picked && why == nil ? Ola.onAction.opacity(0.85) : .secondary)
             .fixedSize(horizontal: false, vertical: true)

@@ -145,7 +145,7 @@ struct MacRoot: View {
   static func subtitle(_ store: OlaStore) -> String {
     switch store.connection {
     case .open:
-      let place = store.runtime == .local ? "Local, on this Mac" : "Cloud, on the Ola machine"
+      let place = (store.runtime ?? .cloud).label
       return store.running.isEmpty ? place : "\(place) \u{00B7} \(store.running.count) working"
     case .connecting: return "Connecting"
     case .lost: return "Not answering"
@@ -248,7 +248,7 @@ struct Sidebar: View {
               .foregroundStyle(.secondary).selectionDisabled()
           }
         } header: {
-          Text("\(r.name) \u{00B7} \(r.place(phone: false))")
+          Text(r.label)
             .help(hidden(r) ? "Show the \(r.name.lowercased()) sessions" : "Hide the \(r.name.lowercased()) sessions")
         }
       }

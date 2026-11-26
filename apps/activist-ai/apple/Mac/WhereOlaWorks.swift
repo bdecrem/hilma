@@ -470,7 +470,7 @@ struct WhereSettings: View {
   /// Session. This group is the local runtime's setup (its folder, the owner's pasted token, its
   /// agent); the cloud's is `MachineSetup`.
   var body: some View {
-    SettingsGroup(title: "Local: on this Mac") {
+    SettingsGroup(title: Runtime.local.label) {
       Group {
         LabeledContent("Folder") {
           HStack(spacing: Space.s) {

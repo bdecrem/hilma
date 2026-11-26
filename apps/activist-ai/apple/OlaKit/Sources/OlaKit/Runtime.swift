@@ -14,7 +14,11 @@ public enum Runtime: String, CaseIterable, Sendable, Identifiable {
   /// One word, for the session list and the chooser.
   public var name: String { self == .cloud ? "Cloud" : "Local" }
 
-  /// Where the work happens, as the chooser says it ("Cloud: on the Ola machine").
+  /// The runtime as every screen names it (Bart, Nov 25, OLA-458: "Cloud (ola.cx) and Local (your Mac)
+  /// instead of the more wordy current versions").
+  public var label: String { self == .cloud ? "Cloud (ola.cx)" : "Local (your Mac)" }
+
+  /// Where the work happens, in a sentence or a tooltip ("Start a session on this Mac").
   public func place(phone: Bool) -> String {
     switch self {
     case .cloud: return "on the Ola machine"

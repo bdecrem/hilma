@@ -216,7 +216,7 @@ struct PermissionsSection: View {
           Toggle(isOn: Binding(get: { perms.mode(r) == .lots }, set: { on in
             Task { await perms.set(on ? .lots : .ask, r) }
           })) {
-            Text(r == .cloud ? "In the cloud" : "Through your Mac")
+            Text(r.label)
           }
           .disabled(!ready)
           Text(!ready ? (r == .cloud ? "Sign in to Ola first." : "Pair with your Mac first.") : perms.mode(r) == .lots ? "Ola goes ahead without asking." : "Ola asks before each step.")
@@ -466,7 +466,7 @@ struct PhoneNewSessionSheet: View {
       HStack(spacing: 14) {
         Image(systemName: r.symbol).font(.title3).foregroundStyle(ok ? Ola.blue : Ola.ink3).frame(width: 30)
         VStack(alignment: .leading, spacing: 2) {
-          Text("\(r.name): \(r.place(phone: true))").foregroundStyle(ok ? Ola.ink : Ola.ink2)
+          Text(r.label).foregroundStyle(ok ? Ola.ink : Ola.ink2)
           Text(ok ? r.detail(phone: true) : r == .cloud ? "Not set up yet. Tap to sign in to Ola." : "Not set up yet. Tap to pair with your Mac.")
             .font(.footnote).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
         }

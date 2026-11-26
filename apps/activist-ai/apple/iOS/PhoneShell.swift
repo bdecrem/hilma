@@ -213,11 +213,10 @@ struct SessionsHome: View {
             Text(emptyLine(r, st)).font(.subheadline).foregroundStyle(Ola.ink2).listRowBackground(Ola.paper)
           }
         } header: {
-          // Which runtime: "Cloud  on the Ola machine", "Local  through your Mac".
+          // Which runtime: "Cloud (ola.cx)", "Local (your Mac)".
           HStack(spacing: 6) {
             Image(systemName: r.symbol)
-            Text(r.name).fontWeight(.semibold)
-            Text(r.place(phone: true))
+            Text(r.label).fontWeight(.semibold)
             Spacer(minLength: 4)
             if hidden(r) { Text("\(st.sessions.count)").monospacedDigit() }
             Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).rotationEffect(.degrees(hidden(r) ? -90 : 0))
@@ -232,7 +231,7 @@ struct SessionsHome: View {
           .onTapGesture { withAnimation { toggle(r) } }
           .accessibilityElement(children: .ignore)
           .accessibilityAddTraits(.isButton)
-          .accessibilityLabel("\(r.name) sessions, \(r.place(phone: true))")
+          .accessibilityLabel("\(r.label) sessions")
           .accessibilityValue(hidden(r) ? "collapsed" : "expanded")
           .accessibilityHint(hidden(r) ? "Shows its sessions." : "Hides its sessions.")
           .accessibilityAction { toggle(r) }
@@ -440,7 +439,7 @@ struct SettingsScreen: View {
         } else {
           Button("Sign In to Ola\u{2026}") { place.setup = .machine }
         }
-      } header: { Text("Cloud: on the Ola machine") } footer: {
+      } header: { Text(Runtime.cloud.label) } footer: {
         Text(cloudReady ? "The same sessions as on the website. Works with your Mac off." : "Your phone works in your Ola projects, the same sessions as the website, even when your Mac is off.")
       }
       Section {
@@ -452,7 +451,7 @@ struct SettingsScreen: View {
         } else {
           Button("Pair with Your Mac\u{2026}") { place.setup = .mac }
         }
-      } header: { Text("Local: through your Mac") } footer: {
+      } header: { Text(Runtime.local.label) } footer: {
         Text(localReady ? "Ola works on your Mac, in its folder. Your Mac needs to be on." : "Scan the code in Ola on your Mac (Settings, Phone).")
       }
       PermissionsSection(store: store)
