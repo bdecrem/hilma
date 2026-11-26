@@ -1,3 +1,6 @@
+#if os(iOS)
+import AVFoundation
+#endif
 import OlaKit
 import SwiftUI
 import UniformTypeIdentifiers
@@ -29,6 +32,16 @@ enum PageScheme {
     config.setURLSchemeHandler(handler, forURLScheme: scheme)
     config.websiteDataStore = .nonPersistent()
     config.defaultWebpagePreferences.allowsContentJavaScript = true
+    // Sound in a page Ola made (OLA-459; Bart, Nov 25: a drum machine "sounds good" on the desktop, "no
+    // sound on iphone"). Two causes, both ours to remove: a page that starts its sound on finger-down is
+    // refused by iOS, which counts only finger-up as a person's say-so (the Mac counts mouse-down); and an
+    // app that never says it plays audio is muted by the phone's silent switch.
+    config.mediaTypesRequiringUserActionForPlayback = []
+    #if os(iOS)
+    config.allowsInlineMediaPlayback = true
+    try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
+    try? AVAudioSession.sharedInstance().setActive(true)
+    #endif
     let web = WKWebView(frame: .zero, configuration: config)
     web.navigationDelegate = handler
     objc_setAssociatedObject(web, &handlerKey, handler, .OBJC_ASSOCIATION_RETAIN)
