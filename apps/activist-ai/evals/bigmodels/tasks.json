@@ -1,7 +1,7 @@
 [
   { "id": "website", "kind": "site", "level": 1,
     "request": "Make a website for the Maple Street Tenants Association: who we are, the next meeting (December 9 at 7 pm in the library's community room), how to join, and a contact form with name, email and message. Make it look good, on a phone too.",
-    "says": ["Maple Street", "December 9|Dec\\.? 9", "7 ?(pm|p\\.m\\.)", "library"] },
+    "says": ["Maple Street", "December 9|Dec\\.? 9", "7(:00)? ?(pm|p\\.m\\.)", "library"] },
   { "id": "memory-game", "kind": "app", "level": 2,
     "request": "make a simple memory game where you flip tiles to find matching pairs" },
   { "id": "data", "kind": "data", "level": 3, "files": "data",

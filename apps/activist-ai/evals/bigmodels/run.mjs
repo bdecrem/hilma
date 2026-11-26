@@ -5,7 +5,7 @@
 // names (tickets/models.json, `studio-*`).
 //
 //   node evals/bigmodels/run.mjs --model studio-nemotron-3.5-super [--tasks website,data] [--time 900]
-//   node evals/bigmodels/run.mjs --report
+//   node evals/bigmodels/run.mjs --report | --rescore | --score <task> --folder <folder>
 //
 // One run: plain opencode (Ola's version, no instruction file, no skills, nothing of Ola's around
 // it) in an empty folder holding only the task's files, in the ticket lane's sandbox (tickets/lib.mjs:
@@ -31,7 +31,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, x, i, all) => {
 
 if (args.report) { report(); process.exit(0) }
 const model = String(args.model || '')
-if (!args.score && (!MODELS[model] || model.startsWith('_'))) { console.error('--model <a name in tickets/models.json> required'); process.exit(2) }
+if (!args.score && !args.rescore && (!MODELS[model] || model.startsWith('_'))) { console.error('--model <a name in tickets/models.json> required'); process.exit(2) }
 const tasks = args.tasks ? String(args.tasks).split(',').map((id) => TASKS.find((t) => t.id === id) || die(`unknown task ${id}`)) : TASKS
 const timeLimit = Number(args.time || 900)
 function die(m) { console.error(m); process.exit(2) }
@@ -130,6 +130,9 @@ async function look(folder, shot, viewport) {
     page.on('pageerror', (e) => errors.push(String(e.message).slice(0, 160)))
     await page.goto('file://' + file, { waitUntil: 'load', timeout: 20000 }).catch((e) => errors.push('load: ' + String(e.message).slice(0, 100)))
     await page.waitForTimeout(800)
+    // Scroll through it first: a page that fades its sections in as they come into view is blank in a
+    // full-page picture otherwise (Inkling 2 Mini's first website, Nov 26).
+    await page.evaluate(async () => { for (let y = 0; y < document.documentElement.scrollHeight; y += Math.round(innerHeight * 0.7)) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 180)) } scrollTo(0, 0); await new Promise((r) => setTimeout(r, 300)) }).catch(() => {})
     await page.screenshot({ path: shot, fullPage: true }).catch(() => {})
     return await page.evaluate(() => ({
       text: document.body?.innerText || '',
@@ -178,6 +181,18 @@ if (args.score) {
   const r = await SCORE[task.kind](task, run)
   console.log(`${task.id}: ${r.pass}/${r.total}`, JSON.stringify(r.checks.filter((c) => !c.pass).map((c) => c.name)), JSON.stringify(r.notes || []).slice(0, 300), dir)
   process.exit(0)
+}
+if (args.rescore) {
+  const rows = readFileSync(results, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+  for (const r of rows) {
+    const task = TASKS.find((t) => t.id === r.task); const dir = path.join(root, r.dir)
+    if (!task || !existsSync(path.join(dir, 'work'))) continue
+    const sc = await SCORE[task.kind](task, { dir, work: path.join(dir, 'work'), home: path.join(dir, 'home') })
+    if (sc.pass !== r.pass || sc.total !== r.total) console.log(`${r.model} ${r.task}: ${r.pass}/${r.total} -> ${sc.pass}/${sc.total}`)
+    Object.assign(r, { passed: sc.total > 0 && sc.pass === sc.total, pass: sc.pass, total: sc.total, checks: sc.checks, notes: sc.notes })
+  }
+  writeFileSync(results, rows.map((r) => JSON.stringify(r)).join('\n') + '\n')
+  report(); process.exit(0)
 }
 mkdirSync(big, { recursive: true })
 for (const t of tasks) { try { await one(t) } catch (e) { console.error(`error ${t.id} on ${model}: ${e.message}`) } }
