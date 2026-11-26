@@ -13,6 +13,8 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import http from 'node:http'
+import net from 'node:net'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,6 +23,48 @@ export const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..
 export const HERE = path.dirname(fileURLToPath(import.meta.url))
 export const ORIGIN = process.env.OLA_ASKS_ORIGIN || 'https://app.ola.cx'
 export const SITES = process.env.OLA_ASKS_SITES || 'https://sites.ola.cx'
+// A machine whose Ola has no public address yet (the Mac Studio until app.ola.cx moves there, OLA-452).
+// ORIGIN's name still leads to the other machine, so every request below would test that one: on
+// Nov 25 the Studio's run broke at its first step, the mini not knowing the Studio's one-time link.
+// Such a machine names its own secure front, host:port, in ~/.ola/local-front (ops/studio/setup.sh
+// writes it; OLA_ASKS_LOCAL_FRONT does the same for one run). That front takes only connections that
+// start with a PROXY line, so this process sends its https requests through a forwarder of its own:
+// for ORIGIN's host it connects to the front and writes the line, anything else goes out as before.
+// TLS stays end to end: the certificate is still checked against ORIGIN's name.
+// Remove with the address move: delete ~/.ola/local-front once ORIGIN's name reaches this machine.
+export const LOCAL_FRONT = (() => {
+  if (process.env.OLA_ASKS_LOCAL_FRONT !== undefined) return process.env.OLA_ASKS_LOCAL_FRONT.trim() || null
+  try {
+    return readFileSync(path.join(homedir(), '.ola/local-front'), 'utf8').trim() || null
+  } catch {
+    return null
+  }
+})()
+if (LOCAL_FRONT) {
+  const m = /^([\w.-]+):(\d+)$/.exec(LOCAL_FRONT)
+  if (!m) throw new Error(`~/.ola/local-front (or OLA_ASKS_LOCAL_FRONT) must be host:port, not "${LOCAL_FRONT}"`)
+  if (typeof http.setGlobalProxyFromEnv !== 'function') throw new Error('this Node cannot send fetch through a forwarder (http.setGlobalProxyFromEnv is missing): the local front needs Node 25 or newer')
+  const want = new URL(ORIGIN)
+  const forwarder = http.createServer((req, res) => res.writeHead(405).end())
+  forwarder.on('connect', (req, client, head) => {
+    const [host, port] = req.url.split(':')
+    const local = host === want.hostname && Number(port) === Number(want.port || 443)
+    const up = local ? net.connect(Number(m[2]), m[1]) : net.connect(Number(port), host)
+    up.on('connect', () => {
+      if (local) up.write(`PROXY TCP4 127.0.0.1 127.0.0.1 ${client.remotePort || 50000} ${m[2]}\r\n`)
+      client.write('HTTP/1.1 200 Connection Established\r\n\r\n')
+      if (head?.length) up.write(head)
+      up.pipe(client)
+      client.pipe(up)
+    })
+    const end = () => (client.destroy(), up.destroy())
+    up.on('error', end)
+    client.on('error', end)
+  })
+  await new Promise((ok) => forwarder.listen(0, '127.0.0.1', ok))
+  forwarder.unref()
+  http.setGlobalProxyFromEnv({ https_proxy: `http://127.0.0.1:${forwarder.address().port}` })
+}
 // The live server's own code and settings: the deployed release, never a builder's copy.
 export const LIVE = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
 export const STATE = process.env.OLA_ASKS_HOME || path.join(homedir(), 'ola-asks')

@@ -262,6 +262,12 @@ d_gateway_local() {
 }
 # The first deploy builds the workspace image, before `install` has made the job that keeps Apple's
 # container services up: start them once here (Nov 24: "Plugins are unavailable", nothing deployed).
+# Until app.ola.cx moves here, that name leads to the mini: Ola's own request tests on this machine
+# reach its secure front directly instead (evals/asks/lib.mjs reads this file, OLA-452).
+# REMOVE at the address move: rm ~/.ola/local-front, and take this step out.
+LOCAL_FRONT=127.0.0.1:4743
+t_local_front() { [ "$(cat "$OLA/local-front" 2>/dev/null)" = "$LOCAL_FRONT" ]; }
+d_local_front() { (umask 077; printf '%s\n' "$LOCAL_FRONT" > "$OLA/local-front"); }
 t_container_up() { /usr/local/bin/container system status | grep -q running; }
 d_container_up() { /usr/local/bin/container system start --enable-kernel-install; }
 t_signers() { [ -s "$OLA/allowed-signers" ]; }
@@ -293,6 +299,7 @@ run_ola() {
   step "the model answers as \"$MODEL_ALIAS\"" t_model_up d_model_up
   human "the settings moved from the mini" t_envs "on the iMac: ops/studio/move-env.sh ola@<studio> (README step 6)"
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi
+  step "Ola's own tests reach this machine's front ($LOCAL_FRONT in ~/.ola/local-front, until app.ola.cx moves here)" t_local_front d_local_front
   human "Bart's signing key in ~/.ola/allowed-signers" t_signers "README step 7 (or run once with OLA_UNSIGNED=1; deploys.log records it)"
   step "Apple's container services running (for the first image build)" t_container_up d_container_up
   if t_envs && { t_signers || [ "${OLA_UNSIGNED:-}" = 1 ]; }; then step "first deploy and the jobs (ola.mjs deploy, install)" t_deployed d_deployed

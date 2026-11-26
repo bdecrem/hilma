@@ -51,7 +51,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, HERE, PLACES_REACHED, STAGING, STATE, WHO, asksToPublishInWords, cardFaults, liveRelease, lostConnection, makeStopper, modelUsedUp, noteRun, passesNeeded, releaseWatch, signedOut, stalestFirst, stalestRuntime, takeRunLock, triesDone, verdictOf, writeRecord, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, stopProject, takeDownSites } from './lib.mjs'
+import { AI, HERE, LOCAL_FRONT, PLACES_REACHED, STAGING, STATE, WHO, asksToPublishInWords, cardFaults, liveRelease, lostConnection, makeStopper, modelUsedUp, noteRun, passesNeeded, releaseWatch, signedOut, stalestFirst, stalestRuntime, takeRunLock, triesDone, verdictOf, writeRecord, ask, checkMust, checkNever, cloudTransport, emptyProject, newSession, placesOf, prepareAccount, readCases, say, signIn, signOutAccount, startLocal, stopProject, takeDownSites } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt)
@@ -111,11 +111,20 @@ const before = (() => {
     return { cases: {} }
   }
 })()
-const RUNTIMES = arg('--runtime', null)?.split(',') ?? stalestRuntime(['local', 'cloud'], cases, before)
+// OLA-452: on a machine that reaches its own Ola through ~/.ola/local-front, the Mac app's engine
+// (runtime local) cannot be run: it signs in by Ola's public name, which is another machine. Its
+// cases are listed as not run, with that reason, and a --runtime that names it is refused.
+const NO_LOCAL = LOCAL_FRONT ? "the Mac app's engine signs in by Ola's public name, which does not lead to this machine yet (~/.ola/local-front)" : null
+if (NO_LOCAL && arg('--runtime', null)?.split(',').includes('local')) {
+  console.error(`--runtime local cannot run here: ${NO_LOCAL}`)
+  process.exit(2)
+}
+const RUNTIMES = arg('--runtime', null)?.split(',') ?? (NO_LOCAL ? ['cloud'] : stalestRuntime(['local', 'cloud'], cases, before))
 const placeOf = (runtime) => Object.keys(PLACES_REACHED).find((p) => PLACES_REACHED[p] === runtime)
 const total = RUNTIMES.reduce((n, rt) => n + cases.filter((c) => placesOf(c).includes(placeOf(rt))).length, 0)
 const known = new Set(readCases(arg('--cases', undefined)).flatMap((c) => placesOf(c).map((p) => `${c.id}@${p}`)))
 say(`asks: ${cases.length} case(s), runtimes ${RUNTIMES.join(', ')}, against the server running ${release}`)
+if (LOCAL_FRONT) say(`asks: Ola is reached at this machine's own front (${LOCAL_FRONT}, ~/.ola/local-front), not by its public address`)
 
 // ---------------------------------------------------------------- the record, after every case (OLA-401)
 const results = [] // one per case@place that ran, and one per place not run
@@ -323,7 +332,7 @@ if (broke) {
   process.exit(1)
 }
 // The places a case names that this runner cannot reach: listed, never passed.
-for (const c of cases) for (const p of placesOf(c)) if (!PLACES_REACHED[p] || !RUNTIMES.includes(PLACES_REACHED[p])) results.push({ id: c.id, place: p, status: 'not run', ok: null, why: PLACES_REACHED[p] ? 'not in this run (--runtime)' : 'this runner cannot reach it headlessly', ticket: c.from?.ticket ?? null, say: c.say })
+for (const c of cases) for (const p of placesOf(c)) if (!PLACES_REACHED[p] || !RUNTIMES.includes(PLACES_REACHED[p])) results.push({ id: c.id, place: p, status: 'not run', ok: null, why: PLACES_REACHED[p] ? (NO_LOCAL && PLACES_REACHED[p] === 'local' ? `not run on this machine: ${NO_LOCAL}` : 'not in this run (--runtime)') : 'this runner cannot reach it headlessly', ticket: c.from?.ticket ?? null, say: c.say })
 
 function row(c, place, r) {
   const tries = r.tries ?? []
