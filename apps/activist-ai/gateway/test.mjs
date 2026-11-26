@@ -2244,6 +2244,34 @@ test('design: after the designer skill is loaded in this turn, the design model 
   }
 })
 
+// OLA-463: Ola's instructions say the designer skills load only by name (right where Ola's own model
+// builds the page). Where a design model is this caller's to use, the gateway tells Ola to load the
+// skill for a page; with no design model it says nothing.
+test('design: with a design model to use, a general request that offers the skill tool is told to load the skill for a page; without one, nothing is added (OLA-463)', async () => {
+  const SKILL_TOOL = [{ type: 'function', function: { name: 'skill', parameters: { type: 'object', properties: {} } } }]
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV })
+  try {
+    await call(g, T.a, turn({ tag: 'title' }))
+    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'no tools (a title): no note')
+    await call(g, T.a, { ...turn({ tag: 'offered' }), tools: SKILL_TOOL })
+    assert.ok(up.st.seen.at(-1).system.includes('load the `designer` skill'), up.st.seen.at(-1).system)
+    assert.notEqual(up.st.seen.at(-1).model, 'up/design-1', 'still the everyday model')
+    await call(g, T.a, { ...turn({ tag: 'loaded' }, { skill: 'designer' }), tools: SKILL_TOOL })
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1')
+    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'the design turn itself: no note')
+  } finally {
+    await g.stop()
+  }
+  const g2 = await gateway({ ...baseEnv(up.url), GATEWAY_USAGE_TOKEN: T.usage })
+  try {
+    await call(g2, T.a, { ...turn({ tag: 'none' }), tools: SKILL_TOOL })
+    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'no design model on this machine: no note')
+  } finally {
+    await g2.stop()
+  }
+})
+
 // OLA-303, the checker's Nov 21 conversations on the live server: the design model asked "What should
 // the block party page say?", the person answered, and from that answer on `general` built the whole
 // page (the served table: 5 design steps, then 27 general). Answering the design work's question goes

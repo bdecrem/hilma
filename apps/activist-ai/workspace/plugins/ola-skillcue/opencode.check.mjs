@@ -1,5 +1,5 @@
 // node workspace/plugins/ola-skillcue/opencode.check.mjs [path to opencode]
-// The plugin inside a real opencode 2.3.2 (Ola's build, opencode-fork/dist), against a stand-in model server on
+// The plugin inside a real opencode 2.4.2 (Ola's build, opencode-fork/dist), against a stand-in model server on
 // 127.0.0.1 that records each request and answers "ok". Proves what the unit tests cannot: opencode loads the
 // plugin, calls its context hook, and the publish skill is in the system prompt the model receives for a request
 // to publish (OLA-284); with OLA_SKILLCUE=off it is not; and a request that is not about publishing gets none.

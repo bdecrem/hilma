@@ -8,7 +8,7 @@ app.ola.cx, the same sessions the website shows (since OLA-150; before, a separa
 apple/
   project.yml        XcodeGen: the source of truth (Ola.xcodeproj is generated, not committed)
   OlaKit/            Swift package shared by both apps
-    Client.swift       opencode 2.3.2 V2 API: sessions, prompt, interrupt, permissions, models, files, the event stream
+    Client.swift       opencode 2.4.2 V2 API: sessions, prompt, interrupt, permissions, models, files, the event stream
     Conversation.swift the event stream folded into turns, steps and approvals (port of web/src/lib/conversation.ts)
     Steps.swift        the plain words for each step and approval (port of web/src/lib/steps.ts)
     Store.swift        the live state both apps show (@Observable)
@@ -463,7 +463,7 @@ is also in plain settings so the app can say who is signed in without reading th
   whatever started it.
 - **The app**: a Mac with nothing set up shows one screen, "Sign in to Ola"; after signing in it goes
   to "On this Mac": choose a folder, and on a Mac without opencode the app fetches it itself
-  (`OlaKit/OpencodeInstall.swift`: the pinned 2.3.2 package for this processor from the npm
+  (`OlaKit/OpencodeInstall.swift`: the pinned 2.4.2 package for this processor from the npm
   registry, checked against the sha512 `package-lock.json` pins (a test keeps the two equal),
   unpacked into `Application Support/Ola/opencode/bin`, asked for its version; no Node, no npm, no
   admin password). Settings has an Account section (name, "Signed in on this Mac", the share used
@@ -508,7 +508,7 @@ permissions (the app's Permissions setting, below), web commands and config, fro
 app's signature and reads the Keychain with no question; `ola` itself is a three-line launcher.
 
 ```bash
-ola                    # the conversation, in this terminal (opencode 2.3.2's interface with Ola's wordmark, on Ola's server)
+ola                    # the conversation, in this terminal (opencode 2.4.2's interface with Ola's wordmark, on Ola's server)
 ola "a request"        # one request, the reply printed; also: ola run "…" (exit code: whether it worked)
 ola -c                 # pick up the last conversation
 ola login | logout | whoami | status | --help
@@ -1009,7 +1009,7 @@ says whether opencode was still running and its last lines, with Try Again. Righ
 is picked the app reads it itself, so a macOS privacy question about that folder comes up then.
 
 opencode for this mode: the app fetches it itself the first time (see "Sign in with an Ola
-account"); `tools/install-local-opencode.sh` (npm, the same pinned 2.3.2, into
+account"); `tools/install-local-opencode.sh` (npm, the same pinned 2.4.2, into
 `~/Library/Application Support/Ola/opencode`) still works and is found too. Proved with
 `OLA_LOCAL_FOLDER=<scratch> OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` (14 of 14).
 

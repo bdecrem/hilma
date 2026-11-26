@@ -33,7 +33,7 @@ test('OLA-356: cache hits are priced at the cached rate and count toward the tok
 test('OLA-356: the lean configuration caps tool output, drops skills and spare tools; the default is unchanged', () => {
   const lean = opencodeConfig('kimi-k3.1-pro', { lean: true }), full = opencodeConfig('kimi-k3.1-pro')
   assert.ok(lean.tool_output.max_bytes <= 12000)
-  for (const t of ['skill', 'subagent', 'question', 'experimental_image_generate']) assert.ok(lean.permissions.some((p) => p.action === t && p.effect === 'deny'), t)
+  for (const t of ['skill', 'subagent', 'question', 'generate_image']) assert.ok(lean.permissions.some((p) => p.action === t && p.effect === 'deny'), t)
   assert.equal(full.tool_output, undefined)
   assert.equal(full.permissions.length, 4)
   assert.equal(LEAN.env.OPENCODE_DISABLE_CLAUDE_CODE, '1')

@@ -42,6 +42,11 @@ export const STEPS_MAX = 5000
 
 // The sentences the gateway adds for Ola to pass on (fixed text, from this file).
 export const WITHHELD = 'Note from Ola’s gateway: this design work is being done by Ola’s own model on this machine, because this project keeps its work in the office. In your reply, say in one plain sentence that a stronger design model is available if the project’s owner turns on the hosted model in Settings.'
+// OLA-463: Ola's instructions (AGENTS.md, since OLA-455) say the designer skills load only when the
+// person names them, which is right where Ola's own model builds the page (the Studio). Where a design
+// model is set and this caller's work may go to it, the skill is what sends the page there, so the
+// gateway says so in the request: a general request that offers the skill tool, before the skill loads.
+export const DESIGN_HERE = 'Note from Ola’s gateway: on this server a separate design model does page design. Before you make or restyle a web page, a site or an app screen, load the `designer` skill (`app-designer` for a phone or Mac app screen), also when the person did not name it.'
 export const DESIGN_DOWN = 'Note from Ola’s gateway: Ola’s design model could not answer this request just now, so Ola’s own everyday model is doing the design. In your reply, say so in one plain sentence.'
 
 /** The design settings, checked. `models` is GATEWAY_MODELS as read (it may hold design). */

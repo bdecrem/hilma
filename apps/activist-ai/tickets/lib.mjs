@@ -102,7 +102,7 @@ export function opencodeConfig(model, { lean = false, steps = null, baseURL = `h
 // cannot add 40 KB, no skills, and a request that says to search first and read line ranges.
 export const LEAN = {
   config: { tool_output: { max_lines: 250, max_bytes: 12000 }, agents: { build: { steps: 60 } } },
-  permissions: ['skill', 'experimental_image_generate', 'question', 'subagent'].map((action) => ({ action, resource: '*', effect: 'deny' })),
+  permissions: ['skill', 'generate_image', 'question', 'subagent'].map((action) => ({ action, resource: '*', effect: 'deny' })),
   env: { OPENCODE_DISABLE_CLAUDE_CODE: '1' },
   reading: 'How to read: search first (grep, glob) and then read only the lines you need (read with offset and limit, at most 200 lines at a time); never read a whole large file. Do not read the root CLAUDE.md whole (80 KB): grep it for the folder or file you touch. Do not load skills. Run the tests once your change is made, not before.',
 }

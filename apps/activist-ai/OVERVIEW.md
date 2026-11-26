@@ -62,7 +62,7 @@ Ola can be asked to do in each runtime; what Ola is told about its own abilities
 ```
 person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mjs (TLS ends on our machine)
    ─► front desk (frontdesk/server.mjs): sign-in, membership, files, audit log
-        ─► the project's sealed VM: opencode 2.3.2 serve, reached through its desk socket
+        ─► the project's sealed VM: opencode 2.4.2 serve, reached through its desk socket
              ─► the door (one unix socket, the VM's only way out) ─► model gateway (gateway/server.mjs)
                   ─► the open model (Together stand-in today; a local MLX server on the Studio)
                   ─► Claude Code or the hosted open model, only when the project's owner allows it
@@ -73,7 +73,7 @@ person ─ HTTPS ─► app.ola.cx (ngrok, TLS passed through) ─► ops/tls.mj
    the same name and password inside the app and get a device pass kept in the Keychain.
 2. **The workspace.** Each project is one sealed Linux VM (Apple `container`) with `--network none`,
    a read-only root, no capabilities, and its own volume at `/work` holding its files and its own
-   database (`/work/project.db`). opencode 2.3.2 runs inside. Idle projects stop after 30 minutes
+   database (`/work/project.db`). opencode 2.4.2 runs inside. Idle projects stop after 30 minutes
    and wake on the next request. At most 4 run at once. Four things run in every project: a note
    to the person when a file or a tool result carries text that tells an AI what to do (the
    `ola-planted` plugin, also in the Mac's local runtime), a record of which engine made each

@@ -6,7 +6,7 @@
 set -u
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 t=~/plain-test; name=${1:?name}; ask=${2:?the request}
-[ -x $t/oc/node_modules/.bin/opencode ] || { mkdir -p $t/oc && (cd $t/oc && npm install --silent @opencode/cli@2.3.2 >/dev/null 2>&1) || { echo "OPENCODE NOT INSTALLED"; exit 1; }; }
+[ -x $t/oc/node_modules/.bin/opencode ] || { mkdir -p $t/oc && (cd $t/oc && npm install --silent @opencode/cli@2.4.2 >/dev/null 2>&1) || { echo "OPENCODE NOT INSTALLED"; exit 1; }; }
 key=$(cat ~/.ola/model-key)
 id=$(curl -fsS -m 5 -H "Authorization: Bearer $key" http://127.0.0.1:8080/v1/models | /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin)["data"][0]["id"])') || { echo "MODEL NOT UP"; exit 1; }
 run=$t/$name; rm -rf $run; mkdir -p $run/work $run/home; cd $run/work

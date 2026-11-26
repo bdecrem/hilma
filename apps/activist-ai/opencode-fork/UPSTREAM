@@ -1,5 +1,5 @@
 # The opencode release Ola's terminal interface is built from. One line each; build.sh and check-upstream.sh read them.
 repo=https://github.com/anomalyco/opencode.git
-tag=v2.3.2
-commit=c0ad18b402eb2827fc1ee71c171b1177b3fc02d1
+tag=v2.4.2
+commit=fc31a485317970bcf6be7b431a9830aaef875731
 npm=@opencode/cli
