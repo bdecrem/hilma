@@ -27,7 +27,7 @@ const OUT = path.join(HERE, '../../..', 'public', BASE.replace(/^\/|\/$/g, ''))
 
 // ---------- copy ----------
 const TITLE = 'Ola: a private AI agent for activists and academics'
-const DESCRIPTION = 'An AI agent for activists and academics. It builds code, websites and data analysis on one computer in Bart’s office, on open models, so none of your data goes to an AI company. Starting in December 2026, with about ten people.'
+const DESCRIPTION = 'An AI agent for activists and academics. It builds code, websites and data analysis on a machine we own, on open models, so none of your data goes to an AI company. Starting small, in December 2026.'
 const MAILTO = 'mailto:bart@ola.cx?subject=Joining%20Ola'
 const SCENE_LABEL = 'Drawing: a small computer on a desk in a study at night, with a paper tag reading Ola tied to it. A desk lamp bends over it, and its cable runs to the wall socket. Around it: books on a shelf and on the desk, a trailing plant, a mug, a wastepaper basket, and a window with the moon over the rooftops.'
 
@@ -209,10 +209,10 @@ function landing(alt = HERO) {
   <div class="letter">
     ${word('display', { cls: 'hello', label: 'Ola' })}
     <h1><span class="h">An AI agent for activists and academics</span></h1>
-    <p>Hi. This is something I’m building for a few friends, community groups and researchers.</p>
-    <p>Most of you don’t love Big Tech, and you think hard about where your data goes. So I’ve set up a system on one computer in my office, just for this. It can build code, websites and data analysis. You decide what data you give it, and it runs on open models, so none of it goes to an AI company.</p>
-    <p>It isn’t bulletproof. It’s one machine and one person, me. What I can promise is that you’ll always know where your stuff is and what’s happening to it, and you can see all of it and delete it anytime. <a href="/architecture">Here’s how it works.</a></p>
-    <p>I want to find out whether AI can be small, honest, and actually useful to people doing work that matters. Starting in December, with about 10 of you.</p>
+    <p>Hi. This is something I’m building for friends, community groups and researchers.</p>
+    <p>Most of you don’t love Big Tech, and you think hard about where your data goes. So I’ve built an AI agent that runs on its own machine, just for this. It builds code, websites and data analysis. You decide what data you give it, and it runs on open models, so none of it goes to an AI company.</p>
+    <p>You’ll always know where your stuff is and what’s happening to it, and you can see all of it and delete it anytime. <a href="/architecture">Here’s how it works.</a></p>
+    <p>We’re starting small, but we think the idea is pretty big: AI that works for the people doing work that matters, and answers to them. The first group starts in December.</p>
     ${signature()}
     <div class="act">${btn('Ask to join', MAILTO)}<small>or write to <a href="${MAILTO}">bart@ola.cx</a></small></div>
   </div>
