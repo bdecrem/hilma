@@ -78,10 +78,10 @@
       "id": "page",
       "what": "Make a web page, site, form or app screen",
       "cloud": {
-        "tell": "design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over"
+        "tell": "build it yourself and hand it over, as the top of this file says (no skill, no rounds of checking)"
       },
       "local": {
-        "tell": "design it yourself as the top of this file says (no skill; `app-designer` first for app screens), look at it once with `ola-page`, hand it over"
+        "tell": "build it yourself and hand it over, as the top of this file says (no skill, no rounds of checking)"
       }
     },
     {
@@ -128,10 +128,10 @@
       "id": "sound",
       "what": "Add sound or music to a page or app",
       "cloud": {
-        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
+        "tell": "make the sounds yourself; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
       },
       "local": {
-        "tell": "load the `sound` skill first; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
+        "tell": "make the sounds yourself; sounds are made in code, so when they ask for a real-world sound (birdsong, a voice, a recording), open your reply with one sentence that it is a made-up sound in code and how close it is, before anything else (never check results first), and never say it is exactly what they asked"
       }
     },
     {

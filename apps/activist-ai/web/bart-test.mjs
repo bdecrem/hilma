@@ -29,6 +29,12 @@ const ORIGIN = 'https://app.ola.cx'
 const SSH = process.env.OLA_WALK_SSH || (STUDIO ? 'ola@100.100.60.59' : 'admin@100.95.51.98')
 const WHO = process.env.OLA_WALK_WHO || 'barttest'
 const ID = process.env.OLA_WALK_ID || 'bart-test'
+// OLA_WALK_OWNER=<handle>: the project belongs to that person (it shows in their own list, with the
+// conversation); the made-up person only joins its team to type the request. Nothing of the owner's is
+// used to sign in. Such a project is never destroyed here.
+const OWNER = process.env.OLA_WALK_OWNER || WHO
+const TEAM = process.env.OLA_WALK_TEAM || `${ID}-team`
+const NAME = process.env.OLA_WALK_NAME || 'Good morning'
 const LIMIT = Number(arg('--limit', 1800))
 const KEEP = args.includes('--keep')
 const SHOTS = arg('--shots', path.join(homedir(), 'Desktop/Ola/bart-test', new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')))
@@ -68,6 +74,7 @@ const admin = (...a) => remote('frontdesk/admin.mjs', a)
 
 function cleanup() {
   const listed = admin('list')
+  if (OWNER !== WHO) return console.log(`cleanup: ${ID} belongs to ${OWNER}: left alone (take ${WHO} out with admin.mjs remove-member ${TEAM} ${WHO})`)
   if (new RegExp(`^workspace ${ID} `, 'm').test(listed)) remote('workspace/ws.mjs', ['destroy', ID, '--confirm', ID], { ok: true }), console.log(`cleanup: the project's computer ${ID} destroyed`)
   if (new RegExp(`^person ${WHO} .* active`, 'm').test(listed)) admin('suspend', WHO), console.log(`cleanup: ${WHO} suspended`)
 }
@@ -90,14 +97,17 @@ if (STUDIO) {
 const stopShim = () => shim && (shim.stdin.end(), shim.kill())
 
 // ---------------------------------------------------------------- the made-up person and project
-{
+if (!args.includes('--followup')) {
   const listed = admin('list')
   if (new RegExp(`^person ${WHO} .* suspended`, 'm').test(listed)) throw new Error(`${WHO} was suspended by an earlier run: use OLA_WALK_WHO=<a new name> OLA_WALK_ID=<a new project>`)
   if (!new RegExp(`^person ${WHO} `, 'm').test(listed)) admin('add-person', WHO, '--name', 'Bart Test (made up)')
-  if (!new RegExp(`^workspace ${ID} `, 'm').test(listed)) admin('create-workspace', ID, '--name', 'Good morning', '--team', `${ID}-team`, '--team-name', 'Bart Test', '--owner', WHO, '--memory', '4g', '--disk', '4g', '--cpus', '4')
+  if (!new RegExp(`^workspace ${ID} `, 'm').test(listed)) admin('create-workspace', ID, '--name', NAME, '--team', TEAM, '--team-name', process.env.OLA_WALK_TEAM_NAME || 'Bart Test', '--owner', OWNER, '--memory', process.env.OLA_WALK_MEMORY || '4g', '--disk', '4g', '--cpus', process.env.OLA_WALK_CPUS || '4')
+  if (OWNER !== WHO) admin('add-member', TEAM, WHO, 'member')
 }
-const link = admin('invite', WHO, '--hours', '2').split(/\s+/).find((w) => w.startsWith('https://'))
-if (!link) throw new Error('no setup link from the admin command')
+// --followup: the person and project exist already; say one more thing in the same conversation.
+const FOLLOWUP = args.includes('--followup')
+const link = FOLLOWUP ? null : admin('invite', WHO, '--hours', '2').split(/\s+/).find((w) => w.startsWith('https://'))
+if (!FOLLOWUP && !link) throw new Error('no setup link from the admin command')
 const PASSWORD = `made up ${randomBytes(9).toString('base64url')} walk`
 
 const result = { request: REQUEST, server: STUDIO ? 'Mac Studio' : SSH, steps: [] }
@@ -113,9 +123,19 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
   page = await ctx.newPage()
   let t0 = Date.now()
-  await page.goto(link)
-  await page.getByLabel('Choose a password').fill(PASSWORD)
-  await page.getByRole('button', { name: 'Make my account' }).click()
+  if (FOLLOWUP) {
+    const reset = admin('reset-password', WHO, '--hours', '1').split(/\s+/).find((w) => w.includes('/#/reset/'))
+    if (!reset) throw new Error('no password link from the admin command')
+    const r1 = await ctx.request.post(`${ORIGIN}/api/auth/reset`, { headers: { origin: ORIGIN }, data: { token: reset.split('/#/reset/')[1], password: PASSWORD } })
+    if (r1.status() !== 200) throw new Error(`setting the password: ${r1.status()}`)
+    const r2 = await ctx.request.post(`${ORIGIN}/api/auth/password`, { headers: { origin: ORIGIN }, data: { handle: WHO, password: PASSWORD } })
+    if (r2.status() !== 200) throw new Error(`sign-in: ${r2.status()}`)
+    await page.goto(`${ORIGIN}/?w=${ID}`)
+  } else {
+    await page.goto(link)
+    await page.getByLabel('Choose a password').fill(PASSWORD)
+    await page.getByRole('button', { name: 'Make my account' }).click()
+  }
   await page.waitForSelector('.project-title', { timeout: 90_000 })
   await page.waitForSelector('.made-none, .thing, #ask-input', { state: 'attached', timeout: 90_000 })
   await shot('signed-in')
@@ -134,11 +154,12 @@ try {
   await until(async () => !(await page.getByText('Opening your project').count()) && !(await page.getByText('Lost the connection').count()), 240_000, 'the project to open')
   if (!(await page.locator('#ask-input:visible').count())) await page.locator('.askbar-open, .askbar input, .askbar textarea').first().click({ timeout: 5000 }).catch(() => {})
   await page.locator('#ask-input:visible').waitFor({ timeout: 30_000 })
+  const turnsBefore = await page.locator('.turn').count()
   await page.locator('#ask-input').fill(REQUEST)
   await shot('typed')
   t0 = Date.now()
   await page.locator('.composer button[type="submit"]').click()
-  await until(async () => (await page.locator('.turn').count()) > 0, 30_000, 'the request in the conversation')
+  await until(async () => (await page.locator('.turn').count()) > turnsBefore, 30_000, 'the request in the conversation')
 
   const asked = []
   let status = null

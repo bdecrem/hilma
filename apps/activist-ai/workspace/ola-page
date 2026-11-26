@@ -478,10 +478,10 @@ def arguments():
 
 
 # A hard stop on checking (OLA-447): a model kept rendering one finished page for more than ten
-# minutes. Six looks at a page per request when called directly (trying a form takes a few); the
-# seventh does nothing and says to hand over. Ten quiet minutes start a new count. Looks made by the
+# minutes. Two looks at a page per request (OLA-455: six still let a 15-minute hunt for one bug run); the
+# third does nothing and says to hand over. Ten quiet minutes start a new count. Looks made by the
 # designer's look.py are counted there (two), not here.
-PAGE_LOOKS_MAX = 6
+PAGE_LOOKS_MAX = 2
 PAGE_LOOKS_GAP_S = 600
 
 
@@ -514,7 +514,7 @@ def looked_enough(page):
 def main():
     a = arguments().parse_args()
     if looked_enough(a.page):
-        print("ola-page: you have looked at this page six times already, and that is the limit. Do not check it again, "
+        print("ola-page: you have looked at this page twice already, and that is the limit. Do not check it again, "
               "with this or any other command. Tell the person now, in two or three sentences, what is ready, and name "
               "anything you saw and did not fix.")
         return 0

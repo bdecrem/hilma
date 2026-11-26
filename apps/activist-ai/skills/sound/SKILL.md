@@ -1,9 +1,9 @@
 ---
 name: sound
-description: Use for every request to add, make, change or fix sound or music in a web page, site or app, including a notification or message chime, button or click sounds, a sound for a done, success or error moment, a celebration when a form or petition is signed, sounds for a sign-up flow, a background music loop or calm ambient bed, a short signature melody or jingle, and whenever sounds are harsh, loud, annoying, cheesy or amateur. Uses Ola's sound kit (soft interface sounds in one family, a melody player, music beds from approved work) and listens to the result before it is done.
+description: Only when the person asks by name for Ola's sound skill. Not for an ordinary request for sound or music in a page or app, which you make yourself in code (AGENTS.md).
 license: Proprietary
 metadata:
-  ola/version: "3"
+  ola/version: "4"
   ola/specialists: "none"
   ola/evals: "v1-app-chimes v2-signature-tune v3-calm-loop v4-signup-sounds v5-petition-win v6-fix-harsh"
   ola/owner: "ola"

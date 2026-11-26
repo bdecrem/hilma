@@ -1,9 +1,9 @@
 ---
 name: app-designer
-description: Use for every request to design, mock up, sketch or fix the screens of a phone app, an iPhone or iOS app or a Mac app, or an app prototype, and when an app feels unfinished, like a web page, or is missing normal app parts such as settings. Makes a clickable HTML prototype at real device sizes and a picture of every screen; it does not write Swift.
+description: Only when the person asks by name for Ola's app-designer skill. Not for an ordinary request to make or fix an app screen, which you build yourself (AGENTS.md).
 license: Proprietary
 metadata:
-  ola/version: "2"
+  ola/version: "3"
   ola/specialists: "see (ola-see), optional"
   ola/evals: "u6-phone-screens u7-app-unfinished"
   ola/owner: "ola"
