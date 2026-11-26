@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiny Sheet — 10 × 20 live spreadsheet</title>
+<style>
+  :root {
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --border: #e2e8f0;
+    --cell-border: #e8edf3;
+    --text: #0f172a;
+    --muted: #64748b;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #eef1f6;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────────────── */
+  header.app {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px; background: #ffffff;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+  }
+  .logo svg { display: block; }
+  .titles h1 { font-size: 15px; margin: 0; letter-spacing: -0.01em; }
+  .titles p { margin: 1px 0 0; font-size: 11.5px; color: var(--muted); }
+  .spacer { flex: 1; }
+  .btn {
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    font: inherit; font-size: 12.5px; font-weight: 550;
+    padding: 7px 14px; border-radius: 8px; cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+  .btn.warn { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+  /* ── Formula bar ────────────────────────────────────── */
+  .formula {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px; background: #fff; border-bottom: 1px solid var(--border);
+  }
+  #nameBox {
+    width: 66px; text-align: center; padding: 7px 0;
+    font: 600 12.5px/1 ui-monospace, Menlo, Consolas, monospace;
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 7px;
+    color: var(--accent); user-select: none;
+  }
+  .fx { font: italic 600 15px Georgia, serif; color: var(--muted); user-select: none; }
+  #fx {
+    flex: 1; padding: 8px 12px; font-size: 13px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid var(--border); border-radius: 7px; outline: none; background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #fx:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  #fx::placeholder { color: #b6c0cf; }
+
+  /* ── Grid ───────────────────────────────────────────── */
+  .wrap {
+    flex: 1; overflow: auto; padding: 18px;
+    display: flex; justify-content: center; align-items: flex-start;
+  }
+  table.sheet {
+    border-collapse: separate; border-spacing: 0;
+    background: #fff; table-layout: fixed;
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 12px 32px rgba(15,23,42,.10);
+  }
+  .sheet th, .sheet td { border-right: 1px solid var(--cell-border); border-bottom: 1px solid var(--cell-border); }
+  .sheet tr:last-child td, .sheet tr:last-child th { border-bottom: none; }
+  .sheet th:last-child, .sheet td:last-child { border-right: none; }
+  .sheet thead th {
+    background: #f8fafc; color: var(--muted);
+    font-size: 11px; font-weight: 650; letter-spacing: .06em;
+    height: 30px; width: 102px; user-select: none;
+    transition: background .12s, color .12s;
+  }
+  .sheet th.corner { width: 44px; background: #f1f5f9; }
+  .sheet tbody th {
+    background: #f8fafc; color: var(--muted);
+    font-size: 11px; font-weight: 600; text-align: center; width: 44px;
+    user-select: none; transition: background .12s, color .12s;
+  }
+  .sheet th.active { background: var(--accent-soft); color: var(--accent); }
+  .sheet td { width: 102px; height: 30px; padding: 0; }
+  .sheet td input {
+    width: 100%; height: 100%; border: 0; outline: none;
+    padding: 2px 8px; font: inherit; font-size: 12.5px; color: var(--text);
+    background: transparent; border-radius: 0;
+  }
+  .sheet td input.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .sheet td input.err { color: var(--danger); background: var(--danger-bg); font-weight: 650; text-align: center; }
+  .sheet td input:focus { box-shadow: inset 0 0 0 2px var(--accent); background: #fff; }
+
+  /* ── Status bar ─────────────────────────────────────── */
+  footer.bar {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 7px 18px; font-size: 11.5px; color: var(--muted);
+    background: #fff; border-top: 1px solid var(--border);
+  }
+  footer.bar span b { color: #334155; font-weight: 600; }
+  kbd {
+    font: 10.5px ui-monospace, Menlo, Consolas, monospace;
+    background: #f1f5f9; border: 1px solid #dbe2ec; border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; color: #334155;
+  }
+  .dot { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="logo" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1" y="1" width="16" height="16" rx="3" stroke="#fff" stroke-width="1.6"/>
+      <line x1="1" y1="6.33" x2="17" y2="6.33" stroke="#fff" stroke-width="1.4"/>
+      <line x1="1" y1="11.66" x2="17" y2="11.66" stroke="#fff" stroke-width="1.4"/>
+      <line x1="6.33" y1="1" x2="6.33" y2="17" stroke="#fff" stroke-width="1.4"/>
+      <line x1="11.66" y1="1" x2="11.66" y2="17" stroke="#fff" stroke-width="1.4"/>
+    </svg>
+  </div>
+  <div class="titles">
+    <h1>Tiny Sheet</h1>
+    <p>10 × 20 grid · live formulas · every keystroke recalculates</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn" id="clearBtn" type="button">Clear sheet</button>
+</header>
+
+<div class="formula">
+  <div id="nameBox" title="Active cell">A1</div>
+  <div class="fx" aria-hidden="true">fx</div>
+  <input id="fx" type="text" autocomplete="off" spellcheck="false"
+         placeholder="Value or formula, e.g. =A1+B2*3 or =SUM(A1:A5)" aria-label="Formula bar">
+</div>
+
+<div class="wrap">
+  <table class="sheet" id="gridTable" aria-label="Spreadsheet grid"></table>
+</div>
+
+<footer class="bar">
+  <span><b>Formulas</b> <code>=</code> + <code>+ - * / ^</code>, parentheses, ranges, <code>%</code></span>
+  <span><b>Functions</b> SUM · AVG · MIN · MAX · COUNT · PRODUCT · ABS · SQRT · ROUND</span>
+  <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move · <kbd>Enter</kbd> down · <kbd>Tab</kbd> right · <kbd>Esc</kbd> revert</span>
+  <span class="dot">autosaved locally</span>
+</footer>
+
+<script>
+/*ENGINE:START*/
+"use strict";
+/* Tiny formula engine: tokenizer → recursive-descent parser → evaluator. Pure & self-contained. */
+var COLS = 10, ROWS = 20;
+var ALL_KEYS = [];
+for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) ALL_KEYS.push(colName(c) + (r + 1));
+
+function colName(i) { return String.fromCharCode(65 + i); }           // 0 -> 'A'
+function colIndex(letters) {                                          // 'A' -> 0
+  var n = 0;
+  for (var i = 0; i < letters.length; i++) n = n * 26 + (letters.charCodeAt(i) - 64);
+  return n - 1;
+}
+function parseKey(key) {                                              // 'B12' -> {c:1, r:11} or null
+  var m = /^([A-Za-z]{1,2})([0-9]+)$/.exec(key);
+  if (!m) return null;
+  var c = colIndex(m[1].toUpperCase()), r = parseInt(m[2], 10) - 1;
+  if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return null;
+  return { c: c, r: r };
+}
+function keyOf(c, r) { return colName(c) + (r + 1); }
+function isErrCode(s) { return /^#(CIRC|DIV\/0|VALUE|REF|NAME|ERROR)!?$/.test(s); }
+
+function FormulaError(code, msg) {
+  var e = new Error(msg || code);
+  e.code = code;
+  return e;
+}
+
+/* ---------- tokenizer ---------- */
+function tokenize(src) {
+  var tokens = [], i = 0;
+  while (i < src.length) {
+    var ch = src.charAt(i);
+    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { i++; continue; }
+    var numMatch = /^(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?/.exec(src.slice(i));
+    if (numMatch) { tokens.push({ type: 'num', value: parseFloat(numMatch[0]) }); i += numMatch[0].length; continue; }
+    var idMatch = /^[A-Za-z_][A-Za-z0-9_.]*/.exec(src.slice(i));
+    if (idMatch) {
+      var word = idMatch[0], up = word.toUpperCase();
+      var ref = /^([A-Z]{1,2})([0-9]+)$/.exec(up);
+      if (ref && parseKey(up)) tokens.push({ type: 'ref', key: up });
+      else tokens.push({ type: 'name', name: up });
+      i += word.length; continue;
+    }
+    if ('+-*/^(),:%'.indexOf(ch) !== -1) { tokens.push({ type: ch }); i++; continue; }
+    throw FormulaError('#ERROR!', 'Unexpected character "' + ch + '"');
+  }
+  tokens.push({ type: 'eof' });
+  return tokens;
+}
+
+/* ---------- parser (recursive descent) ----------
+   expr   := term (('+'|'-') term)*
+   term   := unary (('*'|'/') unary)*
+   unary  := ('-'|'+') unary | power
+   power  := postfix ('^' unary)?        // right-associative
+   postfix:= primary ('%')*
+   primary:= number | cellref | range | funcall | '(' expr ')'        */
+function parse(src) {
+  var tokens = tokenize(src), pos = 0;
+  function peek() { return tokens[pos]; }
+  function next() { return tokens[pos++]; }
+  function expect(type) {
+    var t = next();
+    if (t.type !== type) throw FormulaError('#ERROR!', 'Expected "' + type + '"');
+    return t;
+  }
+  function parseExpr() {
+    var node = parseTerm();
+    while (peek().type === '+' || peek().type === '-') {
+      var op = next().type;
+      node = { t: 'bin', op: op, l: node, r: parseTerm() };
+    }
+    return node;
+  }
+  function parseTerm() {
+    var node = parseUnary();
+    while (peek().type === '*' || peek().type === '/') {
+      var op = next().type;
+      node = { t: 'bin', op: op, l: node, r: parseUnary() };
+    }
+    return node;
+  }
+  function parseUnary() {
+    if (peek().type === '-') { next(); return { t: 'neg', e: parseUnary() }; }
+    if (peek().type === '+') { next(); return parseUnary(); }
+    return parsePower();
+  }
+  function parsePower() {
+    var base = parsePostfix();
+    if (peek().type === '^') { next(); return { t: 'bin', op: '^', l: base, r: parseUnary() }; }
+    return base;
+  }
+  function parsePostfix() {
+    var node = parsePrimary();
+    while (peek().type === '%') { next(); node = { t: 'pct', e: node }; }
+    return node;
+  }
+  function parsePrimary() {
+    var t = peek();
+    if (t.type === 'num') { next(); return { t: 'num', v: t.value }; }
+    if (t.type === 'ref') {
+      next();
+      if (peek().type === ':') {
+        next();
+        var t2 = next();
+        if (t2.type !== 'ref') throw FormulaError('#REF!', 'Expected cell reference after ":"');
+        return { t: 'range', a: t.key, b: t2.key };
+      }
+      return { t: 'ref', key: t.key };
+    }
+    if (t.type === 'name') {
+      next();
+      if (peek().type === '(') {
+        next();
+        var args = [];
+        if (peek().type !== ')') {
+          args.push(parseExpr());
+          while (peek().type === ',') { next(); args.push(parseExpr()); }
+        }
+        expect(')');
+        return { t: 'call', name: t.name, args: args };
+      }
+      throw FormulaError('#NAME?', 'Unknown name "' + t.name + '"');
+    }
+    if (t.type === '(') { next(); var e = parseExpr(); expect(')'); return e; }
+    throw FormulaError('#ERROR!', 'Unexpected token');
+  }
+  var ast = parseExpr();
+  if (peek().type !== 'eof') throw FormulaError('#ERROR!', 'Unexpected trailing input');
+  return ast;
+}
+/* ---------- evaluator ---------- */
+function expandRange(a, b) {
+  var pa = parseKey(a), pb = parseKey(b);
+  if (!pa || !pb) throw FormulaError('#REF!', 'Bad range reference');
+  var c0 = Math.min(pa.c, pb.c), c1 = Math.max(pa.c, pb.c);
+  var r0 = Math.min(pa.r, pb.r), r1 = Math.max(pa.r, pb.r);
+  var keys = [];
+  for (var r = r0; r <= r1; r++) for (var c = c0; c <= c1; c++) keys.push(keyOf(c, r));
+  return keys;
+}
+function isNumericText(s) { return /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?%?$/.test(s.trim()); }
+function textToNum(s) {
+  s = s.trim();
+  var pct = s.charAt(s.length - 1) === '%';
+  var n = parseFloat(pct ? s.slice(0, -1) : s);
+  if (isNaN(n)) throw FormulaError('#VALUE!', 'Expected a number');
+  return pct ? n / 100 : n;
+}
+function classifyRaw(rawVal) {
+  var t = String(rawVal).trim();
+  if (t === '') return { t: 'empty' };
+  var pct = t.charAt(t.length - 1) === '%';
+  var body = pct ? t.slice(0, -1).trim() : t;
+  if (/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(body)) {
+    var n = parseFloat(body);
+    return { t: 'num', v: pct ? n / 100 : n };
+  }
+  return { t: 'text', v: String(rawVal) };
+}
+
+/* Evaluate a whole sheet. raw: { KEY: string }. Returns { KEY: {text, cls} }. Never throws. */
+function evaluateAll(raw) {
+  var memo = new Map(), inProgress = new Set();
+
+  function cellValue(key) {
+    if (memo.has(key)) return memo.get(key);
+    if (inProgress.has(key)) throw FormulaError('#CIRC!', 'Circular reference at ' + key);
+    if (!parseKey(key)) throw FormulaError('#REF!', 'Bad reference ' + key);
+    inProgress.add(key);
+    try {
+      var rawVal = raw[key];
+      var v;
+      if (rawVal === undefined || String(rawVal).trim() === '') v = { t: 'empty' };
+      else if (String(rawVal).trim().charAt(0) === '=') v = evalNode(parse(String(rawVal).trim().slice(1)));
+      else v = classifyRaw(rawVal);
+      memo.set(key, v);
+      return v;
+    } finally {
+      inProgress.delete(key);
+    }
+  }
+
+  function toNumber(v) {
+    if (v.t === 'num') return v.v;
+    if (v.t === 'empty') return 0;
+    if (v.t === 'text') return textToNum(v.v);
+    throw FormulaError('#VALUE!', 'Range used where a number is expected');
+  }
+  function flattenNums(args) {
+    var out = [];
+    for (var i = 0; i < args.length; i++) {
+      var v = evalNode(args[i]);
+      if (v.t === 'range') {
+        for (var j = 0; j < v.keys.length; j++) {
+          var cv = cellValue(v.keys[j]);           // errors inside ranges propagate
+          if (cv.t === 'num') out.push(cv.v);
+        }
+      } else if (v.t === 'num') out.push(v.v);
+      else if (v.t === 'text' && isNumericText(v.v)) out.push(textToNum(v.v));
+      else if (v.t === 'empty') { /* skip */ }
+      else throw FormulaError('#VALUE!', 'Bad argument');
+    }
+    return out;
+  }
+  function evalNode(node) {
+    switch (node.t) {
+      case 'num': return { t: 'num', v: node.v };
+      case 'ref': return cellValue(node.key);
+      case 'range': return { t: 'range', keys: expandRange(node.a, node.b) };
+      case 'neg': { var v = evalNode(node.e); return { t: 'num', v: -toNumber(v) }; }
+      case 'pct': { var p = evalNode(node.e); return { t: 'num', v: toNumber(p) / 100 }; }
+      case 'bin': {
+        var l = toNumber(evalNode(node.l)), r2 = toNumber(evalNode(node.r)), out;
+        switch (node.op) {
+          case '+': out = l + r2; break;
+          case '-': out = l - r2; break;
+          case '*': out = l * r2; break;
+          case '/': if (r2 === 0) throw FormulaError('#DIV/0!', 'Division by zero'); out = l / r2; break;
+          case '^': out = Math.pow(l, r2); if (isNaN(out)) throw FormulaError('#NUM!', 'Invalid power'); break;
+        }
+        if (!isFinite(out)) throw FormulaError('#NUM!', 'Number out of range');
+        return { t: 'num', v: out };
+      }
+      case 'call': return callFunction(node.name, node.args);
+    }
+    throw FormulaError('#ERROR!', 'Unknown node');
+  }
+  function callFunction(name, argNodes) {
+    var nums, i;
+    switch (name) {
+      case 'SUM': nums = flattenNums(argNodes); return { t: 'num', v: nums.reduce(function(a, b) { return a + b; }, 0) };
+      case 'PRODUCT': nums = flattenNums(argNodes); return { t: 'num', v: nums.reduce(function(a, b) { return a * b; }, 1) };
+      case 'AVG': case 'AVERAGE':
+        nums = flattenNums(argNodes);
+        if (!nums.length) throw FormulaError('#DIV/0!', 'Average of no numbers');
+        return { t: 'num', v: nums.reduce(function(a, b) { return a + b; }, 0) / nums.length };
+      case 'MIN':
+        nums = flattenNums(argNodes);
+        return { t: 'num', v: nums.length ? Math.min.apply(null, nums) : 0 };
+      case 'MAX':
+        nums = flattenNums(argNodes);
+        return { t: 'num', v: nums.length ? Math.max.apply(null, nums) : 0 };
+      case 'COUNT':
+        nums = flattenNums(argNodes);
+        return { t: 'num', v: nums.length };
+      case 'ABS': return { t: 'num', v: Math.abs(toNumber(evalNode(argNodes[0]))) };
+      case 'SQRT': {
+        var s = toNumber(evalNode(argNodes[0]));
+        if (s < 0) throw FormulaError('#NUM!', 'Square root of a negative number');
+        return { t: 'num', v: Math.sqrt(s) };
+      }
+      case 'ROUND': {
+        var x = toNumber(evalNode(argNodes[0]));
+        var d = argNodes.length > 1 ? toNumber(evalNode(argNodes[1])) : 0;
+        var f = Math.pow(10, Math.trunc(d));
+        return { t: 'num', v: Math.round(x * f) / f };
+      }
+      default: throw FormulaError('#NAME?', 'Unknown function "' + name + '"');
+    }
+  }
+
+  var result = {};
+  for (var i = 0; i < ALL_KEYS.length; i++) {
+    var key = ALL_KEYS[i];
+    try {
+      result[key] = displayValue(cellValue(key));
+    } catch (e) {
+      var code = (e && e.code) ? e.code : '#ERROR!';
+      result[key] = { text: code, cls: 'err' };
+    }
+  }
+  return result;
+}
+function displayValue(v) {
+  if (v.t === 'empty') return { text: '', cls: '' };
+  if (v.t === 'text') return { text: v.v, cls: 'txt' };
+  if (v.t === 'num') {
+    var r = Math.round(v.v * 1e10) / 1e10;
+    return { text: r.toLocaleString('en-US', { maximumFractionDigits: 10 }), cls: 'num' };
+  }
+  return { text: '#VALUE!', cls: 'err' }; // range leaked into display
+}
+/*ENGINE:END*/
+
+/* ═══════════ UI ═══════════ */
+var raw = {};
+var STORAGE_KEY = 'tiny-sheet-v1';
+var SEED = {
+  A1: 'Item',    B1: 'Qty', C1: 'Unit price', D1: 'Total',
+  A2: 'Apples',  B2: '12',  C2: '0.5',        D2: '=B2*C2',
+  A3: 'Bread',   B3: '2',   C3: '3.25',       D3: '=B3*C3',
+  A4: 'Coffee',  B4: '1',   C4: '14.99',      D4: '=B4*C4',
+  A5: 'Eggs',    B5: '12',  C5: '0.22',       D5: '=B5*C5',
+  A7: 'TOTAL',   B7: '=SUM(B2:B5)',           D7: '=SUM(D2:D5)',
+  A9: 'Avg line', D9: '=AVG(D2:D5)'
+};
+
+function loadRaw() {
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* ignore */ }
+  var copy = {};
+  for (var k in SEED) copy[k] = SEED[k];
+  return copy;
+}
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(raw)); } catch (e) { /* ignore */ }
+}
+function setRaw(key, value) {
+  if (value === '' || value === undefined || value === null) delete raw[key];
+  else raw[key] = value;
+}
+
+/* Build the grid */
+var table = document.getElementById('gridTable');
+var inputs = {};
+var colHeads = [], rowHeads = [];
+(function buildGrid() {
+  var html = '<thead><tr><th class="corner"></th>';
+  for (var c = 0; c < COLS; c++) html += '<th data-col="' + c + '">' + colName(c) + '</th>';
+  html += '</tr></thead><tbody>';
+  for (var r = 0; r < ROWS; r++) {
+    html += '<tr><th data-row="' + r + '">' + (r + 1) + '</th>';
+    for (var c2 = 0; c2 < COLS; c2++) {
+      var key = keyOf(c2, r);
+      html += '<td><input type="text" data-key="' + key + '" aria-label="Cell ' + key + '" autocomplete="off" spellcheck="false"></td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  table.innerHTML = html;
+  var nodes = table.querySelectorAll('input[data-key]');
+  for (var i = 0; i < nodes.length; i++) inputs[nodes[i].getAttribute('data-key')] = nodes[i];
+  colHeads = Array.prototype.slice.call(table.querySelectorAll('thead th[data-col]'));
+  rowHeads = Array.prototype.slice.call(table.querySelectorAll('tbody th[data-row]'));
+})();
+
+var focusKey = 'A1';
+var focusSnapshot = '';
+var nameBox = document.getElementById('nameBox');
+var fx = document.getElementById('fx');
+
+function render(skipKey) {
+  var result = evaluateAll(raw);
+  for (var i = 0; i < ALL_KEYS.length; i++) {
+    var key = ALL_KEYS[i];
+    if (key === skipKey) continue;
+    var cell = result[key], input = inputs[key];
+    input.value = cell.text;
+    input.className = cell.cls;             // '', 'num', 'err', 'txt'
+    input.title = cell.cls === 'err' ? 'Error: ' + cell.text : (raw[key] || '');
+  }
+  highlight();
+}
+function highlight() {
+  var pos = parseKey(focusKey);
+  for (var c = 0; c < colHeads.length; c++) colHeads[c].classList.toggle('active', !!pos && c === pos.c);
+  for (var r = 0; r < rowHeads.length; r++) rowHeads[r].classList.toggle('active', !!pos && r === pos.r);
+  nameBox.textContent = focusKey;
+}
+function showRawInCell(key) {
+  var input = inputs[key];
+  input.value = raw[key] !== undefined ? raw[key] : '';
+  input.className = '';
+}
+function focusCell(key, selectAll) {
+  var input = inputs[key];
+  if (!input) return;
+  focusKey = key;
+  fx.value = raw[key] !== undefined ? raw[key] : '';
+  input.focus();
+  var len = input.value.length;
+  if (selectAll) input.select(); else input.setSelectionRange(len, len);
+  highlight();
+}
+function moveFocus(dRow, dCol, fromKey) {
+  var pos = parseKey(fromKey || focusKey);
+  var r = Math.min(ROWS - 1, Math.max(0, pos.r + dRow));
+  var c = Math.min(COLS - 1, Math.max(0, pos.c + dCol));
+  focusCell(keyOf(c, r), false);
+}
+
+/* Wire up cells */
+table.addEventListener('focusin', function (e) {
+  var key = e.target.getAttribute && e.target.getAttribute('data-key');
+  if (!key) return;
+  focusKey = key;
+  focusSnapshot = raw[key] !== undefined ? raw[key] : '';
+  showRawInCell(key);
+  fx.value = focusSnapshot;
+  highlight();
+});
+table.addEventListener('input', function (e) {
+  var key = e.target.getAttribute && e.target.getAttribute('data-key');
+  if (!key) return;
+  setRaw(key, e.target.value);
+  persist();
+  render(key);                 // every keystroke recalculates everything else
+  fx.value = e.target.value;
+});
+function currentFocusKey() {
+  var el = document.activeElement;
+  var key = el && el.getAttribute && el.getAttribute('data-key');
+  return key || null;
+}
+table.addEventListener('focusout', function (e) {
+  var key = e.target.getAttribute && e.target.getAttribute('data-key');
+  if (!key) return;
+  // Repaint the cell with its computed value once focus leaves — but never clobber
+  // the cell that just received focus (arrow-key navigation moves focus synchronously).
+  setTimeout(function () { render(currentFocusKey()); }, 0);
+});
+table.addEventListener('keydown', function (e) {
+  var key = e.target.getAttribute && e.target.getAttribute('data-key');
+  if (!key) return;
+  var input = e.target;
+  var mod = e.metaKey || e.ctrlKey;
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    moveFocus(e.shiftKey ? -1 : 1, 0, key);
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    moveFocus(0, e.shiftKey ? -1 : 1, key);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault(); moveFocus(-1, 0, key);
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault(); moveFocus(1, 0, key);
+  } else if (e.key === 'ArrowLeft') {
+    if (input.selectionStart === 0 && input.selectionEnd === 0) { e.preventDefault(); moveFocus(0, -1, key); }
+  } else if (e.key === 'ArrowRight') {
+    if (input.selectionStart === input.value.length && input.selectionEnd === input.value.length) { e.preventDefault(); moveFocus(0, 1, key); }
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    setRaw(key, focusSnapshot);
+    persist();
+    input.value = focusSnapshot;
+    render(key);
+    fx.value = focusSnapshot;
+  } else if (mod && (e.key === 'b' || e.key === 'i')) {
+    e.preventDefault(); // reserved; no rich text in cells
+  }
+});
+
+/* Formula bar mirrors the active cell */
+fx.addEventListener('focus', function () {
+  fx.value = raw[focusKey] !== undefined ? raw[focusKey] : '';
+  fx.dataset.snapshot = fx.value;
+});
+fx.addEventListener('input', function () {
+  setRaw(focusKey, fx.value);
+  persist();
+  render(null);                // grid shows computed results live while typing in fx
+});
+fx.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); focusCell(focusKey, false); }
+  else if (e.key === 'Escape') {
+    e.preventDefault();
+    setRaw(focusKey, fx.dataset.snapshot || '');
+    persist();
+    fx.value = fx.dataset.snapshot || '';
+    render(null);
+  }
+});
+fx.addEventListener('blur', function () { render(null); });
+
+/* Clear sheet (two-step confirm) */
+var clearBtn = document.getElementById('clearBtn');
+var clearTimer = null;
+clearBtn.addEventListener('click', function () {
+  if (clearBtn.classList.contains('warn')) {
+    raw = {};
+    persist();
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+    clearBtn.classList.remove('warn');
+    clearBtn.textContent = 'Clear sheet';
+    render(null);
+    focusCell('A1', false);
+    clearTimeout(clearTimer);
+  } else {
+    clearBtn.classList.add('warn');
+    clearBtn.textContent = 'Click again to erase';
+    clearTimer = setTimeout(function () {
+      clearBtn.classList.remove('warn');
+      clearBtn.textContent = 'Clear sheet';
+    }, 3000);
+  }
+});
+
+/* Boot */
+raw = loadRaw();
+render(null);
+focusCell('A1', false);
+</script>
+</body>
+</html>

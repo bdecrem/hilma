@@ -61,5 +61,18 @@
     "needs_ai": false,
     "keywords": ["convert", "unit"],
     "must": "100 °F gives 37.8 °C, 10 kilometers gives 6.21 miles, 1 kilogram gives 2.2 pounds, and changing the number changes the result."
+  },
+  {
+    "id": "spreadsheet",
+    "request": "Build a tiny spreadsheet in one page: a 10 by 20 grid where a cell holds a number, text, or a formula like =A1+B2*3 or =SUM(A1:A5). Everything recalculates as I type, a circular reference shows an error in the cell, and the arrow keys move between cells.",
+    "source": "real",
+    "from": "Bart, 2026-11-25, on the Studio's Ola (Inkling 2 Mini): \"it failed at the spreadsheet in my opinion\". The page computed every formula right and kept showing the formula's text in the cell after Enter (OLA-466). fixtures/wrong is that page; fixtures/good is the larger Inkling's answer to the same words.",
+    "needs_ai": false,
+    "keywords": [
+      "spreadsheet",
+      "sheet",
+      "grid"
+    ],
+    "must": "At phone size: type 2 in A6, 4 in B6 and =A6+B6*3 in C6, press Enter, and C6 shows 14. =SUM(A6:C6) shows 20. Changing A6 to 8 changes C6 to 20 before you press Enter. A cell holds the word hello. From an empty cell the right and down arrows move one cell. =B9 in A9 and =A9 in B9 show an error in both cells."
   }
 ]
