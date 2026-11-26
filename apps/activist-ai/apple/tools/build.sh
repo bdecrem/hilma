@@ -6,7 +6,8 @@
 #                                      (the associated domain; needs Apple's agreement, see project.yml)
 #   tools/build.sh sim                 the iPhone app for the simulator
 #   tools/build.sh device              the iPhone app for a device (automatic signing, team 274T5WCVD2);
-#                                      OLA_PUSH=1 adds Apple push (needs Push on the App ID, see project.yml)
+#                                      OLA_PUSH=1 adds Apple push (needs Push on the App ID, see project.yml);
+#                                      OLA_DEVICE=<udid> builds for that phone and registers it (a new phone)
 #   tools/build.sh install-mac         copies the built Mac app to /Applications/Ola.app (does not open it)
 #                                      and installs the `ola` command, printing where
 #
@@ -81,8 +82,12 @@ case "${1:-}" in
     echo "$DD/Build/Products/Debug-iphonesimulator/Ola.app"
     ;;
   device)
+    # OLA_DEVICE=<udid>: build for that phone and let Xcode add it to the developer account (a phone
+    # that has never run a build from this account is refused at install until it is registered).
+    DEST='generic/platform=iOS'; REG=()
+    if [ -n "${OLA_DEVICE:-}" ]; then DEST="id=$OLA_DEVICE"; REG=(-allowProvisioningDeviceRegistration); fi
     xcodebuild -project Ola.xcodeproj -scheme OlaPhone -configuration Debug -derivedDataPath "$DD" \
-      -destination 'generic/platform=iOS' -allowProvisioningUpdates DEVELOPMENT_TEAM=274T5WCVD2 \
+      -destination "$DEST" -allowProvisioningUpdates ${REG[@]+"${REG[@]}"} DEVELOPMENT_TEAM=274T5WCVD2 \
       ${OLA_PUSH:+CODE_SIGN_ENTITLEMENTS=iOS/Ola.entitlements} build 2>&1 | grep -E "error:|BUILD|signing|Signing|provision" | sort -u
     echo "$DD/Build/Products/Debug-iphoneos/Ola.app"
     ;;
