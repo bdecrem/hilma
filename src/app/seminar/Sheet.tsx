@@ -32,9 +32,9 @@ export type SheetContent = {
 
 // The sheets, in the order of the seminar. `id` is also what a tick is stored under.
 export const SHEETS = [
-  { id: 'fact-checker', href: '/seminar/fact-checker', n: 1, name: 'A fact checker' },
-  { id: 'library', href: '/seminar/library', n: 2, name: 'A paper library' },
-  { id: 'website', href: '/seminar/website', n: 3, name: 'A work website' },
+  { id: 'fact-checker', href: '/seminar/fact-checker', n: 2, name: 'A fact checker' },
+  { id: 'library', href: '/seminar/library', n: 3, name: 'A paper library' },
+  { id: 'website', href: '/seminar/website', n: 4, name: 'A work website' },
 ] as const
 
 export function Sheet({ id, content }: { id: (typeof SHEETS)[number]['id']; content: SheetContent }) {

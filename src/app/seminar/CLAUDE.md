@@ -1,6 +1,6 @@
 # The Seminar (bartin16.xyz/seminar)
 
-**Since 2026-11-24 every page is a short checklist** (Bart: "everything is too wordy", "it's just simple steps"). One centered column, a small red line on top that links back, no pills, no side list, no big titles, no intro paragraphs; steps are one line each with the tick, and his typed lines stay word for word in Say bubbles. `/seminar` is the red line, the "Setting up Claude" box (`/seminar/claude`, seven steps) four project cards (4 is `/seminar/playable`, "Make your idea playable": Bart's own text word for word in `playable/content.json`, each prompt a code block with Copy; do not add or change claims about Claude features there), then a plain card "Or build whatever you want" that opens `/seminar/tips` (Chat or Code, and getting good results; my words, not yet read by him). Keep it this light: cut before adding.
+**Since 2026-11-24 every page is a short checklist** (Bart: "everything is too wordy", "it's just simple steps"). One centered column, a small red line on top that links back, no pills, no side list, no big titles, no intro paragraphs; steps are one line each with the tick, and his typed lines stay word for word in Say bubbles. `/seminar` is the red line, the "Setting up Claude" box (`/seminar/claude`, seven steps) four project cards (1 is `/seminar/newsfeed`, "Custom newsfeed (as an app)", since 2026-11-26: his prompts from his own run word for word in `newsfeed/content.json`, each a code block with Copy, hero = his screenshot of the finished app; do not add or change claims about Claude features there. It replaced "Make your idea playable" at `/seminar/playable`, which now redirects; that text is in git history), then a plain card "Or build whatever you want" that opens `/seminar/tips` (Chat or Code, and getting good results; my words, not yet read by him). Keep it this light: cut before adding.
 
 **Where things are, since the afternoon of 2026-11-23** (the sections below were written as
 the day went and still say "the page" for the website sheet):
@@ -14,7 +14,7 @@ the day went and still say "the page" for the website sheet):
 | `/seminar/fact-checker` | Project 3, John Markoff's fact-checking skill; the file itself is served at `/seminar/fact-checker/SKILL.md` (`public/seminar/fact-checker/`) | `fact-checker/content.json` |
 
 `Sheet.tsx` draws the three project sheets, `SHEETS` in it is the row of links on top of each.
-Bart's numbering is his: since 2026-11-24 fact checker 1, library 2, website 3 (before
+Bart's numbering is his: since 2026-11-26 newsfeed 1, fact checker 2, library 3, website 4 (2026-11-24: fact checker 1, library 2, website 3; before
 that website 1, library 2, fact checker 3), on the landing page (`home.json`) and in `SHEETS`. On every sheet he wants the answer to "how do I use this tomorrow,
 after I shut my laptop": for the library, double-click Open Trust Shelf; and everywhere,
 **rename and pin the project** in the Claude app.

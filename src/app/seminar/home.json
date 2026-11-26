@@ -8,31 +8,31 @@
   "projects": [
     {
       "n": 1,
+      "href": "/seminar/newsfeed",
+      "title": "Custom newsfeed (as an app)",
+      "body": "A research newsletter with live news and new papers, kept as an app on your computer.",
+      "time": ""
+    },
+    {
+      "n": 2,
       "href": "/seminar/fact-checker",
       "title": "Your own fact checker",
       "body": "John Markoff's skill checks every claim in a chapter.",
       "time": "20 min"
     },
     {
-      "n": 2,
+      "n": 3,
       "href": "/seminar/library",
       "title": "Your own paper library",
       "body": "Papers on trust in a database on your laptop, with a chat page.",
       "time": "30 min"
     },
     {
-      "n": 3,
+      "n": 4,
       "href": "/seminar/website",
       "title": "Your own work website",
       "body": "A work page with an office-hours sign-up, live on the internet.",
       "time": "30 min to build, 1 hour to publish"
-    },
-    {
-      "n": 4,
-      "href": "/seminar/playable",
-      "title": "Make your idea playable",
-      "body": "One idea from your research as a small simulation anyone can play with.",
-      "time": "20 min"
     }
   ],
   "last": {

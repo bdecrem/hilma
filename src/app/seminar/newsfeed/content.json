@@ -1,0 +1,47 @@
+{
+  "title": "Custom newsfeed (as an app)",
+  "intro": "A research newsletter that fills itself with live news and new papers, built in one Claude chat and kept as an app on your computer.",
+  "hero": {
+    "src": "/seminar/newsfeed/hero.png",
+    "alt": "The finished app, Mind, Behavior & Wellbeing: a research newsletter for the CASBS fellows, with a Fetch new button, the issue of Nov 26, and lead stories each with a small doodle, a two-sentence summary and links to the paper",
+    "width": 2364,
+    "height": 1932
+  },
+  "facts": [
+    {
+      "label": "As of 11/25:",
+      "text": "installing the artifact as an app on your computer works on a regular Claude account, but not (yet) on the Claude for Education accounts."
+    }
+  ],
+  "steps": [
+    {
+      "title": "Step 1: Ask for ideas",
+      "prompt": "propose 3 \"daily reports\" that search the web to find information on a topic of interest to one of the casbs fellows in my class"
+    },
+    {
+      "title": "Step 2: Make them broad",
+      "prompt": "no propose 3 that will be broadly interesting AND will have a number of good news stories or new research papers on most days"
+    },
+    {
+      "title": "Step 3: Build it",
+      "prompt": "let's do 2, but (1) make sure it pull live data and never makes up stuff in the abstracts etc (2) make it look nice (3) produce it as an Artifact that we can then save as a Native App (a new feature in claude) and it will look great as a mac desktop (web) app (4) it must have both an automatic weekly update using the claude Schedule feature and a \"Fetch new\" type button"
+    },
+    {
+      "title": "Step 4: Make it a newsletter",
+      "prompt": "I want it to be 3-5 lead stories with one paragraph each, and then another set of links with maybe a few words. So needs to be curated and presented like an email newsletter"
+    },
+    {
+      "title": "Step 5: Daily",
+      "prompt": "can the app auto-fetch every day?"
+    },
+    {
+      "title": "Step 6: Shorter, with drawings",
+      "prompt": "make the summaries shorter  - a punchy two sentence summary and a little opus low-thinking drawing next to each"
+    },
+    {
+      "title": "Step 7: Fix the drawings",
+      "prompt": "those are no good - see attached. make it maybe the vibe of my journal app doodles - see the second attached. the background color needs to match the theme too",
+      "note": "I attached a screenshot of doodles from my journal app. Attach a picture of a style you like."
+    }
+  ]
+}

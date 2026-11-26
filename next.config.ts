@@ -483,6 +483,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // seminar project "Make your idea playable" became "Custom newsfeed" (2026-11-26)
+      { source: '/seminar/playable', destination: '/seminar/newsfeed', permanent: false },
       // the board's Numbers page became Learning (2026-11-18); old links and bookmarks follow
       { source: '/numbers', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/learning', permanent: false },
       { source: '/kochito/kit/numbers', destination: '/kochito/kit/learning', permanent: false },
