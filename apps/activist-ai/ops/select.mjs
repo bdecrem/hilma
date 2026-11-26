@@ -79,10 +79,11 @@ export const ALL_IF = ['package.json', 'package-lock.json']
 // image's folders), the evals and the asks' runner (the asks' own test is an ALWAYS suite), the
 // site, the brand, Bart's own tools, the opencode fork's scripts, the Apple apps (a check's apps
 // suite owns them), and the ops programs no update suite runs (the certificate, DNS, probe and
-// tunnel scripts; the alarm, the cleaner and the studio have suites since OLA-291).
+// tunnel scripts; the alarm, the cleaner and the studio have suites since OLA-291; prepush.mjs runs
+// before a push on the builder's machine, sidedoor.mjs is the Studio's stopgap way in).
 const UNCHECKED = [
   /\.md$/, /^evals\//, /^site\//, /^brand\//, /^bart\//, /^opencode-fork\//, /(^|\/)\.gitignore$/, /^apple\//,
-  /^ops\/(cert|dns|probe|tunnel)\.mjs$/, /^ops\/ngrok\.yml$/,
+  /^ops\/(cert|dns|probe|tunnel|prepush|sidedoor)\.mjs$/, /^ops\/ngrok\.yml$/,
 ]
 // *.md in these folders goes into the image or is read by a check: never "unchecked" by its name.
 const READ_MD = [/^workspace\//, /^skills\//]
