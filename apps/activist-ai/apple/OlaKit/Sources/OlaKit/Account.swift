@@ -138,13 +138,49 @@ public enum AccountError: Error, Hashable, LocalizedError {
   }
 }
 
-/// The account's server: `https://app.ola.cx`, and nothing else in the shipped app. Checks point it
-/// at a stand-in (`OLA_ACCOUNT_BASE`, or the `ola.accountBase` default), never shown to anyone.
+/// Which Ola this app signs in to (OLA-456; Bart, Nov 25: "make it so we can easily point the iPhone
+/// app at a different endpoint: i want the iphone app to just point me, the only user, at the Studio
+/// right here in my room"). app.ola.cx unless the person named another server on the sign-in screen.
+public enum AccountServer {
+  public static let key = "ola.accountBase"
+
+  /// What the person typed, as an address this app can use, or nil when it is not one. Without
+  /// "http://" or "https://": plain http for a name on the private network (.local, .ts.net,
+  /// localhost), which is all the app's network rules allow in the clear; https for anything else.
+  public static func parse(_ typed: String) -> URL? {
+    var s = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+    while s.hasSuffix("/") { s.removeLast() }
+    if s.isEmpty || s.contains(" ") { return nil }
+    if !s.contains("://") {
+      let hostPort = s.split(separator: "/", maxSplits: 1).first.map(String.init) ?? s
+      let host = (hostPort.split(separator: ":").first.map(String.init) ?? "").lowercased()
+      let privateName = host == "localhost" || host.hasSuffix(".local") || host.hasSuffix(".ts.net")
+      s = (privateName ? "http://" : "https://") + s
+    }
+    guard let u = URL(string: s), let scheme = u.scheme?.lowercased(), scheme == "http" || scheme == "https",
+          let h = u.host, !h.isEmpty, u.path.isEmpty || u.path == "/" else { return nil }
+    return u
+  }
+
+  public static var isDefault: Bool { AccountAPI.configured == AccountAPI.address }
+
+  /// The server as the person reads it: "app.ola.cx", "ola-studio.local:4780".
+  public static func name(_ u: URL = AccountAPI.configured) -> String { (u.host ?? "") + (u.port.map { ":\($0)" } ?? "") }
+
+  /// nil, or app.ola.cx itself, goes back to app.ola.cx.
+  public static func use(_ u: URL?) {
+    if let u, u != AccountAPI.address { UserDefaults.standard.set(u.absoluteString, forKey: key) }
+    else { UserDefaults.standard.removeObject(forKey: key) }
+  }
+}
+
+/// The account's server: `https://app.ola.cx` unless the person chose another (`AccountServer`, the
+/// `ola.accountBase` default); checks point it at a stand-in with `OLA_ACCOUNT_BASE`.
 public struct AccountAPI: Sendable {
   public static let address = URL(string: "https://app.ola.cx")!
   public static var configured: URL {
     if let s = ProcessInfo.processInfo.environment["OLA_ACCOUNT_BASE"], let u = URL(string: s), u.host != nil { return u }
-    if let s = UserDefaults.standard.string(forKey: "ola.accountBase"), let u = URL(string: s), u.host != nil { return u }
+    if let s = UserDefaults.standard.string(forKey: AccountServer.key), let u = URL(string: s), u.host != nil { return u }
     return address
   }
 

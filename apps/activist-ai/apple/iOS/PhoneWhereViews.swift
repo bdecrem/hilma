@@ -320,6 +320,8 @@ struct MachineSignIn: View {
   @State private var name = ""
   @State private var password = ""
   @State private var busy = false
+  @State private var changingServer = false
+  @State private var server = AccountServer.name()
   @FocusState private var field: Int?
 
   var body: some View {
@@ -341,6 +343,19 @@ struct MachineSignIn: View {
           Button("Sign In", action: go).buttonStyle(OlaButton(kind: ready ? .primary : .ghost)).disabled(!ready || busy)
         }
         if let p = place.problem { Text(p).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true) }
+        // Which Ola this is (OLA-456): app.ola.cx, or the server the person named.
+        Button { changingServer = true } label: {
+          HStack(spacing: 6) {
+            Text("Server").foregroundStyle(Ola.ink2)
+            Text(server).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
+            Spacer(minLength: 8)
+            Text("Change").foregroundStyle(Ola.blue)
+          }
+          .font(OlaFont.sans(Metrics.ui))
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).padding(.top, 8)
+        .accessibilityLabel("Server, \(server). Change")
         if let other {
           Button("Pair with your Mac instead", action: other).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.blue).padding(.top, 8)
         }
@@ -349,7 +364,8 @@ struct MachineSignIn: View {
     }
     .background(Ola.paper)
     .scrollDismissesKeyboard(.interactively)
-    .onAppear { place.problem = nil }
+    .onAppear { place.problem = nil; server = AccountServer.name() }
+    .sheet(isPresented: $changingServer) { ServerSheet { server = AccountServer.name(); place.problem = nil } }
   }
 
   var ready: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty }
@@ -363,6 +379,45 @@ struct MachineSignIn: View {
       password = ""
       if ok { onDone() }
     }
+  }
+}
+
+/// The server this phone signs in to (OLA-456): one field, empty for app.ola.cx. Reached from the
+/// sign-in screen only, so the key a signed-in phone holds always belongs to the server shown.
+struct ServerSheet: View {
+  var onDone: () -> Void = {}
+  @Environment(\.dismiss) private var dismiss
+  @State private var typed = AccountServer.isDefault ? "" : AccountAPI.configured.absoluteString
+  @State private var bad = false
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section {
+          TextField("app.ola.cx", text: $typed)
+            .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.done).onSubmit(save)
+          if bad { Text("That is not an address this phone can use.").foregroundStyle(Ola.vermilionText) }
+        } footer: {
+          Text("The Ola this phone signs in to. Leave it empty for app.ola.cx. For an Ola on your own network, type its name, like ola-studio.local:4780.")
+        }
+        if !AccountServer.isDefault {
+          Section { Button("Use app.ola.cx") { AccountServer.use(nil); onDone(); dismiss() } }
+        }
+      }
+      .navigationTitle("Server").navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+        ToolbarItem(placement: .confirmationAction) { Button("Done", action: save) }
+      }
+    }
+  }
+
+  func save() {
+    if typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { AccountServer.use(nil) }
+    else if let u = AccountServer.parse(typed) { AccountServer.use(u) }
+    else { bad = true; return }
+    onDone()
+    dismiss()
   }
 }
 

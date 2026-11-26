@@ -435,6 +435,7 @@ struct SettingsScreen: View {
           // One status line, Connect Again only when not connected (OLA-210, as on the Mac).
           Label { Text(machineLine) } icon: { Circle().fill(machineDot).frame(width: 8, height: 8) }
           if machineNeedsConnecting { Button("Connect Again\u{2026}") { place.setup = .machine } }
+          LabeledContent("Server", value: AccountServer.name())
           Button("Sign Out", role: .destructive) { signingOut = true }
         } else {
           Button("Sign In to Ola\u{2026}") { place.setup = .machine }

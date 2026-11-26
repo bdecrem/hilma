@@ -437,4 +437,19 @@ final class OpencodeInstallTests: XCTestCase {
     XCTAssertEqual(try OpencodeInstall.runVersion(bin), OpencodeInstall.version)
     XCTAssertTrue(seen.value, "progress was reported while downloading")
   }
+
+  /// OLA-456: the server a person types on the phone's sign-in screen.
+  func testServerAddressAsTyped() {
+    XCTAssertEqual(AccountServer.parse("ola-studio.local:4780")?.absoluteString, "http://ola-studio.local:4780")
+    XCTAssertEqual(AccountServer.parse(" ola-studio.tail1234.ts.net:4780/ ")?.absoluteString, "http://ola-studio.tail1234.ts.net:4780")
+    XCTAssertEqual(AccountServer.parse("app.ola.cx")?.absoluteString, "https://app.ola.cx")
+    XCTAssertEqual(AccountServer.parse("https://studio.ola.cx")?.absoluteString, "https://studio.ola.cx")
+    XCTAssertEqual(AccountServer.parse("http://localhost:4700")?.absoluteString, "http://localhost:4700")
+    XCTAssertNil(AccountServer.parse(""))
+    XCTAssertNil(AccountServer.parse("not an address"))
+    XCTAssertNil(AccountServer.parse("ftp://ola.local"))
+    XCTAssertNil(AccountServer.parse("ola.local/some/path"))
+    XCTAssertEqual(AccountServer.name(URL(string: "http://ola-studio.local:4780")!), "ola-studio.local:4780")
+    XCTAssertEqual(AccountServer.name(AccountAPI.address), "app.ola.cx")
+  }
 }
