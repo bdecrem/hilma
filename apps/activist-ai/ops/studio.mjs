@@ -19,7 +19,8 @@ const run = (cmd, args) => {
 }
 
 /** Labels another account's jobs may never have here: Apple's own, and Ola's. */
-export const OURS = /^(cx\.ola\.|com\.apple\.|application\.com\.apple\.)/
+// com.openssh.ssh-agent is macOS's own (/System/Library/LaunchAgents), present in every account (OLA-434).
+export const OURS = /^(cx\.ola\.|com\.apple\.|application\.com\.apple\.|com\.openssh\.ssh-agent$)/
 
 /** `ps -o etime` ([[dd-]hh:]mm:ss) in seconds. */
 export function etimeSeconds(s) {

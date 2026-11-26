@@ -45,6 +45,11 @@ test('a ready Studio passes every item', () => {
   assert.ok(rows.every((r) => r.ok), JSON.stringify(rows.filter((r) => !r.ok)))
 })
 
+test("macOS's own ssh agent, which every account has, is not counted as another job", () => {
+  const r = byId(check(machine({ extra: ['com.openssh.ssh-agent'] })))
+  assert.equal(r.alone.ok, true, r.alone.what)
+})
+
 test('each missing piece is named, with what to do', () => {
   const r = byId(check(machine({ filevault: false, admin: true, extra: ['sh.macplus.code', 'com.golembot.strays'], homeMode: 0o750, backup: false, signers: false })))
   for (const id of ['disk-encryption', 'own-account', 'alone', 'private-home', 'backups', 'signed-deploys']) {
