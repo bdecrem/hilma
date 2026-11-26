@@ -130,7 +130,10 @@ try {
     } else if (await tab.isVisible().catch(() => false)) await tab.click()
     else await page.locator('.askbar-open').click({ timeout: 5000 }).catch(() => {})
   }
-  await page.locator('#ask-input:visible').waitFor({ timeout: 15_000 })
+  // A new project's computer can take a minute to start; "Opening your project…" shows meanwhile.
+  await until(async () => !(await page.getByText('Opening your project').count()) && !(await page.getByText('Lost the connection').count()), 240_000, 'the project to open')
+  if (!(await page.locator('#ask-input:visible').count())) await page.locator('.askbar-open, .askbar input, .askbar textarea').first().click({ timeout: 5000 }).catch(() => {})
+  await page.locator('#ask-input:visible').waitFor({ timeout: 30_000 })
   await page.locator('#ask-input').fill(REQUEST)
   await shot('typed')
   t0 = Date.now()
