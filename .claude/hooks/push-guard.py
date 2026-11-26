@@ -13,6 +13,8 @@ which looks at what differs from origin/main (the working tree counts, so `git c
 in one command is covered) and runs only the gates that change touches. Nothing of Ola's changed: under
 a second. A gate fails: the push is refused with its lines. `[skip-gates]` anywhere in the command
 lets a push through (say why in the commit message).
+
+Tests: python3 .claude/hooks/push-guard-test.py
 """
 import json
 import os
