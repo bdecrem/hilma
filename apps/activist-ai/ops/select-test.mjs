@@ -65,9 +65,14 @@ test('a change in one part that another part’s check uses runs that check (the
   for (const s of ['gateway', 'workspace', 'web', 'frontdesk']) assert.ok(gw.includes(s), `${s} in ${gw}`)
   const ws = ran(['workspace/ws.mjs']).big
   for (const s of ['workspace', 'frontdesk']) assert.ok(ws.includes(s), `${s} in ${ws}`)
-  // A skill goes into the image the VM suites run.
-  const sk = ran(['skills/sound/SKILL.md']).big
-  assert.ok(sk.includes('workspace') && sk.includes('frontdesk'), sk.join(' '))
+  // What Ola is told (OLA-462): a skill's writing and the instruction file run the workspace suite alone;
+  // a skill's script is code and still runs the front desk's too.
+  for (const f of ['skills/sound/SKILL.md', 'workspace/AGENTS.md', 'skills/designer/references/polish.md']) {
+    const b = ran([f]).big
+    assert.ok(b.includes('workspace') && !b.includes('frontdesk') && !b.includes('web'), `${f}: ${b.join(' ')}`)
+  }
+  const script = ran(['skills/designer/scripts/look.py']).big
+  assert.ok(script.includes('workspace') && script.includes('frontdesk'), script.join(' '))
 })
 
 test('when it cannot tell, every suite runs: a file no suite is known to use, the update tool, the top packages, no base', () => {

@@ -94,6 +94,18 @@ export const PARTS = {
   'README.md': (t) => /\*\*The standing instruction\*\*[\s\S]*?```text\n([\s\S]*?)\n```/.exec(t)?.[1] ?? null,
 }
 
+// What Ola is told (OLA-462; Bart, Nov 25: "Lighten up on those tests. Ideally cut it by two thirds"): the
+// instruction file and a skill's writing go into the project image as text. The workspace suite builds
+// that image and reads them inside a VM; the front desk's and the apps' checks test code that such a
+// change does not touch, and they were two thirds of an update's time. So these files run the workspace
+// suite alone. The same holds for the two files that carry the image's version, when the version (or a
+// comment) is all that changed in them: SAME_BUT says what to ignore when comparing before and after.
+export const TOLD = [/^workspace\/AGENTS\.md$/, /^skills\/[^/]+\/[^/]+\.md$/, /^skills\/[^/]+\/references\//]
+export const SAME_BUT = {
+  'workspace/ws.mjs': (t) => t.replace(/ola-workspace:[0-9.]+-\d+/g, 'ola-workspace:TAG'),
+  'workspace/Containerfile': (t) => t.split('\n').filter((l) => !l.startsWith('#')).join('\n'),
+}
+
 // Not counted when only their parent folder is named: the asks (evals/asks) have their own suite,
 // and a check that names evals/ (the front desk's compare test runs evals/run.mjs there) never
 // reads them; a file there named exactly still counts.
@@ -257,6 +269,19 @@ export function plan({ root, changed, suites, before = () => null }) {
         same.push(f)
         continue
       }
+    }
+    let told = TOLD.some((r) => r.test(f))
+    if (!told && SAME_BUT[f]) {
+      let now = null
+      try {
+        now = readFileSync(path.join(root, f), 'utf8')
+      } catch {}
+      const was = before(f)
+      told = now !== null && was !== null && SAME_BUT[f](now) === SAME_BUT[f](was)
+    }
+    if (told && suites.includes('workspace')) {
+      why.workspace ??= `the change touches ${f} (what Ola is told: the workspace suite alone)`
+      continue
     }
     const by = suites.filter((s) => touches(s, f))
     for (const s of by) why[s] ??= `the change touches ${f}`
