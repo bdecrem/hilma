@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { ALWAYS, ENTRY, PARTS, lanes, plan, suiteFiles, toolFiles, treeFiles } from './select.mjs'
+import { quickForm, ALWAYS, ENTRY, PARTS, lanes, plan, suiteFiles, toolFiles, treeFiles } from './select.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SUITES = ['turn', 'gateway', 'workspace', 'web', 'frontdesk', 'backup', 'ci', 'signers', 'tls', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk', 'park']
@@ -73,6 +73,32 @@ test('a change in one part that another part’s check uses runs that check (the
   }
   const script = ran(['skills/designer/scripts/look.py']).big
   assert.ok(script.includes('workspace') && script.includes('frontdesk'), script.join(' '))
+})
+
+test('an ordinary update runs light (OLA-464): quick tests in place of the front desk and web suites, the workspace suite only for its own folders; a big change keeps every suite', () => {
+  const q = (changed) => {
+    const p = quickForm(plan({ root: AI, changed, suites: SUITES, before: (f) => (f === 'README.md' ? README : null) }), changed)
+    return { ...p, big: p.run.filter((s) => !ALWAYS.includes(s)).sort() }
+  }
+  // server code: its quick tests, no VM suite
+  const fd = q(['frontdesk/server.mjs']).big
+  assert.ok(fd.includes('frontdesk-unit') && !['frontdesk', 'web', 'workspace'].some((x) => fd.includes(x)), fd.join(' '))
+  const web = q(['web/src/App.tsx']).big
+  assert.ok(web.includes('web-unit') && web.includes('frontdesk-unit') && !web.includes('web') && !web.includes('frontdesk') && !web.includes('workspace'), web.join(' '))
+  // the gateway: its own suite (a minute, no VM), the others in their quick form, no workspace suite
+  const gw = q(['gateway/server.mjs']).big
+  assert.ok(gw.includes('gateway') && gw.includes('frontdesk-unit') && !gw.includes('workspace') && !gw.includes('frontdesk'), gw.join(' '))
+  // the project's computer: the workspace suite in full, the front desk's quick tests
+  const wsq = q(['workspace/ws.mjs']).big
+  assert.ok(wsq.includes('workspace') && wsq.includes('frontdesk-unit') && !wsq.includes('frontdesk') && !wsq.includes('web'), wsq.join(' '))
+  assert.deepEqual(q(['workspace/AGENTS.md']).big, ['workspace'])
+  // every skipped long suite says why
+  assert.ok(q(['frontdesk/server.mjs']).skip.some((x) => x.name === 'frontdesk' && /quick tests/.test(x.why)))
+  // a big change: every suite, in full (an opencode upgrade changes the top packages)
+  for (const c of [['package.json'], ['package-lock.json', 'web/package.json'], ['ops/ola.mjs'], ['workspace/Containerfile']]) {
+    const p = q(c)
+    assert.ok(p.all && ['workspace', 'web', 'frontdesk'].every((s) => p.run.includes(s)) && !p.quick, `${c}: ${p.run.join(' ')}`)
+  }
 })
 
 test('when it cannot tell, every suite runs: a file no suite is known to use, the update tool, the top packages, no base', () => {

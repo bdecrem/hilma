@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Ola's services as launchd user agents (no sudo), one deploy command, and one status command.
 //
-//   node ops/ola.mjs deploy [<commit> | origin/main] [--unsigned] [--all]   (default origin/main; the commit
+//   node ops/ola.mjs deploy [<commit> | origin/main] [--unsigned] [--all] [--full]   (default origin/main; the commit
 //                                     must be signed by a key in ~/.ola/allowed-signers, or
 //                                     --unsigned, which is logged) the only way staging
 //                                     changes: fetch, unpack that commit as a new release, npm ci
@@ -13,6 +13,9 @@
 //                                     left alone and the release is kept for a look
 //                                     The suites run are those the change since the deployed
 //                                     commit can affect, side by side (ops/select.mjs, OLA-283);
+//                                     An ordinary update runs light (OLA-464): quick tests in place of the
+//                                     web and front desk suites; a big change (the top packages, the update
+//                                     tool, the image's recipe) and --full run them in full.
 //                                     --all runs every one; the log and deploys.log name the skipped
 //   node ops/ola.mjs check [<commit>] [--base <commit>] [--all] [--no-apps]
 //                                     the deploy's steps and suites for one commit (default
@@ -82,7 +85,7 @@ import { clean } from './clean.mjs'
 import { diskRefusal, freeGB } from './disk.mjs'
 import { deployable, deployCaller } from './signers.mjs'
 import { unchanged } from './restart.mjs'
-import { changedFiles, lanes, plan } from './select.mjs'
+import { changedFiles, lanes, plan, quickForm } from './select.mjs'
 import { acquire as acquireTurn, holder as turnHolder, turnPaths } from './turn.mjs'
 import { limitMs, outcome, runLimited } from './suite.mjs'
 import { ROOM_WAIT_MS, requestPark, waitAnswered } from './park.mjs'
@@ -607,6 +610,9 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
     ['disk', ['--test', 'ops/disk-test.mjs']], // the free-disk refusal (OLA-327), seconds, no VM
     ['park', ['--test', 'ops/park-test.mjs']], // idle projects parked for the VM suites (OLA-240), seconds, no VM
+    // OLA-464: an ordinary update runs these in place of the web and front desk suites (ops/select.mjs, quickForm)
+    ['web-unit', ['ops/unit.mjs', 'web']], // web/test, about a second, no browser
+    ['frontdesk-unit', ['ops/unit.mjs', 'frontdesk']], // frontdesk/test, under a minute, no VM
   ]
   // Free disk first (OLA-327): on Nov 20 an update stopped half way with 3.8 GB left on the mini.
   const diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
@@ -725,11 +731,15 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
   // find XCTest there, so the apps' suite is left to a machine that has it (the mini) and the log says so.
   const xctest = !check || noApps || sh('/usr/bin/xcrun', ['--find', 'xctest']).status === 0
   if (!xctest) say("suite apps: not run on this machine (no Xcode: xcrun finds no xctest); the Mac and iPhone apps' shared code is checked where Xcode is installed")
-  const names = [...(check && !noApps && xctest ? ['apps'] : []), ...SUITES.map(([n]) => n)]
+  const names = [...(check && !noApps && xctest ? ['apps'] : []), ...SUITES.map(([n]) => n).filter((n) => !n.endsWith('-unit'))]
   const changed = all ? null : changedFiles(git, baseCommit, commit)
-  const pick = all
+  const planned = all
     ? { run: names, skip: [], all: '--all was asked for', why: {} }
     : plan({ root: code, changed, suites: names, before: (f) => (baseCommit ? (git('show', `${baseCommit}:apps/activist-ai/${f}`).stdout ?? null) : null) })
+  // OLA-464: an ordinary update runs light (quick tests in place of the long suites); a big change,
+  // --full, --all and every check (the automatic checks among them) run the suites in full.
+  const pick = check || process.argv.includes('--full') ? planned : quickForm(planned, changed)
+  if (pick.quick) say('an ordinary update: the long suites run in their quick form (--full, a big change and the automatic checks run them in full)')
   const since = baseCommit ? ` since ${baseCommit.slice(0, 12)}` : ''
   if (pick.all) say(`suites: all ${names.length} (${pick.all}${changed ? `; ${changed.length} file(s) changed${since}` : ''})`)
   else {

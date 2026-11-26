@@ -107,6 +107,31 @@ export const SAME_BUT = {
   'workspace/Containerfile': (t) => t.split('\n').filter((l) => !l.startsWith('#')).join('\n'),
 }
 
+// An ordinary update runs light (OLA-464). Bart, Nov 25: "that level of testing makes sense for things
+// like opencode upgrades, but not for the majority of updates." The front desk's suite (10 minutes of
+// VMs) and the web's browser walk (5 to 7) were run for every change to server code. Now an update runs
+// their quick tests instead (ops/unit.mjs: no VM, no browser, under a minute), and the workspace suite
+// only when the change is in the image's own folders. The long suites still run in full for a big
+// change: whenever plan() says "every suite" (the top packages, so an opencode upgrade; the update
+// tool; a file it cannot place; no base), for a change to the image's recipe (the Containerfile beyond
+// its comments), with --full or --all, and always in the automatic checks (ops/ci.mjs, `ola.mjs check`),
+// which look at every pushed commit after the fact.
+export const QUICK = { web: 'web-unit', frontdesk: 'frontdesk-unit' }
+const WORKSPACE_OWN = /^(workspace|skills)\//
+/** The ordinary update's form of a plan, or the plan itself when it is a big change. */
+export function quickForm(pick, changed) {
+  if (pick.all || !changed) return pick
+  const ownsWorkspace = changed.some((f) => WORKSPACE_OWN.test(f) && !unchecked(f))
+  const run = []
+  const skip = [...pick.skip]
+  for (const n of pick.run) {
+    if (QUICK[n]) (run.push(QUICK[n]), skip.push({ name: n, why: `an ordinary update: its quick tests run instead (${QUICK[n]}); the long suite runs for a big change and in the automatic checks` }))
+    else if (n === 'workspace' && !ownsWorkspace) skip.push({ name: n, why: 'an ordinary update that changes nothing in workspace/ or skills/; it runs for a big change and in the automatic checks' })
+    else run.push(n)
+  }
+  return { ...pick, run, skip, why: { ...pick.why, ...Object.fromEntries(Object.entries(QUICK).filter(([n]) => pick.run.includes(n)).map(([n, q]) => [q, pick.why[n]])) }, quick: true }
+}
+
 // Not counted when only their parent folder is named: the asks (evals/asks) have their own suite,
 // and a check that names evals/ (the front desk's compare test runs evals/run.mjs there) never
 // reads them; a file there named exactly still counts.
@@ -270,6 +295,15 @@ export function plan({ root, changed, suites, before = () => null }) {
         same.push(f)
         continue
       }
+    }
+    // The image's recipe beyond its comments is a big change (OLA-464): every suite.
+    if (f === 'workspace/Containerfile') {
+      let now = null
+      try {
+        now = readFileSync(path.join(root, f), 'utf8')
+      } catch {}
+      const was = before(f)
+      if (now === null || was === null || SAME_BUT[f](now) !== SAME_BUT[f](was)) return everything('the change touches the project image\'s recipe (workspace/Containerfile beyond its comments)')
     }
     let told = TOLD.some((r) => r.test(f))
     if (!told && SAME_BUT[f]) {
