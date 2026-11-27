@@ -1,0 +1,57 @@
+Ten open bugs in Ola's code (apps/activist-ai), picked from the tracker on Nov 27 for OLA-520.
+Each: id, title, what is wrong in plain words, where it most likely lives.
+
+1. TODO-DUE (found Nov 27, no ticket yet)
+   The to-do check reports "mark_done" failing on a to-do page that works.
+   When the page's done control is a button with no text, only a class or an aria-label
+   (<button class="check" aria-label="Mark as done"> inside li.task), the check does not find it: it only
+   looks for a checkbox or a button whose text says done, and otherwise clicks the middle of the row.
+   Where: apps/activist-ai/evals/apps/checks/todo-due.mjs
+
+2. OLA-387  Ola's refusal counter misses common ways of saying 'I cannot'
+   refusalOf returns null for "I don't have a way to send text messages.", "Sending texts isn't something
+   I can do.", "I have no way of making phone calls.", "That's outside what I can do from this project.",
+   "I can only work with files in this project, so I won't be able to call her." It also labels
+   "I can't send emails myself, but here's a draft" as cannot_here, because 'here\b' matches "here's".
+   Where: apps/activist-ai/frontdesk/faults.mjs (refusalOf); tests in frontdesk/test/faults.test.mjs
+
+3. OLA-376  Files refuses a file whose name has an apostrophe or #
+   Uploading "Rosa's notes.pdf" or "Intake scan (Oct) #2.pdf" is refused with "The file name has characters
+   Ola does not accept. Rename it with letters, digits and spaces." Apostrophes are common in names, and the
+   message is wrong: hyphens, dots, underscores and brackets are accepted.
+   Where: apps/activist-ai/frontdesk/server.mjs (the upload's file-name rule)
+
+4. OLA-385  The website shows steps as 'Used execute' (a raw tool name) instead of plain words
+   In a cloud project, steps of the tool "execute" read 'Used execute' with Show details, beside plain ones
+   like 'Looked at the picture flyer-photo.png'.
+   Where: apps/activist-ai/web/src/lib/steps.ts (an unknown tool falls through to "Used <name>")
+
+5. OLA-418  A summary page's answer offers the font licence files as Open buttons
+   After "make a one-page summary as summary.html" the reply ends with 'Open summary.html',
+   'Open fonts/OFL-PublicSans.txt', 'Open fonts/OFL-SourceSerif4.txt'. Only the page is something the
+   person asked for.
+   Where: the web app's list of files to open under a reply (apps/activist-ai/web/src)
+
+6. OLA-390  After a publish, the answer offers 'Open site/index.html' (the publish copy) beside the page
+   The one page shows twice: as itself and as its publish copy under site/.
+   Where: the same list of files to open under a reply (apps/activist-ai/web/src)
+
+7. OLA-422  Ola made tangerine.html but the publish card listed only index.html
+   Asked for a page that says Tangerine and to publish it, Ola made tangerine.html; the publish card's list
+   of files did not name it.
+   Where: the publish card's file list (apps/activist-ai/frontdesk, chat publish)
+
+8. OLA-270  The request tests drop the cause of 'fetch failed'
+   lib.mjs steady() rethrows a POST error that is not ECONNREFUSED without recording e.cause, so a dropped
+   connection, a TLS error and a DNS failure all read 'fetch failed'.
+   Where: apps/activist-ai/evals/asks/lib.mjs (steady)
+
+9. OLA-382  Every reply carries a 'Compare with Claude' button in projects where Claude cannot take requests
+   In a project with no Anthropic account the button is shown anyway.
+   Where: apps/activist-ai/frontdesk (compare) and the web app's reply buttons
+
+10. OLA-398  The replay test's lift compares unlike numbers
+   53 of 92 cases prevented with the rules, 49 without (+4 cases), but the line reads 'Lift -19 points'
+   because it subtracts try rates (60/174 with retries of failing cases, against one try each without).
+   Lift should compare case rates (58% vs 53%) or first tries only.
+   Where: the replay test's summary (apps/activist-ai/evals)
