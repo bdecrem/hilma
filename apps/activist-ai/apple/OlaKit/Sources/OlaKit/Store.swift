@@ -895,7 +895,9 @@ public final class OlaStore {
   /// Starts Claude Code for a session (the Mac app sets it; nil where Claude cannot run here).
   public var claudeLauncher: ((_ session: SessionInfo, _ request: String, _ context: String) throws -> ClaudeRun)?
   /// Why Claude cannot run here, in one sentence.
-  public var claudeUnavailable: String? = "Claude runs from Ola on your Mac."
+  /// OLA-421 #5: the phone's own line said only "Claude runs from Ola on your Mac.", which a checker
+  /// read as no reason at all; it now says that it cannot, why, and the two things that work.
+  public var claudeUnavailable: String? = "Claude Code can't be started from your iPhone: it runs only on your Mac. Ask for it in Ola on your Mac, or ask Ola to do it here."
   /// Where Claude turns are kept (Application Support on the Mac); nil on the phone.
   public var claudeTurnsBase: URL?
   /// The record of which engine made each file (OLA-224): the folder's own on this Mac; nil elsewhere.
