@@ -11,6 +11,16 @@ import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts
 import { parseCommand } from './commands.ts'
 import { answerFromWords, composerState, type ComposerState } from './composer.ts'
 
+// OLA-479's test switch, read when the page loads: the sign-in may rewrite the address (?w=<project>) before a run.
+const FORCED: StretchReason | null = (() => {
+  try {
+    const f = new URLSearchParams(location.search).get('escalate')
+    return f && ESCALATIONS.includes(f as StretchReason) ? (f as StretchReason) : null
+  } catch {
+    return null
+  }
+})()
+
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
 /** Where a request handed to it goes: the provider's name, or Anthropic. */
@@ -594,15 +604,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   const flagged = new Set<string>()
   let stopping: { turn: string; why: StretchReason } | null = null
   // OLA-479, a test switch for a checker: ?escalate=tests|loop|length|untested in the page's address
-  // treats the next run as if Ola had counted that (untested: as if no test ran, so the nudge comes first).
-  const forced = (): StretchReason | null => {
-    try {
-      const f = new URLSearchParams(location.search).get('escalate')
-      return f && ESCALATIONS.includes(f as StretchReason) ? (f as StretchReason) : null
-    } catch {
-      return null
-    }
-  }
+  // treats every run as if Ola had counted that (untested: as if no test ran, so the nudge comes first).
+  const forced = (): StretchReason | null => FORCED
   function watchStretch() {
     const t = state.turns[state.turns.length - 1]
     if (!t || t.engine === 'claude' || t.engine === 'hosted' || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
