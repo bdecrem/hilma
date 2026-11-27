@@ -1045,8 +1045,10 @@ test('the hosted open model: refused unless granted; its own upstream, key and m
   const grants = path.join(dir, 'gateway-hosted')
   writeGrants(grants, {})
   const HKEY = `hosted-key-${tok()}`
-  const k = { one: tok(), two: tok(), bart: tok() }
-  const env = { ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two},bart:${k.bart}`, HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: HKEY, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: grants, GATEWAY_HOSTED_PRICES: 'in=1000,out=1000', GATEWAY_USAGE_TOKEN: T.usage + T.usage }
+  const k = { one: tok(), two: tok(), bart: tok(), p7: tok() }
+  const people = path.join(dir, 'gateway-people')
+  writeTokens(people, `p-7:${k.p7}`)
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two},bart:${k.bart}`, GATEWAY_PEOPLE_TOKENS_FILE: people, HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: HKEY, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: grants, GATEWAY_HOSTED_PRICES: 'in=1000,out=1000', GATEWAY_USAGE_TOKEN: T.usage + T.usage }
   const g = await gateway(env)
   try {
     const models = await call(g, k.one, null, { method: 'GET', path: '/v1/models' })
@@ -1079,6 +1081,8 @@ test('the hosted open model: refused unless granted; its own upstream, key and m
     const mine = await call(g, k.one, null, { method: 'GET', path: '/v1/usage' })
     assert.deepEqual([mine.json.hosted_month.granted, mine.json.hosted_month.cost_micro_usd, mine.json.hosted.provider, mine.json.hosted.prices, mine.json.data, mine.json.hosted.model], [true, 1000, 'Made-up Cloud', undefined, undefined, undefined])
     assert.equal((await call(g, k.two, null, { method: 'GET', path: '/v1/usage' })).json.hosted_month.granted, false)
+    // OLA-486: a person's own device (p-<id>, the Mac app "On this Mac") is told the model id; a project never.
+    assert.equal((await call(g, k.p7, null, { method: 'GET', path: '/v1/usage' })).json.hosted.model, 'Big/Open-Model-1')
     // Callers that are not projects: the owner's standing caller (OLA_FD_HOSTED_CALLERS) and a
     // person's own Macs (p-<id>; the people file's callers, frontdesk/check.mjs drives those).
     assert.equal((await call(g, k.bart, chat({ tag: 'hb' }, 'hosted'))).status, 403, 'bart without a grant')

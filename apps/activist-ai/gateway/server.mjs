@@ -1105,7 +1105,9 @@ async function handle(req, res, rec, signal) {
     if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name), batch_job: batch.jobOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider, model: hosted.model, prices: C.hosted.prices, picks: hosted.pickList() } : null, claude_prices: C.claude.prices, web: { provider: C.web.provider } })
     // A caller's own: its month on the hosted open model too, and the provider's name, so Ola on a
     // person's Mac can say whether it may hand a request over and to whom (no prices, no other caller).
-    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who), ...(hosted ? { hosted_month: hosted.monthOf(who), hosted: { provider: hosted.provider, picks: hosted.pickList() } } : {}) })
+    // A person's own device (p-<id>) is told the model id too (OLA-486: the Mac app escalates only to
+    // the one its setting names); a project's computer is not.
+    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who), batch_job: batch.jobOf(who), ...(hosted ? { hosted_month: hosted.monthOf(who), hosted: { provider: hosted.provider, ...(isPersonName(who) ? { model: hosted.model } : {}), picks: hosted.pickList() } } : {}) })
   }
   // Which names served a caller's chat requests since a moment (design.mjs): the usage token for any
   // caller (the front desk, for the record of who made each file), a caller's own token for itself.
