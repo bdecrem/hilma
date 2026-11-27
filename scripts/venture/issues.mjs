@@ -50,6 +50,7 @@
 //   node scripts/venture/issues.mjs add "title" --tracker --area model [--what "…"]   makes one (never on the plate, never picked, checked or done)
 //   node scripts/venture/issues.mjs link <tracker-id> <id>… [--note "what was tried and what came of it"]   puts them on its list (again: replaces the note)
 //   node scripts/venture/issues.mjs unlink <tracker-id> <id>…                    takes them off; show <tracker-id> prints the list
+//   node scripts/venture/issues.mjs tracker <id> --why "…"                       turns an open issue that only lists others into a tracker issue (then link them)
 //   node scripts/venture/issues.mjs comment <id> "text" [--who kit]               Kit's reply on the issue's page
 //                                                     (a time in it, or in a --proof, more than 3 min later than the clock is refused: _clock.mjs, OLA-324)
 //   node scripts/venture/issues.mjs inbox [--mark]                               what Bart wrote on the board that Kit has not read
@@ -105,7 +106,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 19
+export const TRACKER_VERSION = 20
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -990,6 +991,19 @@ if (cmd === 'overrides') {
   await attach(id, pos.slice(1))
   const a = await accept(id)
   if (me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) await saveAccept(id, { ...a, builders: [...(a.builders ?? []), { who: typeof one('who') === 'string' ? one('who') : 'kit', role: 'builder', caller: me.id, host: me.host, at: new Date().toISOString(), via: 'commit' }] })
+} else if (cmd === 'tracker') {
+  // OLA-348: an issue opened as work that turned out to be only a list of other issues (a batch of fixes,
+  // each its own ticket) becomes a tracker issue with an empty list, open, and keeps its thread and commits;
+  // the issues are then put on its list with link. Never a done or dropped issue, never twice, always why.
+  const id = normId(pos[0])
+  const r = await get(id)
+  const why = typeof one('why') === 'string' ? one('why').trim() : ''
+  if (isTracker(r)) die(`${id} is already a tracker issue (issues.mjs show ${id})`)
+  if (r.status === 'done' || r.status === 'dropped') die(`Refused: ${id} is ${label[r.status]}, and a finished issue is not turned into a list. Make a new one: issues.mjs add "title" --tracker --area …`)
+  if (why.length < 15) die(`usage: issues.mjs tracker ${id} --why "why it is a list of other issues and not work itself"`)
+  check(await db.from('venture_issues').update({ tracker: [], status: 'open', updated_at: new Date().toISOString() }).eq('id', id), 'update')
+  await record([{ issue_id: id, kind: 'comment', body: `made a tracker issue (it lists other issues and is not work itself): ${why}` }])
+  console.log(`${id} is a tracker issue now; put its issues on the list with: issues.mjs link ${id} <id>… --note "…"`)
 } else if (cmd === 'link' || cmd === 'unlink') {
   // OLA-505: a tracker issue's list, in order: [{ id, note }] in venture_issues.tracker (schema 013)
   const tid = normId(pos[0])
@@ -1132,6 +1146,6 @@ if (cmd === 'overrides') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 61).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 62).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }
