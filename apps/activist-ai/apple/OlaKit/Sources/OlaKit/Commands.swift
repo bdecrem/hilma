@@ -163,7 +163,7 @@ public enum AgentNotes {
   /// For opencode only: Ola's own skills, which both of Bart's servers install (skills/README.md). In step
   /// with workspace/AGENTS.md, "Ola's skills"; bart/ola-bart.sh writes the same line.
   public static let skills = """
-  Skills. Ola has know-how for a few kinds of file, as skills. Load one with the skill tool when the request is for that kind: `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report; `publish` when the person wants something on the public web (publish it, put it online, a link anyone can open, their own domain). The skills `designer`, `app-designer` and `sound` are for a person who asks for them by name; otherwise build pages, app screens and sounds yourself.
+  Skills. Ola has know-how for a few kinds of file, as skills. Load one with the skill tool when the request is for that kind: `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report; `publish` when the person wants something on the public web (publish it, put it online, a link anyone can open, their own domain). There is no skill for a page, a toy, an app, a game or a sound: never call the skill tool for one; build it yourself. (When a person asks for one of Ola's design or sound skills by name, it is already loaded for you.)
   """
   /// For opencode only (OLA-455, in place of OLA-174's item-by-item check): build it and hand it over;
   /// OLA-474: anything that computes gets its cases run with ola-test.
@@ -192,7 +192,7 @@ public enum AgentNotes {
   Questions before you make something. A page, a site or an app screen is never one of them: make the first version from what was said, with marked lines for what is missing, and ask after (unless the person asked to be asked first). For anything else, ask at most one question before you start, and only when you cannot make a first version without the answer. When the person's answer leaves the details to them ("let me give details", "I'll type them"), stop and wait for their next message; never ask again in another form. Anything you still do not know goes into the first version as a plainly marked line to fill in ("Street: to be added"), and you say so in one sentence.
   """
   public static let designWork = """
-  Design work (making or restyling a page or an app screen, once you load the `designer` or `app-designer` skill) is done by Inkling-2-Small, an outside open model by Thinking Machines that Ola rents on Together for design work. It is not Ola's own model. When the record names it, say so in those words: for example "Inkling-2-Small, an outside open model Ola uses for design work, made it". Never call it "Ola's own open model", "my model" or "Ola's model".
+  Design work (making or restyling a page or an app screen, when Ola's `designer` or `app-designer` skill is in use) is done by Inkling-2-Small, an outside open model by Thinking Machines that Ola rents on Together for design work. It is not Ola's own model. When the record names it, say so in those words: for example "Inkling-2-Small, an outside open model Ola uses for design work, made it". Never call it "Ola's own open model", "my model" or "Ola's model".
   """
   public static var all: String { Reaction.instruction + "\n\n" + drawing + "\n\n" + madeBy }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
