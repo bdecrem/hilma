@@ -19,6 +19,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { root, MODELS, runFolders, opencodeConfig, runOpencode, gatewayToken, sandboxed, freeGb, MIN_FREE_GB } from '../../tickets/lib.mjs'
 import { findPage } from '../apps/lib/harness.mjs'
+import { checkHard } from './hard.mjs'
 
 const here = path.dirname(new URL(import.meta.url).pathname)
 const big = path.join(root, 'big')
@@ -88,6 +89,13 @@ const SCORE = {
       { name: 'fits a phone without scrolling sideways', pass: !!phone && phone.scrollWidth <= 392 },
     ]
     return { pass: checks.filter((c) => c.pass).length, total: checks.length, checks, notes: got?.errors?.slice(0, 3) || [] }
+  },
+  // The five harder requests: one small check each, by using the page (hard.mjs).
+  async hard(task, run) {
+    const page = path.join(run.dir, 'page'); pageCopy(run.work, page)
+    const r = await checkHard(task.id, page, path.join(run.dir, 'shot.png'))
+    await phoneShot(run, page)
+    return { pass: r.checks.filter((c) => c.pass).length, total: r.checks.length, checks: r.checks, notes: r.notes }
   },
   async data(task, run) {
     const truth = JSON.parse(readFileSync(path.join(here, 'hidden/data-truth.json'), 'utf8'))

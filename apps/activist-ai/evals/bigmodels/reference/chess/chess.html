@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess for two</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    font-family: system-ui, sans-serif; background: #262522; color: #eee;
+  }
+  #status { margin: 0; font-size: 1.35rem; font-weight: 600; text-align: center; min-height: 1.6em; }
+  #status.alert { color: #ff8a75; }
+  #wrap { position: relative; width: min(92vw, 78vh, 640px); aspect-ratio: 1; }
+  #board {
+    display: grid; width: 100%; height: 100%;
+    grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+    container-type: inline-size; user-select: none;
+  }
+  .sq {
+    position: relative; border: 0; padding: 0; margin: 0; min-width: 0; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif;
+    font-size: 9.5cqw; line-height: 1; cursor: pointer;
+  }
+  .light { background: #eeeed2; }
+  .dark  { background: #769656; }
+  .sq.last  { box-shadow: inset 0 0 0 100px rgba(255, 220, 40, .42); }
+  .sq.sel   { box-shadow: inset 0 0 0 100px rgba(40, 140, 255, .5); }
+  .sq.check { background: radial-gradient(circle, #ff2d12 25%, #e8604c 55%, transparent 80%), #b33; }
+  .sq.target::after {
+    content: ""; position: absolute; width: 30%; height: 30%;
+    border-radius: 50%; background: rgba(0, 0, 0, .28);
+  }
+  .sq.target.capture::after {
+    width: 92%; height: 92%; background: none; border: .7cqw solid rgba(0, 0, 0, .32);
+  }
+  .w { color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 3px #000; }
+  .b { color: #111; text-shadow: 0 0 2px rgba(255, 255, 255, .55); }
+  .coord { position: absolute; font: 600 1.7cqw system-ui, sans-serif; color: #333; text-shadow: none; }
+  .rank { top: 2px; left: 3px; }
+  .file { bottom: 2px; right: 4px; }
+  #promo {
+    position: absolute; inset: 0; background: rgba(0, 0, 0, .6);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  }
+  #promo[hidden] { display: none; }
+  #choices { display: flex; gap: 8px; }
+  #choices button {
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif;
+    font-size: min(12vw, 64px); line-height: 1; padding: 8px 12px; background: #8a9a78;
+  }
+  button.ctl, #choices button, #cancel {
+    border: 0; border-radius: 6px; cursor: pointer;
+  }
+  button.ctl, #cancel { font: inherit; padding: 8px 16px; background: #4b4945; color: #eee; }
+  button.ctl:disabled { opacity: .4; cursor: default; }
+  #controls { display: flex; gap: 8px; }
+  #moves {
+    width: min(92vw, 640px); max-height: 5.5em; overflow-y: auto;
+    font-size: .95rem; color: #bbb; text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1 id="status" role="status" aria-live="polite"></h1>
+  <div id="wrap">
+    <div id="board"></div>
+    <div id="promo" hidden>
+      <div>Promote pawn to:</div>
+      <div id="choices"></div>
+      <button id="cancel">Cancel</button>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="ctl" id="undo">Undo</button>
+    <button class="ctl" id="flip">Flip board</button>
+    <button class="ctl" id="new">New game</button>
+  </div>
+  <div id="moves"></div>
+
+<script id="engine">
+// Squares are 0..63, row by row from a8 (0) to h1 (63).
+// Pieces are two characters: colour (w/b) + type (P N B R Q K), or null.
+const KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+const DIAG = [[1,1],[1,-1],[-1,1],[-1,-1]];
+const ORTHO = [[1,0],[-1,0],[0,1],[0,-1]];
+const ALL = DIAG.concat(ORTHO);
+
+const other = c => c === 'w' ? 'b' : 'w';
+const inside = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
+const squareName = i => 'abcdefgh'[i % 8] + (8 - Math.floor(i / 8));
+
+function initialState() {
+  const back = ['R','N','B','Q','K','B','N','R'];
+  const board = Array(64).fill(null);
+  for (let f = 0; f < 8; f++) {
+    board[f] = 'b' + back[f];
+    board[8 + f] = 'bP';
+    board[48 + f] = 'wP';
+    board[56 + f] = 'w' + back[f];
+  }
+  return { board, turn: 'w', castle: { wK: true, wQ: true, bK: true, bQ: true }, ep: null };
+}
+
+// Is square `sq` attacked by any piece of colour `by`?
+function attacked(board, sq, by) {
+  const r = Math.floor(sq / 8), f = sq % 8;
+  const at = (dr, df) => inside(r + dr, f + df) ? board[(r + dr) * 8 + f + df] : null;
+  // A white pawn attacks upward, so it sits one row below the target.
+  const pr = by === 'w' ? 1 : -1;
+  if (at(pr, -1) === by + 'P' || at(pr, 1) === by + 'P') return true;
+  if (KNIGHT.some(([dr, df]) => at(dr, df) === by + 'N')) return true;
+  if (ALL.some(([dr, df]) => at(dr, df) === by + 'K')) return true;
+  const slides = (dirs, types) => dirs.some(([dr, df]) => {
+    for (let y = r + dr, x = f + df; inside(y, x); y += dr, x += df) {
+      const p = board[y * 8 + x];
+      if (p) return p[0] === by && types.includes(p[1]);
+    }
+    return false;
+  });
+  return slides(DIAG, 'BQ') || slides(ORTHO, 'RQ');
+}
+
+function inCheck(state, colour) {
+  return attacked(state.board, state.board.indexOf(colour + 'K'), other(colour));
+}
+
+// Moves that follow piece movement rules but may leave the king in check.
+function pseudoMoves(state, from) {
+  const { board, turn } = state;
+  const piece = board[from];
+  if (!piece || piece[0] !== turn) return [];
+  const type = piece[1];
+  const r = Math.floor(from / 8), f = from % 8;
+  const moves = [];
+  const add = (to, extra) => moves.push({ from, to, ...extra });
+
+  if (type === 'P') {
+    const dir = turn === 'w' ? -1 : 1;
+    const start = turn === 'w' ? 6 : 1;
+    const last = turn === 'w' ? 0 : 7;
+    const y = r + dir;
+    const push = (to, extra) => {
+      if (y === last) for (const promo of 'QRBN') add(to, { ...extra, promo });
+      else add(to, extra);
+    };
+    if (!board[y * 8 + f]) {
+      push(y * 8 + f);
+      if (r === start && !board[(r + 2 * dir) * 8 + f]) add((r + 2 * dir) * 8 + f, { double: true });
+    }
+    for (const x of [f - 1, f + 1]) {
+      if (!inside(y, x)) continue;
+      const to = y * 8 + x;
+      if (board[to] && board[to][0] !== turn) push(to);
+      else if (to === state.ep) add(to, { enPassant: true });
+    }
+    return moves;
+  }
+
+  const stepping = type === 'N' || type === 'K';
+  const dirs = type === 'N' ? KNIGHT : type === 'B' ? DIAG : type === 'R' ? ORTHO : ALL;
+  for (const [dr, df] of dirs) {
+    for (let y = r + dr, x = f + df; inside(y, x); y += dr, x += df) {
+      const to = y * 8 + x;
+      if (!board[to] || board[to][0] !== turn) add(to);
+      if (board[to] || stepping) break;
+    }
+  }
+
+  // Castling: rights intact, path empty, and the king neither starts in,
+  // passes through, nor lands on an attacked square.
+  const home = turn === 'w' ? 60 : 4;
+  if (type === 'K' && from === home && !inCheck(state, turn)) {
+    const enemy = other(turn);
+    const safe = i => !attacked(board, i, enemy);
+    if (state.castle[turn + 'K'] && board[home + 3] === turn + 'R' &&
+        !board[home + 1] && !board[home + 2] && safe(home + 1) && safe(home + 2)) {
+      add(home + 2, { castle: 'K' });
+    }
+    if (state.castle[turn + 'Q'] && board[home - 4] === turn + 'R' &&
+        !board[home - 1] && !board[home - 2] && !board[home - 3] && safe(home - 1) && safe(home - 2)) {
+      add(home - 2, { castle: 'Q' });
+    }
+  }
+  return moves;
+}
+
+// Returns a new state; the old one is left untouched (which makes undo trivial).
+function applyMove(state, m) {
+  const board = state.board.slice();
+  const castle = { ...state.castle };
+  const piece = board[m.from];
+  const colour = piece[0];
+  board[m.to] = m.promo ? colour + m.promo : piece;
+  board[m.from] = null;
+  if (m.enPassant) board[m.to + (colour === 'w' ? 8 : -8)] = null;
+  if (m.castle === 'K') { board[m.to - 1] = board[m.to + 1]; board[m.to + 1] = null; }
+  if (m.castle === 'Q') { board[m.to + 1] = board[m.to - 2]; board[m.to - 2] = null; }
+
+  if (piece[1] === 'K') castle[colour + 'K'] = castle[colour + 'Q'] = false;
+  // Moving a rook from its corner, or capturing on that corner, ends that right.
+  for (const [corner, key] of [[0, 'bQ'], [7, 'bK'], [56, 'wQ'], [63, 'wK']]) {
+    if (m.from === corner || m.to === corner) castle[key] = false;
+  }
+  return { board, castle, turn: other(colour), ep: m.double ? (m.from + m.to) / 2 : null };
+}
+
+function legalMoves(state, from) {
+  return pseudoMoves(state, from).filter(m => !inCheck(applyMove(state, m), state.turn));
+}
+
+function allLegalMoves(state) {
+  const out = [];
+  for (let i = 0; i < 64; i++) out.push(...legalMoves(state, i));
+  return out;
+}
+
+function gameStatus(state) {
+  const check = inCheck(state, state.turn);
+  const stuck = allLegalMoves(state).length === 0;
+  if (stuck) return check ? 'checkmate' : 'stalemate';
+  return check ? 'check' : 'playing';
+}
+
+// Standard algebraic notation for a legal move.
+function notation(state, m) {
+  const type = state.board[m.from][1];
+  const capture = state.board[m.to] || m.enPassant;
+  let s;
+  if (m.castle) {
+    s = m.castle === 'K' ? 'O-O' : 'O-O-O';
+  } else {
+    s = type === 'P' ? (capture ? squareName(m.from)[0] : '') : type;
+    if (type !== 'P') {
+      const rivals = allLegalMoves(state).filter(o =>
+        o.to === m.to && o.from !== m.from && state.board[o.from] === state.board[m.from]);
+      if (rivals.length) {
+        const name = squareName(m.from);
+        if (!rivals.some(o => o.from % 8 === m.from % 8)) s += name[0];
+        else if (!rivals.some(o => Math.floor(o.from / 8) === Math.floor(m.from / 8))) s += name[1];
+        else s += name;
+      }
+    }
+    s += (capture ? 'x' : '') + squareName(m.to) + (m.promo ? '=' + m.promo : '');
+  }
+  const result = gameStatus(applyMove(state, m));
+  return s + (result === 'checkmate' ? '#' : result === 'check' ? '+' : '');
+}
+</script>
+
+<script>
+// ︎ asks for the text form of a glyph rather than an emoji.
+const GLYPH = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' };
+const NAME = { K: 'king', Q: 'queen', R: 'rook', B: 'bishop', N: 'knight', P: 'pawn' };
+const COLOUR = { w: 'White', b: 'Black' };
+const $ = id => document.getElementById(id);
+
+let state, history, selected, targets, pending, flipped = false;
+
+function newGame() {
+  state = initialState();
+  history = [];
+  clearSelection();
+  render();
+}
+
+function clearSelection() {
+  selected = null;
+  targets = [];
+  pending = null;
+  $('promo').hidden = true;
+}
+
+function clickSquare(i) {
+  if (pending) return;
+  const matches = targets.filter(m => m.to === i);
+  if (matches.length) {
+    if (matches[0].promo) askPromotion(matches);
+    else play(matches[0]);
+    return;
+  }
+  const p = state.board[i];
+  if (p && p[0] === state.turn && i !== selected) {
+    selected = i;
+    targets = legalMoves(state, i);
+  } else {
+    clearSelection();
+  }
+  render();
+}
+
+function askPromotion(matches) {
+  pending = matches;
+  $('choices').replaceChildren(...matches.map(m => {
+    const b = document.createElement('button');
+    b.className = state.turn;
+    b.textContent = GLYPH[m.promo] + '︎';
+    b.title = NAME[m.promo];
+    b.setAttribute('aria-label', NAME[m.promo]);
+    b.onclick = () => play(m);
+    return b;
+  }));
+  $('promo').hidden = false;
+  $('choices').firstChild.focus();
+}
+
+function play(m) {
+  history.push({ state, move: m, text: notation(state, m) });
+  state = applyMove(state, m);
+  clearSelection();
+  render();
+}
+
+function render() {
+  const status = gameStatus(state);
+  const last = history.length ? history[history.length - 1].move : null;
+  const focused = document.activeElement?.dataset?.sq;
+  const squares = [];
+
+  for (let n = 0; n < 64; n++) {
+    const i = flipped ? 63 - n : n;
+    const r = Math.floor(i / 8), f = i % 8;
+    const p = state.board[i];
+    const el = document.createElement('button');
+    el.className = 'sq ' + ((r + f) % 2 ? 'dark' : 'light');
+    el.dataset.sq = i;
+    if (last && (i === last.from || i === last.to)) el.classList.add('last');
+    if (i === selected) el.classList.add('sel');
+    if (p === state.turn + 'K' && (status === 'check' || status === 'checkmate')) el.classList.add('check');
+    const target = targets.find(m => m.to === i);
+    if (target) {
+      el.classList.add('target');
+      if (p || target.enPassant) el.classList.add('capture');
+    }
+    if (p) {
+      const span = document.createElement('span');
+      span.className = p[0];
+      span.textContent = GLYPH[p[1]] + '︎';
+      el.append(span);
+    }
+    el.setAttribute('aria-label',
+      squareName(i) + (p ? ` ${COLOUR[p[0]]} ${NAME[p[1]]}` : '') + (target ? ', legal move' : ''));
+    const label = (cls, text) => {
+      const s = document.createElement('span');
+      s.className = 'coord ' + cls;
+      s.textContent = text;
+      el.append(s);
+    };
+    if (n % 8 === 0) label('rank', squareName(i)[1]);
+    if (n >= 56) label('file', squareName(i)[0]);
+    el.onclick = () => clickSquare(i);
+    squares.push(el);
+  }
+  $('board').replaceChildren(...squares);
+  if (focused !== undefined) $('board').querySelector(`[data-sq="${focused}"]`).focus();
+
+  const side = COLOUR[state.turn];
+  $('status').textContent = {
+    playing: `${side} to move`,
+    check: `Check! ${side} to move`,
+    checkmate: `Checkmate! ${COLOUR[other(state.turn)]} wins`,
+    stalemate: 'Stalemate. The game is a draw'
+  }[status];
+  $('status').classList.toggle('alert', status !== 'playing');
+
+  $('undo').disabled = !history.length;
+  let text = '';
+  history.forEach((h, k) => { text += (k % 2 ? '' : `${k / 2 + 1}. `) + h.text + ' '; });
+  $('moves').textContent = text;
+  $('moves').scrollTop = $('moves').scrollHeight;
+}
+
+$('undo').onclick = () => {
+  if (!history.length) return;
+  state = history.pop().state;
+  clearSelection();
+  render();
+};
+$('flip').onclick = () => { flipped = !flipped; render(); };
+$('new').onclick = () => {
+  if (!history.length || confirm('Abandon this game and start a new one?')) newGame();
+};
+$('cancel').onclick = () => { clearSelection(); render(); };
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { clearSelection(); render(); }
+});
+
+newGame();
+</script>
+</body>
+</html>

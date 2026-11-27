@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Falling Blocks</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111827;
+    color: #e5e7eb;
+    font-family: system-ui, sans-serif;
+  }
+  main { display: flex; gap: 24px; align-items: flex-start; }
+  .well { position: relative; }
+  canvas { display: block; background: #030712; border: 2px solid #374151; }
+  #board { height: min(600px, calc(100vh - 24px)); width: auto; }
+  aside { width: 140px; }
+  h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; color: #9ca3af; }
+  .stat { margin: 0 0 20px; font-size: 28px; font-variant-numeric: tabular-nums; }
+  #next { margin-bottom: 20px; }
+  .help { font-size: 13px; line-height: 1.7; color: #9ca3af; }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(3, 7, 18, 0.8);
+    text-align: center;
+  }
+  #overlay[hidden] { display: none; }
+  #overlay strong { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="well">
+    <canvas id="board" width="300" height="600"></canvas>
+    <div id="overlay">
+      <strong id="title">Falling Blocks</strong>
+      <span id="message">Press Enter to start</span>
+    </div>
+  </div>
+  <aside>
+    <h2>Score</h2>
+    <p class="stat" id="score">0</p>
+    <h2>Lines</h2>
+    <p class="stat" id="lines">0</p>
+    <h2>Level</h2>
+    <p class="stat" id="level">1</p>
+    <h2>Next</h2>
+    <canvas id="next" width="120" height="120"></canvas>
+    <div class="help">
+      ← → move<br>
+      ↑ rotate<br>
+      ↓ soft drop<br>
+      Space hard drop<br>
+      P pause<br>
+      Enter start / restart
+    </div>
+  </aside>
+</main>
+
+<script>
+const COLS = 10, ROWS = 20, SIZE = 30;
+
+// Each shape sits in a square box so that rotating the box rotates the shape.
+const SHAPES = [
+  { color: '#22d3ee', cells: ['....', '####', '....', '....'] }, // I
+  { color: '#facc15', cells: ['##', '##'] },                     // O
+  { color: '#c084fc', cells: ['.#.', '###', '...'] },            // T
+  { color: '#4ade80', cells: ['.##', '##.', '...'] },            // S
+  { color: '#f87171', cells: ['##.', '.##', '...'] },            // Z
+  { color: '#60a5fa', cells: ['#..', '###', '...'] },            // J
+  { color: '#fb923c', cells: ['..#', '###', '...'] },            // L
+];
+
+const $ = id => document.getElementById(id);
+const boardCtx = $('board').getContext('2d');
+const nextCtx = $('next').getContext('2d');
+
+let grid, piece, next, bag, score, lines, level, state, elapsed, last;
+
+function newGrid() {
+  return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+}
+
+// "7-bag": every shape appears once, in random order, before any repeats.
+function draw7() {
+  if (!bag.length) {
+    bag = SHAPES.slice();
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+  }
+  const shape = bag.pop();
+  return {
+    color: shape.color,
+    matrix: shape.cells.map(row => [...row].map(c => c === '#')),
+  };
+}
+
+function collides(matrix, x, y) {
+  return matrix.some((row, r) => row.some((filled, c) => {
+    if (!filled) return false;
+    const gx = x + c, gy = y + r;
+    return gx < 0 || gx >= COLS || gy >= ROWS || (gy >= 0 && grid[gy][gx]);
+  }));
+}
+
+function spawn() {
+  piece = next;
+  next = draw7();
+  piece.x = Math.floor((COLS - piece.matrix.length) / 2);
+  // Start with the first filled row at the top of the board.
+  piece.y = -piece.matrix.findIndex(row => row.includes(true));
+  elapsed = 0;
+  if (collides(piece.matrix, piece.x, piece.y)) gameOver();
+  drawNext();
+}
+
+function move(dx, dy) {
+  if (collides(piece.matrix, piece.x + dx, piece.y + dy)) return false;
+  piece.x += dx;
+  piece.y += dy;
+  return true;
+}
+
+function rotate() {
+  const n = piece.matrix.length;
+  const turned = piece.matrix.map((row, r) => row.map((_, c) => piece.matrix[n - 1 - c][r]));
+  // "Wall kick": if the turned piece doesn't fit, try nudging it.
+  for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1]]) {
+    if (!collides(turned, piece.x + dx, piece.y + dy)) {
+      piece.matrix = turned;
+      piece.x += dx;
+      piece.y += dy;
+      return;
+    }
+  }
+}
+
+function lock() {
+  let aboveTop = false;
+  piece.matrix.forEach((row, r) => row.forEach((filled, c) => {
+    if (!filled) return;
+    if (piece.y + r < 0) aboveTop = true;
+    else grid[piece.y + r][piece.x + c] = piece.color;
+  }));
+
+  const kept = grid.filter(row => row.some(cell => !cell));
+  const cleared = ROWS - kept.length;
+  while (kept.length < ROWS) kept.unshift(Array(COLS).fill(null));
+  grid = kept;
+
+  score += [0, 100, 300, 500, 800][cleared] * level;
+  lines += cleared;
+  level = Math.floor(lines / 10) + 1;
+  updateStats();
+
+  if (aboveTop) gameOver();
+  else spawn();
+}
+
+function stepDown() {
+  if (!move(0, 1)) lock();
+}
+
+function softDrop() {
+  if (move(0, 1)) {
+    score += 1;
+    elapsed = 0;
+    updateStats();
+  } else {
+    lock();
+  }
+}
+
+function hardDrop() {
+  let distance = 0;
+  while (move(0, 1)) distance++;
+  score += distance * 2;
+  lock();
+}
+
+function updateStats() {
+  $('score').textContent = score;
+  $('lines').textContent = lines;
+  $('level').textContent = level;
+}
+
+function showOverlay(title, message) {
+  $('title').textContent = title;
+  $('message').textContent = message;
+  $('overlay').hidden = false;
+}
+
+function start() {
+  grid = newGrid();
+  bag = [];
+  score = 0;
+  lines = 0;
+  level = 1;
+  state = 'playing';
+  next = draw7();
+  $('overlay').hidden = true;
+  updateStats();
+  spawn();
+}
+
+function gameOver() {
+  state = 'over';
+  showOverlay('Game over', `Score ${score} · Press Enter to play again`);
+}
+
+function togglePause() {
+  if (state === 'playing') {
+    state = 'paused';
+    showOverlay('Paused', 'Press P to resume');
+  } else if (state === 'paused') {
+    state = 'playing';
+    $('overlay').hidden = true;
+  }
+}
+
+function drawCell(ctx, x, y, color, size) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
+}
+
+function drawPiece(matrix, x, y, color) {
+  matrix.forEach((row, r) => row.forEach((filled, c) => {
+    if (filled) drawCell(boardCtx, (x + c) * SIZE, (y + r) * SIZE, color, SIZE);
+  }));
+}
+
+function render() {
+  boardCtx.clearRect(0, 0, COLS * SIZE, ROWS * SIZE);
+  grid.forEach((row, r) => row.forEach((color, c) => {
+    if (color) drawCell(boardCtx, c * SIZE, r * SIZE, color, SIZE);
+  }));
+  if (!piece || state === 'over') return;
+
+  // Faint "ghost" showing where the piece will land.
+  let ghostY = piece.y;
+  while (!collides(piece.matrix, piece.x, ghostY + 1)) ghostY++;
+  boardCtx.globalAlpha = 0.22;
+  drawPiece(piece.matrix, piece.x, ghostY, piece.color);
+  boardCtx.globalAlpha = 1;
+  drawPiece(piece.matrix, piece.x, piece.y, piece.color);
+}
+
+function drawNext() {
+  const s = 24;
+  nextCtx.clearRect(0, 0, 120, 120);
+  const cells = [];
+  next.matrix.forEach((row, r) => row.forEach((filled, c) => {
+    if (filled) cells.push([c, r]);
+  }));
+  const xs = cells.map(p => p[0]), ys = cells.map(p => p[1]);
+  const minX = Math.min(...xs), minY = Math.min(...ys);
+  const offX = (120 - (Math.max(...xs) - minX + 1) * s) / 2;
+  const offY = (120 - (Math.max(...ys) - minY + 1) * s) / 2;
+  cells.forEach(([c, r]) =>
+    drawCell(nextCtx, offX + (c - minX) * s, offY + (r - minY) * s, next.color, s));
+}
+
+function loop(time) {
+  const dt = time - (last ?? time);
+  last = time;
+  if (state === 'playing') {
+    elapsed += dt;
+    const interval = Math.max(80, 800 * Math.pow(0.85, level - 1));
+    if (elapsed >= interval) {
+      elapsed = 0;
+      stepDown();
+    }
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const key = e.code;
+  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Enter'].includes(key)) {
+    e.preventDefault();
+  }
+  if (key === 'Enter' && (state === 'ready' || state === 'over')) return start();
+  if (key === 'KeyP' && !e.repeat) return togglePause();
+  if (state !== 'playing') return;
+
+  if (key === 'ArrowLeft') move(-1, 0);
+  else if (key === 'ArrowRight') move(1, 0);
+  else if (key === 'ArrowDown') softDrop();
+  else if (key === 'ArrowUp' && !e.repeat) rotate();
+  else if (key === 'Space' && !e.repeat) hardDrop();
+});
+
+// Pause automatically if the tab is hidden or the window loses focus.
+window.addEventListener('blur', () => { if (state === 'playing') togglePause(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state === 'playing') togglePause();
+});
+
+grid = newGrid();
+state = 'ready';
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

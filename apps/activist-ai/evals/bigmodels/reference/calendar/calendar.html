@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Month calendar</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fff; --fg: #1d232b; --muted: #6b7480; --line: #dde1e6;
+    --other: #f5f6f8; --accent: #2563eb; --chip: #e5edfd; --danger: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181d; --fg: #e6e9ed; --muted: #949dab; --line: #2d333c;
+      --other: #1b1f25; --accent: #6ea0ff; --chip: #223457; --danger: #ff7b72;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 14px/1.4 system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  h1 { font-size: 22px; margin: 0 auto 0 0; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+           padding: 5px 12px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  button.danger { color: var(--danger); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #warning { border: 1px solid var(--danger); color: var(--danger); border-radius: 6px;
+             padding: 8px 12px; margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+          border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .weekday, .day { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .weekday { padding: 4px 8px; color: var(--muted); font-size: 12px; }
+  .day { min-height: 110px; padding: 4px; cursor: pointer; }
+  .day.other { background: var(--other); color: var(--muted); }
+  .num { border: 0; background: none; padding: 0; width: 26px; height: 26px; border-radius: 50%; }
+  .today .num { background: var(--accent); color: var(--bg); font-weight: 600; }
+  .event { display: block; width: 100%; text-align: left; border: 0; background: var(--chip);
+           color: var(--fg); border-radius: 4px; padding: 2px 5px; margin-top: 3px; font-size: 12px;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  dialog { background: var(--bg); color: var(--fg); border: 1px solid var(--line);
+           border-radius: 10px; padding: 20px; width: min(420px, calc(100vw - 24px)); }
+  dialog::backdrop { background: rgb(0 0 0 / .45); }
+  dialog h2 { margin: 0 0 12px; font-size: 18px; }
+  label { display: block; margin-bottom: 10px; }
+  label > input, label > select, label > textarea {
+    display: block; width: 100%; margin-top: 3px; padding: 6px 8px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+  fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 12px; padding: 6px 10px; }
+  fieldset label { display: inline-block; margin: 0 14px 0 0; }
+  fieldset label > input { display: inline; width: auto; margin: 0 4px 0 0; }
+  .hint { color: var(--muted); font-size: 12px; margin: -4px 0 10px; }
+  .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .actions .danger { margin-right: auto; }
+  [hidden] { display: none !important; }
+  @media (max-width: 600px) {
+    body { padding: 6px; }
+    .day { min-height: 74px; padding: 2px; }
+    .event { padding: 1px 2px; font-size: 10px; text-overflow: clip; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title" aria-live="polite"></h1>
+  <button id="prev" aria-label="Previous month">‹</button>
+  <button id="today">Today</button>
+  <button id="next" aria-label="Next month">›</button>
+  <button id="add" class="primary">Add event</button>
+</header>
+<div id="warning" role="alert" hidden></div>
+<main id="grid" class="grid"></main>
+
+<dialog id="dialog" aria-labelledby="dialog-title">
+  <form id="form">
+    <h2 id="dialog-title"></h2>
+    <fieldset id="scope">
+      <legend>Apply to</legend>
+      <label><input type="radio" name="scope" value="one" checked> This occurrence</label>
+      <label><input type="radio" name="scope" value="all"> Whole series</label>
+    </fieldset>
+    <label>Title <input name="title" required maxlength="200" autocomplete="off"></label>
+    <label><span id="date-label">Date</span> <input name="date" type="date" required min="1900-01-01" max="2200-12-31"></label>
+    <label>Time (optional) <input name="time" type="time"></label>
+    <label id="freq-row">Repeats
+      <select name="freq">
+        <option value="none">Does not repeat</option>
+        <option value="daily">Every day</option>
+        <option value="weekly">Every week</option>
+        <option value="monthly">Every month</option>
+      </select>
+    </label>
+    <label id="until-row">Last date (optional, blank = forever) <input name="until" type="date" min="1900-01-01" max="2200-12-31"></label>
+    <p id="monthly-hint" class="hint">In months without that day, it falls on the last day of the month.</p>
+    <label>Notes <textarea name="notes" rows="2" maxlength="2000"></textarea></label>
+    <div class="actions">
+      <button type="button" id="delete" class="danger">Delete</button>
+      <button type="button" id="cancel">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script id="logic">
+// Dates are "YYYY-MM-DD" strings; arithmetic is done in UTC so daylight saving can't shift a day.
+const DAY = 86400000;
+const FIELDS = ['title', 'time', 'notes'];
+const pad = n => String(n).padStart(2, '0');
+const toMs = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+const fromMs = ms => new Date(ms).toISOString().slice(0, 10);
+const addDays = (s, n) => fromMs(toMs(s) + n * DAY);
+const daysInMonth = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate(); // m is 1-12
+
+// Does the series' rule produce an occurrence on this date (ignoring exceptions)?
+function occursOn(series, date) {
+  if (date < series.date || (series.until && date > series.until)) return false;
+  switch (series.freq) {
+    case 'daily': return true;
+    case 'weekly': return (toMs(date) - toMs(series.date)) % (7 * DAY) === 0;
+    case 'monthly': {
+      const [y, m, d] = date.split('-').map(Number);
+      return d === Math.min(Number(series.date.slice(8)), daysInMonth(y, m));
+    }
+    default: return date === series.date;
+  }
+}
+
+// An occurrence is identified by (series id, original date), even after being moved.
+function occurrence(series, orig) {
+  const change = series.exceptions[orig] || {};
+  const result = { id: series.id, orig, date: change.date || orig };
+  for (const f of FIELDS) result[f] = f in change ? change[f] : series[f];
+  return result;
+}
+
+// Every occurrence that is displayed between first and last, inclusive.
+function expand(list, first, last) {
+  const out = [];
+  for (const series of list) {
+    for (let d = first; d <= last; d = addDays(d, 1)) {
+      if (occursOn(series, d) && !series.exceptions[d]) out.push(occurrence(series, d));
+    }
+    // Changed occurrences are handled separately: they may have moved into or out of the range.
+    for (const [orig, change] of Object.entries(series.exceptions)) {
+      if (change.deleted || !occursOn(series, orig)) continue;
+      const o = occurrence(series, orig);
+      if (o.date >= first && o.date <= last) out.push(o);
+    }
+  }
+  return out.sort((a, b) =>
+    a.date.localeCompare(b.date) || a.time.localeCompare(b.time) || a.title.localeCompare(b.title));
+}
+
+// Store only what differs from the series, so later series edits still reach the other fields.
+function changeOne(series, orig, values) {
+  const change = {};
+  if (values.date !== orig) change.date = values.date;
+  for (const f of FIELDS) if (values[f] !== series[f]) change[f] = values[f];
+  if (Object.keys(change).length) series.exceptions[orig] = change;
+  else delete series.exceptions[orig];
+}
+
+// Changing the start date or frequency redefines which occurrences exist.
+const reschedules = (series, values) => series.date !== values.date || series.freq !== values.freq;
+
+function changeAll(series, values) {
+  if (reschedules(series, values)) series.exceptions = {};
+  // A field edited on the whole series replaces any per-occurrence value of that field.
+  for (const f of FIELDS) {
+    if (values[f] === series[f]) continue;
+    for (const [orig, change] of Object.entries(series.exceptions)) {
+      delete change[f];
+      if (!Object.keys(change).length) delete series.exceptions[orig];
+    }
+  }
+  for (const f of [...FIELDS, 'date', 'freq', 'until']) series[f] = values[f];
+  if (series.freq === 'none') series.until = '';
+}
+
+// Removes one occurrence. Returns false when nothing is left, so the series can be dropped.
+function deleteOne(series, orig) {
+  if (series.freq === 'none') return false;
+  series.exceptions[orig] = { deleted: true };
+  if (!series.until) return true;
+  for (let d = series.date; d <= series.until; d = addDays(d, 1)) {
+    if (occursOn(series, d) && !series.exceptions[d]?.deleted) return true;
+  }
+  return false;
+}
+</script>
+
+<script>
+const KEY = 'month-calendar-v1';
+const $ = id => document.getElementById(id);
+const dialog = $('dialog'), form = $('form'), field = form.elements;
+
+let events = [];
+let readOnly = false; // set if saved data can't be read, so it is never overwritten
+let editing = null;   // { id, orig } while editing, null while adding
+let dirty = new Set();
+
+const now = new Date();
+const todayString = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+let view = { year: now.getFullYear(), month: now.getMonth() + 1 };
+
+function warn(message) { $('warning').textContent = message; $('warning').hidden = !message; }
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    const data = raw === null ? [] : JSON.parse(raw);
+    if (!Array.isArray(data)) throw new Error('not a list');
+    events = data;
+    readOnly = false;
+    warn('');
+  } catch (error) {
+    events = [];
+    readOnly = true;
+    warn(`Saved events could not be read (${error.message}). Nothing will be overwritten, and changes are disabled.`);
+  }
+}
+
+// Apply a change to a fresh copy of the stored data; keep it only if it was saved.
+function commit(change) {
+  load();
+  if (readOnly) return false;
+  change(events);
+  try {
+    localStorage.setItem(KEY, JSON.stringify(events));
+    return true;
+  } catch (error) {
+    load();
+    warn(`Could not save: ${error.message}. The change was not kept.`);
+    return false;
+  }
+}
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function render() {
+  const { year, month } = view;
+  const monthStart = `${year}-${pad(month)}-01`;
+  const lead = new Date(toMs(monthStart)).getUTCDay(); // weeks start on Sunday
+  const cells = Math.ceil((lead + daysInMonth(year, month)) / 7) * 7;
+  const first = addDays(monthStart, -lead);
+  const byDate = new Map();
+  for (const o of expand(events, first, addDays(first, cells - 1))) {
+    if (!byDate.has(o.date)) byDate.set(o.date, []);
+    byDate.get(o.date).push(o);
+  }
+
+  const format = (date, options) => new Date(toMs(date)).toLocaleDateString('en-US', { ...options, timeZone: 'UTC' });
+  $('title').textContent = format(monthStart, { month: 'long', year: 'numeric' });
+  const grid = $('grid');
+  grid.replaceChildren(...['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => element('div', 'weekday', d)));
+
+  for (let i = 0; i < cells; i++) {
+    const date = addDays(first, i);
+    const cell = element('div', 'day');
+    cell.dataset.date = date;
+    if (date.slice(0, 7) !== monthStart.slice(0, 7)) cell.classList.add('other');
+    if (date === todayString()) cell.classList.add('today');
+    const number = element('button', 'num', Number(date.slice(8)));
+    number.setAttribute('aria-label', `Add event on ${format(date, { month: 'long', day: 'numeric', year: 'numeric' })}`);
+    cell.append(number);
+    cell.addEventListener('click', () => openNew(date));
+    for (const o of byDate.get(date) || []) {
+      const label = (o.time ? o.time + ' ' : '') + o.title;
+      const chip = element('button', 'event', label);
+      chip.title = o.notes ? `${label}\n${o.notes}` : label;
+      chip.addEventListener('click', e => { e.stopPropagation(); openExisting(o.id, o.orig); });
+      cell.append(chip);
+    }
+    grid.append(cell);
+  }
+}
+
+const readForm = () => ({
+  title: field.title.value.trim(), date: field.date.value, time: field.time.value,
+  notes: field.notes.value, freq: field.freq.value,
+  until: field.freq.value === 'none' ? '' : field.until.value,
+});
+
+function updateForm() {
+  const series = editing && events.find(s => s.id === editing.id);
+  const one = series && series.freq !== 'none' && field.scope.value === 'one';
+  $('freq-row').hidden = one;
+  $('until-row').hidden = one || field.freq.value === 'none';
+  $('monthly-hint').hidden = one || field.freq.value !== 'monthly' || Number(field.date.value.slice(8)) < 29;
+  $('date-label').textContent = !one && field.freq.value !== 'none' ? 'Series starts on' : 'Date';
+  field.until.min = field.date.value || '1900-01-01';
+}
+
+// Fill the form for the chosen scope, keeping anything the user has already typed.
+function fill(values) {
+  for (const name of ['title', 'date', 'time', 'notes', 'freq', 'until']) {
+    if (!dirty.has(name)) field[name].value = values[name] || '';
+  }
+}
+
+function openDialog(heading) {
+  $('dialog-title').textContent = heading;
+  updateForm();
+  dialog.showModal();
+  field.title.focus();
+}
+
+function openNew(date) {
+  if (readOnly) return;
+  editing = null;
+  dirty = new Set();
+  form.reset();
+  fill({ date, freq: 'none' });
+  $('scope').hidden = true;
+  $('delete').hidden = true;
+  openDialog('New event');
+}
+
+function openExisting(id, orig) {
+  const series = events.find(s => s.id === id);
+  if (!series || readOnly) return;
+  editing = { id, orig };
+  dirty = new Set();
+  form.reset();
+  const repeats = series.freq !== 'none';
+  $('scope').hidden = !repeats;
+  $('delete').hidden = false;
+  field.scope.value = repeats ? 'one' : 'all';
+  fill(repeats ? { ...series, ...occurrence(series, orig) } : series);
+  openDialog('Edit event');
+}
+
+function done() { dialog.close(); render(); }
+
+form.addEventListener('input', e => {
+  if (e.target.name === 'scope') {
+    const series = events.find(s => s.id === editing.id);
+    // The date means something different in each scope, so a typed one is not carried across.
+    dirty.delete('date');
+    if (series) fill(e.target.value === 'one' ? { ...series, ...occurrence(series, editing.orig) } : series);
+  } else {
+    dirty.add(e.target.name);
+    if (e.target.name === 'title') e.target.setCustomValidity('');
+  }
+  updateForm();
+});
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const values = readForm();
+  if (!values.title) {
+    field.title.setCustomValidity('Please enter a title.');
+    field.title.reportValidity();
+    return;
+  }
+  const scope = field.scope.value;
+  const series = editing && events.find(s => s.id === editing.id);
+  const wholeSeries = !series || series.freq === 'none' || scope === 'all';
+  if (wholeSeries && values.until && values.until < values.date) {
+    alert('The last date is before the start date.');
+    return;
+  }
+  if (series && series.freq !== 'none' && scope === 'all' && reschedules(series, values)
+      && Object.keys(series.exceptions).length
+      && !confirm('Changing the start date or how it repeats will discard the changes and deletions you made to single occurrences. Continue?')) {
+    return;
+  }
+  let missing = false;
+  const saved = commit(list => {
+    if (!editing) {
+      const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      list.push({ id, ...values, exceptions: {} });
+      return;
+    }
+    const target = list.find(s => s.id === editing.id);
+    if (!target) missing = true;
+    else if (wholeSeries) changeAll(target, values);
+    else changeOne(target, editing.orig, values);
+  });
+  if (saved && !editing) {
+    // Show the month of the new event so it doesn't seem to vanish.
+    const [year, month] = values.date.split('-').map(Number);
+    view = { year, month };
+  }
+  done();
+  if (missing) warn('That event was deleted in another tab, so the change was not saved.');
+});
+
+$('delete').addEventListener('click', () => {
+  const series = events.find(s => s.id === editing.id);
+  if (!series) return done();
+  const one = series.freq !== 'none' && field.scope.value === 'one';
+  const question = one ? 'Delete only this occurrence?'
+    : series.freq === 'none' ? 'Delete this event?' : 'Delete the whole series, including past occurrences?';
+  if (!confirm(question)) return;
+  commit(list => {
+    const i = list.findIndex(s => s.id === editing.id);
+    if (i >= 0 && !(one && deleteOne(list[i], editing.orig))) list.splice(i, 1);
+  });
+  done();
+});
+
+$('cancel').addEventListener('click', () => dialog.close());
+
+function step(delta) {
+  const d = new Date(Date.UTC(view.year, view.month - 1 + delta, 1));
+  if (d.getUTCFullYear() < 1900 || d.getUTCFullYear() > 2200) return;
+  view = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+  render();
+}
+$('prev').addEventListener('click', () => step(-1));
+$('next').addEventListener('click', () => step(1));
+$('today').addEventListener('click', () => {
+  const d = new Date();
+  view = { year: d.getFullYear(), month: d.getMonth() + 1 };
+  render();
+});
+$('add').addEventListener('click', () => {
+  const today = todayString();
+  const month = `${view.year}-${pad(view.month)}`;
+  openNew(today.startsWith(month) ? today : `${month}-01`);
+});
+
+// Stay in step with other open tabs.
+window.addEventListener('storage', e => { if (e.key === KEY || e.key === null) { load(); render(); } });
+
+load();
+render();
+</script>
+</body>
+</html>

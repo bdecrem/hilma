@@ -10,6 +10,7 @@ installed. The purpose: one big model for escalation by day and long work at nig
 | which models, which build | `ops/studio/big-model.sh` (`list`), `tickets/models.json` (`studio-*`) |
 | swap a model in and out on the Studio | `ops/studio/big-model.sh start <name>`, `use <name>`, `back` |
 | five requests a person would make, easy to hard | `tasks.json`, run by `run.mjs` (website, memory game, a messy member list, a bug to find, the spreadsheet) |
+| five harder requests: a chess game, falling blocks, a Markdown editor, a calendar with repeating events, a Sudoku | `tasks.json` kind `hard`, one small check each in `hard.mjs` (by using the page); `reference/<task>` is what Claude Sonnet 5.5 made in one try, which passes all of them (OLA-484) |
 | three tickets of our own tracker | `tickets/trial.mjs --lean` (small OLA-351, medium OLA-337, hard OLA-283) |
 | the whole night, unattended | `ops/studio/big-models-night.sh` |
 

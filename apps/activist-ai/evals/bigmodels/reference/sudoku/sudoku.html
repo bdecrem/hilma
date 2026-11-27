@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sudoku</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;
+    font-family: system-ui, sans-serif; background: #f4f5f7; color: #1c2430;
+  }
+  main { width: min(94vw, 460px); padding: 16px 0; text-align: center; }
+  h1 { margin: 0 0 12px; font-size: 1.6rem; }
+  #board {
+    display: grid; grid-template-columns: repeat(9, 1fr); aspect-ratio: 1;
+    grid-template-rows: repeat(9, 1fr); border: 2px solid #1c2430; background: #fff;
+  }
+  .cell {
+    border: 0; border-right: 1px solid #c5cad3; border-bottom: 1px solid #c5cad3; border-radius: 0;
+    padding: 0; min-width: 0; background: #fff; color: #1d5fd1; cursor: pointer;
+    font: 500 clamp(18px, 5.5vw, 28px) system-ui, sans-serif;
+  }
+  .cell:nth-child(9n) { border-right: 0; }
+  .cell:nth-child(n+73) { border-bottom: 0; }
+  .cell:nth-child(9n+3), .cell:nth-child(9n+6) { border-right: 2px solid #1c2430; }
+  .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #1c2430; }
+  .cell.given { color: #1c2430; font-weight: 700; }
+  .cell.hinted { color: #14804a; font-weight: 700; }
+  .cell.peer { background: #edf2fb; }
+  .cell.same { background: #d5e3fa; }
+  .cell.clash { background: #fdeaea; }
+  .cell.error { color: #c4161c; background: #f9caca; }
+  .cell.selected { box-shadow: inset 0 0 0 3px #1d5fd1; }
+  .row { display: flex; gap: 6px; margin-top: 12px; }
+  .row button {
+    flex: 1; min-width: 0; padding: 10px 0; font-size: 1.05rem; cursor: pointer;
+    border: 1px solid #b6bdc9; border-radius: 6px; background: #fff; color: inherit;
+  }
+  .row button:hover:not(:disabled) { background: #e8eefa; }
+  .row button:disabled { opacity: .45; cursor: default; }
+  #status { min-height: 1.4em; margin: 12px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sudoku</h1>
+  <div id="board" role="group" aria-label="Sudoku board"></div>
+  <div class="row" id="pad"></div>
+  <div class="row">
+    <button type="button" id="erase">Erase</button>
+    <button type="button" id="hint">Hint</button>
+    <button type="button" id="new">New game</button>
+  </div>
+  <p id="status" role="status"></p>
+</main>
+
+<script id="engine">
+// Grids are arrays of 81 numbers, 0 meaning empty.
+const PEERS = Array.from({ length: 81 }, (_, i) => {
+  const r = Math.floor(i / 9), c = i % 9, out = [];
+  for (let j = 0; j < 81; j++) {
+    const r2 = Math.floor(j / 9), c2 = j % 9;
+    const sameBox = Math.floor(r / 3) === Math.floor(r2 / 3) && Math.floor(c / 3) === Math.floor(c2 / 3);
+    if (j !== i && (r === r2 || c === c2 || sameBox)) out.push(j);
+  }
+  return out;
+});
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function candidates(grid, i) {
+  const used = new Set(PEERS[i].map(j => grid[j]));
+  return [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(v => !used.has(v));
+}
+
+// Backtracking search that always branches on the most constrained cell.
+// Counts solutions up to `limit`; `found` receives the first one.
+// Assumes the filled cells do not already conflict.
+function solve(grid, limit, random, found) {
+  let best = -1, options = null;
+  for (let i = 0; i < 81; i++) {
+    if (grid[i]) continue;
+    const c = candidates(grid, i);
+    if (!options || c.length < options.length) {
+      best = i; options = c;
+      if (c.length < 2) break;
+    }
+  }
+  if (best === -1) {
+    if (found && !found.length) found.push(...grid);
+    return 1;
+  }
+  if (random) shuffle(options);
+  let count = 0;
+  for (const v of options) {
+    grid[best] = v;
+    count += solve(grid, limit - count, random, found);
+    if (count >= limit) break;
+  }
+  grid[best] = 0;
+  return count;
+}
+
+// Remove clues in random order, keeping each removal only if the solution stays unique.
+function generate(targetClues = 32) {
+  const solution = [];
+  solve(Array(81).fill(0), 1, true, solution);
+  const puzzle = solution.slice();
+  let clues = 81;
+  for (const i of shuffle([...Array(81).keys()])) {
+    if (clues <= targetClues) break;
+    const v = puzzle[i];
+    puzzle[i] = 0;
+    if (solve(puzzle.slice(), 2) === 1) clues--;
+    else puzzle[i] = v;
+  }
+  return { puzzle, solution };
+}
+</script>
+
+<script>
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+const hintBtn = document.getElementById('hint');
+
+let solution, values, kind, selected, won; // kind[i]: 'given', 'hinted' or ''
+
+const cells = Array.from({ length: 81 }, (_, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.addEventListener('click', () => select(i));
+  b.addEventListener('focus', () => { if (selected !== i) select(i); });
+  boardEl.appendChild(b);
+  return b;
+});
+
+for (let v = 1; v <= 9; v++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = v;
+  b.addEventListener('click', () => enter(v));
+  document.getElementById('pad').appendChild(b);
+}
+
+const clashes = i => values[i] !== 0 && PEERS[i].some(j => values[j] === values[i]);
+
+function render() {
+  cells.forEach((b, i) => {
+    const v = values[i], bad = clashes(i);
+    const cls = ['cell'];
+    if (kind[i]) cls.push(kind[i]);
+    if (selected !== null) {
+      if (PEERS[selected].includes(i)) cls.push('peer');
+      if (v && v === values[selected]) cls.push('same');
+    }
+    // The player's own entry is marked as the error; a locked cell it collides with is only tinted.
+    if (bad) cls.push(kind[i] ? 'clash' : 'error');
+    if (i === selected) cls.push('selected');
+    b.className = cls.join(' ');
+    b.textContent = v || '';
+    b.tabIndex = i === (selected ?? 0) ? 0 : -1;
+    b.setAttribute('aria-label',
+      `Row ${Math.floor(i / 9) + 1}, column ${i % 9 + 1}: ${v || 'empty'}` +
+      (kind[i] ? `, ${kind[i]}` : '') + (bad ? ', conflicts' : ''));
+  });
+
+  const errors = values.some((_, i) => clashes(i));
+  won = !errors && values.every(v => v);
+  hintBtn.disabled = won;
+  statusEl.textContent = won ? 'Solved. Well done!'
+    : errors ? 'A number repeats in a row, column or box.' : '';
+}
+
+function select(i) {
+  selected = i;
+  render();
+}
+
+function enter(v) {
+  if (won || selected === null || kind[selected]) return;
+  values[selected] = v;
+  render();
+}
+
+// Fill the selected cell if it needs it; otherwise fix a wrong entry, otherwise a random empty cell.
+function hint() {
+  const wrong = i => !kind[i] && values[i] !== solution[i];
+  const open = [...Array(81).keys()].filter(wrong);
+  if (!open.length) return;
+  const mistakes = open.filter(i => values[i]);
+  const pool = mistakes.length ? mistakes : open;
+  const i = selected !== null && wrong(selected) ? selected : pool[Math.floor(Math.random() * pool.length)];
+  values[i] = solution[i];
+  kind[i] = 'hinted';
+  select(i);
+}
+
+function newGame() {
+  const game = generate();
+  solution = game.solution;
+  values = game.puzzle.slice();
+  kind = values.map(v => v ? 'given' : '');
+  selected = null;
+  won = false;
+  render();
+}
+
+document.getElementById('erase').addEventListener('click', () => enter(0));
+hintBtn.addEventListener('click', hint);
+document.getElementById('new').addEventListener('click', () => {
+  const started = values.some((v, i) => v && kind[i] !== 'given');
+  if (won || !started || confirm('Abandon this puzzle and start a new one?')) newGame();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const moves = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 };
+  if (/^[1-9]$/.test(e.key)) enter(Number(e.key));
+  else if (['Backspace', 'Delete', '0'].includes(e.key)) enter(0);
+  else if (e.key in moves) {
+    const from = selected ?? 0, step = moves[e.key];
+    let to = from + step;
+    if (to < 0 || to > 80 || (Math.abs(step) === 1 && Math.floor(to / 9) !== Math.floor(from / 9))) to = from;
+    select(to);
+    cells[to].focus();
+  } else return;
+  e.preventDefault();
+});
+
+newGame();
+</script>
+</body>
+</html>
