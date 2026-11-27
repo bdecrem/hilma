@@ -165,7 +165,7 @@ export async function gatewayUsage(cc) {
     // name as people read it, or null), and each caller's month.
     // The picked choices it serves at that provider (OLA-337: DeepSeek V4 Pro), names only.
     const picks = Array.isArray(j.hosted?.picks) ? j.hosted.picks.filter((x) => typeof x?.id === 'string' && /^[a-z0-9.-]{1,40}$/.test(x.id) && typeof x.name === 'string').map((x) => ({ id: x.id, name: x.name.slice(0, 40), words: typeof x.words === 'string' ? x.words.slice(0, 80) : x.name.slice(0, 40) })) : []
-    const hosted = j.hosted && typeof j.hosted.provider === 'string' ? { provider: j.hosted.provider.slice(0, 40), picks } : null
+    const hosted = j.hosted && typeof j.hosted.provider === 'string' ? { provider: j.hosted.provider.slice(0, 40), model: typeof j.hosted.model === 'string' ? j.hosted.model.slice(0, 80) : null, picks } : null
     const hostedMonth = new Map(data.filter((d) => typeof d?.caller === 'string' && d.hosted_month).map((d) => [d.caller, d.hosted_month]))
     return { modes, month, hosted, hostedMonth }
   } catch {

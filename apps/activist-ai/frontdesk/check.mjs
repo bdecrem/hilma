@@ -2633,7 +2633,7 @@ const hostedLog = () => gateway.log.split('\n').filter((l) => l.includes('"model
 
 await check('the hosted open model is off by default and independent of Claude; only the owner turns it on, with consent; the grants file follows', async () => {
   const f = await api('/api/fallback', { cookie: a.cookie, ws: FA })
-  assert(f.status === 200 && f.json.hosted.enabled === false && f.json.hosted.configured === true && f.json.hosted.provider === HOSTED_UP.HOSTED_PROVIDER && f.json.stretch === 'suggest' && f.json.stretchTo === 'hosted' && f.json.claude.enabled === false, JSON.stringify(f.json).slice(0, 300))
+  assert(f.status === 200 && f.json.hosted.enabled === false && f.json.hosted.configured === true && f.json.hosted.provider === HOSTED_UP.HOSTED_PROVIDER && f.json.hosted.model === HOSTED_UP.HOSTED_MODEL && f.json.stretch === 'suggest' && f.json.stretchTo === 'hosted' && f.json.claude.enabled === false, JSON.stringify(f.json).slice(0, 300))
   assert(!hostedFile()[`ws-${FA}`], 'a hosted grant before anyone turned it on')
   assert((await jpost(v, '/api/hosted/settings', { enabled: true, consent: true })).status === 403, 'the viewer turned it on')
   assert((await jpost(a, '/api/hosted/settings', { enabled: true })).status === 400, 'on without consent')
