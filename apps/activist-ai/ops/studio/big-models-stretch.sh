@@ -12,5 +12,8 @@ until [[ -e $HOME/ola-models/big/Inkling-Small-3bit/.complete ]]; do sleep 60; d
 say "waiting for the night's test and the catch-up to end"
 sleep 90
 while pgrep -f "studio/big-models-night.sh|studio/big-models-hard.sh" > /dev/null; do sleep 30; done
+# The 2-bit build first, with everything the other models ran: the night's test skipped it (the engine
+# built on Nov 25 did not know the Inkling GGUF; big-model.sh now uses the later build in ~/llama-new).
+TASKS=website,memory-game,data,debug,spreadsheet,chess,blocks,markdown,calendar,sudoku TICKETS=ola-351-ready,ola-337-deepseek,ola-283-select $here/big-models-hard.sh inkling-small
 TASKS=spreadsheet,chess,sudoku TIME=1800 TICKETS=ola-337-deepseek TICKET_TIME=2400 $here/big-models-hard.sh inkling-small-3
 say "stretch finished"

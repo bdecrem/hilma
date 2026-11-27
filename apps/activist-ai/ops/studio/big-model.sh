@@ -16,7 +16,8 @@
 set -u
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 M=$HOME/ola-models; B=$M/big; LOGS=$HOME/Library/Logs/ola; PIDF=$HOME/.ola/bigmodel.pid
-LLAMA=$HOME/llama-head/build/bin/llama-server
+# llama-new is a later build (Nov 27): the Nov 25 one does not know the Inkling GGUF ('unknown model architecture').
+LLAMA=$HOME/llama-head/build/bin/llama-server; [[ -x $HOME/llama-new/build/bin/llama-server ]] && LLAMA=$HOME/llama-new/build/bin/llama-server
 D=gui/$(id -u)
 # name | kind | path (a file, or for a split GGUF its first part; a folder for mtplx) | context | what it is
 MODELS=(
