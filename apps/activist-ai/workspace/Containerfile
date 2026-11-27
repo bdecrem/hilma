@@ -78,6 +78,9 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.4.2-6 (OLA-497, the speed check on 733280817063: page 14 s / plain 15 s, toy 32 s / 18 s, app 25 s / 7 s, where the model
+# wrote the page first and changed it four times after writing the logic): AGENTS.md puts the computing steps in order,
+# each file once: logic, cases, ola-test, then the page. Builds on 2.4.2-5.
 # 2.4.2-5 (OLA-497, the speed check on 158d38e59d7a: the toy passed, the page and the app still tried the skill tool once,
 # and the page read the downloaded forecast through five ola-db lookups): ola-fetch prints 6000 characters of the text,
 # not 1500; AGENTS.md says one search and one download are usually enough for a fact on a page, and no longer names
