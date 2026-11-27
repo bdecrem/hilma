@@ -2373,8 +2373,10 @@ An older conversation's `<ola-nudge>` turns show as one plain line from Ola. The
 still carry OLA-486's port of it (parked; it comes out when the apps are picked up again).
 
 **Ola presses the page (OLA-515, Bart, Nov 27: "idea 1 (click around) we DO").** When a turn of Ola's
-own model ends well and wrote or changed an .html file, the web app asks the front desk (`POST
-/api/poke`) to run `ola-poke` on that page in the project's VM: no model, the headless Chromium of
+own model ends well, the web app asks the front desk (`POST /api/poke {since: the turn's start}`) to run
+`ola-poke --since` in the project's VM, which takes the .html file changed last since then, found by
+its time and not by the turn's steps (the first live test wrote it with `cat > index.html`; none
+changed: nothing pressed, nothing sent): no model, the headless Chromium of
 ola-page, every field typed into and every button, box and tile pressed with a real click (at most 30,
 16 s of pressing, a hard stop at 20 s). Dead means a script error (on load, typing or a press), a field
 that does not take what was typed, or a press after which nothing at all changed (DOM, other fields,

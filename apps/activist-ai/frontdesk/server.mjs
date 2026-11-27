@@ -703,18 +703,22 @@ export function makeFrontDesk(cfg = config()) {
     }
     // The page Ola's own model just handed over, pressed all over (OLA-515, workspace/ola-poke): every
     // field typed in and every button pressed in the VM's headless browser, no model involved. Answers
-    // the dead things ({ dead: [{ what, name, say }] }), or 502 when the pressing itself failed, and
-    // the page then sends nothing. Asked by the web app as a turn ends with a changed .html file.
+    // { page, dead: [{ what, name, say }] } (page null, dead empty when no .html file changed since the
+    // turn began), or 502 when the pressing itself failed, and the page then sends nothing. Asked by the
+    // web app after every done turn of Ola's own model with { since: the turn's start, ms }; the page is
+    // found here by its time in the VM, however it was written (a write step or `cat > index.html`).
     if (p === '/api/poke' && req.method === 'POST') {
       if (!canRun) return json(res, 403, readOnly)
       const body = await readJson(req, 4 * 1024)
-      if (!body || typeof body.path !== 'string' || !workspaces.validRel(body.path) || !/\.html?$/i.test(body.path)) return json(res, 400, { error: 'bad_path' })
+      const since = Number(body?.since)
+      if (!Number.isFinite(since) || since < 1.6e12 || since > Date.now() + 86_400_000) return json(res, 400, { error: 'bad_since' })
       const busy = workspaces.holdBusy(ws.slug)
       try {
-        const dead = await workspaces.poke(ws.slug, body.path)
-        if (!dead) return json(res, 502, { error: 'poke_failed' })
-        log(`${ws.slug}: a page was pressed (${dead.length} dead)`)
-        return json(res, 200, { dead })
+        // 5 s of slack: the turn's start may come from the page's clock, the file's time from the VM's.
+        const r = await workspaces.poke(ws.slug, since - 5000)
+        if (!r) return json(res, 502, { error: 'poke_failed' })
+        log(`${ws.slug}: ${r.page ? `a page was pressed (${r.dead.length} dead)` : 'no page changed in the turn: nothing pressed'}`)
+        return json(res, 200, r)
       } finally {
         busy()
       }

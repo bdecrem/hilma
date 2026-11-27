@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """ola-poke: press everything on a page Ola just made, and say what is dead (OLA-515).
 
-    ola-poke /work/index.html            prints one JSON object: {"dead": [...], "typed": n, "pressed": n, "seconds": s}
+    ola-poke /work/index.html            prints one JSON object: {"page": ..., "dead": [...], "typed": n, "pressed": n, "seconds": s}
+    ola-poke --since <ms> /work          the same for the .html file in the folder changed last at or after that
+                                         time (epoch ms), or {"page": null, "dead": []} when none changed
 
-Run by the front desk (never by the model, and no model is involved) when Ola's own model hands over a
-turn that wrote an .html file. It opens the page in the same headless Chromium as ola-page (no network,
+Run by the front desk (never by the model, and no model is involved) when a turn of Ola's own model
+ends. The page is found by its time, not by the turn's steps: the model writes files with write steps
+and with shell commands (`cat > index.html`) alike (the first live test, Nov 27). It opens the page in the same headless Chromium as ola-page (no network,
 the page's own folder served on 127.0.0.1), types into every field the way a person does (a real click
 in the field, then text), and presses every button, tile and box with a real mouse click, one at a
 time. After each it looks whether anything happened. What it reports ("dead"), each with one plain
@@ -287,17 +290,56 @@ def poke(page_path):
         shutil.rmtree(profile, ignore_errors=True)
 
 
+SKIP_DIRS = {"node_modules", "__pycache__", "venv", ".venv"}
+
+
+def changed_page(folder, since_ms):
+    """The .html file under `folder` changed last at or after since_ms (not in dot folders), or None."""
+    best = None
+    top = str(folder).rstrip(os.sep).count(os.sep)
+    for root, dirs, files in os.walk(folder):
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in SKIP_DIRS] if root.count(os.sep) - top < 4 else []
+        for f in files:
+            if f.startswith(".") or not f.lower().endswith((".html", ".htm")):
+                continue
+            p = os.path.join(root, f)
+            try:
+                m = os.stat(p).st_mtime * 1000
+            except OSError:
+                continue
+            if m >= since_ms and (best is None or m > best[0]):
+                best = (m, p)
+    return best[1] if best else None
+
+
 def main():
-    if len(sys.argv) != 2 or sys.argv[1].startswith("-"):
-        print("usage: ola-poke <page.html>", file=sys.stderr)
+    args = sys.argv[1:]
+    since = None
+    if len(args) == 3 and args[0] == "--since":
+        try:
+            since = float(args[1])
+            args = args[2:]
+        except ValueError:
+            args = []
+    if len(args) != 1 or args[0].startswith("-"):
+        print("usage: ola-poke <page.html> | ola-poke --since <epoch ms> <folder>", file=sys.stderr)
         return 2
+    target = args[0]
+    if since is not None:
+        if not os.path.isdir(target):
+            print("ola-poke: no such folder", file=sys.stderr)
+            return 2
+        target = changed_page(target, since)
+        if not target:
+            print(json.dumps({"page": None, "dead": []}))
+            return 0
 
     def overdue(*_):
         raise TimeoutError("over the deadline")
     signal.signal(signal.SIGALRM, overdue)
     signal.alarm(int(os.environ.get("OLA_POKE_DEADLINE_S", "20")))
     try:
-        out = poke(sys.argv[1])
+        out = poke(target)
     except Exception as e:
         print(f"ola-poke: {type(e).__name__}: {str(e)[:160]}", file=sys.stderr)
         return 1

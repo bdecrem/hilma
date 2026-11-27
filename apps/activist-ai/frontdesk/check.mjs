@@ -2344,11 +2344,14 @@ await check('who made a file: Ola makes index.html, Claude rewrites it, and aske
   const mb = await api('/api/made-by', { cookie: a.cookie, ws: FA })
   assert(mb.status === 200 && mb.json.files.find((f) => f.path === 'index.html')?.engine === 'claude', `/api/made-by: ${mb.status} ${mb.text.slice(0, 200)}`)
   assert((await api('/api/made-by', { cookie: b.cookie, ws: FA })).status === 404, 'another team read the record')
-  // OLA-515: the page pressed all over in the VM (a page with no controls: nothing dead); another team cannot.
-  const poke = (who) => api('/api/poke', { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify({ path: 'index.html' }), headers: { 'content-type': 'application/json' } })
-  const pk = await poke(a)
-  assert(pk.status === 200 && Array.isArray(pk.json?.dead) && pk.json.dead.length === 0, `/api/poke: ${pk.status} ${pk.text.slice(0, 200)}`)
-  assert((await poke(b)).status !== 200, 'another team pressed the page')
+  // OLA-515: the page changed since a time is found in the VM and pressed all over (a page with no
+  // controls: nothing dead); since a time after every change: no page, nothing pressed; another team cannot.
+  const poke = (who, since) => api('/api/poke', { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify({ since }), headers: { 'content-type': 'application/json' } })
+  const pk = await poke(a, Date.now() - 30 * 60_000)
+  assert(pk.status === 200 && pk.json?.page === 'index.html' && Array.isArray(pk.json?.dead) && pk.json.dead.length === 0, `/api/poke: ${pk.status} ${pk.text.slice(0, 200)}`)
+  const none = await poke(a, Date.now() + 60_000)
+  assert(none.status === 200 && none.json?.page === null && none.json.dead.length === 0, `/api/poke, nothing changed: ${none.status} ${none.text.slice(0, 200)}`)
+  assert((await poke(b, Date.now() - 30 * 60_000)).status !== 200, 'another team pressed the page')
   // Under "Ask before each step": reading the record must not stop for a yes.
   const p = await api(`/oc/api/session/${id}`, { method: 'PATCH', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ metadata: { autonomy: 'ask' } }), headers: { 'content-type': 'application/json' } })
   assert(p.status < 300, `autonomy: ${p.status}`)

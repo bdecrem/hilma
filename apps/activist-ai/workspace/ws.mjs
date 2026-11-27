@@ -48,7 +48,7 @@ import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.4.2-10'
+export const IMAGE = 'ola-workspace:2.4.2-11'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -1107,21 +1107,26 @@ export async function examples(id, args, input, { ms = 20_000 } = {}) {
 }
 
 /**
- * `ola-poke /work/<rel>` in the VM (OLA-515): every field typed in and every button pressed on a page
- * Ola just made, no model involved. Resolves the dead things ([{ what, name, say }], maybe empty), or
- * null when the pressing itself failed or ran out of time (the caller then sends nothing).
+ * `ola-poke --since <ms> /work` in the VM (OLA-515): the .html file in the project changed last since
+ * `sinceMs` (however it was written: a write step or `cat > index.html`), every field typed in and every
+ * button pressed, no model involved. Resolves { page: <rel> | null, dead: [{ what, name, say }] } (page
+ * null and dead empty when no page changed), or null when the pressing failed or ran out of time (the
+ * caller then sends nothing).
  */
-export async function poke(id, rel, { ms = 25_000 } = {}) {
+export async function poke(id, sinceMs, { ms = 25_000 } = {}) {
   validId(id)
-  if (!validRel(rel) || !/\.html?$/i.test(rel)) refuse('not a page')
-  const child = execTool(id, 'ola-poke', [`/work/${rel}`])
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) refuse('not a time')
+  const child = execTool(id, 'ola-poke', ['--since', String(Math.floor(sinceMs)), '/work'])
   const timer = setTimeout(() => child.kill('SIGKILL'), ms)
   const r = await collect(child, 256 * 1024)
   clearTimeout(timer)
   if (r.code !== 0) return null
   try {
     const j = JSON.parse(r.out)
-    return Array.isArray(j?.dead) ? j.dead.filter((d) => d && typeof d.say === 'string').map((d) => ({ what: String(d.what ?? ''), name: String(d.name ?? '').slice(0, 60), say: d.say.slice(0, 300) })) : null
+    if (!Array.isArray(j?.dead)) return null
+    const page = typeof j.page === 'string' && j.page.startsWith('/work/') ? j.page.slice('/work/'.length) : null
+    if (page !== null && !validRel(page)) return null
+    return { page, dead: page === null ? [] : j.dead.filter((d) => d && typeof d.say === 'string').map((d) => ({ what: String(d.what ?? ''), name: String(d.name ?? '').slice(0, 60), say: d.say.slice(0, 300) })) }
   } catch {
     return null
   }

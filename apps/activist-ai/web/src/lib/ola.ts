@@ -609,7 +609,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       // OLA-515: a page handed over is pressed all over, and only what is dead goes back, once (lib/poke.ts).
       if (t.status === 'done' && !t.nudge) {
         flagged.add(t.id)
-        void pokeAfter(t, state.directory, { poke: desk.poke, send: (text) => sendOla(text), stillLast: () => state.turns[state.turns.length - 1]?.id === t.id && !busy() && !state.suggestion })
+        void pokeAfter(t, { poke: desk.poke, send: (text) => sendOla(text), stillLast: () => state.turns[state.turns.length - 1]?.id === t.id && !busy() && !state.suggestion })
       }
       return
     }

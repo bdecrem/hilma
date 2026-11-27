@@ -78,6 +78,9 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.4.2-11 (OLA-515, the first live test on 9f7b72cc123f: the page was written with `cat > index.html`, no write step, so
+# nothing was pressed): `ola-poke --since <ms> /work` finds the .html file changed last since the turn began by its time,
+# however it was written, and prints page null when none changed. Builds on 2.4.2-10.
 # 2.4.2-10 (OLA-515; Bart, Nov 27: 'idea 1 (click around) we DO'): `ola-poke`, run by the front desk (never the model) after Ola's
 # model hands over a turn that wrote an .html file: it types into every field and presses every button of that page and
 # prints what is dead as JSON (poke_test.py). Builds on 2.4.2-9.

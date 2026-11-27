@@ -89,5 +89,21 @@ d = Path(tempfile.mkdtemp(prefix="ola-poke-test-"))
 r = subprocess.run([sys.executable, "-I", POKE, str(d / "index.html")], capture_output=True, text=True, timeout=60, env={**os.environ, "OLA_POKE_DEADLINE_S": "6"})
 ok("a page that hangs on a press: exits 1 within the deadline and prints nothing", r.returncode == 1 and not r.stdout.strip(), f"{r.returncode} {r.stdout[:200]} {r.stderr[-200:]}")
 
+# --since: the page is found by its time, however it was written (the first live test: `cat > index.html`
+# in a shell step, no write step), newest first, one page; none changed since then: nothing pressed.
+import time  # noqa: E402
+proj = Path(tempfile.mkdtemp(prefix="ola-poke-test-"))
+(proj / "old.html").write_text(PAGES["working"])
+os.utime(proj / "old.html", (time.time() - 3600, time.time() - 3600))
+(proj / ".shots").mkdir()
+(proj / ".shots" / "x.html").write_text(PAGES["load-error"])
+start_ms = (time.time() - 5) * 1000
+subprocess.run(["sh", "-c", f"cat > '{proj}/index.html'"], input=PAGES["dead-button"], text=True, check=True)
+r = subprocess.run([sys.executable, "-I", POKE, "--since", str(start_ms), str(proj)], capture_output=True, text=True, timeout=60)
+j = json.loads(r.stdout or "null") if r.returncode == 0 else None
+ok("--since: a page written by a shell command since the turn began is the one pressed (not an older page, not a dot folder)", j and j["page"].endswith("/index.html") and [x["say"] for x in j["dead"]] == ["Pressing 'Done' changed nothing on the page."], f"{r.returncode} {r.stdout[:300]} {r.stderr[-200:]}")
+r = subprocess.run([sys.executable, "-I", POKE, "--since", str((time.time() + 60) * 1000), str(proj)], capture_output=True, text=True, timeout=60)
+ok("--since: no page changed since then: {\"page\": null, \"dead\": []}, nothing pressed", r.returncode == 0 and json.loads(r.stdout or "null") == {"page": None, "dead": []}, f"{r.returncode} {r.stdout[:200]}")
+
 print(f"{sum(results)} passed, {len(results) - sum(results)} failed")
 sys.exit(0 if all(results) else 1)
