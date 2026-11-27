@@ -156,7 +156,8 @@ const finish = async (code) => {
 }
 for (const s of ['SIGTERM', 'SIGINT']) process.on(s, () => (say(`${s}: stopping; the next start of this arm carries on`), finish(3)))
 
-const done = new Set(rows().filter((r) => r.arm === ARM).map((r) => `${r.id}#${r.try}`))
+// A forced run (a check of this script) is not a measured run: it never stands in for one.
+const done = new Set(rows().filter((r) => r.arm === ARM && Boolean(r.forced) === Boolean(FORCE)).map((r) => `${r.id}#${r.try}`))
 say(`before-after: arm ${ARM}, ${todo.length} requests x ${TRIES}, ${done.size} already done, against ${liveRelease()}, through the website${FORCE ? ` (forced hand-off: ?escalate=${FORCE}, a check of this script)` : ''}`)
 password = await prepareAccount()
 signedIn = await signIn(password)
