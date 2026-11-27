@@ -4,6 +4,19 @@
 
 ## Do the work yourself — no lazy shortcuts
 
+### How much to check: one quick try (2026-11-27)
+
+Bart, after a 90-minute list was planned as three hours, a checker agent was put on a trivial change and a
+30-run measurement was proposed for an experiment: "we are over-testing right now ... what would be cool is
+1 test, not thirty." Everything below about verifying is read under this:
+
+- **The default is one quick try of the real thing**, done by the session itself, then say what was seen.
+- **More only when being wrong would lose data, money, sign-in, or something already sent to another person.**
+  Say what more and why in one line before doing it.
+- **An experiment or a new idea gets one run**, a handful at most. A batch of runs or a second agent to check
+  happens only when Bart asks for it.
+- "Verify" means look before you claim. It does not mean look many times.
+
 When a step is doable with the tools available, do it — don't punt it to Bart and don't offer to do it instead of just doing it.
 
 - **Verification is my job, not Bart's.** "Verify behavior" means I drive it. I have a browser (Playwright + Chrome MCP), a shell, DB access, and the iOS simulator. If checking the fix means loading a page, logging in, querying the database, or launching the app, I do that myself and report what I observed. Asking Bart to "load the page and tell me what you see" or "let me know if it works" is the lazy punt to avoid.

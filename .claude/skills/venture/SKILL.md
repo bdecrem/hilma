@@ -195,14 +195,11 @@ Bart, Nov 21, 5:26 am, typed: "Ola-338 yes", after finding that the Nov 20 rules
 button fix take 4 h 46 min (about 45% of it waiting for the Mac mini). Five rules; the tools hold
 the ones marked so:
 
-1. **Anything Bart will touch is tried once by a second agent** (a checker, `apps/venture/CHECKER.md`)
-   on the live site or the real build before he is told it works. `issues.mjs say` and the checks
-   enforce it, unchanged.
-   **Not for a small change** (Bart, Nov 27, on a checker started for taking a feature out: "the ola
-   change seems trivial. are you overthinking it?", then "kill the fucking second agent. sick of it."):
-   a removal, a rewording, a setting, anything the release's own suites cover gets NO second agent.
-   It closes on those suites passing on the live release, in one line. A checker is only for something
-   new that he will do or see.
+1. **One quick try by the lead, no second agent** (Bart, Nov 27: "kill the fucking second agent. sick of
+   it.", then "we are over-testing ... 1 test, not thirty"). Before Bart is told something works, the lead
+   tries it once on the real thing and says what it saw; the ticket closes on that line. A checker agent
+   (`apps/venture/CHECKER.md`) or a batch of runs is started only when Bart asks for one, or when being
+   wrong would lose data, money or sign-in, and then with one line saying why.
 2. **The project's own tools get no second agent** (scripts/venture, apps/venture, hooks, Ola's ops
    tools): the builder's tests, then the lead runs them once. Mark the ticket
    `issues.mjs check <id> internal --why "…"` and close it with

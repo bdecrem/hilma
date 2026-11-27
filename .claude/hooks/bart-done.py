@@ -98,7 +98,8 @@ def plan_usage():
         return ""
 
 
-remind = "\n\n".join(x for x in (plan_usage(), most_seen(), owed_fixes()) if x)
+ENOUGH = 'HOW MUCH TO CHECK (Bart, Nov 27: "we are over-testing ... 1 quick test, not 30"). The default is ONE quick try of the real thing, by the session itself, then say what you saw. More only when being wrong would lose data, money, sign-in or something already sent to another person: then say what more and why in one line first. An experiment or a new idea: one run, a handful at most. Never a second agent to check, and never a batch of runs, unless Bart asked for it. Every other line below about proof and checking is read under this one: it says to look before you claim, not to look many times.'
+remind = "\n\n".join(x for x in (ENOUGH, plan_usage(), most_seen(), owed_fixes()) if x)
 if not isinstance(data, dict):
     if remind:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": remind}}))
