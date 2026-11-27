@@ -1,10 +1,13 @@
 // node --test ops/studio-test.mjs: the Studio's install list check (OLA-100), on made-up machines.
 import assert from 'node:assert/strict'
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { check, etimeSeconds, settingNames } from './studio.mjs'
+import { hasPreview, scrubLine, scrubText } from './studio/model-log.mjs'
 
 const NOW = Date.parse('2026-12-02T12:00:00Z')
 
@@ -82,4 +85,49 @@ test('helpers', () => {
   assert.equal(etimeSeconds('1-02:03:04'), 93784)
   assert.equal(etimeSeconds('junk'), null)
   assert.deepEqual([...settingNames('# c\nA=1\n\nB_C=x=y\n')], ['A', 'B_C'])
+})
+
+// OLA-468: the model server's log keeps no words of an answer.
+
+const GEN = '{"event": "mtplx_openai_generation", "prompt_tokens": 812, "completion_tokens": 40, "finish_reason": "stop", "tok_s": 97.5, "text_preview": "Here is the spreadsheet of the tenants\\" union dues"}'
+
+test('model log: a generation line keeps its numbers and loses the answer text', () => {
+  const j = JSON.parse(scrubLine(GEN))
+  assert.equal(j.text_preview, undefined)
+  assert.deepEqual(j, { event: 'mtplx_openai_generation', prompt_tokens: 812, completion_tokens: 40, finish_reason: 'stop', tok_s: 97.5 })
+  assert.equal(JSON.parse(scrubLine('{"a":{"request_last_user_preview":"my rent","n":1},"content":"x"}')).a.n, 1)
+  assert.equal(scrubLine('{"a":{"request_last_user_preview":"my rent"}}').includes('rent'), false)
+})
+
+test('model log: a line that is not JSON loses a preview pair, other lines pass unchanged', () => {
+  assert.equal(scrubLine('INFO done "text_preview": "the tenants\\" list" ok'), 'INFO done "text_preview":"[removed]" ok')
+  assert.equal(scrubLine('MTPLX serving inkling on 127.0.0.1:8080'), 'MTPLX serving inkling on 127.0.0.1:8080')
+  assert.equal(hasPreview(GEN), true)
+  assert.equal(hasPreview(scrubText(`${GEN}\nplain\n`)), false)
+  assert.equal(hasPreview('"text_preview":""'), false)
+})
+
+test('model log: run passes the command through the scrub; scrub and dirty fix and check a written log', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'modellog-'))
+  const tool = path.join(path.dirname(fileURLToPath(import.meta.url)), 'studio/model-log.mjs')
+  const out = execFileSync(process.execPath, [tool, 'run', '--', process.execPath, '-e', `console.log(${JSON.stringify(GEN)}); console.error("warn")`], { encoding: 'utf8' })
+  assert.equal(out.includes('tenants'), false)
+  assert.match(out, /"completion_tokens":40/)
+  assert.match(out, /warn/)
+  const log = path.join(dir, 'model.log')
+  writeFileSync(log, `start\n${GEN}\n${GEN}\n`, { mode: 0o644 })
+  chmodSync(log, 0o644)
+  assert.throws(() => execFileSync(process.execPath, [tool, 'dirty', log], { encoding: 'utf8' }))
+  execFileSync(process.execPath, [tool, 'scrub', log], { encoding: 'utf8' })
+  assert.equal(statSync(log).mode & 0o777, 0o600)
+  assert.equal(readFileSync(log, 'utf8').includes('tenants'), false)
+  assert.equal(readFileSync(log, 'utf8').split('\n')[0], 'start')
+  execFileSync(process.execPath, [tool, 'dirty', log], { encoding: 'utf8' })
+})
+
+test("model log: the Studio's model job runs MTPLX through the filter, with a 077 umask", () => {
+  const sh = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'studio/setup.sh'), 'utf8')
+  assert.match(sh, /<string>\$LOG_FILTER<\/string><string>run<\/string><string>--<\/string>\s*<string>\/opt\/homebrew\/bin\/mtplx<\/string>/)
+  assert.match(sh, /<key>Umask<\/key><integer>63<\/integer>/)
+  assert.match(sh, /step "~\/Library\/Logs\/ola\/model.log mode 600/)
 })

@@ -165,6 +165,8 @@ MODELS=$HOME/ola-models
 KEYFILE=$OLA/model-key
 AGENT=$HOME/Library/LaunchAgents/cx.ola.model.plist
 GWENV=$OLA/gateway.env
+MODEL_LOG=$HOME/Library/Logs/ola/model.log
+LOG_FILTER=$OLA/model-log.mjs   # a copy outside the staging clone: the model's job starts before any deploy
 mode_of() { stat -f %Lp "$1" 2>/dev/null; }
 
 t_home() { [ "$(mode_of "$HOME")" = 700 ] && [ "$(mode_of "$OLA")" = 700 ] && [ "$(mode_of "$HOME/Library/Logs/ola")" = 700 ] && [ "$(mode_of "$MODELS")" = 700 ]; }
@@ -197,6 +199,7 @@ model_plist() {
 <plist version="1.0"><dict>
   <key>Label</key><string>cx.ola.model</string>
   <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/node</string><string>$LOG_FILTER</string><string>run</string><string>--</string>
     <string>/opt/homebrew/bin/mtplx</string><string>serve</string>
     <string>--model</string><string>$MODELS/$MODEL_DIR</string>
     <string>--model-id</string><string>$MODEL_ALIAS</string>
@@ -215,11 +218,19 @@ model_plist() {
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>30</integer>
-  <key>StandardOutPath</key><string>$HOME/Library/Logs/ola/model.log</string>
-  <key>StandardErrorPath</key><string>$HOME/Library/Logs/ola/model.log</string>
+  <key>Umask</key><integer>63</integer>
+  <key>StandardOutPath</key><string>$MODEL_LOG</string>
+  <key>StandardErrorPath</key><string>$MODEL_LOG</string>
 </dict></plist>
 EOF
 }
+# MTPLX writes the first 120 characters of every answer into its log (text_preview) and has no switch
+# for it, so its job runs under ops/studio/model-log.mjs, which drops it (OLA-468); Umask 077 above
+# makes a new log 600.
+t_log_filter() { cmp -s "$HERE/model-log.mjs" "$LOG_FILTER"; }
+d_log_filter() { (umask 077; cp "$HERE/model-log.mjs" "$LOG_FILTER"); }
+t_model_log() { [ ! -e "$MODEL_LOG" ] || /opt/homebrew/bin/node "$LOG_FILTER" dirty "$MODEL_LOG"; }
+d_model_log() { /opt/homebrew/bin/node "$LOG_FILTER" scrub "$MODEL_LOG"; }
 t_model_job() { [ -f "$AGENT" ] && [ "$(model_plist)" = "$(cat "$AGENT")" ] && launchctl print "gui/$(id -u)/cx.ola.model"; }
 d_model_job() {
   mkdir -p "$(dirname "$AGENT")"   # a new account has no ~/Library/LaunchAgents (Nov 24)
@@ -304,7 +315,9 @@ run_ola() {
   step "staging clone ~/ola-staging (no working tree)" t_clone d_clone
   step "the model's files ~/ola-models/$MODEL_DIR" t_pack d_pack
   step "the model server's key ~/.ola/model-key (600)" t_key d_key
-  step "launchd job cx.ola.model: mtplx serve on 127.0.0.1:$MODEL_PORT" t_model_job d_model_job
+  step "the model log's filter ~/.ola/model-log.mjs (no answer text in the log)" t_log_filter d_log_filter
+  step "launchd job cx.ola.model: mtplx serve on 127.0.0.1:$MODEL_PORT, through the filter" t_model_job d_model_job
+  step "~/Library/Logs/ola/model.log mode 600, no answer text in it" t_model_log d_model_log
   step "the model answers as \"$MODEL_ALIAS\"" t_model_up d_model_up
   human "the settings moved from the mini" t_envs "on the iMac: ops/studio/move-env.sh ola@<studio> (README step 6)"
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi

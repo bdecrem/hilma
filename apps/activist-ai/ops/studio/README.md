@@ -42,7 +42,11 @@ first on a 128 GB Mac: always name the Inkling pack.
   launchd job `cx.ola.model` in the ola account, `127.0.0.1:8080` only, with the key
   (`~/.ola/model-key`, 600), served as `inkling`, thinking on medium. It serves one request at a time
   and the rest wait: three people at once each took about 20 minutes for a 5 to 10 minute job.
-  Its log: `~/Library/Logs/ola/model.log`.
+  Its log: `~/Library/Logs/ola/model.log`, mode 600. MTPLX writes the first 120 characters of every
+  answer into it (`text_preview`) and has no switch for that, so the job runs it under
+  `model-log.mjs` (copied to `~/.ola/model-log.mjs`), which drops every preview before the line is
+  written; `node ~/.ola/model-log.mjs dirty ~/Library/Logs/ola/model.log` says whether any is left
+  (OLA-468). MTPLX's own request log, `~/.mtplx/logs`, already stores only a digest.
 - **The gateway:** `UPSTREAM_BASE_URL=http://127.0.0.1:8080/v1` and every name, `general`, `see`,
   `ocr`, `read`, `translate`, `route`, mapped to the one model (`GATEWAY_MODELS`). The two fallbacks
   (Claude, a hosted model) stay off by default and per project. The gateway's old settings are kept
