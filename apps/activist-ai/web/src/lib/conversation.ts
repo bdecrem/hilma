@@ -5,7 +5,7 @@
 import type { Approval, Problem, Question, Step, Turn } from './types.ts'
 import { shown } from './commands.ts'
 import { questionCard } from '../../server/cards.mjs'
-import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, nudgeOf, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
+import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, nudgeOf, runProblem, shellFailed, stepProblem, STUCK_WORDS, testOutcome } from './steps.ts'
 
 export interface ConversationState {
   sessionID: string | null
@@ -103,9 +103,14 @@ function finishStep(step: Step, ok: boolean, at: number, output: string, metadat
   step.detail.output = output
   step.ended = at
   const exit = ok ? shellFailed(metadata) : null
-  if (ok && exit === null) {
+  // OLA-488: a test run whose own last line says it failed ("0 passed, 0 failed, 1 error") is a failed step.
+  const testFailed = ok && exit === null && testOutcome(step) === 'failed'
+  if (ok && exit === null && !testFailed) {
     step.status = 'done'
     step.result = describeResult(step.tool, safeParse(step.detail.input), output, metadata)
+  } else if (testFailed) {
+    step.status = 'failed'
+    step.error = 'The test did not pass. What it printed is under Show details.'
   } else {
     step.status = 'failed'
     step.error = exit !== null ? 'The program stopped with an error. What it printed is under Show details.' : (problem?.text ?? 'This step did not work.')

@@ -315,6 +315,14 @@ public struct Conversation: Equatable, Sendable {
     }.joined(separator: "\n")
   }
 
+  /// OLA-488: a test run whose own last line says it failed ("0 passed, 0 failed, 1 error") is a failed step.
+  func markFailedTest(_ step: inout Step) {
+    guard step.status == .done, Escalate.testOutcome(step) == .failed else { return }
+    step.status = .failed
+    step.result = nil
+    step.error = "The test did not pass. What it printed is under Show details."
+  }
+
   private func finish(_ step: inout Step, ok: Bool, at: Date, output: String, metadata: JSON, problem: Problem?) {
     step.output = output
     step.ended = at
@@ -322,6 +330,7 @@ public struct Conversation: Equatable, Sendable {
     if ok && exit == nil {
       step.status = .done
       step.result = Plain.describeResult(step.tool, input: JSON.parse(step.input) ?? .object([:]), output: output, metadata: metadata)
+      markFailedTest(&step)
     } else {
       step.status = .failed
       step.error = exit.map { "The program stopped with an error (exit code \($0))." } ?? problem?.text ?? "This step did not work."
@@ -542,6 +551,7 @@ public struct Conversation: Equatable, Sendable {
               if name == "shell" || name == "bash" { step.input = input.pretty }
               scratch.finish(&step, ok: true, at: step.ended ?? started, output: scratch.outputText(part["state"]["content"]), metadata: part["state"]["metadata"], problem: nil)
               step.input = raw
+              scratch.markFailedTest(&step)
             } else if st == "error" {
               scratch.finish(&step, ok: false, at: step.ended ?? started, output: part["state"]["error"]["message"].str, metadata: part["state"]["metadata"], problem: Plain.stepProblem(part["state"]["error"]))
             }
