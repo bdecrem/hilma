@@ -27,7 +27,7 @@ MODELS=(
   "nemotron|llama|$M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_0.gguf|131072|Nemotron 3.5 Super VL 120B, 4-bit, 72 GB"
   "gpt-oss|llama|$B/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf|131072|gpt-oss-120b, 4-bit, 63 GB"
   "qwen|mtplx|$B/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed|131072|Qwen3.8-Flash-Next, 4-bit, 115 GB on disk, about 83 GB in memory"
-  "inkling2-small|llama|$B/Inkling-2-Small/UD-Q3_K_XL/*00001-of-*.gguf|65536|Inkling 2 Small, 3-bit, 285 GB: larger than memory, its experts read from the SSD; slow, for overnight work"
+  "inkling2-small|llama-ssd|$B/Inkling-2-Small/UD-Q3_K_XL/*00001-of-*.gguf|16384|Inkling 2 Small, 3-bit, 285 GB: larger than memory, its experts read from the SSD; slow, for overnight work"
 )
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
 row() { for r in $MODELS; do [[ ${r%%|*} == $1 ]] && { print -r -- $r; return 0 }; done; return 1; }
@@ -57,6 +57,10 @@ serve() {  # name port keyfile id
   local log=$LOGS/bigmodel-$name.log
   if [[ $kind == mtplx ]]; then
     nohup mtplx serve --model $p --model-id $id --host 127.0.0.1 --port $port --api-key-file $keyf --context-window $ctx --no-stats-footer --yes > $log 2>&1 &
+  elif [[ $kind == llama-ssd ]]; then
+    # Larger than memory: the experts stay memory-mapped on the CPU side and are read from the SSD as they
+    # are used (--cpu-moe); everything else goes to the GPU. No warm-up run, it would only read the disk.
+    nohup $LLAMA -m $p --alias $id --host 127.0.0.1 --port $port --api-key-file $keyf --jinja -c $ctx -ngl 999 --cpu-moe --no-warmup -np 1 > $log 2>&1 &
   else
     nohup $LLAMA -m $p --alias $id --host 127.0.0.1 --port $port --api-key-file $keyf --jinja -c $ctx -ngl 999 -np 1 > $log 2>&1 &
   fi
