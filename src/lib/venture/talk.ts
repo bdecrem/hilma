@@ -112,9 +112,9 @@ export async function* talkStream(lead: string, messages: TalkMsg[], signal?: Ab
       return
     }
     // OLA-478: the mini's Claude login at its plan limit is said as that, with when it comes back.
-    if (res.status === 502 && /hit your .*limit/i.test(why)) {
+    if (res.status === 502 && /hit your .{0,40}limit|limit (?:reached|hit)|usage limit|rate.?limit/i.test(why)) {
       console.error('[venture/talk] plan limit on the mini:', why)
-      const when = why.match(/resets\s+([^·(\n]+?)\s*(?:\(|·|$)/i)?.[1]
+      const when = why.match(/resets\s+([^·∙|(\n]+?)\s*(?:\(|·|∙|\||$)/i)?.[1]
       yield `The Claude login on the Mac mini has hit its plan limit${when ? ` and comes back at ${when}` : ''}, so I can't answer on this call until then.`
       return
     }
