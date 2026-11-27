@@ -74,11 +74,16 @@ for d in $(sed -n 's#^ *- path: \.\./\([A-Za-z0-9_-]*\).*#\1#p' project.yml | so
 done
 }
 
+# The commit it is built from, in the Mac app's Info.plist (OlaCommit, as tools/build.sh does; "+changes"
+# when the tree differs). The phone drive builds the shipped build's commit from the Mac download's
+# OlaCommit (tools/drive.sh); until Nov 27 the archives were made without it, so build 36 said "" and
+# every default phone drive stopped at "names no OlaCommit" (OLA-362).
+COMMIT="$(git rev-parse --short=12 HEAD)$(git diff --quiet HEAD -- .. 2>/dev/null || echo +changes)"
 archive() { # $1 scheme, $2 destination, $3 name
   if [ "$MINI" = local ]; then
     echo "== archiving $3 here (unsigned)"
     xcodebuild archive -project Ola.xcodeproj -scheme "$1" -destination "$2" -archivePath "$OUT/$3.xcarchive" \
-      -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/ola-shared" \
+      -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/ola-shared" OLA_COMMIT="$COMMIT" \
       CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > "$OUT/$3-archive.log" 2>&1 \
       || { grep -E 'error:' "$OUT/$3-archive.log" | sort -u | head -20; echo "error: archive failed ($OUT/$3-archive.log)" >&2; exit 1; }
   else
@@ -86,7 +91,7 @@ archive() { # $1 scheme, $2 destination, $3 name
   ssh -o ConnectTimeout=10 "$MINI" "set -e; export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH; cd ~/ola-ship/apple
     rm -rf ~/ola-ship/$3.xcarchive ~/ola-ship/$3.xcarchive.tgz
     xcodebuild archive -project Ola.xcodeproj -scheme $1 -destination '$2' -archivePath ~/ola-ship/$3.xcarchive \
-      -configuration Release -derivedDataPath ~/ola-ship/dd-$3 -clonedSourcePackagesDirPath ~/ola-ship/spm \
+      -configuration Release -derivedDataPath ~/ola-ship/dd-$3 -clonedSourcePackagesDirPath ~/ola-ship/spm OLA_COMMIT='$COMMIT' \
       CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > ~/ola-ship/$3-archive.log 2>&1 \
       || { grep -E 'error:' ~/ola-ship/$3-archive.log | sort -u | head -20; exit 1; }
     cd ~/ola-ship && tar czf $3.xcarchive.tgz $3.xcarchive" \
@@ -97,6 +102,8 @@ archive() { # $1 scheme, $2 destination, $3 name
   [ -f "$plist" ] || plist="$OUT/$3.xcarchive/Products/Applications/Ola.app/Contents/Info.plist"
   local got; got=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$plist")
   [ "$got" = "$BUILD" ] || { echo "error: the mini archived build $got, project.yml says $BUILD" >&2; exit 1; }
+  got=$(/usr/libexec/PlistBuddy -c "Print OlaCommit" "$plist" 2>/dev/null)
+  [ "$1" != OlaMac ] || [ "$got" = "$COMMIT" ] || { echo "error: $3 says OlaCommit '$got', not $COMMIT (the phone drive builds from it)" >&2; exit 1; }
   local ver; ver=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$plist")
   [ "$ver" = "$VERSION" ] || { echo "error: the mini archived version $ver, project.yml says $VERSION" >&2; exit 1; }
   [ "$(/usr/libexec/PlistBuddy -c 'Print ITSAppUsesNonExemptEncryption' "$plist")" = false ] \
