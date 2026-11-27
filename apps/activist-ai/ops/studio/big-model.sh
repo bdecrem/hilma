@@ -24,7 +24,6 @@ LLAMA=$HOME/llama-head/build/bin/llama-server
 D=gui/$(id -u)
 # name | kind | path (a file, or for a split GGUF its first part; a folder for mtplx) | context | what it is
 MODELS=(
-  "nemotron|llama|$M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_0.gguf|131072|Nemotron 3.5 Super VL 120B, 4-bit, 72 GB"
   "qwen|mtplx|$B/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed|131072|Qwen3.8-Flash-Next, 4-bit, 115 GB on disk, about 83 GB in memory"
   "inkling2-small|llama-ssd|$B/Inkling-2-Small/UD-Q3_K_XL/*00001-of-*.gguf|16384|Inkling 2 Small, 3-bit, 285 GB: larger than memory, its experts read from the SSD; slow, for overnight work"
 )
