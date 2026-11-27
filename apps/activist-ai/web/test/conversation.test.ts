@@ -121,6 +121,8 @@ test('words for common commands and tools', () => {
   assert.equal(describeCommand('wc -l survey.csv').verb, 'Counted the lines in')
   // Ola's own commands are said as what they do, never by name (first-user pass: "Ran ola-page").
   assert.deepEqual(describeCommand('ola-page index.html --width 390 --out shot.png'), { icon: 'check', verb: 'Looked at how the page shows', object: 'index.html' })
+  // OLA-474: the agent's own checks of its code.
+  assert.deepEqual(describeCommand('ola-test calc.js calc.test.js'), { icon: 'check', verb: 'Tested', object: 'calc.js' })
   assert.equal(describeCommand('/opt/ola/bin/ola-ocr --pages 2 scans/study-3.pdf').object, 'study-3.pdf')
   assert.equal(describeCommand('ola-translate ley.md --to en').verb, 'Translated')
   assert.equal(describeCommand('ola-something-new x').verb, 'Used one of Ola’s tools')

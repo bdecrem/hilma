@@ -53,6 +53,9 @@ final class FoldTests: XCTestCase {
     XCTAssertEqual(Plain.describeCommand("python3 totals.py survey.csv").verb, "Ran")
     XCTAssertEqual(Plain.describeCommand("python3 totals.py survey.csv").object, "totals.py")
     XCTAssertEqual(Plain.describeCommand("ls -la").verb, "Looked through")
+    // OLA-474: the agent's own checks of its code, in the web app's words.
+    XCTAssertEqual(Plain.describeCommand("ola-test calc.js calc.test.js").verb, "Tested")
+    XCTAssertEqual(Plain.describeCommand("/opt/ola/bin/ola-test sheet/calc.js sheet/calc.test.js").object, "calc.js")
     XCTAssertEqual(Plain.describeTool("read", input: ["path": "/Users/admin/ola-bart/a/b.csv"], dir: "/Users/admin/ola-bart").object, "a/b.csv")
     XCTAssertEqual(Plain.present("Ran a short program"), "Run a short program")
     XCTAssertEqual(Plain.shellFailed(["exit": 2]), 2)

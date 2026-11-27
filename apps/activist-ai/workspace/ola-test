@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""ola-test: run the checks you wrote for your own code, in the browser that is in this computer, and
+print pass and fail as text (OLA-474). It is not a look at a page: it takes no picture and is not counted
+with ola-page's looks.
+
+    ola-test calc.js calc.test.js          the files run in order in one blank page, sharing their names
+    ola-test index.html calc.test.js       the page loads first, then the test file runs inside it
+
+In the test file, two functions are there for you:
+
+    check("1 + 2", add(1, 2), 3)           passes when the value is the one expected (numbers to 1e-9,
+                                           anything else compared as JSON)
+    test("an empty cell is blank", () => { if (show("") !== "") throw new Error("not blank") })
+
+console.log lines are printed too. The checks run at once, as the files load (not inside a timer).
+Exit 0 when every check passed, 1 when one failed, a file threw or no check ran, 2 on a usage error.
+Only Python's standard library; the browser is ola-page's (on a Mac, the Ola app's web view).
+"""
+import importlib.util, json, os, shutil, sys, tempfile, threading, time, uuid
+from pathlib import Path
+
+HERE = Path(os.path.realpath(__file__)).parent
+
+
+def page_module():
+    """ola-page's code (the browser, the file server): olapage.py beside this on a Mac, ola-page elsewhere."""
+    for name in ("olapage.py", "ola-page"):
+        f = HERE / name
+        if f.is_file():
+            from importlib.machinery import SourceFileLoader
+            spec = importlib.util.spec_from_loader("olapage", SourceFileLoader("olapage", str(f)))
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules["olapage"] = mod
+            spec.loader.exec_module(mod)
+            return mod
+    return None
+
+
+# Runs in the page, once it has loaded: defines check and test, runs each file as a script (so their
+# functions are shared, as on a page), and answers what happened as JSON.
+RUN = r"""
+(() => {
+  const out = { results: [], errors: [], logs: [] }
+  const fmt = (v) => { try { const s = JSON.stringify(v); return s === undefined ? String(v) : s } catch (e) { return String(v) } }
+  const same = (a, b) => typeof a === 'number' && typeof b === 'number'
+    ? (Number.isNaN(a) && Number.isNaN(b)) || a === b || Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b))
+    : fmt(a) === fmt(b)
+  window.check = (name, got, want) => {
+    const ok = same(got, want)
+    out.results.push(ok ? { name: String(name), ok } : { name: String(name), ok, got: fmt(got), want: fmt(want) })
+    return ok
+  }
+  window.test = (name, fn) => {
+    try {
+      const r = fn()
+      out.results.push(r === false ? { name: String(name), ok: false, got: 'false', want: 'true' } : { name: String(name), ok: true })
+    } catch (e) {
+      out.results.push({ name: String(name), ok: false, threw: String((e && e.message) || e) })
+    }
+  }
+  console.log = (...a) => { out.logs.push(a.map((x) => (typeof x === 'string' ? x : fmt(x))).join(' ')) }
+  const onError = (e) => out.errors.push(((e.filename || '').split('/').pop() || 'a file') + (e.lineno ? ' line ' + e.lineno : '') + ': ' + String(e.message || e.error || 'error'))
+  addEventListener('error', onError)
+  for (const f of FILES) {
+    const s = document.createElement('script')
+    s.textContent = f.code + '\n//# sourceURL=' + f.name
+    document.head.appendChild(s)
+  }
+  removeEventListener('error', onError)
+  return JSON.stringify(out)
+})()
+"""
+
+MAX_LINES = 200
+
+
+def report(names, page, r, page_errors):
+    """The plain lines, and the exit code."""
+    results, errors = r.get("results", []), list(page_errors) + r.get("errors", [])
+    passed = sum(1 for x in results if x.get("ok"))
+    failed = len(results) - passed
+    where = f"{', '.join(names)} inside {page}" if page else ", ".join(names)
+    print(f"ola-test: ran {where} in the browser")
+    shown = 0
+    for x in results:
+        if shown >= MAX_LINES:
+            break
+        if x.get("ok"):
+            print(f"  pass: {x['name'][:120]}")
+        elif "threw" in x:
+            print(f"  FAIL: {x['name'][:120]}: it threw {x['threw'][:200]}")
+        else:
+            print(f"  FAIL: {x['name'][:120]}: got {x['got'][:200]}, expected {x['want'][:200]}")
+        shown += 1
+    for e in errors[:20]:
+        print(f"  ERROR: {e[:240]}")
+    for l in r.get("logs", [])[:40]:
+        print(f"  log: {l[:200]}")
+    if not results and not errors:
+        print("  no check ran: call check(name, got, expected) or test(name, fn) in the test file")
+    print(f"{passed} passed, {failed} failed" + (f", {len(errors)} {'error' if len(errors) == 1 else 'errors'}" if errors else ""))
+    return 0 if results and not failed and not errors else 1
+
+
+def in_chromium(olapage, page, files):
+    """The image's way (and Bart's machine): ola-page's headless Chromium, the page's folder served on 127.0.0.1."""
+    binary = os.environ.get("OLA_PAGE_CHROMIUM") or next((c for c in olapage.CANDIDATES if os.access(c, os.X_OK)), None) or shutil.which("chromium-headless-shell")
+    if not binary:
+        print("ola-test: no browser is installed on this computer", file=sys.stderr)
+        return None
+    olapage.Quiet.root = str(page.parent)
+    srv = olapage.Server(("127.0.0.1", 0), olapage.Quiet)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}/{page.name}"
+    profile = tempfile.mkdtemp(prefix="ola-test-")
+    cdp = None
+    import signal
+
+    def overdue(*_):
+        raise TimeoutError("the tests took longer than %d s" % deadline)
+    deadline = int(os.environ.get("OLA_PAGE_DEADLINE_S", "150"))
+    signal.signal(signal.SIGALRM, overdue)
+    signal.alarm(deadline)
+    try:
+        cdp = olapage.CDP(binary, profile)
+        tid = cdp.send("Target.createTarget", {"url": "about:blank"})["targetId"]
+        sid = cdp.send("Target.attachToTarget", {"targetId": tid, "flatten": True})["sessionId"]
+        for m in ("Page.enable", "Runtime.enable"):
+            cdp.send(m, session=sid)
+        cdp.send("Page.navigate", {"url": url}, session=sid)
+        end = time.time() + 20
+        while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events):
+            cdp.pump(0.25)
+        cdp.pump(0.2)
+        page_errors = []
+        for e in cdp.events:
+            if e.get("method") == "Runtime.exceptionThrown":
+                d = e.get("params", {}).get("exceptionDetails", {})
+                page_errors.append("the page: " + ((d.get("exception") or {}).get("description") or d.get("text") or "error").split("\n")[0][:200])
+        res = cdp.send("Runtime.evaluate", {"expression": "const FILES = " + json.dumps(files) + ";" + RUN, "returnByValue": True}, session=sid, timeout=deadline)
+        value = (res.get("result") or {}).get("value")
+        if not isinstance(value, str):
+            raise RuntimeError(((res.get("exceptionDetails") or {}).get("text") or "the tests did not run")[:200])
+        return json.loads(value), page_errors
+    finally:
+        signal.alarm(0)
+        if cdp:
+            cdp.close()
+        srv.shutdown()
+        shutil.rmtree(profile, ignore_errors=True)
+
+
+def in_mac_app(page, files):
+    """On a Mac: the Ola app runs the page in its own web view (bart/ola-page-mac's way), and the script's answer comes back."""
+    box = Path(os.environ["OLA_RENDER_DIR"])
+    rid = uuid.uuid4().hex
+    script = "(() => { const FILES = " + json.dumps(files) + "; return " + RUN.strip() + " })()"
+    req = {"id": rid, "page": str(page), "root": str(page.parent), "width": 400, "height": 300, "viewport": True,
+           "scale": 1, "dark": False, "wait": 200, "measure": script, "max_height": 300}
+    inbox, outbox = box / "in", box / "out"
+    inbox.mkdir(exist_ok=True)
+    tmp = inbox / f".{rid}.tmp"
+    tmp.write_text(json.dumps(req))
+    tmp.rename(inbox / f"{rid}.json")
+    answer = outbox / f"{rid}.json"
+    end = time.time() + int(os.environ.get("OLA_PAGE_DEADLINE_S", "150"))
+    while time.time() < end and not answer.exists():
+        time.sleep(0.2)
+    if not answer.exists():
+        (inbox / f"{rid}.json").unlink(missing_ok=True)
+        raise RuntimeError("the Ola Mac app did not run the tests in time (is it open?)")
+    r = json.loads(answer.read_text())
+    answer.unlink(missing_ok=True)
+    if r.get("png"):
+        Path(r["png"]).unlink(missing_ok=True)
+    if not r.get("ok"):
+        raise RuntimeError(str(r.get("error", "unknown"))[:200])
+    rep = r.get("report") or {}
+    return rep, ["the page: " + e for e in rep.get("script_errors") or []]
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 0 if argv else 2
+    paths = [Path(a) for a in argv]
+    pages = [p for p in paths if p.suffix.lower() in (".html", ".htm")]
+    scripts = [p for p in paths if p not in pages]
+    if len(pages) > 1 or not scripts or any(p.suffix.lower() not in (".js", ".mjs") for p in scripts):
+        print("ola-test: give one or more .js files (the code, then its checks), with at most one .html page first", file=sys.stderr)
+        return 2
+    for p in paths:
+        if not p.is_file():
+            print(f"ola-test: no such file: {p}", file=sys.stderr)
+            return 2
+    files = [{"name": p.name, "code": p.read_text(errors="replace")} for p in scripts]
+    harness = None
+    if pages:
+        page = pages[0].resolve()
+    else:
+        # A blank page beside the first file (a dot name: it stays out of the person's Files), removed after.
+        page = harness = scripts[0].resolve().parent / f".ola-test-{os.getpid()}.html"
+        harness.write_text("<!doctype html><meta charset=utf-8><title>ola-test</title><body></body>\n")
+    try:
+        if os.environ.get("OLA_RENDER_DIR") and Path(os.environ["OLA_RENDER_DIR"]).is_dir():
+            got = in_mac_app(page, files)
+        else:
+            olapage = page_module()
+            if not olapage:
+                print("ola-test: ola-page is not beside ola-test, so there is no browser to run in", file=sys.stderr)
+                return 1
+            got = in_chromium(olapage, page, files)
+            if got is None:
+                return 1
+    except Exception as e:
+        print(f"ola-test: the tests could not run ({type(e).__name__}: {str(e)[:200]})", file=sys.stderr)
+        return 1
+    finally:
+        if harness:
+            harness.unlink(missing_ok=True)
+    return report([p.name for p in scripts], pages[0].name if pages else None, *got)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

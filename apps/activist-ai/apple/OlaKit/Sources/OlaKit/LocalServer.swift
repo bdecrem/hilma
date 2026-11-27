@@ -47,8 +47,9 @@ public final class LocalServer: @unchecked Sendable {
   /// this app's own web view: bart/ola-page-mac, with the sealed image's ola-page beside it as
   /// olapage.py for its measurements and its words) are what Ola's designer skills look with.
   /// ola-publish (OLA-223, ../bart/ola-publish) puts a folder on Ola's sites address through the
-  /// same door, only when signed in.
-  public static let webToolNames = ["ola-search", "ola-fetch", "ola-lookup", "ola-db", "ola-made-by", "olaspec.py", "olatext.py", "ola-see", "ola-page", "olapage.py", "ola-publish"]
+  /// same door, only when signed in. ola-test (OLA-474) runs the agent's own checks of its code in
+  /// this app's web view, the same way as ola-page.
+  public static let webToolNames = ["ola-search", "ola-fetch", "ola-lookup", "ola-db", "ola-made-by", "olaspec.py", "olatext.py", "ola-see", "ola-page", "olapage.py", "ola-test", "ola-publish"]
   /// The file each tool is copied from, when its name in the app's Resources or the repo differs.
   static let webToolFrom = ["ola-page": "ola-page-mac", "olapage.py": "ola-page"]
   nonisolated(unsafe) public static var webToolsSource: URL? = Bundle.main.resourceURL.flatMap { r in

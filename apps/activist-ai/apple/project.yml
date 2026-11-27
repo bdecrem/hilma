@@ -37,7 +37,7 @@ targets:
       # Ola's web commands for "On this Mac" (OlaKit LocalServer.installWebTools), the same files
       # as the customers' sealed image.
       - path: ../workspace
-        includes: [ola-search, ola-fetch, ola-lookup, ola-db, ola-made-by, olaspec.py, lib/olatext.py, ola-see, ola-page]
+        includes: [ola-search, ola-fetch, ola-lookup, ola-db, ola-made-by, olaspec.py, lib/olatext.py, ola-see, ola-page, ola-test]
         buildPhase: resources
         group: WebTools
       # ola-page on this Mac: asks this app to render a page in its own web view (Mac/PageRender.swift).

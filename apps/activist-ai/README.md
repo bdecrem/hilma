@@ -2545,6 +2545,16 @@ evals had it loop up to 104 steps guessing at pages it could not see). The rende
 without it, the skill says in one line that it could not look at the page itself and relies on the
 measurements.
 
+**`ola-test <code.js>… <checks.js>` (OLA-474, image 2.4.2-3)** runs the checks the model wrote for its
+own code in the same headless browser (or, in front of an `.html` page, inside that page) and prints
+`pass:` / `FAIL: <name>: got …, expected …` / `ERROR:` lines and `n passed, m failed`; exit 1 on any
+failure. The test file calls `check(name, got, expected)` or `test(name, fn)`. It takes no picture and is
+not counted with ola-page's looks. Why: in OLA-467 one round of real results took the Studio's model from
+16 of 28 checks to 28 of 28, and it had reached for `node`, which the image does not have. `AGENTS.md`
+says it in two sentences: a page that only shows things keeps the fast path; anything that computes
+gets 8 to 10 cases run with it, at most three rounds. On a Mac the same file runs the checks in the Ola
+app's web view (as `ola-page` there does); on Bart's machine (`bart/ola-bart.sh`) in its Chromium.
+
 **With and without:** `evals/run.mjs --skills on|off` runs a task with the skills offered or with the
 session denied every skill, and `evals/skills-report.mjs` puts the two side by side, per skill, over
 eight tasks (`s1` to `s8`, two per skill). First measurement on GLM-5.3-Flash, 3 seeds: 23 of 24 runs passed with the skills, 16 of 19 without, with about a third fewer tokens; the report skill is the clearest gain, and the design-pass arm without skills is incomplete (the spending ceiling ran out). Details in `evals/README.md`, numbers in `evals/results/summary-skills.json`.

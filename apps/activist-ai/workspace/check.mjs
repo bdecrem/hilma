@@ -640,6 +640,22 @@ print(json.dumps({"code": r.returncode, "did": j.get("did"), "text": j.get("text
       const did = r.did || []
       t('ola-page --do: fills fields by words and by number, picks a choice, clicks a button by its words, says FAILED for a button that is not there, and prints the words after', r.code === 0 && did.length === 5 && did.slice(0, 4).every((d) => d.endsWith('ok') || d.includes('-> ok')) && did[4].includes('FAILED') && /Buy milk due 2026-12-01 High/.test(r.text || '') && r.printed === true, JSON.stringify(r).slice(0, 300))
     }
+    // ola-test (OLA-474): the agent runs the checks it wrote for its own code in the browser here, and reads pass and fail as text
+    {
+      const run = String.raw`
+import json, os, subprocess
+os.makedirs("/tmp/t", exist_ok=True)
+open("/tmp/t/calc.js", "w").write("function add(a, b) { return a + b }\n")
+open("/tmp/t/calc.test.js", "w").write('check("one plus two", add(1, 2), 3)\ncheck("two plus two", add(2, 2), 5)\n')
+open("/tmp/t/ok.test.js", "w").write('check("one plus two", add(1, 2), 3)\n')
+bad = subprocess.run(["ola-test", "/tmp/t/calc.js", "/tmp/t/calc.test.js"], capture_output=True, text=True, timeout=120)
+good = subprocess.run(["ola-test", "/tmp/t/calc.js", "/tmp/t/ok.test.js"], capture_output=True, text=True, timeout=120)
+print(json.dumps({"bad": [bad.returncode, bad.stdout[-400:]], "good": [good.returncode, good.stdout[-200:]], "left": [f for f in os.listdir("/tmp/t") if f.startswith(".ola-test")]}))
+`
+      const r = insideJSON(A, run, { timeout: 240_000 })
+      const [bc, bo] = r.bad || [], [gc, go] = r.good || []
+      t('ola-test: runs the code and its checks in the browser inside the VM, prints pass and FAIL with what it got, exits 1 on a failure and 0 when all pass, and leaves no file behind', bc === 1 && /pass: one plus two/.test(bo) && /FAIL: two plus two: got 4, expected 5/.test(bo) && /1 passed, 1 failed/.test(bo) && gc === 0 && /1 passed, 0 failed/.test(go) && r.left?.length === 0, JSON.stringify(r).slice(0, 400))
+    }
     // ola-page against a page that never ends and one that eats memory (review 5 follow-up): each look
     // ends within its deadline, the browser is held to its share of memory, nothing of it is left
     // running, and opencode lives on. Small limits here so the check is quick.
