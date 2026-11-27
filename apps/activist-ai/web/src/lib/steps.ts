@@ -54,7 +54,7 @@ export function describeCommand(command: string): Words {
   const file = (c.split(/\s+/).slice(1).map((a) => a.replace(/^["']|["']$/g, '')).find((a) => !a.startsWith('-') && /\.\w{1,5}$/.test(a)) ?? '').split('/').pop() ?? ''
   const OWN: Record<string, Words> = {
     'ola-page': { icon: 'check', verb: 'Looked at how the page shows', object: file },
-    'ola-test': { icon: 'check', verb: 'Tested', object: file },
+    'ola-test': { icon: 'check', verb: 'Tested', object: file || 'its work' },
     'ola-view': { icon: 'look', verb: 'Looked at', object: file },
     'ola-see': { icon: 'look', verb: 'Looked at the picture', object: file },
     'ola-ocr': { icon: 'read', verb: 'Read the scanned pages of', object: file },

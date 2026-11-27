@@ -66,7 +66,7 @@ public enum Plain {
     if matches(c, #"^(?:/opt/ola/bin/)?ola-test(\s|$)"#) {
       let file = c.split(whereSeparator: \.isWhitespace).dropFirst().map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "\"'")) }
         .first { !$0.hasPrefix("-") && matches($0, #"\.\w{1,5}$"#) } ?? ""
-      return Words(icon: .check, verb: "Tested", object: file.split(separator: "/").last.map(String.init) ?? file)
+      return Words(icon: .check, verb: "Tested", object: file.isEmpty ? "its work" : file.split(separator: "/").last.map(String.init) ?? file)
     }
     if let script = firstMatch(c, #"^(?:python3?|node|Rscript|bash|sh)\s+(?!-)([\w./-]+\.(?:py|js|mjs|R|sh))"#, group: 1) {
       return Words(icon: .run, verb: "Ran", object: script.split(separator: "/").last.map(String.init) ?? script)
