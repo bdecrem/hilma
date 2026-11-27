@@ -1,0 +1,68 @@
+Batch 1 of Ola's open bugs (apps/activist-ai), oldest first, 2026-11-27.
+
+1. P1 OLA-299  A new project on a full machine says 'Lost the connection to Ola's computer. Trying again' forever instead of saying the machine is full
+Test server, release 44ec5d68e931, Nov 20 16:21-16:27 PST, app.ola.cx at 390 px in WebKit and Chromium, two made-up accounts each with a new project (chk267w-test, chk267c-test). Both stayed on 'Opening your project…' with 'Lost the connection to Ola's computer. Trying again' for 6 minutes over four reloads; the first sentence then failed (no composer). ws.mjs start on the mini said: '4 workspaces are already running; the machine runs at most 4' (appdriver, askcases, ola168-chk and one of mine). The person is never told the machine is full or when it will open. The checker's screenshots of it were overwritten by a later run (checker's mistake); to see it again, open a fifth project while four run.
+
+
+thread:
+  Nov 20, 4:28 PM      kit      edited the description to: Test server, release 44ec5d68e931, Nov 20 16:21-16:27 PST, app.ola.cx at 390 px in WebKit and Chromium, two made-up accounts each with a new project (chk267w-test, chk267c-test). Both stayed on 'Opening your project…' with 'Lost the connection to Ola's computer. Trying again' for 6 minutes over four reloads; the first sentence then failed (no composer). ws.mjs start on the mini said: '4 workspaces are already running; the machine runs at most 4' (appdriver, askcases, ola168-chk and one of mine). The person is never told the machine is full or when it will open. The checker's screenshots of it were overwritten by a later run (checker's mistake); to see it again, open a fifth project while four run.
+
+2. P1 OLA-330  Ola tells times and dates in UTC in a cloud project: 'today (Sat Nov 21)' on Friday evening in California
+Live 18f9cd483982, Nov 20 about 9:33 pm PST, cloud project chk1122a-test (made-up person). Asked for a block party page on Saturday, Ola's card said 'Party is today (Sat Nov 21)' although it was Friday Nov 20 evening for the person; asked 'who made that page?', Ola said the design model 'created the page on Nov 21 at 5:32 AM' (that was 9:32 pm PST) and 'I changed it last - at 5:38 AM'. The project's clock or ola-made-by speaks UTC, not the person's time. Seen by the checker of OLA-303; log on the M1 iMac: ~/Desktop/Ola/checks/OLA-303/live-1121/log.jsonl
+
+
+thread:
+
+3. P1 OLA-371  Web app: a published page's card says 'Private: only the people in this project can open it. It is not on the public web' while sites.ola.cx serves it
+Seen by the OLA-302 checker, Nov 21 7:27 pm, release 4e7e05d53b32, app.ola.cx as appdriver: after Ola published index.html (and site/index.html) at sites.ola.cx/appdriver/ (200, new words), both page cards still read 'Private ... not on the public web', and index.html (made by Ola) is labelled 'a web page you uploaded'. At 1280 wide the card titles overlap the Open link. Picture: mini ~/Library/Logs/venture-runner/shots/OLA-302/checker/1/11-try3-done.png
+
+
+thread:
+
+4. P1 OLA-407  Asked to change the page and put it on ola again, Ola sometimes only changes it and says to type 'publish it again'
+Live fc468fede085, iPhone app in a cloud project that had just published: 'now change the page so it says Damson and put it on ola again' and 'ok now make it say Sloe and stick it on ola again' changed index.html, asked no yes, and answered 'This change is not public yet ... say publish it again to put it up' (2 of 4; 'hmm can u change it to say Hazel n put it up on ola again pls' did publish). Evidence on the mini: ~/Library/Logs/venture-runner/shots/OLA-267/r8/8a, 8d (transcript.json). Found by the checker on OLA-267 #8.
+
+
+thread:
+
+5. P1 OLA-412  A new cloud project on app.ola.cx stayed on 'Opening your project…' for more than 4 minutes, twice
+Seen by the OLA-325 checker, Nov 23 ~2:20 am, release 8ea2fd33a8c7, made-up accounts chk1123*: two brand-new projects never opened. Find whether project start-up is stuck or just slow, and fix.
+
+
+thread:
+  Nov 27, 1:14 PM      kit      Seen again Nov 27, 1:15 PM on 157cab088bb9 (OLA-515 checker): a new cloud project stayed on 'Opening your project…' / 'Lost the connection' for 240 s while another new project was starting; alone, it opened. Also seen at 12:09 PM on 9f7b72cc123f.
+
+6. P1 OLA-426  Cloud web chat: 'put something up on ola for me please, a public page with only the word Kestrel on it' made the page but did not publish it ('your request did not ask to publish')
+OLA-285 checker, release 9310a7a0789d, app.ola.cx WebKit 390x844, made-up ck9310k, project already had a published Sorrel page: Ola wrote kestrel.html, said 'the page is made, but it is not public yet ... your request did not ask to publish or to replace it', no publish card. Bart's 'put it up on ola ... public' means publish. Log: ~/Library/Logs/venture-runner/shots/OLA-285/k/log.jsonl step 2 (turn-2.png) on the mini.
+
+
+thread:
+
+7. P1 OLA-450  A page Ola builds says tomorrow's date in the evening: the project's computer runs on UTC, so 'today' is wrong for the person from 4 pm Pacific
+Bart Test, Nov 25, 4 pm: the Good Morning page said Thursday, November 26. Also seen on that page: the drawn sun sits over the last line on a phone, and numbers in rounded boxes although the instructions say none.
+
+commit a007186b [OLA-450] the project's computer keeps the machine's time zone, so 'today' inside it is the person's today (it ran on UTC: a page built at 4 pm Pacific said tomorrow's date); image tag 2.4.2-2 so every project's computer is made again with it
+
+thread:
+  Nov 25, 8:32 PM      kit      built and live on image 2.4.2-2: ready for a checker
+
+8. P1 OLA-466  The spreadsheet Bart asked for came out broken to use: a finished formula keeps showing its text, typing does not replace a cell, every tap zooms on a phone
+Bart, Nov 25: 'it failed at the spreadsheet in my opinion'. Studio, project studio, 6 min. Used at phone size by the lead: after Enter a formula cell shows '=E1*2' until another cell is typed in; typing on a selected cell inserts into the old text (the page says 'type to overwrite'); cell text is 14 px so an iPhone zooms on every tap; 5 of 20 columns fit; test cells with a red #LOOP! left in; =1/0 shows Infinity. Causes on Ola's side: the project computer has no way to run the page's JavaScript or type into it (no node; ola-page only takes a picture), so it shipped after one look at a picture and said it had not re-checked; one step wrote its file-write as plain text and ran to the 16,000-token cap, 3 min 19 s of the 6 lost; the page landed as spreadsheet.html in Files with no link because index.html is the music page.
+
+commit 63e274a1 [OLA-466] the spreadsheet that failed for Bart is the eighth app request, with a check that uses it at phone size: tap a cell, type, press Enter, read the cell. The grid is found by where the cells are on screen, so it works on any model's page. Its own test: the Studio's real page fails on exactly one step (a finished formula keeps showing its text), the larger Inkling's page passes all 8
+
+thread:
+  Nov 25, 10:18 PM     kit      Same request, plain OpenCode, one run each (Nov 25, 10:15 pm): larger Inkling (Together) 126 s, passes the use-run except that typing on a filled cell adds to it and cell text is 12.5 px; it ran its own check through the page's event handlers. Nemotron 52 s, unusable (keeps one character per cell). Studio's Inkling Mini through Ola: 366 s, formula te
+
+9. P1 OLA-489  A request in a just-made project fails: 'Your request did not reach Ola's computer' twice in the first two minutes
+Found by the OLA-474 checker on release 5a56fac1f0dc: project chk479-f made with admin create-workspace at 7:28 pm; the spreadsheet request at 7:29 and again at 7:30 failed at once with that line, nothing in frontdesk.log for it; Say hello at 7:32 worked. A new person's first message would hit this. On the M1 iMac: ~/Desktop/Ola/checks/OLA-474/p2-c5-1-f, p2-c5-1-f2
+
+
+thread:
+
+10. P1 OLA-498  The Studio still publishes the whole site from its own copies: its next publish takes the test server's pages off sites.ola.cx
+OLA-494 (a5215721) makes each Ola machine keep the other's pages; the Studio runs the older publish code until its next update (held until the 'without' half of the measurement is done). Update the Studio, then check a Studio publish leaves a test-server page up.
+
+
+thread:
+

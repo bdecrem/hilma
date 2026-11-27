@@ -39,5 +39,6 @@ const s = await runOpencode(run, text, { timeLimit, tokenLimit: Infinity, model,
 const diff = sh('git add -A >/dev/null 2>&1; git diff --cached config', work)
 writeFileSync(path.join(run.dir, 'change.diff'), diff)
 writeFileSync(path.join(run.dir, 'final.txt'), s.final || '')
+writeFileSync(path.join(run.dir, 'run.json'), JSON.stringify({ model, ref: sh(`git -C ${q(repo)} rev-parse ${ref}`).trim(), minutes: +((Date.now() - t0) / 60000).toFixed(1), ...s, final: undefined }, null, 2))
 console.log(`write-tests: ${s.end}, ${s.requests} calls, ${((Date.now() - t0) / 60000).toFixed(1)} min; changed: ${sh('git diff --cached --name-status config', work).trim().replace(/\n/g, ', ') || 'nothing'}`)
 console.log(`dir ${run.dir}`)

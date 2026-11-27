@@ -1,0 +1,52 @@
+{
+  "taken": {
+    "OLA-299": {
+      "batch": 1
+    },
+    "OLA-330": {
+      "batch": 1
+    },
+    "OLA-371": {
+      "batch": 1
+    },
+    "OLA-407": {
+      "batch": 1
+    },
+    "OLA-412": {
+      "batch": 1
+    },
+    "OLA-426": {
+      "batch": 1
+    },
+    "OLA-450": {
+      "batch": 1
+    },
+    "OLA-466": {
+      "batch": 1
+    },
+    "OLA-489": {
+      "batch": 1
+    },
+    "OLA-498": {
+      "batch": 1
+    }
+  },
+  "skipped": {
+    "OLA-101": {
+      "batch": 1,
+      "why": "setup-chore"
+    },
+    "OLA-348": {
+      "batch": 1,
+      "why": "umbrella-ticket"
+    },
+    "OLA-470": {
+      "batch": 1,
+      "why": "a-change-not-a-bug"
+    },
+    "OLA-477": {
+      "batch": 1,
+      "why": "setup-chore"
+    }
+  }
+}
