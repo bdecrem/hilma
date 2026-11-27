@@ -40,9 +40,14 @@
 #   --type-only     (mac or phone, --where cloud) each sentence typed, read back from the box and wiped,
 #          never sent: no model, no card (OLA-402 phone, OLA-275 mac; tools/drive-box-test.sh). Passes when
 #          every sentence was whole in the box.
-#   --escalate <why>  (mac) the app starts with -OlaEscalate <why> (tests|loop|length|untested): every
-#          run ends as if Ola had counted that (OLA-486; the web's ?escalate=). A stretch card that comes is
-#          pictured and listed under the sentence's cards in transcript.json, never answered.
+#   --escalate <why>  (mac or phone) the app starts with -OlaEscalate <why> (tests|loop|length|untested):
+#          every run ends as if Ola had counted that (OLA-486; the web's ?escalate=). A stretch card that
+#          comes is pictured and listed under the sentence's cards in transcript.json.
+#   --answer "<answer>"  (mac or phone) the stretch card's answer to press when one comes: "Just this
+#          once", "Always in this project" ("Always in this folder" On this Mac) or "Not now" (OLA-491; the
+#          Mac by Command-1/2/3, the phone by a tap). Without it the card is only pictured. Either way the
+#          drive follows Ola's own turn after the sentence's (the nudge, the hand-off, the finish after
+#          Not now) and reads that answer.
 #   A line break in --say is typed as Option-Return (a new line in the box), not Return (OLA-275).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
@@ -65,7 +70,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; ESCALATE=""; export ANSWER_WORDS="" TYPE_ONLY=""
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; export ESCALATE="" STRETCH_ANSWER="" ANSWER_WORDS="" TYPE_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -83,6 +88,7 @@ while [ $# -gt 0 ]; do
     --pick-rounds) ROUNDS="$2"; shift 2 ;;
     --away) AWAY=1; shift ;;
     --escalate) ESCALATE="$2"; shift 2 ;;
+    --answer) STRETCH_ANSWER="$2"; shift 2 ;;
     --answer-words) ANSWER_WORDS="$2"; shift 2 ;;
     --type-only) TYPE_ONLY=1; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
@@ -156,6 +162,9 @@ resolve_mac_app() {
   # A build without drive mode would open as a normal window: asked first, nothing opens.
   "$APP/Contents/MacOS/Ola" --drive-probe 2>&1 | grep -q "drive mode: yes" || fail "$APP ($(defaults read "$APP/Contents/Info" CFBundleVersion 2>/dev/null)) has no drive mode (-OlaDrive); it is in builds after 0.1 (25). Pass --app <a build that has it>."
 }
+# The phone is built from the commit of the shipped build (tools/drive-phone.sh says why): the Mac
+# download's OlaCommit, or OLA_PHONE_COMMIT (live: the live release; or a commit).
+phone_commit() { export PHONE_COMMIT="${OLA_PHONE_COMMIT:-$(defaults read "$APP/Contents/Info" OlaCommit 2>/dev/null)}"; [ -n "$PHONE_COMMIT" ] || fail "$APP names no OlaCommit: pass OLA_PHONE_COMMIT=<commit> or live"; }
 app_name() { echo "$APP ($(defaults read "$APP/Contents/Info" CFBundleShortVersionString) ($(defaults read "$APP/Contents/Info" CFBundleVersion) $(defaults read "$APP/Contents/Info" OlaConfiguration 2>/dev/null || echo 'of unknown configuration') $(defaults read "$APP/Contents/Info" OlaCommit 2>/dev/null)))"; }
 # Lists the scratch folder's files into transcript.json and keeps a copy beside it.
 note_folder() {
@@ -189,6 +198,7 @@ check_file() {
 if [ "$APPKIND" = phone ] && [ "$WHERE" = local ]; then
   # ------------------------------------------------------------ the phone through the Mac app
   resolve_mac_app
+  phone_commit
   FOLDER="$RUN/folder"; mkdir -p "$FOLDER" "$RUN/home" "$OUT/mac"
   python3 - "$RUN/script.json" "$RUN/out" "$PW" "$FOLDER" "$CARD" "$WAIT" "$SAYS_JSON" "$RUN/pair-code" "$RUN/phone-done" <<'PY2'
 import json, sys
@@ -247,6 +257,8 @@ if size: s["size"] = size
 if rounds: s["pickRounds"] = int(rounds)
 if away: s["away"] = True
 if typeonly: s["typeOnly"] = True
+import os
+if os.environ.get("STRETCH_ANSWER"): s["answer"] = os.environ["STRETCH_ANSWER"]
 json.dump(s, open(f, "w"))
 PY
   prepare_account
@@ -275,6 +287,8 @@ PY
 fi
 
 # ---------------------------------------------------------------- phone
+if [ -z "${OLA_PHONE_COMMIT:-}" ]; then resolve_mac_app; fi
+phone_commit
 prepare_account
 # Written in the run's folder and copied to <dir> after (collect_mac says why).
 "$HERE/drive-phone.sh" "$RUN/phone-out" "$RUN" "$PW" "$WHERE" "$CARD" "$WAIT" "$SAYS_JSON" | sed "s#$RUN/phone-out#$OUT#g"

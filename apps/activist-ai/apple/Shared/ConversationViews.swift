@@ -1017,9 +1017,10 @@ struct StretchCard: View {
       Text(suggestion.whyLine + " " + FallbackWords.leaves(suggestion.target, provider: provider))
         .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
       HStack(spacing: Space.s) {
-        Button("Just this once") { Task { await store.answerSuggestion(.once) } }.buttonStyle(OlaButton(kind: .primary))
-        Button(store.config?.account == true ? "Always in this project" : "Always in this folder") { if isOn { Task { await store.answerSuggestion(.always) } } else { consent = true } }.buttonStyle(OlaButton(kind: .ghost))
-        Button("Not now") { Task { await store.answerSuggestion(.notNow) } }.buttonStyle(OlaButton(kind: .ghost))
+        // Command-1, -2, -3, as the question card's choices (and how the Mac drive presses them, OLA-491).
+        Button("Just this once") { Task { await store.answerSuggestion(.once) } }.buttonStyle(OlaButton(kind: .primary)).keyboardShortcut("1", modifiers: .command)
+        Button(store.config?.account == true ? "Always in this project" : "Always in this folder") { if isOn { Task { await store.answerSuggestion(.always) } } else { consent = true } }.buttonStyle(OlaButton(kind: .ghost)).keyboardShortcut("2", modifiers: .command)
+        Button("Not now") { Task { await store.answerSuggestion(.notNow) } }.buttonStyle(OlaButton(kind: .ghost)).keyboardShortcut("3", modifiers: .command)
         Spacer()
         if let o = suggestion.other {
           Button(o == .claude ? "or Claude" : "or the hosted open model") { store.switchSuggestion() }.buttonStyle(LinkButton(color: Ola.blue))

@@ -51,6 +51,9 @@ enum MacDrive {
     var says: [String]
     var card: String?
     var waitSeconds: Double?
+    /// The stretch card's answer to press when one comes (OLA-491): "Just this once", "Always in this
+    /// project" (or "… folder", as the card says it here), "Not now". Without it the card is pictured only.
+    var answer: String?
     var pick: String?
     var tryAgain: String?
     var small: Bool?
@@ -388,8 +391,16 @@ enum MacDrive {
       // Until the turn ends; a card is answered the way the script says.
       let end = Date().addingTimeInterval(wait)
       var lastCard: String?
+      // The turn followed (OLA-491): the sentence's, then Ola's own turn after it when one comes (the
+      // nudge, the hand-off to a larger model, the finish after Not now), which carry Ola's words.
+      let followed = { () -> Turn? in
+        guard let ts = store.conversation?.turns, let i = ts.lastIndex(where: mine) else { return nil }
+        return ts[i...].last(where: { mine($0) || $0.nudge == true })
+      }
+      var endedAt: Date?
+      var endedTurn: String?
       while true {
-        let turn = store.conversation?.turns.last(where: mine)
+        let turn = followed()
         if Date() > end {
           said.status = "timeout"
           said.answerInApp = turn?.shownAnswer ?? ""
@@ -462,10 +473,40 @@ enum MacDrive {
           said.status = "error"
           throw Failed(why: "the app shows an error: \(p.text)")
         }
+        // The stretch card (OLA-486/491): pictured and listed; with --answer, that answer pressed by
+        // its shortcut (Command-1, -2, -3), as a person could press it.
+        if let st = store.suggestion, st.id != lastCard {
+          lastCard = st.id
+          said.cards.append("stretch card: \(FallbackWords.question(st.target, provider: store.hosted.provider)) \(st.whyLine)")
+          try await settle(window, 0.8)
+          step("stretch card: \(st.reason.rawValue)", shot: "say\(n)-stretch-card")
+          if let a = s.answer {
+            let always = store.config?.account == true ? "Always in this project" : "Always in this folder"
+            let keys: [(String, String, UInt16)] = [("Just this once", "1", 18), (always, "2", 19), ("Not now", "3", 20)]
+            guard let k = keys.first(where: { $0.0.lowercased() == a.lowercased() }) else { said.status = "card"; throw Failed(why: "the stretch card has no answer \(quoted(a)); it offers \(keys.map(\.0).joined(separator: ", "))") }
+            let wasOn = store.hostedOn
+            shortcut(k.1, code: k.2, in: window)
+            // "Always" with the switch off asks first, with the consent text: Turn On (Return).
+            if k.1 == "2", !wasOn, let sheet = (try? await until(5, "") { window.attachedSheet }) {
+              try await settle(sheet, 0.8)
+              step("the consent question", shot: "say\(n)-stretch-consent")
+              key(.return, in: sheet)
+            }
+            _ = try await until(20, "the stretch card stayed after \(k.0) (Command-\(k.1))") { store.suggestion?.id == st.id ? nil : true }
+            said.answered.append("\(k.0) (Command-\(k.1))")
+            step("answered the stretch card: \(k.0)", shot: "say\(n)-stretch-answered")
+          }
+          endedAt = nil
+          continue
+        }
         if let t = turn, !t.isRunning {
+          // Ola's own next turn, or the card, comes a moment after a turn ends: 6 s for it.
+          if endedTurn != t.id { endedTurn = t.id; endedAt = Date() }
+          if let e = endedAt, Date().timeIntervalSince(e) < 6 { try await Task.sleep(nanoseconds: 300_000_000); continue }
           said.endedAt = now
           said.answerInApp = t.shownAnswer
           said.steps = t.steps.map { "\($0.verb) \($0.object) [\($0.status.rawValue)]" }
+          if t.nudge == true { said.by = MadeByWords.name(t.engine, model: t.model) + " (after Ola's own turn: \(t.request))" }
           if t.status != .done {
             said.status = t.status.rawValue
             try await settle(window, 1)
@@ -473,6 +514,7 @@ enum MacDrive {
           }
           break
         }
+        endedTurn = nil
         try await Task.sleep(nanoseconds: 300_000_000)
       }
       // The turn's own error line comes before "no card": on Nov 21 a run with a used-up weekly
@@ -480,12 +522,8 @@ enum MacDrive {
       if let e = store.conversation?.turns.last?.error { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(e.text)") }
       if s.card == "yes", said.cards.isEmpty { said.status = "no card"; throw Failed(why: "no card came for sentence \(n), and the script says one must") }
       try await settle(window, 2.5)
-      // The stretch card (OLA-486, with -OlaEscalate): pictured and listed, never answered.
-      if let f = Escalate.forced { say("escalate \(f.rawValue): hosted \(store.hosted.unavailable ?? "available"), model \(store.hosted.model ?? "not told"), card \(store.suggestion == nil ? "none" : "shown")") }
-      if let st = store.suggestion {
-        said.cards.append("stretch card: \(FallbackWords.question(st.target, provider: store.hosted.provider)) \(st.whyLine)")
-        step("stretch card: \(st.reason.rawValue)", shot: "say\(n)-stretch-card")
-      }
+      // With -OlaEscalate: what the app had to go on (the stretch card is listed in the loop above).
+      if let f = Escalate.forced { say("escalate \(f.rawValue): hosted \(store.hosted.unavailable ?? "available"), model \(store.hosted.model ?? "not told"), card \(said.cards.contains { $0.hasPrefix("stretch card") } ? "shown" : "none")") }
       // The answer as the screen shows it: the window's picture, read back with text recognition.
       let file = shot("say\(n)-answer")
       record.steps.append(Entry(at: now, step: "answer \(n) on the screen", shot: file))

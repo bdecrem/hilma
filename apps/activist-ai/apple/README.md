@@ -182,8 +182,28 @@ changes the settings or Keychain of an Ola someone uses on the mini.
   (`Ola --drive-probe`) and refuses one without it, so a check on "the Mac app as shipped" needs a
   download shipped after this change; until then `--app` points at a build of this branch.
 
-**The iPhone app** (`phone`, `tools/drive-phone.sh`): built from the live release's commit
-(`~/ola-staging/deployed.json`, from `~/ola-staging/current`) once per release into
+**Ola's escalation (OLA-486, OLA-491)**: `--escalate tests|loop|length|untested` (Mac and phone) starts
+the app with `-OlaEscalate`, so every run ends as if Ola had counted that; `--answer "Just this once"`,
+`"Always in this project"` (`"Always in this folder"` On this Mac) or `"Not now"` presses that answer on
+the stretch card (the Mac by Command-1, -2, -3; the phone by a tap; "Always" with the switch off answers
+the consent question with Turn On). Without `--answer` the card is only pictured. Either way the drive
+follows Ola's own turn after the sentence's (the nudge, the hand-off to the larger model, the finish
+after Not now) and reads that answer; a turn that ends waits 6 s for one to start.
+
+```bash
+# the hand-off by itself (the project's hosted switch on): no card, Ola's turn with the sentence of why, real work
+tools/drive.sh mac   --where cloud --escalate loop --say "make a tip calculator page" --out ~/ola-drive/checks/486-mac
+tools/drive.sh phone --where cloud --escalate loop --say "make a tip calculator page" --out ~/ola-drive/checks/486-phone
+# the switch off: the card, answered
+tools/drive.sh mac   --where cloud --escalate loop --answer "Just this once" --say "make a tip calculator page" --out ~/ola-drive/checks/486-once
+```
+
+**The iPhone app** (`phone`, `tools/drive-phone.sh`): **a simulator cannot run the TestFlight build
+itself** (it is signed for iPhones and built for the phone's chip), so the drive builds the commit the
+shipped build was made from: the published Mac download's `OlaCommit` (`ship-via-mini.sh both` ships the
+TestFlight build and the download from one commit), taken out of `~/ola-staging`'s git
+(`OLA_PHONE_COMMIT=live` builds the live release as before Nov 26, `OLA_PHONE_COMMIT=<sha>` any commit).
+The drive prints the version and build it built, which match TestFlight's. Built once per commit into
 `~/ola-drive/phone/<commit>/`, installed fresh with an empty Keychain into a simulator of its own
 ("Ola drive", booted headless, shut down after), and driven by XCUITest (`drive/`, a project of its own
 that knows the app only by its bundle id): real taps and the simulator's keyboard. A button that is

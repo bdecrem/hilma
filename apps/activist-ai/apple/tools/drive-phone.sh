@@ -4,7 +4,7 @@
 # local: the phone through the Mac; drive.sh has started the Mac copy, which writes the pairing code
 # into <pair-code-file>, and the phone types it on its Pair with your Mac screen.
 #
-# 1. The app, built from the live release's commit (~/ola-staging/current), once per commit, into
+# 1. The app, built from the shipped build's commit (or the live release's, OLA_PHONE_COMMIT=live), once per commit, into
 #    ~/ola-drive/phone/<commit>: its own copy of the release, its own Xcode project and build folder.
 # 2. A simulator of its own ("Ola drive", made once), booted headless (no Simulator window), the app
 #    installed fresh with an empty Keychain, so it starts signed out as a new phone does.
@@ -23,15 +23,30 @@ XCODEGEN="$(command -v xcodegen || echo "$STATE/xcodegen/bin/xcodegen")"
 [ -x "$XCODEGEN" ] || fail "no xcodegen on this Mac (brew install xcodegen, or a copy at $STATE/xcodegen/bin/xcodegen)"
 [ "$WHERE" = cloud ] || [ -n "$PAIR" ] || fail "local on the phone is through the Mac app: run it as tools/drive.sh phone --where local"
 
-# 1. The app at the live release's commit.
-COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:12])' "$HOME/ola-staging/deployed.json")" || fail "no deployed.json: which release is live is not known"
+# 1. The app at the commit of the shipped build (OLA-491). A simulator cannot run the TestFlight build
+#    itself (it is signed for iPhones and built for the phone's chip), so the drive builds the commit that
+#    build was made from: drive.sh passes PHONE_COMMIT, the published Mac download's OlaCommit
+#    (ship-via-mini.sh both ships the two from one commit), taken from ~/ola-staging's git.
+#    OLA_PHONE_COMMIT=live builds the live release instead (as before Nov 26), or =<sha> any commit.
+if [ -n "${PHONE_COMMIT:-}" ] && [ "${PHONE_COMMIT}" != live ]; then
+  git -C "$HOME/ola-staging" cat-file -e "$PHONE_COMMIT^{commit}" 2>/dev/null || git -C "$HOME/ola-staging" fetch -q origin || fail "could not fetch in ~/ola-staging"
+  COMMIT="$(git -C "$HOME/ola-staging" rev-parse --short=12 "$PHONE_COMMIT^{commit}")" || fail "the shipped build's commit $PHONE_COMMIT is not in ~/ola-staging"
+  FROM="the shipped build's commit"
+else
+  COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:12])' "$HOME/ola-staging/deployed.json")" || fail "no deployed.json: which release is live is not known"
+  FROM="the live release"
+fi
 SRC="$STATE/phone/$COMMIT"
 APP="$SRC/dd/Build/Products/Debug-iphonesimulator/Ola.app"
 # Signed to run locally (ad hoc): an unsigned simulator app gets no Keychain, and the sign-in lives there.
 if [ ! -d "$APP" ] || ! codesign -v "$APP" 2>/dev/null; then
-  echo "  building the iPhone app at the live release $COMMIT (once per release, a few minutes)"
-  mkdir -p "$SRC"
-  rsync -a --delete --exclude node_modules --exclude '.git' "$LIVE/" "$SRC/ai/" || fail "could not copy the release"
+  echo "  building the iPhone app at $FROM $COMMIT (once per commit, a few minutes)"
+  rm -rf "$SRC"; mkdir -p "$SRC/ai"
+  if [ "$FROM" = "the live release" ]; then
+    rsync -a --delete --exclude node_modules --exclude '.git' "$LIVE/" "$SRC/ai/" || fail "could not copy the release"
+  else
+    git -C "$HOME/ola-staging" archive "$COMMIT" apps/activist-ai | tar -x -C "$SRC/ai" --strip-components 2 || fail "could not take $COMMIT out of ~/ola-staging"
+  fi
   mkdir -p "$SRC/ai/apple/build/OlaSkills" "$SRC/ai/apple/build/OlaOpencode"
   (cd "$SRC/ai/apple" && "$XCODEGEN" generate >/dev/null) || fail "xcodegen failed on the release's project.yml"
   xcodebuild -project "$SRC/ai/apple/Ola.xcodeproj" -scheme OlaPhone -configuration Debug -destination 'generic/platform=iOS Simulator' \
@@ -74,9 +89,11 @@ if pair: s["pairCodeFile"] = pair
 import os
 if os.environ.get("ANSWER_WORDS"): s["answerWords"] = os.environ["ANSWER_WORDS"]
 if os.environ.get("TYPE_ONLY"): s["typeOnly"] = True
+if os.environ.get("ESCALATE"): s["escalate"] = os.environ["ESCALATE"]
+if os.environ.get("STRETCH_ANSWER"): s["answer"] = os.environ["STRETCH_ANSWER"]
 json.dump(s, open(f, "w"))
 PY
-echo "  driving the iPhone app $VERSION ($BUILD) from the live release $COMMIT in the simulator \"$NAME\" ($UDID), $WHERE"
+echo "  driving the iPhone app $VERSION ($BUILD) from $FROM $COMMIT in the simulator \"$NAME\" ($UDID), $WHERE"
 LIMIT=$(( $(python3 -c 'import json,sys; print(len(json.loads(sys.argv[1])))' "$SAYS_JSON") * ${WAIT%.*} + 600 ))
 TEST_RUNNER_OLA_DRIVE_SCRIPT="$RUN/phone-script.json" TEST_RUNNER_OLA_DRIVE_APP_VERSION="$VERSION" TEST_RUNNER_OLA_DRIVE_APP_BUILD="$BUILD" \
   perl -e 'alarm shift; exec @ARGV' "$LIMIT" xcodebuild -project "$DRV/src/OlaDrive.xcodeproj" -scheme OlaDrivePhone -destination "id=$UDID" \

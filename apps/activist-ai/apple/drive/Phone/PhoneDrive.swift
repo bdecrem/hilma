@@ -26,6 +26,11 @@ final class PhoneDrive: XCTestCase {
     /// Each sentence typed, read back from the box and wiped, never sent (OLA-402: the box test,
     /// tools/drive-box-test.sh; no model, no card).
     var typeOnly: Bool?
+    /// The app starts with -OlaEscalate <why> (tests|loop|length|untested), as the Mac drive's (OLA-491).
+    var escalate: String?
+    /// The stretch card's answer to tap when one comes: "Just this once", "Always in this project",
+    /// "Not now" (OLA-491). Without it the card is only pictured.
+    var answer: String?
   }
   struct Entry: Encodable { var at: Double; var step: String; var shot: String? }
   struct Said: Encodable {
@@ -106,6 +111,7 @@ final class PhoneDrive: XCTestCase {
     let password = try String(contentsOfFile: s.passwordFile, encoding: .utf8).trimmingCharacters(in: .newlines)
     let wait = s.waitSeconds ?? 600
     app = XCUIApplication(bundleIdentifier: "cx.ola.mac")
+    if let e = s.escalate { app.launchArguments = ["-OlaEscalate", e] }
     app.launch()
     guard app.wait(for: .runningForeground, timeout: 30) else { throw Failed(why: "the app did not open") }
     sleep(2)
@@ -164,7 +170,9 @@ final class PhoneDrive: XCTestCase {
       step("signed in", shot: "signed-in")
     }
     // The sessions list, with the section of the place this run works in.
-    let cloudHeader = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", s.where == "local" ? "Local sessions" : "Cloud sessions")).firstMatch
+    // The app's labels (Runtime.label): "Cloud (ola.cx)", "Local (your Mac)"; "Cloud", "Local" before Nov 26.
+    let (name, label) = s.where == "local" ? ("Local", "Local (your Mac)") : ("Cloud", "Cloud (ola.cx)")
+    let cloudHeader = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", "\(label) sessions", "\(name) sessions")).firstMatch
     _ = cloudHeader.waitForExistence(timeout: 20)
     step("the sessions list", shot: "sessions")
     // The app's own "Get a notification when Ola is done…?" card (after pairing): Not now, as a person
@@ -177,8 +185,9 @@ final class PhoneDrive: XCTestCase {
 
     // New session, then the runtime in the sheet.
     try tap(newSession, "New session")
-    let place = s.where == "local" ? "Local" : "Cloud"
-    let row = app.buttons.containing(NSPredicate(format: "label BEGINSWITH %@", place + ":")).firstMatch
+    let place = name
+    // The sheet's row: "Cloud (ola.cx), Works with your Mac off. …" ("Cloud: …" before); not the list's header behind it.
+    let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ OR label BEGINSWITH %@", place + ":", label + ",")).firstMatch
     guard row.waitForExistence(timeout: 10) else { throw Failed(why: "New session showed no \(place) choice") }
     step("New Session", shot: "new-session")
     if (row.label as NSString).contains("Not set up yet") { throw Failed(why: "\(place) is not set up on the phone: \(row.label)") }
@@ -299,11 +308,35 @@ final class PhoneDrive: XCTestCase {
           quietSince = nil
           continue
         }
+        // The stretch card (OLA-491): pictured once; with "answer" that answer tapped ("Always" with the
+        // switch off asks first: Turn On).
+        let stretch = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'This may be a stretch' OR label BEGINSWITH 'Hand this to Claude'")).firstMatch
+        if stretch.exists, !said.cards.contains(where: { $0.hasPrefix("stretch card") }) || (s.answer != nil && said.answered.count < said.cards.count) {
+          if !said.cards.contains(where: { $0.hasPrefix("stretch card") }) {
+            said.cards.append("stretch card: \(stretch.label)")
+            step("stretch card", shot: "say\(n)-stretch-card")
+          }
+          if let a = s.answer {
+            let b = app.buttons.matching(NSPredicate(format: "label ==[c] %@", a)).firstMatch
+            guard b.exists else { said.status = "card"; throw Failed(why: "the stretch card has no answer '\(a)'") }
+            try tap(b, a)
+            let on = app.buttons["Turn On"]
+            if on.waitForExistence(timeout: 3) { step("the consent question", shot: "say\(n)-stretch-consent"); try tap(on, "Turn On") }
+            let gone = Date().addingTimeInterval(20)
+            while stretch.exists, Date() < gone { sleep(1) }
+            if stretch.exists { throw Failed(why: "the stretch card stayed after \(a)") }
+            said.answered.append(a)
+            step("answered the stretch card: \(a)", shot: "say\(n)-stretch-answered")
+          }
+          quietSince = nil
+          continue
+        }
         if let p = visibleProblem() { said.status = "error"; throw Failed(why: "the app shows an error: \(p)") }
-        // Done: Stop is gone and Send is back, and it stays so for three seconds, with no question
-        // waiting (a waiting question also shows Send and no Stop: OLA-360).
+        // Done: Stop is gone and Send is back, and it stays so for six seconds, with no question
+        // waiting (a waiting question also shows Send and no Stop: OLA-360). Six, not three (OLA-491):
+        // Ola's own next turn (the nudge, the hand-off, the finish after Not now) starts within them.
         if !stop.exists, app.buttons["Send"].exists, questionKicker() == nil {
-          if let q = quietSince, Date().timeIntervalSince(q) >= 3 { break }
+          if let q = quietSince, Date().timeIntervalSince(q) >= 6 { break }
           if quietSince == nil { quietSince = Date() }
         } else { quietSince = nil }
         sleep(1)
