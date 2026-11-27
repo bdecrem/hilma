@@ -1,9 +1,9 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { AREAS, type Activity, type Area, type Issue } from '@/lib/venture/board'
+import { AREAS, type Activity, type Area, type Issue, type TrackerItem } from '@/lib/venture/board'
 import { ago, at } from '../time'
-import { Linked, person, REPO, STATUS, STATUS_ORDER } from './common'
+import { Linked, person, REPO, Status, STATUS, STATUS_ORDER } from './common'
 
 // One issue (app.kochitolabs.com/issues/OLA-150, OLA-163). Left: the title and the description,
 // each edited by clicking it, then Activity, one thread oldest first: opened, status changes,
@@ -91,7 +91,7 @@ export function thread(i: Issue, act: Activity[], now: string): Line[] {
   return out.sort((a, b) => a.at.localeCompare(b.at))
 }
 
-export default function IssueView({ issue, activity, base, now, user, mock = false }: { issue: Issue; activity: Activity[] | null; base: string; now: string; user: string; mock?: boolean }) {
+export default function IssueView({ issue, activity, base, now, user, mock = false, list = null, partOf = [] }: { issue: Issue; activity: Activity[] | null; base: string; now: string; user: string; mock?: boolean; list?: TrackerItem[] | null; partOf?: { id: string; title: string }[] }) {
   const router = useRouter()
   const [i, setI] = useState(issue)
   const [act, setAct] = useState(activity)
@@ -233,6 +233,32 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
               </div>
             )}
           </div>
+          {list && (
+            <section className="bd-sec">
+              {/* a tracker issue (OLA-505): not work itself, the issues it lists, each with what came of it */}
+              <h2 className="bd-h2">
+                On this list <span className="m">{list.length}</span>
+              </h2>
+              {list.length === 0 ? (
+                <p className="bd-empty">No issues on this list yet.</p>
+              ) : (
+                <ol className="bd-rows bd-tlist">
+                  {list.map((x) => (
+                    <li key={x.id}>
+                      <a href={`${base}/issues/${x.id}`}>
+                        <span className="id">{x.id}</span>
+                        {x.status ? <Status s={x.status} /> : <span className="bd-st">not found</span>}
+                        <span className="t">
+                          {x.title ?? x.id}
+                          {x.note && <span className="note">{x.note}</span>}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          )}
           <section className="bd-sec">
             <h2 className="bd-h2">Activity</h2>
             <ol className="bd-thread">
@@ -279,6 +305,9 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
             <div>
               <dt>Status</dt>
               <dd>
+                {list ? (
+                  <span className="bd-st">Tracker, not work itself</span>
+                ) : (
                 <select
                   value={askProof ? 'done' : i.status}
                   disabled={busy}
@@ -295,6 +324,7 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
                     </option>
                   ))}
                 </select>
+                )}
                 {askProof && (
                   <form
                     className="bd-proof"
@@ -339,6 +369,18 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
                 </select>
               </dd>
             </div>
+            {partOf.length > 0 && (
+              <div>
+                <dt>Part of</dt>
+                <dd>
+                  {partOf.map((t) => (
+                    <a key={t.id} href={`${base}/issues/${t.id}`}>
+                      {t.title}
+                    </a>
+                  ))}
+                </dd>
+              </div>
+            )}
             {i.builtBy && (
               <div>
                 <dt>Built by</dt>

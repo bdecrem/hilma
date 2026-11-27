@@ -46,6 +46,10 @@
 //   node scripts/venture/issues.mjs commit <id> <hash>…                          attach commits by hand
 //   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
 //   node scripts/venture/issues.mjs show <id>                                    the issue and its whole thread
+//   Tracker issues (OLA-505): an issue that is not work itself but lists other issues, so related work is found in one place.
+//   node scripts/venture/issues.mjs add "title" --tracker --area model [--what "…"]   makes one (never on the plate, never picked, checked or done)
+//   node scripts/venture/issues.mjs link <tracker-id> <id>… [--note "what was tried and what came of it"]   puts them on its list (again: replaces the note)
+//   node scripts/venture/issues.mjs unlink <tracker-id> <id>…                    takes them off; show <tracker-id> prints the list
 //   node scripts/venture/issues.mjs comment <id> "text" [--who kit]               Kit's reply on the issue's page
 //                                                     (a time in it, or in a --proof, more than 3 min later than the clock is refused: _clock.mjs, OLA-324)
 //   node scripts/venture/issues.mjs inbox [--mark]                               what Bart wrote on the board that Kit has not read
@@ -101,7 +105,7 @@ const FAKE = !!process.env.VENTURE_TRACKER_FAKE
 // The version of the tracker's rules (OLA-273): bump it with every change to what the tracker refuses.
 // The newest tracker that ran writes it to venture_state "tracker_version"; an older copy (an agent's
 // worktree that was not rebased) refuses to run.
-export const TRACKER_VERSION = 18
+export const TRACKER_VERSION = 19
 // Variables that change what the tracker believes (OLA-251, third pass): honored on a copy of the
 // tracker only. On the real one they are ignored, and each use leaves a line in the overrides.
 const envWays = []
@@ -432,8 +436,9 @@ async function attach(id, hashes) {
   }
 }
 
+const isTracker = (r) => Array.isArray(r?.tracker)
 const label = { open: 'next', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
-const line = (r) => `${r.id.padEnd(8)} ${r.priority} ${(label[r.status] ?? r.status).padEnd(15)} ${r.area.padEnd(8)} ${(r.who ?? '').padEnd(10)} ${r.title}${r.status === 'done' && r.proof ? `  [${r.proof}]` : ''}`
+const line = (r) => `${r.id.padEnd(8)} ${r.priority} ${(isTracker(r) ? `tracker (${r.tracker.length})` : label[r.status] ?? r.status).padEnd(15)} ${r.area.padEnd(8)} ${(r.who ?? '').padEnd(10)} ${r.title}${r.status === 'done' && r.proof ? `  [${r.proof}]` : ''}`
 
 // ---- Checks (2026-11-20). Bart, after publishing failed for him four times in one morning, each
 // time after he was told it worked: "THERE IS ZERO LEARNING AFTER ONE WEEK". The week's record: 104
@@ -570,6 +575,12 @@ async function lostRoles() {
   }
 }
 if (!['hook', 'wait-board', 'record-override'].includes(cmd)) await lostRoles()
+// OLA-505: a tracker issue lists other issues and is not work itself: it is never started, claimed,
+// checked, marked ready, waiting or done
+if (idArg && (['start', 'claim', 'done', 'ready', 'wait'].includes(cmd) || (cmd === 'check' && pos.length > 1))) {
+  const t = check(await db.from('venture_issues').select('id, title, tracker').eq('id', idArg).maybeSingle(), 'read')
+  if (isTracker(t)) die(`Refused: ${t.id} ("${t.title}") is a tracker issue: it lists other issues and is not a piece of work, so it is never ${cmd === 'check' ? 'checked' : cmd === 'wait' ? 'waiting' : cmd === 'ready' ? 'marked ready' : cmd === 'done' ? 'done' : cmd === 'claim' ? 'claimed' : 'started'}. Work on the issues on its list (issues.mjs show ${t.id}).`)
+}
 
 if (cmd === 'overrides') {
   // the record of deliberate ways around a guard (OLA-251, third pass; _overrides.mjs)
@@ -592,7 +603,9 @@ if (cmd === 'overrides') {
   const num = (last[0]?.num ?? 0) + 1
   const now = new Date().toISOString()
   const links = [...many('link').map((l) => ({ label: l.split('=')[0], url: l.slice(l.indexOf('=') + 1) })), ...many('doc').map((d) => ({ label: 'note', doc: d }))]
-  const row = { id: `${PREFIX}-${num}`, num, project: 'ola', title, what: one('what') ?? '', area, priority: one('pri') ?? 'P1', who: one('who') ?? 'lead', week: one('week') ? Number(one('week')) : null, status: one('start') ? 'in_progress' : 'open', started_at: one('start') ? now : null, links }
+  const tracker = !!one('tracker')
+  if (tracker && one('start')) die('a tracker issue is not work, so it is never started: leave out --start')
+  const row = { id: `${PREFIX}-${num}`, num, project: 'ola', title, what: one('what') ?? '', area, priority: one('pri') ?? (tracker ? 'P2' : 'P1'), who: one('who') ?? 'lead', week: one('week') ? Number(one('week')) : null, status: one('start') ? 'in_progress' : 'open', started_at: one('start') ? now : null, links, ...(tracker ? { tracker: [] } : {}) }
   validate(row)
   console.log(line(check(await db.from('venture_issues').insert(row).select().single(), 'add')))
 } else if (cmd === 'start') {
@@ -873,7 +886,7 @@ if (cmd === 'overrides') {
   } else {
     const acc = check(await db.from('venture_state').select('key, value').like('key', `${ACCEPT}%`), 'checks')
     const by = new Map(acc.map((x) => [x.key.slice(ACCEPT.length), { ...emptyAccept(), ...x.value }]))
-    const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'done']).order('num'), 'read')
+    const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'done']).order('num'), 'read').filter((r) => !isTracker(r))
     const today = pacificDay()
     const waiting = rows.filter((r) => r.status === 'in_progress' && by.get(r.id)?.ready && !verdict(r, by.get(r.id)).ok)
     const bare = rows.filter((r) => r.status === 'in_progress' && !by.get(r.id)?.internal && !(by.get(r.id)?.checks.length))
@@ -977,6 +990,35 @@ if (cmd === 'overrides') {
   await attach(id, pos.slice(1))
   const a = await accept(id)
   if (me.id && !(a.builders ?? []).some((b) => b.caller === me.id)) await saveAccept(id, { ...a, builders: [...(a.builders ?? []), { who: typeof one('who') === 'string' ? one('who') : 'kit', role: 'builder', caller: me.id, host: me.host, at: new Date().toISOString(), via: 'commit' }] })
+} else if (cmd === 'link' || cmd === 'unlink') {
+  // OLA-505: a tracker issue's list, in order: [{ id, note }] in venture_issues.tracker (schema 013)
+  const tid = normId(pos[0])
+  const ids = pos.slice(1).map(normId)
+  if (!ids.length) die(`usage: issues.mjs ${cmd} <tracker-id> <id>…${cmd === 'link' ? ' [--note "what was tried and what came of it"]' : ''}`)
+  const t = await get(tid)
+  if (!isTracker(t)) die(`Refused: ${tid} ("${t.title}") is not a tracker issue, so it has no list to ${cmd === 'link' ? 'put issues on' : 'take issues off'}. A tracker issue is made with: issues.mjs add "title" --tracker --area …`)
+  let list = [...t.tracker]
+  const lines = []
+  if (cmd === 'link') {
+    const note = typeof one('note') === 'string' ? one('note').trim() : null
+    for (const id of ids) {
+      if (id === tid) die(`${tid} cannot be on its own list`)
+      await get(id)
+      const at = list.findIndex((x) => x.id === id)
+      if (at >= 0) { if (note !== null) list[at] = { ...list[at], note } }
+      else list.push({ id, note: note ?? '' })
+      lines.push({ issue_id: tid, kind: 'comment', body: `${at >= 0 ? 'note changed for' : 'listed'} ${id}${note ? `: ${note}` : ''}` })
+    }
+  } else {
+    for (const id of ids) {
+      if (!list.some((x) => x.id === id)) die(`${id} is not on ${tid}'s list`)
+      list = list.filter((x) => x.id !== id)
+      lines.push({ issue_id: tid, kind: 'comment', body: `took ${id} off the list` })
+    }
+  }
+  check(await db.from('venture_issues').update({ tracker: list, updated_at: new Date().toISOString() }).eq('id', tid), 'update')
+  await record(lines)
+  console.log(`${tid} lists ${list.length} issue(s)${ids.length ? `; ${cmd === 'link' ? 'linked' : 'unlinked'} ${ids.join(', ')}` : ''}`)
 } else if (cmd === 'list') {
   let q = db.from('venture_issues').select('*').eq('project', 'ola')
   const d = one('day')
@@ -1001,6 +1043,18 @@ if (cmd === 'overrides') {
   if (r.proof) console.log(`proof: ${r.proof}`)
   for (const l of r.links ?? []) console.log(`link: ${l.label} ${l.url ?? `note ${l.doc}`}`)
   for (const c of commits) console.log(`commit ${c.sha.slice(0, 8)} ${c.subject}`)
+  // OLA-505: a tracker issue's list; and, for any issue, the tracker issues it is on
+  const trackers = check(await db.from('venture_issues').select('id, title, tracker').eq('project', 'ola'), 'trackers').filter((x) => isTracker(x) && x.tracker.some((e) => e.id === r.id))
+  for (const x of trackers) console.log(`part of: ${x.id} ${x.title}`)
+  if (isTracker(r)) {
+    console.log(`\ntracker issue: it lists ${r.tracker.length} issue(s) and is not work itself`)
+    const ids = r.tracker.map((e) => e.id)
+    const rows = ids.length ? check(await db.from('venture_issues').select('id, title, status').in('id', ids), 'list') : []
+    for (const e of r.tracker) {
+      const x = rows.find((y) => y.id === e.id)
+      console.log(`  ${e.id.padEnd(8)} ${(x ? label[x.status] ?? x.status : '?').padEnd(15)} ${x?.title ?? '(no such issue)'}${e.note ? `\n           ${e.note}` : ''}`)
+    }
+  }
   const act = await db.from('venture_issue_activity').select('*').eq('issue_id', r.id).order('at')
   if (act.error && !missing(act.error)) die(`activity: ${act.error.message}`)
   if (act.data?.length) {
@@ -1043,7 +1097,7 @@ if (cmd === 'overrides') {
   const sweep = await sweepDue(db).catch(() => [])
   console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine), sweep }))
 } else if (cmd === 'plate') {
-  const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting']), 'plate')
+  const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting']), 'plate').filter((r) => !isTracker(r))
   const order = { in_progress: 0, open: 1, waiting: 2 }
   rows.sort((a, b) => order[a.status] - order[b.status] || a.priority.localeCompare(b.priority) || a.num - b.num)
   for (const r of rows) console.log(line(r))
@@ -1078,6 +1132,6 @@ if (cmd === 'overrides') {
   }
   console.log(`${items.length} imported`)
 } else {
-  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 57).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  console.error(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 61).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   process.exit(cmd ? 1 : 0)
 }

@@ -1,4 +1,4 @@
-import { AREAS, type Area, type Issue } from '@/lib/venture/board'
+import { AREAS, isTracker, type Area, type Issue } from '@/lib/venture/board'
 import { href } from '../Shell'
 import { ago, dayLong, pday, shiftDay } from '../time'
 import { Status } from './common'
@@ -40,10 +40,12 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
       (!p.opened || pday(i.opened_at) === dayOf(p.opened)) &&
       (!needle || `${i.id} ${i.title} ${i.what}`.toLowerCase().includes(needle)),
   )
-  const count = (st: Issue['status'][]) => filtered.filter((i) => st.includes(i.status)).length
+  // a tracker issue (OLA-505) lists other issues and is not work: it is in Open and All, never in Doing or Next
+  const inTab = (t: (typeof TABS)[number], i: Issue) => t[2].includes(i.status) && !(isTracker(i) && (t[0] === 'doing' || t[0] === 'next'))
+  const count = (t: (typeof TABS)[number]) => filtered.filter((i) => inTab(t, i)).length
   const sort = p.sort === 'id' || p.sort === 'pri' || p.sort === 'updated' ? p.sort : ''
   const rows = filtered
-    .filter((i) => tab[2].includes(i.status))
+    .filter((i) => inTab(tab, i))
     .sort((a, b) => {
       if (sort === 'id') return b.num - a.num
       if (sort === 'pri') return a.priority.localeCompare(b.priority) || updated(b).localeCompare(updated(a))
@@ -96,7 +98,7 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
             <span className="who bd-cut" title={i.builtBy ? `Built by Ola on ${i.builtBy.model}` : undefined}>
               {i.builtBy ? 'Ola' : i.who}
             </span>
-            <Status s={i.status} />
+            {isTracker(i) ? <span className="bd-st">tracker</span> : <Status s={i.status} />}
             <span className="upd">{ago(updated(i), now)}</span>
           </a>
         </li>
@@ -113,11 +115,11 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
         </a>
       </div>
       <nav className="bd-tabs" aria-label="Status">
-        {TABS.map(([id, name, st]) => (
-          <a key={id} href={url({ tab: id, sort: undefined })} aria-current={tab[0] === id ? 'page' : undefined} className={id === 'waiting' && count(st) ? 'hot' : ''}>
-            {name} <span className="m">{count(st)}</span>
+        {TABS.map((t) => { const [id, name] = t; return (
+          <a key={id} href={url({ tab: id, sort: undefined })} aria-current={tab[0] === id ? 'page' : undefined} className={id === 'waiting' && count(t) ? 'hot' : ''}>
+            {name} <span className="m">{count(t)}</span>
           </a>
-        ))}
+        ) })}
       </nav>
       <div className="bd-bar">
         <Filters action={href(base, '/issues')} p={p} areas={Object.entries(AREAS) as [Area, string][]} />

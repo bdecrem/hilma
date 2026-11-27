@@ -419,6 +419,16 @@ The lead and every builder keep it current with `scripts/venture/issues.mjs`:
     node scripts/venture/issues.mjs list --day yesterday   # or today, 2026-11-16; --status, --area
     node scripts/venture/issues.mjs plate | unsorted | show OLA-142 | place <sha> <OLA-n|none>
 
+**Tracker issues** (OLA-505, schema 013): an issue that is not work itself but
+lists other issues, each with a one-line note, so related work is found in one
+place ("Ola Improvement Ideas"). `add "title" --tracker`, `link <tracker> <id>…
+--note "…"` (again replaces the note), `unlink <tracker> <id>…`; `show` prints
+the list, or of a listed issue the tracker it is part of. The list is
+`venture_issues.tracker` (null on an ordinary issue). It stays open and is
+never on the plate, picked by the runner, checked or closed; the board shows
+the list on its page and "Part of" on each listed issue's page. Test:
+`node scripts/venture/tracker-issue-test.mjs`.
+
 Titles are for Bart, in plain words, never internal names (say the model
 connection, sign-in, a project's sealed box, the practice copy on the mini).
 Areas: web, apps, model, security, ops, voice, design, board. **Commits find

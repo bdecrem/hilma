@@ -575,7 +575,7 @@ if (cmd === '--wait') {
   // "the daily update on the dashboard should always list the open issues count from now on"), kept
   // with the entry so a past day keeps its own number.
   {
-    const r = await db.from('venture_issues').select('status, opened_at, finished_at').eq('project', 'ola')
+    const r = await db.from('venture_issues').select('status, opened_at, finished_at, tracker').eq('project', 'ola')
     if (r.error) die(`venture_issues: ${r.error.message}`)
     entry.openIssues = openCounts(r.data, Date.now(), entry.day)
   }

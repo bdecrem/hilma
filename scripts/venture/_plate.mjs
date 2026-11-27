@@ -52,7 +52,8 @@ export function pickTicket(issues, { claims = {}, tickets = {}, order = [], recu
   const rank = (i) => (resume.includes(i.id) ? -1 : i.priority === 'P0' ? 0 : ideas.includes(i.id) ? 1 : 2 + (PRI[i.priority] ?? 9))
   const ipos = (id) => (ideas.includes(id) ? ideas.indexOf(id) : Infinity)
   const cand = issues
-    .filter((i) => i.status === 'open' || i.status === 'in_progress')
+    // OLA-505: a tracker issue (venture_issues.tracker is its list) is not work: never picked
+    .filter((i) => (i.status === 'open' || i.status === 'in_progress') && !Array.isArray(i.tracker))
     .sort((a, b) => rank(a) - rank(b) || ipos(a.id) - ipos(b.id) || pos(a.id) - pos(b.id) || String(a.opened_at).localeCompare(String(b.opened_at)) || a.num - b.num)
   for (const i of cand) {
     const c = claims[i.id]
@@ -327,7 +328,7 @@ export function resumeList(limit, issues = [], now = Date.now()) {
 // ------------------------------------------------------------------ the count and the line
 const closedBy = (i, t) => (i.status === 'done' || i.status === 'dropped') && i.finished_at && Date.parse(i.finished_at) < t
 /** Tickets open at time t: opened before it, and not finished (done or dropped) before it. */
-export const openAt = (issues, t) => issues.filter((i) => Date.parse(i.opened_at) < t && !closedBy(i, t)).length
+export const openAt = (issues, t) => issues.filter((i) => !Array.isArray(i.tracker) && Date.parse(i.opened_at) < t && !closedBy(i, t)).length
 /** Midnight Pacific at the start of a Pacific day (YYYY-MM-DD). */
 export const pacificMidnight = (day) => zonedTime(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10)), 0, 0, 'America/Los_Angeles')
 export const pacificDay = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
@@ -347,7 +348,7 @@ const when = (t, now) => (pacificDay(t) === pacificDay(now) ? clock(t) : `${new 
  * limit: venture_state "runner_limit". Returns { text, idle, working }.
  */
 export function leadLine(issues, { runner = null, claims = {}, limit = null, now = Date.now() } = {}) {
-  const open = issues.filter((i) => ['open', 'in_progress', 'waiting'].includes(i.status))
+  const open = issues.filter((i) => ['open', 'in_progress', 'waiting'].includes(i.status) && !Array.isArray(i.tracker))
   const by = ['P0', 'P1', 'P2'].map((p) => `${open.filter((i) => i.priority === p).length} ${p}`).join(', ')
   const last = issues.filter((i) => i.status === 'done' && i.finished_at).sort((a, b) => b.finished_at.localeCompare(a.finished_at))[0]
   const live = Object.entries(claims).filter(([, c]) => now - Date.parse(c.at) < CLAIM_TTL)

@@ -230,6 +230,10 @@
 .bd-table .upd { font-family: var(--mono); font-size: 12px; color: var(--ink-3); text-align: right; white-space: nowrap; }
 .bd-table .done-t, .bd-table .dropped-t { color: var(--ink-2); }
 .bd-table .proof { color: var(--ink-3); margin-left: 8px; }
+/* a tracker issue's list (OLA-505): id, status, the title with its note under it */
+.bd-tlist > li > a { grid-template-columns: 72px 132px minmax(0, 1fr); align-items: baseline; padding-top: 6px; padding-bottom: 6px; }
+.bd-tlist .id { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+.bd-tlist .note { display: block; color: var(--ink-3); font-size: 12.5px; margin-top: 2px; }
 .bd .bd-day { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; font-size: 13px; font-weight: 600; }
 .bd-day:first-of-type { margin-top: 4px; }
 .bd-day .m { color: var(--ink-3); font-weight: 400; }

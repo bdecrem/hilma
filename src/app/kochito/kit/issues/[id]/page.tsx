@@ -25,7 +25,7 @@ export default async function IssuePage({ params }: { params: Promise<{ id: stri
   if (!found) notFound()
   return (
     <Shell base={base} q={q} user={user} f={f} current="issues">
-      <IssueView issue={found.issue} activity={found.activity} base={base} now={f.now} user={user} />
+      <IssueView issue={found.issue} activity={found.activity} list={found.list} partOf={found.partOf} base={base} now={f.now} user={user} />
     </Shell>
   )
 }

@@ -36,11 +36,11 @@ if (!dry && sent?.value?.date === today) {
 
 const { data: doc, error } = await db.from('venture_docs').select('body').eq('slug', 'journal').maybeSingle()
 if (error || !doc?.body) throw new Error(`cannot read the journal: ${error?.message ?? 'empty'}`)
-const { data: open, error: iErr } = await db.from('venture_issues').select('id, title, priority, status, num').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting'])
+const { data: open, error: iErr } = await db.from('venture_issues').select('id, title, priority, status, num, tracker').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting'])
 if (iErr) throw new Error(`cannot read the issue tracker: ${iErr.message}`)
 const order = { in_progress: 0, open: 1 }
 const plate = open
-  .filter((i) => i.status !== 'waiting' && i.priority !== 'P2')
+  .filter((i) => i.status !== 'waiting' && i.priority !== 'P2' && !Array.isArray(i.tracker))
   .sort((a, b) => order[a.status] - order[b.status] || a.priority.localeCompare(b.priority) || a.num - b.num)
   .slice(0, 3)
   .map((i) => `${i.priority} ${i.title} (${i.id}${i.status === 'in_progress' ? ', doing' : ''})`)

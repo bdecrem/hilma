@@ -41,7 +41,13 @@ export type Issue = {
   updated_at: string
   commits: Commit[]
   builtBy?: BuiltBy
+  /** A tracker issue (OLA-505, schema 013): not work itself, a list of other issues with a note each; null on an ordinary issue. */
+  tracker?: TrackerEntry[] | null
 }
+export type TrackerEntry = { id: string; note: string }
+export const isTracker = (i: Pick<Issue, 'tracker'>): boolean => Array.isArray(i.tracker)
+/** A tracker issue's list as its page shows it: each listed issue with its status, title and note. */
+export type TrackerItem = { id: string; note: string; title: string | null; status: Status | null }
 /** One line of an issue's Activity (schema 012): a comment, a status change or an edit, by a board
  *  account (via 'board', new for Kit until seen_by_kit_at is set) or by Kit's command line ('cli'). */
 export type Activity = {
@@ -322,9 +328,9 @@ export function pacificMidnight(day: string): number {
   }
   return guess - off(guess - off(guess))
 }
-type Countable = Pick<Issue, 'status' | 'opened_at' | 'finished_at'>
+type Countable = Pick<Issue, 'status' | 'opened_at' | 'finished_at' | 'tracker'>
 /** Tickets open at time t: opened before it, and not done or dropped before it. */
-export const openAt = (issues: Countable[], t: number) => issues.filter((i) => Date.parse(i.opened_at) < t && !((i.status === 'done' || i.status === 'dropped') && i.finished_at && Date.parse(i.finished_at) < t)).length
+export const openAt = (issues: Countable[], t: number) => issues.filter((i) => !isTracker(i) && Date.parse(i.opened_at) < t && !((i.status === 'done' || i.status === 'dropped') && i.finished_at && Date.parse(i.finished_at) < t)).length
 /** "Open issues: N (yesterday: M)" from the tracker's records: N now (or at the end of a past day),
  *  M at the end of the day before. Needs every ticket that was open in that span (loadBoard's set). */
 export function openCounts(issues: Countable[], now: number, day?: string): { n: number; yesterday: number } {
@@ -334,7 +340,7 @@ export function openCounts(issues: Countable[], now: number, day?: string): { n:
   return { n: openAt(issues, end), yesterday: openAt(issues, pacificMidnight(d)) }
 }
 const CLAIM_TTL = 45 * 60e3
-export function leadFrom(issues: Pick<Issue, 'status' | 'priority'>[], runner: RunnerState | null, claims: Record<string, Claim>, limit: Lead['paused'] | null, now: number): Lead {
+export function leadFrom(issues: Pick<Issue, 'status' | 'priority' | 'tracker'>[], runner: RunnerState | null, claims: Record<string, Claim>, limit: Lead['paused'] | null, now: number): Lead {
   const live = Object.entries(claims).filter(([, c]) => now - Date.parse(c.at) < CLAIM_TTL)
   const runStale = !!runner?.running && now - Date.parse(runner.started ?? '') > 3 * 3600e3
   let working: Lead['working'] = null
@@ -345,7 +351,7 @@ export function leadFrom(issues: Pick<Issue, 'status' | 'priority'>[], runner: R
   }
   const times = [runner?.ended, runner?.started, ...Object.values(claims).map((c) => c.at)].filter((t): t is string => !!t).map((t) => Date.parse(t))
   const last = times.length ? Math.max(...times) : null
-  const urgent = issues.some((i) => ['open', 'in_progress', 'waiting'].includes(i.status) && (i.priority === 'P0' || i.priority === 'P1'))
+  const urgent = issues.some((i) => ['open', 'in_progress', 'waiting'].includes(i.status) && !isTracker(i) && (i.priority === 'P0' || i.priority === 'P1'))
   const busy = !!working || (!!runner?.running && !runStale)
   return { working, idle: urgent && !busy && (last === null || now - last > 3600e3), lastActive: last === null ? null : new Date(last).toISOString(), paused: limit && Date.parse(limit.until) > now ? limit : null }
 }
@@ -473,7 +479,7 @@ export type Frame = { now: string; open: number | null; status: LiveStatus | nul
 export async function loadFrame(): Promise<Frame> {
   const db = f2Supabase()
   const [open, st, mac] = await Promise.all([
-    db.from('venture_issues').select('id', { count: 'exact', head: true }).eq('project', 'ola').in('status', ['open', 'in_progress', 'waiting']),
+    db.from('venture_issues').select('id', { count: 'exact', head: true }).eq('project', 'ola').in('status', ['open', 'in_progress', 'waiting']).is('tracker', null),
     db.from('venture_state').select('value').eq('key', 'ola_status').maybeSingle(),
     macLatest(),
   ])
@@ -515,13 +521,15 @@ export function firstLine(body: string): string {
 
 // ---------------------------------------------------------------- one issue and its thread (round three)
 /** One issue with its commits and its Activity (null when schema 012 is not applied yet). */
-export async function loadIssue(id: string): Promise<{ issue: Issue; activity: Activity[] | null } | null> {
+export async function loadIssue(id: string): Promise<{ issue: Issue; activity: Activity[] | null; list: TrackerItem[] | null; partOf: { id: string; title: string }[] } | null> {
   const db = f2Supabase()
-  const [issueR, commitsR, actR, ola] = await Promise.all([
+  const [issueR, commitsR, actR, ola, partR] = await Promise.all([
     db.from('venture_issues').select('*').eq('id', id).maybeSingle(),
     db.from('venture_commits').select('sha, subject, at, issue_id').eq('issue_id', id).order('at'),
     db.from('venture_issue_activity').select('*').eq('issue_id', id).order('at'),
     olaShas(db, id),
+    // the tracker issues whose list holds this one (OLA-505)
+    db.from('venture_issues').select('id, title').filter('tracker', 'cs', JSON.stringify([{ id }])).order('num'),
   ])
   if (issueR.error) {
     if (missing(issueR.error)) return null
@@ -530,9 +538,18 @@ export async function loadIssue(id: string): Promise<{ issue: Issue; activity: A
   if (!issueR.data) return null
   if (commitsR.error) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
   if (actR.error && !missing(actR.error)) throw new Error(`venture_issue_activity read failed: ${actR.error.message}`)
+  if (partR.error) throw new Error(`venture_issues read failed: ${partR.error.message}`)
   const i = issueR.data as Omit<Issue, 'commits'>
   const cs = (commitsR.data ?? []) as Commit[]
-  return { issue: { ...i, links: i.links ?? [], commits: cs, builtBy: builtBy(cs, ola) }, activity: actR.error ? null : (actR.data as Activity[]) }
+  let list: TrackerItem[] | null = null
+  if (Array.isArray(i.tracker)) {
+    const ids = i.tracker.map((e) => e.id)
+    const r = ids.length ? await db.from('venture_issues').select('id, title, status').in('id', ids) : { data: [], error: null }
+    if (r.error) throw new Error(`venture_issues read failed: ${r.error.message}`)
+    const rows = (r.data ?? []) as { id: string; title: string; status: Status }[]
+    list = i.tracker.map((e) => { const x = rows.find((y) => y.id === e.id); return { id: e.id, note: e.note ?? '', title: x?.title ?? null, status: x?.status ?? null } })
+  }
+  return { issue: { ...i, links: i.links ?? [], commits: cs, builtBy: builtBy(cs, ola) }, activity: actR.error ? null : (actR.data as Activity[]), list, partOf: (partR.data ?? []) as { id: string; title: string }[] }
 }
 
 // ---------------------------------------------------------------- the status panel (OLA-164)
