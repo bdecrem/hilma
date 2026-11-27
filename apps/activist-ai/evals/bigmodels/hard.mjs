@@ -20,9 +20,18 @@ const cells = (page, n) => page.evaluate((n) => {
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect()
     if (r.width < 14 || r.height < 14 || r.width > 200 || Math.abs(r.width - r.height) > r.width * 0.35) continue
-    ;(groups[el.tagName + Math.round(r.width) + 'x' + Math.round(r.height)] ||= []).push({ el, r })
+    ;(groups[el.tagName] ||= []).push({ el, r })
   }
-  let g = Object.values(groups).filter((g) => g.length === n).sort((a, b) => a[0].r.width - b[0].r.width)[0]
+  // n elements of one tag within 15% of one width (thick lines between boxes make cells a pixel or two unequal)
+  let g = null
+  for (const list of Object.values(groups)) {
+    list.sort((a, b) => a.r.width - b.r.width)
+    for (let i = 0; i + n <= list.length && !g; i++) {
+      const top = list[i].r.width * 1.15, same = list.filter((x) => x.r.width >= list[i].r.width && x.r.width <= top)
+      if (same.length === n && (i === 0 || list[i - 1].r.width < list[i].r.width)) g = same
+    }
+    if (g) break
+  }
   const text = (el) => String(el.querySelector?.('input')?.value || el.innerText || el.value || '').trim()
   if (g) {
     g.sort((a, b) => a.r.top - b.r.top)
@@ -96,7 +105,11 @@ const CHECK = {
     const fill = async () => {
       let title = page.locator('input[type=text]:visible, input:not([type]):visible').first()
       if (!(await title.isVisible().catch(() => false))) {
-        if (!(await clickWord(page, /add|new|create|\+/i))) { const day = (await cells(page, 49).catch(() => null)) || (await cells(page, 36).catch(() => null)); if (day) await page.mouse.click(day[10].x, day[10].y) }
+        // No button to add one: click the first day of the month, as a person would.
+        if (!(await clickWord(page, /add|new|create|\+/i))) {
+          const day = await page.evaluate(() => { const e = [...document.querySelectorAll('body *')].filter((e) => /^1$/.test((e.innerText || '').trim()) && e.getBoundingClientRect().width > 10).sort((a, b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width)[0]; if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })
+          if (day) await page.mouse.click(day.x, day.y)
+        }
         await sleep(400)
       }
       if (!(await title.isVisible().catch(() => false))) return 'found no box for the event\'s name'
