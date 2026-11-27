@@ -516,9 +516,12 @@ zai-org/GLM-5.3-Flash 15000000`. It never touches the installed staging (`~/ola-
 
 Bart, voice call Nov 26: ten requests, easy to hard, run without the new stuff (Ola's model runs its
 own tests, OLA-474; Ola makes a test run and escalates to a bigger model, OLA-479) and then with it;
-what each produced and how long it took. `before-after.mjs` sends each request three times as chat in
-the asks' made-up cloud project, copies the project's files out after the answer and judges them with
-the checks that already exist (`apps/checks`, `bigmodels/run.mjs --score`). The ten, in order:
+what each produced and how long it took. `before-after.mjs` types each request three times into the
+real website (headless Chromium, phone size) in the asks' made-up cloud project, answers its cards yes,
+and waits until the page is quiet, so Ola's own "test it" nudge and its hand-off to the hosted model
+(both live in the page, `web/src/lib/ola.ts`) are part of the run. It then copies the project's files
+out and judges them with the checks that already exist (`apps/checks`, `bigmodels/run.mjs --score`).
+The `with` arm turns the project's hosted-model switch on for the arm (set back after). The ten, in order:
 website, countdown (both only show things: the control), tip-split, unit-converter, todo-due,
 signup-sheet, memory-game, data, debug, spreadsheet.
 
@@ -530,9 +533,13 @@ node evals/before-after.mjs --table
 ```
 
 One line per run in `~/ola-before-after/results.jsonl` (seconds from send to answer, steps, whether a
-test ran, whether it escalated, the check's score); what a run made in `~/ola-before-after/<arm>/<request>-<try>/`.
+test ran, whether Ola nudged its model to test, whether it handed over and why, who finished:
+`ola`/`hosted`, the check's score), read from the conversation's own marks (`NUDGE`, `HANDOFF_MARK`
+in `web/src/lib/steps.ts`) and the page; what a run made in `~/ola-before-after/<arm>/<request>-<try>/`
+(files, conversation.json, screenshots). `--force tests` opens the page with `?escalate=tests` to see a
+hand-off at once: for checking the script only, its rows are left out of `--table`.
 A run is cut at 20 minutes; a broken one is recorded as broken and the next starts; a stopped arm
 carries on where it stopped when started again. On the Studio it refuses a run unless
-`ops/studio/big-model.sh status` says Ola's own model is loaded and no big model runs. What counts
-as a test and as an escalation are two patterns at the top of the script (`TEST`, `ESCALATE`):
-check them against the names OLA-474 and OLA-479 ship with before the `with` arm.
+`ops/studio/big-model.sh status` says Ola's own model is loaded and no big model runs. It runs on
+the machine whose Ola it measures (the asks' admin command and project computer), with playwright in
+`web/node_modules`; on the Studio its browser goes through the asks' local front.

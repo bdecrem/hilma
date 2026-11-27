@@ -32,6 +32,7 @@ export const SITES = process.env.OLA_ASKS_SITES || 'https://sites.ola.cx'
 // for ORIGIN's host it connects to the front and writes the line, anything else goes out as before.
 // TLS stays end to end: the certificate is still checked against ORIGIN's name.
 // Remove with the address move: delete ~/.ola/local-front once ORIGIN's name reaches this machine.
+let forwarderUrl = null
 export const LOCAL_FRONT = (() => {
   if (process.env.OLA_ASKS_LOCAL_FRONT !== undefined) return process.env.OLA_ASKS_LOCAL_FRONT.trim() || null
   try {
@@ -64,6 +65,11 @@ if (LOCAL_FRONT) {
   await new Promise((ok) => forwarder.listen(0, '127.0.0.1', ok))
   forwarder.unref()
   http.setGlobalProxyFromEnv({ https_proxy: `http://127.0.0.1:${forwarder.address().port}` })
+  forwarderUrl = `http://127.0.0.1:${forwarder.address().port}`
+}
+/** The forwarder above as a proxy address, for a browser this process starts (null: no local front). */
+export function localFrontProxy() {
+  return forwarderUrl
 }
 // The live server's own code and settings: the deployed release, never a builder's copy.
 export const LIVE = path.join(homedir(), 'ola-staging/current/apps/activist-ai')
