@@ -11,7 +11,15 @@ const here = path.dirname(new URL(import.meta.url).pathname)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 // Every word the page shows: its text, what it draws on a canvas, and what it says in an alert.
-const words = async (page, said) => (await page.evaluate(() => (document.body?.innerText || '') + '\n' + (window.__drawn || []).join('\n'))) + '\n' + said.join('\n')
+// The words a person can see: text kept in the page at opacity 0 (a "Game Over" panel waiting to be shown) is left out.
+const words = async (page, said) => (await page.evaluate(() => {
+  const unseen = [...document.querySelectorAll('body *')].filter((e) => getComputedStyle(e).opacity === '0')
+  const was = unseen.map((e) => e.style.display)
+  for (const e of unseen) e.style.display = 'none'
+  const text = document.body?.innerText || ''
+  unseen.forEach((e, i) => { e.style.display = was[i] })
+  return text + '\n' + (window.__drawn || []).join('\n')
+})) + '\n' + said.join('\n')
 const count = (text, re) => (text.match(re) || []).length
 
 // The cells of a grid: n elements of one size laid out as a square, or failing that the biggest canvas cut into n.
@@ -80,7 +88,7 @@ const CHECK = {
     await page.mouse.click(5, 5).catch(() => {})
     for (const k of ['Enter', 'ArrowLeft', 'ArrowUp']) { await page.keyboard.press(k); await sleep(150) }
     let over = false
-    for (let i = 0; i < 150 && !over; i++) { await page.keyboard.press('Space'); await sleep(140); if (i % 8 === 7) over = count(await words(page, said), /game\s*over/gi) > before }
+    for (let i = 0; i < 150 && !over; i++) { await page.keyboard.press('Space'); await sleep(140); over = count(await words(page, said), /game\s*over/gi) > before }  // after every press: in some games the next Space starts a new game
     const score = (await words(page, said)).match(/score\D{0,12}(\d+)/i)
     if (score) notes.push(`score shown: ${score[1]}`)
     return [{ name: 'pieces drop with space, stack up, and the game says game over', pass: over }]
