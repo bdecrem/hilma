@@ -36,7 +36,7 @@ test('still dead after the fix: one message and one question, with the bigger mo
   assert.equal(r.cards.length, 1)
   const q = deadQuestion(r.cards[0].page, DEAD, { hostedSetUp: true, canSend: true })
   assert.deepEqual(q, { page: 'index.html', dead: ["Pressing 'Done' changed nothing on the page."], offered: true })
-  assert.match(deadOffer('Together AI'), /runs outside this machine, at Together AI/)
+  assert.match(deadOffer('Together AI'), /runs outside this machine \(Together AI\)/)
 })
 
 test('all fine after the fix, or nothing changed: neither message nor question', async () => {
