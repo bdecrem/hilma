@@ -2,7 +2,7 @@
 # OLA-520 run two on the Mac Studio, in two phases so a reading of the tests sits between them:
 #   nohup caffeinate -i ~/big-test/hilma/apps/activist-ai/tickets/run2.sh qwen >> ~/big-test/run2.log 2>&1 &
 #     Qwen reads the ten bugs (ten-bugs-2.txt, ask-2.txt) and writes tests (45 min at most), Ola's model is
-#     loaded again, then did-it-fail.mjs runs each test on the untouched code.
+#     loaded again (steps 300: the lean cap of 60 stopped it at 10.7 min with nothing written), then did-it-fail.mjs runs each test on the untouched code.
 #   nohup caffeinate -i ~/big-test/hilma/apps/activist-ai/tickets/run2.sh inkmini given/a.json given/b.json … >> ~/big-test/run2.log 2>&1 &
 #     three.mjs on each case, one after another (Inkling 2 Mini, Ola's own model).
 # Each phase waits for the Studio to be free and appends to ~/big-test/run2-summary.txt.
@@ -23,7 +23,7 @@ if [[ $phase == qwen ]]; then
   $BM start qwen || { say "qwen did not start"; exit 1; }
   out=$($t/gateway.sh studio-qwen3.8-flash-next); say "$out"
   gw=$(print -r -- $out | sed -n 's/.*gateway pid \([0-9]*\).*/\1/p'); sleep 2
-  node $t/write-tests.mjs --model studio-qwen3.8-flash-next --bugs $t/ten-bugs-2.txt --ask $t/ask-2.txt --time 2700 | tee /tmp/run2-qwen.txt
+  node $t/write-tests.mjs --model studio-qwen3.8-flash-next --bugs $t/ten-bugs-2.txt --ask $t/ask-2.txt --time 2700 --steps 300 | tee /tmp/run2-qwen.txt
   kill $gw 2>/dev/null; gw=""; $BM back
   d=$(sed -n 's/^dir //p' /tmp/run2-qwen.txt)
   { echo "== OLA-520 run two, $(date)"; echo "Qwen: $(grep '^write-tests: [a-z]' /tmp/run2-qwen.txt | tail -1)"; echo "run folder $d"

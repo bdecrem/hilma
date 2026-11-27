@@ -5,7 +5,7 @@
 // ticket lane's sandbox through the model's gateway (gateway.sh <model> first), and the run's changes are
 // kept in <dir>/change.diff. Then each test TESTS.md names can be checked on the untouched code (three.mjs
 // takes the chosen one as a case).
-//   node apps/activist-ai/tickets/write-tests.mjs --model studio-qwen3.8-flash-next --bugs apps/activist-ai/tickets/ten-bugs.txt [--ask <instruction file>] [--time 1800]
+//   node apps/activist-ai/tickets/write-tests.mjs --model studio-qwen3.8-flash-next --bugs apps/activist-ai/tickets/ten-bugs.txt [--ask <instruction file>] [--steps 60] [--time 1800]
 import { writeFileSync, readFileSync, symlinkSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { repo, root, nmRoot, nmOla, MODELS, sh, q, runFolders, opencodeConfig, runOpencode, gatewayToken, LEAN } from './lib.mjs'
@@ -25,7 +25,7 @@ sh(`git -C ${q(repo)} archive ${ref} -- ${paths.map((x) => `'${x}'`).join(' ')} 
 symlinkSync(nmRoot, path.join(work, 'node_modules'))
 if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
 writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
-writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean: true }), null, 2))
+writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean: true, steps: args.steps ? Number(args.steps) : null }), null, 2))
 sh('git init -q && git add -A && git commit -qm base && git tag config', work)
 
 // --ask <file>: the instruction itself (run two of OLA-520); the bugs follow it.
