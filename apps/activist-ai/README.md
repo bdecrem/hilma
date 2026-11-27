@@ -2372,6 +2372,22 @@ fails ("0 passed, 0 failed, 1 error") reads as a failed step even when the comma
 An older conversation's `<ola-nudge>` turns show as one plain line from Ola. The Mac and iPhone apps
 still carry OLA-486's port of it (parked; it comes out when the apps are picked up again).
 
+**Ola presses the page (OLA-515, Bart, Nov 27: "idea 1 (click around) we DO").** When a turn of Ola's
+own model ends well and wrote or changed an .html file, the web app asks the front desk (`POST
+/api/poke`) to run `ola-poke` on that page in the project's VM: no model, the headless Chromium of
+ola-page, every field typed into and every button, box and tile pressed with a real click (at most 30,
+16 s of pressing, a hard stop at 20 s). Dead means a script error (on load, typing or a press), a field
+that does not take what was typed, or a press after which nothing at all changed (DOM, other fields,
+scroll, dialogs, storage, clipboard, sound, drawing, requests, validation, navigation). Not pressed and
+never reported: Copy, Share, Print, Save, Reset, Clear, Close, Cancel, Undo, Back, Play, Sound and the
+like, a lone "-" or "<", links, disabled, hidden or covered controls; a checkbox without a handler of its
+own is pressed but not judged. Nothing dead: nothing happens. Something dead: one follow-up turn to Ola's
+model, marked `<ola-nudge><ola-poke>`, that lists what (six lines at most) and asks it to fix exactly that
+and hand over; the conversation shows it as one plain line from Ola. Never a second round (Ola's own
+turns are not pressed), and when the pressing fails or times out nothing is sent. `web/src/lib/poke.ts`,
+`workspace/ola-poke`, tests `web/test/poke.test.ts` and `workspace/poke_test.py`. Web app only (the Mac
+and iPhone apps are parked).
+
 **The stretch card** (`web/src/components/StretchCard.tsx`), in the conversation, the approval
 sheet's sibling: "This may be a stretch for Ola's own model. Hand it to the hosted open model at
 <provider>?" (or "… to Claude?" when only Claude is set up; with both, the hosted open model first

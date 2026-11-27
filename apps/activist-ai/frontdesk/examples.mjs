@@ -52,6 +52,8 @@ export function exampleOfTurn(messages, turnId = null) {
   if (!t || t.outcome !== 'succeeded' || !ID.test(t.turnId)) return null
   if (t.kinds.some((k) => !k.startsWith('step_'))) return null // a refusal, or a stopped run
   const request = typed(t.request).replace(HANDOVER, '').trim()
+  // A turn Ola sent its own model (a hand-off, a pressed page's follow-up, OLA-515) is not the person's request.
+  if (request.startsWith('<ola-nudge>')) return null
   if (!request || request.length > 2000 || !MAKES.test(request)) return null
   // The turn's tool steps in order (the same slice of messages readTurn read).
   const ordered = [...messages].sort((a, b) => (a?.time?.created ?? 0) - (b?.time?.created ?? 0))

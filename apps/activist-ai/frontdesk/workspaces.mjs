@@ -542,6 +542,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     dbApi: ws.dbApi,
     madeBy: ws.madeBy,
     examples: ws.examples,
+    poke: ws.poke,
     dbStream: ws.dbStream,
     dbAdd: ws.dbAdd,
     dbRemove: ws.dbRemove,

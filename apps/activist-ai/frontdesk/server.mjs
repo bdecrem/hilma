@@ -701,6 +701,24 @@ export function makeFrontDesk(cfg = config()) {
       if (req.method === 'POST' && r.status === 200) await examples.forget(ws.slug, body.conversation, body.turn).catch((e) => log(`examples: not taken out in ${ws.slug} (${e?.message ?? e})`))
       return json(res, r.status, r.body)
     }
+    // The page Ola's own model just handed over, pressed all over (OLA-515, workspace/ola-poke): every
+    // field typed in and every button pressed in the VM's headless browser, no model involved. Answers
+    // the dead things ({ dead: [{ what, name, say }] }), or 502 when the pressing itself failed, and
+    // the page then sends nothing. Asked by the web app as a turn ends with a changed .html file.
+    if (p === '/api/poke' && req.method === 'POST') {
+      if (!canRun) return json(res, 403, readOnly)
+      const body = await readJson(req, 4 * 1024)
+      if (!body || typeof body.path !== 'string' || !workspaces.validRel(body.path) || !/\.html?$/i.test(body.path)) return json(res, 400, { error: 'bad_path' })
+      const busy = workspaces.holdBusy(ws.slug)
+      try {
+        const dead = await workspaces.poke(ws.slug, body.path)
+        if (!dead) return json(res, 502, { error: 'poke_failed' })
+        log(`${ws.slug}: a page was pressed (${dead.length} dead)`)
+        return json(res, 200, { dead })
+      } finally {
+        busy()
+      }
+    }
     // Which engine last changed each file (OLA-224): the project's own record, `ola-db made-by
     // --json` inside the VM (names, engines and times only), for Files. One exec, one transfer slot.
     if (p === '/api/made-by' && req.method === 'GET') {

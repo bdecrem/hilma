@@ -58,7 +58,8 @@ const HERE = path.join(AI, 'evals')
 const OUT = process.env.OLA_BA_HOME || path.join(homedir(), 'ola-before-after')
 const RESULTS = path.join(OUT, 'results.jsonl')
 const RUN_MIN = 20
-const QUIET_MS = 10_000
+// 30 s, not 10 (OLA-515): the page presses a handed-over page for up to 20 s before its one follow-up turn starts.
+const QUIET_MS = 30_000
 
 // The ten, easy to hard. "shows" only shows things (the control: the new stuff must not slow them);
 // "computes" is what the new stuff is for. The words are the existing lists', not copied here.

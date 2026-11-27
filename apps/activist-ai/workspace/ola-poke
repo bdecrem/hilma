@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""ola-poke: press everything on a page Ola just made, and say what is dead (OLA-515).
+
+    ola-poke /work/index.html            prints one JSON object: {"dead": [...], "typed": n, "pressed": n, "seconds": s}
+
+Run by the front desk (never by the model, and no model is involved) when Ola's own model hands over a
+turn that wrote an .html file. It opens the page in the same headless Chromium as ola-page (no network,
+the page's own folder served on 127.0.0.1), types into every field the way a person does (a real click
+in the field, then text), and presses every button, tile and box with a real mouse click, one at a
+time. After each it looks whether anything happened. What it reports ("dead"), each with one plain
+sentence for the model:
+  - a script error when the page opened, when typing, or on a press;
+  - a field that does not take what was typed (tried with "12" and with "Test");
+  - a button whose press changed nothing at all: no change anywhere in the page (a node, an attribute, a
+    text, another field's value, the scroll), no dialog, no storage, clipboard, sound, drawing, request,
+    validation message or navigation, within 0.8 s.
+Deliberately not reported (when in doubt, nothing is said): buttons whose words say they may do nothing
+visible (Copy, Share, Print, Download, Save, Reset, Clear, Close, Cancel, Undo, Back, Play, Sound...,
+and a lone "-" or "<"), which are not pressed at all; links; disabled or hidden controls and covered
+ones (not pressed); a checkbox or radio that has no handler of its own (delegated or plain form boxes);
+a read-only field. A navigation ends the pressing (the page is gone). At most 30 fields and controls,
+16 s of pressing, and a hard stop at 20 s (OLA_POKE_DEADLINE_S): a stop, or any error of its own, exits
+1 with nothing printed, and the front desk then sends nothing.
+"""
+import importlib.machinery, importlib.util, json, os, shutil, signal, sys, tempfile, threading, time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+_spec = importlib.util.spec_from_loader("olapage", importlib.machinery.SourceFileLoader("olapage", str(HERE / "ola-page")))
+P = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(P)
+
+MAX_CONTROLS = 30
+PRESS_BUDGET_S = 16
+WAIT_S = (0.3, 0.5)  # looked at after 0.3 s, and once more 0.5 s later when nothing had happened yet
+
+# Before any of the page's own code: count every effect a press may have that is not in the page's
+# DOM, note which elements got a click handler of their own, and make alert/confirm/prompt not block.
+INIT = r"""
+(() => {
+  const w = window
+  w.__olaFx = 0; w.__olaMut = 0; w.__olaClick = new Set()
+  const fx = () => { w.__olaFx++ }
+  const wrap = (o, k, stub) => { try { const f = o && o[k]; if (typeof f !== 'function') return; o[k] = function (...a) { fx(); return stub ? stub(...a) : f.apply(this, a) } } catch (e) {} }
+  const ET = EventTarget.prototype, add = ET.addEventListener
+  ET.addEventListener = function (t, ...r) {
+    try { if (this instanceof Element && /^(click|dblclick|mousedown|mouseup|pointerdown|pointerup|touchstart|touchend|change|input)$/.test(t)) w.__olaClick.add(this) } catch (e) {}
+    return add.call(this, t, ...r)
+  }
+  wrap(w, 'alert', () => undefined); wrap(w, 'confirm', () => true); wrap(w, 'prompt', () => '12')
+  wrap(w, 'print', () => undefined); wrap(w, 'open', () => null); wrap(w, 'fetch'); wrap(XMLHttpRequest.prototype, 'send')
+  for (const k of ['setItem', 'removeItem', 'clear']) wrap(Storage.prototype, k)
+  wrap(document, 'execCommand'); wrap(URL, 'createObjectURL'); wrap(history, 'pushState'); wrap(history, 'replaceState')
+  if (navigator.clipboard) { wrap(navigator.clipboard, 'writeText'); wrap(navigator.clipboard, 'write') }
+  if (w.HTMLMediaElement) { wrap(HTMLMediaElement.prototype, 'play'); wrap(HTMLMediaElement.prototype, 'pause') }
+  if (w.speechSynthesis) wrap(w.speechSynthesis, 'speak')
+  if (w.AudioNode) wrap(AudioNode.prototype, 'connect')
+  if (w.AudioScheduledSourceNode) wrap(AudioScheduledSourceNode.prototype, 'start')
+  if (w.CanvasRenderingContext2D) for (const k of ['fillRect', 'strokeRect', 'clearRect', 'fillText', 'strokeText', 'fill', 'stroke', 'drawImage', 'putImageData']) wrap(CanvasRenderingContext2D.prototype, k)
+  for (const G of [w.WebGLRenderingContext, w.WebGL2RenderingContext]) if (G) for (const k of ['drawArrays', 'drawElements', 'clear']) wrap(G.prototype, k)
+  for (const t of ['invalid', 'submit', 'hashchange', 'toggle']) add.call(w, t, fx, true)
+  new MutationObserver((l) => { w.__olaMut += l.length }).observe(document, { subtree: true, childList: true, attributes: true, characterData: true })
+})()
+"""
+
+# Runs in the page after it loads: the fields and the controls, in page order, kept on window.
+FIND = r"""
+(() => {
+  const w = window
+  const vis = (e) => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' }
+  const off = (e) => e.disabled || e.getAttribute('aria-disabled') === 'true' || e.closest('fieldset[disabled]')
+  const words = (e) => [e.getAttribute('aria-label'), (e.innerText || '').trim(), e.value && e.tagName === 'INPUT' ? e.value : '', e.title, e.getAttribute('alt')].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+  const fieldName = (e) => ((e.labels && e.labels[0] && e.labels[0].innerText) || e.getAttribute('aria-label') || e.placeholder || e.name || e.id || '').replace(/\s+/g, ' ').trim().slice(0, 40)
+  const TEXT = /^(|text|search|email|tel|url|number|password)$/
+  const fields = [...document.querySelectorAll('input, textarea, select')].filter((e) => vis(e) && !off(e) && !e.readOnly && !/^(hidden|button|submit|reset|image|checkbox|radio|file)$/.test(e.type))
+  const SKIP = /\b(copy|copied|share|print|download|export|save|saved|reset|clear|close|cancel|dismiss|undo|redo|back|prev|previous|help|about|info|menu|theme|dark|light|sound|mute|unmute|play|pause|stop|audio|music|speak|listen|read aloud|volume|log ?out|sign ?out|log ?in|sign ?in|settings|full ?screen|load|import|upload|open|install|email|tweet|link)\b/i
+  const LONE = /^[-−–‹«<←]$/
+  const LATE = /\b(delete|remove|trash)\b/i
+  const sel = 'button, input[type=button], input[type=submit], input[type=image], input[type=checkbox], input[type=radio], [role=button], [role=checkbox], [role=switch], [role=tab], [onclick], summary'
+  let ctl = [...document.querySelectorAll(sel)].filter((e) => vis(e) || ((e.type === 'checkbox' || e.type === 'radio') && e.labels && [...e.labels].some(vis)))
+  ctl = ctl.filter((e) => !(e.tagName === 'A' && e.hasAttribute('href') && !e.hasAttribute('onclick') && e.getAttribute('role') !== 'button'))
+  const listed = new Set(ctl)
+  // Elements that got a click handler of their own (a tile, a card): small ones, not around a listed control.
+  for (const e of w.__olaClick) {
+    if (!e.isConnected || listed.has(e) || /^(HTML|BODY|INPUT|TEXTAREA|SELECT|OPTION|LABEL|FORM)$/.test(e.tagName) || !vis(e) || e.querySelectorAll('*').length > 5) continue
+    if ([...listed].some((c) => c.contains(e) || e.contains(c))) continue
+    ctl.push(e); listed.add(e)
+  }
+  ctl = ctl.filter((e) => ![...listed].some((c) => c !== e && c.contains(e) && c.tagName !== 'LABEL'))
+  ctl.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+  const out = []
+  let n = 0
+  for (const e of ctl) {
+    n++
+    if (off(e)) continue
+    const say = words(e)
+    if (SKIP.test(say) || LONE.test(say.trim())) continue
+    const box = e.type === 'checkbox' || e.type === 'radio' || /^(checkbox|switch)$/.test(e.getAttribute('role') || '')
+    out.push({ e, name: say.slice(0, 40) || (e.id ? '#' + e.id : 'the ' + n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th') + ' control'), box, own: w.__olaClick.has(e) || e.hasAttribute('onclick') || e.hasAttribute('onchange'), late: LATE.test(say) })
+  }
+  out.sort((a, b) => a.late - b.late)
+  w.__olaFields = fields.map((e) => ({ e, name: fieldName(e) || 'field ' + (fields.indexOf(e) + 1), text: e.tagName === 'TEXTAREA' || (e.tagName === 'INPUT' && TEXT.test(e.type)) }))
+  w.__olaCtl = out
+  return JSON.stringify({ fields: w.__olaFields.map((f) => [f.name, f.text]), controls: out.map((c) => c.name) })
+})()
+"""
+
+# Helpers in the page, defined once after FIND.
+LIB = r"""
+(() => {
+  const w = window
+  w.__olaVal = (e) => {
+    if (e.tagName === 'SELECT') return e.options.length > 1 ? e.options[1].value : null
+    const t = e.type
+    if (t === 'number' || t === 'range') { const lo = e.min !== '' ? +e.min : -Infinity, hi = e.max !== '' ? +e.max : Infinity; return String(Math.max(lo, Math.min(hi, 12))) }
+    return { date: '2026-12-01', time: '10:30', month: '2026-12', week: '2026-W49', 'datetime-local': '2026-12-01T10:30', color: '#336699', email: 'a@example.org', url: 'https://example.org', tel: '5551234' }[t] ?? '12'
+  }
+  w.__olaSet = (e, v) => {
+    const proto = e.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : e.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype
+    Object.getOwnPropertyDescriptor(proto, 'value').set.call(e, v)
+    e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }))
+  }
+  // A point to click on e, or null when it is gone, hidden or covered by something else.
+  w.__olaAim = (e) => {
+    if (!e || !e.isConnected) return null
+    let t = e
+    if ((e.type === 'checkbox' || e.type === 'radio') && e.getBoundingClientRect().width === 0 && e.labels && e.labels[0]) t = e.labels[0]
+    t.scrollIntoView({ block: 'center', inline: 'center' })
+    const r = t.getBoundingClientRect(), s = getComputedStyle(t)
+    if (r.width <= 0 || r.height <= 0 || s.visibility === 'hidden') return null
+    const x = r.left + r.width / 2, y = r.top + r.height / 2
+    const hit = document.elementFromPoint(x, y)
+    if (!hit) return null
+    const mine = hit === t || t.contains(hit) || (e.labels && [...e.labels].some((l) => l === hit || l.contains(hit)))
+    return mine ? [x, y] : null
+  }
+  w.__olaState = (skip) => JSON.stringify([w.scrollX, w.scrollY, location.href, [...document.querySelectorAll('input, textarea, select')].filter((e) => e !== skip).map((e) => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value)])
+  w.__olaArm = (skip) => { w.__olaFx = 0; w.__olaMut = 0; w.__olaBefore = w.__olaState(skip); w.__olaSkip = skip }
+  w.__olaMoved = () => w.__olaFx > 0 || w.__olaMut > 0 || w.__olaState(w.__olaSkip) !== w.__olaBefore
+  w.__olaRefill = () => { for (const f of w.__olaFields) if (f.e.isConnected && f.e.value === '' && f.e.tagName !== 'SELECT') try { w.__olaSet(f.e, w.__olaVal(f.e)) } catch (x) {} }
+  return true
+})()
+"""
+
+
+class Page:
+    def __init__(self, cdp, sid):
+        self.cdp, self.sid = cdp, sid
+
+    def js(self, expr):
+        r = self.cdp.send("Runtime.evaluate", {"expression": expr, "returnByValue": True}, session=self.sid, timeout=10)
+        if "exceptionDetails" in r:
+            raise RuntimeError("ola-poke's own script failed: " + str(r["exceptionDetails"].get("text"))[:120])
+        return r.get("result", {}).get("value")
+
+    def click(self, x, y):
+        for t in ("mouseMoved", "mousePressed", "mouseReleased"):
+            self.cdp.send("Input.dispatchMouseEvent", {"type": t, "x": x, "y": y, "button": "left" if t != "mouseMoved" else "none", "clickCount": 1}, session=self.sid, timeout=10)
+
+    def errors(self, start):
+        """Script errors among the events from index `start` on, and whether the page navigated away."""
+        out, gone = [], False
+        for e in self.cdp.events[start:]:
+            m, p = e.get("method"), e.get("params", {})
+            if m == "Runtime.exceptionThrown":
+                d = p.get("exceptionDetails", {})
+                out.append(((d.get("exception") or {}).get("description") or d.get("text") or "error").split("\n")[0][:200])
+            elif m == "Page.frameNavigated" and not p.get("frame", {}).get("parentId"):
+                gone = True
+        return out, gone
+
+
+def q(s):
+    return "'" + s.replace("'", "’") + "'"
+
+
+def poke(page_path):
+    t0 = time.time()
+    page = Path(page_path).resolve()
+    if not page.is_file():
+        raise RuntimeError("no such page")
+    binary = os.environ.get("OLA_PAGE_CHROMIUM") or next((c for c in P.CANDIDATES if os.access(c, os.X_OK)), None) or shutil.which("chromium-headless-shell")
+    if not binary:
+        raise RuntimeError("no page renderer")
+    P.Quiet.root = str(page.parent)
+    srv = P.Server(("127.0.0.1", 0), P.Quiet)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}/{page.name}"
+    profile = tempfile.mkdtemp(prefix="ola-poke-")
+    cdp = None
+    dead, seen = [], set()
+
+    def report(kind, name, say):
+        if say not in seen:
+            seen.add(say)
+            dead.append({"what": kind, "name": name, "say": say})
+
+    try:
+        cdp = P.CDP(binary, profile)
+        tid = cdp.send("Target.createTarget", {"url": "about:blank"})["targetId"]
+        sid = cdp.send("Target.attachToTarget", {"targetId": tid, "flatten": True})["sessionId"]
+        for m in ("Page.enable", "Runtime.enable"):
+            cdp.send(m, session=sid)
+        cdp.send("Emulation.setDeviceMetricsOverride", {"width": 1280, "height": 900, "deviceScaleFactor": 1, "mobile": False}, session=sid)
+        cdp.send("Page.addScriptToEvaluateOnNewDocument", {"source": INIT}, session=sid)
+        cdp.send("Page.navigate", {"url": url}, session=sid)
+        end = time.time() + 8
+        while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events):
+            cdp.pump(0.2)
+        cdp.pump(0.5)
+        pg = Page(cdp, sid)
+        for err in pg.errors(0)[0]:
+            report("error", "", f"Script error when the page opened: {err}")
+        mark = len(cdp.events)
+        found = json.loads(pg.js(FIND))
+        pg.js(LIB)
+        fields, controls = found["fields"], found["controls"]
+        budget = MAX_CONTROLS
+        typed = pressed = 0
+        # Fields first, so the buttons have something to work on.
+        for i, (name, text) in enumerate(fields):
+            if budget <= 0:
+                break
+            budget -= 1
+            if not text:
+                pg.js(f"(() => {{ const f = window.__olaFields[{i}]; const v = window.__olaVal(f.e); if (v !== null) window.__olaSet(f.e, v) }})()")
+                continue
+            took = False
+            f = f"window.__olaFields[{i}].e"
+            first = pg.js(f"window.__olaVal({f})")
+            tries = [first] if pg.js(f"{f}.type") == "number" else [first, "Test"]
+            for v in tries:
+                aim = pg.js(f"JSON.stringify(window.__olaAim({f}))")
+                aim = json.loads(aim) if aim else None
+                if not aim:
+                    took = True  # covered or gone: not judged
+                    break
+                pg.click(*aim)
+                pg.js(f"(() => {{ const e = {f}; e.focus(); e.select && e.select() }})()")
+                cdp.send("Input.insertText", {"text": v}, session=sid, timeout=10)
+                typed += 1
+                if v in (pg.js(f"{f}.value") or ""):
+                    took = True
+                    break
+            if not took:
+                report("field", name, f"The field {q(name)} did not take what was typed.")
+            for err in pg.errors(mark)[0]:
+                report("error", name, f"Typing in the field {q(name)} gave a script error: {err}")
+            mark = len(cdp.events)
+        # Then every control, one press each.
+        for i, name in enumerate(controls):
+            if budget <= 0 or time.time() - t0 > PRESS_BUDGET_S:
+                break
+            budget -= 1
+            pg.js("window.__olaRefill()")
+            aim = pg.js(f"JSON.stringify(window.__olaAim(window.__olaCtl[{i}].e))")
+            aim = json.loads(aim) if aim else None
+            if not aim:
+                continue
+            c = f"window.__olaCtl[{i}]"
+            pg.js(f"window.__olaArm({c}.box ? {c}.e : null)")
+            mark = len(cdp.events)
+            pg.click(*aim)
+            pressed += 1
+            moved = False
+            for wait in WAIT_S:
+                cdp.pump(wait)
+                errs, gone = pg.errors(mark)
+                if gone:
+                    break
+                if pg.js("window.__olaMoved()"):
+                    moved = True
+                    break
+            errs, gone = pg.errors(mark)
+            for err in errs:
+                report("error", name, f"Pressing {q(name)} gave a script error: {err}")
+            if gone:
+                break  # it went to another page: nothing more to press here
+            judged = pg.js(f"!{c}.box || {c}.own")
+            if not moved and not errs and judged:
+                report("button", name, f"Pressing {q(name)} changed nothing on the page.")
+        return {"page": page_path, "dead": dead, "typed": typed, "pressed": pressed, "seconds": round(time.time() - t0, 1)}
+    finally:
+        if cdp:
+            cdp.close()
+        srv.shutdown()
+        shutil.rmtree(profile, ignore_errors=True)
+
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1].startswith("-"):
+        print("usage: ola-poke <page.html>", file=sys.stderr)
+        return 2
+
+    def overdue(*_):
+        raise TimeoutError("over the deadline")
+    signal.signal(signal.SIGALRM, overdue)
+    signal.alarm(int(os.environ.get("OLA_POKE_DEADLINE_S", "20")))
+    try:
+        out = poke(sys.argv[1])
+    except Exception as e:
+        print(f"ola-poke: {type(e).__name__}: {str(e)[:160]}", file=sys.stderr)
+        return 1
+    finally:
+        signal.alarm(0)
+    print(json.dumps(out))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

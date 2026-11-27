@@ -440,7 +440,7 @@ export const TEST_COMMAND = /^(?:\/opt\/ola\/bin\/)?ola-test(?=\s|$)|^(?:python3
 
 /**
  * A turn Ola itself sends its model is marked, so the page shows it as Ola's line, never as the
- * person's words. Today only the hand-off below; conversations from Nov 26 and 27 also hold the
+ * person's words. Today the hand-off below and the pressed-page follow-up (POKE_MARK); conversations from Nov 26 and 27 also hold the
  * "run a test" and "finish it" turns of the removed OLA-479, shown in one plain sentence each.
  */
 export const NUDGE_MARK = '<ola-nudge>'
@@ -452,8 +452,11 @@ export const NUDGE_MARK = '<ola-nudge>'
 export const HANDOFF_MARK = `${NUDGE_MARK}<ola-handoff>`
 export const handoffPrompt = (sentence: string, request: string) =>
   `${HANDOFF_MARK}${sentence}\n\nFrom Ola, not the person: Ola’s own model could not finish the person’s request in this conversation, so you are taking it over. Do the work now, in full, building on what is already in the project, and check it; do not ask the person what they want. Their request: ${request}`
+/** Ola pressed the page its model handed over and found something dead (OLA-515, lib/poke.ts): its one follow-up, first line shown. */
+export const POKE_MARK = `${NUDGE_MARK}<ola-poke>`
 /** A request as the person sees it, and whether Ola sent it. */
 export function nudgeOf(text: string): { request: string; nudge: boolean } {
+  if (text.startsWith(POKE_MARK)) return { request: text.slice(POKE_MARK.length).split('\n')[0], nudge: true }
   if (text.startsWith(HANDOFF_MARK)) return { request: text.slice(HANDOFF_MARK.length).split('\n')[0], nudge: true }
   if (!text.startsWith(NUDGE_MARK)) return { request: text, nudge: false }
   // An older conversation's OLA-479 turns: "finish as well as you can", or "run a test first".
