@@ -25,6 +25,13 @@ export default function Filters({ action, p, areas }: { action: string; p: Track
         <option value="P2">P2</option>
         <option value="P4">P4</option>
       </select>
+      <select name="diff" defaultValue={p.diff ?? ''} onChange={send} aria-label="Difficulty">
+        <option value="">Any difficulty</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="none">Not rated</option>
+      </select>
     </form>
   )
 }

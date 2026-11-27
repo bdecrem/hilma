@@ -42,9 +42,13 @@
 //   node scripts/venture/issues.mjs wait <id> [--what "what Bart has to do"]      waiting on Bart
 //   node scripts/venture/issues.mjs open <id>                                    back to open (next up)
 //   node scripts/venture/issues.mjs drop <id> [--why "…"]   a ticket named as a review's daily idea needs --why "Bart: <his words>" (OLA-331)
-//   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--who …] [--week …] [--proof …] [--lane <lane> --why …]
+//   node scripts/venture/issues.mjs edit <id> [--title …] [--what …] [--area …] [--pri …] [--difficulty …] [--who …] [--week …] [--proof …] [--lane <lane> --why …]
+//   Difficulty (optional; add takes --difficulty too, edit --difficulty none clears it, list --difficulty easy filters):
+//     easy   = one place, a few lines
+//     medium = a few files, or some logic to understand
+//     hard   = several parts that must fit together, or unclear where the cause is
 //   node scripts/venture/issues.mjs commit <id> <hash>…                          attach commits by hand
-//   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web]
+//   node scripts/venture/issues.mjs list [--day yesterday|today|YYYY-MM-DD] [--status done,in_progress] [--area web] [--pri P1] [--difficulty easy]
 //   node scripts/venture/issues.mjs show <id>                                    the issue and its whole thread
 //   Tracker issues (OLA-505): an issue that is not work itself but lists other issues, so related work is found in one place.
 //   node scripts/venture/issues.mjs add "title" --tracker --area model [--what "…"]   makes one (never on the plate, never picked, checked or done)
@@ -222,7 +226,7 @@ async function patch(id, fields) {
   const row = check(await db.from('venture_issues').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id).select().single(), 'update')
   const lines = []
   if (before && fields.status && fields.status !== before.status) lines.push({ issue_id: id, kind: 'status', field: 'status', old_value: before.status, new_value: fields.status, body: fields.status === 'done' || fields.status === 'dropped' ? (fields.proof ?? '') : '' })
-  for (const k of ['title', 'what', 'priority', 'area', 'who', 'week']) if (before && k in fields && fields[k] !== before[k] && !(k === 'what' && fields.status)) lines.push({ issue_id: id, kind: 'edit', field: k, old_value: before[k] === null ? null : String(before[k]), new_value: fields[k] === null ? null : String(fields[k]) })
+  for (const k of ['title', 'what', 'priority', 'difficulty', 'area', 'who', 'week']) if (before && k in fields && fields[k] !== before[k] && !(k === 'what' && fields.status)) lines.push({ issue_id: id, kind: 'edit', field: k, old_value: before[k] === null ? null : String(before[k]), new_value: fields[k] === null ? null : String(fields[k]) })
   await record(lines)
   console.log(line(row))
   return row
@@ -412,9 +416,12 @@ async function unread() {
   return r.data
 }
 const inboxLine = (a) => `${a.issue_id.padEnd(8)} ${when(a.at).padEnd(20)} ${a.who.padEnd(8)} ${a.kind === 'comment' ? 'comment: ' : ''}${says(a).replace(/\s+/g, ' ')}`
+const DIFFICULTIES = ['easy', 'medium', 'hard']
+const difficultyOf = (v) => (v === undefined ? undefined : v === 'none' ? null : v)
 function validate(f) {
   if (f.area !== undefined && !AREAS[f.area]) die(`area must be one of: ${Object.keys(AREAS).join(', ')}`)
   if (f.priority !== undefined && !/^P[0124]$/.test(f.priority)) die('priority must be P0, P1, P2 or P4')
+  if (f.difficulty !== undefined && f.difficulty !== null && !DIFFICULTIES.includes(f.difficulty)) die(`difficulty must be one of: ${DIFFICULTIES.join(', ')} (or none to clear it)`)
   if (f.status !== undefined && !STATUSES.includes(f.status)) die(`status must be one of: ${STATUSES.join(', ')}`)
   if (f.week !== undefined && f.week !== null && !(f.week >= 1 && f.week <= 4)) die('week must be 1 to 4')
 }
@@ -439,7 +446,7 @@ async function attach(id, hashes) {
 
 const isTracker = (r) => Array.isArray(r?.tracker)
 const label = { open: 'next', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
-const line = (r) => `${r.id.padEnd(8)} ${r.priority} ${(isTracker(r) ? `tracker (${r.tracker.length})` : label[r.status] ?? r.status).padEnd(15)} ${r.area.padEnd(8)} ${(r.who ?? '').padEnd(10)} ${r.title}${r.status === 'done' && r.proof ? `  [${r.proof}]` : ''}`
+const line = (r) => `${r.id.padEnd(8)} ${r.priority} ${(isTracker(r) ? `tracker (${r.tracker.length})` : label[r.status] ?? r.status).padEnd(15)} ${r.area.padEnd(8)} ${(r.who ?? '').padEnd(10)} ${r.title}${r.difficulty ? `  {${r.difficulty}}` : ''}${r.status === 'done' && r.proof ? `  [${r.proof}]` : ''}`
 
 // ---- Checks (2026-11-20). Bart, after publishing failed for him four times in one morning, each
 // time after he was told it worked: "THERE IS ZERO LEARNING AFTER ONE WEEK". The week's record: 104
@@ -606,7 +613,7 @@ if (cmd === 'overrides') {
   const links = [...many('link').map((l) => ({ label: l.split('=')[0], url: l.slice(l.indexOf('=') + 1) })), ...many('doc').map((d) => ({ label: 'note', doc: d }))]
   const tracker = !!one('tracker')
   if (tracker && one('start')) die('a tracker issue is not work, so it is never started: leave out --start')
-  const row = { id: `${PREFIX}-${num}`, num, project: 'ola', title, what: one('what') ?? '', area, priority: one('pri') ?? (tracker ? 'P2' : 'P1'), who: one('who') ?? 'lead', week: one('week') ? Number(one('week')) : null, status: one('start') ? 'in_progress' : 'open', started_at: one('start') ? now : null, links, ...(tracker ? { tracker: [] } : {}) }
+  const row = { id: `${PREFIX}-${num}`, num, project: 'ola', title, what: one('what') ?? '', area, priority: one('pri') ?? (tracker ? 'P2' : 'P1'), who: one('who') ?? 'lead', week: one('week') ? Number(one('week')) : null, status: one('start') ? 'in_progress' : 'open', started_at: one('start') ? now : null, links, ...(one('difficulty') !== undefined ? { difficulty: difficultyOf(one('difficulty')) } : {}), ...(tracker ? { tracker: [] } : {}) }
   validate(row)
   console.log(line(check(await db.from('venture_issues').insert(row).select().single(), 'add')))
 } else if (cmd === 'start') {
@@ -951,6 +958,7 @@ if (cmd === 'overrides') {
   const f = {}
   for (const [k, col] of [['title', 'title'], ['what', 'what'], ['area', 'area'], ['pri', 'priority'], ['who', 'who'], ['proof', 'proof'], ['day', 'day']]) if (one(k) !== undefined) f[col] = one(k)
   if (one('week') !== undefined) f.week = one('week') === 'none' ? null : Number(one('week'))
+  if (one('difficulty') !== undefined) f.difficulty = difficultyOf(one('difficulty'))
   validate(f)
   if (one('lane') !== undefined) {
     // the lane is the ticket's (OLA-251): changed here, with the reason, on its thread
@@ -1045,6 +1053,12 @@ if (cmd === 'overrides') {
     q = q.in('status', wanted)
   }
   if (one('area')) q = q.eq('area', one('area'))
+  if (one('pri')) q = q.in('priority', String(one('pri')).split(',').map((x) => x.trim()))
+  if (one('difficulty')) {
+    const dw = String(one('difficulty'))
+    if (!DIFFICULTIES.includes(dw) && dw !== 'none') die(`difficulty must be one of: ${DIFFICULTIES.join(', ')} (or none: not rated)`)
+    q = dw === 'none' ? q.is('difficulty', null) : q.eq('difficulty', dw)
+  }
   const rows = check(await q.order('num'), 'list')
   for (const r of rows) console.log(line(r))
   console.log(`${rows.length} issue(s)`)
@@ -1052,7 +1066,7 @@ if (cmd === 'overrides') {
   const r = await get(normId(pos[0]))
   const commits = check(await db.from('venture_commits').select('sha, subject, at').eq('issue_id', r.id).order('at'), 'commits')
   console.log(`${r.id}  ${r.title}\n${r.what}\n`)
-  console.log(`area ${AREAS[r.area]} · ${r.priority} · ${label[r.status]} · ${r.who}${r.week ? ` · plan week ${r.week}` : ''}`)
+  console.log(`area ${AREAS[r.area]} · ${r.priority}${r.difficulty ? ` · ${r.difficulty}` : ''} · ${label[r.status]} · ${r.who}${r.week ? ` · plan week ${r.week}` : ''}`)
   console.log(`opened ${r.opened_at}${r.started_at ? `, started ${r.started_at}` : ''}${r.finished_at ? `, finished ${r.finished_at}` : ''}${r.day ? ` (counts for ${r.day})` : ''}`)
   if (r.proof) console.log(`proof: ${r.proof}`)
   for (const l of r.links ?? []) console.log(`link: ${l.label} ${l.url ?? `note ${l.doc}`}`)

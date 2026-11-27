@@ -1,7 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { AREAS, type Activity, type Area, type Issue, type TrackerItem } from '@/lib/venture/board'
+import { AREAS, DIFFICULTIES, type Activity, type Area, type Issue, type TrackerItem } from '@/lib/venture/board'
 import { ago, at } from '../time'
 import { Linked, person, REPO, Status, STATUS, STATUS_ORDER } from './common'
 
@@ -353,6 +353,19 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
                 <select value={i.priority} disabled={busy} aria-label="Priority" onChange={(e) => save({ priority: e.target.value })}>
                   {['P0', 'P1', 'P2', 'P4'].map((p) => (
                     <option key={p}>{p}</option>
+                  ))}
+                </select>
+              </dd>
+            </div>
+            <div>
+              <dt>Difficulty</dt>
+              <dd>
+                <select value={i.difficulty ?? ''} disabled={busy} aria-label="Difficulty" onChange={(e) => save({ difficulty: e.target.value || null })}>
+                  <option value="">Not rated</option>
+                  {DIFFICULTIES.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
                   ))}
                 </select>
               </dd>

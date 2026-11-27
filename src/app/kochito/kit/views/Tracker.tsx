@@ -13,7 +13,7 @@ import Keys from './Keys'
 // opened. A ticket Ola built (OLA-300: its commit came from the hand-off) shows Ola as Who, and each
 // day of Done says how many of its tickets Ola built. Keyboard: / searches, c opens New issue (Keys.tsx).
 
-export type TrackerParams = { tab?: string; area?: string; pri?: string; q?: string; sort?: string; week?: string; day?: string; opened?: string; who?: string }
+export type TrackerParams = { tab?: string; area?: string; pri?: string; diff?: string; q?: string; sort?: string; week?: string; day?: string; opened?: string; who?: string }
 const TABS: [string, string, Issue['status'][]][] = [
   ['open', 'Open', ['in_progress', 'open', 'waiting']],
   ['doing', 'Doing', ['in_progress']],
@@ -34,6 +34,7 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
     (i) =>
       (!p.area || i.area === p.area) &&
       (!p.pri || i.priority === p.pri) &&
+      (!p.diff || (p.diff === 'none' ? !i.difficulty : i.difficulty === p.diff)) &&
       (!p.who || i.who === p.who) &&
       (!p.week || String(i.week ?? '') === p.week) &&
       (!p.day || i.day === dayOf(p.day)) &&
@@ -92,6 +93,7 @@ export default function Tracker({ all, p, base, now, today }: { all: Issue[] | n
             <span className={`bd-pri ${i.priority.toLowerCase()}`}>{i.priority}</span>
             <span className={`bd-cut ${i.status}-t`} title={i.title}>
               {i.title}
+              {i.difficulty && <span className={`bd-diff ${i.difficulty}`}>{i.difficulty}</span>}
               {i.status === 'done' && i.proof && <span className="proof">{i.proof}</span>}
             </span>
             <span className="area bd-cut">{AREAS[i.area]}</span>

@@ -5,7 +5,7 @@
 // The rules for a status match scripts/venture/issues.mjs, so a change made on the page and one
 // made from the command line leave the same row behind.
 import { f2Supabase } from '@/lib/f2/supabase'
-import { AREAS, type Area, type Issue, type Status, pacificDay } from './board'
+import { AREAS, DIFFICULTIES, type Area, type Issue, type Status, pacificDay } from './board'
 
 export const STATUSES: Status[] = ['open', 'in_progress', 'waiting', 'done', 'dropped']
 const missing = (e: { code?: string; message?: string } | null) => !!e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? ''))
@@ -19,7 +19,7 @@ export class WriteError extends Error {
   }
 }
 
-type Fields = { title?: string; what?: string; status?: Status; priority?: Issue['priority']; area?: Area; who?: string; week?: number | null; proof?: string }
+type Fields = { title?: string; what?: string; status?: Status; priority?: Issue['priority']; difficulty?: Issue['difficulty']; area?: Area; who?: string; week?: number | null; proof?: string }
 
 /** Checks and trims what the page sent; throws a WriteError the route turns into a 400. */
 export function clean(input: Record<string, unknown>): Fields {
@@ -51,6 +51,11 @@ export function clean(input: Record<string, unknown>): Fields {
   if (input.priority !== undefined) {
     if (!['P0', 'P1', 'P2', 'P4'].includes(input.priority as string)) throw new WriteError('priority must be P0, P1, P2 or P4')
     f.priority = input.priority as Issue['priority']
+  }
+  if (input.difficulty !== undefined) {
+    const d = input.difficulty === null || input.difficulty === '' || input.difficulty === 'none' ? null : String(input.difficulty)
+    if (d !== null && !(DIFFICULTIES as readonly string[]).includes(d)) throw new WriteError(`difficulty must be one of ${DIFFICULTIES.join(', ')}, or none`)
+    f.difficulty = d as Issue['difficulty']
   }
   if (input.area !== undefined) {
     if (!(String(input.area) in AREAS)) throw new WriteError(`area must be one of ${Object.keys(AREAS).join(', ')}`)
@@ -85,8 +90,8 @@ export async function updateIssue(id: string, input: Record<string, unknown>, us
   const patch: Record<string, unknown> = {}
   const lines: Record<string, unknown>[] = []
   const base = { issue_id: id, at: now, who: user, via: 'board' }
-  for (const k of ['title', 'what', 'priority', 'area', 'who', 'week'] as const) {
-    if (f[k] === undefined || f[k] === cur[k]) continue
+  for (const k of ['title', 'what', 'priority', 'difficulty', 'area', 'who', 'week'] as const) {
+    if (f[k] === undefined || f[k] === (cur[k] ?? (k === 'difficulty' ? null : cur[k]))) continue
     patch[k] = f[k]
     lines.push({ ...base, kind: 'edit', field: k, old_value: cur[k] === null ? null : String(cur[k]), new_value: f[k] === null ? null : String(f[k]) })
   }

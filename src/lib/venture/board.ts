@@ -22,6 +22,8 @@ export type Commit = { sha: string; subject: string; at: string; issue_id?: stri
 export type BuiltBy = { by: 'ola'; model: string } | null
 export const OLA_BUILT = /^Built by Ola on (\S+)/m
 export const olaModel = (body: string): string | null => body.match(OLA_BUILT)?.[1] ?? null
+export const DIFFICULTIES = ['easy', 'medium', 'hard'] as const
+export type Difficulty = (typeof DIFFICULTIES)[number]
 export type Issue = {
   id: string
   num: number
@@ -29,6 +31,8 @@ export type Issue = {
   what: string
   area: Area
   priority: 'P0' | 'P1' | 'P2' | 'P4'
+  // optional (schema 015): easy = one place, a few lines; medium = a few files or some logic; hard = several parts, or the cause unclear
+  difficulty?: Difficulty | null
   status: Status
   who: string
   week: number | null
