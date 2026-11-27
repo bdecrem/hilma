@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { AI, ask, cloudTransport, emptyProject, inProject, liveRelease, newSession, prepareAccount, say, signIn, signOutAccount, stopProject, takeDownSites, takeRunLock } from './asks/lib.mjs'
+import { AI, ask, cloudTransport, emptyProject, inProject, liveRelease, modelUsedUp, newSession, prepareAccount, say, signIn, signOutAccount, stopProject, takeDownSites, takeRunLock } from './asks/lib.mjs'
 
 const HERE = path.join(AI, 'evals')
 const OUT = process.env.OLA_BA_HOME || path.join(homedir(), 'ola-before-after')
@@ -115,6 +115,7 @@ for (let t = 1; t <= TRIES; t++) {
     try {
       row = await Promise.race([one(r, t), new Promise((_, no) => setTimeout(() => no(new Error(`no end after ${RUN_MIN + 5} min`)), (RUN_MIN + 5) * 60_000))])
     } catch (e) {
+      if (e.usedUp) held.release(), say(`STOP: ${e.usedUp}; not counted. Start this arm again after that; it carries on.`), await finish(5)
       row = { broken: String(e.message).slice(0, 300) }
       signedIn = null // sign in again before the next run, in case that was the fault
     }
@@ -142,6 +143,9 @@ async function one(r, t) {
   const turns = []
   let turn = await ask(T, sid, r.say, end - Date.now())
   turns.push(turn)
+  // Refused for the project's model allowance (or the provider's credits): not Ola's doing, nothing more can run.
+  const usedUp = turn.status === 'failed' && modelUsedUp({ why: turn.error })
+  if (usedUp) throw Object.assign(new Error(usedUp), { usedUp })
   // Ola ends on a question: the person says yes (twice at most), as the asks do.
   for (let i = 0; i < 2 && turn.status === 'done' && endsOnQuestion(turn.texts.at(-1) ?? '') && Date.now() < end; i++) turns.push((turn = await ask(T, sid, 'Yes, go ahead.', end - Date.now())))
   const secs = Math.round((Date.now() - t0) / 1000)
@@ -158,7 +162,7 @@ async function one(r, t) {
   const s = score(r, path.join(dir, 'files'))
   return {
     secs,
-    end: turn.status === 'timeout' ? `cut at ${RUN_MIN} min` : turn.status,
+    end: turn.status === 'timeout' ? `cut at ${RUN_MIN} min` : `${turn.status}${turn.error ? `: ${String(turn.error).slice(0, 200)}` : ''}`,
     steps: steps.length,
     tested: steps.some((s) => TEST.test(s)),
     escalated: ESCALATE.test(steps.join('\n')) || ESCALATE.test(said),
