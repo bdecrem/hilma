@@ -511,3 +511,28 @@ runs' logs. The gateway is stopped; start it again with `evals/start-gateway-ws.
 zai-org/GLM-5.3-Flash 15000000`. It never touches the installed staging (`~/ola-staging`, `~/.ola`,
 `stage-a`, port 4180). `Qwen/Qwen3-Coder-Next-FP8` is listed by Together but not serverless (400
 `model_not_available`: it needs a dedicated endpoint), so it was not run.
+
+## Before and after: ten requests without and with the testing and escalation (OLA-480)
+
+Bart, voice call Nov 26: ten requests, easy to hard, run without the new stuff (Ola's model runs its
+own tests, OLA-474; Ola makes a test run and escalates to a bigger model, OLA-479) and then with it;
+what each produced and how long it took. `before-after.mjs` sends each request three times as chat in
+the asks' made-up cloud project, copies the project's files out after the answer and judges them with
+the checks that already exist (`apps/checks`, `bigmodels/run.mjs --score`). The ten, in order:
+website, countdown (both only show things: the control), tip-split, unit-converter, todo-due,
+signup-sheet, memory-game, data, debug, spreadsheet.
+
+```bash
+mkdir -p ~/ola-before-after
+nohup node evals/before-after.mjs --arm without > ~/ola-before-after/without.log 2>&1 &   # before the changes
+nohup node evals/before-after.mjs --arm with    > ~/ola-before-after/with.log 2>&1 &      # after
+node evals/before-after.mjs --table
+```
+
+One line per run in `~/ola-before-after/results.jsonl` (seconds from send to answer, steps, whether a
+test ran, whether it escalated, the check's score); what a run made in `~/ola-before-after/<arm>/<request>-<try>/`.
+A run is cut at 20 minutes; a broken one is recorded as broken and the next starts; a stopped arm
+carries on where it stopped when started again. On the Studio it refuses a run unless
+`ops/studio/big-model.sh status` says Ola's own model is loaded and no big model runs. What counts
+as a test and as an escalation are two patterns at the top of the script (`TEST`, `ESCALATE`):
+check them against the names OLA-474 and OLA-479 ship with before the `with` arm.
