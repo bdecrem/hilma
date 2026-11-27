@@ -288,6 +288,16 @@ d_watch_off() {
   if grep -q '^OFF=' "$OLA/watch.env" 2>/dev/null; then echo "~/.ola/watch.env has an OFF= line without almanac: add it by hand" >&2; return 1; fi
   (umask 077; printf 'OFF=almanac\n' >> "$OLA/watch.env"); chmod 600 "$OLA/watch.env"
 }
+# The health check texts an alarm and sends its status to the board with the Venture key, which the
+# mini's check reads from its venture checkout. The Studio has none (Nov 26: every run "NOT SENT",
+# OLA-477): move-env.sh puts only that key in ~/.ola/venture.env, and watch.env points at it and names
+# the machine, so its texts say "the Studio" and its reading has its own place on the board.
+t_venture_key() { [ "$(mode_of "$OLA/venture.env")" = 600 ] && grep -q '^VENTURE_KEY=.' "$OLA/venture.env"; }
+t_watch_key() { grep -qx "KEY_FROM=$OLA/venture.env" "$OLA/watch.env" 2>/dev/null && grep -qx 'MACHINE=Studio' "$OLA/watch.env"; }
+d_watch_key() {
+  [ -f "$OLA/watch.env" ] || (umask 077; : > "$OLA/watch.env")
+  set_env "$OLA/watch.env" KEY_FROM "$OLA/venture.env" && set_env "$OLA/watch.env" MACHINE Studio
+}
 t_container_up() { /usr/local/bin/container system status | grep -q running; }
 d_container_up() { /usr/local/bin/container system start --enable-kernel-install; }
 t_signers() { [ -s "$OLA/allowed-signers" ]; }
@@ -323,6 +333,8 @@ run_ola() {
   if t_envs; then step "the gateway uses the local model for: $GATEWAY_NAMES" t_gateway_local d_gateway_local; fi
   step "Ola's own tests reach this machine's front ($LOCAL_FRONT in ~/.ola/local-front, until app.ola.cx moves here)" t_local_front d_local_front
   step "the health check does not look for the Almanac here (OFF=almanac in ~/.ola/watch.env)" t_watch_off d_watch_off
+  human "the key the health check sends with, in ~/.ola/venture.env" t_venture_key "on the iMac: ops/studio/move-env.sh ola@<studio> --key"
+  if t_venture_key; then step "the health check sends its alarms and status as the Studio (KEY_FROM, MACHINE in ~/.ola/watch.env)" t_watch_key d_watch_key; fi
   human "Bart's signing key in ~/.ola/allowed-signers" t_signers "README step 7 (or run once with OLA_UNSIGNED=1; deploys.log records it)"
   step "Apple's container services running (for the first image build)" t_container_up d_container_up
   if t_envs && { t_signers || [ "${OLA_UNSIGNED:-}" = 1 ]; }; then step "first deploy and the jobs (ola.mjs deploy, install)" t_deployed d_deployed

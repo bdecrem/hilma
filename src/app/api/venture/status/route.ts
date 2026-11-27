@@ -77,7 +77,11 @@ export async function POST(req: Request) {
     projects: num((s.projects as Record<string, unknown> | undefined)?.running) !== null ? { running: num((s.projects as Record<string, unknown>).running) } : null,
     parts,
   }
-  const { error } = await f2Supabase().from('venture_state').upsert({ key: 'ola_status', value, at: value.at })
+  // Each machine has its own place (OLA-477): the mini's reading is "ola_status" (the board's main
+  // reading), the Studio's "ola_status_studio", so the two never overwrite each other.
+  const slot = !value.from || value.from === 'mini' ? 'ola_status' : value.from === 'studio' ? 'ola_status_studio' : null
+  if (!slot) return NextResponse.json({ error: 'unknown machine' }, { status: 400 })
+  const { error } = await f2Supabase().from('venture_state').upsert({ key: slot, value, at: value.at })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

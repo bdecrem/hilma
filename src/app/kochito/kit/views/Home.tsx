@@ -1,6 +1,6 @@
 import { closedOn, openCounts, type BoardData } from '@/lib/venture/board'
 import { href } from '../Shell'
-import { Health } from '../health'
+import { Health, StudioLine } from '../health'
 import { firstLink, inline } from '../inline'
 import { clock, dayShort, pday, shiftDay, since } from '../time'
 import { LearningFigures, sweepStats } from './Learning'
@@ -176,6 +176,7 @@ export default function Home({ d, base }: { d: BoardData; base: string }) {
           <section className="bd-sec" id="health" aria-labelledby="health-h">
             <h2 id="health-h">Health</h2>
             <Health s={d.status} now={now} />
+            <StudioLine s={d.studio} now={now} />
           </section>
           <section className="bd-sec" aria-labelledby="week-h">
             <h2 id="week-h">This week in the plan</h2>

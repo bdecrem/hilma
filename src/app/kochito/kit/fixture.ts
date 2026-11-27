@@ -88,6 +88,18 @@ export function fixture(): BoardData {
       projects: { running: 2 },
       parts: { 'web app': true, 'model connection': true, address: true, tunnel: true },
     },
+    studio: {
+      at: T('2026-11-18', 11, 34),
+      deployed: null,
+      checks: null,
+      asks: null,
+      ci: null,
+      alarm: { state: 'ok', says: [], warns: [], runAt: T('2026-11-18', 11, 34) },
+      disk: { freeGB: 1480 },
+      memory: 'normal, swap 0%',
+      projects: { running: 0 },
+      parts: { 'web app': true, 'model connection': true },
+    },
     independence: {
       days: days.map((day, n) => ({ day, messages: 60 + n * 3, steers: Math.round((rates[n] * (60 + n * 3)) / 100), repeats: n, maybes: 1, rate: rates[n], between: 3, items: [{ time: '9:12 am', label: 'steer' as const, class: 'own labels', repeat: n % 2 === 0, quote: 'a made-up correction, for the design' }] })),
       replay: { at: T('2026-11-18', 2, 40), kind: 'nightly', cases: 71, graded: 71, with_rules: { passed: 66, tries: 79 }, without_rules: { passed: 30, tries: 71 }, prevented: 63, prevented_without: 29, weak: [{ id: 'c80-made-up', source: 'Correction 80', title: 'A made-up case that fails', weakness: 'a', why: ['a made-up reason'] }], history: [{ at: T('2026-11-17', 17), cases: 21, prevented: 18, prevented_without: 7 }, { at: T('2026-11-18', 2, 40), kind: 'nightly', cases: 71, prevented: 63, prevented_without: 29 }] },

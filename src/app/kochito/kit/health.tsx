@@ -37,7 +37,7 @@ export function Health({ s, now }: { s: LiveStatus | null; now: string }) {
   const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
   return (
     <dl className="bd-health" aria-label="Health of the Ola machine">
-      <dt>Ola machine</dt>
+      <dt>Mac mini</dt>
       <dd className={`state ${r.state}`}>
         <span className={`bd-dot ${r.state === 'alarm' ? 'alarm' : 'ok'}`} />
         {r.state === 'alarm' ? `ALARM: ${r.says.map(cap).join(' ')}` : 'OK'}
@@ -48,6 +48,28 @@ export function Health({ s, now }: { s: LiveStatus | null; now: string }) {
       <dd>{s.deployed ? `version ${s.deployed.commit.slice(0, 8)}${s.deployed.at ? `, updated ${at(s.deployed.at, now)}` : ''}${s.checks ? `, ${s.checks.passed} of ${s.checks.total} checks` : ''}` : 'no version reported'}</dd>
       <dt>Checks on main</dt>
       <dd className={s.ci && !s.ci.ok ? 'state alarm' : undefined}>{ciLine(s, now)}</dd>
+      <dt>Disk</dt>
+      <dd>{s.disk ? `${s.disk.freeGB} GB free` : 'not measured'}</dd>
+      <dt />
+      <dd className={`read${r.stale ? ' stale' : ''}`}>{r.stale ? `read ${r.ago}: no reading since` : `read ${r.ago}`}</dd>
+    </dl>
+  )
+}
+
+/** The Mac Studio's reading in one line under the mini's (OLA-477): its state and when it was read.
+ *  Shown only once the Studio has sent a reading. */
+export function StudioLine({ s, now }: { s: LiveStatus | null; now: string }) {
+  if (!s) return null
+  const r = reading(s, now)
+  const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+  return (
+    <dl className="bd-health" aria-label="Health of the Mac Studio">
+      <dt>Mac Studio</dt>
+      <dd className={`state ${r.state}`}>
+        <span className={`bd-dot ${r.state === 'alarm' ? 'alarm' : 'ok'}`} />
+        {r.state === 'alarm' ? `ALARM: ${r.says.map(cap).join(' ')}` : 'OK'}
+        {r.state === 'warn' && s.alarm.warns.length > 0 && <span className="note">warning: {s.alarm.warns.join('; ')}</span>}
+      </dd>
       <dt>Disk</dt>
       <dd>{s.disk ? `${s.disk.freeGB} GB free` : 'not measured'}</dd>
       <dt />

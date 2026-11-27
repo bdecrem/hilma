@@ -548,3 +548,18 @@ test('a check that is turned off forgets the alarm it raised before (OLA-476)', 
   assert.equal(state().active.almanac, undefined, 'the old alarm is still in the state')
   assert.equal(state().streak.almanac, undefined)
 })
+
+test('the Studio (MACHINE=Studio, OLA-477): its texts say so, and its status is sent as its own', async () => {
+  fakes({ freeGB: 6 })
+  up.imsg = 200
+  const studio = { OLA_WATCH_MACHINE: 'Studio', OLA_WATCH_PUSH_EVERY_MIN: '10' }
+  const before = statuses.length
+  const r = await watch(at('14:00'), [], studio)
+  assert.deepEqual(r.sent, ["Ola alarm (the Studio): The Studio's disk is almost full (6 GB left)."])
+  assert.match(r.out, /status pushed to the board/)
+  assert.equal(statuses.length, before + 1)
+  assert.equal(statuses.at(-1).host, 'studio')
+  assert.deepEqual(statuses.at(-1).alarm.says, ["the Studio's disk is almost full (6 GB left)."])
+  fakes({ freeGB: 30 })
+  assert.deepEqual((await watch(at('14:02'), [], studio)).sent, ['Ola (the Studio): back to normal. Disk has 30 GB free.'])
+})

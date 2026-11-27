@@ -120,6 +120,8 @@ export type BoardData = {
   unsorted: Commit[]
   commitSync: { at: string; ok: boolean; why?: string } | null
   status: LiveStatus | null
+  /** The Mac Studio's own reading (OLA-477), sent by its health check; null until it has sent one. */
+  studio: LiveStatus | null
   independence: { days: SteerDay[]; replay: Replay | null; replayAttempt: ReplayAttempt | null }
   plan: { slug: string; title: string; start: string; end: string; weeks: PlanWeek[] } | null
   notes: NoteLink[]
@@ -385,7 +387,7 @@ export async function loadBoard(): Promise<BoardData> {
   const since = new Date(Date.now() - 45 * 86400e3).toISOString()
   const [docs, state, issuesR, commitsR, claimsR, ola] = await Promise.all([
     db.from('venture_docs').select('slug, title, body, updated_at').in('slug', ['journal', PLAN_SLUG, LEARN_SLUG]),
-    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'steer_replay_attempt', 'ola_status', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
+    db.from('venture_state').select('key, value, at').in('key', ['steers', 'steer_replay', 'steer_replay_attempt', 'ola_status', 'ola_status_studio', 'commit_sync', 'learning', 'sweeps', 'api_use', 'runner', 'runner_limit']),
     db.from('venture_issues').select('*').eq('project', 'ola').or(`status.in.(open,in_progress,waiting),finished_at.gte.${since}`).order('num', { ascending: false }),
     db.from('venture_commits').select('sha, subject, at, issue_id, ignored').gte('at', since).order('at', { ascending: false }),
     db.from('venture_state').select('key, value, at').like('key', 'claim:%'),
@@ -413,6 +415,7 @@ export async function loadBoard(): Promise<BoardData> {
     unsorted: commits.filter((c) => !c.issue_id && !c.ignored).map(({ sha, subject, at }) => ({ sha, subject, at })),
     commitSync: (st('commit_sync')?.value ?? null) as BoardData['commitSync'],
     status: (st('ola_status')?.value ?? null) as LiveStatus | null,
+    studio: (st('ola_status_studio')?.value ?? null) as LiveStatus | null,
     independence: {
       days: Object.values((st('steers')?.value?.days ?? {}) as Record<string, SteerDay>).sort((a, b) => a.day.localeCompare(b.day)),
       replay: (st('steer_replay')?.value ?? null) as Replay | null,

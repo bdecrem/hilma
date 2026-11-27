@@ -49,6 +49,10 @@
 // How it texts: an HTTPS POST to <base>/api/venture/imsg with the Venture key, both read at each run
 // from the checkout the morning text runs from (KEY_FROM, default ~/hilma-venture/.env.local:
 // VENTURE_KEY, VENTURE_BASE or https://ola.cx). The key is never copied, printed or saved.
+// The Studio has no venture checkout: its KEY_FROM is ~/.ola/venture.env (only VENTURE_KEY, moved
+// there by ops/studio/move-env.sh) and MACHINE=Studio, which names it in its alarm sentences and
+// texts ("Ola alarm (the Studio): ...") and sends its status to its own place on the board, so the
+// two machines never overwrite each other's reading (OLA-477).
 //
 // Settings: DEFAULTS below; ~/.ola/watch.env (KEY=VALUE, mode 600) overrides them; OLA_WATCH_<KEY>
 // in the environment overrides both (tests). OLA_HOME moves ~/.ola, OLA_WATCH_LOGS the log folder,
@@ -117,6 +121,7 @@ export const DEFAULTS = {
   PUSH_EVERY_MIN: 10,
   // the text
   KEY_FROM: path.join(HOME, 'hilma-venture/.env.local'),
+  MACHINE: 'mini', // the machine's name in the sentences and on the board: mini or Studio
   SEND_BASE: '', // default: VENTURE_BASE from KEY_FROM, else https://ola.cx
   // the programs it reads (tests point these at fakes)
   DF_BIN: '/bin/df',
@@ -356,7 +361,7 @@ function judge(S, r, now, prev) {
         id: 'disk',
         item: 1,
         level: d.freeGB < S.DISK_ALARM_GB ? 'alarm' : d.freeGB < S.DISK_WARN_GB ? 'warn' : 'ok',
-        say: `the mini's disk is almost full (${d.freeGB} GB left).`,
+        say: `the ${S.MACHINE}'s disk is almost full (${d.freeGB} GB left).`,
         clear: `Disk has ${d.freeGB} GB free.`,
         note: `the disk was under ${S.DISK_WARN_GB} GB free`,
         low: d.freeGB,
@@ -367,7 +372,7 @@ function judge(S, r, now, prev) {
   if (r.memory) {
     const m = r.memory
     const bad = m.level === 4 || m.swapPct >= S.SWAP_ALARM_PCT
-    c.push({ id: 'memory', item: 2, level: bad ? 'alarm' : m.level === 2 ? 'warn' : 'ok', two: true, say: 'the mini is running out of memory and will be slow.', clear: 'Memory is fine again.', note: 'memory ran low for a while', detail: `memory ${m.pressure}, swap ${m.swapPct}%` })
+    c.push({ id: 'memory', item: 2, level: bad ? 'alarm' : m.level === 2 ? 'warn' : 'ok', two: true, say: `the ${S.MACHINE} is running out of memory and will be slow.`, clear: 'Memory is fine again.', note: 'memory ran low for a while', detail: `memory ${m.pressure}, swap ${m.swapPct}%` })
   }
   if (r.web) {
     const words = {
@@ -489,15 +494,15 @@ export function decide(S, state, conds, now, { muted = false } = {}) {
   let text = null
   let digest = false
   if (fresh.length || repeat.length) {
-    text = `Ola alarm: ${[...fresh, ...repeat].map(cap).join(' ')}${cleared.length ? ` Back to normal: ${cleared.join(' ')}` : ''}`
+    text = `Ola alarm${S.MACHINE === 'mini' ? '' : ` (the ${S.MACHINE})`}: ${[...fresh, ...repeat].map(cap).join(' ')}${cleared.length ? ` Back to normal: ${cleared.join(' ')}` : ''}`
   } else if (cleared.length) {
-    text = `Ola: back to normal. ${cleared.join(' ')}`
+    text = `Ola${S.MACHINE === 'mini' ? '' : ` (the ${S.MACHINE})`}: back to normal. ${cleared.join(' ')}`
   } else if (!state.lastDigest) {
     state.lastDigest = digestDay(S, now) // the first run: the first note comes at the next DIGEST_HOUR
   } else if (!muted && !isQuiet && state.lastDigest !== digestDay(S, now)) {
     const notes = Object.values(state.warnings)
     if (notes.length) {
-      text = `Ola: a daily note, nothing urgent. Since yesterday ${notes.map((w) => `${w.note}${w.low !== undefined ? ` (lowest ${w.low} ${w.unit})` : ''}${w.count > 1 ? ` (${w.count} times)` : ''}`).join('; ')}.`
+      text = `Ola${S.MACHINE === 'mini' ? '' : ` (the ${S.MACHINE})`}: a daily note, nothing urgent. Since yesterday ${notes.map((w) => `${w.note}${w.low !== undefined ? ` (lowest ${w.low} ${w.unit})` : ''}${w.count > 1 ? ` (${w.count} times)` : ''}`).join('; ')}.`
       digest = true
     } else state.lastDigest = digestDay(S, now)
   }
@@ -581,7 +586,7 @@ export function boardStatus(S, state, r, conds, now) {
   if (r.public) parts['public address'] = r.public.status === 200 || (r.public.status === 401 && !!r.public.basic)
   if (r.almanac) parts['Almanac'] = r.almanac.status === 200
   return {
-    host: 'mini',
+    host: S.MACHINE.toLowerCase(),
     deployed,
     ci,
     asks,

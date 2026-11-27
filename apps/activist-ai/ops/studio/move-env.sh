@@ -3,6 +3,7 @@
 # reaches the mini with its key; ssh asks once for the ola account's password on the Studio.
 #
 #   move-env.sh <ola@studio> [--check]
+#   move-env.sh <ola@studio> --key     only the Venture key the health check sends with (OLA-477)
 #
 # The files go mini -> pipe -> Studio, mode 600, and are never written anywhere else or printed:
 # the only output is each file's name and size. On the Studio, paths in them that name the mini's
@@ -13,6 +14,8 @@
 # them). What does not: the mini's backup key (the Studio makes its own, README step 9), the
 # platform database and the workspaces (staging's made-up data stays on the mini), the per-project
 # allowlists.
+# Also moved: the Venture key alone, from the mini's venture checkout (~/hilma-venture/.env.local) to
+# ~/.ola/venture.env, so the Studio's health check can text an alarm and send its status to the board.
 set -eu
 MINI=${OLA_MINI:-admin@100.95.51.98}
 STUDIO=${1:-}
@@ -23,6 +26,15 @@ echo "on the mini ($MINI), in ~/.ola:"
 ssh -o BatchMode=yes "$MINI" "cd .ola && for f in $FILES; do [ -e \"\$f\" ] && du -sk \"\$f\" | awk '{print \"  \" \$2 \" (\" \$1 \" KB)\"}' || echo \"  \$f MISSING\"; done"
 case " $* " in *" --check "*) echo "(check: nothing copied)"; exit 0 ;; esac
 
+# The one line goes mini -> pipe -> Studio; only how many lines arrived is printed.
+move_key() {
+  ssh -o BatchMode=yes "$MINI" "grep -E '^VENTURE_KEY=.' hilma-venture/.env.local" |
+    ssh "$STUDIO" 'umask 077; mkdir -p ~/.ola && cd ~/.ola && cat > venture.env.new && grep -q "^VENTURE_KEY=." venture.env.new &&
+      mv venture.env.new venture.env && chmod 600 venture.env && echo "on the Studio: ~/.ola/venture.env ($(wc -l < venture.env | tr -d " ") line)" ||
+      { rm -f venture.env.new; echo "FAILED: no Venture key came from the mini"; exit 1; }'
+}
+case " $* " in *" --key "*) move_key; echo "Next on the Studio, as ola: ops/studio/setup.sh ola"; exit 0 ;; esac
+
 ssh "$STUDIO" 'test "$(whoami)" = ola && ! id -Gn | tr " " "\n" | grep -qx admin' || { echo "$STUDIO is not the standard account ola"; exit 1; }
 ssh -o BatchMode=yes "$MINI" "cd .ola && tar -cf - $FILES" |
   ssh "$STUDIO" 'umask 077; mkdir -p ~/.ola && chmod 700 ~/.ola && cd ~/.ola && tar -xpf - &&
@@ -30,4 +42,5 @@ ssh -o BatchMode=yes "$MINI" "cd .ola && tar -cf - $FILES" |
     chmod 600 claude-oauth-token && chmod -R go-rwx tls &&
     echo "on the Studio, in ~/.ola:" && ls -ld '"$FILES"' | awk "{print \"  \" \$1 \" \" \$NF}" &&
     printf "  paths still naming /Users/admin: %s\n" "$(cat *.env | grep -c /Users/admin/)"'
+move_key
 echo "Next on the Studio, as ola: ops/studio/setup.sh ola"
