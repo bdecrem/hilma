@@ -35,7 +35,7 @@ for alias in "$@"; do
   UPSTREAM_BASE_URL=$base UPSTREAM_API_KEY=$key \
   GATEWAY_TOKENS=tickets:$(cat $state/token) GATEWAY_HOST=127.0.0.1 GATEWAY_PORT=$port \
   GATEWAY_MODELS=code=$id GATEWAY_DB=$state/$alias.db GATEWAY_REPORT_CACHED=1 \
-  GATEWAY_WEEKLY_TOKENS=20000000 GATEWAY_MAX_INFLIGHT=6 GATEWAY_MAX_INFLIGHT_PER_CALLER=6 GATEWAY_MAX_QUEUED_PER_CALLER=24 \
+  GATEWAY_WEEKLY_TOKENS=${TICKETS_WEEKLY_TOKENS:-20000000} GATEWAY_MAX_INFLIGHT=6 GATEWAY_MAX_INFLIGHT_PER_CALLER=6 GATEWAY_MAX_QUEUED_PER_CALLER=24 \
     nohup node $here/../gateway/server.mjs >> $state/$alias.log 2>&1 &
   echo "$alias ($id at $provider): gateway pid $! on http://127.0.0.1:$port/v1"
 done

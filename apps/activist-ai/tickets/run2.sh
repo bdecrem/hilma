@@ -9,6 +9,8 @@
 set -u
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export GATEWAY_TOTAL_TIMEOUT_MS=2400000 GATEWAY_FIRST_BYTE_TIMEOUT_MS=1800000 GATEWAY_READ_TIMEOUT_MS=600000
+# The Studio's own models cost nothing: the ticket gateway's weekly 20M-token ceiling (meant for paid models) stopped Qwen after 4 min on Nov 27.
+export TICKETS_WEEKLY_TOKENS=200000000
 h=~/big-test/hilma; t=$h/apps/activist-ai/tickets; BM=$h/apps/activist-ai/ops/studio/big-model.sh; S=~/big-test/run2-summary.txt
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
 while pgrep -f "before-after.mjs" >/dev/null || pgrep -f "runner.mjs|ola.mjs deploy|three.mjs|write-tests.mjs" >/dev/null; do say "waiting for the Studio"; sleep 60; done
