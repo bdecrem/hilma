@@ -216,7 +216,7 @@ async function gitSetup({ delayMs = 0 } = {}) {
   fs.writeFileSync(path.join(d, 'sites.env'), `OLA_SITES_GIT_REMOTE=${bare}\nOLA_SITES_GIT_EMAIL=owner@example.com\n`, { mode: 0o600 })
   const cfg = sitesConfig({ OLA_FD_SITES_ORIGIN: origin, OLA_FD_SITES_API: 'http://127.0.0.1:9', OLA_FD_SITES_FILE: path.join(d, 'sites.env'), OLA_FD_SITES_GIT_VERIFY_MS: '3000', OLA_FD_SITES_GIT_SETTLE_MS: '120', OLA_FD_SITES_POLL_MS: '50' })
   const branch = (args) => execFileSync('git', ['-C', bare, ...args], { encoding: 'utf8' })
-  return { d, bare, origin, branch, server, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()), edges }
+  return { d, bare, origin, branch, server, cfg, sites: makeSites({ cfg, dataDir: path.join(d, 'fd'), request: () => assert.fail('no Vercel API call in git mode') }), markPush: () => (pushedAt = Date.now()), edges }
 }
 
 test('git mode: publish = one commit pushed, the page live; publish again; unpublish leaves no trace in the branch', async () => {
@@ -256,6 +256,69 @@ test('git mode: publish = one commit pushed, the page live; publish again; unpub
   assert.equal((await fetch(`${g.origin}/git-other/`)).status, 200)
   assert.equal(g.branch(['rev-list', '--count', 'main']).trim(), '1')
   assert.doesNotMatch(g.branch(['ls-tree', '-r', '--name-only', 'main']), /git-flyer/)
+  g.server.close()
+})
+
+test('git mode, two Ola machines on one site: each keeps the other\'s pages, a name the other holds is refused, publishes at once both land (OLA-494)', async () => {
+  const g = await gitSetup()
+  const studio = makeSites({ cfg: g.cfg, dataDir: path.join(g.d, 'fd-studio'), request: () => assert.fail('no Vercel API call in git mode') })
+  const pub = async (sites, slug, title) => {
+    const ctx = folderCtx(slug, project({ 'site/index.html': `<!doctype html><title>${title}</title>` }))
+    const pre = await sites.preview(ctx, { folder: 'site' })
+    return sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  }
+  const tree = () => g.branch(['ls-tree', '--name-only', 'main']).trim().split('\n').sort()
+  // The Studio publishes first, then the test server: the Studio's page stays.
+  assert.equal((await pub(studio, 'studio-page', 'Studio one')).body.live, true)
+  assert.equal((await pub(g.sites, 'test-page', 'Test one')).body.live, true)
+  assert.deepEqual(tree(), ['404.html', 'index.html', 'studio-page', 'test-page', 'vercel.json'])
+  assert.match(await (await fetch(`${g.origin}/studio-page/`)).text(), /Studio one/)
+  // The Studio publishes again: the test server's page stays too.
+  assert.equal((await pub(studio, 'studio-page', 'Studio two')).body.live, true)
+  assert.match(await (await fetch(`${g.origin}/test-page/`)).text(), /Test one/)
+  assert.match(await (await fetch(`${g.origin}/studio-page/`)).text(), /Studio two/)
+  // A name the Studio holds is refused on the test server, plainly, and the Studio's page is untouched.
+  const taken = await pub(g.sites, 'studio-page', 'Overwritten')
+  assert.equal(taken.status, 409, JSON.stringify(taken.body))
+  assert.equal(taken.body.error, 'name_taken')
+  assert.match(taken.body.message, /another Ola machine.*Nothing was published/)
+  assert.equal(g.sites.status('studio-page'), null)
+  assert.match(await (await fetch(`${g.origin}/studio-page/`)).text(), /Studio two/)
+  // Unpublish on the test server takes only its own page down.
+  assert.equal((await g.sites.unpublish('test-page')).body.gone, true)
+  assert.deepEqual(tree(), ['404.html', 'index.html', 'studio-page', 'vercel.json'])
+  // Both publish at the same moment: the push that lost the race reads the branch again; both land.
+  const [a, b] = await Promise.all([pub(studio, 'studio-race', 'SR'), pub(g.sites, 'test-race', 'TR')])
+  assert.equal(a.status, 200, JSON.stringify(a.body))
+  assert.equal(b.status, 200, JSON.stringify(b.body))
+  assert.deepEqual(tree(), ['404.html', 'index.html', 'studio-page', 'studio-race', 'test-race', 'vercel.json'])
+  assert.equal(g.branch(['rev-list', '--count', 'main']).trim(), '1')
+  g.server.close()
+})
+
+test('git mode, a desk from before OLA-494 (no list of its folders): owns the branch only if it pushed it last', async () => {
+  const g = await gitSetup()
+  const other = makeSites({ cfg: g.cfg, dataDir: path.join(g.d, 'fd-other'), request: () => assert.fail('no Vercel API call') })
+  const pub = async (sites, slug) => {
+    const ctx = folderCtx(slug, project({ 'site/index.html': `<title>${slug}</title>` }))
+    const pre = await sites.preview(ctx, { folder: 'site' })
+    return sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  }
+  assert.equal((await pub(g.sites, 'mine-a')).status, 200)
+  // Forget the list, as an older release left state.json; the branch is still our last push.
+  const stateFile = path.join(g.d, 'fd', 'sites', 'state.json')
+  const st = JSON.parse(fs.readFileSync(stateFile, 'utf8'))
+  delete st.owned
+  fs.writeFileSync(stateFile, JSON.stringify(st))
+  assert.equal((await g.sites.unpublish('mine-a')).body.gone, true, 'its own page, recognised from the last push')
+  // Another machine pushed since: nothing on the branch is ours, it is all kept.
+  assert.equal((await pub(g.sites, 'mine-b')).status, 200)
+  assert.equal((await pub(other, 'theirs-a')).status, 200)
+  const st2 = JSON.parse(fs.readFileSync(stateFile, 'utf8'))
+  delete st2.owned
+  fs.writeFileSync(stateFile, JSON.stringify(st2))
+  assert.equal((await pub(g.sites, 'mine-c')).status, 409, 'mine-b is on the branch, unclaimed: refused rather than dropped')
+  assert.match(await (await fetch(`${g.origin}/theirs-a/`)).text(), /theirs-a/)
   g.server.close()
 })
 

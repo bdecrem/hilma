@@ -602,12 +602,22 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     return d.id
   }
   // ------------------------------------------------ a git repository the host deploys on push
-  // The repository is a copy made from the manifests, never a source: every deploy writes the whole
-  // site (every project's files from our blobs, the root page, the 404 page, vercel.json) as ONE
-  // commit with no parent and force-pushes it, so an unpublished page is in no commit the
-  // repository keeps (the same rule as deleting the deployment before, above). git runs with a
-  // short, fixed environment: the front desk's own variables reach no git or ssh process.
+  // The repository is a copy made from the manifests, never a source: every deploy writes the site
+  // (this desk's projects from our blobs, the root page, the 404 page, vercel.json) as ONE commit with
+  // no parent and force-pushes it, so an unpublished page is in no commit the repository keeps (the
+  // same rule as deleting the deployment before, above). git runs with a short, fixed environment:
+  // the front desk's own variables reach no git or ssh process.
+  //
+  // More than one Ola machine publishes to the one site (OLA-494, Nov 27: the Studio and the test
+  // server both hold a key for bdecrem/ola-sites; when the Studio started publishing on Nov 25, the
+  // test server's key was moved aside, because each push of the whole site from one machine's copies
+  // would have wiped the other's pages). So a deploy starts from the branch as it is now: every
+  // top-level folder another machine published is kept as it is, only the folders this desk owns
+  // (state.json `owned`) are replaced or removed, and the push is refused if the branch moved in
+  // between (--force-with-lease), then tried again from the new branch. A name another machine
+  // already published is refused (TAKEN), never overwritten.
   const repoDir = path.join(dir, 'repo')
+  const ROOT_FILES = ['index.html', '404.html', 'vercel.json']
   function git(g, args, { cwd = repoDir } = {}) {
     const ssh = ['ssh', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=20']
     if (g.key) ssh.push('-o', 'IdentitiesOnly=yes', '-i', `'${g.key.replace(/'/g, '')}'`)
@@ -616,12 +626,23 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       execFile('git', ['-c', 'core.autocrlf=false', '-c', 'core.safecrlf=false', '-c', 'commit.gpgsign=false', ...args], { cwd, env, timeout: 120_000, maxBuffer: 4 * 1024 * 1024 }, (err, stdout, stderr) => {
         // stderr is never logged whole: only its last line, cut short (it holds no secret, but a
         // remote's message is not ours to repeat at length).
-        if (err) reject(Object.assign(new Error(`git ${args[0]} failed: ${String(stderr).trim().split('\n').pop()?.slice(0, 160) ?? ''}`), { code: 'HOST' }))
+        if (err) reject(Object.assign(new Error(`git ${args[0]} failed: ${String(stderr).trim().split('\n').pop()?.slice(0, 160) ?? ''}`), { code: 'HOST', stderr: String(stderr) }))
         else resolve(String(stdout))
       })
     })
   }
   async function gitDeployAll(g, all) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await gitDeployOnce(g, all)
+      } catch (e) {
+        // The branch moved between our read and our push (another machine published): read it again.
+        if (e.code === 'MOVED' && attempt < 3) continue
+        throw e
+      }
+    }
+  }
+  async function gitDeployOnce(g, all) {
     mk()
     if (!fs.existsSync(path.join(repoDir, '.git'))) {
       fs.rmSync(repoDir, { recursive: true, force: true })
@@ -630,8 +651,23 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     }
     await git(g, ['remote', 'remove', 'origin']).catch(() => {})
     await git(g, ['remote', 'add', 'origin', g.remote])
-    // The tree, written from scratch.
+    // The branch as it is now ('' when the repository is empty).
+    const ref = `refs/heads/${g.branch}`
+    const base = ((await git(g, ['ls-remote', 'origin', ref])).trim().split(/\s+/)[0] || '')
+    if (base) await git(g, ['fetch', '-q', '--depth', '1', 'origin', `+${ref}:refs/remotes/origin/${g.branch}`])
+    const there = base ? (await git(g, ['ls-tree', '--name-only', base])).trim().split('\n').filter(Boolean) : []
+    const st = readJson(stateFile) ?? {}
+    // Which folders are ours. Before OLA-494 a desk kept no list: when the branch is still the commit
+    // this desk pushed last, everything on it is ours; otherwise nothing on it is.
+    const owned = new Set(Array.isArray(st.owned) ? st.owned : st.commit && st.commit === base ? there.filter((n) => !ROOT_FILES.includes(n)) : [])
+    const theirs = there.filter((n) => !ROOT_FILES.includes(n) && !owned.has(n))
+    const taken = Object.keys(all).filter((slug) => theirs.includes(slug))
+    if (taken.length) throw Object.assign(new Error(`taken on the site by another Ola machine: ${taken.join(', ')}`), { code: 'TAKEN', taken })
+    // The tree: the other machines' folders as they are, then ours, then the root files.
+    await git(g, ['checkout', '-q', '--orphan', `deploy-${process.pid}-${Date.now()}`])
+    await git(g, ['rm', '-rq', '--cached', '--ignore-unmatch', '.'])
     for (const e of fs.readdirSync(repoDir)) if (e !== '.git') fs.rmSync(path.join(repoDir, e), { recursive: true, force: true })
+    if (theirs.length) await git(g, ['checkout', '-q', base, '--', ...theirs])
     const put = (rel, buf) => {
       const f = path.join(repoDir, rel)
       if (!f.startsWith(repoDir + path.sep)) throw Object.assign(new Error('a path outside the site'), { code: 'HOST' })
@@ -646,18 +682,22 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
       }
     }
     for (const [name, text] of [['index.html', ROOT_PAGE], ['404.html', NOT_FOUND_PAGE], ['vercel.json', vercelJson()]]) put(name, Buffer.from(text))
-    const tmpBranch = `deploy-${process.pid}-${Date.now()}`
-    await git(g, ['checkout', '-q', '--orphan', tmpBranch])
     await git(g, ['add', '-A', '.'])
     const when = new Date().toISOString()
-    await git(g, ['-c', `user.name=${g.author}`, '-c', `user.email=${g.email}`, 'commit', '-q', '--allow-empty', '-m', `sites: ${Object.keys(all).length} site(s), ${when}`])
+    await git(g, ['-c', `user.name=${g.author}`, '-c', `user.email=${g.email}`, 'commit', '-q', '--allow-empty', '-m', `sites: ${Object.keys(all).length} site(s) from this machine, ${theirs.length} kept from others, ${when}`])
     await git(g, ['branch', '-M', g.branch])
-    await git(g, ['push', '-q', '--force', 'origin', `HEAD:refs/heads/${g.branch}`])
+    try {
+      await git(g, ['push', '-q', `--force-with-lease=${ref}:${base}`, 'origin', `HEAD:${ref}`])
+    } catch (e) {
+      if (/stale info|rejected|fetch first|non-fast-forward/i.test(e.stderr ?? '')) throw Object.assign(new Error('the branch moved'), { code: 'MOVED' })
+      throw e
+    }
     const head = (await git(g, ['rev-parse', 'HEAD'])).trim()
     // Old commits are dropped here too.
+    await git(g, ['update-ref', '-d', `refs/remotes/origin/${g.branch}`]).catch(() => {})
     await git(g, ['reflog', 'expire', '--expire=now', '--all']).catch(() => {})
     await git(g, ['gc', '-q', '--prune=now']).catch(() => {})
-    writeJson(stateFile, { commit: head, at: when })
+    writeJson(stateFile, { commit: head, at: when, owned: Object.keys(all).sort() })
     return head
   }
   const deploy = (c, all) => (c.git ? gitDeployAll(c.git, all) : deployAll(c, all))
@@ -871,6 +911,7 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         })
       } catch (e) {
         log(`sites: publish of ${ctx.slug} failed (${e.code ?? e.name} ${e.status ?? ''})`)
+        if (e.code === 'TAKEN') return { status: 409, body: { error: 'name_taken', message: `The name ${ctx.slug} is already taken on ${cfg.origin} by a page published from another Ola machine. Nothing was published. Pick another name for this page.` } }
         return { status: e.code === 'BUSY' ? 429 : 502, body: { error: 'publish_failed', message: e.code === 'BUSY' ? 'Another page is being published just now. Try again in a minute.' : 'The page could not be published just now: the host did not take it. Nothing changed. Try again in a few minutes.' } }
       }
       const index = plan.items.find((i) => i.as === plan.page)

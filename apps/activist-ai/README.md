@@ -2770,7 +2770,14 @@ and 404 pages, `vercel.json` with the headers above) into `<data>/sites/repo` as
 parent, force-pushes it, and waits up to five minutes (`OLA_FD_SITES_GIT_VERIFY_MS`) for
 https://sites.ola.cx/<name>/ to answer with the new page (or 404). The branch therefore holds only
 what is published now; old deployments' own addresses are behind Vercel's login
-(`all_except_custom_domains`). The checks before (the list and its fingerprint, the secret scan,
+(`all_except_custom_domains`). **More than one Ola machine on the one site (OLA-494, 2026-11-27):** the Studio and the test
+server both publish to `bdecrem/ola-sites`. A deploy starts from the branch as it is now, keeps
+every top-level folder another machine published, replaces or removes only the folders this front
+desk owns (`owned` in `<data>/sites/state.json`), and pushes with `--force-with-lease`, reading the
+branch again if it moved. A name another machine already holds is refused ("already taken … by a
+page published from another Ola machine"), never overwritten. A desk from before this keeps no
+list: it owns what is on the branch only if the branch is still its own last push. Tests:
+`test/sites.test.mjs`, "two Ola machines on one site". The checks before (the list and its fingerprint, the secret scan,
 the caps, a name owned by its first publisher) are the same code. Tests: `test/sites.test.mjs`,
 "git mode".
 

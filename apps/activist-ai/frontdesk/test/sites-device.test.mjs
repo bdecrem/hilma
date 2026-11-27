@@ -300,7 +300,10 @@ test('ola-publish through a door: preview, the yes, publish, status, publish aga
     })
   })
   await new Promise((r) => doorSrv.listen(0, '127.0.0.1', r))
-  const site = mkdtempSync(path.join(tmpdir(), 'ola-publish-site-'))
+  // Its own parent: the skill's old-copy check looks at pages beside the folder, and the shared temp
+  // folder holds other tests' pages, written while this one runs (OLA-494).
+  const site = path.join(mkdtempSync(path.join(tmpdir(), 'ola-publish-parent-')), 'ola-publish-site')
+  mkdirSync(site)
   mkdirSync(path.join(site, 'pics'))
   mkdirSync(path.join(site, '.git'))
   writeFileSync(path.join(site, 'index.html'), '<!doctype html><title>Made-up food bank hours</title><img src="pics/dot.svg">')
