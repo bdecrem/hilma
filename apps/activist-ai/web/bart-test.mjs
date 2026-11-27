@@ -66,7 +66,10 @@ process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.s
 `
 function remote(tool, a, { ok = false } = {}) {
   const q = a.map((s) => `'${String(s).replace(/'/g, `'\\''`)}'`).join(' ')
-  const r = spawnSync('ssh', ['-o', 'ConnectTimeout=15', SSH, `cd ~/ola-staging/current/apps/activist-ai && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin node - ${tool} ${q}`], { input: REMOTE, encoding: 'utf8', timeout: 600_000 })
+  // OLA_WALK_SSH=local: this machine is the server (a run on the test server itself, OLA-454).
+  const r = SSH === 'local'
+    ? spawnSync(process.execPath, ['-', tool, ...a.map(String)], { cwd: path.join(homedir(), 'ola-staging/current/apps/activist-ai'), input: REMOTE, encoding: 'utf8', timeout: 600_000 })
+    : spawnSync('ssh', ['-o', 'ConnectTimeout=15', SSH, `cd ~/ola-staging/current/apps/activist-ai && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin node - ${tool} ${q}`], { input: REMOTE, encoding: 'utf8', timeout: 600_000 })
   if (r.status !== 0 && !ok) throw new Error(`${tool} ${a[0]}: ${(r.stderr || '').trim().split('\n').pop()}`)
   return (r.stdout || '').trim()
 }
