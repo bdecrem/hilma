@@ -64,7 +64,8 @@ test('the note names itself an example, not the request, and carries the steps',
   const n = noteFor(lib[0])
   assert.ok(n.startsWith(NOTE_HEAD))
   assert.match(n, /not the person's request/)
-  assert.match(n, /How each thing was tried before answering:/)
+  assert.match(n, /Steps: build it in one go/)
+  assert.doesNotMatch(n, /How each thing was tried/)
   assert.ok(n.length <= 6000)
 })
 

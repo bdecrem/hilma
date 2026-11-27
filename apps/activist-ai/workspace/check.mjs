@@ -493,7 +493,10 @@ try {
   // folders opencode searches, a project config that lists more and allows every skill) changes that.
   {
     const skillsDir = path.join(here, '../skills')
-    const ours = readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(path.join(skillsDir, e.name, 'SKILL.md'))).map((e) => e.name).sort()
+    // OLA-497: the skills the system config denies by ID (designer, app-designer, sound: loaded only by name,
+    // through ola-skillcue) are not offered to the model.
+    const byName = new Set([...readFileSync(path.join(here, 'opencode-system.jsonc'), 'utf8').matchAll(/"skill\.use", "resource": "([a-z0-9-]+)", "effect": "deny"/g)].map((m) => m[1]))
+    const ours = readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(path.join(skillsDir, e.name, 'SKILL.md')) && !byName.has(e.name)).map((e) => e.name).sort()
     const auth = `Basic ${Buffer.from(`opencode:${ws.secrets(A).OPENCODE_PASSWORD}`).toString('base64')}`
     const oc = (method, p, body) =>
       new Promise((resolve) => {

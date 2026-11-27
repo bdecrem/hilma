@@ -1,5 +1,5 @@
 {
-  "about": "Ola's worked examples (OLA-181): app requests that ended well, shown to the model when a new request is close to one. Test requests only, written for this library: none is one of the seven measured problems in evals/apps/problems.json, so the measure is not taught to the test. Bart's own kept requests are added on the Ola machine from a file outside the repo (OLA_EXAMPLES_EXTRA). Each one: request, tags (kind words), asked (what it plainly means, one line each), built, tried (each item tried on the page, with what was seen), answer.",
+  "about": "Ola's worked examples (OLA-181): app requests that ended well, shown to the model when a new request is close to one. Test requests only, written for this library: none is one of the seven measured problems in evals/apps/problems.json, so the measure is not taught to the test. Bart's own kept requests are added on the Ola machine from a file outside the repo (OLA_EXAMPLES_EXTRA). Each one: request, tags (kind words), asked (what it plainly means, one line each), built (in the fast path of AGENTS.md since OLA-497: one file where it can, a computing part in its own .js with its cases run once by ola-test), tried (kept for the record; not shown to the model since OLA-497), answer.",
   "examples": [
     {
       "id": "test-reading-list",
@@ -31,8 +31,8 @@
         "an empty list says so instead of showing nothing"
       ],
       "built": [
-        "one folder: index.html, style.css, app.js; no server, no outside files",
-        "app.js keeps an array of {id, title, rating, finished} in localStorage under one key, reads it at start, writes it after every change, and redraws the whole list from it",
+        "one file, index.html (HTML, CSS and JavaScript together); no server, no outside files",
+        "the script keeps an array of {id, title, rating, finished} in localStorage under one key, reads it at start, writes it after every change, and redraws the whole list from it",
         "the rating is five buttons per book with aria-label 'Rate 1' to 'Rate 5'; the chosen number also shows as text ('4 of 5') so it can be read",
         "Enter in the title field adds the book too"
       ],
@@ -43,7 +43,7 @@
         "opened the page again with no steps (a reload): the book, its rating and its finished state were still there",
         "cleared localStorage and opened it: 'No books yet' showed"
       ],
-      "answer": "Named each of the five items and what was seen when it was tried, said where the list is saved (this browser only), and how to open the page."
+      "answer": "Said in two sentences what the page does, that the list is saved in this browser only, and its file name."
     },
     {
       "id": "test-stopwatch",
@@ -71,8 +71,8 @@
         "it keeps correct time even if the tab is slow (time from Date.now(), not a counter of ticks)"
       ],
       "built": [
-        "index.html, style.css, app.js; the display is one element with tabular numbers so it does not jump",
-        "app.js stores the start moment and the time already run; every 50 ms (requestAnimationFrame when visible) it shows now - start + already run",
+        "one file, index.html; the display is one element with tabular numbers so it does not jump",
+        "the script stores the start moment and the time already run; on every frame (requestAnimationFrame) it shows now - start + already run",
         "Lap pushes the current reading; the list shows 'Lap 3  01:12.40' and the gap from the lap before"
       ],
       "tried": [
@@ -81,7 +81,7 @@
         "--do \"click Start\" --wait 1000 --do \"click Stop\" looked twice with --wait 500 and --wait 2000: the same reading both times, so Stop holds",
         "then --do \"click Reset\" --text: 00:00.00 and the laps list empty"
       ],
-      "answer": "Listed Start, Stop, Reset and Lap with the readings seen when each was tried, and how to open the page."
+      "answer": "Said in two sentences what Start, Stop, Reset and Lap do, and its file name."
     },
     {
       "id": "test-recipe-scaler",
@@ -108,8 +108,8 @@
         "lines with no number are kept as they are"
       ],
       "built": [
-        "index.html, app.js; the parser reads a leading number in the forms 2, 2.5, 1/2 and 1 1/2, multiplies by wanted / makes, and prints the result rounded to the nearest 1/8 as a fraction",
-        "the result updates on every change of any field (input events), with no button needed; a Scale button is there too for people who look for one"
+        "index.html and scale.js (it computes, so its logic is in its own file with 10 cases run once with ola-test); the parser reads a leading number in the forms 2, 2.5, 1/2 and 1 1/2, multiplies by wanted / makes, and prints the result rounded to the nearest 1/8 as a fraction",
+        "the result updates on every change of any field (input events), with no button needed"
       ],
       "tried": [
         "known answers first: ola-page index.html --do \"fill 1=2 cups flour\" --do \"fill 2=4\" --do \"fill 3=8\" --text: '4 cups flour' (2 doubled is 4)",
@@ -117,7 +117,7 @@
         "--do \"fill 1=salt to taste\" --text: 'salt to taste' unchanged",
         "an empty servings field: a short message instead of NaN"
       ],
-      "answer": "Gave the three worked numbers and their results, so the person can see the math is right, and said which formats are understood."
+      "answer": "Said how many cases passed, which formats are understood, and the file name."
     },
     {
       "id": "test-tic-tac-toe",
@@ -145,8 +145,7 @@
         "whose turn it is shows above the board; New game clears it"
       ],
       "built": [
-        "index.html, style.css, app.js; the board is nine <button> elements in a CSS grid (aria-label 'square 1' to 'square 9'), so it is drawn by the page, not on a canvas",
-        "app.js holds the nine cells in an array and checks the eight lines after every move"
+        "index.html and game.js (who wins is computed, so the eight-line check is in game.js with its cases run once with ola-test); the board is nine <button> elements in a CSS grid (aria-label 'square 1' to 'square 9'), drawn by the page, not on a canvas"
       ],
       "tried": [
         "ola-page index.html --out .shots/start.png --text: nine empty squares in the picture and 'X to play'",
@@ -154,7 +153,7 @@
         "--do \"click square 1\" --do \"click square 1\" --text: square 1 stayed X and it was still O's turn",
         "played a draw (1,2,3 by X,O,X then 5,4,6,8,7,9): 'Draw'"
       ],
-      "answer": "Described the board, the turns, the win and the draw as tried, with the picture of the opening board."
+      "answer": "Said how many cases passed and the file name."
     },
     {
       "id": "test-rsvp",
@@ -183,8 +182,8 @@
         "the date is checked: January 21, 2027 is a Thursday"
       ],
       "built": [
-        "used the designer skill for the page itself (one headline, the facts, one action)",
-        "index.html, style.css, app.js; RSVPs in localStorage; Share uses navigator.share when it exists and navigator.clipboard.writeText(location.href) otherwise, with a visible message either way"
+        "one file, index.html, designed by the model itself: one headline, the facts as written, one action",
+        "RSVPs in localStorage; Share uses navigator.share when it exists and navigator.clipboard.writeText(location.href) otherwise, with a visible message either way"
       ],
       "tried": [
         "python3 -c 'import datetime; print(datetime.date(2027,1,21).strftime(\"%A\"))' printed Thursday",
@@ -192,7 +191,7 @@
         "--do \"fill 1=Rosa\" --do \"click RSVP\" --text: 'Rosa' under 'Who is coming (1)'; opened again: still there",
         "--do \"click Share\" --text: 'Link copied' showed (the headless browser has no share sheet, so the copy path ran)"
       ],
-      "answer": "Said what each part did when tried, that RSVPs are kept only in each visitor's own browser (a shared list needs a server or a form service), and how to publish the page if they want a link."
+      "answer": "Said what the page has, that RSVPs are kept only in each visitor's own browser (a shared list needs a server or a form service), and that it can be published for a link."
     },
     {
       "id": "test-word-game-ai",
@@ -221,8 +220,8 @@
         "the AI part is real: a small server that asks a model for words as JSON, and the page uses it when it is running"
       ],
       "built": [
-        "index.html, app.js for the game; server.mjs (Node, no packages) with one route, GET /api/words?theme=..., that asks a model for 8 words as JSON and checks the reply before passing it on; the key is read from an environment variable and never written into a file",
-        "app.js tries /api/words first with a 6 second limit; on any failure or a bad reply it uses words.json, the built-in lists, and shows 'Using the built-in words (no AI connected)'",
+        "index.html for the game; server.mjs (Node, no packages) with one route, GET /api/words?theme=..., that asks a model for 8 words as JSON and checks the reply before passing it on; the key is read from an environment variable and never written into a file",
+        "the page tries /api/words first with a 6 second limit; on any failure or a bad reply it uses its built-in word lists and shows 'Using the built-in words (no AI connected)'",
         "the game itself never depends on the AI: scrambling, checking and the score are plain code"
       ],
       "tried": [
@@ -231,7 +230,7 @@
         "--do \"fill 2=zzz\" --do \"press Enter\" --text: 'Try again'",
         "node server.mjs with a stand-in model reply (a local file) and curl 127.0.0.1:8787/api/words?theme=ocean: 8 words as JSON"
       ],
-      "answer": "Said plainly that the game works now with built-in words and that the AI words need server.mjs running with a model key, with the one command to start it; named each thing tried and what was seen."
+      "answer": "Said plainly that the game works now with built-in words and that the AI words need server.mjs running with a model key, with the one command to start it."
     },
     {
       "id": "test-expense-split",
@@ -259,7 +258,7 @@
         "kept after a reload (this browser only)"
       ],
       "built": [
-        "index.html, app.js; amounts kept in cents as whole numbers so 10.00 / 3 never prints 3.3333; the settle step pairs the largest debtor with the largest creditor until all are at zero"
+        "index.html and split.js (it computes, so its logic has its own file and 10 cases run once with ola-test); amounts kept in cents as whole numbers so 10.00 / 3 never prints 3.3333; the settle step pairs the largest debtor with the largest creditor until all are at zero"
       ],
       "tried": [
         "known answer: Ana paid 30.00, Ben paid 0, Chi paid 0 (fill and click Add each); --text showed 'Ben owes Ana $10.00' and 'Chi owes Ana $10.00'",
@@ -267,7 +266,7 @@
         "a letter typed as the amount: 'Enter an amount like 12.50', nothing added",
         "opened again: the people and expenses were still there"
       ],
-      "answer": "Showed the worked case with its result so the math can be checked, and said where the data is kept."
+      "answer": "Said how many cases passed, gave one worked case so the math can be checked, and where the data is kept."
     },
     {
       "id": "test-flashcards",
@@ -294,7 +293,7 @@
         "starts with a few real cards so it is not empty"
       ],
       "built": [
-        "index.html, style.css, app.js; the deck in localStorage, seeded with ten common verbs (hablar, comer, vivir…) the first time",
+        "one file, index.html; the deck in localStorage, seeded with ten common verbs (hablar, comer, vivir…) the first time",
         "the answer side is hidden with the hidden attribute until Show answer, so it is not in the page's text before then"
       ],
       "tried": [
@@ -303,7 +302,7 @@
         "--do \"click Show answer\" --do \"click I got it\" --do \"click Show answer\" --do \"click Missed it\" --text: '1 of 2 right' and a third card",
         "--do \"fill front=correr\" --do \"fill back=to run\" --do \"click Add card\", then opened again: 'correr' was in the deck"
       ],
-      "answer": "Named each part and what was seen, and how to add cards."
+      "answer": "Said in two sentences what it does, how to add cards, and the file name."
     }
   ]
 }

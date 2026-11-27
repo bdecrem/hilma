@@ -35,3 +35,9 @@
   prints, never from the record, never publish again, never send the person to look. The address note says the same while a
   publish is pending. "did that page go up", "did it publish", "is it live yet" now count as link questions. Tests:
   skillcue.test.mjs 14 of 14, opencode.check.mjs 10 of 10 (the pending rule reached the model through real opencode 2.3.2).
+- 2.3.0 (2026-11-27, OLA-497): designer, app-designer and sound load only when a person names them (BY_NAME): the
+  server's system config now denies skill.use for them, so the model is not offered them (on the speed check of Nov 27,
+  release d24a04dc5fa9, the model loaded the designer skill for a kite toy and a tip calculator and read its quick.md
+  and base.css; plain OpenCode wrote one file), and a request that names one ("use the designer skill", "Ola's house
+  style", "three design concepts", "the app-designer skill", "the sound skill") gets its text here. Tests:
+  skillcue.test.mjs, one new.

@@ -7,7 +7,10 @@
 // opencode would find them. Here every skill is denied by ID except Ola's, and Ola's folder is named
 // in this file, which outranks any project's list, so a planted skill with the same ID loses.
 // The built-in skills (opencode's own docs, bug reports, the desktop browser) are denied too.
-// Keep the allow list equal to the folders in apps/activist-ai/skills (skills/check.py proves it).
+// Keep the allow list equal to the folders in apps/activist-ai/skills (skills/check.py proves it), except
+// designer, app-designer and sound (OLA-497): denied here, so the model never loads them on its own (it did
+// for a kite toy and a tip calculator on the speed check of Nov 27); ola-skillcue puts one in front of a
+// request that names it (BY_NAME there).
 //
 // Plugins: only Ola's, from the image (OPENCODE_DISABLE_PROJECT_CONFIG keeps a project's out).
 // ola-planted notes text in a file that speaks to an AI (plugins/ola-planted/index.js, OLA-88).
@@ -21,9 +24,9 @@
     { "action": "skill.use", "resource": "chart", "effect": "allow" },
     { "action": "skill.use", "resource": "workbook", "effect": "allow" },
     { "action": "skill.use", "resource": "report", "effect": "allow" },
-    { "action": "skill.use", "resource": "designer", "effect": "allow" },
-    { "action": "skill.use", "resource": "app-designer", "effect": "allow" },
-    { "action": "skill.use", "resource": "sound", "effect": "allow" },
+    { "action": "skill.use", "resource": "designer", "effect": "deny" },
+    { "action": "skill.use", "resource": "app-designer", "effect": "deny" },
+    { "action": "skill.use", "resource": "sound", "effect": "deny" },
     { "action": "skill.use", "resource": "publish", "effect": "allow" },
     { "action": "skill.use", "resource": "batch-quotes", "effect": "allow" },
     // Only Ola's models (OLA-249): opencode with no provider it can use turns on its own free hosted

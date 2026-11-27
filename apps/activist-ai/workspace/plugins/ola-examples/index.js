@@ -112,6 +112,9 @@ export function closest(request, library, min = MIN_SCORE) {
   return best && best.score >= min ? best : null
 }
 
+// What the note says about steps (OLA-497), in place of the example's tries: the fast path of AGENTS.md.
+export const STEPS = 'Steps: build it in one go as your instructions say (one .html file where you can; only a part that computes gets its own .js and its cases run with ola-test), then hand it over without looking at it.'
+
 const list = (xs) => (xs ?? []).map((x) => `- ${x}`).join('\n')
 
 /** The note the model sees, for one example, fenced by NOTE_HEAD and NOTE_END, at most MAX_CHARS. */
@@ -122,7 +125,10 @@ export function noteFor(ex) {
     `Its request: "${ex.request}"`,
     ex.asked?.length ? `What it asked for, one line each:\n${list(ex.asked)}` : '',
     ex.built?.length ? `How it was built:\n${list(ex.built)}` : '',
-    `How each thing was tried before answering:\n${list(ex.tried)}`,
+    // OLA-497: the example's tries are not shown. They taught the item-by-item check OLA-455 took out of the
+    // instructions, and the speed check (evals/speed) measured Ola writing three files and looking at a kite toy
+    // where plain OpenCode wrote one file in 18 s.
+    STEPS,
     ex.answer ? `The answer it ended with: ${ex.answer}` : '',
   ].filter(Boolean).join('\n\n')
   const room = MAX_CHARS - NOTE_END.length - 1

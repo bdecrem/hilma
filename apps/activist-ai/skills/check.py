@@ -8,7 +8,7 @@ metadata ola/version, ola/evals, ola/needs (what it needs beyond the standard li
 cmd:<program>, or none) and ola/mac (yes, or "no, why"); a CHANGELOG.md whose last line names that version; and a tests/
 folder. Every eval it names exists in evals/tasks and names this skill back (except a placeholder,
 version 0, which may point at existing tasks). The system config's allow list
-(workspace/opencode-system.jsonc) is exactly these folders. Instructions stay under 500 lines.
+(workspace/opencode-system.jsonc) is exactly these folders, less the three loaded by name (OLA-497). Instructions stay under 500 lines.
 Prints one line per problem and 'skills check: N skills, all good'; exit 1 on any problem.
 """
 import json, re, sys
@@ -90,8 +90,13 @@ for name in skills:
             problems.append(f"{name}: SKILL.md names /opt/ola/skills/{s[0]}/{s[1]}, which is not in the repo")
 sysconf = (ROOT / "workspace" / "opencode-system.jsonc").read_text()
 allowed = sorted(re.findall(r'"skill\.use", "resource": "([a-z0-9-]+)", "effect": "allow"', sysconf))
-if allowed != skills:
-    problems.append(f"opencode-system.jsonc allows {allowed}, the folders are {skills}")
+# OLA-497: designer, app-designer and sound load only when a person names them (ola-skillcue BY_NAME):
+# denied by ID here, so the model never calls them itself. Every folder is either allowed or one of these.
+by_name = sorted(re.findall(r'"skill\.use", "resource": "([a-z0-9-]+)", "effect": "deny"', sysconf))
+if by_name != ["app-designer", "designer", "sound"]:
+    problems.append(f"opencode-system.jsonc denies by name {by_name}, expected app-designer, designer, sound (ola-skillcue BY_NAME)")
+if sorted(allowed + by_name) != skills:
+    problems.append(f"opencode-system.jsonc allows {allowed} and denies by name {by_name}, the folders are {skills}")
 if '"resource": "*", "effect": "deny"' not in sysconf:
     problems.append("opencode-system.jsonc does not deny every other skill")
 for p in problems:

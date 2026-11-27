@@ -54,7 +54,10 @@ opencode ranks above every global and project config and whose policies outrank 
 
 - names `/opt/ola/skills` in `skills` (the highest-ranked list, so an ID that collides with a
   project's loses there), and
-- denies `skill.use` for every ID, then allows Ola's by name.
+- denies `skill.use` for every ID, then allows Ola's by name, except `designer`, `app-designer`
+  and `sound` (OLA-497): those stay denied, so the model never loads them on its own, and the
+  `ola-skillcue` plugin puts one in front of a request that names it ("use the designer skill").
+  On the Mac's local runtime the model is still offered all of them.
 
 The image also sets `OPENCODE_DISABLE_PROJECT_CONFIG=1` (review 4); the system config does not
 depend on it. `workspace/check.mjs` plants a same-ID `chart`, new skills in `.opencode`,

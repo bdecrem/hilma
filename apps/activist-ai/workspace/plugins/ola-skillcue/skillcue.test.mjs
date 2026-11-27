@@ -305,3 +305,24 @@ test('2.2.0: while this project\'s publish is still being checked, a status ques
   writeFileSync(path.join(dir, 'result.json'), 'not json')
   assert.equal(publishPending(env), false)
 })
+
+test('2.3.0 (OLA-497): designer, app-designer and sound load only when a person names them; the speed check\'s requests load none', async () => {
+  const { BY_NAME } = await import('./index.js')
+  assert.deepEqual(BY_NAME, ['app-designer', 'designer', 'sound'])
+  assert.deepEqual(ids('use the designer skill for our block party page'), ['designer'])
+  assert.deepEqual(ids("make it in Ola's house style"), ['designer'])
+  assert.deepEqual(ids('show me three design concepts for the flyer'), ['designer'])
+  assert.deepEqual(ids('use the app-designer skill for the sign-up screens'), ['app-designer'])
+  assert.deepEqual(ids('use the sound skill for the chimes'), ['sound'])
+  for (const r of ['build me a Good Morning web page with the weather in Santa Cruz today', 'make me a kite flying toy I can play with on my phone', 'build me a tip calculator', 'design a landing page for a book club', 'add sound to the game', 'use sound on every tap', 'turn the sound off']) {
+    assert.deepEqual(ids(r), [], r)
+  }
+  // The system config denies exactly these, so the model is never offered them (skills/check.py keeps it so).
+  const sys = readFileSync(path.resolve(HERE, '../../opencode-system.jsonc'), 'utf8')
+  const denied = [...sys.matchAll(/"skill\.use", "resource": "([a-z0-9-]+)", "effect": "deny"/g)].map((m) => m[1]).sort()
+  assert.deepEqual(denied, BY_NAME)
+  reset()
+  const ev = { system: [], messages: [{ role: 'user', content: 'use the designer skill for our block party page' }] }
+  onContext(ev, env)
+  assert.ok(ev.system.some((p) => p.text.startsWith(`${NOTE_HEAD} designer]`)))
+})

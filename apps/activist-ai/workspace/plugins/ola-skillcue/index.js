@@ -37,7 +37,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 export const NOTE_HEAD = '[Ola skill loaded:'
 export const NOTE_END = '[end of the skill]'
 
-// Which requests load which skill. Only publish today; a skill joins with its own pattern and a test.
+// Which requests load which skill: publish, and (OLA-497) the three skills loaded only by name, BY_NAME below.
 export const CUES = [
   {
     skill: 'publish',
@@ -93,6 +93,21 @@ export const LINK_ASK = new RegExp([
 // unless it goes on to send or share it ("make me a link I can send").
 export const EDITS_LINK = /\b(?:add|put|insert|include|remove|delete|change|fix|update|edit|make|turn)\b[^.?!\n]{0,30}\b(?:link|url)s?\b(?![^.?!\n]{0,60}\b(?:text|send|share|e-?mail|post|forward|give)\b)/i
 export const asksForLink = (r) => LINK_ASK.test(r) && !EDITS_LINK.test(r)
+// OLA-497: the three skills a person loads by name. On the server the model can no longer call them itself
+// (opencode-system.jsonc denies skill.use for them: on the speed check of Nov 27 the model loaded the designer
+// skill for a kite toy and a tip calculator and read its quick.md and base.css, where plain OpenCode wrote one
+// file); a request that names one gets its text here instead.
+export const BY_NAME = ['app-designer', 'designer', 'sound']
+CUES.push(
+  { skill: 'app-designer', about: "Ola's app-designer skill, asked for by name", when: /\bapp[- ]?designer\b/i },
+  {
+    skill: 'designer',
+    about: "Ola's designer skill, asked for by name",
+    when: /(?<!app[- ]?)\bdesigner skill\b|\buse (?:ola'?s |the )?designer\b|\bola'?s (?:house )?style\b|\bhouse style\b|\b(?:two|three|four|2|3|4|several) (?:design )?(?:concepts|directions)\b/i,
+  },
+  { skill: 'sound', about: "Ola's sound skill, asked for by name", when: /\bsound skill\b|\buse (?:ola'?s |the )?sound\b(?! (?:on|off|effects?|of)\b)/i },
+)
+
 {
   const publish = CUES[0].when
   CUES[0].when = { source: publish.source, test: (r) => publish.test(r) || asksForLink(r) }
