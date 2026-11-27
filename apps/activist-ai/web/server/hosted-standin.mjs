@@ -35,8 +35,11 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
   }
   write()
   const info = async () => {
-    const m = provider ? (await usage())?.data?.find((d) => d.caller === 'ws-dev')?.hosted_month : null
+    const u = provider ? await usage() : null
+    const m = u?.data?.find((d) => d.caller === 'ws-dev')?.hosted_month
     return {
+      // As the front desk (OLA-479): the hosted model's id, from the gateway.
+      model: u?.hosted?.model ?? null,
       enabled: st.enabled,
       canChange: role() === 'owner',
       configured: Boolean(provider),

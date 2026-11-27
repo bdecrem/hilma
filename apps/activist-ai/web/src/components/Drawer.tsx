@@ -475,7 +475,7 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
     <li class="turn" data-status={t().status}>
       <div class="said-you" classList={{ reacted: !!reaction() }}>
         <p class="who">
-          You <span class="meta">{clock(t().at)}</span>
+          {t().nudge ? 'Ola' : 'You'} <span class="meta">{clock(t().at)}</span>
           <Show when={byClaude() || byHosted()}>
             <span class="engine-mark" classList={{ hosted: byHosted() }}>{byClaude() ? 'Claude' : 'Hosted open model'}</span>
           </Show>

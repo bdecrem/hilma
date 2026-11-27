@@ -5,7 +5,7 @@
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, NO_LONGER_NEEDED, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
-import { describeApproval, handoffWords, precheck, STRETCH_CHECKS, stuckReason, type Stuck } from './steps.ts'
+import { describeApproval, ESCALATE, ESCALATIONS, escalation, handoffWords, NUDGE, precheck, STRETCH_CHECKS, stuckReason, testRan } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
@@ -417,6 +417,13 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   // on, and otherwise reads who can turn it on.
   type Plan = { kind: 'none' } | { kind: 'handover'; target: Fallback } | { kind: 'card'; offers: Fallback[]; canAct: boolean }
   function planFor(reason: StretchReason): Plan {
+    // OLA-479: what Ola counted goes only to the hosted model, and only while it is the one ESCALATE.to
+    // names (never a Chinese model). Switched on for the project: just do it. Else the card.
+    if (ESCALATIONS.includes(reason)) {
+      if (!state.hosted?.configured || state.hosted.model !== ESCALATE.to || state.stretch === 'never' || state.declined.includes(reason)) return { kind: 'none' }
+      if (isOn('hosted')) return { kind: 'handover', target: 'hosted' }
+      return { kind: 'card', offers: ['hosted'], canAct: state.owner }
+    }
     const setUp = (['hosted', 'claude'] as Fallback[]).filter(isSetUp)
     if (!setUp.length || state.stretch === 'never' || state.declined.includes(reason)) return { kind: 'none' }
     const on = setUp.filter(isOn)
@@ -585,24 +592,47 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   // without asking" the same request goes to the fallback, marked, with one sentence of why.
   const loadedAt = Date.now()
   const flagged = new Set<string>()
-  let stopping: { turn: string; why: Stuck } | null = null
+  let stopping: { turn: string; why: StretchReason } | null = null
+  // OLA-479, a test switch for a checker: ?escalate=tests|loop|length|untested in the page's address
+  // treats the next run as if Ola had counted that (untested: as if no test ran, so the nudge comes first).
+  const forced = (): StretchReason | null => {
+    try {
+      const f = new URLSearchParams(location.search).get('escalate')
+      return f && ESCALATIONS.includes(f as StretchReason) ? (f as StretchReason) : null
+    } catch {
+      return null
+    }
+  }
   function watchStretch() {
     const t = state.turns[state.turns.length - 1]
     if (!t || t.engine === 'claude' || t.engine === 'hosted' || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
     const running = t.status === 'working' || t.status === 'sending'
-    const why = stuckReason(t)
+    const force = forced()
+    const prev = state.turns[state.turns.length - 2]
+    const request = t.nudge && prev ? prev.request : t.request
+    const why: StretchReason | null = stuckReason(t) ?? escalation(t)
     if (running) {
-      if (why === 'tools' && !stopping && planFor('tools').kind !== 'none') {
+      if (why && (why === 'tools' || ESCALATIONS.includes(why)) && !stopping && planFor(why).kind !== 'none') {
         stopping = { turn: t.id, why }
         void stop()
       }
       return
     }
-    const reason = stopping?.turn === t.id ? stopping.why : t.status === 'stopped' ? null : why
+    let reason = stopping?.turn === t.id ? stopping.why : t.status === 'stopped' ? null : why
     stopping = null
+    if (!reason && t.status === 'done' && force && force !== 'untested') reason = force
+    // A request that computes and was handed over with no test: one nudge, and a second time none is a failure.
+    if (!reason && t.status === 'done' && (ESCALATE.computes.test(request) || force === 'untested') && (force === 'untested' || !testRan(t))) {
+      if (t.nudge) reason = 'untested'
+      else {
+        flagged.add(t.id)
+        void sendOla(NUDGE)
+        return
+      }
+    }
     if (!reason) return
     flagged.add(t.id)
-    stretch(reason, t.request, t.id)
+    stretch(reason, request, t.id)
   }
 
   function newConversation() {

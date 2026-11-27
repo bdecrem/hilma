@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, switchOf, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, ESCALATE, escalation, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -261,6 +261,8 @@ test('a question for a step that ended is no card, and a card goes when its step
   assert.equal(card()?.id, 'p2')
   applyEvent(state, { type: 'session.tool.success', created: 8, data: { sessionID: s, id: 't2', content: [], metadata: { exit: 0 } } })
   assert.equal(card(), null, 'the step ran: its card is over')
+  // OLA-479 (below): nothing here was cut off at the length limit.
+  assert.equal(state.turns[0].cutOff, undefined)
 
   // One still up when the run ends goes with it.
   applyEvent(state, { type: 'session.tool.input.started', created: 9, data: { sessionID: s, id: 't3', name: 'shell' } })
@@ -269,4 +271,54 @@ test('a question for a step that ended is no card, and a card goes when its step
   assert.equal(card(), null, 'the run ended with a card still up')
   assert.equal(state.turns[0].status, 'done')
   assert.equal(state.turns[0].steps[0].status, 'done', 'a step that ran is shown as "did not finish"')
+})
+
+test('OLA-479: Ola counts failed test rounds, the same step again and replies cut off at the length limit; the model is not asked', () => {
+  const sh = (command: string, status = 'done') => ({ tool: 'shell', status, detail: { input: command } })
+  const write = (path: string, content: string) => ({ tool: 'write', status: 'done', detail: { input: JSON.stringify({ path, content }) } })
+  const turn = (steps: any[], cutOff = 0) => ({ request: 'Build a tiny spreadsheet', steps, cutOff })
+  assert.equal(ESCALATE.failedTestRounds, 2)
+  assert.equal(ESCALATE.sameSteps, 3)
+  assert.equal(ESCALATE.lengthHits, 2)
+  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed')])), null, 'one failed round is not two')
+  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed'), write('calc.js', 'v2'), sh('ola-test calc.js calc.test.js', 'failed')])), 'tests')
+  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed'), sh('ola-test calc.js calc.test.js')])), null, 'a failed round then a passing one')
+  assert.equal(escalation(turn([sh('ls'), sh('ls'), sh('ls')])), 'loop', 'the same command three times')
+  assert.equal(escalation(turn([write('a.html', 'x'), write('a.html', 'x'), write('a.html', 'x')])), 'loop', 'the same file written again with the same words')
+  assert.equal(escalation(turn([sh('cat a.html'), write('a.html', 'v2'), sh('cat a.html'), write('a.html', 'v3'), sh('cat a.html')])), null, 'reading a file again after changing it is not a loop')
+  assert.equal(escalation(turn([], 1)), null)
+  assert.equal(escalation(turn([], 2)), 'length')
+  assert.ok(testRan({ steps: [sh('ola-test calc.js calc.test.js')] }))
+  assert.ok(testRan({ steps: [sh('/opt/ola/bin/ola-test index.html t.js')] }))
+  assert.ok(!testRan({ steps: [sh('cat calc.test.js'), sh('ola-page index.html --out .shots/a.png')] }), 'reading a test file or looking at a page is not a test')
+  // What computes, and what only shows things (that keeps the fast path: no test, no nudge).
+  for (const r of ['Build a tiny spreadsheet in one page', 'make a tip calculator', 'a memory game for my class', 'a page that totals our dues']) assert.ok(ESCALATE.computes.test(r), r)
+  for (const r of ['Make a good morning page with the weather', 'a page for our block party on Saturday', 'Write a flyer for the garden club']) assert.ok(!ESCALATE.computes.test(r), r)
+  for (const r of ['tests', 'loop', 'length', 'untested'] as const) assert.ok(STRETCH_WHY[r].length > 10)
+  // The nudge is Ola's, shown as Ola's.
+  assert.deepEqual(nudgeOf('make a calculator'), { request: 'make a calculator', nudge: false })
+  assert.equal(nudgeOf(NUDGE).nudge, true)
+  assert.ok(NUDGE.includes('ola-test'))
+})
+
+test('OLA-479: a reply cut off at the length limit is counted, live and in the stored history; the nudge turn is marked', () => {
+  const s = 'ses_len'
+  const state = emptyConversation()
+  state.sessionID = s
+  startTurn(state, 'Build a tiny spreadsheet', 1)
+  applyEvent(state, { type: 'session.step.ended', created: 2, data: { sessionID: s, finish: 'length' } })
+  applyEvent(state, { type: 'session.step.ended', created: 3, data: { sessionID: s, finish: 'tool-calls' } })
+  assert.equal(state.turns[0].cutOff, 1)
+  startTurn(state, NUDGE, 4)
+  assert.equal(state.turns[1].nudge, true)
+  assert.ok(!state.turns[1].request.includes('<ola-nudge>'))
+  const turns = turnsFromMessages([
+    { id: 'u1', type: 'user', text: 'Build a tiny spreadsheet', time: { created: 1 } },
+    { id: 'a1', type: 'assistant', finish: 'length', content: [], time: { created: 2 } },
+    { id: 'a2', type: 'assistant', finish: 'length', content: [], time: { created: 3 } },
+    { id: 'u2', type: 'user', text: NUDGE, time: { created: 4 } },
+  ], null)
+  assert.equal(turns[0].cutOff, 2)
+  assert.equal(escalation(turns[0]), 'length')
+  assert.equal(turns[1].nudge, true)
 })

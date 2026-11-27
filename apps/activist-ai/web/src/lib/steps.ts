@@ -6,7 +6,7 @@
 import { webRequestOf } from '../../server/webask.mjs'
 import { publishAskOf, publishRequestOf } from '../../server/publishask.mjs'
 import { publishCard } from '../../server/cards.mjs'
-import type { Problem, PublishCard, StepIcon, StretchReason } from './types.ts'
+import type { Escalation, Problem, PublishCard, StepIcon, StretchReason } from './types.ts'
 
 export interface Words {
   icon: StepIcon
@@ -415,8 +415,61 @@ export function precheck(request: string, files: { path: string; size: number }[
   return null
 }
 
+// ---------------------------------------------------------------- OLA-479: Ola counts, the model is not asked
+//
+// Bart, Nov 26: for a request that computes, a test must run before Ola hands over, and Ola itself
+// (not the model) counts failed test rounds, the same step repeated with no change and replies cut off
+// at the length limit, and hands the request to a bigger model at a threshold. Every setting is here.
+export const ESCALATE = {
+  /** Where a stuck request goes: the hosted model, only while the gateway's HOSTED_MODEL is this id (never a Chinese model). */
+  to: 'thinkingmachines/Inkling-2-Small',
+  failedTestRounds: 2,
+  sameSteps: 3,
+  lengthHits: 2,
+  /** A request that computes (a test must run): formulas, totals, a calculator, a game's rules, an answer worked out. */
+  computes: /\b(spreadsheets?|calculat\w*|formulas?|converter|convert|totals?|sums?|averages?|budget|tax|tips?|interest|loan|mortgage|scores?|scoring|game|quiz|puzzle|sudoku|chess|tic[- ]tac[- ]toe)\b/i,
+  /** A step that ran a test. */
+  test: /\b(ola-test|pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b/,
+}
+export const ESCALATIONS: readonly StretchReason[] = ['tests', 'loop', 'length', 'untested']
+
+/** The one nudge (OLA-479), sent as a request in the model's conversation, marked so the page shows it as Ola's. */
+export const NUDGE_MARK = '<ola-nudge>'
+export const NUDGE = `${NUDGE_MARK}From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed.`
+/** A request as the person sees it, and whether it is Ola's nudge. */
+export function nudgeOf(text: string): { request: string; nudge: boolean } {
+  return text.startsWith(NUDGE_MARK) ? { request: 'Ola asked its model to run a test of the logic before handing it over.', nudge: true } : { request: text, nudge: false }
+}
+
+const CHANGES = new Set(['write', 'edit', 'patch', 'apply_patch', 'multiedit'])
+/** Did a step of this turn run a test? */
+export const testRan = (t: { steps: { tool: string; detail: { input: string } }[] }, c = ESCALATE) => t.steps.some((s) => (s.tool === 'shell' || s.tool === 'bash') && c.test.test(s.detail.input))
+/**
+ * During a run or after it, by what can be seen: failed test rounds, the same step again with nothing
+ * changed in between (a file written again with the same words counts), replies cut off at the length limit.
+ */
+export function escalation(t: { request: string; steps: { tool: string; status: string; detail: { input: string } }[]; cutOff?: number }, c = ESCALATE): Escalation | null {
+  if ((t.cutOff ?? 0) >= c.lengthHits) return 'length'
+  const failedTests = t.steps.filter((s) => (s.tool === 'shell' || s.tool === 'bash') && c.test.test(s.detail.input) && s.status === 'failed').length
+  if (failedTests >= c.failedTestRounds) return 'tests'
+  const seen = new Map<string, number>()
+  for (const s of t.steps) {
+    if (!s.detail.input) continue
+    const key = `${s.tool}\n${s.detail.input}`
+    const n = (seen.get(key) ?? 0) + 1
+    if (n >= c.sameSteps) return 'loop'
+    if (CHANGES.has(s.tool)) for (const k of [...seen.keys()]) if (!CHANGES.has(k.split('\n')[0])) seen.delete(k)
+    seen.set(key, n)
+  }
+  return null
+}
+
 /** Why Ola suggests handing the request over, in one sentence. */
 export const STRETCH_WHY: Record<StretchReason, string> = {
+  tests: `Ola’s own model’s tests of its work failed ${ESCALATE.failedTestRounds} times.`,
+  loop: `Ola’s own model did the same step ${ESCALATE.sameSteps} times without getting further.`,
+  length: `Ola’s own model’s replies were cut off at its length limit ${ESCALATE.lengthHits} times.`,
+  untested: 'Ola’s own model handed over work that computes without testing it, even when asked to.',
   error: 'Ola’s own model ran into an error on this request.',
   budget: 'Ola’s own model reached the most it may do for one request.',
   tools: 'Three of Ola’s steps in a row did not work.',

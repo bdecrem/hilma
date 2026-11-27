@@ -2362,6 +2362,21 @@ names are together more than 3 contexts of Ola's own model (bytes / 4 against 13
 is a long build in many parts (at least 800 characters, 8 listed parts, a verb that makes
 something). No confidence number: models do not give a trustworthy one.
 
+**Ola counts, and escalates (OLA-479, Bart, Nov 26).** From the steps the page already sees, never by
+asking the model (`web/src/lib/steps.ts` `ESCALATE`, every setting in one object): two failed test
+rounds (`ola-test` exiting 1), three identical steps with no file changed between them, or two replies
+cut off at the length limit (`session.step.ended` with `finish: length`) stop the run and hand the
+request to the hosted model. For a request that computes (`ESCALATE.computes`: a spreadsheet, a
+calculator, totals, a game…) a test must run: handed over with none, Ola sends its model one nudge (a
+turn marked as Ola's, `<ola-nudge>`), and still none counts as a failure (`untested`). A page that only
+shows things gets no test, no nudge and no added time. Where it goes is one setting, `ESCALATE.to`
+(today `thinkingmachines/Inkling-2-Small`): the page escalates only while the gateway's `HOSTED_MODEL`
+is that id (the front desk reads it from `/v1/usage`), so never to a Chinese model. With the hosted
+switch on for the project it just hands over, shown as a hosted turn "outside this machine" with one
+sentence of why; otherwise the stretch card below (Just this once / Always in this project / Not now).
+A checker forces each trigger with `?escalate=tests|loop|length|untested` in the project page's
+address (the next run ends as if Ola had counted that; `untested` goes through the nudge first).
+
 **The stretch card** (`web/src/components/StretchCard.tsx`), in the conversation, the approval
 sheet's sibling: "This may be a stretch for Ola's own model. Hand it to the hosted open model at
 <provider>?" (or "… to Claude?" when only Claude is set up; with both, the hosted open model first

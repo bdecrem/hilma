@@ -20,6 +20,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit } from 'playwright'
 import { publishCard } from './server/cards.mjs'
+import { ESCALATE } from './src/lib/steps.ts'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const LIVE = !process.argv.includes('--no-live')
@@ -50,10 +51,10 @@ if (built.status !== 0) {
   process.exit(1)
 }
 
-async function startDev(extra) {
+async function startDev(extra, env = {}) {
   const p = spawn(process.execPath, [path.join(HERE, 'dev.mjs'), '--dist', '--port', '0', ...extra], {
     cwd: HERE,
-    env: { ...process.env, OLA_DEV_CONTROLS: '1', OLA_DEV_PIECE_MS: '250', OLA_DEV_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'ola-check-')) },
+    env: { ...process.env, ...env, OLA_DEV_CONTROLS: '1', OLA_DEV_PIECE_MS: '250', OLA_DEV_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'ola-check-')) },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let out = ''
@@ -1121,7 +1122,7 @@ const HOSTED_CONSENT = 'When this is on, you can hand a request to an open model
 const LONG_BUILD = `Build a full website for our tenants' union, with these parts:\n${['A home page that says who we are and when we meet', 'A page for each of the six buildings, with the building rep and a short history', 'A form to report a repair problem, saved as a CSV in the project', 'A calendar page of the next twelve meetings, made from meetings.csv', 'A page of our demands, in English and Spanish, side by side', 'A members-only page with the phone tree, hidden from the menu', 'A printable flyer for the next general meeting, one page, large type', 'A page explaining how rent stabilization works, in plain words, with sources'].map((p, i) => `${i + 1}. ${p}`).join('\n')}\nKeep every page readable on a phone, use our colors (deep green and cream), and write all the text yourself in a warm, plain voice that a new tenant would understand. Put a short note at the bottom of each page saying when it was last updated.`
 async function fallbackChecks(engine, label) {
   const b = await engine.launch()
-  const d = await startDev(['--fake-model'])
+  const d = await startDev(['--fake-model'], { OLA_DEV_HOSTED_ID: ESCALATE.to })
   const c = await b.newContext({ viewport: { width: 1440, height: 900 } })
   const pg = await c.newPage()
   pg.on('request', (r) => {
@@ -1322,6 +1323,31 @@ async function fallbackChecks(engine, label) {
       assert(once === 403, `a member's "just this once" by API: ${once}`)
       await card().getByRole('button', { name: 'OK' }).click()
       await dev('/__dev/role?to=owner', 'POST')
+    })
+    await check(`${label}: OLA-479, the test switch: ?escalate=tests ends an ordinary run with the card for failed tests; ?escalate=untested nudges the model once, marked as Ola's, then shows the card`, async () => {
+      const open = async (force) => {
+        await pg.goto(`${d.url}?escalate=${force}#/`)
+        await pg.waitForSelector('.thing')
+        await pg.getByRole('button', { name: 'Ask Ola' }).click()
+        await pg.waitForTimeout(300)
+        await pg.getByRole('button', { name: 'New conversation' }).click().catch(() => {})
+      }
+      await open('tests')
+      await ask('Say hello')
+      await card().waitFor({ timeout: 30_000 })
+      const why = await card().locator('.stretch-why').innerText()
+      assert(/tests of its work failed 2 times/.test(why) && (await pg.locator('.drawer .turn').count()) === 1, `tests: ${why}`)
+      await card().getByRole('button', { name: 'Not now' }).click()
+      await open('untested')
+      await ask('Say hello')
+      await card().waitFor({ timeout: 60_000 })
+      const turns = await pg.locator('.drawer .turn').count()
+      const nudge = (await pg.locator('.drawer .turn').nth(1).locator('.said-you .who').innerText()).replace(/\s+/g, ' ')
+      const why2 = await card().locator('.stretch-why').innerText()
+      await shot('card-untested')
+      assert(turns === 2 && /^Ola /.test(nudge) && /without testing it/.test(why2), `untested: ${turns} turns, nudge "${nudge}", ${why2}`)
+      await card().getByRole('button', { name: 'Not now' }).click()
+      return 'tests: card; untested: one nudge marked Ola, then the card'
     })
     await check(`${label}: the card at 390 px: no sideways scroll, no text under 15 px`, async () => {
       const m = await b.newContext({ viewport: { width: 390, height: 844 } })

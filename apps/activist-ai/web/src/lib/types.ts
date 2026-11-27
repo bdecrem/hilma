@@ -217,6 +217,10 @@ export interface Turn {
   run?: string | null
   /** Why the request was handed over, in one sentence (null when the person asked). */
   handoff?: string | null
+  /** OLA-479: Ola's own one nudge to its model (a test before handing over), not the person's words. */
+  nudge?: boolean
+  /** OLA-479: replies of this turn the model's length limit cut off. */
+  cutOff?: number
 }
 
 export type Engine = 'ola' | 'claude' | 'hosted'
@@ -235,7 +239,9 @@ export type ClaudeAuto = 'ask' | 'stuck' | 'always'
 /** "When a request looks like a stretch": suggest it and let me decide; hand it over without asking; never suggest. */
 export type Stretch = 'suggest' | 'handover' | 'never'
 /** What Ola saw that makes a request look like a stretch (observable signals only, never a score). */
-export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build' | 'many_files' | 'design'
+export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build' | 'many_files' | 'design' | Escalation
+/** OLA-479: what Ola itself counts during a run before it hands the request to a bigger model (steps.ts ESCALATE). */
+export type Escalation = 'tests' | 'loop' | 'length' | 'untested'
 
 /** GET /api/fallback: the hosted open model for this project. */
 export interface HostedInfo {
@@ -245,6 +251,8 @@ export interface HostedInfo {
   configured: boolean
   /** The provider's name as people read it ("Together AI"), or null. */
   provider: string | null
+  /** The provider's id of the hosted model ("thinkingmachines/Inkling-2-Small"), or null. */
+  model?: string | null
   unavailable: string | null
   month: { unit: 'usd'; used: number; cap: number; reported: boolean }
   running: { conversation: string } | null

@@ -5,7 +5,7 @@
 import type { Approval, Problem, Question, Step, Turn } from './types.ts'
 import { shown } from './commands.ts'
 import { questionCard } from '../../server/cards.mjs'
-import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
+import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, nudgeOf, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
 
 export interface ConversationState {
   sessionID: string | null
@@ -58,7 +58,8 @@ export function stepVerb(step: Pick<Step, 'icon' | 'verb'>, engine?: Turn['engin
 }
 
 export function startTurn(state: ConversationState, request: string, at = Date.now()): Turn {
-  const turn: Turn = { id: `local-${at}`, request, at, status: 'sending', steps: [], answer: '', notes: [], error: null, notice: null, ended: null }
+  const n = nudgeOf(request)
+  const turn: Turn = { id: `local-${at}`, request: n.request, at, status: 'sending', steps: [], answer: '', notes: [], error: null, notice: null, ended: null, ...(n.nudge ? { nudge: true } : {}) }
   state.turns.push(turn)
   state.answerMessage = null
   return turn
@@ -255,6 +256,11 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
     case 'session.step.failed':
       turn.error = runProblem(d.error)
       return true
+    case 'session.step.ended':
+      // OLA-479: a reply the model's length limit cut off, counted by Ola (not the model).
+      if (d.finish !== 'length') return false
+      turn.cutOff = (turn.cutOff ?? 0) + 1
+      return true
     case 'session.execution.succeeded':
       // The run ended: whatever it asked is no longer waiting (OLA-250). A Claude run's card is its own.
     {
@@ -314,7 +320,8 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
   let turn: Turn | null = null
   for (const m of ordered) {
     if (m.type === 'user') {
-      turn = { id: m.id, request: stripEngines(m.text ?? ''), at: m.time?.created ?? 0, status: 'working', steps: [], answer: '', notes: [], error: null, notice: null, ended: null }
+      const n = nudgeOf(stripEngines(m.text ?? ''))
+      turn = { id: m.id, request: n.request, at: m.time?.created ?? 0, status: 'working', steps: [], answer: '', notes: [], error: null, notice: null, ended: null, ...(n.nudge ? { nudge: true } : {}) }
       turns.push(turn)
       continue
     }
@@ -348,6 +355,8 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
         turn.answer = text
       }
       if (m.error) turn.error = runProblem(m.error)
+      // OLA-479: a reply the model's length limit cut off, counted by Ola.
+      if (m.finish === 'length') turn.cutOff = (turn.cutOff ?? 0) + 1
     }
     if (m.type === 'idle') {
       turn.status = m.outcome === 'succeeded' ? 'done' : m.outcome === 'interrupted' ? 'stopped' : 'failed'
