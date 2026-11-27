@@ -57,10 +57,27 @@ def forget():
         pass
 
 
+LIFT = os.environ.get("VENTURE_LIMIT_LIFT") or os.path.expanduser("~/.claude/venture-limit-lifted.json")
+
+
+def lifted(lim):
+    """True when Bart lifted exactly this recorded limit on this machine (OLA-478, Nov 26: the mini's
+    login hit its weekly limit, the record stopped helpers on the M1 iMac too, whose login still
+    answered on Opus; Bart: "Lift it."). The file ~/.claude/venture-limit-lifted.json names the
+    limit by its reset time, so it ends with that limit and never lifts a later one."""
+    try:
+        lift = json.load(open(LIFT))
+        return bool(lift.get("until")) and lift.get("until") == lim.get("until") and bool(lift.get("why"))
+    except Exception:
+        return False
+
+
 def limit_live(data):
     """The recorded limit while it holds, else None."""
     lim = (data or {}).get("limit") or None
     if not lim or not lim.get("until"):
+        return None
+    if lifted(lim):
         return None
     try:
         from datetime import datetime, timezone

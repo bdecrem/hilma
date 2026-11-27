@@ -6,8 +6,11 @@ from datetime import datetime, timedelta, timezone
 
 here = os.path.dirname(os.path.abspath(__file__))
 n = 0
-def run(script, event, cache=None):
-    env = {**os.environ, "CLAUDE_PROJECT_DIR": os.path.dirname(os.path.dirname(here))}
+def run(script, event, cache=None, lift=None):
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": os.path.dirname(os.path.dirname(here)), "VENTURE_LIMIT_LIFT": "/nonexistent/lift.json"}
+    if lift is not None:
+        f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False); json.dump(lift, f); f.close()
+        env["VENTURE_LIMIT_LIFT"] = f.name
     if cache is not None:
         f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False); json.dump(cache, f); f.close()
         env["VENTURE_USAGE_CACHE"] = f.name
@@ -31,6 +34,13 @@ ok("a recorded limit that holds: the Agent call is refused, with the reset and t
 r = run("agent-guard.py", {"tool_name": "Task"}, {"line": line, "limit": {**lim, "until": iso(timedelta(minutes=-5))}})
 ok("a limit past its reset does not refuse", r["hookSpecificOutput"].get("permissionDecision") is None)
 ok("another tool: nothing", run("agent-guard.py", {"tool_name": "Bash"}, {"line": line, "limit": lim}) is None)
+# Bart lifted this limit on this machine (Nov 26: the mini's limit stopped helpers on the iMac, whose login still answered)
+r = run("agent-guard.py", {"tool_name": "Agent"}, {"line": "LIMIT HIT", "limit": lim}, lift={"until": lim["until"], "why": "Bart: 'Lift it.'"})
+ok("a limit Bart lifted on this machine does not refuse", r["hookSpecificOutput"].get("permissionDecision") is None)
+r = run("agent-guard.py", {"tool_name": "Agent"}, {"line": "LIMIT HIT", "limit": lim}, lift={"until": iso(timedelta(hours=-20)), "why": "Bart: 'Lift it.'"})
+ok("a lift of an earlier limit does not lift this one", r["hookSpecificOutput"]["permissionDecision"] == "deny")
+r = run("agent-guard.py", {"tool_name": "Agent"}, {"line": "LIMIT HIT", "limit": lim}, lift={"until": lim["until"]})
+ok("a lift without Bart's words does not lift", r["hookSpecificOutput"]["permissionDecision"] == "deny")
 
 t = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False)
 t.write(json.dumps({"type": "assistant", "message": {"model": "claude-opus-5-5", "content": [{"type": "text", "text": "You've hit your session limit, as a quote"}]}}) + "\n"); t.close()
