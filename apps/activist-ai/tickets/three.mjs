@@ -9,7 +9,7 @@
 //   these tests report, change nothing else". Then stop, pass or not.
 // No judge model, no lessons, no queue. The Studio's memory is written to <out>/memory.txt each minute.
 //   apps/activist-ai/tickets/gateway.sh studio-inkling-2-mini   (first)
-//   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case ola-337-deepseek [--time 1500] [--max-usd 1]
+//   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case ola-337-deepseek [--time 1500] [--max-usd 1] [--steps 120]
 //   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case-file apps/activist-ai/tickets/given/<id>.json
 import { writeFileSync, readFileSync, appendFileSync, symlinkSync, existsSync } from 'node:fs'
 import path from 'node:path'
@@ -38,6 +38,15 @@ export function parseTests(out, limit = 4000) {
   return { failed, report }
 }
 
+// How a try ended, in words (OLA-520, Nov 27: on the first run every round-1 try "ended done" at the step cap
+// with no edit, and every round-2 try "model_error" was the connection's weekly allowance).
+export function whyEnded(t, cap, events = '') {
+  if (/insufficient_quota|allowance of/.test(events) && t.end !== 'done') return 'cut off: the model connection\'s allowance is used up'
+  if (t.end === 'done' && t.requests >= cap && !t.size) return `stopped at the ${cap}-step cap with no edit`
+  if (t.end === 'done' && !t.size) return 'stopped with no edit'
+  return t.end
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) await main()
 
 async function main() {
@@ -56,6 +65,7 @@ async function main() {
   if (!MODELS[model] || !c) { console.error('--model <models.json name> --case <cases.json id>'); process.exit(2) }
   const timeLimit = Number(args.time || 1500), N = 3
   // A priced model (OpenRouter, Together) stops each try at --max-usd (default $1); the Studio's own models cost nothing.
+  const steps = args.steps ? Number(args.steps) : null // the step cap, LEAN's 60 unless given
   const usdLimit = MODELS[model].in > 0 ? Number(args['max-usd'] || 1) : Infinity
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
   const out = path.join(root, 'three', `${c.id}-${stamp}`)
@@ -69,7 +79,7 @@ async function main() {
     symlinkSync(nmRoot, path.join(work, 'node_modules'))
     if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
     writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
-    writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean: true }), null, 2))
+    writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean: true, steps }), null, 2))
     sh('git init -q && git add -A && git commit -qm base && git tag config', work)
     if (seedDiff) { writeFileSync(path.join(run.dir, 'seed.diff'), seedDiff); sh('git apply --whitespace=nowarn ../seed.diff && git add -A && git commit -qm seed', work) }
     return run
@@ -103,7 +113,8 @@ async function main() {
       const run = prepare(`r${r}-try${i + 1}`, seedDiff), t0 = Date.now()
       const s = await runOpencode(run, text, { timeLimit, tokenLimit: Infinity, usdLimit, model, token, lean: true })
       const res = { round: r, try: i + 1, end: s.end, requests: s.requests, minutes: +((Date.now() - t0) / 60000).toFixed(1), final: (s.final || '').slice(0, 500), ...(await score(run)) }
-      log(`  round ${r} try ${i + 1}: ${res.pass}/${res.total}, ${res.minutes} min, ${s.end}, change ${res.size} lines`)
+      res.why = whyEnded(res, steps || 60, readFileSync(path.join(run.dir, 'events.jsonl'), 'utf8'))
+      log(`  round ${r} try ${i + 1}: ${res.pass}/${res.total}, ${res.minutes} min, ${res.why}, change ${res.size} lines`)
       return res
     }))
   }
@@ -126,5 +137,6 @@ async function main() {
   log(k >= 0 ? `round 2 starts from try ${k + 1} (${seed.pass}/${seed.total}, ${seed.size} lines)` : `no try beat the untouched code (${base.pass}): round 2 starts from the untouched code`)
   const r2 = await round(2, seed ? seed.diff : null, ask(!!seed, (seed || base).report)); rows.push(...r2)
   if (win(r2)) { const w = win(r2); done(`fixed: round 2 (from ${seed ? `try ${k + 1}` : 'the untouched code'}), try ${w.try}, ${w.size} changed lines (${path.join(out, `r2-try${w.try}`, 'change.diff')})`) }
-  done(`not fixed: best ${best(r1)}/${base.total} in round 1, ${best(r2)}/${base.total} in round 2 (from ${seed ? `try ${k + 1}` : 'the untouched code'})`)
+  const cut = r2.every((t) => /allowance|quota/.test(t.why))
+  done(`not fixed: best ${best(r1)}/${base.total} in round 1; ${cut ? 'round 2 cut off by the model connection\'s allowance, not measured' : `${best(r2)}/${base.total} in round 2`} (from ${seed ? `try ${k + 1}` : 'the untouched code'})`)
 }

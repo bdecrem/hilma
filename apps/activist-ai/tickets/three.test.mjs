@@ -27,3 +27,11 @@ test('parseTests: top-level failures, the failing block without stack lines', ()
   assert.deepEqual(p.failed, ['two words'])
   assert.ok(p.report.includes('Error: timed out') && !p.report.includes('waitFor'))
 })
+
+test('whyEnded names the step cap, the allowance and no edit', async () => {
+  const { whyEnded } = await import('./three.mjs')
+  assert.equal(whyEnded({ end: 'done', requests: 60, size: 0 }, 60), 'stopped at the 60-step cap with no edit')
+  assert.equal(whyEnded({ end: 'model_error', requests: 50, size: 0 }, 60, '{"type":"insufficient_quota"}'), "cut off: the model connection's allowance is used up")
+  assert.equal(whyEnded({ end: 'done', requests: 12, size: 0 }, 60), 'stopped with no edit')
+  assert.equal(whyEnded({ end: 'done', requests: 30, size: 40 }, 60), 'done')
+})

@@ -159,6 +159,18 @@ Whole, Inkling made no edit in four runs; in pieces its small and medium changes
 Inkling runs side by side on the small ticket all passed, so extra tries bought nothing there. Note for
 Bart, with the tracker sample and the cost comparison: app.kochitolabs.com/notes/chopping-tickets-2026-11-21.
 
+**Three tries and one round of feedback (`three.mjs`, OLA-520, Nov 27).** Three runs of one model on one
+case at once; a try that passes every test is the fix; else the best try (or the untouched code) seeds three
+fresh runs with the failing tests' output. `--max-usd` stops each try of a priced model (default $1),
+`--steps` raises the 60-step cap, and each try's line says how it ended ("stopped at the 60-step cap with no
+edit", "cut off: the model connection's allowance is used up"). Tests: `node --test three.test.mjs` (6).
+First run, medium case `ola-337-deepseek`, Inkling 2 Mini through OpenRouter on the mini (the mini cannot
+sign in to the Studio, so not the Studio's build): the untouched code is already 53/54 (the one failing test
+is the ticket's own), so "53 of 54" means no change. Round 1: all three tries spent the 60 steps reading
+with shell commands and made no edit (6.8, 11.5, 21.8 min). Round 2 (from the untouched code, with the
+failing test's output): all three cut off after 11 min by the connection's 20M-token weekly allowance,
+no edit. $0.57 for the six. Not fixed; round 2 not yet measured.
+
 ## Step 2: the hand-off (`handoff.mjs`)
 
 ```bash
