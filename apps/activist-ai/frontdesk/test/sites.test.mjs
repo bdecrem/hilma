@@ -296,6 +296,42 @@ test('git mode, two Ola machines on one site: each keeps the other\'s pages, a n
   g.server.close()
 })
 
+test('git mode: another machine force-pushes the whole site without our pages; keep() puts them back and leaves theirs (OLA-503)', async () => {
+  const { execFileSync } = await import('node:child_process')
+  const g = await gitSetup()
+  const pub = async (slug, title) => {
+    const ctx = folderCtx(slug, project({ 'site/index.html': `<!doctype html><title>${title}</title>` }))
+    const pre = await g.sites.preview(ctx, { folder: 'site' })
+    return g.sites.publish(ctx, { folder: 'site' }, pre.body.fingerprint)
+  }
+  assert.equal((await pub('tamarack', 'Tamarack')).body.live, true)
+  assert.equal((await pub('elm-st', 'Elm')).body.live, true)
+  // Nothing moved: keep() changes nothing.
+  assert.deepEqual((await g.sites.keep()).restored, [])
+  // A desk on a release from before OLA-494: one orphan commit with only its own folder, force-pushed.
+  const old = tmp()
+  const sh = (args) => execFileSync('git', ['-C', old, ...args], { encoding: 'utf8' })
+  execFileSync('git', ['init', '-q', old])
+  fs.mkdirSync(path.join(old, 'studio'))
+  fs.writeFileSync(path.join(old, 'studio', 'index.html'), '<title>Studio</title>')
+  fs.writeFileSync(path.join(old, 'index.html'), 'root')
+  sh(['add', '-A'])
+  sh(['-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-qm', 'Ola front desk: sites: 1 site(s)'])
+  sh(['push', '-qf', g.bare, 'HEAD:refs/heads/main'])
+  assert.equal((await fetch(`${g.origin}/tamarack/`)).status, 404)
+  const k = await g.sites.keep()
+  assert.deepEqual(k.restored.sort(), ['elm-st', 'tamarack'])
+  assert.match(await (await fetch(`${g.origin}/tamarack/`)).text(), /Tamarack/)
+  assert.match(await (await fetch(`${g.origin}/elm-st/`)).text(), /Elm/)
+  assert.match(await (await fetch(`${g.origin}/studio/`)).text(), /Studio/, "the other machine's page is kept")
+  // The other machine publishes again keeping ours (new code): the branch moved, nothing is missing.
+  assert.deepEqual((await g.sites.keep()).restored, [])
+  // And our own publishes still work after a restore.
+  assert.equal((await pub('third', 'Third')).body.live, true)
+  assert.match(await (await fetch(`${g.origin}/studio/`)).text(), /Studio/)
+  g.server.close()
+})
+
 test('git mode, a desk from before OLA-494 (no list of its folders): owns the branch only if it pushed it last', async () => {
   const g = await gitSetup()
   const other = makeSites({ cfg: g.cfg, dataDir: path.join(g.d, 'fd-other'), request: () => assert.fail('no Vercel API call') })

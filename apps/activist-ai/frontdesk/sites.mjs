@@ -102,6 +102,8 @@ export function sitesConfig(env = process.env) {
     pollMs: Number(env.OLA_FD_SITES_POLL_MS) || 1500,
     // After the host's bot check answers instead of the page, the next read waits this long.
     challengeMs: Number(env.OLA_FD_SITES_CHALLENGE_MS) || 10_000,
+    // How often a git-mode desk looks whether its own pages are still on the branch (OLA-503); 0: never.
+    keepMs: env.OLA_FD_SITES_KEEP_MS === undefined ? 300_000 : Number(env.OLA_FD_SITES_KEEP_MS) || 0,
   }
 }
 
@@ -701,6 +703,8 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
     return head
   }
   const deploy = (c, all) => (c.git ? gitDeployAll(c.git, all) : deployAll(c, all))
+  // The branch head keep() last found holding every page of this desk (OLA-503).
+  let keptHead = null
 
   // The public address answers with what was published (or, after an unpublish, with 404).
   // `shows` is what the address said last (the old words while it still has them).
@@ -925,6 +929,45 @@ export function makeSites({ cfg = sitesConfig(), dataDir, log = () => {}, reques
         ? { unconfirmed: true, message: `It was sent to ${cfg.origin}. Ola could not read ${plan.url} to confirm it just now: the host answered with its bot check instead of the page. Open the address to see it.` }
         : { message: `It was sent to ${cfg.origin}, but ${plan.url} does not show it yet${seen.shows ? ` (it still shows “${seen.shows}”)` : ''}. It usually appears within a few minutes; check the address again then.` }
       return { status: 200, body: { url: plan.url, again, files: plan.items.length, total: plan.total, live, shows: seen.challenged ? '' : seen.shows, expected: wordsOf(buffers.get(index.path)), ...notYet, fingerprint: plan.fingerprint }, plan }
+    },
+    /**
+     * Puts this desk's pages back when another machine's push dropped them (OLA-503, Nov 27: the
+     * Studio, on a release from before OLA-494, pushed the whole site from its own copies, and every
+     * page the test server had published answered 404 while Ola had told the person it was live).
+     * Whatever another machine runs, a page published here stays published: the server calls this
+     * every `keepMs`. One `ls-remote` when the branch is still what was last seen; a fetch only when
+     * it moved. Returns the names put back.
+     */
+    async keep() {
+      const c = cred()
+      if (!c?.git) return { restored: [] }
+      return serial(async () => {
+        const all = manifests()
+        const slugs = Object.keys(all)
+        if (!slugs.length) return { restored: [] }
+        const st = readJson(stateFile) ?? {}
+        const ref = `refs/heads/${c.git.branch}`
+        const head = ((await git(c.git, ['ls-remote', c.git.remote, ref], { cwd: dir })).trim().split(/\s+/)[0] || '')
+        if (head && (head === st.commit || head === keptHead)) return { restored: [] }
+        let there = []
+        if (head) {
+          if (!fs.existsSync(path.join(repoDir, '.git'))) {
+            fs.rmSync(repoDir, { recursive: true, force: true })
+            fs.mkdirSync(repoDir, { mode: 0o700 })
+            await git(c.git, ['init', '-q'])
+          }
+          await git(c.git, ['fetch', '-q', '--depth', '1', c.git.remote, ref])
+          there = (await git(c.git, ['ls-tree', '--name-only', 'FETCH_HEAD'])).trim().split('\n').filter(Boolean)
+        }
+        const missing = slugs.filter((s) => !there.includes(s))
+        if (!missing.length) {
+          keptHead = head
+          return { restored: [] }
+        }
+        log(`sites: ${missing.length} page(s) published here were off the site (another machine pushed without them): ${missing.join(', ')}; putting them back`)
+        keptHead = await gitDeployAll(c.git, all)
+        return { restored: missing }
+      })
     },
     /** Takes a project's pages down (the owner's Unpublish, or `admin.mjs unpublish`). */
     async unpublish(slug) {

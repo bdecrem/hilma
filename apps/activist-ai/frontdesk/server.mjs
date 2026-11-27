@@ -396,6 +396,12 @@ export function makeFrontDesk(cfg = config()) {
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log, switches })
   const sites = makeSites({ cfg: cfg.sites, dataDir: cfg.data, log })
   const siteNames = makeSiteNames(db, sites)
+  // OLA-503: a page published here stays on the site whatever another Ola machine pushes.
+  if (cfg.sites.keepMs > 0) {
+    const keep = () => sites.keep().catch((e) => log(`sites: the check that this machine's pages are still on the site failed (${e.code ?? e.name}: ${String(e.message).slice(0, 160)})`))
+    setTimeout(keep, 30_000).unref()
+    setInterval(keep, cfg.sites.keepMs).unref()
+  }
   // What a project's publish leaves in the audit log, from the Publish button or the conversation.
   const auditSitePublish = (ws, sess, sel, r, was) => {
     const ref = nameRef(keys, ws.id, sel.page ?? sel.folder ?? '')

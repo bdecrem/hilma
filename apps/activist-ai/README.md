@@ -2769,7 +2769,12 @@ desk owns (`owned` in `<data>/sites/state.json`), and pushes with `--force-with-
 branch again if it moved. A name another machine already holds is refused ("already taken … by a
 page published from another Ola machine"), never overwritten. A desk from before this keeps no
 list: it owns what is on the branch only if the branch is still its own last push. Tests:
-`test/sites.test.mjs`, "two Ola machines on one site". The checks before (the list and its fingerprint, the secret scan,
+`test/sites.test.mjs`, "two Ola machines on one site". **Pages stay up whatever the other machine
+runs (OLA-503):** every 5 minutes (`OLA_FD_SITES_KEEP_MS`, 0 = never) the front desk reads the
+branch head; when it moved and a page this desk published is missing from it (a machine on older
+code pushed the whole site from its own copies), it pushes again with them back, keeping the other
+machine's folders, and logs `sites: N page(s) published here were off the site`. Test: "keep() puts
+them back". The checks before (the list and its fingerprint, the secret scan,
 the caps, a name owned by its first publisher) are the same code. Tests: `test/sites.test.mjs`,
 "git mode".
 
