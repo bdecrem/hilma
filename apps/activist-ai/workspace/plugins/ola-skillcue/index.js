@@ -26,10 +26,15 @@
 // 2.2.0 (OLA-285, check #2): "did that page go up" counts too, and while this project's publish is still being checked
 // (its record says publishing) such a request gets the `pending` rule: run `ola-publish status`, answer from it.
 //
-// It only adds text the model sees. It never blocks a tool, changes a file, or reaches anything outside the
-// opencode process.
+// 2.4.0 (OLA-285, check #2 again): the `pending` rule was followed 1 time in 3, so the plugin no longer asks the model to
+// run `ola-publish status`: it runs it itself, before the model sees the request, and puts what it printed in front of
+// the request as the fact to answer from (OUTCOME_HEAD). Status waits for the outcome (up to OLA_PUBLISH_WAIT, 110 s).
+//
+// It adds text the model sees and, for 2.4.0, runs `ola-publish status` (which only reads the publish record and marks
+// an outcome as shown). It never blocks a tool or reaches anything outside the VM.
 
-import { readFileSync, statSync } from 'node:fs'
+import { readFileSync, statSync, existsSync } from 'node:fs'
+import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -222,6 +227,41 @@ export function rulesFor(request, env = process.env) {
   return rules.map((x) => (x.id === 'link' ? PENDING_RULE : x))
 }
 
+// 2.4.0 (OLA-285): on release 78618a02c356 (Nov 23) the pending rule above reached the model and was followed 1 time
+// in 3 ("did it publish?" ran status and said live; "is my page live yet?" and "hey did that page actually go up or
+// not" read the record and said Ola can't tell). So for such a question, while the record says publishing, the
+// plugin runs `ola-publish status` itself in the context hook (opencode awaits an async hook: opencode.check.mjs),
+// which waits for the outcome, marks it shown and prints it; that output goes in front of the request, on every
+// step of it, as the fact to answer from. The pending rule stays only for when the command cannot run.
+export const OUTCOME_HEAD = '[Ola publish outcome for this request]'
+export function publishCommand(env = process.env) {
+  const c = env.OLA_PUBLISH_CMD || path.resolve(HERE, '../../bin/ola-publish')
+  return existsSync(c) ? c : null
+}
+/** `ola-publish status`, run here: { code, out }, or null when it could not run. */
+export function runStatus(env = process.env) {
+  const cmd = publishCommand(env)
+  if (!cmd) return Promise.resolve(null)
+  const wait = Number(env.OLA_PUBLISH_WAIT) || 110
+  return new Promise((ok) => {
+    execFile(cmd, ['status'], { env, timeout: (wait + 30) * 1000, maxBuffer: 64 * 1024 }, (err, stdout) => {
+      const out = String(stdout || '').trim()
+      const code = err ? (typeof err.code === 'number' ? err.code : null) : 0
+      if (code === null || !out) { console.error(`ola-skillcue: ola-publish status did not run (${err?.message || 'no output'})`); return ok(null) }
+      ok({ code, out })
+    })
+  })
+}
+export const outcomeNote = ({ code, out }) =>
+  `${OUTCOME_HEAD} The person asked whether the page is up while this project's publish was still being checked by Ola's server. ` +
+  'Ola already ran `ola-publish status` for this request, before you saw it (it waits for the outcome); it printed exactly this:\n---\n' + out + '\n---\n' +
+  'This is the answer: give it to the person now, in plain words, following what it says (the address exactly as it is there, if it says to give it). ' +
+  'Do not read .ola/publish/result.json or any file for the answer, do not run ola-publish for the files again, and never ask the person to open the address to check it themselves. ' +
+  (code === 3
+    ? 'It is still being checked: say so (not live, not confirmed yet), then run `ola-publish status` once more as a command of its own and answer from what it prints.'
+    : 'Do not run `ola-publish status` again for this request: its answer is above, and a second run only prints it as a record.')
+const outcomes = new Map() // sessionID -> { request, note }
+
 export const ruleNote = (rule) => `${RULE_HEAD} ${rule.id}] ${rule.text}`
 
 /** The text of the newest message the person typed. */
@@ -283,11 +323,24 @@ export function noteFor(id, env = process.env, about = id) {
   return note
 }
 
-export function onContext(event, env = process.env) {
+export async function onContext(event, env = process.env) {
   if (String(env.OLA_SKILLCUE ?? '').toLowerCase() === 'off') return
   if (!Array.isArray(event?.system)) return
   const request = newestRequest(event.messages)
   if (!request) return
+  // 2.4.0 (OLA-285): the outcome of a publish still being checked, got once per request and kept for its later steps.
+  const sid = String(event.sessionID || '')
+  let fact = outcomes.get(sid)
+  if (fact && fact.request !== request) { outcomes.delete(sid); fact = undefined }
+  if (!fact && asksForLink(request) && publishPending(env)) {
+    const r = await runStatus(env)
+    if (r) {
+      fact = { request, note: outcomeNote(r) }
+      outcomes.set(sid, fact)
+      if (outcomes.size > 500) outcomes.delete(outcomes.keys().next().value)
+    }
+  }
+  if (fact && !event.system.some((p) => p?.text?.startsWith?.(OUTCOME_HEAD))) event.system.push({ type: 'text', text: fact.note })
   for (const { skill: id, about } of cuesFor(request)) {
     if (alreadyLoaded(event.messages, id)) continue
     if (event.system.some((p) => p?.text?.startsWith?.(`${NOTE_HEAD} ${id}]`))) continue
@@ -296,6 +349,7 @@ export function onContext(event, env = process.env) {
   }
   // OLA-421: the standing rule that applies to this request, on every step of it.
   for (const rule of rulesFor(request, env)) {
+    if (fact && (rule.id === 'link' || rule.id === 'pending')) continue
     if (event.system.some((p) => p?.text?.startsWith?.(`${RULE_HEAD} ${rule.id}]`))) continue
     event.system.push({ type: 'text', text: ruleNote(rule) })
   }
@@ -349,6 +403,8 @@ export function onToolAfter(event, env = process.env) {
   const text = textOfResult(event.result)
   if (!text || text.includes(ADDRESS_HEAD)) return
   const sid = String(event.sessionID || '')
+  // 2.4.0: the outcome in front of this request already says what the address showed when Ola's server checked it.
+  if (outcomes.has(sid)) return
   const seen = told.get(sid) ?? new Set()
   const fresh = [...new Set((text.match(SITE_ADDRESS) ?? []).map((u) => 'https://' + u.replace(/^https?:\/\//, '').replace(/\/?$/, '/')))].filter((u) => !seen.has(u))
   if (!fresh.length) return
@@ -361,12 +417,12 @@ export function onToolAfter(event, env = process.env) {
 }
 
 /** For tests: forget the read skills and the addresses already noted. */
-export function reset() { cache.clear(); told.clear() }
+export function reset() { cache.clear(); told.clear(); outcomes.clear() }
 
 export default {
   id: 'ola-skillcue',
   async setup(ctx) {
-    await ctx.session.hook('context', (ev) => onContext(ev))
+    await ctx.session.hook('context', async (ev) => { await onContext(ev) })
     await ctx.tool.hook('execute.after', (ev) => onToolAfter(ev))
   },
 }

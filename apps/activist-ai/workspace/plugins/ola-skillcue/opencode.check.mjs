@@ -6,10 +6,12 @@
 // OLA-421: a request for Claude and one for something every Monday get their rule; a change to a page gets none.
 // 2.1.0: the checker's link sentence gets the link rule; an address read from a file gets the address note (execute.after).
 // 2.2.0: with the project's publish still being checked, a status question gets the pending rule.
+// 2.4.0: with the project's publish still being checked, the plugin runs `ola-publish status` itself (opencode awaits
+// the async hook) and the outcome written seconds later is in what the model receives.
 // No real model is called.
 import http from 'node:http'
 
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, copyFileSync, chmodSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -91,10 +93,20 @@ check('an address read from a file: the tool result the model received carries t
 const pub = path.join(root, 'pub')
 mkdirSync(pub)
 writeFileSync(path.join(pub, 'result.json'), JSON.stringify({ state: 'publishing', stage: 'checking', url: 'https://sites.ola.cx/ck9310k-test/', until: Date.now() / 1000 + 60, written: Date.now() / 1000 }))
-const h = await run('hey did that page actually go up or not', { OLA_SKILLS_DIR: SKILLS, OLA_PUBLISH_DIR: pub })
-check('a publish still being checked: the checker\'s sentence gets the pending rule, not the link rule', h.code === 0 && has(h.sent) && h.sent.includes('[Ola rule for this request: pending]') && !h.sent.includes('[Ola rule for this request: link]'))
+const h = await run('hey did that page actually go up or not', { OLA_SKILLS_DIR: SKILLS, OLA_PUBLISH_DIR: pub, OLA_PUBLISH_CMD: '/nonexistent/ola-publish' })
+check('a publish still being checked, status cannot run: the checker\'s sentence gets the pending rule, not the link rule', h.code === 0 && has(h.sent) && h.sent.includes('[Ola rule for this request: pending]') && !h.sent.includes('[Ola rule for this request: link]'))
+
+// 2.4.0 (OLA-285 check #2 on 78618a02c356): the plugin waits for the outcome itself and hands it to the model.
+const cmd = path.join(root, 'ola-publish')
+copyFileSync(path.resolve(HERE, '../../ola-publish'), cmd); chmodSync(cmd, 0o755)
+writeFileSync(path.join(pub, 'result.json'), JSON.stringify({ state: 'publishing', stage: 'checking', url: 'https://sites.ola.cx/ck9310m-test/', shows: 'Sorrel', status: 200, until: Date.now() / 1000 + 60, written: Date.now() / 1000 }))
+setTimeout(() => writeFileSync(path.join(pub, 'result.json'), JSON.stringify({ state: 'done', live: true, url: 'https://sites.ola.cx/ck9310m-test/', shows: 'Quince', count: 1, written: Date.now() / 1000 })), 5000)
+const t0 = Date.now()
+const i = await run('is my page live yet?', { OLA_SKILLS_DIR: SKILLS, OLA_PUBLISH_DIR: pub, OLA_PUBLISH_CMD: cmd, OLA_PUBLISH_WAIT: '30' })
+check(`a publish still being checked: opencode waited for the outcome (${Math.round((Date.now() - t0) / 1000)} s) and the model received it as the fact, with no rule to run status`,
+  i.code === 0 && Date.now() - t0 >= 5000 && i.sent.includes('[Ola publish outcome for this request]') && i.sent.includes('Checked: the address answers with exactly the page just published') && i.sent.includes('Quince') && !i.sent.includes('[Ola rule for this request: pending]') && !i.sent.includes('[Ola rule for this request: link]'))
 
 server.close()
 rmSync(root, { recursive: true, force: true })
-console.log(failed ? `${failed} of 10 failed` : '10 of 10 passed')
+console.log(failed ? `${failed} of 11 failed` : '11 of 11 passed')
 process.exit(failed ? 1 : 0)

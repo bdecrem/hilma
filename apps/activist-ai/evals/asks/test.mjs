@@ -1038,7 +1038,7 @@ test('OLA-421: unpublishButton posts to the website\'s own route and waits for 4
 
 // OLA-285 check #2: with the project's publish still being checked, "is my page live yet?" and "hey did that page
 // actually go up or not" were answered from .ola/publish/result.json, never with `ola-publish status`.
-test('OLA-285: the cases of a publish still being checked: the checker\'s sentences, status run in the request, the outcome reported', async () => {
+test('OLA-285: the cases of a publish still being checked: the checker\'s sentences, the outcome reported (since ola-skillcue 2.4.0 the plugin runs status, not the model)', async () => {
   const cs = readCases()
   for (const [id, say] of [['live-yet-while-checking', 'is my page live yet?'], ['went-up-while-checking', 'hey did that page actually go up or not']]) {
     const c = cs.find((x) => x.id === id)
@@ -1047,7 +1047,7 @@ test('OLA-285: the cases of a publish still being checked: the checker\'s senten
     assert.deepEqual(c.places, ['cloud-web:chat'], id)
     assert.deepEqual(c.between, [{ publishStillChecking: { outcomeAfterS: 45 } }], id)
     assert.ok(c.before?.length && c.separate, `${id}: published first, asked in a new conversation`)
-    for (const m of ['ranlast:ola-publish\\s+status', 'says:sites\\.ola\\.cx/askcases', 'site:Sorrel']) assert.ok(c.must.includes(m), `${id}: ${m}`)
+    for (const m of ['says:sites\\.ola\\.cx/askcases', 'says:\\b(?:live|up)\\b', 'site:Sorrel']) assert.ok(c.must.includes(m), `${id}: ${m}`)
     assert.ok(c.mustNot.some((x) => new RegExp(x, 'i').test('open https://sites.ola.cx/askcases/ in your own browser')), `${id}: never sends the person to look`)
   }
   const run = readFileSync(path.join(HERE, 'run.mjs'), 'utf8')

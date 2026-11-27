@@ -283,14 +283,15 @@ test('2.2.0: while this project\'s publish is still being checked, a status ques
   for (const w of ['still going', 'run `ola-publish status` as a command of its own', 'waits for the outcome', 'only if it prints that the address answers with the page', 'NOT CHECKED YET', 'once more', 'Do not read .ola/publish/result.json', 'do not run ola-publish for the files again', 'never ask the person to open the address'])
     assert.ok(t.includes(w), w)
   // in the system prompt, beside the publish skill
+  // (2.4.0: only when `ola-publish status` cannot run here; OLA_PUBLISH_CMD names a file that is not there)
   const e = { system: [{ type: 'text', text: 'base' }], messages: [{ role: 'user', content: 'is my page live yet?' }] }
-  onContext(e, env)
+  await onContext(e, { ...env, OLA_PUBLISH_CMD: '/nonexistent/ola-publish' })
   assert.ok(e.system.some((p) => p.text.startsWith(`${RULE_HEAD} pending]`)))
   assert.ok(!e.system.some((p) => p.text.startsWith(`${RULE_HEAD} link]`)))
   // reading the record while it is pending: the note says run status, not publish again
   reset()
   const g = { tool: 'read', input: { filePath: '/work/.ola/publish/result.json' }, sessionID: 'p1', status: 'completed', result: { content: [{ type: 'text', text: '{"state": "publishing", "url": "https://sites.ola.cx/ck9310k-test/"}' }] } }
-  onToolAfter(g, env)
+  onToolAfter(g, { ...env, OLA_PUBLISH_CMD: '/nonexistent/ola-publish' })
   const note = g.result.content.at(-1).text.trim()
   assert.ok(note.startsWith(ADDRESS_HEAD))
   assert.match(note, /still being checked/)
@@ -325,4 +326,73 @@ test('2.3.0 (OLA-497): designer, app-designer and sound load only when a person 
   const ev = { system: [], messages: [{ role: 'user', content: 'use the designer skill for our block party page' }] }
   onContext(ev, env)
   assert.ok(ev.system.some((p) => p.text.startsWith(`${NOTE_HEAD} designer]`)))
+})
+
+// 2.4.0 (OLA-285, check #2 on release 78618a02c356, Nov 23): the pending rule reached the model and was followed 1 time in 3.
+// Now the plugin runs `ola-publish status` itself before the model sees the request, and its output is the fact in front of it.
+test('2.4.0: while a publish is still being checked, a status question gets the outcome itself, waited for by the plugin', async () => {
+  const { onContext, onToolAfter, OUTCOME_HEAD, RULE_HEAD, ADDRESS_HEAD, reset } = await import('./index.js')
+  const { mkdtempSync, writeFileSync, readFileSync: rf, copyFileSync, chmodSync } = await import('node:fs')
+  const os = await import('node:os')
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'skillcue-out-'))
+  // the command as the image has it (0755 in /opt/ola/bin; the repo's copy is not executable)
+  const cmd = path.join(mkdtempSync(path.join(os.tmpdir(), 'skillcue-bin-')), 'ola-publish')
+  copyFileSync(path.resolve(HERE, '../../ola-publish'), cmd); chmodSync(cmd, 0o755)
+  const env = { OLA_SKILLS_DIR: SKILLS, OLA_PUBLISH_DIR: dir, OLA_PUBLISH_CMD: cmd, OLA_PUBLISH_WAIT: '20', PATH: process.env.PATH }
+  const file = path.join(dir, 'result.json')
+  const put = (r) => writeFileSync(file, JSON.stringify({ written: Date.now() / 1000, ...r }))
+  const url = 'https://sites.ola.cx/ck9310m-test/'
+  const checking = () => put({ state: 'publishing', stage: 'checking', url, shows: 'Quince', status: 200, until: Date.now() / 1000 + 60 })
+  const ev = (sid, text) => ({ sessionID: sid, system: [{ type: 'text', text: 'base' }], messages: [{ role: 'user', content: text }] })
+  const has = (e, head) => e.system.some((p) => p.text.startsWith(head))
+  const outcome = (e) => e.system.find((p) => p.text.startsWith(OUTCOME_HEAD))?.text ?? ''
+
+  // (a) the checker's sentence, the live outcome written 1.5 s into the request: the plugin waits for it
+  reset(); checking()
+  setTimeout(() => put({ state: 'done', live: true, url, shows: 'Quince', count: 1 }), 1500)
+  const t0 = Date.now()
+  const a = ev('s-a', 'is my page live yet?')
+  await onContext(a, env)
+  assert.ok(Date.now() - t0 >= 1400, 'it waited for the outcome')
+  const o = outcome(a)
+  assert.ok(o.includes('Checked: the address answers with exactly the page just published'), o)
+  assert.ok(o.includes('Quince') && o.includes(url))
+  assert.match(o, /Do not run `ola-publish status` again/)
+  assert.match(o, /never ask the person to open the address/)
+  assert.ok(!has(a, `${RULE_HEAD} pending]`) && !has(a, `${RULE_HEAD} link]`), 'neither the pending nor the link rule')
+  assert.ok(has(a, `${NOTE_HEAD} publish]`), 'the publish skill is still loaded')
+  assert.equal(JSON.parse(rf(file, 'utf8')).used, true, 'status marked the outcome as shown')
+  // the next step of the same request: the same fact, without running status again (it would print a record now)
+  const a2 = ev('s-a', 'is my page live yet?')
+  await onContext(a2, env)
+  assert.equal(outcome(a2), o)
+  // a read of the record on that step gets no address note (the outcome is already in front of the request)
+  const g = { tool: 'read', input: { filePath: '/work/.ola/publish/result.json' }, sessionID: 's-a', status: 'completed', result: { content: [{ type: 'text', text: url }] } }
+  onToolAfter(g, env)
+  assert.ok(!g.result.content.some((p) => p.text.includes(ADDRESS_HEAD)))
+  // a new request in that conversation: the fact is gone with the old request
+  const a3 = ev('s-a', 'make the heading bigger')
+  await onContext(a3, env)
+  assert.ok(!has(a3, OUTCOME_HEAD))
+
+  // (b) "hey did that page actually go up or not", the address still showing the earlier page: NOT LIVE YET
+  reset(); checking()
+  setTimeout(() => put({ state: 'done', live: false, url, shows: 'Sorrel', count: 1 }), 1000)
+  const b = ev('s-b', 'hey did that page actually go up or not')
+  await onContext(b, env)
+  assert.ok(outcome(b).includes('NOT LIVE YET') && outcome(b).includes('Sorrel'), outcome(b))
+
+  // (c) still checking when status stops waiting: said as not confirmed, and status once more
+  reset(); checking()
+  const c = ev('s-c', 'did it publish?')
+  await onContext(c, { ...env, OLA_PUBLISH_WAIT: '2' })
+  assert.ok(outcome(c).includes('NOT CHECKED YET'), outcome(c))
+  assert.ok(outcome(c).includes('That is not the result of the check'))
+  assert.match(outcome(c), /run `ola-publish status` once more/)
+
+  // (d) not pending: no status run, the link rule as before
+  reset(); put({ state: 'done', live: true, url, shows: 'Quince', used: true })
+  const d = ev('s-d', 'is my page live yet?')
+  await onContext(d, env)
+  assert.ok(!has(d, OUTCOME_HEAD) && has(d, `${RULE_HEAD} link]`))
 })

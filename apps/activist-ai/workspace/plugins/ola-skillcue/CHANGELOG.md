@@ -41,3 +41,12 @@
   and base.css; plain OpenCode wrote one file), and a request that names one ("use the designer skill", "Ola's house
   style", "three design concepts", "the app-designer skill", "the sound skill") gets its text here. Tests:
   skillcue.test.mjs, one new.
+- 2.4.0 (2026-11-27, OLA-285 check #2 on release 78618a02c356, Nov 23): the pending rule reached the model and was followed
+  1 time in 3 ("did it publish?" ran status and said live; "is my page live yet?" and "hey did that page actually go up or
+  not" read the record and said Ola can't tell). Now the plugin does it: for such a question while the record says
+  publishing, the context hook runs `ola-publish status` itself (it waits up to OLA_PUBLISH_WAIT for the outcome and marks
+  it shown) and puts exactly what it printed in front of the request (`[Ola publish outcome for this request]`), on every
+  step of that request, with neither the pending nor the link rule; still checking after the wait, it says so and to run
+  status once more. The pending rule stays only for when the command cannot run (logged). opencode 2.4.2 awaits an async
+  context hook (measured: a 115 s wait in the hook, then the model call). Tests: skillcue.test.mjs 16 of 16,
+  opencode.check.mjs 11 of 11 (the outcome written 5 s into the request reached the model through real opencode 2.4.2).

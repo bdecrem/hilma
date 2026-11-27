@@ -1212,8 +1212,8 @@
         }
       ],
       "must": [
-        "ranlast:ola-publish\\s+status",
         "says:sites\\.ola\\.cx/askcases",
+        "says:\\b(?:live|up)\\b",
         "site:Sorrel"
       ],
       "mustNot": [
@@ -1227,7 +1227,7 @@
       "from": {
         "date": "2026-11-23",
         "ticket": "OLA-285",
-        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must run `ola-publish status` and answer from the outcome: here live, with the address."
+        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must answer from the outcome: here live, with the address. Since ola-skillcue 2.4.0 (Nov 27; the rule to run status was followed 1 time in 3 on 78618a02c356) the plugin runs `ola-publish status` itself before the model sees the request, so no step of the model's is required."
       }
     },
     {
@@ -1256,8 +1256,8 @@
         }
       ],
       "must": [
-        "ranlast:ola-publish\\s+status",
         "says:sites\\.ola\\.cx/askcases",
+        "says:\\b(?:live|up)\\b",
         "site:Sorrel"
       ],
       "mustNot": [
@@ -1271,7 +1271,7 @@
       "from": {
         "date": "2026-11-23",
         "ticket": "OLA-285",
-        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must run `ola-publish status` and answer from the outcome: here live, with the address."
+        "what": "The OLA-285 checker on app.ola.cx (release 9310a7a0789d), Nov 23 11:25-11:33 am, a cloud project whose page was published earlier: with the project's publish record set to 'publishing, checking' (what the web server hands while it checks the address, up to 5 minutes), 'is my page live yet?' (twice) and 'hey did that page actually go up or not' never ran `ola-publish status` (which waits for the outcome): Ola read .ola/publish/result.json itself and answered within seconds 'Not quite yet ... it isn't live' though the outcome 'done, live' came 45 s later, and once told the person to open the address in their own browser. Ola must answer from the outcome: here live, with the address. Since ola-skillcue 2.4.0 (Nov 27; the rule to run status was followed 1 time in 3 on 78618a02c356) the plugin runs `ola-publish status` itself before the model sees the request, so no step of the model's is required."
       }
     }
   ]
