@@ -1291,7 +1291,9 @@ async function fallbackChecks(engine, label) {
       await ask('please fail')
       await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2, null, { timeout: 30_000 })
       await waitDone(pg)
-      const handoff = await lastTurn(pg).locator('.handoff').innerText()
+      // OLA-486: the hand-off is Ola's turn, its line the sentence of why (the request is not shown twice).
+      const handoff = (await lastTurn(pg).locator('.said-you').innerText()).replace(/\s+/g, ' ')
+      assert(/^Ola /.test(handoff), `the hand-off is not Ola's turn: ${handoff}`)
       assert((await card().count()) === 0 && /ran into an error on this request\. This project hands such requests to the hosted open model/.test(handoff), `handed over: ${handoff}`)
       const ended = await lastTurn(pg).getAttribute('data-status')
       assert(ended === 'done' && (await who()) === 'Hosted open model, outside this machine', `the handed-over run ended ${ended}: ${(await lastTurn(pg).innerText()).slice(-160)}`)

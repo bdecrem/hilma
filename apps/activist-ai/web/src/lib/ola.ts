@@ -5,7 +5,7 @@
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, NO_LONGER_NEEDED, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
-import { describeApproval, ESCALATE, ESCALATIONS, escalation, FINISH, FINISH_REQUEST, handoffWords, NUDGE, precheck, STRETCH_CHECKS, stuckReason, testRan } from './steps.ts'
+import { describeApproval, ESCALATE, ESCALATIONS, escalation, FINISH, FINISH_REQUEST, handoffPrompt, handoffWords, NUDGE, precheck, STRETCH_CHECKS, stuckReason, testRan } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
@@ -448,7 +448,11 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     if (plan.kind === 'none') return false
     if (plan.kind === 'handover') {
       const to = plan.target === 'claude' ? 'Claude' : 'the hosted open model'
-      void runOn(plan.target, request, { why: 'stuck', handoff: handoffWords(reason, to), once: false, after: turnId !== null })
+      const words = handoffWords(reason, to)
+      // OLA-486: after Ola's own model tried, the hosted model gets Ola's marked hand-off (the
+      // sentence of why, shown as Ola's line), not the person's request a second time.
+      if (plan.target === 'hosted' && turnId !== null) void runOn('hosted', handoffPrompt(words, request), { why: 'stuck', handoff: null, once: false, after: true })
+      else void runOn(plan.target, request, { why: 'stuck', handoff: words, once: false, after: turnId !== null })
       return true
     }
     setState('suggestion', { id: `s${Date.now()}`, request, turnId, reason, offers: plan.offers, target: plan.offers[0], canAct: plan.canAct })

@@ -592,7 +592,7 @@ public final class OlaStore {
         // Before a run: does the request alone look like a stretch? (the web app's precheck)
         if let r = Stretch.precheck(typed, files: localFiles?() ?? []) {
           switch plan(r, sessionID: selectedID) {
-          case .handover(let f): await handOver(f, typed, reason: r); return
+          case .handover(let f): await handOver(f, typed, reason: r, tried: false); return
           case .suggest(let target, let offers):
             suggestion = StretchSuggestion(sessionID: selectedID, request: typed, reason: r, target: target, offers: offers, turnID: nil)
             return
@@ -1137,8 +1137,11 @@ public final class OlaStore {
     }
   }
 
-  func handOver(_ f: Fallback, _ request: String, reason: StretchReason, sentence: Bool = true) async {
-    let note = FallbackWords.handoff(reason, to: f, provider: hosted.provider)
+  /// `tried`: Ola's own model ran first. Then the hosted model gets Ola's marked hand-off (OLA-486):
+  /// the sentence of why, shown as Ola's, and the request to take over, never the person's words again.
+  func handOver(_ f: Fallback, _ request: String, reason: StretchReason, sentence: Bool = true, tried: Bool = true) async {
+    let note = FallbackWords.handoff(reason, to: f, provider: hosted.provider, project: config?.account == true)
+    if f == .hosted, tried { await askHosted(Escalate.handoffPrompt(note, request: request)); return }
     if f == .claude { await askClaude(request) } else { await askHosted(request) }
     if sentence, let id = selectedID, let i = conversations[id]?.turns.indices.last, conversations[id]?.turns[i].engine == f.engine {
       conversations[id]?.turns[i].notes.insert(note, at: 0)

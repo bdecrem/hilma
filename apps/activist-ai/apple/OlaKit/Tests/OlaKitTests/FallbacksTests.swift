@@ -323,6 +323,21 @@ final class FallbacksTests: XCTestCase {
     XCTAssertEqual(turns.first?.steps.first?.status, .failed, "from the stored history too")
   }
 
+  /// OLA-486: a hand-off without asking is Ola's turn with the sentence of why (in a cloud project,
+  /// "This project"), not the person's request a second time, and the larger model gets the request.
+  func testHandOffIsOlasTurnWithTheSentence() {
+    let s = FallbackWords.handoff(.loop, to: .hosted, provider: "Together AI", project: true)
+    XCTAssertTrue(s.contains("This project hands"))
+    XCTAssertTrue(FallbackWords.handoff(.loop, to: .hosted, provider: nil).contains("This folder hands"))
+    let p = Escalate.handoffPrompt(s, request: "build a budget page")
+    XCTAssertTrue(p.hasSuffix("Their request: build a budget page"))
+    var c = Conversation(sessionID: "s")
+    c.startTurn("build a budget page")
+    c.startTurn(p)
+    XCTAssertEqual(c.turns.last?.nudge, true)
+    XCTAssertEqual(c.turns.last?.request, s)
+  }
+
   /// OLA-479: after "Not now", Ola's own model finishes the request in a turn marked Ola's.
   func testNotNowHasOlasModelFinish() {
     XCTAssertEqual(Escalate.nudgeOf(Escalate.finish).request, Escalate.finishRequest)

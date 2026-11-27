@@ -1018,7 +1018,7 @@ struct StretchCard: View {
         .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
       HStack(spacing: Space.s) {
         Button("Just this once") { Task { await store.answerSuggestion(.once) } }.buttonStyle(OlaButton(kind: .primary))
-        Button("Always in this folder") { if isOn { Task { await store.answerSuggestion(.always) } } else { consent = true } }.buttonStyle(OlaButton(kind: .ghost))
+        Button(store.config?.account == true ? "Always in this project" : "Always in this folder") { if isOn { Task { await store.answerSuggestion(.always) } } else { consent = true } }.buttonStyle(OlaButton(kind: .ghost))
         Button("Not now") { Task { await store.answerSuggestion(.notNow) } }.buttonStyle(OlaButton(kind: .ghost))
         Spacer()
         if let o = suggestion.other {

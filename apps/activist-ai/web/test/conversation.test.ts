@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, switchOf, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, ESCALATE, escalation, FINISH, FINISH_REQUEST, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, ESCALATE, escalation, FINISH, FINISH_REQUEST, handoffPrompt, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -355,6 +355,12 @@ test('OLA-488: a test run whose own last line fails reads as a failed step, thou
   assert.equal(bad.status, 'failed', 'a test that printed an error shows a check mark')
   assert.match(bad.error!, /did not pass/)
   assert.equal(good.status, 'done')
+})
+
+test('OLA-486: a hand-off without asking is Ola\'s turn with the sentence of why, and gives the larger model the request', () => {
+  const p = handoffPrompt('Ola’s own model did the same step 3 times without getting further. This project hands such requests to the hosted open model, so it is working on it.', 'build a budget page')
+  assert.deepEqual(nudgeOf(p), { request: 'Ola’s own model did the same step 3 times without getting further. This project hands such requests to the hosted open model, so it is working on it.', nudge: true })
+  assert.ok(p.endsWith('Their request: build a budget page') && /do not ask the person what they want/.test(p))
 })
 
 test('OLA-479: after "Not now" Ola finishes the request itself, in a turn marked as Ola\'s', () => {

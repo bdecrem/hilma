@@ -459,8 +459,17 @@ export const NUDGE = `${NUDGE_MARK}From Ola, not the person: this request comput
 /** After "Not now" on the card (OLA-479): Ola's own model finishes the request and says what it could not verify. */
 export const FINISH = `${NUDGE_MARK}From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested.`
 export const FINISH_REQUEST = 'Ola asked its model to finish as well as it can and to say plainly what it could not check.'
+/**
+ * A hand-off without asking (OLA-486): the larger model is told, as Ola, that it takes the request
+ * over and does the work. The page shows the first line (the sentence of why) as Ola's, never the
+ * person's request a second time. The apps' `Escalate.handoffPrompt`.
+ */
+export const HANDOFF_MARK = `${NUDGE_MARK}<ola-handoff>`
+export const handoffPrompt = (sentence: string, request: string) =>
+  `${HANDOFF_MARK}${sentence}\n\nFrom Ola, not the person: Ola’s own model could not finish the person’s request in this conversation, so you are taking it over. Do the work now, in full, building on what is already in the project, and check it; do not ask the person what they want. Their request: ${request}`
 /** A request as the person sees it, and whether it is Ola's nudge. */
 export function nudgeOf(text: string): { request: string; nudge: boolean } {
+  if (text.startsWith(HANDOFF_MARK)) return { request: text.slice(HANDOFF_MARK.length).split('\n')[0], nudge: true }
   if (text.startsWith(FINISH)) return { request: FINISH_REQUEST, nudge: true }
   return text.startsWith(NUDGE_MARK) ? { request: 'Ola asked its model to run a test of the logic before handing it over.', nudge: true } : { request: text, nudge: false }
 }

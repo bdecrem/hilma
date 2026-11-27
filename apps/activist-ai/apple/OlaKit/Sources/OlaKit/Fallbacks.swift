@@ -138,8 +138,8 @@ public enum FallbackWords {
     return "Answered by the hosted open model\(provider.map { " at \($0)" } ?? ""), outside Ola."
   }
   /// The sentence when a request was handed over without asking.
-  public static func handoff(_ reason: StretchReason, to f: Fallback, provider: String?) -> String {
-    "\(reason.why) This folder hands such requests to \(f.named(provider: provider)), so it is working on it."
+  public static func handoff(_ reason: StretchReason, to f: Fallback, provider: String?, project: Bool = false) -> String {
+    "\(reason.why) This \(project ? "project" : "folder") hands such requests to \(f.named(provider: provider)), so it is working on it."
   }
   /// What leaves, on the card.
   public static func leaves(_ f: Fallback, provider: String?) -> String {
@@ -266,8 +266,16 @@ public enum Escalate {
   /// After "Not now" on the card: Ola's own model finishes the request and says what it could not verify (the web's `FINISH`).
   public static let finish = "\(nudgeMark)From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested."
   public static let finishRequest = "Ola asked its model to finish as well as it can and to say plainly what it could not check."
+  /// A hand-off without asking (OLA-486): the larger model is told, as Ola, that it takes the
+  /// request over and does the work. The apps show the first line (the sentence of why) as Ola's,
+  /// never the person's request a second time. The web's `handoffPrompt`.
+  public static let handoffMark = "\(nudgeMark)<ola-handoff>"
+  public static func handoffPrompt(_ sentence: String, request: String) -> String {
+    "\(handoffMark)\(sentence)\n\nFrom Ola, not the person: Ola\u{2019}s own model could not finish the person\u{2019}s request in this conversation, so you are taking it over. Do the work now, in full, building on what is already in the project, and check it; do not ask the person what they want. Their request: \(request)"
+  }
   /// A request as the person sees it, and whether it is Ola's nudge.
   public static func nudgeOf(_ text: String) -> (request: String, nudge: Bool) {
+    if text.hasPrefix(handoffMark) { return (String(text.dropFirst(handoffMark.count).prefix { $0 != "\n" }), true) }
     if text.hasPrefix(finish) { return (finishRequest, true) }
     return text.hasPrefix(nudgeMark) ? ("Ola asked its model to run a test of the logic before handing it over.", true) : (text, false)
   }
