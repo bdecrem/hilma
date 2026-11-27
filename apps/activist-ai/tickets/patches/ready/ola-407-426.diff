@@ -1,0 +1,26 @@
+diff --git a/apps/activist-ai/frontdesk/publishednote.mjs b/apps/activist-ai/frontdesk/publishednote.mjs
+index df619284..a3398cf1 100644
+--- a/apps/activist-ai/frontdesk/publishednote.mjs
++++ b/apps/activist-ai/frontdesk/publishednote.mjs
+@@ -10,7 +10,7 @@
+ // built from what is really published (sites.status), never from the model's memory.
+ 
+ // Asks to publish, put up, put online, take down: then the publish skill governs, no note.
+-export const ASKS_PUBLISH = /\bpublish|\bunpublish|\b(?:put|get|bring)\s+(?:it\s+|this\s+|that\s+|the\s+\w+\s+)?(?:back\s+)?(?:up|online|live)\b|\bgo(?:es)?\s+live\b|\bmake\s+(?:it|this|the\s+\w+)\s+(?:public|live)\b|\btake\s+(?:it\s+|this\s+|the\s+\w+\s+)?down\b|\blink\s+anyone\b/i
++export const ASKS_PUBLISH = /\bpublish|\bunpublish|\b(?:put|get|bring|stick)\s+(?:it\s+|this\s+|that\s+|something\s+|anything\s+|a\s+\w+\s+|the\s+\w+\s+)?(?:back\s+)?(?:up|online|live|on\s+(?:ola|the\s+(?:web|internet)))\b|\bgo(?:es)?\s+live\b|\bmake\s+(?:it|this|the\s+\w+)\s+(?:public|live)\b|\btake\s+(?:it\s+|this\s+|the\s+\w+\s+)?down\b|\blink\s+anyone\b/i
+ 
+ // Asks to change something (a page, its words, its look): the note applies.
+ export const ASKS_CHANGE = /\b(?:change|changes|edit|update|make|turn|rename|replace|fix|add|remove|delete|drop|move|swap|redo|rewrite|reword|say|says|instead|heading|headline|title|colou?r|font|text|words?|bigger|smaller|darker|lighter)\b/i
+diff --git a/apps/activist-ai/gateway/publishedchange.mjs b/apps/activist-ai/gateway/publishedchange.mjs
+index d4c5a6fd..eadafc2b 100644
+--- a/apps/activist-ai/gateway/publishedchange.mjs
++++ b/apps/activist-ai/gateway/publishedchange.mjs
+@@ -13,7 +13,7 @@
+ 
+ // The same two patterns as the web server's (frontdesk/publishednote.mjs), copied: the gateway is its
+ // own folder and imports nothing outside it (ops/restart-test.mjs). gateway/test.mjs keeps them equal.
+-export const ASKS_PUBLISH = /\bpublish|\bunpublish|\b(?:put|get|bring)\s+(?:it\s+|this\s+|that\s+|the\s+\w+\s+)?(?:back\s+)?(?:up|online|live)\b|\bgo(?:es)?\s+live\b|\bmake\s+(?:it|this|the\s+\w+)\s+(?:public|live)\b|\btake\s+(?:it\s+|this\s+|the\s+\w+\s+)?down\b|\blink\s+anyone\b/i
++export const ASKS_PUBLISH = /\bpublish|\bunpublish|\b(?:put|get|bring|stick)\s+(?:it\s+|this\s+|that\s+|something\s+|anything\s+|a\s+\w+\s+|the\s+\w+\s+)?(?:back\s+)?(?:up|online|live|on\s+(?:ola|the\s+(?:web|internet)))\b|\bgo(?:es)?\s+live\b|\bmake\s+(?:it|this|the\s+\w+)\s+(?:public|live)\b|\btake\s+(?:it\s+|this\s+|the\s+\w+\s+)?down\b|\blink\s+anyone\b/i
+ export const ASKS_CHANGE = /\b(?:change|changes|edit|update|make|turn|rename|replace|fix|add|remove|delete|drop|move|swap|redo|rewrite|reword|say|says|instead|heading|headline|title|colou?r|font|text|words?|bigger|smaller|darker|lighter)\b/i
+ const asksChangeNotPublish = (t) => ASKS_CHANGE.test(t) && !ASKS_PUBLISH.test(t)
+ 

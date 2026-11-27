@@ -1,0 +1,18 @@
+diff --git a/apps/activist-ai/frontdesk/faults.mjs b/apps/activist-ai/frontdesk/faults.mjs
+index 651c3eef..78f28bd1 100644
+--- a/apps/activist-ai/frontdesk/faults.mjs
++++ b/apps/activist-ai/frontdesk/faults.mjs
+@@ -58,10 +58,10 @@ const CANT = String.raw`(?:can't|cannot|can not|am unable to|'m unable to|unable
+ const REFUSALS = [
+   ['not_switched_on', /\bnot (?:yet )?(?:switched|turned) on\b|\bis(?:n't| not) (?:enabled|available) (?:here|in this|on this|yet)\b/],
+   ['no_network', /\bno (?:internet|network|web)(?: access| connection)?\b|\b(?:can't|cannot|unable to) (?:reach|access|connect to) the (?:internet|web|network)\b|\bwithout (?:internet|network) access\b|\bsandbox(?:ed)?\b[^.\n]{0,40}\b(?:offline|no network)\b/],
+-  ['no_tool', /\b(?:don't|do not) have (?:a |the |any )?(?:tool|tools|ability|access|capability|permission)\b|\bno tool (?:for|to|that)\b/],
++  ['no_tool', /\b(?:don't|do not) have (?:a |the |any )?(?:tool|tools|way|ability|access|capability|permission)\b|\bi have no way\b|\bno way for me to\b|\bno tool (?:for|to|that)\b/],
+   ['do_it_yourself', /\byou(?:'ll| will)? (?:need|have) to\b[^.\n]{0,60}\b(?:yourself|manually|by hand)\b|\b(?:press|tap|click) (?:the )?["“'*]*\w+["”'*]* button\b[^.\n]{0,40}\byourself\b|\byou can do (?:this|it|that) yourself\b/],
+-  ['cannot_here', new RegExp(String.raw`\b${CANT}\b[^.\n]{0,100}\b(?:from here|here\b|in this (?:project|environment|sandbox|workspace|session|runtime|conversation)|on this (?:machine|computer|runtime)|from this (?:computer|runtime|machine))`)],
+-  ['cannot', /\bi (?:can't|cannot|can not)\b|\bi(?:'m| am) (?:unable|not able) to\b/],
++  ['cannot_here', new RegExp(String.raw`\b${CANT}\b[^.\n]{0,100}\b(?:from here|here\b(?!'| is\b)|in this (?:project|environment|sandbox|workspace|session|runtime|conversation)|on this (?:machine|computer|runtime)|from this (?:computer|runtime|machine))`)],
++  ['cannot', /\bi (?:can't|cannot|can not)\b|\bi(?:'m| am) (?:unable|not able) to\b|\bi won't be able to\b|\b(?:isn't|not) something i can do\b|\boutside what i can do\b/],
+ ]
+ 
+ /** The refusal in an answer, as one of `KINDS`' keys, or null. Deterministic; nothing is stored. */
