@@ -223,3 +223,40 @@ test('the phone: his earlier line sent again at the front of a new turn is not s
   await sleep(50)
   assert.deepEqual(f.rows.filter((x) => x.role === 'bart').map((x) => x.text), [a, more, 'Okay.'])
 })
+
+test('OLA-478: the writer at its plan limit is said as that, with when it comes back; a test call says it is a test', async () => {
+  const { talkStream, talkReply } = await import('../../src/lib/venture/talk')
+  process.env.VENTURE_VOICE_URL = 'http://writer.invalid'
+  process.env.VENTURE_VOICE_SECRET = 'x'.repeat(32)
+  const real = globalThis.fetch
+  const bodies: string[] = []
+  const say = (text: string) => async (_u: unknown, init?: RequestInit) => {
+    bodies.push(String(init?.body ?? ''))
+    return new Response(text, { status: 502 })
+  }
+  const all = async (g: AsyncGenerator<string>) => {
+    let s = ''
+    for await (const t of g) s += t
+    return s
+  }
+  try {
+    for (const [text, when] of [["You've hit your weekly limit · resets 2am (America/Los_Angeles)", '2am'], ['5-hour limit reached ∙ resets 7pm', '7pm'], ['Claude AI usage limit reached', '']]) {
+      globalThis.fetch = say(text) as typeof fetch
+      const out = await all(talkStream('', [{ role: 'user', content: 'hi' }]))
+      assert.match(out, /plan limit/, text)
+      if (when) assert.match(out, new RegExp(`comes back at ${when}`), text)
+      else assert.doesNotMatch(out, /comes back/, text)
+    }
+    globalThis.fetch = say('claude exit 1') as typeof fetch
+    await assert.rejects(all(talkStream('', [{ role: 'user', content: 'hi' }])), /did not answer \(502\)/)
+    bodies.length = 0
+    globalThis.fetch = say("You've hit your weekly limit · resets 2am") as typeof fetch
+    const at = new Date().toISOString()
+    await all(talkReply([{ role: 'event', text: 'test', at }, { role: 'bart', text: 'hello', at }] as never))
+    await all(talkReply([{ role: 'bart', text: 'hello', at }] as never))
+    assert.equal(JSON.parse(bodies[0]).test, true, 'a test call says so')
+    assert.equal(JSON.parse(bodies[1]).test, undefined, "Bart's own call never does")
+  } finally {
+    globalThis.fetch = real
+  }
+})

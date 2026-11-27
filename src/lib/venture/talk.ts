@@ -79,8 +79,11 @@ export function talkMessages(turns: Turn[]): TalkMsg[] {
 }
 
 // Claude's reply as a stream of text, written on the Mac mini (see the top of this file).
+/// A session marked 'test' (the checkers' calls) says so to the writer, so a checker can try the
+/// plan-limit line on a live call without the limit (voice-server.ts, VOICE_TEST_LIMIT).
 export async function* talkReply(turns: Turn[]): AsyncGenerator<string> {
-  yield* talkStream('', talkMessages(turns))
+  const test = turns.some((t) => t.role === 'event' && t.text === 'test')
+  yield* talkStream('', talkMessages(turns), undefined, undefined, test)
 }
 
 function voiceWriter() {
@@ -100,9 +103,9 @@ export async function warmCache(lead: string): Promise<void> {
 
 /// `info.carried` is set when the writer took over the reply it was already writing to his same
 /// turn with fewer words (he added a few; src/lib/venture/voice-carry.ts).
-export async function* talkStream(lead: string, messages: TalkMsg[], signal?: AbortSignal, info?: { carried?: boolean }): AsyncGenerator<string> {
+export async function* talkStream(lead: string, messages: TalkMsg[], signal?: AbortSignal, info?: { carried?: boolean }, test = false): AsyncGenerator<string> {
   const w = voiceWriter()
-  const res = await fetch(`${w.url}/reply`, { method: 'POST', headers: w.headers, body: JSON.stringify({ lead, messages }), signal })
+  const res = await fetch(`${w.url}/reply`, { method: 'POST', headers: w.headers, body: JSON.stringify({ lead, messages, ...(test ? { test: true } : {}) }), signal })
   if (info) info.carried = res.headers.get('x-kit-carried') === '1'
   if (!res.ok || !res.body) {
     const why = (await res.text().catch(() => '')).slice(0, 300)

@@ -125,6 +125,21 @@ function claude(systemText: string, user: string, onText: (t: string) => void, s
   })
 }
 
+// OLA-478: a checker tries the plan-limit line on a live call without the login being at its limit.
+// Only a call marked 'test' gets it, and only while ~/.venture-voice-test-limit holds a time in the
+// future (at most 15 minutes ahead), so it ends by itself: `date -u -v+10M +%FT%TZ > ~/.venture-voice-test-limit`.
+// The text is the Claude CLI's own wording at the limit, as the writer got it on Nov 26.
+const VOICE_TEST_LIMIT = path.join(homedir(), '.venture-voice-test-limit')
+const LIMIT_TEXT = "You've hit your weekly limit · resets 2am (America/Los_Angeles)"
+function testLimitOn(): boolean {
+  try {
+    const until = Date.parse(readFileSync(VOICE_TEST_LIMIT, 'utf8').trim())
+    return until > Date.now() && until - Date.now() <= 15 * 60_000
+  } catch {
+    return false
+  }
+}
+
 const authed = (req: IncomingMessage) => {
   const got = Buffer.from(String(req.headers.authorization ?? ''))
   const want = Buffer.from(`Bearer ${SECRET}`)
@@ -164,6 +179,10 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   }
   const messages = (Array.isArray(b.messages) ? b.messages : []).filter((m): m is Msg => !!m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
   if (!messages.length) return void res.writeHead(400).end('no messages')
+  if (b.test === true && testLimitOn()) {
+    say('reply: test call, answered with the plan-limit text (VOICE_TEST_LIMIT is in date)')
+    return void res.writeHead(502, { 'Content-Type': 'text/plain' }).end(LIMIT_TEXT)
+  }
   const last = messages[messages.length - 1]
   const opened = carry.open(carryKey(lead, messages), last.role === 'user' ? last.content : '', async (onText, signal) => {
     const r = await claude(await system(lead), transcript(messages), onText, signal)
