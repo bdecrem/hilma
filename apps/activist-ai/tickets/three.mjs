@@ -10,6 +10,7 @@
 // No judge model, no lessons, no queue. The Studio's memory is written to <out>/memory.txt each minute.
 //   apps/activist-ai/tickets/gateway.sh studio-inkling-2-mini   (first)
 //   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case ola-337-deepseek [--time 1500] [--max-usd 1]
+//   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case-file apps/activist-ai/tickets/given/<id>.json
 import { writeFileSync, readFileSync, appendFileSync, symlinkSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { here, repo, root, nmRoot, nmOla, MODELS, sh, q, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, LEAN } from './lib.mjs'
@@ -44,7 +45,14 @@ async function main() {
     if (x.startsWith('--')) a.push([x.slice(2), all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true])
     return a
   }, []))
-  const model = args.model, c = JSON.parse(readFileSync(path.join(here, 'cases.json'), 'utf8')).find((x) => x.id === args.case)
+  // --case-file: one case kept apart from cases.json (trial.mjs runs every case there), whose given tests
+  // live in the folder its giveDir names (tests written for a bug that is still open are on no commit).
+  const model = args.model, c = args['case-file'] ? JSON.parse(readFileSync(path.resolve(args['case-file']), 'utf8'))
+    : JSON.parse(readFileSync(path.join(here, 'cases.json'), 'utf8')).find((x) => x.id === args.case)
+  const put = (work) => { for (const f of c.give) {
+    sh(`mkdir -p ${q(path.dirname(path.join(work, f)))}`)
+    sh(c.giveDir ? `cp ${q(path.join(here, c.giveDir, f))} ${q(path.join(work, f))}` : `git -C ${q(repo)} show ${c.commit}:${f} > ${q(path.join(work, f))}`)
+  } }
   if (!MODELS[model] || !c) { console.error('--model <models.json name> --case <cases.json id>'); process.exit(2) }
   const timeLimit = Number(args.time || 1500), N = 3
   // A priced model (OpenRouter, Together) stops each try at --max-usd (default $1); the Studio's own models cost nothing.
@@ -57,7 +65,7 @@ async function main() {
   function prepare(name, seedDiff) {
     const run = runFolders(path.join(out, name)), { work } = run
     sh(`git -C ${q(repo)} archive ${c.base || `${c.commit}^`} -- ${c.paths.map((x) => `'${x}'`).join(' ')} | tar -x -C ${q(work)}`)
-    for (const f of c.give) sh(`git -C ${q(repo)} show ${c.commit}:${f} > ${q(path.join(work, f))}`)
+    put(work)
     symlinkSync(nmRoot, path.join(work, 'node_modules'))
     if (existsSync(path.join(work, 'apps/activist-ai'))) symlinkSync(nmOla, path.join(work, 'apps/activist-ai/node_modules'))
     writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
@@ -69,7 +77,7 @@ async function main() {
 
   // Tests on a run: the given tests put back first (an edit to one never counts), then each case test.
   async function score(run) {
-    for (const f of c.give) sh(`git -C ${q(repo)} show ${c.commit}:${f} > ${q(path.join(run.work, f))}`)
+    put(run.work)
     let pass = 0, total = 0, failed = [], report = ''
     for (const t of c.tests) {
       const r = await runTest(run, t.name, t.cmd)

@@ -1,0 +1,15 @@
+{
+  "id": "ola-387-refusals",
+  "ticket": "OLA-387",
+  "base": "23a0501b",
+  "level": "small",
+  "note": "OLA-520: the test was written by Qwen3.8-Flash-Next (tickets/write-tests.mjs) and fails on the untouched code; the bug is still open, so the test lives in giveDir, on no commit.",
+  "request": "Ticket OLA-387: Ola's refusal counter (refusalOf in apps/activist-ai/frontdesk/faults.mjs) misses common ways of saying 'I cannot'. It returns null for \"I don't have a way to send text messages.\", \"Sending texts isn't something I can do.\", \"I have no way of making phone calls.\", \"That's outside what I can do from this project.\" and \"I can only work with files in this project, so I won't be able to call her.\", so each is an uncounted refusal; and it labels \"I can't send emails myself, but here's a draft\" as cannot_here, because 'here\\b' matches \"here's\". A test for it is at apps/activist-ai/frontdesk/test/faults-refusal.test.mjs, run it with: cd apps/activist-ai && node --test frontdesk/test/faults-refusal.test.mjs",
+  "give": ["apps/activist-ai/frontdesk/test/faults-refusal.test.mjs"],
+  "giveDir": "given/ola-387-refusals",
+  "tests": [
+    { "name": "refusal-test", "cmd": "cd apps/activist-ai && node --test frontdesk/test/faults-refusal.test.mjs" },
+    { "name": "faults-test", "cmd": "cd apps/activist-ai/frontdesk && node --test test/faults.test.mjs" }
+  ],
+  "paths": ["CLAUDE.md", "package.json", "apps/activist-ai", ":!apps/activist-ai/apple", ":!apps/activist-ai/opencode-fork", ":!apps/activist-ai/site", ":!apps/activist-ai/brand"]
+}
