@@ -57,15 +57,24 @@ async function prepare(file, { local = false } = {}) {
 
 function emptyProject() {
   // Right after the last run stopped it, a start can return before the computer runs again: tried
-  // for up to a minute.
-  let e
+  // for up to a minute. When the machine already runs its most project computers (ws.mjs: "4
+  // workspaces are already running; the machine runs at most 4", other checkers' projects), the drive
+  // waits for one to stop, up to 20 minutes, saying so; until Nov 27 it tried a minute and failed with
+  // "container ola-appdriver is not running", which hid the reason (OLA-362).
+  let e, started = ''
+  const full = Date.now() + 20 * 60_000
   for (let i = 0; i < 12; i++) {
-    live('workspace/ws.mjs', ['start', PROJECT], { ok: true })
+    const s = spawnSync(process.execPath, [path.join(LIVE, 'workspace/ws.mjs'), 'start', PROJECT], { cwd: LIVE, env: liveEnv(), encoding: 'utf8', timeout: 600_000 })
+    started = (s.stderr || s.stdout || '').trim().split('\n').pop() || ''
+    if (s.status !== 0 && /already running; the machine runs at most/.test(started) && Date.now() < full) {
+      console.log(`waiting for a free project computer (${started})`)
+      spawnSync('/bin/sleep', ['30']); i--; continue
+    }
     e = spawnSync('/usr/local/bin/container', ['exec', `ola-${PROJECT}`, 'sh', '-c', 'find /work -mindepth 1 -maxdepth 1 ! -name project.db ! -name project.db-wal ! -name project.db-shm ! -name .ola -exec rm -rf {} +'], { encoding: 'utf8' })
     if (e.status === 0 || !/not running/.test(e.stderr || '')) break
     spawnSync('/bin/sleep', ['5'])
   }
-  if (e.status !== 0) throw new Error(`emptying the project: ${(e.stderr || '').trim().slice(0, 200)}`)
+  if (e.status !== 0) throw new Error(`emptying the project: ${(e.stderr || '').trim().slice(0, 200)}${started ? ` (its start said: ${started.slice(0, 200)})` : ''}`)
 }
 
 async function resetPassword() {
