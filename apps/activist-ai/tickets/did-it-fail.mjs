@@ -19,7 +19,11 @@ export function verdict({ exit, pass, total }, out) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dir = path.resolve(process.argv[2]), work = path.join(dir, 'work')
   const run = { dir, work, home: path.join(dir, 'home') }
-  const list = existsSync(path.join(work, 'TESTS.json')) ? JSON.parse(readFileSync(path.join(work, 'TESTS.json'), 'utf8')) : []
+  // No TESTS.json (batch M, Nov 27: the step cap came before it): the test files the run added, each run
+  // with node --test; the bug id is the first OLA-n in the file.
+  const added = () => sh('git add -A >/dev/null 2>&1; git diff --cached --name-only --diff-filter=A config', work).trim().split('\n').filter((f) => /\.test\.m?js$/.test(f))
+    .map((f) => ({ bug: (readFileSync(path.join(work, f), 'utf8').match(/OLA-\d+/) || ['?'])[0], file: f, cmd: `node --test ${f}`, why: 'no TESTS.json: found as an added test file' }))
+  const list = existsSync(path.join(work, 'TESTS.json')) ? JSON.parse(readFileSync(path.join(work, 'TESTS.json'), 'utf8')) : added()
   // Anything the run changed besides adding files: the code under test would not be untouched.
   const changed = sh('git add -A >/dev/null 2>&1; git diff --cached --name-status config', work).trim().split('\n').filter((l) => l && !l.startsWith('A'))
   // ...so those are put back to the untouched code before the tests run; the new files stay.

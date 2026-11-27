@@ -35,7 +35,12 @@ export const ASK = 'Here are ten bugs. For each, say in one line whether a small
   'and for each write one test file that fails on this code because of the bug and would pass once the bug is fixed. Put each test next to the tests ' +
   'of that part of the code, in the style of the tests already there, runnable with one node command. Do not fix the bugs. End with a file TESTS.md ' +
   'naming for each of the two: the bug id, the test file, the exact command to run it, and what it checks; and a file TESTS.json, a JSON array of the two: ' +
-  '[{"bug": "OLA-…", "file": "<test file, from this folder>", "cmd": "<the exact command, run from this folder>"}].'
+  '[{"bug": "OLA-…", "file": "<test file, from this folder>", "cmd": "<the exact command, run from this folder>"}].' +
+  // Nov 27, after the review of the first three fixes (patches/ready/REVIEW-2026-11-27.md): tests made of the
+  // ticket's own sentences let a fix pass by adding those phrases, and the fixes came out too broad.
+  ' Each test must also hold (a) at least three inputs that must NOT change behavior: near-misses that share words with ' +
+  "the bug's sentences but mean something else, so a fix that is too broad fails; these must pass on today's code; and " +
+  "(b) at least two inputs that say the same thing as the ticket in other words, so a fix cannot pass by adding the ticket's exact phrases."
 
 if (cmd === 'pick') pick()
 else if (cmd === 'run') await run(path.resolve(rest[0]))
@@ -79,14 +84,18 @@ async function run(file) {
   const gateway = (m) => { const o = run([path.join(here, 'gateway.sh'), m], env).stdout; log(o.trim()); return Number((o.match(/gateway pid (\d+)/) || [])[1]) }
   const stop = (pid) => { try { process.kill(pid) } catch {} }
 
-  // Qwen writes the tests.
-  free()
-  const ask = path.join(out, 'ask.txt'); writeFileSync(ask, ASK)
-  if (run([BM, 'start', 'qwen']).status !== 0) { log('qwen did not start'); run([BM, 'back']); process.exit(1) }
-  let gw = gateway('studio-qwen3.8-flash-next')
-  const wt = run(['node', path.join(here, 'write-tests.mjs'), '--model', 'studio-qwen3.8-flash-next', '--bugs', file, '--ask', ask, '--time', '1800', '--steps', '80'], env).stdout
-  stop(gw); run([BM, 'back']); log(wt.trim())
-  const wdir = (wt.match(/^dir (.*)$/m) || [])[1]
+  // Qwen writes the tests, or --tests <dir> takes a finished write-tests run (batch M, Nov 27: the step cap
+  // came before TESTS.json, so its one test never reached the check).
+  let gw, wdir = args.tests ? path.resolve(args.tests) : null
+  if (!wdir) {
+    free()
+    const ask = path.join(out, 'ask.txt'); writeFileSync(ask, ASK)
+    if (run([BM, 'start', 'qwen']).status !== 0) { log('qwen did not start'); run([BM, 'back']); process.exit(1) }
+    gw = gateway('studio-qwen3.8-flash-next')
+    const wt = run(['node', path.join(here, 'write-tests.mjs'), '--model', 'studio-qwen3.8-flash-next', '--bugs', file, '--ask', ask, '--time', '1800', '--steps', '80'], env).stdout
+    stop(gw); run([BM, 'back']); log(wt.trim())
+    wdir = (wt.match(/^dir (.*)$/m) || [])[1]
+  }
   const qrun = JSON.parse(readFileSync(path.join(wdir, 'run.json'), 'utf8'))
   log(run([BM, 'status']).stdout.trim())
 

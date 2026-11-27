@@ -68,6 +68,36 @@
     },
     "OLA-389": {
       "batch": "H"
+    },
+    "OLA-521": {
+      "batch": "N"
+    },
+    "OLA-304": {
+      "batch": "N"
+    },
+    "OLA-385": {
+      "batch": "N"
+    },
+    "OLA-390": {
+      "batch": "N"
+    },
+    "OLA-393": {
+      "batch": "N"
+    },
+    "OLA-394": {
+      "batch": "N"
+    },
+    "OLA-409": {
+      "batch": "N"
+    },
+    "OLA-415": {
+      "batch": "N"
+    },
+    "OLA-417": {
+      "batch": "N"
+    },
+    "OLA-418": {
+      "batch": "N"
     }
   },
   "skipped": {
@@ -86,6 +116,218 @@
     "OLA-477": {
       "batch": 1,
       "why": "setup-chore"
+    },
+    "OLA-519": {
+      "batch": "N",
+      "why": "tracker-not-ola-code"
+    },
+    "OLA-515": {
+      "batch": "N",
+      "why": "feature"
+    },
+    "OLA-520": {
+      "batch": "N",
+      "why": "this-work"
+    },
+    "OLA-92": {
+      "batch": "N",
+      "why": "design"
+    },
+    "OLA-97": {
+      "batch": "N",
+      "why": "billing-check"
+    },
+    "OLA-99": {
+      "batch": "N",
+      "why": "board"
+    },
+    "OLA-102": {
+      "batch": "N",
+      "why": "feature"
+    },
+    "OLA-105": {
+      "batch": "N",
+      "why": "feature"
+    },
+    "OLA-107": {
+      "batch": "N",
+      "why": "investigation"
+    },
+    "OLA-108": {
+      "batch": "N",
+      "why": "move"
+    },
+    "OLA-109": {
+      "batch": "N",
+      "why": "feature"
+    },
+    "OLA-111": {
+      "batch": "N",
+      "why": "writing"
+    },
+    "OLA-123": {
+      "batch": "N",
+      "why": "sound-change"
+    },
+    "OLA-126": {
+      "batch": "N",
+      "why": "decision"
+    },
+    "OLA-177": {
+      "batch": "N",
+      "why": "notes"
+    },
+    "OLA-190": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-191": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-192": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-193": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-194": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-195": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-197": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-198": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-199": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-200": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-202": {
+      "batch": "N",
+      "why": "schedule"
+    },
+    "OLA-218": {
+      "batch": "N",
+      "why": "feature"
+    },
+    "OLA-229": {
+      "batch": "N",
+      "why": "measurement"
+    },
+    "OLA-236": {
+      "batch": "N",
+      "why": "rename"
+    },
+    "OLA-246": {
+      "batch": "N",
+      "why": "fixed"
+    },
+    "OLA-247": {
+      "batch": "N",
+      "why": "mac-mini"
+    },
+    "OLA-258": {
+      "batch": "N",
+      "why": "tracker-tool"
+    },
+    "OLA-269": {
+      "batch": "N",
+      "why": "mac-mini"
+    },
+    "OLA-276": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-290": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-307": {
+      "batch": "N",
+      "why": "mac-mini"
+    },
+    "OLA-308": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-314": {
+      "batch": "N",
+      "why": "tracker"
+    },
+    "OLA-317": {
+      "batch": "N",
+      "why": "tracker"
+    },
+    "OLA-318": {
+      "batch": "N",
+      "why": "iphone-app"
+    },
+    "OLA-320": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-329": {
+      "batch": "N",
+      "why": "builder-watcher"
+    },
+    "OLA-343": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-349": {
+      "batch": "N",
+      "why": "mac-mini"
+    },
+    "OLA-350": {
+      "batch": "N",
+      "why": "apps"
+    },
+    "OLA-357": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-358": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-360": {
+      "batch": "N",
+      "why": "iphone-app"
+    },
+    "OLA-361": {
+      "batch": "N",
+      "why": "iphone-app"
+    },
+    "OLA-369": {
+      "batch": "N",
+      "why": "notes"
+    },
+    "OLA-373": {
+      "batch": "N",
+      "why": "mac-app"
+    },
+    "OLA-383": {
+      "batch": "N",
+      "why": "board"
+    },
+    "OLA-386": {
+      "batch": "N",
+      "why": "tracker"
     }
   }
 }

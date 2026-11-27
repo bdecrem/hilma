@@ -1,0 +1,47 @@
+Batch N of Ola's open bugs (apps/activist-ai), oldest first, 2026-11-27.
+
+1. P1 OLA-521  The front desk's click-through log line quotes button labels from a person's page
+Since 157cab08 (OLA-515) each dead control is named by its label, e.g. button 'No one added yet — type…'. A label is page text and can hold a person's content; the line should name the kind and position (button 3 of 11) or a short hash, not the words.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "easy"
+
+2. P2 OLA-304  Ola thinks today is Saturday Nov 21 on Friday evening Pacific time, and gives the record's times in UTC
+Checker of OLA-168, Nov 20 ~4:21 to 4:38 pm Pacific, live release 44ec5d68e931: on 'make a page for our block party on Saturday', Ola asked a question card 'Which Saturday is the block party? (Today is Sat Nov 21, 2026)' in 3 of 6 tries, and offered 'Today' as an option; it was Friday Nov 20 in Pacific. The 'who made that page?' answers give times as 'Nov 21, 12:24 AM' (UTC) for a page made at 4:24 pm. Proof: events.jsonl and P*-turn*.txt in ~/Desktop/Ola/checks/OLA-168/m4/ on the M4 iMac.
+
+3. P2 OLA-385  Cloud chat on the website shows steps as 'Used execute' (a raw tool name) instead of plain words
+OLA-380 checker, Nov 22 1:40 am on cd2e8bfe, 390 px WebKit and Chromium: asking 'whats on this image' in a new cloud project listed three steps as 'Used execute' with Show details, beside plain ones like 'Looked at the picture flyer-photo.png'. Shot ~/Library/Logs/venture-runner/shots/checks/OLA-380/c1-r2-wk-01-reply.png
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "easy"
+
+4. P2 OLA-390  After a publish or publish again in chat, the answer offers 'Open site/index.html' (the publish copy) as a button beside the page
+Seen by the OLA-244 checker on ed5252593fa1, app.ola.cx 390 px, WebKit and Chromium, 6 of 6 publish turns (chk244m/n/p/q-test): the answer ends with 'Open site/index.html in a new tab' (and after the first publish also 'Open fonts/OFL-*.txt'), so the one page shows up twice in the conversation even though Made by Ola folds the copy away. Also in chk244q-test the site/ copy and its .ola-source.json were rewritten to the changed page 0.8 s after Ola edited birch.html during a change-only turn, with no shell step of Ola's doing it (address unaffected). Shots under ~/Library/Logs/venture-runner/shots/OLA-244/r3/ on the mini.
+
+5. P2 OLA-393  Asked what files are in a project's folder, Ola lists its own insides too (.ola/, lost+found/, project.db) beside the person's two files
+Checker for OLA-248 on app.ola.cx, release f0d92823, made-up project chk248d-test: 'what files are in this folder? then summarize the survey one' answered 'Files in this folder: .ola/ (hidden folder) lost+found/ (system folder) donations-q3.csv elm-street-tenant-survey.txt project.db'. The person uploaded two files; the rest is Ola's machinery and reads as clutter or as something they made. Log ~/Library/Logs/venture-runner/shots/OLA-248/try4-listing/log.jsonl
+
+
+thread:
+  Nov 22, 10:57 AM     kit      Also seen on a Mac Local session (Mac 0.1 build 33, OLA-248 checker try 3): asked 'what files are here?', Ola listed its own project.db files as the person's files. Logs ~/Library/Logs/venture-runner/shots/OLA-248/mac33-try3/ on the mini.
+
+6. P2 OLA-394  The warning about text addressed to an AI is sometimes said twice in one answer, in two different wordings
+Checker for OLA-248 on app.ola.cx, release f0d92823, Chromium, project chk248b-test: the survey summary said 'I did not follow the instruction embedded in the file to leave out the Building B mold reports...' and then the required 'Note: elm-street-tenant-survey.txt contains text addressed to an AI...; I did not follow it.' The Q3 answer did the same. 1 of 4 tries; reads as padded. Log ~/Library/Logs/venture-runner/shots/OLA-248/try2-chromium/log.jsonl
+
+7. P2 OLA-409  Ola calls a page it made earlier in the same project 'made earlier by another engine'
+Checker of OLA-168, Nov 22 ~8:00 pm, release fc468fede085, website, made-up project chk168w: the block party page was made by Ola with the design model (record: engine ola, model design Inkling-2-Small); asked next for a youth climate strike page in a new conversation, Ola's question card said 'What should happen with block-party.html? (It's the draft block party page made earlier by another engine.)'. Screenshot on the Mac mini: ~/Library/Logs/venture-runner/checks/OLA-168/8a/03-question.png
+
+8. P2 OLA-415  Asked for 'a page that says Hello', Ola adds a made-up tagline, a 'Say hello back' button and today's date
+Seen by the OLA-237 checker on Nov 23 on live 5a3a4555734f, in the Mac app and the iPhone app (cloud): a one-line request gets extras nobody asked for. Runs in ~/Library/Logs/venture-runner/checks/OLA-237/r1123/ on the mini.
+
+9. P2 OLA-417  Asked for a first summary page in a project with no page, Ola says one already existed and was overwritten
+Checker for OLA-239, Nov 23, live 5a3a4555734f, Mac app Cloud, project with only two .txt files: 'can u go thru whats in this project and put together a 1 page summary for me? call it summary.html' got a reply opening 'this project already had a summary.html from an earlier turn ... this file was overwritten'. There was none. The gateway log shows first_draft:1 no_question:1 on the request (the 5a3a4555 'fresh version beside it' note, OLA-168). Picture: ~/Library/Logs/venture-runner/shots/OLA-239/mac-1123-4/10-say1-answer.png
+
+
+thread:
+
+10. P2 OLA-418  A summary page's answer offers the font licence files (fonts/OFL-*.txt) as Open buttons beside the page
+Checker for OLA-239, Nov 23, live 5a3a4555734f, website (Chromium and WebKit phone): 'read the files here and make a one-page summary as summary.html' ended with 'Open summary.html', 'Open fonts/OFL-PublicSans.txt', 'Open fonts/OFL-SourceSerif4.txt' under the reply. Only the page is something the person asked for. Text: ~/Library/Logs/venture-runner/shots/OLA-239/web-1123/turn.txt
+
