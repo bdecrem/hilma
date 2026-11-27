@@ -2977,7 +2977,22 @@ const deskGet = (id, p) =>
     r.end()
   })
 const executing = async (id) => Object.keys((await deskGet(id, '/api/session/active'))?.data ?? {})
-const wsState = (id) => JSON.parse(node('workspace/ws.mjs', ['status', id, '--json']).stdout)[0]?.state
+// Asynchronous on purpose (OLA-295): the fake model answers from this process, and `ws.mjs status`
+// takes about 2 s (it asks `container`). A spawnSync here held every model answer behind it: each
+// 0.7 s document of the batch job took 2.7 s, which looked like an 85 s stall after the restart.
+const wsState = (id) =>
+  new Promise((resolve) => {
+    const c = spawn(process.execPath, [path.join(AI, 'workspace/ws.mjs'), 'status', id, '--json'], { env, stdio: ['ignore', 'pipe', 'ignore'] })
+    let out = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.on('close', () => {
+      try {
+        resolve(JSON.parse(out)[0]?.state)
+      } catch {
+        resolve(undefined)
+      }
+    })
+  })
 async function restartForLongRuns() {
   if (LIVE) {
     gateway.kill('SIGTERM')
@@ -3010,14 +3025,14 @@ async function ask(text) {
 await check('a run longer than the idle limit finishes with no request from the browser, and the workspace stops only after it ends', async () => {
   await restartForLongRuns()
   const calls0 = fake.calls()
-  const { t0, sid } = await ask('List the folder, slowly. slow 4x1500')
+  const { t0, sid } = await ask('List the folder, slowly. slow 6x1500')
   await A.page.goto('about:blank') // no request from any browser while it runs
   const states = new Set()
   let lastSeen = Date.now()
   // The workspace's state, sampled only between two sightings of the run executing.
   while (Date.now() - t0 < 90_000) {
     if (!(await executing(FA)).length) break
-    const st = wsState(FA)
+    const st = await wsState(FA)
     if (!(await executing(FA)).length) break
     states.add(st)
     lastSeen = Date.now()
@@ -3026,10 +3041,12 @@ await check('a run longer than the idle limit finishes with no request from the 
   const ran = lastSeen - t0
   const msgs = JSON.stringify(await deskGet(FA, `/api/session/${sid}/message`))
   assert(states.size && [...states].every((s) => s === 'running'), `states during the run: ${[...states].join(', ')} (ran ${ran} ms)`)
+  // Six steps of 1.5 s, about 9 s, seen running for more than 6 s (OLA-295: four steps passed only
+  // while a blocking status poll here slowed every model answer).
   assert(ran > 6000, `the run lasted only ${ran} ms (idle limit 3 s)`)
-  assert(msgs.includes('Done after 4 slow steps'), `the run did not reach its answer after ${ran} ms, ${fake.calls() - calls0} calls: ${msgs.slice(0, 900)}`)
+  assert(msgs.includes('Done after 6 slow steps'), `the run did not reach its answer after ${ran} ms, ${fake.calls() - calls0} calls: ${msgs.slice(0, 900)}`)
   const ended = Date.now()
-  await until(() => wsState(FA) !== 'running', 30_000, 'the idle stop after the run')
+  await until(async () => (await wsState(FA)) !== 'running', 30_000, 'the idle stop after the run')
   return `ran ${(ran / 1000).toFixed(1)} s past a 3 s idle limit, running throughout, ${fake.calls() - calls0} model calls, answered; stopped ${((Date.now() - ended) / 1000).toFixed(1)} s after it ended`
 })
 
@@ -3197,7 +3214,7 @@ await check('batch jobs: the whole job runs past the 24 s run ceiling and the 3 
   fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_RUN_CEILING_MIN: '0.4', OLA_FD_WAKE_WAIT_MS: '0' })
   await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
   const states = new Set()
-  await until(async () => (states.add(wsState(FA)), (await jobGet(a, job60)).job.approved?.state === 'done'), 240_000, 'the job finishing after the restart')
+  await until(async () => (states.add(await wsState(FA)), (await jobGet(a, job60)).job.approved?.state === 'done'), 240_000, 'the job finishing after the restart')
   const ran = Date.now() - t0
   const g = await jobGet(a, job60, '&limit=200')
   assert(g.results.total === 60, `${g.results.total} rows`)
