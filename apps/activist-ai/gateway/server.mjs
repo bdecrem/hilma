@@ -1309,7 +1309,7 @@ async function handle(req, res, rec, signal) {
     const askNote = isProbe ? null : askFirstNote(body.messages, offered)
     if (askNote) rec.ask_first = 1
     // OLA-244: a change to a page this conversation published is not a request to publish it (publishedchange.mjs).
-    const pubNote = isProbe ? null : publishedChangeNote(body.messages)
+    const pubNote = isProbe ? null : publishedChangeNote(body.messages, { local: isPersonName(who) })
     if (pubNote) rec.published_change = 1
     // OLA-168: design work makes the first version before it asks anything (firstdraft.mjs).
     const draftNote = isProbe || !rec.design ? null : firstDraftNote(body.messages, why || 'name')

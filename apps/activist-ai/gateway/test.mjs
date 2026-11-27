@@ -2575,6 +2575,14 @@ test('published change: a change to a page this conversation published is not a 
   assert.match(publishedChangeNote([...cloud, { role: 'user', content: 'make the heading say Willow instead' }]) ?? '', /sites\.ola\.cx\/oak-test\//)
   // A cloud request already carrying the web server's fact: no second note (no doubled sentence).
   assert.equal(publishedChangeNote(ask('<ola-engines>A page of this project is published at https://sites.ola.cx/picnic/ (from the copy in site/).</ola-engines>\n\nchange the page so it says Cedar')), null)
+  // A new conversation on a Mac (the checker, Nov 23: 'can you change the words on my page to Rowan'
+  // edited site/index.html too): the Mac's form of the rule, with `ola-publish status` for the address.
+  const fresh = [{ role: 'user', content: 'can you change the words on my page to Rowan' }]
+  assert.equal(publishedChangeNote(fresh), null, 'a cloud project: the web server says it, or nothing is published')
+  assert.match(publishedChangeNote(fresh, { local: true }) ?? '', /never edit, rename or delete anything in the publish copy[\s\S]*ola-publish status[\s\S]*This change is not public yet: <address>/)
+  assert.equal(publishedChangeNote([{ role: 'user', content: 'publish it again' }], { local: true }), null)
+  assert.equal(publishedChangeNote([{ role: 'user', content: 'thanks' }], { local: true }), null)
+  assert.match(publishedChangeNote(ask('make the heading say Willow instead'), { local: true }) ?? '', /sites\.ola\.cx\/picnic\/ still shows/, 'the address, once this conversation published')
   const up = await fakeUpstream()
   const g = await gateway(baseEnv(up.url))
   try {

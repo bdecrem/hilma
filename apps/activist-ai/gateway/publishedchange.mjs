@@ -58,8 +58,22 @@ export const publishedChangeText = (url) =>
   'do not run ola-publish and do not offer to. End the answer with this one sentence, in the person’s language: ' +
   `"This change is not public yet: ${url} still shows the earlier page; say “publish it again” to put it up."`
 
-/** The note for this request, or null. */
-export function publishedChangeNote(messages) {
+// OLA-244, the checker on Nov 23 (Mac app 0.1 (34), Ola on the Mac, and the iPhone through it): in a
+// NEW conversation in the folder whose page was published ("can you change the words on my page to
+// Rowan"), nothing was published, but Ola edited the publish copy site/index.html as well and never
+// said the change was not public: this conversation had no ola-publish result to read, and on the Mac
+// there is no web server to put the publish record in front. A Mac's request (a person's caller, never
+// a cloud project's) that asks only for a change gets the rule with the check it needs: leave a
+// publish copy alone, and ask `ola-publish status` (never asked, changes nothing) for the address.
+export const localChangeText =
+  'Note from Ola’s gateway: this request does not ask to publish. If it changes a page and this folder holds a publish copy of it ' +
+  '(a folder holding .ola-source.json, such as site/; `ls -a site` shows it): change only the page’s own file and keep its file name; ' +
+  'never edit, rename or delete anything in the publish copy (the next publish makes it again); do not run `ola-publish preview` or `ola-publish publish` and do not offer to. ' +
+  'Then run `ola-publish status` as a command of its own (it changes nothing and is never asked). If it shows that page’s site public, end the answer with this one sentence, in the person’s language, with the address it shows: ' +
+  '"This change is not public yet: <address> still shows the earlier page; say “publish it again” to put it up."'
+
+/** The note for this request, or null. `local`: the request comes from a Mac (a person's caller). */
+export function publishedChangeNote(messages, { local = false } = {}) {
   if (!Array.isArray(messages)) return null
   let last = -1
   messages.forEach((m, i) => m?.role === 'user' && (last = i))
@@ -70,5 +84,5 @@ export function publishedChangeNote(messages) {
   const own = said.replace(/<ola-[a-z-]+>[\s\S]*?<\/ola-[a-z-]+>/g, ' ')
   if (!asksChangeNotPublish(own)) return null
   const url = publishedIn(messages, last)
-  return url ? publishedChangeText(url) : null
+  return url ? publishedChangeText(url) : local ? localChangeText : null
 }
