@@ -257,7 +257,12 @@ public enum Escalate {
 
   /// A checker's test switch (the web's `?escalate=`): the launch argument `-OlaEscalate tests|loop|length|untested`
   /// treats every run as if Ola had counted that (untested: as if no test ran, so the nudge comes first).
-  public static let forced: StretchReason? = UserDefaults.standard.string(forKey: "OlaEscalate").flatMap(StretchReason.init(rawValue:)).flatMap { reasons.contains($0) ? $0 : nil }
+  /// Read from the process's arguments, not the settings (a driven Mac copy keeps its settings apart).
+  public static let forced: StretchReason? = {
+    let a = CommandLine.arguments
+    guard let i = a.firstIndex(of: "-OlaEscalate"), i + 1 < a.count, let r = StretchReason(rawValue: a[i + 1]), reasons.contains(r) else { return nil }
+    return r
+  }()
 
   static func isShell(_ s: Step) -> Bool { s.tool == "shell" || s.tool == "bash" }
   static let changes: Set<String> = ["write", "edit", "patch", "apply_patch", "multiedit"]

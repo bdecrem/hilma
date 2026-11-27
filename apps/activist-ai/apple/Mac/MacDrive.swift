@@ -481,6 +481,7 @@ enum MacDrive {
       if s.card == "yes", said.cards.isEmpty { said.status = "no card"; throw Failed(why: "no card came for sentence \(n), and the script says one must") }
       try await settle(window, 2.5)
       // The stretch card (OLA-486, with -OlaEscalate): pictured and listed, never answered.
+      if let f = Escalate.forced { say("escalate \(f.rawValue): hosted \(store.hosted.unavailable ?? "available"), model \(store.hosted.model ?? "not told"), card \(store.suggestion == nil ? "none" : "shown")") }
       if let st = store.suggestion {
         said.cards.append("stretch card: \(FallbackWords.question(st.target, provider: store.hosted.provider)) \(st.whyLine)")
         step("stretch card: \(st.reason.rawValue)", shot: "say\(n)-stretch-card")
