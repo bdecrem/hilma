@@ -389,7 +389,7 @@ three full runs of the check, the last 55 of 55:
 
 **Not done yet:** ssh into a workspace; backups of the volumes. (Start at boot, doors as launchd
 jobs, token reloads and idle stop are done; see above and [Start at boot](#start-at-boot-launchd).
-After an unattended reboot no workspace runs until someone opens it, by design.) A test workspace
+After a reboot the projects that were running come back by themselves: [Start at boot](#start-at-boot-launchd), OLA-101.) A test workspace
 for the outside reviewer is left on the mini, stopped: `stage-a`, owned by the made-up `stage-kim`.
 
 ## The front desk
@@ -1176,7 +1176,24 @@ turn and, after each, uses the same session for `/api/me`, `/api/project`, openc
 desk and the gateway through the door from inside the VM. First measured from `~/hilma-venture`:
 5 of 5, each back within 0.7 to 1.0 s. `stage-a` is left stopped. The mini was not rebooted.
 
-After an unattended reboot no workspace runs until someone opens it. The checks
+**Projects come back after a restart (OLA-101, 2026-11-27).** The front desk keeps
+`~/.ola/up.json` (mode 600, slugs and the machine's boot time only): a project it starts is added,
+one it stops (the idle stop, parking for an update) is removed. When the front desk starts and the
+boot time differs from the file's, the machine restarted, and it starts every listed project that
+is still open again, one at a time, through the same start a person's request uses (the cap of 4
+and a closed project hold); while Apple's container system is still coming up a start is tried
+again every 15 s, for 15 minutes, then the project starts on its next request. On the same boot (a
+front desk restart, as every update does) nothing is started: VMs outlive the front desk. Only the
+service does this (`OLA_LAUNCHD=1`), never a check's front desk. A new project needs nothing extra:
+its first start adds it, and the front desk serves it without a restart. The log says
+`the machine restarted: starting again N project(s)` and one line per project. Code
+`ops/comeback.mjs`, used in `frontdesk/workspaces.mjs`; test `node --test ops/comeback-test.mjs`
+(an update suite, no VM). **On the Studio this needs `ola` signed in**: the jobs are user agents,
+and with FileVault on nobody is signed in by itself after a power cut, so Ola (and its projects)
+start when someone unlocks the disk with the `ola` password at the Studio's screen, which also
+signs it in ("The Studio's install list", item 1). Not measured yet: a real restart of the Studio.
+
+The checks
 (`workspace/check.mjs`, `frontdesk/check.mjs`) hold their limit of 2 against their own workspaces
 only (`OLA_RUNNING_SCOPE=home`, never honored for `~/.ola`), and the machine's 4 against every VM,
 so `stage-a` or a person's workspace may run meanwhile. Before they start VMs they wait up to 3

@@ -297,7 +297,7 @@ export function makeFrontDesk(cfg = config()) {
     // read "Not published" for `ola-publish status 2>&1 | tail -20` as "the page was never published").
     await workspaces.ocCall(slug, 'POST', `/api/session/${sessionID}/permission/${requestID}/reply`, { decision: 'reject', message: parsed.statusBad ? `Not run: ${why}` : `Not published, and the person was not asked: ${why}` })
   }
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => {
+  const workspaces = makeWorkspaces({ db, keys, log, comeBack: process.env.OLA_LAUNCHD === '1', idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug), onGoWeb, onPublishAsk, onPrompt, onRunEnded: (slug, sessionID, how) => {
     madeBy?.ended(slug, sessionID, { interrupted: how !== 'succeeded' })
     // OLA-235: what went wrong in the turn, as labels (faults.mjs); never the request or the answer.
     const wsId = db.prepare('SELECT id FROM workspaces WHERE slug = ?').get(slug)?.id

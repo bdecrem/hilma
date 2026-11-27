@@ -610,6 +610,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
     ['disk', ['--test', 'ops/disk-test.mjs']], // the free-disk refusal (OLA-327), seconds, no VM
     ['park', ['--test', 'ops/park-test.mjs']], // idle projects parked for the VM suites (OLA-240), seconds, no VM
+    ['comeback', ['--test', 'ops/comeback-test.mjs']], // projects started again after the machine restarts (OLA-101), seconds, no VM
     ['speed', ['evals/speed/test.mjs']], // the speed check's rules (OLA-456), a second, no VM, no model call
     // OLA-464: an ordinary update runs these in place of the web and front desk suites (ops/select.mjs, quickForm)
     ['web-unit', ['ops/unit.mjs', 'web']], // web/test, about a second, no browser

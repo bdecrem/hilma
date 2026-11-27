@@ -12,6 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as ws from '../workspace/ws.mjs'
 import * as park from '../ops/park.mjs'
+import { makeComeback } from '../ops/comeback.mjs'
 import { makeProxy, opencodeCall } from '../web/server/proxy.mjs'
 import { audit, nameRef } from './db.mjs'
 import { webRequests } from '../web/server/webask.mjs'
@@ -35,7 +36,7 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {} }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {}, comeBack = false }) {
   // `onPrompt` and `onRunEnded` (madeby.mjs, OLA-224): a person's prompt is noted as Ola's turn in
   // the VM before it goes on (and may get a note in front of it), and its run's end ends the turn.
   // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
@@ -115,7 +116,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     if (!starting.has(slug) && f && Date.now() - f.at < 2000) throw f.e
     if (!starting.has(slug)) {
       const p = run('start', slug)
-        .then(() => (ready.set(slug, Date.now()), refused.delete(slug)), (e) => (refused.set(slug, { e, at: Date.now() }), Promise.reject(e)))
+        .then(() => (ready.set(slug, Date.now()), refused.delete(slug), back.note(slug)), (e) => (refused.set(slug, { e, at: Date.now() }), Promise.reject(e)))
         .finally(() => starting.delete(slug))
       starting.set(slug, p)
     }
@@ -253,7 +254,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     asleep.add(slug)
     reset(slug)
     const p = run('stop', slug)
-      .then(() => log(`${slug}: ${said}`))
+      .then(() => (back.gone(slug), log(`${slug}: ${said}`)))
       .catch((e) => {
         asleep.delete(slug)
         log(`${slug}: ${what} failed (${e.code ?? 'error'})`)
@@ -295,6 +296,20 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   const sweepMs = Math.max(1000, Math.min(60_000, Math.min(idleStopMs > 0 ? idleStopMs : Infinity, runCeilingMs > 0 ? runCeilingMs : Infinity) / 4))
   const sweeper = idleStopMs > 0 || runCeilingMs > 0 ? setInterval(sweep, sweepMs) : null
   sweeper?.unref()
+
+  // -------------------------------------------------------------- back after a restart
+  //
+  // OLA-101 (ops/comeback.mjs): the projects this front desk started and has not stopped are kept
+  // in $OLA_HOME/up.json; when the machine has restarted since, the service (comeBack: OLA_LAUNCHD)
+  // starts them again by itself, through ensureRunning, so the first person back finds them up.
+  const back = makeComeback({
+    home: ws.HOME,
+    log,
+    running: () => ws.running().map((c) => (c.configuration?.id || c.id || '').slice(4)),
+    start: (slug) => ensureRunning(slug),
+    isActive: (slug) => !!db.prepare("SELECT 1 FROM workspaces WHERE slug = ? AND status = 'active'").get(slug),
+  })
+  if (comeBack) back.resume().catch((e) => log(`starting projects again after a restart: ${e.message}`))
 
   // -------------------------------------------------------------- parked for an update's tests
   //
