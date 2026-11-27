@@ -108,7 +108,8 @@ test('the plugin in that project shows it as "(from this project)", fenced and c
   assert.equal(ev.system.length, 1)
   const note = ev.system[0].text
   assert.ok(note.startsWith(`${NOTE_HEAD} ${FROM_PROJECT}`) && note.endsWith(NOTE_END) && note.length <= 2400, note.slice(0, 80))
-  assert.ok(note.includes('click + Elm Street'))
+  // OLA-497: the note shows what was asked and built, never the tries (the speed check measured them as extra steps)
+  assert.ok(note.includes('bike racks') && !note.includes('click + Elm Street') && note.includes('Steps: build it in one go'), note)
   // another project: its own (empty) file, so only the committed test library can be shown
   reset()
   const other = project()
