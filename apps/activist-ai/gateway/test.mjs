@@ -13,6 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
+import { argsFit } from './toolargs.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 import { publishedChangeNote, publishedIn, ASKS_PUBLISH as GW_ASKS_PUBLISH, ASKS_CHANGE as GW_ASKS_CHANGE } from './publishedchange.mjs'
 import { ASKS_PUBLISH as FD_ASKS_PUBLISH, ASKS_CHANGE as FD_ASKS_CHANGE } from '../frontdesk/publishednote.mjs'
@@ -77,7 +78,12 @@ async function fakeUpstream() {
       res.writeHead(cmd.status, { 'Content-Type': 'application/json' })
       return res.end(JSON.stringify({ error: { message: cmd.error || 'no' } }))
     }
-    const message = cmd.textCalls
+    // callSeq: one tool call per try of the same tag, the last one repeated (OLA-411).
+    const nth = cmd.callSeq ? st.seen.filter((x) => x.tag === cmd.tag).length - 1 : 0
+    const seqCall = cmd.callSeq?.[Math.min(nth, cmd.callSeq.length - 1)]
+    const message = seqCall
+      ? { role: 'assistant', content: null, tool_calls: [{ id: `c${nth}`, type: 'function', function: { name: seqCall.name, arguments: JSON.stringify(seqCall.args) } }] }
+      : cmd.textCalls
       ? { role: 'assistant', content: 'invented result', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'read', arguments: '{"path":"x"}' } }] }
       : { role: 'assistant', content: cmd.reply ?? 'ok' }
     // Optional extras let a test see whether the gateway passes fields it should strip.
@@ -2345,6 +2351,41 @@ test('ask first: a person who asks to be asked first gets a card, through a note
     assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
     await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }] })
     assert.doesNotMatch(up.st.seen.at(-1).system, /asked you to ask them/)
+  } finally {
+    await g.stop()
+  }
+})
+
+// OLA-411, the checker on the iPhone, Nov 23: a question call without what opencode's question tool
+// needs (header, options with a label and a description each) showed the person a red failed step
+// before the card. The gateway tries such a reply again; if every try misses, the last reply goes
+// through as before, so a schema read wrongly costs a retry, never a turn.
+test('tool arguments that miss the tool’s schema are tried again, and pass through after the last try (OLA-411)', async () => {
+  const QSCHEMA = { type: 'object', required: ['questions'], properties: { questions: { type: 'array', items: { type: 'object', required: ['question', 'header', 'options'], properties: { question: { type: 'string' }, header: { type: 'string' }, options: { type: 'array', items: { type: 'object', required: ['label', 'description'], properties: { label: { type: 'string' }, description: { type: 'string' } } } }, multiple: { type: 'boolean' } } } } } }
+  const good = { questions: [{ question: 'What date?', header: 'Date', options: [{ label: 'Saturday', description: 'This Saturday' }] }] }
+  assert.ok(argsFit(good, QSCHEMA))
+  assert.ok(!argsFit({ questions: [{ question: 'What date?', header: 'Date' }] }, QSCHEMA), 'no options')
+  assert.ok(!argsFit({ questions: [{ question: 'What date?', options: [] }] }, QSCHEMA), 'no header')
+  assert.ok(!argsFit({ questions: [{ question: 'What date?', header: 'Date', options: [{ label: 'Sat' }] }] }, QSCHEMA), 'an option with no description')
+  assert.ok(!argsFit({ questions: 'What date?' }, QSCHEMA), 'a string where a list goes')
+  assert.ok(argsFit({ questions: [{ question: 'q', header: 'h', options: [], multiple: null }] }, QSCHEMA), 'null for an optional field is fine')
+  assert.ok(argsFit({ anything: 1 }, { anyOf: [{ type: 'string' }] }), 'what it does not read is fine')
+  assert.ok(argsFit({ x: 1 }, undefined), 'no schema: fine')
+  const tools = [{ type: 'function', function: { name: 'question', parameters: QSCHEMA } }]
+  const bad = { questions: [{ question: 'What date?', header: 'Date' }] }
+  const up = await fakeUpstream()
+  const g = await gateway(baseEnv(up.url))
+  try {
+    const r = await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: [{ role: 'user', content: JSON.stringify({ tag: 'q1', callSeq: [{ name: 'question', args: bad }, { name: 'question', args: good }] }) }] })
+    assert.equal(r.status, 200)
+    assert.deepEqual(JSON.parse(r.json.choices[0].message.tool_calls[0].function.arguments), good, 'the second try, which fits, is the reply')
+    assert.equal(up.st.seen.filter((x) => x.tag === 'q1').length, 2)
+    await waitFor(() => g.logs().find((l) => l.args_retried === 1 && !l.args_missed), 3000, 'the log line says a try was retried')
+    const r2 = await call(g, T.a, { model: 'general', max_tokens: 400, tools, messages: [{ role: 'user', content: JSON.stringify({ tag: 'q2', callSeq: [{ name: 'question', args: bad }] }) }] })
+    assert.equal(r2.status, 200, 'every try missed: the last reply still goes through')
+    assert.deepEqual(JSON.parse(r2.json.choices[0].message.tool_calls[0].function.arguments), bad)
+    assert.equal(up.st.seen.filter((x) => x.tag === 'q2').length, 3, 'three tries in all')
+    await waitFor(() => g.logs().find((l) => l.args_missed === 1), 3000, 'the log line says every try missed')
   } finally {
     await g.stop()
   }

@@ -11,7 +11,7 @@
 // note goes (the tool call is in the messages), and a person who answers in words sends a new message
 // that no longer asks to be asked.
 
-export const ASK_FIRST = 'Note from Ola’s gateway: the person asked you to ask them something before you start. Ask now with the question tool: every question they asked for in one call, each with two to four short choices where choices make sense, and wait for their answer. Never write the questions in your reply instead: only the question tool shows the person a card they can answer.'
+export const ASK_FIRST = 'Note from Ola’s gateway: the person asked you to ask them something before you start. Ask now with the question tool: every question they asked for in one call, and wait for their answer. Each question needs all three: question (the whole question), header (two or three words) and options (two to four choices, each with a label and a one-line description). Never write the questions in your reply instead: only the question tool shows the person a card they can answer.'
 
 const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((p) => p?.type === 'text' && typeof p.text === 'string').map((p) => p.text).join('\n') : '')
 

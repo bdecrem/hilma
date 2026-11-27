@@ -55,6 +55,7 @@ import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
 import { askFirstNote, bothNotes } from './askfirst.mjs'
+import { argsFit, schemasOf } from './toolargs.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 import { publishedChangeNote } from './publishedchange.mjs'
 import { DESIGN_DOWN, DESIGN_HERE, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
@@ -844,17 +845,22 @@ function sanitizeCompletion(json, modelName) {
 }
 
 // What is wrong with a reply, or null. Only shape is judged, never content.
-function fault(message, offered) {
+// `schemas`: each offered tool's parameters (toolargs.mjs); a miss there is MISSES_SCHEMA.
+const MISSES_SCHEMA = 'tool arguments that miss what the tool needs'
+function fault(message, offered, schemas = new Map()) {
+  let miss = null
   for (const call of message.tool_calls || []) {
     const name = call.function?.name
     if (!name || (offered.size && !offered.has(name))) return `a call to a tool that was not offered`
     try {
       const args = JSON.parse(call.function.arguments || '{}')
       if (args === null || typeof args !== 'object') return 'tool arguments that are not an object'
+      if (!argsFit(args, schemas.get(name))) miss = MISSES_SCHEMA
     } catch {
       return 'tool arguments that are not JSON'
     }
   }
+  if (miss) return miss
   if (!(message.tool_calls || []).length && !(typeof message.content === 'string' && message.content.trim())) return 'an empty reply'
   return null
 }
@@ -869,6 +875,10 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
   // ordinary caller (they can echo our key; `redact` scrubs every reply anyway): only the model
   // check's caller gets them, so the alarm can say what the provider said.
   let said = null
+  const schemas = schemasOf(body.tools)
+  // OLA-411: a reply whose tool arguments miss the tool's schema is tried again, but if every try
+  // misses, the last such reply goes through (opencode refuses the call and Ola tries again).
+  let missed = null
   for (let attempt = 1; attempt <= TRIES; attempt++) {
     // The quota is re-checked before every try: the tokens a slow burst already spent are in the
     // store by now, so a caller cannot keep retrying (or keep its queued requests going) past the
@@ -941,13 +951,18 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
       last = 'a reply with no message'
       continue
     }
-    const wrong = fault(message, offered)
+    const wrong = fault(message, offered, schemas)
+    if (wrong === MISSES_SCHEMA) missed = json
     if (wrong) {
       last = `the model produced ${wrong}`
       continue
     }
     if ((message.tool_calls || []).length && !C.keepText) message.content = null
-    return { status: 200, json }
+    return { status: 200, json, ...(missed ? { argsRetried: 1 } : {}) }
+  }
+  if (missed) {
+    if (!C.keepText) missed.choices[0].message.content = null
+    return { status: 200, json: missed, argsRetried: 1, argsMissed: 1 }
   }
   return { status: lastStatus, error: `${last}, ${TRIES} times`, why: `${last}, ${TRIES} times`, said }
 }
@@ -1343,6 +1358,8 @@ async function handle(req, res, rec, signal) {
       out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, targets.get(body.model) ?? null)
     }
     rec.status = out.status
+    if (out.argsRetried) rec.args_retried = 1
+    if (out.argsMissed) rec.args_missed = 1
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
       if (wantStream) stream(res, clean, wantUsage)
