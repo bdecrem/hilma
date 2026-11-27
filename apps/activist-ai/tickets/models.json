@@ -119,11 +119,11 @@
     "cached": 0,
     "out": 0
   },
-  "studio-inkling-small-3": {
+  "studio-deepseek-v4-flash-3": {
     "id": "big",
     "provider": "studio",
     "context": 65536,
-    "build": "Inkling Small (first generation, 264B), UD-IQ3_S GGUF, 3-bit (107 GB): a stretch, more than the Studio has free",
+    "build": "DeepSeek V4 Flash, UD-IQ3_XXS GGUF, 3-bit (104 GB): a stretch, a little more than the Studio has free",
     "in": 0,
     "cached": 0,
     "out": 0

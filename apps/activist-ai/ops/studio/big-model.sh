@@ -16,8 +16,8 @@
 set -u
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 M=$HOME/ola-models; B=$M/big; LOGS=$HOME/Library/Logs/ola; PIDF=$HOME/.ola/bigmodel.pid
-# llama-new is a later build (Nov 27): the Nov 25 one does not know the Inkling GGUF ('unknown model architecture').
-LLAMA=$HOME/llama-head/build/bin/llama-server; [[ -x $HOME/llama-new/build/bin/llama-server ]] && LLAMA=$HOME/llama-new/build/bin/llama-server
+# The first-generation Inkling Small GGUF loads in no llama.cpp (it knows 'inkling2', not 'inkling'): MLX only.
+LLAMA=$HOME/llama-head/build/bin/llama-server
 D=gui/$(id -u)
 # name | kind | path (a file, or for a split GGUF its first part; a folder for mtplx) | context | what it is
 MODELS=(
@@ -25,8 +25,8 @@ MODELS=(
   "gpt-oss|llama|$B/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf|131072|gpt-oss-120b, 4-bit, 63 GB"
   "qwen|mtplx|$B/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed|131072|Qwen3.8-Flash-Next, 4-bit, 115 GB on disk, about 83 GB in memory"
   "inkling-small|llama|$B/Inkling-Small/UD-IQ2_M/*00001-of-*.gguf|65536|Inkling Small (first generation), 2-bit, 82 GB"
-  "inkling-small-3|llama|$B/Inkling-Small-3bit/UD-IQ3_S/*00001-of-*.gguf|65536|Inkling Small (first generation), 3-bit, 107 GB: a stretch, more than the 100 GB the Studio has free"
   "deepseek|llama|$B/DeepSeek-V4-Flash/UD-IQ2_M/*00001-of-*.gguf|65536|DeepSeek V4 Flash, 2-bit, 91 GB"
+  "deepseek-3|llama|$B/DeepSeek-V4-Flash-3bit/UD-IQ3_XXS/*00001-of-*.gguf|65536|DeepSeek V4 Flash, 3-bit, 104 GB: a stretch, a little more than the Studio has free (Bart's yes, Nov 26, for this test)"
 )
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
 row() { for r in $MODELS; do [[ ${r%%|*} == $1 ]] && { print -r -- $r; return 0 }; done; return 1; }
