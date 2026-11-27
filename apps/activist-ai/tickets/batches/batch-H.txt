@@ -1,0 +1,74 @@
+Batch H of Ola's open bugs (apps/activist-ai), oldest first, 2026-11-27.
+
+1. P1 OLA-412  A new cloud project on app.ola.cx stayed on 'Opening your project…' for more than 4 minutes, twice
+Seen by the OLA-325 checker, Nov 23 ~2:20 am, release 8ea2fd33a8c7, made-up accounts chk1123*: two brand-new projects never opened. Find whether project start-up is stuck or just slow, and fix.
+
+
+thread:
+  Nov 27, 1:14 PM      kit      Seen again Nov 27, 1:15 PM on 157cab088bb9 (OLA-515 checker): a new cloud project stayed on 'Opening your project…' / 'Lost the connection' for 240 s while another new project was starting; alone, it opened. Also seen at 12:09 PM on 9f7b72cc123f.
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+2. P1 OLA-466  The spreadsheet Bart asked for came out broken to use: a finished formula keeps showing its text, typing does not replace a cell, every tap zooms on a phone
+Bart, Nov 25: 'it failed at the spreadsheet in my opinion'. Studio, project studio, 6 min. Used at phone size by the lead: after Enter a formula cell shows '=E1*2' until another cell is typed in; typing on a selected cell inserts into the old text (the page says 'type to overwrite'); cell text is 14 px so an iPhone zooms on every tap; 5 of 20 columns fit; test cells with a red #LOOP! left in; =1/0 shows Infinity. Causes on Ola's side: the project computer has no way to run the page's JavaScript or type into it (no node; ola-page only takes a picture), so it shipped after one look at a picture and said it had not re-checked; one step wrote its file-write as plain text and ran to the 16,000-token cap, 3 min 19 s of the 6 lost; the page landed as spreadsheet.html in Files with no link because index.html is the music page.
+
+commit 63e274a1 [OLA-466] the spreadsheet that failed for Bart is the eighth app request, with a check that uses it at phone size: tap a cell, type, press Enter, read the cell. The grid is found by where the cells are on screen, so it works on any model's page. Its own test: the Studio's real page fails on exactly one step (a finished formula keeps showing its text), the larger Inkling's page passes all 8
+
+thread:
+  Nov 25, 10:18 PM     kit      Same request, plain OpenCode, one run each (Nov 25, 10:15 pm): larger Inkling (Together) 126 s, passes the use-run except that typing on a filled cell adds to it and cell text is 12.5 px; it ran its own check through the page's event handlers. Nemotron 52 s, unusable (keeps one character per cell). Studio's Inkling Mini through Ola: 366 s, formula te
+
+3. P1 OLA-489  A request in a just-made project fails: 'Your request did not reach Ola's computer' twice in the first two minutes
+Found by the OLA-474 checker on release 5a56fac1f0dc: project chk479-f made with admin create-workspace at 7:28 pm; the spreadsheet request at 7:29 and again at 7:30 failed at once with that line, nothing in frontdesk.log for it; Say hello at 7:32 worked. A new person's first message would hit this. On the M1 iMac: ~/Desktop/Ola/checks/OLA-474/p2-c5-1-f, p2-c5-1-f2
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+4. P1 OLA-498  The Studio still publishes the whole site from its own copies: its next publish takes the test server's pages off sites.ola.cx
+OLA-494 (a5215721) makes each Ola machine keep the other's pages; the Studio runs the older publish code until its next update (held until the 'without' half of the measurement is done). Update the Studio, then check a Studio publish leaves a test-server page up.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+5. P2 OLA-268  A project page can sit on 'Opening your project…' for minutes after the machine was busy
+da4380403a13, app.ola.cx, WebKit 390 px, new project chk230m4x-test (now removed). Signed in from a setup link at 20:13 UTC; the front desk logged 'error (MACHINE_BUSY)' seven times 20:13:28-36; the project's computer was running from 20:13:45 (container list), but the page still showed only 'Opening your project…' at 20:14:37, 20:15:43 and 20:16:49, with no message and no retry; the conversation could not be opened. A person would see a page that never opens. Shots on the M4 iMac: ~/Desktop/Ola/checks/OLA-230/m4-webkit2/02-s-Bart-after.png, 04-s-Juniper-after.png.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+6. P2 OLA-306  Asked to make a page that says one word and publish it, Ola sometimes asks a question in words first
+Release 44ec5d68e931, app.ola.cx 390 px, Nov 20 4:18-4:50 pm. 3 of 15 tries of 'make a page that says WORD and publish it on ola' asked a question card before the publish sheet: Birch in a fresh project ('Before I build and publish the page, what should Birch be? I don't want to invent details'), Spruce ('Just the word, minimal page'), Cedar in Chromium ('New cedar.html, publish it'). The sentence already says what the page says, so Bart has to answer twice. Also, 'change the page so it says Bart Was Here instead' showed the publish sheet twice for one change. Shots on the M4 iMac: ~/Desktop/Ola/checks/OLA-267/awkward/02-s-Birch-card.png and webkit/ chromium/ NN-s-WORD-card.png.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+7. P2 OLA-326  A project summary names the project's official public site from its README before any site of ours
+Correction of Nov 20, 1:59 pm: asked for the MRD production website, the agent named ola.cx/mrd; Bart: no the official one.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+8. P2 OLA-363  Ola offers a choice like 'Here it is: I'll type the bio now in the answer box', which sends no words when tapped, and then asks again
+Asked for a cat page with a question first, Ola's question cards had choices ('I'll tell you', 'Here it is', 'The words are...') that promise typed words; tapping one answers at once with no words, and Ola asked again three times, then said 'you're picking the answer option without typing the text'. Seen checking OLA-301 on the iPhone, Nov 21 6:00 pm: mini /Users/admin/Library/Logs/venture-runner/shots/OLA-301/checker4/3c/13-say1-question3.png, 17-say1-answer.png
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+9. P2 OLA-364  Ola's answers mention its own internal checks to the person ('the checker flagged the size', 'the automated look.py check keeps printing...')
+Two of three finished answers on Nov 21 (checking OLA-301) told the person about Ola's internal look checker, in its own jargon. Also one answer said 'press Open' where the button reads View. Mini /Users/admin/Library/Logs/venture-runner/shots/OLA-301/checker4/3b/11-say1-answer.png, /Users/admin/Library/Logs/venture-runner/shots/OLA-301/checker4/6b/mac/08-mac-shows-the-phone-session.png
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+
+10. P2 OLA-389  After a republish in chat, Ola's answer named the wrong earlier page ('replaced the earlier Oak page' when the address had shown Willow)
+Seen by the OLA-244 checker on app.ola.cx, release 11595ff14c64, Nov 22: Juniper republished in a project whose address showed Willow; the answer said it replaced the earlier Oak page. What Ola says the address showed before must come from the command or the record, not memory. Evidence on the mini: ~/Library/Logs/venture-runner/shots/OLA-267/r5/.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "hard"
+

@@ -1,0 +1,74 @@
+Batch M of Ola's open bugs (apps/activist-ai), oldest first, 2026-11-27.
+
+1. P1 OLA-299  A new project on a full machine says 'Lost the connection to Ola's computer. Trying again' forever instead of saying the machine is full
+Test server, release 44ec5d68e931, Nov 20 16:21-16:27 PST, app.ola.cx at 390 px in WebKit and Chromium, two made-up accounts each with a new project (chk267w-test, chk267c-test). Both stayed on 'Opening your project…' with 'Lost the connection to Ola's computer. Trying again' for 6 minutes over four reloads; the first sentence then failed (no composer). ws.mjs start on the mini said: '4 workspaces are already running; the machine runs at most 4' (appdriver, askcases, ola168-chk and one of mine). The person is never told the machine is full or when it will open. The checker's screenshots of it were overwritten by a later run (checker's mistake); to see it again, open a fifth project while four run.
+
+
+thread:
+  Nov 20, 4:28 PM      kit      edited the description to: Test server, release 44ec5d68e931, Nov 20 16:21-16:27 PST, app.ola.cx at 390 px in WebKit and Chromium, two made-up accounts each with a new project (chk267w-test, chk267c-test). Both stayed on 'Opening your project…' with 'Lost the connection to Ola's computer. Trying again' for 6 minutes over four reloads; the first sentence then failed (no composer). ws.mjs start on the mini said: '4 workspaces are already running; the machine runs at most 4' (appdriver, askcases, ola168-chk and one of mine). The person is never told the machine is full or when it will open. The checker's screenshots of it were overwritten by a later run (checker's mistake); to see it again, open a fifth project while four run.
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+2. P1 OLA-330  Ola tells times and dates in UTC in a cloud project: 'today (Sat Nov 21)' on Friday evening in California
+Live 18f9cd483982, Nov 20 about 9:33 pm PST, cloud project chk1122a-test (made-up person). Asked for a block party page on Saturday, Ola's card said 'Party is today (Sat Nov 21)' although it was Friday Nov 20 evening for the person; asked 'who made that page?', Ola said the design model 'created the page on Nov 21 at 5:32 AM' (that was 9:32 pm PST) and 'I changed it last - at 5:38 AM'. The project's clock or ola-made-by speaks UTC, not the person's time. Seen by the checker of OLA-303; log on the M1 iMac: ~/Desktop/Ola/checks/OLA-303/live-1121/log.jsonl
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+3. P1 OLA-371  Web app: a published page's card says 'Private: only the people in this project can open it. It is not on the public web' while sites.ola.cx serves it
+Seen by the OLA-302 checker, Nov 21 7:27 pm, release 4e7e05d53b32, app.ola.cx as appdriver: after Ola published index.html (and site/index.html) at sites.ola.cx/appdriver/ (200, new words), both page cards still read 'Private ... not on the public web', and index.html (made by Ola) is labelled 'a web page you uploaded'. At 1280 wide the card titles overlap the Open link. Picture: mini ~/Library/Logs/venture-runner/shots/OLA-302/checker/1/11-try3-done.png
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+4. P0 OLA-468  The model server's log on the Studio keeps the first 120 characters of every answer, readable by any account on the machine
+Found Nov 25 while reading why the spreadsheet request failed: ~ola/Library/Logs/ola/model.log (mode 644) has a text_preview field per request, 416 lines so far, with the model's first words about the person's request. Ola's rule is that no content is logged. Fix: turn the preview off in the model server or strip it before the log is written, make the log 600, and clear the existing lines.
+
+commit 795b1d30 [OLA-468] the Studio's model log keeps no words of an answer: cx.ola.model runs mtplx under ops/studio/model-log.mjs, which drops text_preview (and any *_preview, text, content) before the line is written, Umask 077 on the job, and a setup step that makes model.log 600 and scrubs the lines already in it in place. studio-test 10 of 10
+
+thread:
+  Nov 27, 2:04 PM      kit      Built and pushed in 795b1d30, not yet on the Studio (the mini cannot sign in to ola@ola-studio). What changed: MTPLX has no switch for text_preview, so the model job now runs it under ops/studio/model-log.mjs, which drops every *_preview (and text/content) field before the line reaches model.log; the job gets Umask 077 so a new log is 600; and setup.sh ola gains a step that makes the existing model.log 600 and scrubs the previews already in it, in place (the numbers, times and finish reasons stay). MTPLX's own request log in ~/.mtplx/logs already stores only a digest. Tested: node --test ops/studio-test.mjs, 10 of 10 (scrub of a real-shaped generation line, a non-JSON line, the run wrapper on a stand-in command, scrub + dirty on a 644 log, the plist wiring). Left, for a session on the iMac that can sign in as ola: ssh ola@ola-studio 'rm -rf /tmp/h && git clone -q http
+
+5. P2 OLA-148  On a phone the 'this may be a stretch' card's buttons are below the screen: you have to scroll to answer it
+Seen in the Nov 18 phone walk. The line under the switch now steps aside, which shows the card's title; the buttons still need a scroll. Options: scroll the card into view, or let it take the composer's place on a phone.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+6. P2 OLA-227  Cloud: asked who made a file, Ola named Claude correctly but added 'I did not create or change it' when it had made the file (1 of 2 runs)
+From OLA-224's cloud check, Nov 20 1:33 am, image 2.3.0-40: the note told it what Claude did; it must also state its own part from the record (ola-made-by lists both).
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+7. P2 OLA-353  On a phone, the 'This was wrong' card's Yes button sits under the message box and needs a scroll
+Found by the OLA-235 checker on app.ola.cx at phone width (Nov 21): the card opens but its 'Yes, keep it as a test' button is hidden behind the input box until you scroll.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+8. P2 OLA-376  Files refuses a file whose name has an apostrophe or # ("Rosa's notes.pdf"), and its message names the wrong rule
+Seen by the OLA-87 checker on app.ola.cx (e5aeede9b3c1), Nov 21 10:05 pm, made-up member chk87a: uploading "Rosa's notes.pdf" or 'Intake scan (Oct) #2.pdf' says 'was not sent. The file name has characters Ola does not accept. Rename it with letters, digits and spaces.' Apostrophes are common in people's file names; and the rule as said is wrong: 'Scan 2026-11-21 at 10.32.pdf', 'IMG_4021.pdf' and 'Food Bank (Oct).pdf' (hyphens, dots, underscores, brackets) were all accepted. Also: picking the same 60 MB file again sends all of it, then says 'There is already a file called …' with no way to replace it.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+9. P2 OLA-378  Asked again for a file that exists, Ola's web reply says 'press Open' but no Open link is under that reply
+OLA-239 check run on app.ola.cx, Nov 22: a second 'make a one-page summary as summary.html' in the same project ended 'The summary already exists as summary.html in your Files ... press Open to see it' with nothing under the reply to open (the first turn had 'Open summary.html'). Turn text and picture: ~/Library/Logs/venture-runner/shots/OLA-239/1b-sameproject/.
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+
+10. P2 OLA-382  Every reply carries a 'Compare with Claude' button in projects where Claude cannot take requests
+OLA-232 checker, Nov 21 on e5aeede9b3c1, project with no Anthropic account. Related to OLA-87 check #1 (Compare with Claude needs an admin-owned project).
+
+
+thread:
+  Nov 27, 3:14 PM      kit      changed difficulty from "" to "medium"
+

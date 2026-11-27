@@ -4,7 +4,7 @@
 //
 //   1. pick (on a machine where the tracker works):
 //        node apps/activist-ai/tickets/batch.mjs pick                      the next open P1s, oldest first, not seen before
-//        node apps/activist-ai/tickets/batch.mjs pick --take 292,299,… --skip 101:setup,182:board,…
+//        node apps/activist-ai/tickets/batch.mjs pick --take 292,299,… --skip 101:setup,182:board,… [--name M]
 //      writes batches/batch-<k>.txt (each ticket's title, description and thread) and records every id in
 //      batches/seen.json, so the next batch starts after them. Which open tickets are bugs in Ola's code is a
 //      person's call; --skip records the ones that are not, with a word of why. Commit and push.
@@ -50,7 +50,8 @@ function pick() {
   if (!args.take) { for (const t of fresh.slice(0, 3 * n)) console.log(`${t.id} ${t.p} ${t.title}`); return }
   const take = String(args.take).split(',').map((x) => `OLA-${x.replace(/^OLA-/, '')}`)
   const skip = String(args.skip || '').split(',').filter(Boolean).map((x) => x.split(':'))
-  const k = 1 + Math.max(0, ...Object.values(s.taken).map((b) => b.batch))
+  // --name M: batch-M.txt (the difficulty batches of Nov 27); otherwise the next number.
+  const k = args.name || 1 + Math.max(0, ...Object.values(s.taken).map((b) => b.batch).filter(Number.isFinite))
   let text = `Batch ${k} of Ola's open bugs (apps/activist-ai), oldest first, ${new Date().toISOString().slice(0, 10)}.\n\n`
   take.forEach((id, i) => {
     const t = open.find((x) => x.id === id)

@@ -1,0 +1,31 @@
+Difficulty ratings for batches M and H (OLA-520, Nov 27), one line of why each. Set on the tickets with
+issues.mjs edit --difficulty. Order: P1, then P0, then P2, oldest first. Medium: 3 P1, 1 P0, 6 P2. Hard: 4 P1, 6 P2.
+Left out: OLA-450 (a fix is built and waits for a check), P4 tickets (OLA-305, OLA-354), anything about the Mac
+mini (OLA-269), measurements rather than bugs (OLA-229), and the Mac and iPhone apps.
+
+Medium (a few files, or some logic to understand)
+  OLA-299 P1  the "machine busy" refusal exists in the front desk; the web app must show it instead of retrying (frontdesk + web/src/lib/ola.ts)
+  OLA-330 P1  the time zone of the record and of ola-made-by's wording, across the made-by facts and their tests
+  OLA-371 P1  the page card's Private/Public line and its "you uploaded" label come from the published status and the made-by record
+  OLA-468 P0  the model server's log line: strip the preview before writing, and the log's mode (ops/studio model-log)
+  OLA-148 P2  the stretch card's buttons on a phone: scroll into view or take the composer's place (web layout + card code)
+  OLA-227 P2  the made-by note must state Ola's own part from the record as well as Claude's (frontdesk made-by note)
+  OLA-353 P2  the same phone layout fault for the "This was wrong" card
+  OLA-376 P2  the file-name rule is copied in three places (web/server/files.mjs, workspace/ws.mjs, workspace/ola-put) and its message is wrong
+  OLA-378 P2  a second "make a summary" turn says "press Open" with no Open under it: which files a reply offers
+  OLA-382 P2  the Compare with Claude button must depend on whether Claude is set up for the project (frontdesk/compare.mjs to the reply buttons)
+
+Hard (several parts that must fit, or the cause is unclear)
+  OLA-412 P1  new projects stuck on "Opening your project…" while another starts: cause unknown (start-up queue, VM, front desk)
+  OLA-466 P1  the spreadsheet: causes spread over the page check, a file write as plain text, the token cap and where the page lands
+  OLA-489 P1  first requests in a just-made project fail: not reproduced, timing between the VM and the front desk
+  OLA-498 P1  the Studio's publish replaces the test server's pages: two machines, one site, publish copies
+  OLA-268 P2  a project page stays on "Opening…" for minutes after the machine was busy: start-up retries across front desk and web
+  OLA-306 P2  Ola sometimes asks a question instead of making and publishing a one-word page: model behavior with the skills and notes
+  OLA-326 P2  a project summary names the README's official site before ours: what the model is given and how it ranks it
+  OLA-363 P2  Ola offers a choice that sends no words when tapped: the question tool, the card and the model's wording together
+  OLA-364 P2  answers mention Ola's internal checks: many prompts and tool outputs leak those names
+  OLA-389 P2  after a republish Ola names the wrong earlier page: the made-by record, the publish history and the note given to the model
+
+Easy (set on the tickets too): OLA-387, OLA-426, OLA-407 (fixed by Inkmini today), OLA-385 (one tool name in web/src/lib/steps.ts),
+OLA-521 (one log line in frontdesk/poke.mjs).

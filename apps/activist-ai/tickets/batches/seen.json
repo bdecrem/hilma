@@ -1,19 +1,19 @@
 {
   "taken": {
     "OLA-299": {
-      "batch": 1
+      "batch": "M"
     },
     "OLA-330": {
-      "batch": 1
+      "batch": "M"
     },
     "OLA-371": {
-      "batch": 1
+      "batch": "M"
     },
     "OLA-407": {
       "batch": 1
     },
     "OLA-412": {
-      "batch": 1
+      "batch": "H"
     },
     "OLA-426": {
       "batch": 1
@@ -22,13 +22,52 @@
       "batch": 1
     },
     "OLA-466": {
-      "batch": 1
+      "batch": "H"
     },
     "OLA-489": {
-      "batch": 1
+      "batch": "H"
     },
     "OLA-498": {
-      "batch": 1
+      "batch": "H"
+    },
+    "OLA-468": {
+      "batch": "M"
+    },
+    "OLA-148": {
+      "batch": "M"
+    },
+    "OLA-227": {
+      "batch": "M"
+    },
+    "OLA-353": {
+      "batch": "M"
+    },
+    "OLA-376": {
+      "batch": "M"
+    },
+    "OLA-378": {
+      "batch": "M"
+    },
+    "OLA-382": {
+      "batch": "M"
+    },
+    "OLA-268": {
+      "batch": "H"
+    },
+    "OLA-306": {
+      "batch": "H"
+    },
+    "OLA-326": {
+      "batch": "H"
+    },
+    "OLA-363": {
+      "batch": "H"
+    },
+    "OLA-364": {
+      "batch": "H"
+    },
+    "OLA-389": {
+      "batch": "H"
     }
   },
   "skipped": {
