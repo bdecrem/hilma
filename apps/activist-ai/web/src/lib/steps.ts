@@ -487,6 +487,7 @@ export const STRETCH_WHY: Record<StretchReason, string> = {
   long_build: 'This is a long build in many parts.',
   many_files: 'This request covers many documents at once.',
   design: 'Design is the kind of work Ola’s own model is weakest at today.',
+  dead: 'Some of the page still does not work after Ola asked its model to fix it.',
 }
 
 /** The sentence on a reply that was handed over without asking ("Hand it over without asking"). */

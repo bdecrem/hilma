@@ -237,7 +237,7 @@ export type ClaudeAuto = 'ask' | 'stuck' | 'always'
 /** "When a request looks like a stretch": suggest it and let me decide; hand it over without asking; never suggest. */
 export type Stretch = 'suggest' | 'handover' | 'never'
 /** What Ola saw that makes a request look like a stretch (observable signals only, never a score). */
-export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build' | 'many_files' | 'design'
+export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build' | 'many_files' | 'design' | 'dead'
 
 /** GET /api/fallback: the hosted open model for this project. */
 export interface HostedInfo {
@@ -274,6 +274,9 @@ export interface Suggestion {
   target: Fallback
   /** The person can send it (an owner, or the target's switch is on); else the card only says who can turn it on. */
   canAct: boolean
+  /** reason 'dead' (OLA-522): the page still dead after the one fix, and what on it does not work, in plain sentences. */
+  page?: string
+  dead?: string[]
 }
 
 /** GET /api/claude: Fallback to Claude for this project. */

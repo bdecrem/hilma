@@ -67,7 +67,9 @@ export interface FrontDesk {
   /** Which engine last changed each file (OLA-224): the project's own record. */
   madeBy(): Promise<MadeByEntry[]>
   /** The page changed since `since` (ms), pressed all over in the project's computer (OLA-515): which page, and what is dead. */
-  poke(since: number): Promise<{ page: string | null; dead: { what: string; name: string; say: string }[] }>
+  poke(since: number, second?: boolean): Promise<{ page: string | null; dead: { what: string; name: string; say: string }[] }>
+  /** OLA-522: one line in the front desk log for the question after the second pressing, and its answer. */
+  pokeNote(note: { event: 'asked' | 'yes' | 'no'; offered: boolean; dead: number }): Promise<unknown>
   /** Sends one file to the workspace. Rejects with a DeskError (409 when the name is taken). */
   upload(file: File, opts?: { replace?: boolean }): Promise<UploadResult>
   downloadUrl(path: string): string
@@ -272,7 +274,8 @@ export const desk: FrontDesk = {
   runs: () => call<RunsPayload>('/api/runs'),
   files: async () => (await call<{ files: FileEntry[] }>('/api/files')).files,
   madeBy: async () => (await call<{ files: MadeByEntry[] }>('/api/made-by')).files,
-  poke: (since) => post<{ page: string | null; dead: { what: string; name: string; say: string }[] }>('/api/poke', { since }),
+  poke: (since, second) => post<{ page: string | null; dead: { what: string; name: string; say: string }[] }>('/api/poke', { since, ...(second ? { second: true } : {}) }),
+  pokeNote: (note) => post('/api/poke/note', note).catch(() => null),
   upload: (file, opts) =>
     maxUpload && file.size > maxUpload
       ? Promise.reject(new DeskError({ text: tooLarge(maxUpload), detail: '413 too_large (not sent)' }, 413))

@@ -7,6 +7,7 @@
 import { createSignal, Show } from 'solid-js'
 import { fallbackPlace, type Ola } from '../lib/ola.ts'
 import { STRETCH_WHY } from '../lib/steps.ts'
+import { DEAD_TITLE, deadOffer } from '../lib/poke.ts'
 import type { Fallback } from '../lib/types.ts'
 import { CONSENT, ConsentDialog, hostedConsent } from './Settings.tsx'
 
@@ -27,6 +28,41 @@ export function StretchCard(props: { ola: Ola }) {
   }
   const always = () => (on(s().target) ? void answer('always') : setAsking(true))
   const id = () => `stretch-${s().id}`
+  // OLA-522: the page still has dead things after Ola's one fix. What does not work, in plain sentences,
+  // and one question with two answers when the bigger model can be used here; else only "OK".
+  if (s().reason === 'dead')
+    return (
+      <section class="stretch-card" aria-labelledby={`${id()}-title`} aria-describedby={`${id()}-why`}>
+        <h3 id={`${id()}-title`} class="stretch-title">
+          {DEAD_TITLE}
+        </h3>
+        <ul id={`${id()}-why`} class="stretch-why">
+          {(s().dead ?? []).map((d) => (
+            <li>{d}</li>
+          ))}
+        </ul>
+        <Show when={s().canAct}>
+          <p class="stretch-leaves">{deadOffer(provider())}</p>
+        </Show>
+        <div class="sheet-actions stretch-actions">
+          <Show
+            when={s().canAct}
+            fallback={
+              <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => void answer('not_now')}>
+                OK
+              </button>
+            }
+          >
+            <button type="button" class="primary-button" disabled={busy()} onClick={() => void answer('once')}>
+              Yes, give it to the bigger model
+            </button>
+            <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => void answer('not_now')}>
+              No
+            </button>
+          </Show>
+        </div>
+      </section>
+    )
   return (
     <section class="stretch-card" aria-labelledby={`${id()}-title`} aria-describedby={`${id()}-why`}>
       <Show when={s().turnId === null}>

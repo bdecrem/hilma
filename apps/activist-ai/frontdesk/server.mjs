@@ -39,7 +39,7 @@ import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { makeFaults } from './faults.mjs'
-import { pokeLine } from './poke.mjs'
+import { pokeLine, pokeNoteLine } from './poke.mjs'
 import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { asksAboutFile, filesFact } from './filesnote.mjs'
 import { asksChangeNotPublish, publishedFact } from './publishednote.mjs'
@@ -719,12 +719,21 @@ export function makeFrontDesk(cfg = config()) {
         const t0 = Date.now()
         const r = await workspaces.poke(ws.slug, since - 5000).catch(() => ({ failed: 'failed' }))
         // One line each time it runs (frontdesk/poke.mjs): whether it ran, which page, what it found.
-        log(pokeLine({ handle: sess.handle, slug: ws.slug, r, ms: Date.now() - t0 }))
+        log(pokeLine({ handle: sess.handle, slug: ws.slug, r, ms: Date.now() - t0, second: body?.second === true }))
         if (r.failed) return json(res, 502, { error: 'poke_failed' })
         return json(res, 200, { page: r.page, dead: r.dead })
       } finally {
         busy()
       }
+    }
+    // OLA-522: the page says what it did after the second pressing (the question, and the answer), so
+    // each step leaves one line in this log like the pressing does. Names and counts only.
+    if (p === '/api/poke/note' && req.method === 'POST') {
+      if (!canRun) return json(res, 403, readOnly)
+      const line = pokeNoteLine({ handle: sess.handle, slug: ws.slug, note: await readJson(req, 1024) })
+      if (!line) return json(res, 400, { error: 'bad_note' })
+      log(line)
+      return json(res, 200, { ok: true })
     }
     // Which engine last changed each file (OLA-224): the project's own record, `ola-db made-by
     // --json` inside the VM (names, engines and times only), for Files. One exec, one transfer slot.

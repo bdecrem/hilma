@@ -273,8 +273,9 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             return <QuestionCard question={q} onAnswer={(a) => props.ola.answerQuestion(a)} />
           }}
         </Show>
-        <Show when={s().suggestion}>
-          <StretchCard ola={props.ola} />
+        {/* Keyed by the card's id: a new card (OLA-522's still-dead one, or a stretch) is drawn afresh. */}
+        <Show when={s().suggestion?.id} keyed>
+          {(_id) => <StretchCard ola={props.ola} />}
         </Show>
         <CompareSheet open={!!sheet()} info={cmp() ?? null} conversation={s().sessionID ?? null} message={sheet()?.message ?? null} id={sheet()?.id ?? null} onClose={() => (setSheet(null), void refetchCompare())} onChanged={() => void refetchCompare()} />
         <Show when={s().help}>

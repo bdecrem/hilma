@@ -9,7 +9,7 @@ import { describeApproval, handoffPrompt, handoffWords, precheck, STRETCH_CHECKS
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
-import { pokeAfter } from './poke.ts'
+import { deadAnswer, deadQuestion, isPokeFix, pokeAfter, pokeAgain, type Dead } from './poke.ts'
 import { answerFromWords, composerState, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
@@ -454,6 +454,15 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   async function answerSuggestion(answer: 'once' | 'always' | 'not_now') {
     const s = state.suggestion
     if (!s) return
+    // OLA-522: still dead after the fix. Yes: one hand-off to the hosted model with the page and the list,
+    // never pressed or asked again (its turn is the hosted model's). No (or OK, nothing offered): nothing more.
+    if (s.reason === 'dead') {
+      setState('suggestion', null)
+      const a = deadAnswer(s, answer, handoffPrompt)
+      if (a.note) void desk.pokeNote({ event: a.note, offered: true, dead: s.dead?.length ?? 0 })
+      if (a.handoff) void runOn('hosted', a.handoff, { why: 'stuck', handoff: null, once: !isOn('hosted'), after: true })
+      return
+    }
     if (answer === 'not_now' || !s.canAct) {
       setState(produce((st) => void ((st.suggestion = null), st.declined.includes(s.reason) || st.declined.push(s.reason))))
       if (s.turnId === null) void sendOla(s.request)
@@ -607,14 +616,27 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     stopping = null
     if (!reason) {
       // OLA-515: a page handed over is pressed all over, and only what is dead goes back, once (lib/poke.ts).
+      const stillLast = () => state.turns[state.turns.length - 1]?.id === t.id && !busy() && !state.suggestion
       if (t.status === 'done' && !t.nudge) {
         flagged.add(t.id)
-        void pokeAfter(t, { poke: desk.poke, send: (text) => sendOla(text), stillLast: () => state.turns[state.turns.length - 1]?.id === t.id && !busy() && !state.suggestion })
+        void pokeAfter(t, { poke: (since) => desk.poke(since), send: (text) => sendOla(text), stillLast })
+      } else if (t.status === 'done' && isPokeFix(t)) {
+        // OLA-522: after the one fix, pressed once more; still dead: say what, and ask about the bigger model.
+        flagged.add(t.id)
+        void pokeAgain(t, { poke: (since) => desk.poke(since, true), stillDead: (page, dead) => stillDead(t, page, dead), stillLast })
       }
       return
     }
     flagged.add(t.id)
     stretch(reason, t.request, t.id)
+  }
+  /** OLA-522: the card after the second pressing, for the fix turn `t`: what still does not work, and the one question when it can be acted on. */
+  function stillDead(t: Turn, page: string, dead: Dead[]) {
+    const i = state.turns.findIndex((x) => x.id === t.id)
+    const request = (i > 0 ? state.turns[i - 1]?.request : '') ?? ''
+    const q = deadQuestion(page, dead, { hostedSetUp: isSetUp('hosted'), canSend: state.owner || isOn('hosted') })
+    setState('suggestion', { id: `s${Date.now()}`, request, turnId: t.id, reason: 'dead', offers: ['hosted'], target: 'hosted', canAct: q.offered, page: q.page, dead: q.dead })
+    void desk.pokeNote({ event: 'asked', offered: q.offered, dead: dead.length })
   }
 
   function newConversation() {

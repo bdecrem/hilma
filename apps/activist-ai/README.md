@@ -2407,6 +2407,19 @@ turns are not pressed), and when the pressing fails or times out nothing is sent
 `workspace/ola-poke`, tests `web/test/poke.test.ts` and `workspace/poke_test.py`. Web app only (the Mac
 and iPhone apps are parked).
 
+**After the one fix (OLA-522, Bart, Nov 27: "if invalid ... ask the customer if we can escalate to
+inkling 2 small").** When Ola's fix turn ends, the page is pressed once more (`/api/poke` with
+`second`). All works, or the pressing fails: nothing more. Still dead: the stretch card, reason
+`dead`, says "Ola pressed the buttons again after the fix, and this still does not work:" with the
+same sentences (four at most) and, only when the hosted model is set up and this person can send it
+(the owner, or the project's switch on), asks "Give this to a bigger model? It runs outside this
+machine, at <provider>: …" with "Yes, give it to the bigger model" / "No"; otherwise only "OK". Yes:
+one hand-off turn to the hosted model (handoffPrompt, shown as "Ola gave this to a bigger model, which
+runs outside this machine, with the page and what does not work on it."), never pressed or asked
+again; No: nothing. The second pressing, the question and the answer each leave a front desk log line
+(`frontdesk/poke.mjs`, `POST /api/poke/note`); the hand-off is the hosted run's own line. Tests
+`web/test/poke-again.test.ts`, `frontdesk/test/poke.test.mjs`.
+
 **The stretch card** (`web/src/components/StretchCard.tsx`), in the conversation, the approval
 sheet's sibling: "This may be a stretch for Ola's own model. Hand it to the hosted open model at
 <provider>?" (or "… to Claude?" when only Claude is set up; with both, the hosted open model first

@@ -2,7 +2,7 @@
 // that none changed), how many controls, how long, what was dead, or that it failed or timed out.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { pokeLine } from '../poke.mjs'
+import { pokeLine, pokeNoteLine } from '../poke.mjs'
 
 const at = { handle: 'asks', slug: 'asks-team' }
 
@@ -31,4 +31,15 @@ test('many dead things: four named, the rest counted, and the line fits the log 
   const dead = Array.from({ length: 12 }, (_, i) => ({ what: 'button', name: `A very long button label number ${i}`, say: 'x' }))
   const line = pokeLine({ ...at, r: { page: 'a'.repeat(100) + '.html', pressed: 30, typed: 0, dead }, ms: 16000 })
   assert.ok(line.endsWith(', and 8 more') && line.length <= 300, `${line.length}: ${line}`)
+})
+
+// OLA-522: the second pressing, the question and the answer each leave one line.
+test('the second pressing, the question and its answer', () => {
+  assert.equal(pokeLine({ ...at, r: { page: 'index.html', pressed: 4, typed: 1, dead: [{ what: 'button', name: 'Done', say: 'x' }] }, ms: 2000, second: true }), "second click-through (after the fix) for asks in asks-team: pressed index.html (4 pressed, 1 typed, 2.0 s): 1 dead: button 'Done'")
+  assert.equal(pokeNoteLine({ ...at, note: { event: 'asked', offered: true, dead: 2 } }), 'click-through for asks in asks-team: still dead after the fix (2); told the person and asked whether to give it to the bigger model')
+  assert.match(pokeNoteLine({ ...at, note: { event: 'asked', offered: false, dead: 1 } }), /told the person \(no bigger model offered/)
+  assert.equal(pokeNoteLine({ ...at, note: { event: 'yes', offered: true, dead: 2 } }), 'click-through for asks in asks-team: the person said yes: handed to the bigger model')
+  assert.equal(pokeNoteLine({ ...at, note: { event: 'no', offered: true, dead: 2 } }), 'click-through for asks in asks-team: the person said no: nothing more')
+  assert.equal(pokeNoteLine({ ...at, note: { event: 'anything I like' } }), null)
+  assert.equal(pokeNoteLine({ ...at, note: null }), null)
 })
