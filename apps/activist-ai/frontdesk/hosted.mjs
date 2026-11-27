@@ -133,7 +133,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log, madeBy =
       canChange: ws.role === 'owner',
       configured: Boolean(provider),
       provider,
-      // The provider's id of the hosted model (OLA-479: the page escalates a stuck request only to the model its setting names).
+      // The provider's id of the hosted model. Read only by the Mac and iPhone apps' parked OLA-486 port of OLA-479's hand-off (the web app's was removed, OLA-504).
       model: g?.hosted?.model ?? null,
       unavailable: provider ? null : g ? NOT_SET_UP.none : NOT_SET_UP.unknown,
       month: { unit: 'usd', used: (m?.cost_micro_usd ?? 0) / 1e6, cap: (r.usd ?? hc.capMicroUsd) / 1e6, reported: Boolean(g) },

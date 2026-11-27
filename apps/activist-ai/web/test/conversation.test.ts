@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, switchOf, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, ESCALATE, escalation, FINISH, FINISH_REQUEST, handoffPrompt, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, handoffPrompt, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testOutcome } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -269,8 +269,6 @@ test('a question for a step that ended is no card, and a card goes when its step
   assert.equal(card()?.id, 'p2')
   applyEvent(state, { type: 'session.tool.success', created: 8, data: { sessionID: s, id: 't2', content: [], metadata: { exit: 0 } } })
   assert.equal(card(), null, 'the step ran: its card is over')
-  // OLA-479 (below): nothing here was cut off at the length limit.
-  assert.equal(state.turns[0].cutOff, undefined)
 
   // One still up when the run ends goes with it.
   applyEvent(state, { type: 'session.tool.input.started', created: 9, data: { sessionID: s, id: 't3', name: 'shell' } })
@@ -281,61 +279,37 @@ test('a question for a step that ended is no card, and a card goes when its step
   assert.equal(state.turns[0].steps[0].status, 'done', 'a step that ran is shown as "did not finish"')
 })
 
-test('OLA-479: Ola counts failed test rounds, the same step again and replies cut off at the length limit; the model is not asked', () => {
-  const sh = (command: string, status = 'done') => ({ tool: 'shell', status, detail: { input: command } })
-  const write = (path: string, content: string) => ({ tool: 'write', status: 'done', detail: { input: JSON.stringify({ path, content }) } })
-  const turn = (steps: any[], cutOff = 0) => ({ request: 'Build a tiny spreadsheet', steps, cutOff })
-  assert.equal(ESCALATE.failedTestRounds, 2)
-  assert.equal(ESCALATE.sameSteps, 3)
-  assert.equal(ESCALATE.lengthHits, 2)
-  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed')])), null, 'one failed round is not two')
-  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed'), write('calc.js', 'v2'), sh('ola-test calc.js calc.test.js', 'failed')])), 'tests')
-  assert.equal(escalation(turn([sh('ola-test calc.js calc.test.js', 'failed'), sh('ola-test calc.js calc.test.js')])), null, 'a failed round then a passing one')
-  assert.equal(escalation(turn([sh('ls'), sh('ls'), sh('ls')])), 'loop', 'the same command three times')
-  assert.equal(escalation(turn([write('a.html', 'x'), write('a.html', 'x'), write('a.html', 'x')])), 'loop', 'the same file written again with the same words')
-  assert.equal(escalation(turn([sh('cat a.html'), write('a.html', 'v2'), sh('cat a.html'), write('a.html', 'v3'), sh('cat a.html')])), null, 'reading a file again after changing it is not a loop')
-  assert.equal(escalation(turn([], 1)), null)
-  assert.equal(escalation(turn([], 2)), 'length')
-  assert.ok(testRan({ steps: [sh('ola-test calc.js calc.test.js')] }))
-  assert.ok(testRan({ steps: [sh('/opt/ola/bin/ola-test index.html t.js')] }))
-  assert.ok(!testRan({ steps: [sh('cat calc.test.js'), sh('ola-page index.html --out .shots/a.png')] }), 'reading a test file or looking at a page is not a test')
-  assert.ok(!testRan({ steps: [sh('ls -la /work && which ola-test ola-page'), sh('cat /opt/ola/bin/ola-test')] }), 'naming ola-test is not running it (chk479-b)')
-  assert.ok(!testRan({ steps: [sh(`cat > t.py <<'EOF'\nimport unittest\nEOF`)] }), 'the words of a heredoc are not a command')
+test('OLA-474: what counts as a test run, and whether it passed', () => {
+  const sh = (command: string, status = 'done', output = '') => ({ tool: 'shell', status, detail: { input: command, output } })
+  assert.equal(testOutcome(sh('ola-test calc.js calc.test.js')), 'passed')
+  assert.equal(testOutcome(sh('ola-test calc.js calc.test.js', 'failed')), 'failed')
+  assert.equal(testOutcome(sh('/opt/ola/bin/ola-test index.html t.js')), 'passed')
+  assert.equal(testOutcome(sh('cat calc.test.js')), null, 'reading a test file is not a test')
+  assert.equal(testOutcome(sh('ola-page index.html --out .shots/a.png')), null, 'looking at a page is not a test')
+  assert.equal(testOutcome(sh('ls -la /work && which ola-test ola-page')), null, 'naming ola-test is not running it (chk479-b)')
+  assert.equal(testOutcome(sh('cat /opt/ola/bin/ola-test')), null)
+  assert.equal(testOutcome(sh(`cat > t.py <<'EOF'\nimport unittest\nEOF`)), null, 'the words of a heredoc are not a command')
   // chk479-b: the exit code of `ola-test … | tail` is tail's, so the summary line decides.
-  const piped = (output: string) => ({ tool: 'shell', status: 'done', detail: { input: `cd /work && cat > t.test.js <<'EOF'\ncheck('a', 1, 1)\nEOF\nola-test sheet.js t.test.js 2>&1 | tail -10`, output } })
-  assert.ok(testRan({ steps: [piped('3 passed, 0 failed\n')] }))
-  assert.equal(escalation(turn([piped('ola-test: ran sheet.js\n  ERROR: sheet.js line 482\n0 passed, 0 failed, 1 error\n'), piped('2 passed, 1 failed\n')])), 'tests', 'two failed rounds behind a pipe')
-  assert.equal(escalation(turn([piped('  no check ran\n0 passed, 0 failed\n'), piped('8 passed, 0 failed\n')])), null, 'one failed round (no check ran) then a pass')
-  // What computes, and what only shows things (that keeps the fast path: no test, no nudge).
-  for (const r of ['Build a tiny spreadsheet in one page', 'make a tip calculator', 'a memory game for my class', 'a page that totals our dues']) assert.ok(ESCALATE.computes.test(r), r)
-  for (const r of ['Make a good morning page with the weather', 'a page for our block party on Saturday', 'Write a flyer for the garden club']) assert.ok(!ESCALATE.computes.test(r), r)
-  for (const r of ['tests', 'loop', 'length', 'untested'] as const) assert.ok(STRETCH_WHY[r].length > 10)
-  // The nudge is Ola's, shown as Ola's.
-  assert.deepEqual(nudgeOf('make a calculator'), { request: 'make a calculator', nudge: false })
-  assert.equal(nudgeOf(NUDGE).nudge, true)
-  assert.ok(NUDGE.includes('ola-test'))
+  const piped = `cd /work && cat > t.test.js <<'EOF'\ncheck('a', 1, 1)\nEOF\nola-test sheet.js t.test.js 2>&1 | tail -10`
+  assert.equal(testOutcome(sh(piped, 'done', '3 passed, 0 failed\n')), 'passed')
+  assert.equal(testOutcome(sh(piped, 'done', 'ola-test: ran sheet.js\n  ERROR: sheet.js line 482\n0 passed, 0 failed, 1 error\n')), 'failed')
+  assert.equal(testOutcome(sh(piped, 'done', '  no check ran\n0 passed, 0 failed\n')), 'failed', 'no check ran')
 })
 
-test('OLA-479: a reply cut off at the length limit is counted, live and in the stored history; the nudge turn is marked', () => {
-  const s = 'ses_len'
-  const state = emptyConversation()
-  state.sessionID = s
-  startTurn(state, 'Build a tiny spreadsheet', 1)
-  applyEvent(state, { type: 'session.step.ended', created: 2, data: { sessionID: s, finish: 'length' } })
-  applyEvent(state, { type: 'session.step.ended', created: 3, data: { sessionID: s, finish: 'tool-calls' } })
-  assert.equal(state.turns[0].cutOff, 1)
-  startTurn(state, NUDGE, 4)
-  assert.equal(state.turns[1].nudge, true)
-  assert.ok(!state.turns[1].request.includes('<ola-nudge>'))
+test('OLA-504: an older conversation with OLA-479\'s nudge and finish turns opens with them as Ola\'s lines, no marker shown', () => {
+  const nudge = '<ola-nudge>From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed.'
+  const finish = '<ola-nudge>From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested.'
+  assert.deepEqual(nudgeOf('make a calculator'), { request: 'make a calculator', nudge: false })
   const turns = turnsFromMessages([
-    { id: 'u1', type: 'user', text: 'Build a tiny spreadsheet', time: { created: 1 } },
+    { id: 'u1', type: 'user', text: 'make a tip calculator', time: { created: 1 } },
     { id: 'a1', type: 'assistant', finish: 'length', content: [], time: { created: 2 } },
-    { id: 'a2', type: 'assistant', finish: 'length', content: [], time: { created: 3 } },
-    { id: 'u2', type: 'user', text: NUDGE, time: { created: 4 } },
+    { id: 'u2', type: 'user', text: nudge, time: { created: 3 } },
+    { id: 'u3', type: 'user', text: finish, time: { created: 4 } },
   ], null)
-  assert.equal(turns[0].cutOff, 2)
-  assert.equal(escalation(turns[0]), 'length')
-  assert.equal(turns[1].nudge, true)
+  assert.equal(turns[0].nudge, undefined)
+  assert.deepEqual([turns[1].nudge, turns[1].request], [true, 'Ola asked its model to run a test of the logic before handing it over.'])
+  assert.deepEqual([turns[2].nudge, turns[2].request], [true, 'Ola asked its model to finish as well as it can and to say plainly what it could not check.'])
+  for (const t of turns) assert.ok(!t.request.includes('<ola-'), t.request)
 })
 
 test('OLA-488: a test run whose own last line fails reads as a failed step, though the command exited 0', () => {
@@ -361,9 +335,4 @@ test('OLA-486: a hand-off without asking is Ola\'s turn with the sentence of why
   const p = handoffPrompt('Ola’s own model did the same step 3 times without getting further. This project hands such requests to the hosted open model, so it is working on it.', 'build a budget page')
   assert.deepEqual(nudgeOf(p), { request: 'Ola’s own model did the same step 3 times without getting further. This project hands such requests to the hosted open model, so it is working on it.', nudge: true })
   assert.ok(p.endsWith('Their request: build a budget page') && /do not ask the person what they want/.test(p))
-})
-
-test('OLA-479: after "Not now" Ola finishes the request itself, in a turn marked as Ola\'s', () => {
-  assert.deepEqual(nudgeOf(FINISH), { request: FINISH_REQUEST, nudge: true })
-  assert.ok(/does not work or was not tested/.test(FINISH))
 })

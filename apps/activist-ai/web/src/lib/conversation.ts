@@ -261,11 +261,6 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
     case 'session.step.failed':
       turn.error = runProblem(d.error)
       return true
-    case 'session.step.ended':
-      // OLA-479: a reply the model's length limit cut off, counted by Ola (not the model).
-      if (d.finish !== 'length') return false
-      turn.cutOff = (turn.cutOff ?? 0) + 1
-      return true
     case 'session.execution.succeeded':
       // The run ended: whatever it asked is no longer waiting (OLA-250). A Claude run's card is its own.
     {
@@ -360,8 +355,6 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
         turn.answer = text
       }
       if (m.error) turn.error = runProblem(m.error)
-      // OLA-479: a reply the model's length limit cut off, counted by Ola.
-      if (m.finish === 'length') turn.cutOff = (turn.cutOff ?? 0) + 1
     }
     if (m.type === 'idle') {
       turn.status = m.outcome === 'succeeded' ? 'done' : m.outcome === 'interrupted' ? 'stopped' : 'failed'

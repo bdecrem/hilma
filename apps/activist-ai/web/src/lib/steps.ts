@@ -6,7 +6,7 @@
 import { webRequestOf } from '../../server/webask.mjs'
 import { publishAskOf, publishRequestOf } from '../../server/publishask.mjs'
 import { publishCard } from '../../server/cards.mjs'
-import type { Escalation, Problem, PublishCard, StepIcon, StretchReason } from './types.ts'
+import type { Problem, PublishCard, StepIcon, StretchReason } from './types.ts'
 
 export interface Words {
   icon: StepIcon
@@ -48,7 +48,7 @@ export function commandParts(command: string): string[] {
 function mainCommand(c: string): string {
   const parts = commandParts(c)
   if (parts.length < 2) return c
-  const test = parts.find((p) => ESCALATE.test.test(p))
+  const test = parts.find((p) => TEST_COMMAND.test(p))
   if (test) return test
   const rest = parts.filter((p) => !/^cd(\s|$)/.test(p))
   return rest.length === 1 ? rest[0] : c
@@ -435,30 +435,15 @@ export function precheck(request: string, files: { path: string; size: number }[
   return null
 }
 
-// ---------------------------------------------------------------- OLA-479: Ola counts, the model is not asked
-//
-// Bart, Nov 26: for a request that computes, a test must run before Ola hands over, and Ola itself
-// (not the model) counts failed test rounds, the same step repeated with no change and replies cut off
-// at the length limit, and hands the request to a bigger model at a threshold. Every setting is here.
-export const ESCALATE = {
-  /** Where a stuck request goes: the hosted model, only while the gateway's HOSTED_MODEL is this id (never a Chinese model). */
-  to: 'thinkingmachines/Inkling-2-Small',
-  failedTestRounds: 2,
-  sameSteps: 3,
-  lengthHits: 2,
-  /** A request that computes (a test must run): formulas, totals, a calculator, a game's rules, an answer worked out. */
-  computes: /\b(spreadsheets?|calculat\w*|formulas?|converter|convert|totals?|sums?|averages?|budget|tax|tips?|interest|loan|mortgage|scores?|scoring|game|quiz|puzzle|sudoku|chess|tic[- ]tac[- ]toe)\b/i,
-  /** A command (one part of a step's command, see commandParts) that runs a test. */
-  test: /^(?:\/opt\/ola\/bin\/)?ola-test(?=\s|$)|^(?:python3?\s+-m\s+)?(?:pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b/,
-}
-export const ESCALATIONS: readonly StretchReason[] = ['tests', 'loop', 'length', 'untested']
+/** A command (one part of a step's command, see commandParts) that runs a test (OLA-474: ola-test, or the model's own pytest / unittest). */
+export const TEST_COMMAND = /^(?:\/opt\/ola\/bin\/)?ola-test(?=\s|$)|^(?:python3?\s+-m\s+)?(?:pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b/
 
-/** The one nudge (OLA-479), sent as a request in the model's conversation, marked so the page shows it as Ola's. */
+/**
+ * A turn Ola itself sends its model is marked, so the page shows it as Ola's line, never as the
+ * person's words. Today only the hand-off below; conversations from Nov 26 and 27 also hold the
+ * "run a test" and "finish it" turns of the removed OLA-479, shown in one plain sentence each.
+ */
 export const NUDGE_MARK = '<ola-nudge>'
-export const NUDGE = `${NUDGE_MARK}From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed.`
-/** After "Not now" on the card (OLA-479): Ola's own model finishes the request and says what it could not verify. */
-export const FINISH = `${NUDGE_MARK}From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested.`
-export const FINISH_REQUEST = 'Ola asked its model to finish as well as it can and to say plainly what it could not check.'
 /**
  * A hand-off without asking (OLA-486): the larger model is told, as Ola, that it takes the request
  * over and does the work. The page shows the first line (the sentence of why) as Ola's, never the
@@ -467,55 +452,31 @@ export const FINISH_REQUEST = 'Ola asked its model to finish as well as it can a
 export const HANDOFF_MARK = `${NUDGE_MARK}<ola-handoff>`
 export const handoffPrompt = (sentence: string, request: string) =>
   `${HANDOFF_MARK}${sentence}\n\nFrom Ola, not the person: Ola’s own model could not finish the person’s request in this conversation, so you are taking it over. Do the work now, in full, building on what is already in the project, and check it; do not ask the person what they want. Their request: ${request}`
-/** A request as the person sees it, and whether it is Ola's nudge. */
+/** A request as the person sees it, and whether Ola sent it. */
 export function nudgeOf(text: string): { request: string; nudge: boolean } {
   if (text.startsWith(HANDOFF_MARK)) return { request: text.slice(HANDOFF_MARK.length).split('\n')[0], nudge: true }
-  if (text.startsWith(FINISH)) return { request: FINISH_REQUEST, nudge: true }
-  return text.startsWith(NUDGE_MARK) ? { request: 'Ola asked its model to run a test of the logic before handing it over.', nudge: true } : { request: text, nudge: false }
+  if (!text.startsWith(NUDGE_MARK)) return { request: text, nudge: false }
+  // An older conversation's OLA-479 turns: "finish as well as you can", or "run a test first".
+  const finish = /chose not to hand this request/.test(text)
+  return { request: finish ? 'Ola asked its model to finish as well as it can and to say plainly what it could not check.' : 'Ola asked its model to run a test of the logic before handing it over.', nudge: true }
 }
 
-const CHANGES = new Set(['write', 'edit', 'patch', 'apply_patch', 'multiedit'])
 type TestStep = { tool: string; status: string; detail: { input: string; output?: string } }
 /**
  * Was this step a test run, and did it pass? Null when no part of its command runs a test. A chain's
  * exit code is its last command's (`ola-test … | tail`), so ola-test's own last line counts too:
  * "N passed, M failed[, K errors]" fails on any failure or error, or when no check passed.
  */
-export function testOutcome(s: TestStep, c = ESCALATE): 'passed' | 'failed' | null {
+export function testOutcome(s: TestStep): 'passed' | 'failed' | null {
   if (s.tool !== 'shell' && s.tool !== 'bash') return null
-  if (!commandParts(s.detail.input).some((p) => c.test.test(p))) return null
+  if (!commandParts(s.detail.input).some((p) => TEST_COMMAND.test(p))) return null
   if (s.status === 'failed') return 'failed'
   const m = [...(s.detail.output ?? '').matchAll(/^(\d+) passed, (\d+) failed(?:, (\d+) errors?)?\s*$/gm)].pop()
   return m && (+m[2] > 0 || +(m[3] ?? 0) > 0 || +m[1] === 0) ? 'failed' : 'passed'
 }
-/** Did a step of this turn run a test? */
-export const testRan = (t: { steps: TestStep[] }, c = ESCALATE) => t.steps.some((s) => testOutcome(s, c) !== null)
-/**
- * During a run or after it, by what can be seen: failed test rounds, the same step again with nothing
- * changed in between (a file written again with the same words counts), replies cut off at the length limit.
- */
-export function escalation(t: { request: string; steps: TestStep[]; cutOff?: number }, c = ESCALATE): Escalation | null {
-  if ((t.cutOff ?? 0) >= c.lengthHits) return 'length'
-  const failedTests = t.steps.filter((s) => testOutcome(s, c) === 'failed').length
-  if (failedTests >= c.failedTestRounds) return 'tests'
-  const seen = new Map<string, number>()
-  for (const s of t.steps) {
-    if (!s.detail.input) continue
-    const key = `${s.tool}\n${s.detail.input}`
-    const n = (seen.get(key) ?? 0) + 1
-    if (n >= c.sameSteps) return 'loop'
-    if (CHANGES.has(s.tool)) for (const k of [...seen.keys()]) if (!CHANGES.has(k.split('\n')[0])) seen.delete(k)
-    seen.set(key, n)
-  }
-  return null
-}
 
 /** Why Ola suggests handing the request over, in one sentence. */
 export const STRETCH_WHY: Record<StretchReason, string> = {
-  tests: `Ola’s own model’s tests of its work failed ${ESCALATE.failedTestRounds} times.`,
-  loop: `Ola’s own model did the same step ${ESCALATE.sameSteps} times without getting further.`,
-  length: `Ola’s own model’s replies were cut off at its length limit ${ESCALATE.lengthHits} times.`,
-  untested: 'Ola’s own model handed over work that computes without testing it, even when asked to.',
   error: 'Ola’s own model ran into an error on this request.',
   budget: 'Ola’s own model reached the most it may do for one request.',
   tools: 'Three of Ola’s steps in a row did not work.',

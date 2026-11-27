@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// NOTE (OLA-504, Nov 27): the 'with' half measured OLA-479's nudge and hand-off, removed from the page after this measurement; ESCALATIONS, NUDGE, FINISH and ESCALATE.to are no longer in steps.ts, so only the 'without' half still runs as written.
 // Before and after (OLA-480; Bart, voice call Nov 26: "10 tasks ... without this new stuff, and then
 // with this new stuff ... what it produced ... how long it took ... make them progressively more
 // demanding"). The new stuff: Ola's model can run its own tests (OLA-474), and Ola makes a test run
@@ -86,7 +87,7 @@ for (const r of REQUESTS) {
 const STEPS = await import(path.join(AI, 'web/src/lib/steps.ts'))
 const { stripEngines } = await import(path.join(AI, 'web/src/lib/conversation.ts'))
 const { ESCALATE, ESCALATIONS, NUDGE, FINISH, HANDOFF_MARK, STRETCH_WHY, commandParts } = STEPS
-const runsTest = (command) => commandParts(String(command ?? '')).some((p) => ESCALATE.test.test(p))
+const runsTest = (command) => commandParts(String(command ?? '')).some((p) => (STEPS.TEST_COMMAND ?? ESCALATE.test).test(p))
 
 const args = process.argv.slice(2)
 const arg = (n, d) => (args.includes(n) ? args[args.indexOf(n) + 1] : d)

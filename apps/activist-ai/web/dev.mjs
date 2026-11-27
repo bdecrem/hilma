@@ -144,8 +144,7 @@ if (process.env.OLA_DEV_HOSTED !== 'unset' && (FAKE || process.env.OLA_DEV_HOSTE
   hostedEnv = {
     HOSTED_BASE_URL: FAKE ? `http://127.0.0.1:${h.port}/v1` : 'https://api.together.xyz/v1',
     HOSTED_API_KEY: FAKE ? 'fake-hosted-key-not-a-secret' : upstreamKey,
-    // OLA_DEV_HOSTED_ID: the id the fake hosted model goes by (the web check names ESCALATE.to, so the page may escalate to it).
-    HOSTED_MODEL: FAKE ? process.env.OLA_DEV_HOSTED_ID || 'fake-hosted' : process.env.OLA_DEV_HOSTED_MODEL,
+    HOSTED_MODEL: FAKE ? 'fake-hosted' : process.env.OLA_DEV_HOSTED_MODEL,
     HOSTED_PROVIDER,
     GATEWAY_HOSTED_FILE: path.join(run, 'gateway-hosted'),
     ...(process.env.OLA_DEV_HOSTED_PRICES ? { GATEWAY_HOSTED_PRICES: process.env.OLA_DEV_HOSTED_PRICES } : {}),

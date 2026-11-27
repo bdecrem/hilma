@@ -195,7 +195,7 @@ try {
       await sleep(2500)
       continue
     }
-    // The stretch card (OLA-479): a person who cannot or does not hand over answers "OK" / "Not now",
+    // The stretch card: a person who cannot or does not hand over answers "OK" / "Not now",
     // and Ola's own model gets one more turn to finish (OLA-454: the script used to stop at the card).
     const card = page.locator('.stretch-card').last()
     if ((await card.count()) && (await card.isVisible().catch(() => false))) {
