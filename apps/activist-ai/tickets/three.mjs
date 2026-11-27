@@ -9,7 +9,7 @@
 //   these tests report, change nothing else". Then stop, pass or not.
 // No judge model, no lessons, no queue. The Studio's memory is written to <out>/memory.txt each minute.
 //   apps/activist-ai/tickets/gateway.sh studio-inkling-2-mini   (first)
-//   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case ola-337-deepseek [--time 1500]
+//   node apps/activist-ai/tickets/three.mjs --model studio-inkling-2-mini --case ola-337-deepseek [--time 1500] [--max-usd 1]
 import { writeFileSync, readFileSync, appendFileSync, symlinkSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { here, repo, root, nmRoot, nmOla, MODELS, sh, q, runFolders, opencodeConfig, runOpencode, runTest, gatewayToken, LEAN } from './lib.mjs'
@@ -47,6 +47,8 @@ async function main() {
   const model = args.model, c = JSON.parse(readFileSync(path.join(here, 'cases.json'), 'utf8')).find((x) => x.id === args.case)
   if (!MODELS[model] || !c) { console.error('--model <models.json name> --case <cases.json id>'); process.exit(2) }
   const timeLimit = Number(args.time || 1500), N = 3
+  // A priced model (OpenRouter, Together) stops each try at --max-usd (default $1); the Studio's own models cost nothing.
+  const usdLimit = MODELS[model].in > 0 ? Number(args['max-usd'] || 1) : Infinity
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
   const out = path.join(root, 'three', `${c.id}-${stamp}`)
   const token = gatewayToken()
@@ -91,7 +93,7 @@ async function main() {
     log(`round ${r}: ${N} tries at once, ${timeLimit / 60} min each`)
     return Promise.all(Array.from({ length: N }, async (_, i) => {
       const run = prepare(`r${r}-try${i + 1}`, seedDiff), t0 = Date.now()
-      const s = await runOpencode(run, text, { timeLimit, tokenLimit: Infinity, model, token, lean: true })
+      const s = await runOpencode(run, text, { timeLimit, tokenLimit: Infinity, usdLimit, model, token, lean: true })
       const res = { round: r, try: i + 1, end: s.end, requests: s.requests, minutes: +((Date.now() - t0) / 60000).toFixed(1), final: (s.final || '').slice(0, 500), ...(await score(run)) }
       log(`  round ${r} try ${i + 1}: ${res.pass}/${res.total}, ${res.minutes} min, ${s.end}, change ${res.size} lines`)
       return res
