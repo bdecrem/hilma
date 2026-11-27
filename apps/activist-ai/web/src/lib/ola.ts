@@ -5,7 +5,7 @@
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, NO_LONGER_NEEDED, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
-import { describeApproval, ESCALATE, ESCALATIONS, escalation, handoffWords, NUDGE, precheck, STRETCH_CHECKS, stuckReason, testRan } from './steps.ts'
+import { describeApproval, ESCALATE, ESCALATIONS, escalation, FINISH, FINISH_REQUEST, handoffWords, NUDGE, precheck, STRETCH_CHECKS, stuckReason, testRan } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
@@ -469,6 +469,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     if (answer === 'not_now' || !s.canAct) {
       setState(produce((st) => void ((st.suggestion = null), st.declined.includes(s.reason) || st.declined.push(s.reason))))
       if (s.turnId === null) void sendOla(s.request)
+      // OLA-479: after what Ola counted, its own model finishes the request and says what it could not verify.
+      else if (ESCALATIONS.includes(s.reason)) void sendOla(FINISH)
       return
     }
     if (answer === 'always') {
@@ -609,6 +611,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   function watchStretch() {
     const t = state.turns[state.turns.length - 1]
     if (!t || t.engine === 'claude' || t.engine === 'hosted' || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
+    // The person said "Not now" and Ola's model is finishing on its own: not stopped or asked again.
+    if (t.nudge && t.request === FINISH_REQUEST) return
     const running = t.status === 'working' || t.status === 'sending'
     const force = forced()
     const prev = state.turns[state.turns.length - 2]

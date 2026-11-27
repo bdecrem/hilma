@@ -302,6 +302,38 @@ final class FallbacksTests: XCTestCase {
     XCTAssertEqual(StretchReason(rawValue: "untested"), .untested)
   }
 
+  /// OLA-488: a test whose own last line fails reads as a failed step though the command exited 0, live and from the history.
+  func testAFailedTestRunIsAFailedStep() {
+    let cmd = "cd /work && ola-test calc.js calc.test.js 2>&1 | tail -5"
+    let bad = "ola-test: ran calc.js\n  ERROR: calc.js line 12\n0 passed, 0 failed, 1 error\n"
+    var c = Conversation(sessionID: "s")
+    c.startTurn("make me a tip calculator")
+    for (id, out) in [("t1", bad), ("t2", "8 passed, 0 failed\n")] {
+      c.apply(["type": "session.tool.input.started", "data": ["sessionID": "s", "id": .string(id), "name": "shell"]])
+      c.apply(["type": "session.tool.called", "data": ["sessionID": "s", "id": .string(id), "input": ["command": .string(cmd)]]])
+      c.apply(["type": "session.tool.success", "data": ["sessionID": "s", "id": .string(id), "content": [["type": "text", "text": .string(out)]], "metadata": ["exit": 0]]])
+    }
+    let steps = c.turns.last?.steps ?? []
+    XCTAssertEqual(steps.map(\.status), [.failed, .done], "a test that printed an error shows a check mark")
+    XCTAssertEqual("\(steps.first?.verb ?? "") \(steps.first?.object ?? "")", "Tested calc.js")
+    let turns = Conversation.turns(fromMessages: [
+      ["type": "user", "id": "u1", "text": "make me a tip calculator", "time": ["created": 1]],
+      ["type": "assistant", "id": "a1", "content": [["type": "tool", "id": "p1", "name": "shell", "state": ["status": "completed", "input": ["command": .string(cmd)], "content": [["type": "text", "text": .string(bad)]], "metadata": ["exit": 0]], "time": ["created": 2]]], "time": ["created": 2]],
+    ], directory: nil)
+    XCTAssertEqual(turns.first?.steps.first?.status, .failed, "from the stored history too")
+  }
+
+  /// OLA-479: after "Not now", Ola's own model finishes the request in a turn marked Ola's.
+  func testNotNowHasOlasModelFinish() {
+    XCTAssertEqual(Escalate.nudgeOf(Escalate.finish).request, Escalate.finishRequest)
+    XCTAssertTrue(Escalate.nudgeOf(Escalate.finish).nudge)
+    XCTAssertTrue(Escalate.finish.contains("does not work or was not tested"))
+    var c = Conversation(sessionID: "s")
+    c.startTurn(Escalate.finish)
+    XCTAssertEqual(c.turns.last?.nudge, true)
+    XCTAssertEqual(c.turns.last?.request, Escalate.finishRequest)
+  }
+
   func testTheNudgeIsOlasTurnAndCutOffsAreCounted() {
     var c = Conversation(sessionID: "s")
     c.startTurn("make me a tip calculator")

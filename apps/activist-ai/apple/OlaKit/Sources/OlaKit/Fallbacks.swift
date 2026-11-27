@@ -263,9 +263,13 @@ public enum Escalate {
   /// The one nudge, sent as a request in the model's conversation, marked so the apps show it as Ola's.
   public static let nudgeMark = "<ola-nudge>"
   public static let nudge = "\(nudgeMark)From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed."
+  /// After "Not now" on the card: Ola's own model finishes the request and says what it could not verify (the web's `FINISH`).
+  public static let finish = "\(nudgeMark)From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested."
+  public static let finishRequest = "Ola asked its model to finish as well as it can and to say plainly what it could not check."
   /// A request as the person sees it, and whether it is Ola's nudge.
   public static func nudgeOf(_ text: String) -> (request: String, nudge: Bool) {
-    text.hasPrefix(nudgeMark) ? ("Ola asked its model to run a test of the logic before handing it over.", true) : (text, false)
+    if text.hasPrefix(finish) { return (finishRequest, true) }
+    return text.hasPrefix(nudgeMark) ? ("Ola asked its model to run a test of the logic before handing it over.", true) : (text, false)
   }
 
   /// A checker's test switch (the web's `?escalate=`): the launch argument `-OlaEscalate tests|loop|length|untested`

@@ -456,8 +456,12 @@ export const ESCALATIONS: readonly StretchReason[] = ['tests', 'loop', 'length',
 /** The one nudge (OLA-479), sent as a request in the model's conversation, marked so the page shows it as Ola's. */
 export const NUDGE_MARK = '<ola-nudge>'
 export const NUDGE = `${NUDGE_MARK}From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed.`
+/** After "Not now" on the card (OLA-479): Ola's own model finishes the request and says what it could not verify. */
+export const FINISH = `${NUDGE_MARK}From Ola, not the person: the person chose not to hand this request to a bigger model. Finish it as well as you can, then say plainly in your answer what does not work or was not tested.`
+export const FINISH_REQUEST = 'Ola asked its model to finish as well as it can and to say plainly what it could not check.'
 /** A request as the person sees it, and whether it is Ola's nudge. */
 export function nudgeOf(text: string): { request: string; nudge: boolean } {
+  if (text.startsWith(FINISH)) return { request: FINISH_REQUEST, nudge: true }
   return text.startsWith(NUDGE_MARK) ? { request: 'Ola asked its model to run a test of the logic before handing it over.', nudge: true } : { request: text, nudge: false }
 }
 

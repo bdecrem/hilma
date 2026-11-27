@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, switchOf, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, ESCALATE, escalation, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, ESCALATE, escalation, FINISH, FINISH_REQUEST, NUDGE, nudgeOf, precheck, quotaProblem, runProblem, stepProblem, shortPath, STRETCH_CHECKS, STRETCH_WHY, testRan } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -336,4 +336,28 @@ test('OLA-479: a reply cut off at the length limit is counted, live and in the s
   assert.equal(turns[0].cutOff, 2)
   assert.equal(escalation(turns[0]), 'length')
   assert.equal(turns[1].nudge, true)
+})
+
+test('OLA-488: a test run whose own last line fails reads as a failed step, though the command exited 0', () => {
+  const s = 'ses_488'
+  const state = emptyConversation()
+  state.sessionID = s
+  startTurn(state, 'Build a tiny spreadsheet', 1)
+  const run = (id: string, output: string, at: number) => {
+    applyEvent(state, { type: 'session.tool.input.started', created: at, data: { sessionID: s, id, name: 'shell' } })
+    applyEvent(state, { type: 'session.tool.called', created: at, data: { sessionID: s, id, input: { command: 'cd /work && ola-test calc.js calc.test.js 2>&1 | tail -5' } } })
+    applyEvent(state, { type: 'session.tool.success', created: at + 1, data: { sessionID: s, id, content: [{ type: 'text', text: output }], metadata: { exit: 0 } } })
+  }
+  run('t1', 'ola-test: ran calc.js\n  ERROR: calc.js line 12\n0 passed, 0 failed, 1 error\n', 2)
+  run('t2', '8 passed, 0 failed\n', 4)
+  const [bad, good] = state.turns[0].steps
+  assert.equal(`${bad.verb} ${bad.object}`, 'Tested calc.js')
+  assert.equal(bad.status, 'failed', 'a test that printed an error shows a check mark')
+  assert.match(bad.error!, /did not pass/)
+  assert.equal(good.status, 'done')
+})
+
+test('OLA-479: after "Not now" Ola finishes the request itself, in a turn marked as Ola\'s', () => {
+  assert.deepEqual(nudgeOf(FINISH), { request: FINISH_REQUEST, nudge: true })
+  assert.ok(/does not work or was not tested/.test(FINISH))
 })

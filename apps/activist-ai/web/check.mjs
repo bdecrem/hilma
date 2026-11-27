@@ -1324,7 +1324,7 @@ async function fallbackChecks(engine, label) {
       await card().getByRole('button', { name: 'OK' }).click()
       await dev('/__dev/role?to=owner', 'POST')
     })
-    await check(`${label}: OLA-479, the test switch: ?escalate=tests ends an ordinary run with the card for failed tests; ?escalate=untested nudges the model once, marked as Ola's, then shows the card`, async () => {
+    await check(`${label}: OLA-479, the test switch: ?escalate=tests ends an ordinary run with the card for failed tests, and "Not now" has Ola's own model finish it; ?escalate=untested nudges the model once, marked as Ola's, then shows the card`, async () => {
       const open = async (force) => {
         await pg.goto(`${d.url}?escalate=${force}#/`)
         await pg.waitForSelector('.thing')
@@ -1338,6 +1338,12 @@ async function fallbackChecks(engine, label) {
       const why = await card().locator('.stretch-why').innerText()
       assert(/tests of its work failed 2 times/.test(why) && (await pg.locator('.drawer .turn').count()) === 1, `tests: ${why}`)
       await card().getByRole('button', { name: 'Not now' }).click()
+      // "Not now": Ola's own model finishes the request in one more turn marked Ola's, and is not stopped or asked again.
+      await waitDone(pg)
+      await pg.waitForTimeout(1500)
+      const after = await pg.locator('.drawer .turn').count()
+      const finish = (await pg.locator('.drawer .turn').nth(1).locator('.said-you .who').innerText().catch(() => '')).replace(/\s+/g, ' ')
+      assert(after === 2 && /^Ola /.test(finish) && (await card().count()) === 0, `after Not now: ${after} turns, "${finish}", card ${await card().count()}`)
       await open('untested')
       await ask('Say hello')
       await card().waitFor({ timeout: 60_000 })

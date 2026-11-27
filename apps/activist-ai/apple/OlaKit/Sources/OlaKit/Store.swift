@@ -1107,14 +1107,15 @@ public final class OlaStore {
   /// During an Ola run (OLA-479): what Ola counts reached a threshold, so it stops the run; the
   /// request is handed over (or the card shown) when the run has ended.
   func duringOlaRun(_ id: String, _ t: Turn) {
-    guard t.engine == .ola, t.isRunning, stopping == nil, let why = Escalate.escalation(t), plan(why, sessionID: id) != .nothing, let client else { return }
+    guard t.engine == .ola, t.isRunning, stopping == nil, !(t.nudge == true && t.request == Escalate.finishRequest), let why = Escalate.escalation(t), plan(why, sessionID: id) != .nothing, let client else { return }
     stopping = (id, t.id, why)
     Task { try? await client.interrupt(id) }
   }
 
   /// After an Ola run: did it get stuck, by what can be seen, or by what Ola counted (OLA-479)?
   func afterOlaRun(_ id: String, _ t: Turn) async {
-    guard t.engine == .ola else { return }
+    // The person said "Not now" and Ola's model is finishing on its own: not stopped or asked again.
+    guard t.engine == .ola, !(t.nudge == true && t.request == Escalate.finishRequest) else { return }
     let turns = conversations[id]?.turns ?? []
     // The nudge's turn stands for the person's request before it.
     let request = t.nudge == true && turns.count >= 2 ? turns[turns.count - 2].request : t.request
@@ -1164,6 +1165,8 @@ public final class OlaStore {
       if s.reason == .asked { return }
       declined[s.sessionID ?? "", default: []].insert(s.reason)
       if s.turnID == nil { await sendToOla(s.request) }
+      // OLA-479: after what Ola counted, its own model finishes the request and says what it could not verify.
+      else if Escalate.reasons.contains(s.reason) { await sendToOla(Escalate.finish) }
     }
   }
 

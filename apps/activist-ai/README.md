@@ -2374,7 +2374,10 @@ shows things gets no test, no nudge and no added time. Where it goes is one sett
 is that id (the front desk reads it from `/v1/usage`), so never to a Chinese model. With the hosted
 switch on for the project it just hands over, shown as a hosted turn "outside this machine" with one
 sentence of why; otherwise the stretch card below (Just this once / Always in this project / Not now).
-A checker forces each trigger with `?escalate=tests|loop|length|untested` in the project page's
+Not now on a card for what Ola counted sends Ola's own model one more turn marked as Ola's (`FINISH`):
+finish as well as you can and say plainly what does not work or was not tested; that turn is not
+stopped or asked about again. A test step whose own last line fails ("0 passed, 0 failed, 1 error")
+reads as a failed step, even when the command exited 0 (OLA-488). A checker forces each trigger with `?escalate=tests|loop|length|untested` in the project page's
 address (the next run ends as if Ola had counted that; `untested` goes through the nudge first).
 
 **The stretch card** (`web/src/components/StretchCard.tsx`), in the conversation, the approval
