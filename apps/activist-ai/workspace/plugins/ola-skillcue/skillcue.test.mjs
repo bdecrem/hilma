@@ -360,7 +360,8 @@ test('2.4.0: while a publish is still being checked, a status question gets the 
   assert.match(o, /Do not run `ola-publish status` again/)
   assert.match(o, /never ask the person to open the address/)
   assert.ok(!has(a, `${RULE_HEAD} pending]`) && !has(a, `${RULE_HEAD} link]`), 'neither the pending nor the link rule')
-  assert.ok(has(a, `${NOTE_HEAD} publish]`), 'the publish skill is still loaded')
+  assert.ok(!has(a, `${NOTE_HEAD} publish]`), '2.4.1: no publish skill beside the outcome (it was followed, and Ola published again)')
+  assert.match(o, /publish skill does not apply to this request/)
   assert.equal(JSON.parse(rf(file, 'utf8')).used, true, 'status marked the outcome as shown')
   // the next step of the same request: the same fact, without running status again (it would print a record now)
   const a2 = ev('s-a', 'is my page live yet?')
@@ -388,7 +389,20 @@ test('2.4.0: while a publish is still being checked, a status question gets the 
   await onContext(c, { ...env, OLA_PUBLISH_WAIT: '2' })
   assert.ok(outcome(c).includes('NOT CHECKED YET'), outcome(c))
   assert.ok(outcome(c).includes('That is not the result of the check'))
-  assert.match(outcome(c), /run `ola-publish status` once more/)
+  assert.match(outcome(c), /ask again in a minute or two/)
+  assert.match(outcome(c), /never say you will tell them or check back later/)
+  assert.doesNotMatch(outcome(c), /once more/)
+
+  // 2.4.1 (check #3 on 8790f36fb9ad): the checker's own wording and its neighbours, only while pending
+  const { asksWhilePending } = await import('./index.js')
+  for (const r of ['so can people see my site now or what?', 'is it done?', 'can people open it now', 'whats the status of my page', 'did it work?', 'is it up yet', 'any news?'])
+    assert.ok(asksWhilePending(r), r)
+  for (const r of ['make the heading bigger', 'can you add a photo of the garden', 'is it ok to use blue?']) assert.ok(!asksWhilePending(r), r)
+  reset(); checking()
+  setTimeout(() => put({ state: 'done', live: true, url, shows: 'Quince', count: 1 }), 800)
+  const w = ev('s-w', 'so can people see my site now or what?')
+  await onContext(w, env)
+  assert.ok(outcome(w).includes('Checked: the address answers'), outcome(w))
 
   // (d) not pending: no status run, the link rule as before
   reset(); put({ state: 'done', live: true, url, shows: 'Quince', used: true })

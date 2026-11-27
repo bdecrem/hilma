@@ -98,6 +98,17 @@ export const LINK_ASK = new RegExp([
 // unless it goes on to send or share it ("make me a link I can send").
 export const EDITS_LINK = /\b(?:add|put|insert|include|remove|delete|change|fix|update|edit|make|turn)\b[^.?!\n]{0,30}\b(?:link|url)s?\b(?![^.?!\n]{0,60}\b(?:text|send|share|e-?mail|post|forward|give)\b)/i
 export const asksForLink = (r) => LINK_ASK.test(r) && !EDITS_LINK.test(r)
+// 2.4.1 (OLA-285, check #3 on 8790f36fb9ad): while a publish is still being checked, more ways to ask whether it worked.
+// The checker's "so can people see my site now or what?" matched nothing; "is it done?", "can people open it now",
+// "whats the status of my page" and "did it work?" did not either. Used only while the record says publishing.
+export const STATUS_ASK = new RegExp([
+  String.raw`\bcan (?:people|anyone|others|folks|everyone|they|we|members|neighbou?rs|my [\w-]+|our [\w-]+) (?:see|open|view|visit|find|get to|access|read)\b`,
+  String.raw`\bis (?:it|the (?:page|site|website|publish\w*)) (?:done|up|working|finished|ready|out|there|through)\b`,
+  String.raw`\bdid (?:it|that|the (?:page|site|publish\w*)) (?:work|go through|go up|go live|finish|succeed)\b`,
+  String.raw`\b(?:status|state) of (?:my|the|our|this|that) (?:page|site|website|publish\w*)\b`,
+  String.raw`\b(?:any news|any luck|anything yet|still (?:checking|publishing|going|working))\b`,
+].join('|'), 'i')
+export const asksWhilePending = (r) => asksForLink(r) || STATUS_ASK.test(r)
 // OLA-497: the three skills a person loads by name. On the server the model can no longer call them itself
 // (opencode-system.jsonc denies skill.use for them: on the speed check of Nov 27 the model loaded the designer
 // skill for a kite toy and a tip calculator and read its quick.md and base.css, where plain OpenCode wrote one
@@ -258,8 +269,10 @@ export const outcomeNote = ({ code, out }) =>
   'This is the answer: give it to the person now, in plain words, following what it says (the address exactly as it is there, if it says to give it). ' +
   'Do not read .ola/publish/result.json or any file for the answer, do not run ola-publish for the files again, and never ask the person to open the address to check it themselves. ' +
   (code === 3
-    ? 'It is still being checked: say so (not live, not confirmed yet), then run `ola-publish status` once more as a command of its own and answer from what it prints.'
-    : 'Do not run `ola-publish status` again for this request: its answer is above, and a second run only prints it as a record.')
+    ? 'It is still being checked after Ola waited for it: tell the person exactly that in one or two plain sentences (not live, not confirmed yet), and that they can ask again in a minute or two. ' +
+      'Run nothing else for it (not ola-publish status again, not ola-publish), and never say you will tell them or check back later: Ola cannot do anything after this answer.'
+    : 'Do not run `ola-publish status` again for this request: its answer is above, and a second run only prints it as a record.') +
+  ' Ola\'s publish skill does not apply to this request: do not prepare, check or publish anything.'
 const outcomes = new Map() // sessionID -> { request, note }
 
 export const ruleNote = (rule) => `${RULE_HEAD} ${rule.id}] ${rule.text}`
@@ -332,7 +345,7 @@ export async function onContext(event, env = process.env) {
   const sid = String(event.sessionID || '')
   let fact = outcomes.get(sid)
   if (fact && fact.request !== request) { outcomes.delete(sid); fact = undefined }
-  if (!fact && asksForLink(request) && publishPending(env)) {
+  if (!fact && asksWhilePending(request) && publishPending(env)) {
     const r = await runStatus(env)
     if (r) {
       fact = { request, note: outcomeNote(r) }
@@ -342,6 +355,9 @@ export async function onContext(event, env = process.env) {
   }
   if (fact && !event.system.some((p) => p?.text?.startsWith?.(OUTCOME_HEAD))) event.system.push({ type: 'text', text: fact.note })
   for (const { skill: id, about } of cuesFor(request)) {
+    // 2.4.1 (OLA-285, check #2 on 8790f36fb9ad): with the outcome in front of "is my page live yet?" the publish skill beside
+    // it ("follow it from its first step") was followed instead, and Ola published again. Not with the outcome.
+    if (fact && id === 'publish') continue
     if (alreadyLoaded(event.messages, id)) continue
     if (event.system.some((p) => p?.text?.startsWith?.(`${NOTE_HEAD} ${id}]`))) continue
     const note = noteFor(id, env, about)

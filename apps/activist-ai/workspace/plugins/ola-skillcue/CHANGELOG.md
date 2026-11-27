@@ -50,3 +50,10 @@
   status once more. The pending rule stays only for when the command cannot run (logged). opencode 2.4.2 awaits an async
   context hook (measured: a 115 s wait in the hook, then the model call). Tests: skillcue.test.mjs 16 of 16,
   opencode.check.mjs 11 of 11 (the outcome written 5 s into the request reached the model through real opencode 2.4.2).
+- 2.4.1 (2026-11-27, OLA-285, the checker on release 8790f36fb9ad): with the outcome in front of "is my page live yet?" the
+  publish skill was loaded beside it ("follow it from its first step") and Ola published again: no publish skill with the
+  outcome, and the outcome says the skill does not apply. "so can people see my site now or what?" matched nothing: while
+  the record says publishing, STATUS_ASK also counts "can people see/open", "is it done/up", "did it work", "the status of
+  my page", "any news". Still being checked after the wait ("is it up yet" took 393 s and ended "I'll let you know the
+  moment it finishes"): say so, ask again in a minute or two, run nothing more, never promise to tell them later.
+  Tests: skillcue.test.mjs 16 of 16 (more asserts), opencode.check.mjs 11 of 11.
