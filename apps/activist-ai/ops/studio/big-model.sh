@@ -54,7 +54,7 @@ serve() {  # name port keyfile id
   stop_big; ola_down
   local log=$LOGS/bigmodel-$name.log
   if [[ $kind == mtplx ]]; then
-    nohup mtplx serve --model $p --model-id $id --host 127.0.0.1 --port $port --api-key-file $keyf --context-window $ctx --no-stats-footer --yes > $log 2>&1 &
+    nohup mtplx serve --model $p --model-id $id --host 127.0.0.1 --port $port --api-key-file $keyf --context-window $ctx --no-stats-footer --ssd-session-cache-max-size 8GB --yes > $log 2>&1 &
   elif [[ $kind == llama-ssd ]]; then
     # Larger than memory: the experts stay memory-mapped on the CPU side and are read from the SSD as they
     # are used (--cpu-moe); everything else goes to the GPU. No warm-up run, it would only read the disk.

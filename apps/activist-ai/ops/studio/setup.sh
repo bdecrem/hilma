@@ -205,6 +205,7 @@ model_plist() {
     <string>--api-key-file</string><string>$KEYFILE</string>
     <string>--reasoning-effort</string><string>$MODEL_EFFORT</string>
     <string>--no-stats-footer</string>
+    <string>--ssd-session-cache-max-size</string><string>8GB</string>
     <string>--yes</string>
   </array>
   <key>EnvironmentVariables</key><dict>
