@@ -23,8 +23,9 @@ MODELS=(
   "nemotron|llama|$M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_0.gguf|131072|Nemotron 3.5 Super VL 120B, 4-bit, 72 GB"
   "gpt-oss|llama|$B/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf|131072|gpt-oss-120b, 4-bit, 63 GB"
   "qwen|mtplx|$B/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed|131072|Qwen3.8-Flash-Next, 4-bit, 115 GB on disk, about 83 GB in memory"
-  "inkling-small|llama|$B/Inkling-Small/*UD-IQ2_M*00001-of-*.gguf|65536|Inkling Small (first generation), 2-bit, 82 GB"
-  "deepseek|llama|$B/DeepSeek-V4-Flash/*UD-IQ2_M*00001-of-*.gguf|65536|DeepSeek V4 Flash, 2-bit, 91 GB"
+  "inkling-small|llama|$B/Inkling-Small/UD-IQ2_M/*00001-of-*.gguf|65536|Inkling Small (first generation), 2-bit, 82 GB"
+  "inkling-small-3|llama|$B/Inkling-Small-3bit/UD-IQ3_S/*00001-of-*.gguf|65536|Inkling Small (first generation), 3-bit, 107 GB: a stretch, more than the 100 GB the Studio has free"
+  "deepseek|llama|$B/DeepSeek-V4-Flash/UD-IQ2_M/*00001-of-*.gguf|65536|DeepSeek V4 Flash, 2-bit, 91 GB"
 )
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
 row() { for r in $MODELS; do [[ ${r%%|*} == $1 ]] && { print -r -- $r; return 0 }; done; return 1; }
