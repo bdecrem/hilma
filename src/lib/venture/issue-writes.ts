@@ -49,7 +49,7 @@ export function clean(input: Record<string, unknown>): Fields {
     f.status = input.status as Status
   }
   if (input.priority !== undefined) {
-    if (!['P0', 'P1', 'P2'].includes(input.priority as string)) throw new WriteError('priority must be P0, P1 or P2')
+    if (!['P0', 'P1', 'P2', 'P4'].includes(input.priority as string)) throw new WriteError('priority must be P0, P1, P2 or P4')
     f.priority = input.priority as Issue['priority']
   }
   if (input.area !== undefined) {

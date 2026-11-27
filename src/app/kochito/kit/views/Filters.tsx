@@ -23,6 +23,7 @@ export default function Filters({ action, p, areas }: { action: string; p: Track
         <option value="P0">P0</option>
         <option value="P1">P1</option>
         <option value="P2">P2</option>
+        <option value="P4">P4</option>
       </select>
     </form>
   )

@@ -414,7 +414,7 @@ async function unread() {
 const inboxLine = (a) => `${a.issue_id.padEnd(8)} ${when(a.at).padEnd(20)} ${a.who.padEnd(8)} ${a.kind === 'comment' ? 'comment: ' : ''}${says(a).replace(/\s+/g, ' ')}`
 function validate(f) {
   if (f.area !== undefined && !AREAS[f.area]) die(`area must be one of: ${Object.keys(AREAS).join(', ')}`)
-  if (f.priority !== undefined && !/^P[012]$/.test(f.priority)) die('priority must be P0, P1 or P2')
+  if (f.priority !== undefined && !/^P[0124]$/.test(f.priority)) die('priority must be P0, P1, P2 or P4')
   if (f.status !== undefined && !STATUSES.includes(f.status)) die(`status must be one of: ${STATUSES.join(', ')}`)
   if (f.week !== undefined && f.week !== null && !(f.week >= 1 && f.week <= 4)) die('week must be 1 to 4')
 }

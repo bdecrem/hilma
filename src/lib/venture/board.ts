@@ -28,7 +28,7 @@ export type Issue = {
   title: string
   what: string
   area: Area
-  priority: 'P0' | 'P1' | 'P2'
+  priority: 'P0' | 'P1' | 'P2' | 'P4'
   status: Status
   who: string
   week: number | null

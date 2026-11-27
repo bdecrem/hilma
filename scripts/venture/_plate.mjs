@@ -21,7 +21,7 @@ export const SESSION_DOING_HOLD = 3 * 60 * MIN // while a session is open, a tic
 export const IDLE_AFTER = 60 * MIN
 export const MAX_FAILS = 2 // runs with no commit and no finish, then a comment and the next ticket
 export const MAX_RUNS = 4 // runs on one ticket in all, then the same
-const PRI = { P0: 0, P1: 1, P2: 2 }
+const PRI = { P0: 0, P1: 1, P2: 2, P4: 4 }
 export const CLAIM_PREFIX = 'claim:'
 
 /** Ticket ids in the order the newest plate lists them (its numbered lines only), and the recurring jobs it names. */

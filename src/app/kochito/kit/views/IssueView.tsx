@@ -351,7 +351,7 @@ export default function IssueView({ issue, activity, base, now, user, mock = fal
               <dt>Priority</dt>
               <dd>
                 <select value={i.priority} disabled={busy} aria-label="Priority" onChange={(e) => save({ priority: e.target.value })}>
-                  {['P0', 'P1', 'P2'].map((p) => (
+                  {['P0', 'P1', 'P2', 'P4'].map((p) => (
                     <option key={p}>{p}</option>
                   ))}
                 </select>
