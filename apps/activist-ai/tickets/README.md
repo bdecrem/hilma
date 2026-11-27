@@ -203,3 +203,13 @@ Ola"). The mark is read from the commit body's first words, `Built by Ola on <mo
 `handoff.mjs` writes; the lead keeps that line when merging (`git merge --ff-only` or a cherry-pick
 keeps it). Code: `src/lib/venture/board.ts` (`OLA_BUILT`, `closedOn`); test
 `npx tsx scripts/venture/ola-built-test.ts`.
+
+## The batch chain, as tuned on Nov 27 (OLA-520)
+
+`batch.mjs run` gives Qwen `brief-tests.md` (the job, what a good test has, Ola in half a page) and each
+Inkmini try `brief-fix.md` (six rules). For every bug Qwen writes two files: the test the fixing model sees,
+and a held-back one (`*.held.test.*`) with other examples that it never sees. `did-it-fail.mjs` keeps a test
+only if it fails inside the test on untouched code and its "stays" tests pass today. `three.mjs` puts the
+held-back test in only while scoring a finished try; a try is a fix only if both pass. A second round is told
+how many held-back checks fail and of which kind (too narrow, too broad), never the examples. Changes that
+pass the shown test only are kept as `*.fits-the-test-only.diff.txt`.

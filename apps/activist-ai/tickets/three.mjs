@@ -47,6 +47,20 @@ export function whyEnded(t, cap, events = '') {
   return t.end
 }
 
+// What a seeded second round is told about the held-back tests (written by the test's author, never shown
+// to the model that fixes): how many fail and of which kind, never the examples themselves.
+// h: { pass, total, bug, stays } (failing tests by the start of their name).
+export function heldNote(h) {
+  if (!h || h.pass === h.total) return ''
+  const n = (k, one, many) => `${k} ${k === 1 ? one : many}`
+  const kinds = [h.bug ? `${n(h.bug, 'other example of the same bug still goes', 'other examples of the same bug still go')} wrong (the change is too narrow: it fits the test's examples, not the cause)` : '',
+    h.stays ? `${n(h.stays, 'thing that must stay as it is today now comes', 'things that must stay as they are today now come')} out differently (the change is too broad)` : ''].filter(Boolean)
+  return `Examples you cannot see were run as well, and ${h.total - h.pass} of ${h.total} of those checks fail${kinds.length ? `: ${kinds.join('; and ')}` : ''}. Rework the change so that it follows from the cause.\n\n`
+}
+
+// A test command that ends badly while reporting no failing test (a crash before any test ran) counts as one failure.
+export const tally = (r) => ({ pass: r.pass || 0, total: (r.total || 0) + (r.exit !== 0 && (r.total || 0) === (r.pass || 0) ? 1 : 0) })
+
 if (import.meta.url === `file://${process.argv[1]}`) await main()
 
 async function main() {
@@ -62,6 +76,9 @@ async function main() {
     sh(`mkdir -p ${q(path.dirname(path.join(work, f)))}`)
     sh(c.giveDir ? `cp ${q(path.join(here, c.giveDir, f))} ${q(path.join(work, f))}` : `git -C ${q(repo)} show ${c.commit}:${f} > ${q(path.join(work, f))}`)
   } }
+  // Held-back tests (c.hold, c.holdTests): in the folder only while a finished try is scored.
+  const hold = c?.hold || [], holdTests = c?.holdTests || []
+  const RULES = readFileSync(path.join(here, 'brief-fix.md'), 'utf8').trim()
   if (!MODELS[model] || !c) { console.error('--model <models.json name> --case <cases.json id>'); process.exit(2) }
   const timeLimit = Number(args.time || 1500), N = 3
   // A priced model (OpenRouter, Together) stops each try at --max-usd (default $1); the Studio's own models cost nothing.
@@ -92,20 +109,39 @@ async function main() {
     for (const t of c.tests) {
       const r = await runTest(run, t.name, t.cmd)
       const p = parseTests(readFileSync(path.join(run.dir, `test-${t.name}.txt`), 'utf8'))
-      pass += r.pass || 0; total += r.total || 0; failed.push(...p.failed.map((n) => `${t.name}: ${n}`)); report += p.report + '\n'
+      const y = tally(r); pass += y.pass; total += y.total; failed.push(...p.failed.map((n) => `${t.name}: ${n}`)); report += p.report + '\n'
     }
+    const shown = { pass, total }
     // The change against the untouched code, the given tests left out.
     const diff = sh(`git add -A >/dev/null 2>&1; git diff --cached config -- . ${c.give.map((f) => `':!${f}'`).join(' ')}`, run.work)
     writeFileSync(path.join(run.dir, 'change.diff'), diff)
     const size = diff.split('\n').filter((l) => /^[+-](?![+-]{2} )/.test(l)).length
-    return { pass, total, failed, report: report.trim().slice(0, 4000), size, diff }
+    // The held-back tests, after the change is recorded: put in, run, taken out again.
+    let held = null
+    if (holdTests.length) {
+      held = { pass: 0, total: 0, bug: 0, stays: 0 }
+      for (const f of hold) sh(`mkdir -p ${q(path.dirname(path.join(run.work, f)))} && cp ${q(path.join(here, c.giveDir, f))} ${q(path.join(run.work, f))}`)
+      for (const t of holdTests) {
+        const y = tally(await runTest(run, t.name, t.cmd))
+        const p = parseTests(readFileSync(path.join(run.dir, `test-${t.name}.txt`), 'utf8'))
+        held.pass += y.pass; held.total += y.total
+        for (const n of p.failed) { if (/^stays\b/i.test(n)) held.stays++; else if (/^bug\b/i.test(n)) held.bug++; failed.push(`${t.name}: ${n}`) }
+      }
+      for (const f of hold) sh(`rm -f ${q(path.join(run.work, f))}`)
+      pass += held.pass; total += held.total
+    }
+    return { pass, total, shown, held, failed, report: report.trim().slice(0, 4000), size, diff }
   }
 
-  const ask = (seeded, report) => seeded === null
-    ? `${c.request}\n\nThe ticket's tests are already in place: ${c.give.join(', ')}. Make them pass without changing them, and keep the code's existing tests passing. ` +
-      `Run them yourself: ${c.tests.map((t) => t.cmd).join('; ')}. ${LEAN.reading} Work only in this folder. When it is done, commit your change with git and say in two sentences what you changed.`
-    : `${c.request}\n\n${seeded ? 'Work on this ticket has started: the change so far is committed in this folder. ' : ''}These tests still fail (${c.tests.map((t) => t.cmd).join('; ')}):\n\n${report}\n\n` +
-      `Fix exactly what these tests report, change nothing else. Do not change ${c.give.join(', ')}. ${LEAN.reading} Work only in this folder. When they pass, commit with git and say in one sentence what you changed.`
+  const cmds = c.tests.map((t) => t.cmd).join('; ')
+  const unseen = holdTests.length ? ' When you are done, other examples of the same bug that you cannot see are run as well, and so are checks that what works today still works.' : ''
+  const ask = (seeded, report, held) => seeded === null
+    ? `${c.request}\n\nFix the bug this ticket describes: its cause, for every case of that kind, not only the examples in the ticket and the test. ` +
+      `A test is in place (${c.give.join(', ')}); it shows some examples.${unseen}\n\n${RULES}\n\n` +
+      `Run the tests yourself: ${cmds}. ${LEAN.reading} Work only in this folder. When it is done, commit your change with git and say in two sentences what you changed and why that was the cause.`
+    : `${c.request}\n\n${seeded ? 'Work on this ticket has started: the change so far is committed in this folder. ' : ''}` +
+      (report ? `These tests still fail (${cmds}):\n\n${report}\n\nFix what these tests report. ` : `The tests you can see pass (${cmds}). `) + `${seeded ? heldNote(held) : ''}\n\n${RULES}\n\n` +
+      `Do not change ${c.give.join(', ')}. ${LEAN.reading} Work only in this folder. When it is right, commit with git and say in one sentence what you changed.`
 
   async function round(r, seedDiff, text) {
     log(`round ${r}: ${N} tries at once, ${timeLimit / 60} min each`)
@@ -114,7 +150,7 @@ async function main() {
       const s = await runOpencode(run, text, { timeLimit, tokenLimit: Infinity, usdLimit, model, token, lean: true })
       const res = { round: r, try: i + 1, end: s.end, requests: s.requests, minutes: +((Date.now() - t0) / 60000).toFixed(1), final: (s.final || '').slice(0, 500), ...(await score(run)) }
       res.why = whyEnded(res, steps || 60, readFileSync(path.join(run.dir, 'events.jsonl'), 'utf8'))
-      log(`  round ${r} try ${i + 1}: ${res.pass}/${res.total}, ${res.minutes} min, ${res.why}, change ${res.size} lines`)
+      log(`  round ${r} try ${i + 1}: ${res.pass}/${res.total}${res.held ? ` (shown ${res.shown.pass}/${res.shown.total}, held back ${res.held.pass}/${res.held.total})` : ''}, ${res.minutes} min, ${res.why}, change ${res.size} lines`)
       return res
     }))
   }
@@ -135,7 +171,7 @@ async function main() {
   const k = pick(r1, base)
   const seed = k >= 0 ? r1[k] : null
   log(k >= 0 ? `round 2 starts from try ${k + 1} (${seed.pass}/${seed.total}, ${seed.size} lines)` : `no try beat the untouched code (${base.pass}): round 2 starts from the untouched code`)
-  const r2 = await round(2, seed ? seed.diff : null, ask(!!seed, (seed || base).report)); rows.push(...r2)
+  const r2 = await round(2, seed ? seed.diff : null, ask(!!seed, (seed || base).report, seed?.held)); rows.push(...r2)
   if (win(r2)) { const w = win(r2); done(`fixed: round 2 (from ${seed ? `try ${k + 1}` : 'the untouched code'}), try ${w.try}, ${w.size} changed lines (${path.join(out, `r2-try${w.try}`, 'change.diff')})`) }
   const cut = r2.every((t) => /allowance|quota/.test(t.why))
   done(`not fixed: best ${best(r1)}/${base.total} in round 1; ${cut ? 'round 2 cut off by the model connection\'s allowance, not measured' : `${best(r2)}/${base.total} in round 2`} (from ${seed ? `try ${k + 1}` : 'the untouched code'})`)

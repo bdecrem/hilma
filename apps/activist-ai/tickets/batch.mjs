@@ -10,7 +10,8 @@
 //      person's call; --skip records the ones that are not, with a word of why. Commit and push.
 //   2. run (on the Studio, nohup):
 //        node apps/activist-ai/tickets/batch.mjs run batches/batch-<k>.txt
-//      Qwen (one run, 30 min, 80 steps) reads the ten and writes failing tests for two; Ola's own model is
+//      Qwen (one run, 30 min, 150 steps, its assignment brief-tests.md) reads the ten and writes for two a failing
+//      test and a held-back test the fixing model never sees; Ola's own model is
 //      put back; did-it-fail.mjs keeps a test only if it fails inside the test on the untouched code; each
 //      kept test goes to three.mjs (three Inkmini tries, a second round if none passes), one bug after the
 //      other. ~/ola-trials/batches/batch-<k>/summary.txt at the end; the changes that passed their tests in
@@ -30,17 +31,10 @@ const seen = () => existsSync(seenFile) ? JSON.parse(readFileSync(seenFile, 'utf
 const trk = (a) => tracker(a, process.env.OLA_TICKETS_TRACKER)
 const PATHS = ['CLAUDE.md', 'package.json', 'apps/activist-ai', ':!apps/activist-ai/apple', ':!apps/activist-ai/opencode-fork', ':!apps/activist-ai/site', ':!apps/activist-ai/brand']
 
-// The same request as the morning run that worked (Nov 27, 13:16), plus TESTS.json so the check can read it.
-export const ASK = 'Here are ten bugs. For each, say in one line whether a small model could fix it. Then choose the TWO for which you can write a good test, ' +
-  'and for each write one test file that fails on this code because of the bug and would pass once the bug is fixed. Put each test next to the tests ' +
-  'of that part of the code, in the style of the tests already there, runnable with one node command. Do not fix the bugs. End with a file TESTS.md ' +
-  'naming for each of the two: the bug id, the test file, the exact command to run it, and what it checks; and a file TESTS.json, a JSON array of the two: ' +
-  '[{"bug": "OLA-…", "file": "<test file, from this folder>", "cmd": "<the exact command, run from this folder>"}].' +
-  // Nov 27, after the review of the first three fixes (patches/ready/REVIEW-2026-11-27.md): tests made of the
-  // ticket's own sentences let a fix pass by adding those phrases, and the fixes came out too broad.
-  ' Each test must also hold (a) at least three inputs that must NOT change behavior: near-misses that share words with ' +
-  "the bug's sentences but mean something else, so a fix that is too broad fails; these must pass on today's code; and " +
-  "(b) at least two inputs that say the same thing as the ticket in other words, so a fix cannot pass by adding the ticket's exact phrases."
+// Qwen's whole assignment (the job, what a good test has, Ola in half a page). Nov 27: after the review of the
+// first three fixes (patches/ready/REVIEW-2026-11-27.md: tests made of the ticket's own sentences, fixes that
+// were lists of phrases) and after batch M (80 steps spent finding the code, one test, never run).
+export const ASK = readFileSync(path.join(here, 'brief-tests.md'), 'utf8').trim()
 
 if (cmd === 'pick') pick()
 else if (cmd === 'run') await run(path.resolve(rest[0]))
@@ -92,7 +86,7 @@ async function run(file) {
     const ask = path.join(out, 'ask.txt'); writeFileSync(ask, ASK)
     if (run([BM, 'start', 'qwen']).status !== 0) { log('qwen did not start'); run([BM, 'back']); process.exit(1) }
     gw = gateway('studio-qwen3.8-flash-next')
-    const wt = run(['node', path.join(here, 'write-tests.mjs'), '--model', 'studio-qwen3.8-flash-next', '--bugs', file, '--ask', ask, '--time', '1800', '--steps', '80'], env).stdout
+    const wt = run(['node', path.join(here, 'write-tests.mjs'), '--model', 'studio-qwen3.8-flash-next', '--bugs', file, '--ask', ask, '--time', '1800', '--steps', '150'], env).stdout
     stop(gw); run([BM, 'back']); log(wt.trim())
     wdir = (wt.match(/^dir (.*)$/m) || [])[1]
   }
@@ -117,6 +111,8 @@ async function run(file) {
       const tdir = readdirSync(path.join(root, 'three')).filter((d) => d.startsWith(`${c.id}-`)).sort().pop()
       const res = JSON.parse(readFileSync(path.join(root, 'three', tdir, 'result.json'), 'utf8'))
       for (const t of res.tries.filter((t) => t.total > 0 && t.pass === t.total)) copyFileSync(path.join(root, 'three', tdir, `r${t.round}-try${t.try}`, 'change.diff'), path.join(out, 'patches', `${c.bug}-round${t.round}-try${t.try}.diff`))
+      // Passed the test it could see and failed the held-back one: kept apart, for whoever reviews.
+      for (const t of res.tries.filter((t) => t.held && t.shown.total > 0 && t.shown.pass === t.shown.total && t.held.pass < t.held.total)) copyFileSync(path.join(root, 'three', tdir, `r${t.round}-try${t.try}`, 'change.diff'), path.join(out, 'patches', `${c.bug}-round${t.round}-try${t.try}.fits-the-test-only.diff.txt`))
       results.push({ ...c, dir: path.join(root, 'three', tdir), ...res })
     }
     stop(gw)
@@ -130,7 +126,7 @@ async function run(file) {
   writeFileSync(path.join(out, 'patches', 'README.txt'), `Changes that passed their tests. Not reviewed, not applied: Bart picks which he wants first.\n\n${patches.join('\n') || '(none)'}\n`)
   const s = [`${k}: ${file}`, `Qwen (${qrun.model} at ${qrun.ref.slice(0, 8)}): ${qrun.end}, ${qrun.requests} calls, ${qrun.minutes} min; tokens ${qrun.tokens_in} new in + ${qrun.tokens_cached} cached in + ${qrun.tokens_out} out`,
     `Qwen's answer:\n${readFileSync(path.join(wdir, 'final.txt'), 'utf8')}`, `\nThe did-it-fail check on the untouched code:\n${dif.trim() || '(no TESTS.json: no tests)'}`,
-    ...results.map((r) => `\n${r.bug} (${r.id}): ${r.line}\n  untouched code ${r.base.pass}/${r.base.total}\n${r.tries.map((t) => `  round ${t.round} try ${t.try}: ${t.pass}/${t.total}, ${t.minutes} min, ${t.end}, change ${t.size} lines`).join('\n')}`),
+    ...results.map((r) => `\n${r.bug} (${r.id}): ${r.line}\n  untouched code ${r.base.pass}/${r.base.total}\n${r.tries.map((t) => `  round ${t.round} try ${t.try}: ${t.pass}/${t.total}${t.held ? ` (shown ${t.shown.pass}/${t.shown.total}, held back ${t.held.pass}/${t.held.total})` : ''}, ${t.minutes} min, ${t.why || t.end}, change ${t.size} lines${t.size ? '' : `; it said: ${(t.final || '').replace(/\s+/g, ' ').slice(0, 200)}`}`).join('\n')}`),
     `\nPatches (passed their tests, not reviewed, not applied): ${patches.length ? patches.map((p) => path.join(out, 'patches', p)).join(', ') : 'none'}`,
     `Peak memory used on the Studio: ${peak} GB of 128`]
   writeFileSync(path.join(out, 'summary.txt'), s.join('\n') + '\n')
@@ -146,12 +142,16 @@ function makeCase(r, wdir, ref, out, file) {
   copyFileSync(path.join(work, r.file), path.join(giveDir, r.file))
   const src = readFileSync(path.join(work, r.file), 'utf8'), tdir = path.dirname(r.file)
   const imports = [...src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)].map((m) => path.normalize(path.join(tdir, m[1])))
-  const siblings = readdirSync(path.join(work, tdir)).filter((f) => /\.test\.m?js$/.test(f) && path.join(tdir, f) !== path.normalize(r.file))
+  const useHeld = r.held && r.heldVerdict === 'fails'
+  if (useHeld) { mkdirSync(path.dirname(path.join(giveDir, r.held)), { recursive: true }); copyFileSync(path.join(work, r.held), path.join(giveDir, r.held)) }
+  const notes = [r.where && `Where the cause lives, according to whoever wrote the test (check it, it may be incomplete): ${r.where}`, r.cause && `The cause as they see it: ${r.cause}`].filter(Boolean).join('\n')
+  const siblings = readdirSync(path.join(work, tdir)).filter((f) => /\.test\.m?js$/.test(f) && !/\.held\.test\./.test(f) && path.join(tdir, f) !== path.normalize(r.file))
     .filter((f) => { const t = readFileSync(path.join(work, tdir, f), 'utf8'); return [...t.matchAll(/from\s+['"](\.[^'"]+)['"]/g)].some((m) => imports.includes(path.normalize(path.join(tdir, m[1])))) })
     .slice(0, 3)
   const text = readFileSync(file, 'utf8'), at = text.indexOf(`${bug} `), words = at >= 0 ? text.slice(at, text.indexOf('\n\n', at) > 0 ? text.indexOf('\n\n', at) : undefined) : bug
   const c = { id, ticket: bug, base: ref, level: 'batch', note: `OLA-520 batch: test written by Qwen, failed inside the test on the untouched code`,
-    request: `Ticket ${words.trim()}\n\nA test for it is at ${r.file}, run it with: ${r.cmd}`,
+    request: `Ticket ${words.trim()}\n\nA test for it is at ${r.file}, run it with: ${r.cmd}${notes ? `\n\n${notes}` : ''}`,
+    ...(useHeld ? { hold: [r.held], holdTests: [{ name: 'held-back', cmd: r.heldCmd }] } : {}),
     give: [r.file], giveDir: path.relative(here, giveDir),
     tests: [{ name: 'bug-test', cmd: r.cmd }, ...siblings.map((f) => ({ name: f.replace(/\W+/g, '-'), cmd: `cd ${q(tdir)} && node --test ${q(f)}` }))], paths: PATHS }
   const f = path.join(out, `${id}.json`); writeFileSync(f, JSON.stringify(c, null, 2))

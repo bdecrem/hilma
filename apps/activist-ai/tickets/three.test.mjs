@@ -1,7 +1,7 @@
 // three.mjs's picking rule and test parsing (OLA-520).   node apps/activist-ai/tickets/three.test.mjs
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { pick, parseTests } from './three.mjs'
+import { heldNote, tally, pick, parseTests } from './three.mjs'
 
 const base = { pass: 50, failed: ['a', 'b', 'c', 'd'] }
 
@@ -34,4 +34,18 @@ test('whyEnded names the step cap, the allowance and no edit', async () => {
   assert.equal(whyEnded({ end: 'model_error', requests: 50, size: 0 }, 60, '{"type":"insufficient_quota"}'), "cut off: the model connection's allowance is used up")
   assert.equal(whyEnded({ end: 'done', requests: 12, size: 0 }, 60), 'stopped with no edit')
   assert.equal(whyEnded({ end: 'done', requests: 30, size: 40 }, 60), 'done')
+})
+
+test('the note about held-back tests gives counts by kind and never an example', () => {
+  assert.equal(heldNote(null), '')
+  assert.equal(heldNote({ pass: 6, total: 6, bug: 0, stays: 0 }), '')
+  const n = heldNote({ pass: 3, total: 6, bug: 2, stays: 1 })
+  assert.match(n, /3 of 6/); assert.match(n, /2 other examples of the same bug still go wrong/); assert.match(n, /1 thing that must stay as it is today now comes out differently/)
+  assert.match(heldNote({ pass: 0, total: 1, bug: 0, stays: 0 }), /1 of 1 of those checks fail\. Rework/)
+})
+
+test('a test command that crashes before any test counts as one failure', () => {
+  assert.deepEqual(tally({ exit: 1, pass: null, total: null }), { pass: 0, total: 1 })
+  assert.deepEqual(tally({ exit: 1, pass: 3, total: 5 }), { pass: 3, total: 5 })
+  assert.deepEqual(tally({ exit: 0, pass: 5, total: 5 }), { pass: 5, total: 5 })
 })

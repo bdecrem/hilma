@@ -2,11 +2,13 @@
 // The did-it-fail check (OLA-520 run two), no model: each test a write-tests.mjs run names in TESTS.json is
 // run on the untouched code (the run's work folder holds only the new tests; any other change is reported),
 // in the same sandbox, and read as one of: fails inside the test (good), passes (not a test of the bug),
-// breaks before testing (missing import, syntax error, no tests found).
+// breaks before testing (missing import, syntax error, no tests found), wrong (a test named "stays" fails
+// on today's code). The held-back test (TESTS.json held, heldCmd) is read the same way.
 //   node apps/activist-ai/tickets/did-it-fail.mjs <write-tests run dir>     (writes <dir>/did-it-fail.json)
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { sh, runTest } from './lib.mjs'
+import { parseTests } from './three.mjs'
 
 export function verdict({ exit, pass, total }, out) {
   if (exit === 0) return 'passes'
@@ -21,8 +23,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const run = { dir, work, home: path.join(dir, 'home') }
   // No TESTS.json (batch M, Nov 27: the step cap came before it): the test files the run added, each run
   // with node --test; the bug id is the first OLA-n in the file.
-  const added = () => sh('git add -A >/dev/null 2>&1; git diff --cached --name-only --diff-filter=A config', work).trim().split('\n').filter((f) => /\.test\.m?js$/.test(f))
-    .map((f) => ({ bug: (readFileSync(path.join(work, f), 'utf8').match(/OLA-\d+/) || ['?'])[0], file: f, cmd: `node --test ${f}`, why: 'no TESTS.json: found as an added test file' }))
+  const isHeld = (f) => /\.held\.test\.\w+$/.test(f)
+  const added = () => sh('git add -A >/dev/null 2>&1; git diff --cached --name-only --diff-filter=A config', work).trim().split('\n').filter((f) => /\.test\.(m?js|ts)$/.test(f) && !isHeld(f))
+    .map((f) => ({ ...(existsSync(path.join(work, f.replace(/\.test\.(\w+)$/, '.held.test.$1'))) ? { held: f.replace(/\.test\.(\w+)$/, '.held.test.$1'), heldCmd: `node --test ${f.replace(/\.test\.(\w+)$/, '.held.test.$1')}` } : {}), bug: (readFileSync(path.join(work, f), 'utf8').match(/OLA-\d+/) || ['?'])[0], file: f, cmd: `node --test ${f}`, why: 'no TESTS.json: found as an added test file' }))
   const list = existsSync(path.join(work, 'TESTS.json')) ? JSON.parse(readFileSync(path.join(work, 'TESTS.json'), 'utf8')) : added()
   // Anything the run changed besides adding files: the code under test would not be untouched.
   const changed = sh('git add -A >/dev/null 2>&1; git diff --cached --name-status config', work).trim().split('\n').filter((l) => l && !l.startsWith('A'))
@@ -34,9 +37,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const name = `check-${String(t.bug).replace(/\W+/g, '-')}`, t0 = Date.now()
     const r = await runTest(run, name, t.cmd, 120000)
     const out = readFileSync(path.join(dir, `test-${name}.txt`), 'utf8')
-    rows.push({ bug: t.bug, file: t.file, cmd: t.cmd, verdict: verdict(r, out), exit: r.exit, pass: r.pass, total: r.total, seconds: +((Date.now() - t0) / 1000).toFixed(1), why: t.why })
+    // A "stays" test says what must keep working; one that fails on today's code is wrong about today.
+    const wrong = (o) => parseTests(o).failed.some((n) => /^stays\b/i.test(n))
+    const row = { bug: t.bug, file: t.file, cmd: t.cmd, verdict: verdict(r, out) === 'fails' && wrong(out) ? 'wrong' : verdict(r, out), exit: r.exit, pass: r.pass, total: r.total, seconds: +((Date.now() - t0) / 1000).toFixed(1), why: t.why, where: t.where, cause: t.cause }
+    // The held-back test, kept only if it too fails inside the test and its "stays" tests pass today.
+    if (t.heldCmd && t.held && existsSync(path.join(work, t.held))) {
+      const hr = await runTest(run, `${name}-held`, t.heldCmd, 120000), ho = readFileSync(path.join(dir, `test-${name}-held.txt`), 'utf8')
+      Object.assign(row, { held: t.held, heldCmd: t.heldCmd, heldVerdict: verdict(hr, ho) === 'fails' && wrong(ho) ? 'wrong' : verdict(hr, ho), heldPass: hr.pass, heldTotal: hr.total })
+    }
+    rows.push(row)
   }
   writeFileSync(path.join(dir, 'did-it-fail.json'), JSON.stringify({ changed, rows }, null, 2))
   if (changed.length) console.log(`note: the run changed existing files: ${changed.join(', ')}`)
-  for (const r of rows) console.log(`${r.bug}: ${r.verdict}${r.file ? ` (${r.file}, exit ${r.exit}, ${r.pass}/${r.total}, ${r.seconds} s)` : ` (${r.why})`}`)
+  for (const r of rows) console.log(`${r.bug}: ${r.verdict}${r.file ? ` (${r.file}, exit ${r.exit}, ${r.pass}/${r.total}, ${r.seconds} s)` : ` (${r.why})`}${r.held ? `; held-back test: ${r.heldVerdict} (${r.held}, ${r.heldPass}/${r.heldTotal})` : r.file ? '; no held-back test' : ''}`)
 }
