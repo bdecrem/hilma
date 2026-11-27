@@ -15,4 +15,8 @@ say "waiting for the night's test and the catch-up to end"
 sleep 90
 while pgrep -f "studio/big-models-night.sh|studio/big-models-hard.sh" > /dev/null; do sleep 30; done
 TASKS=spreadsheet,chess,sudoku TIME=1800 TICKETS=ola-337-deepseek TICKET_TIME=2400 $here/big-models-hard.sh deepseek-3
+# Then Inkling Small (first generation) from its MLX 2-bit build, 88 GB: the one model of Bart's list the
+# night could not run (its GGUF loads in no llama.cpp). Everything the other models ran; skipped if it
+# does not start.
+TASKS=website,memory-game,data,debug,spreadsheet,chess,blocks,markdown,calendar,sudoku TICKETS=ola-351-ready,ola-337-deepseek,ola-283-select $here/big-models-hard.sh inkling-small
 say "stretch finished"
