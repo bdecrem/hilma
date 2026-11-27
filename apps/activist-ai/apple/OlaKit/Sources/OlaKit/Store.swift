@@ -543,6 +543,17 @@ public final class OlaStore {
     if new == nil { nextOnly = false }
   }
 
+  /// OLA-421 #5: a plain-words request for Claude where Claude cannot run (the phone) is refused
+  /// before the box is cleared, so the words stay and "ask Ola to do it here" is one edit away.
+  /// Sets the problem line and returns true when it refuses.
+  public func refusesClaudeHere(_ text: String) -> Bool {
+    let typed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard case .none = SlashCommand.parse(typed), nextEngine == .ola, ClaudeAsk.detect(typed) != nil,
+          claudeLauncher == nil || claudeUnavailable != nil else { return false }
+    problem = Problem(text: claudeUnavailable ?? "Claude is not available here.")
+    return true
+  }
+
   /// What Bart typed: a slash command, or a request for the engine chosen beside the composer.
   public func send(_ text: String) async {
     let typed = text.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -217,6 +217,25 @@ final class FallbacksTests: XCTestCase {
 
   final class Armed { var log: [Bool] = [] }
 
+  /// OLA-421 #5: on the phone (no launcher) a plain-words Claude request is refused before the box
+  /// is cleared, with the line that says why; anything else, a command, or a Mac with Claude goes on.
+  func testPhoneRefusesClaudeBeforeClearingTheBox() {
+    let store = OlaStore(fixture: Fixture.main)
+    store.claudeLauncher = nil
+    store.claudeUnavailable = "Claude Code can't be started from your iPhone: it runs only on your Mac. Ask for it in Ola on your Mac, or ask Ola to do it here."
+    XCTAssertTrue(store.refusesClaudeHere("have claude code do this one: write a file called hello.txt that says hi"))
+    XCTAssertEqual(store.problem?.text, store.claudeUnavailable)
+    store.problem = nil
+    XCTAssertTrue(store.refusesClaudeHere("can you get claude code to make me a hello.txt file with the word hi in it"))
+    store.problem = nil
+    XCTAssertFalse(store.refusesClaudeHere("every monday morning, check the city council agenda and tell me what is new"))
+    XCTAssertFalse(store.refusesClaudeHere("/new"))
+    XCTAssertNil(store.problem)
+    store.claudeUnavailable = nil
+    store.claudeLauncher = { _, _, _ in throw OlaError.unreachable("not in a test") }
+    XCTAssertFalse(store.refusesClaudeHere("have claude code do this one: write a file called hello.txt that says hi"), "a Mac with Claude shows the card instead")
+  }
+
   /// Bart, 2026-11-17: "hey can you use claude code for this next thing?" got "I can't use Claude
   /// Code" from the everyday model. Now it is the Claude card, and nothing goes to Ola.
   func testAskingForClaudeInPlainWordsShowsTheCard() async throws {

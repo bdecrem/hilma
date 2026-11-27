@@ -774,6 +774,8 @@ struct ConversationPane: View {
     }
     // An unknown command is not sent: the text stays, and the menu says so.
     if case .unknown = SlashCommand.parse(t.trimmingCharacters(in: .whitespacesAndNewlines)) { return }
+    // Claude asked for where it cannot run (the phone): the red line says why, the words stay (OLA-421).
+    if store.refusesClaudeHere(t) { return }
     draft = ""
     Task { await store.send(t) }
   }
