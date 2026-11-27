@@ -54,7 +54,7 @@ import { sweepDue, getState, setState, pacificDay } from './_state.mjs'
 import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 import { checkDeploys } from './_overrides.mjs'
 import { sshArgs } from './_olassh.mjs'
-import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, mergePlan, pickTicket, planFrom, plateOrder, resumeList } from './_plate.mjs'
+import { CHECKER_QUIET, CLAIM_PREFIX, CLAIM_TTL, MIN, WAIT_PREFIX, afterRun, claimRole, deployGate, deployPending, ideaTickets, isServerFile, leadLine, limitFrom, mergePlan, pickTicket, planFrom, plateOrder, reserveHeld, resumeList } from './_plate.mjs'
 
 // ------------------------------------------------------------------ settings
 const MODEL = 'opus' // every run (Bart, Nov 19: Opus, not Fable); the CLI's alias for the newest Opus
@@ -516,6 +516,7 @@ if (cmd === 'status') {
     console.log(`interactive session: ${session ? `${session.value.host}, heartbeat ${mins(age(session.at))}${age(session.at) < SESSION_FRESH ? ' (open: it answers texts and the board; the runner still works tickets)' : ''}` : 'none seen'}`)
     console.log(`runner: ${runner ? (runner.running ? `RUNNING on ${runner.host} since ${runner.started} (${(runner.why ?? []).join('; ')})` : `idle; last run ended ${runner.ended ?? 'never'}${runner.last ? `, ${runner.last.ticket}: ${runner.last.outcome}` : ''}`) : 'never ran'}`)
     console.log(`claims: ${Object.entries(live).map(([id, c]) => `${id} by ${c.who}, renewed ${mins(age(c.at))}`).join('; ') || 'none'}`)
+    { const kept = reserveHeld((await getState(db, 'plan_usage'))?.value); if (kept) console.log(`no ticket work until ${at(kept.until)}: ${kept.text}`) }
     if (limit) console.log(`paused: ${limit.kind === 'error' ? 'a run failed to start' : 'the usage limit'} until ${at(limit.until)} (${limit.text})`)
     console.log(`to answer: ${why.length ? why.join('; ') : 'nothing'}`)
   }
@@ -603,6 +604,12 @@ if (cmd === 'status') {
       if (await answerRun(seen, answer)) break
       if (force) break
       continue
+    }
+    // OLA-478: past the reserve line, the rest of the plan's window is for voice, texts and minutes
+    const kept = force ? null : reserveHeld((await getState(db, 'plan_usage'))?.value)
+    if (kept) {
+      say(`no ticket work: ${kept.text}; starting again ${at(kept.until)}`)
+      break
     }
     if (await replayDue()) {
       say('the nightly replay test')

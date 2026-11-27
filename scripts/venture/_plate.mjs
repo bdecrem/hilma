@@ -226,6 +226,25 @@ export function limitFrom(out = '', now = Date.now()) {
 // unifiedWindows: { seven_day: { utilization, resetsAt, status }, five_hour?: … } }. The latest one is
 // the plan's state; venture_state "plan_usage" keeps it, so every machine reads the same numbers.
 
+// OLA-478, Nov 26: the runner's ticket work used the mini's whole weekly allowance by Thursday, and
+// Kit's voice replies, the text replies and the call minutes, which run on the same login on the mini,
+// stopped with it ("You've hit your weekly limit · resets 2am"; Bart wanted a voice call at 11 am).
+// The last part of each window is kept for them: past these shares the runner starts no ticket work
+// (and no NOW.md or replay run) until the window resets; runs that answer what Bart sent still go.
+export const RESERVE = { five_hour: 0.8, seven_day: 0.85, seven_day_opus: 0.85, seven_day_sonnet: 0.85 }
+
+/** The window whose share is past the reserve line, or null: { window, utilization, until (ISO), text }. A window past its reset does not count. */
+export function reserveHeld(plan, now = Date.now(), lines = RESERVE) {
+  let held = null
+  for (const [k, w] of Object.entries(plan?.windows ?? {})) {
+    if (!(k in lines) || w.utilization == null || w.utilization < lines[k]) continue
+    if (w.resetsAt && w.resetsAt <= now) continue
+    const until = w.resetsAt ?? now + 30 * MIN
+    if (!held || until > Date.parse(held.until)) held = { window: k, utilization: w.utilization, until: new Date(until).toISOString(), text: `${WINDOW_NAMES[k] ?? k} at ${pct(w.utilization)}, past the ${pct(lines[k])} kept for voice, texts and minutes` }
+  }
+  return held
+}
+
 /** The plan's windows the run's last rate_limit_event reported, or null: { status, windows: { [name]: { utilization, resetsAt (ms), status } }, at }. */
 export function planFrom(out = '', now = Date.now()) {
   let info = null
