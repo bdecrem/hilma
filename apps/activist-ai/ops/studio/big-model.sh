@@ -16,8 +16,10 @@
 set -u
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 M=$HOME/ola-models; B=$M/big; LOGS=$HOME/Library/Logs/ola; PIDF=$HOME/.ola/bigmodel.pid
-# The first-generation Inkling Small GGUF loads in no llama.cpp (it knows 'inkling2', not 'inkling'), so
-# it is served from its MLX build by mtplx, whose code names its type (inkling_mm_model).
+# Nov 27: Inkling Small (first generation) and both DeepSeek builds were deleted (Bart: "Yes. And also dump
+# deepseek"): no engine here runs the first, and DeepSeek did worse than Inkling 2 Mini. In their place
+# Inkling 2 Small at 3-bit (285 GB, more than memory: llama.cpp pages its experts from the SSD), for
+# overnight work where speed does not matter.
 LLAMA=$HOME/llama-head/build/bin/llama-server
 D=gui/$(id -u)
 # name | kind | path (a file, or for a split GGUF its first part; a folder for mtplx) | context | what it is
@@ -25,9 +27,7 @@ MODELS=(
   "nemotron|llama|$M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_0.gguf|131072|Nemotron 3.5 Super VL 120B, 4-bit, 72 GB"
   "gpt-oss|llama|$B/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf|131072|gpt-oss-120b, 4-bit, 63 GB"
   "qwen|mtplx|$B/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed|131072|Qwen3.8-Flash-Next, 4-bit, 115 GB on disk, about 83 GB in memory"
-  "inkling-small|mtplx|$B/Inkling-Small-mlx-2bit|65536|Inkling Small (first generation), MLX 2-bit, 88 GB"
-  "deepseek|llama|$B/DeepSeek-V4-Flash/UD-IQ2_M/*00001-of-*.gguf|65536|DeepSeek V4 Flash, 2-bit, 91 GB"
-  "deepseek-3|llama|$B/DeepSeek-V4-Flash-3bit/UD-IQ3_XXS/*00001-of-*.gguf|65536|DeepSeek V4 Flash, 3-bit, 104 GB: a stretch, a little more than the Studio has free (Bart's yes, Nov 26, for this test)"
+  "inkling2-small|llama|$B/Inkling-2-Small/UD-Q3_K_XL/*00001-of-*.gguf|65536|Inkling 2 Small, 3-bit, 285 GB: larger than memory, its experts read from the SSD; slow, for overnight work"
 )
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
 row() { for r in $MODELS; do [[ ${r%%|*} == $1 ]] && { print -r -- $r; return 0 }; done; return 1; }

@@ -9,7 +9,7 @@ export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 here=${0:A:h}; ola=${here:h:h}; BM=$here/big-model.sh
 export GATEWAY_TOTAL_TIMEOUT_MS=2400000 GATEWAY_FIRST_BYTE_TIMEOUT_MS=1800000 GATEWAY_READ_TIMEOUT_MS=600000
 say() { echo "$(date '+%b %d %H:%M:%S') $*"; }
-typeset -A alias=(ola studio-inkling-2-mini nemotron studio-nemotron-3.5-super gpt-oss studio-gpt-oss-120b qwen studio-qwen3.8-flash-next inkling-small studio-inkling-small deepseek-3 studio-deepseek-v4-flash-3 deepseek studio-deepseek-v4-flash)
+typeset -A alias=(ola studio-inkling-2-mini nemotron studio-nemotron-3.5-super gpt-oss studio-gpt-oss-120b qwen studio-qwen3.8-flash-next inkling-small studio-inkling-small deepseek-3 studio-deepseek-v4-flash-3 deepseek studio-deepseek-v4-flash inkling2-small studio-inkling-2-small)
 gw=""
 finish() { trap - EXIT INT TERM; [[ -n $gw ]] && kill $gw 2>/dev/null; $BM back; say "hard finished"; exit 0; }
 trap finish EXIT INT TERM
