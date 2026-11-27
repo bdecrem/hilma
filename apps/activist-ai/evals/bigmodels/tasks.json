@@ -1,18 +1,76 @@
 [
-  { "id": "website", "kind": "site", "level": 1,
-    "request": "Make a website for the Maple Street Tenants Association: who we are, the next meeting (December 9 at 7 pm in the library's community room), how to join, and a contact form with name, email and message. Make it look good, on a phone too.",
-    "says": ["Maple Street", "December 9|Dec\\.? 9", "7(:00)? ?(pm|p\\.m\\.)", "library"] },
-  { "id": "memory-game", "kind": "app", "level": 2,
-    "request": "make a simple memory game where you flip tiles to find matching pairs" },
-  { "id": "data", "kind": "data", "level": 3, "files": "data",
-    "request": "members.csv in this folder is our member list: 400 rows, typed in by volunteers over three years. Answer four questions from it and write the answers to a file named answers.json, one JSON object with exactly these keys: \"joined_2026\" (how many members joined in 2026), \"dues_by_neighborhood\" (an object: total dues paid per neighborhood; a blank or unreadable amount counts as 0), \"median_dues_active\" (the median dues among active members who have an amount), \"duplicate_emails\" (the sorted list of email addresses, in lowercase, that appear more than once). Then tell me the four answers in plain words." },
-  { "id": "debug", "kind": "engine", "level": 4, "files": "debug",
-    "request": "formula.mjs in this folder is the calculation engine of a small spreadsheet; SPEC.md says what it must do. People report that every formula with a function in it, like =SUM(A1:A3), shows an error instead of a number, and there may be other faults. Find what is wrong and fix it in formula.mjs. Keep the export computeSheet. Test your fix by running the code before you say it works." },
-  { "id": "spreadsheet", "kind": "app", "level": 5,
-    "request": "Build a tiny spreadsheet in one page: a 10 by 20 grid where a cell holds a number, text, or a formula like =A1+B2*3 or =SUM(A1:A5). Everything recalculates as I type, a circular reference shows an error in the cell, and the arrow keys move between cells." },
-  {"id": "chess", "kind": "hard", "level": 6, "request": "Build a chess game in one page for two people sharing the screen. It must only allow legal moves, including castling, en passant and pawn promotion, and say when it is check, checkmate or stalemate."},
-  {"id": "blocks", "kind": "hard", "level": 7, "request": "Make a falling-blocks puzzle game in one page: seven different shapes fall, I move and rotate them with the arrow keys and drop them with space, full rows disappear, and it shows the score, the next piece and game over."},
-  {"id": "markdown", "kind": "hard", "level": 8, "request": "Make a Markdown editor in one page with a live preview beside it, without using any library: headings, bold, italic, links, images, nested lists, quotes, code blocks and tables."},
-  {"id": "calendar", "kind": "hard", "level": 9, "request": "Make a month calendar in one page where I can add events that repeat every day, every week or every month. I can change or delete just one occurrence or the whole series, and everything is still there after I reload the page."},
-  {"id": "sudoku", "kind": "hard", "level": 10, "request": "Make a Sudoku game in one page: each new game is a fresh puzzle that has exactly one solution, it marks an entry that breaks the rules, and a hint button fills in one correct cell."}
+ {
+  "id": "website",
+  "kind": "site",
+  "level": 1,
+  "request": "Make a website for the Maple Street Tenants Association: who we are, the next meeting (December 9 at 7 pm in the library's community room), how to join, and a contact form with name, email and message. Make it look good, on a phone too.",
+  "says": [
+   "Maple Street",
+   "December 9|Dec\\.? 9",
+   "7(:00)? ?(pm|p\\.m\\.)",
+   "library"
+  ]
+ },
+ {
+  "id": "memory-game",
+  "kind": "app",
+  "level": 2,
+  "request": "make a simple memory game where you flip tiles to find matching pairs"
+ },
+ {
+  "id": "data",
+  "kind": "data",
+  "level": 3,
+  "files": "data",
+  "request": "members.csv in this folder is our member list: 400 rows, typed in by volunteers over three years. Answer four questions from it and write the answers to a file named answers.json, one JSON object with exactly these keys: \"joined_2026\" (how many members joined in 2026), \"dues_by_neighborhood\" (an object: total dues paid per neighborhood; a blank or unreadable amount counts as 0), \"median_dues_active\" (the median dues among active members who have an amount), \"duplicate_emails\" (the sorted list of email addresses, in lowercase, that appear more than once). Then tell me the four answers in plain words."
+ },
+ {
+  "id": "debug",
+  "kind": "engine",
+  "level": 4,
+  "files": "debug",
+  "request": "formula.mjs in this folder is the calculation engine of a small spreadsheet; SPEC.md says what it must do. People report that every formula with a function in it, like =SUM(A1:A3), shows an error instead of a number, and there may be other faults. Find what is wrong and fix it in formula.mjs. Keep the export computeSheet. Test your fix by running the code before you say it works."
+ },
+ {
+  "id": "spreadsheet",
+  "kind": "app",
+  "level": 5,
+  "request": "Build a tiny spreadsheet in one page: a 10 by 20 grid where a cell holds a number, text, or a formula like =A1+B2*3 or =SUM(A1:A5). Everything recalculates as I type, a circular reference shows an error in the cell, and the arrow keys move between cells."
+ },
+ {
+  "id": "chess",
+  "kind": "hard",
+  "level": 6,
+  "request": "Build a chess game in one page for two people sharing the screen. It must only allow legal moves, including castling, en passant and pawn promotion, and say when it is check, checkmate or stalemate."
+ },
+ {
+  "id": "blocks",
+  "kind": "hard",
+  "level": 7,
+  "request": "Make a falling-blocks puzzle game in one page: seven different shapes fall, I move and rotate them with the arrow keys and drop them with space, full rows disappear, and it shows the score, the next piece and game over."
+ },
+ {
+  "id": "markdown",
+  "kind": "hard",
+  "level": 8,
+  "request": "Make a Markdown editor in one page with a live preview beside it, without using any library: headings, bold, italic, links, images, nested lists, quotes, code blocks and tables."
+ },
+ {
+  "id": "calendar",
+  "kind": "hard",
+  "level": 9,
+  "request": "Make a month calendar in one page where I can add events that repeat every day, every week or every month. I can change or delete just one occurrence or the whole series, and everything is still there after I reload the page."
+ },
+ {
+  "id": "sudoku",
+  "kind": "hard",
+  "level": 10,
+  "request": "Make a Sudoku game in one page: each new game is a fresh puzzle that has exactly one solution, it marks an entry that breaks the rules, and a hint button fills in one correct cell."
+ },
+ {
+  "id": "papers",
+  "kind": "app",
+  "level": 11,
+  "request": "Build \"Mind, Behavior & Wellbeing: all items\", one page (index.html, no libraries) that fetches new research papers live and lets a reader browse them. Never make anything up: every title, author list, venue, date and abstract comes from the sources and is shown as fetched (strip HTML tags, nothing else). Never show sample or placeholder papers; if a source fails, say so on the page and still show the rest.\n\nSources, fetched in parallel when the reader presses the \"Fetch now\" button, for a time window chosen in a select (24 h / 3 days (default) / 7 days / 14 days):\n1. Europe PMC: https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&resultType=core&synonym=false&pageSize=25&query=<encoded>\n   TERMS = (\"well-being\" OR wellbeing OR happiness OR \"life satisfaction\" OR emotion OR loneliness OR \"decision making\" OR \"mental health\")\n   RANGE = FIRST_PDATE:[YYYY-MM-DD TO YYYY-MM-DD]\n   - Lane \"Preprints\": TITLE_ABS:TERMS AND SRC:PPR AND RANGE AND HAS_ABSTRACT:y\n   - Lane \"Across PubMed\": TITLE:TERMS AND SRC:MED AND RANGE AND HAS_ABSTRACT:y\n   Fields: title, authorString, journalInfo.journal.title, firstPublicationDate, abstractText, doi, source, id. Record link: https://europepmc.org/article/{source}/{id}.\n2. OpenAlex, lane \"Social & behavioral science\": https://api.openalex.org/works?per_page=25&search=<wellbeing OR happiness OR loneliness OR emotion OR \"decision making\" OR \"mental health\">&filter=from_publication_date:X,to_publication_date:Y,has_abstract:true,type:article\n   Rebuild each abstract from abstract_inverted_index by putting every word at its position. Venue is primary_location.source.display_name. Show at most 25 authors, then \"and N more\".\n\nClean-up: drop items without both a title and an abstract. Deduplicate on lowercased DOI after stripping https://doi.org/ and any trailing version suffix such as _v1 or _v2; fall back to the title.\n\nThe page: a header with the title, the time-window select, the \"Fetch now\" button and a status line (\"Fetching...\", then \"N items from M sources\", and any source that failed, by name). Below it, a left rail with a search box, source filters with counts, and topic filters (Wellbeing & happiness, Emotion & mood, Decisions & judgment, Social connection, Mental health; matched by regex on title and abstract); on the right, one card per item: venue, date, the title as a link, authors, the abstract clamped to 3 lines with a \"Read all\" button, and a record link. Each card is an element with class \"card\". Before any fetch show: \"Press Fetch now to pull the latest papers.\"\n\nAlso include a number check as a global function window.checkNumbers(written, source): it pulls every token matching /\\d+(?:[.,]\\d+)*/ from `written`, removes the commas, and returns true only if every one of them appears among the numbers in `source`.\n\nSafety: treat all fetched text as untrusted (insert it with textContent or escape it), and only link URLs that start with https://. Works at 360 px wide, no console errors. You cannot reach the internet while building, so write the fetching carefully from the field names above."
+ }
 ]
