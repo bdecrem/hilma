@@ -40,6 +40,9 @@
 #   --type-only     (mac or phone, --where cloud) each sentence typed, read back from the box and wiped,
 #          never sent: no model, no card (OLA-402 phone, OLA-275 mac; tools/drive-box-test.sh). Passes when
 #          every sentence was whole in the box.
+#   --escalate <why>  (mac) the app starts with -OlaEscalate <why> (tests|loop|length|untested): every
+#          run ends as if Ola had counted that (OLA-486; the web's ?escalate=). A stretch card that comes is
+#          pictured and listed under the sentence's cards in transcript.json, never answered.
 #   A line break in --say is typed as Option-Return (a new line in the box), not Return (OLA-275).
 #   Every Mac run fails when "Try again with" under the latest answer is not all in view (OLA-337).
 #
@@ -62,7 +65,7 @@ fail() { echo "DRIVE FAIL  $*"; exit 1; }
 [ $# -ge 1 ] || { sed -n 2,30p "$0"; exit 2; }
 ORIG=("$@")
 APPKIND="$1"; shift
-WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; export ANSWER_WORDS="" TYPE_ONLY=""
+WHERE=cloud; CARD=any; WAIT=600; PROJECT=appdriver; APP=""; OUT=""; SAYS=(); FILE=""; PICK=""; TRYAGAIN=""; SMALL=""; SIZE=""; ROUNDS=""; AWAY=""; ESCALATE=""; export ANSWER_WORDS="" TYPE_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --where) WHERE="$2"; shift 2 ;;
@@ -79,6 +82,7 @@ while [ $# -gt 0 ]; do
     --size) SIZE="$2"; shift 2 ;;
     --pick-rounds) ROUNDS="$2"; shift 2 ;;
     --away) AWAY=1; shift ;;
+    --escalate) ESCALATE="$2"; shift 2 ;;
     --answer-words) ANSWER_WORDS="$2"; shift 2 ;;
     --type-only) TYPE_ONLY=1; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
@@ -195,7 +199,7 @@ PY2
   echo "  the Mac side: $(app_name), local, Let my phone connect on port 4338"
   # Its log in the run's folder, copied out at the end: LaunchServices cannot open a log file in some
   # folders (one under ~/Library/Logs fails the whole launch with error -10810, measured Nov 21).
-  open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$RUN/mac-app.log" --stderr "$RUN/mac-app.log" "$APP" --args -OlaDrive "$RUN/script.json" &
+  open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$RUN/mac-app.log" --stderr "$RUN/mac-app.log" "$APP" --args -OlaDrive "$RUN/script.json" ${ESCALATE:+-OlaEscalate "$ESCALATE"} &
   MACPID=$!
   # The phone starts once the Mac has its code; a Mac copy that stops first ends the run here.
   for ((i = 0; i < 300; i++)); do [ -s "$RUN/pair-code" ] && break; kill -0 $MACPID 2>/dev/null || break; sleep 1; done
@@ -250,7 +254,7 @@ PY
   # Through LaunchServices into the logged-in desktop, in the background (-g), as a new copy (-n), with
   # its own home: its settings, Application Support and opencode state are the run's, not anyone's.
   # The log in the run's folder, copied out after (see the phone-through-the-Mac branch above: -10810).
-  open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$RUN/mac-app.log" --stderr "$RUN/mac-app.log" "$APP" --args -OlaDrive "$RUN/script.json" &
+  open -n -g -W --env CFFIXED_USER_HOME="$RUN/home" --stdout "$RUN/mac-app.log" --stderr "$RUN/mac-app.log" "$APP" --args -OlaDrive "$RUN/script.json" ${ESCALATE:+-OlaEscalate "$ESCALATE"} &
   OPENPID=$!
   LIMIT=$(( (${#SAYS[@]} + $([ -n "$TRYAGAIN" ] && echo 1 || echo 0)) * ${WAIT%.*} + 300 ))
   for ((i = 0; i < LIMIT; i++)); do kill -0 $OPENPID 2>/dev/null || break; sleep 1; done

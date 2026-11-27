@@ -480,6 +480,11 @@ enum MacDrive {
       if let e = store.conversation?.turns.last?.error { said.status = "error"; throw Failed(why: "the app shows an error under the answer: \(e.text)") }
       if s.card == "yes", said.cards.isEmpty { said.status = "no card"; throw Failed(why: "no card came for sentence \(n), and the script says one must") }
       try await settle(window, 2.5)
+      // The stretch card (OLA-486, with -OlaEscalate): pictured and listed, never answered.
+      if let st = store.suggestion {
+        said.cards.append("stretch card: \(FallbackWords.question(st.target, provider: store.hosted.provider)) \(st.whyLine)")
+        step("stretch card: \(st.reason.rawValue)", shot: "say\(n)-stretch-card")
+      }
       // The answer as the screen shows it: the window's picture, read back with text recognition.
       let file = shot("say\(n)-answer")
       record.steps.append(Entry(at: now, step: "answer \(n) on the screen", shot: file))

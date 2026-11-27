@@ -55,6 +55,9 @@ public enum StretchReason: String, Codable, Sendable {
   case error, budget, tools, bigFiles = "big_files", longBuild = "long_build", manyFiles = "many_files", design
   /// The person asked for Claude or Claude Code in plain words ("use claude code for this").
   case asked
+  /// What Ola itself counted during a run (OLA-479, `Escalate`): failed test rounds, the same step
+  /// again with nothing changed, replies cut off at the length limit, work that computes handed over untested.
+  case tests, loop, length, untested
 
   /// The one sentence of why (STRETCH_WHY in steps.ts).
   public var why: String {
@@ -67,6 +70,10 @@ public enum StretchReason: String, Codable, Sendable {
     case .manyFiles: "This request covers many documents at once."
     case .design: "Design is the kind of work Ola\u{2019}s own model is weakest at today."
     case .asked: "You asked for Claude Code."
+    case .tests: "Ola\u{2019}s own model\u{2019}s tests of its work failed \(Escalate.failedTestRounds) times."
+    case .loop: "Ola\u{2019}s own model did the same step \(Escalate.sameSteps) times without getting further."
+    case .length: "Ola\u{2019}s own model\u{2019}s replies were cut off at its length limit \(Escalate.lengthHits) times."
+    case .untested: "Ola\u{2019}s own model handed over work that computes without testing it, even when asked to."
     }
   }
 }
@@ -221,6 +228,57 @@ public enum Stretch {
       if out.count >= limit { break }
     }
     return out
+  }
+}
+
+/// OLA-479, the web app's `ESCALATE` (web/src/lib/steps.ts), the same settings in one place: for a
+/// request that computes a test must run before Ola hands over, and Ola itself (from the steps it
+/// sees, never by asking the model) counts failed test rounds, the same step repeated with no change
+/// and replies cut off at the length limit, and hands the request to the bigger model at a threshold.
+public enum Escalate {
+  /// Where a stuck request goes: the hosted model, only while its id is this one (never a Chinese model).
+  public static let to = "thinkingmachines/Inkling-2-Small"
+  public static let failedTestRounds = 2
+  public static let sameSteps = 3
+  public static let lengthHits = 2
+  /// A request that computes (a test must run): formulas, totals, a calculator, a game's rules, an answer worked out.
+  public static let computes = try! NSRegularExpression(pattern: #"\b(spreadsheets?|calculat\w*|formulas?|converter|convert|totals?|sums?|averages?|budget|tax|tips?|interest|loan|mortgage|scores?|scoring|game|quiz|puzzle|sudoku|chess|tic[- ]tac[- ]toe)\b"#, options: .caseInsensitive)
+  /// A step that ran a test.
+  public static let test = try! NSRegularExpression(pattern: #"\b(ola-test|pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b"#)
+  public static let reasons: Set<StretchReason> = [.tests, .loop, .length, .untested]
+
+  /// The one nudge, sent as a request in the model's conversation, marked so the apps show it as Ola's.
+  public static let nudgeMark = "<ola-nudge>"
+  public static let nudge = "\(nudgeMark)From Ola, not the person: this request computes, and no test of its logic has run. Write 8 to 10 cases with the answers you expect to a test file, run them with ola-test, fix what fails (at most three rounds), then hand it over and say how many cases passed."
+  /// A request as the person sees it, and whether it is Ola's nudge.
+  public static func nudgeOf(_ text: String) -> (request: String, nudge: Bool) {
+    text.hasPrefix(nudgeMark) ? ("Ola asked its model to run a test of the logic before handing it over.", true) : (text, false)
+  }
+
+  /// A checker's test switch (the web's `?escalate=`): the launch argument `-OlaEscalate tests|loop|length|untested`
+  /// treats every run as if Ola had counted that (untested: as if no test ran, so the nudge comes first).
+  public static let forced: StretchReason? = UserDefaults.standard.string(forKey: "OlaEscalate").flatMap(StretchReason.init(rawValue:)).flatMap { reasons.contains($0) ? $0 : nil }
+
+  static func isShell(_ s: Step) -> Bool { s.tool == "shell" || s.tool == "bash" }
+  static let changes: Set<String> = ["write", "edit", "patch", "apply_patch", "multiedit"]
+
+  /// Did a step of this turn run a test?
+  public static func testRan(_ t: Turn) -> Bool { t.steps.contains { isShell($0) && Stretch.has(test, $0.input) } }
+
+  /// During a run or after it, by what can be seen: failed test rounds, the same step again with
+  /// nothing changed in between (a file written again with the same words counts), replies cut off.
+  public static func escalation(_ t: Turn) -> StretchReason? {
+    if (t.cutOff ?? 0) >= lengthHits { return .length }
+    if t.steps.filter({ isShell($0) && Stretch.has(test, $0.input) && $0.status == .failed }).count >= failedTestRounds { return .tests }
+    var seen: [String: Int] = [:]
+    for s in t.steps where !s.input.isEmpty {
+      let key = "\(s.tool)\n\(s.input)"
+      let n = (seen[key] ?? 0) + 1
+      if n >= sameSteps { return .loop }
+      if changes.contains(s.tool) { seen = seen.filter { changes.contains(String($0.key.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false)[0])) } }
+      seen[key] = n
+    }
+    return nil
   }
 }
 
@@ -385,8 +443,11 @@ public struct HostedStatus: Equatable, Sendable {
   public var picks: [HostedPick] = []
   /// In a cloud project whose switch is off: the owner hands each request over just this once.
   public var once = false
+  /// The provider's id of the hosted model ("thinkingmachines/Inkling-2-Small"), when told (OLA-479).
+  public var model: String?
 
-  public init(unavailable: String?, provider: String? = nil, usedUSD: Double? = nil, capUSD: Double? = nil, picks: [HostedPick] = [], once: Bool = false) {
+  public init(unavailable: String?, provider: String? = nil, usedUSD: Double? = nil, capUSD: Double? = nil, picks: [HostedPick] = [], once: Bool = false, model: String? = nil) {
+    self.model = model
     self.unavailable = unavailable
     self.provider = provider
     self.usedUSD = usedUSD
@@ -411,7 +472,7 @@ public struct HostedStatus: Equatable, Sendable {
     if let used, let cap, used >= cap {
       return HostedStatus(unavailable: "You have used this month\u{2019}s budget for the hosted open model ($\(String(format: "%.2f", cap))). It starts again on the first of next month.", provider: provider, usedUSD: used, capUSD: cap, picks: picks)
     }
-    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks)
+    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks, model: j["hosted"]["model"].string)
   }
 
   /// A cloud project's, from the front desk's GET /api/fallback (OLA-337): there when the machine
@@ -428,7 +489,7 @@ public struct HostedStatus: Equatable, Sendable {
     guard on || h["canChange"].bool == true else {
       return HostedStatus(unavailable: "The hosted open model is off for this project. Its owner can turn it on in Settings.", provider: provider, picks: picks)
     }
-    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks, once: !on)
+    return HostedStatus(unavailable: nil, provider: provider, usedUSD: used, capUSD: cap, picks: picks, once: !on, model: h["model"].string)
   }
 
   /// "$0.03 of $20.00 this month"

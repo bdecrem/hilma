@@ -225,6 +225,10 @@ public struct Turn: Identifiable, Equatable, Sendable, Codable {
   /// The files this turn created, changed or deleted, from the project's record (MadeBy), so a
   /// change made by a shell command, or by a turn the app quit during, is shown and told too.
   public var changed: [String]?
+  /// OLA-479: Ola's own one nudge to its model (a test before handing over), not the person's words.
+  public var nudge: Bool?
+  /// OLA-479: replies of this turn the model's length limit cut off.
+  public var cutOff: Int?
 
   public init(id: String, request: String, at: Date, status: Status, steps: [Step] = [], answer: String = "", notes: [String] = [], error: Problem? = nil, notice: String? = nil, ended: Date? = nil, engine: Engine = .ola) {
     self.engine = engine
@@ -290,7 +294,10 @@ public struct Conversation: Equatable, Sendable {
 
   /// A request sent from this app: shown at once, before the server confirms it.
   public mutating func startTurn(_ request: String, at: Date = .now) {
-    turns.append(Turn(id: "local-\(at.timeIntervalSince1970)", request: request, at: at, status: .sending))
+    let n = Escalate.nudgeOf(request)
+    var t = Turn(id: "local-\(at.timeIntervalSince1970)", request: n.request, at: at, status: .sending)
+    if n.nudge { t.nudge = true }
+    turns.append(t)
     answerMessage = nil
   }
 
@@ -342,12 +349,15 @@ public struct Conversation: Equatable, Sendable {
       return true
     }
     if type == "session.inbox.enqueued", d["item"]["type"].str == "user" {
-      let text = EngineNote.strip(d["item"]["payload"]["text"].str)
+      let n = Escalate.nudgeOf(EngineNote.strip(d["item"]["payload"]["text"].str))
+      let text = n.request
       if let i = turns.lastIndex(where: { $0.status == .sending && $0.request == text }) {
         turns[i].id = d["inboxID"].str
       } else if !turns.contains(where: { $0.id == d["inboxID"].str }) {
         // Sent from the other app.
-        turns.append(Turn(id: d["inboxID"].str, request: text, at: at, status: .sending))
+        var t = Turn(id: d["inboxID"].str, request: text, at: at, status: .sending)
+        if n.nudge { t.nudge = true }
+        turns.append(t)
         answerMessage = nil
       }
       return true
@@ -456,6 +466,11 @@ public struct Conversation: Equatable, Sendable {
     case "session.step.failed":
       turn.error = Plain.runProblem(d["error"])
       return true
+    case "session.step.ended":
+      // OLA-479: a reply the model's length limit cut off, counted by Ola (not the model).
+      guard d["finish"].str == "length" else { return false }
+      turn.cutOff = (turn.cutOff ?? 0) + 1
+      return true
     case "session.execution.succeeded":
       // The run ended: whatever it asked is no longer waiting (OLA-250), whether or not this turn
       // was still shown as running. (A Claude run's card is its own runner's, not opencode's.)
@@ -502,7 +517,10 @@ public struct Conversation: Equatable, Sendable {
     for m in ordered {
       let type = m["type"].str
       if type == "user" {
-        turns.append(Turn(id: m["id"].str, request: EngineNote.strip(m["text"].str), at: m["time"]["created"].date ?? .distantPast, status: .working))
+        let n = Escalate.nudgeOf(EngineNote.strip(m["text"].str))
+        var t = Turn(id: m["id"].str, request: n.request, at: m["time"]["created"].date ?? .distantPast, status: .working)
+        if n.nudge { t.nudge = true }
+        turns.append(t)
         continue
       }
       guard !turns.isEmpty else { continue }
@@ -536,6 +554,8 @@ public struct Conversation: Equatable, Sendable {
           turn.answer = text
         }
         if !m["error"].isNull { turn.error = Plain.runProblem(m["error"]) }
+        // OLA-479: a reply the model's length limit cut off, counted by Ola.
+        if m["finish"].str == "length" { turn.cutOff = (turn.cutOff ?? 0) + 1 }
       }
       if type == "idle" {
         let outcome = m["outcome"].str

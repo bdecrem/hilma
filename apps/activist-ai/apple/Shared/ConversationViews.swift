@@ -113,7 +113,7 @@ struct RequestView: View {
   var turn: Turn
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: Space.m) {
-      Text("You").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink3)
+      Text(turn.nudge == true ? "Ola" : "You").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink3)
         .frame(width: Metrics.youColumn, alignment: .leading)
       Text(turn.request).font(OlaFont.sans(Metrics.reading)).foregroundStyle(Ola.ink).lineSpacing(2)
         .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)

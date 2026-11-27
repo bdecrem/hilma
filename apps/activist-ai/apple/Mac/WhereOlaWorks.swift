@@ -623,7 +623,7 @@ extension WhereOlaWorks {
       s.hosted = cloudHosted
       s.hostedOn = false
     } else {
-      s.hosted = HostedStatus(unavailable: hostedUnavailable(r), provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD, picks: hostedStatus.picks)
+      s.hosted = HostedStatus(unavailable: hostedUnavailable(r), provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD, picks: hostedStatus.picks, model: hostedStatus.model)
       s.hostedOn = f.hosted && s.hosted.unavailable == nil
     }
     // A pick that is no longer offered here goes back to Ola (Claude's launcher is set below).

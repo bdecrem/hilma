@@ -264,6 +264,80 @@ final class FallbacksTests: XCTestCase {
     XCTAssertEqual(store.plan(.longBuild, sessionID: "x"), .nothing)
     XCTAssertEqual(store.plan(.tools, sessionID: "x"), .suggest(.hosted, [.hosted]))
   }
+
+  /// OLA-479 on the Mac and the phone: the web app's ESCALATE, the same settings and the same counts.
+  func testOlaCountsWhatCanBeSeen() {
+    XCTAssertEqual([Escalate.to, "\(Escalate.failedTestRounds)", "\(Escalate.sameSteps)", "\(Escalate.lengthHits)"], ["thinkingmachines/Inkling-2-Small", "2", "3", "2"])
+    func step(_ id: String, _ tool: String, _ input: String, _ status: Step.Status = .done) -> Step { Step(id: id, tool: tool, words: Words(icon: .run, verb: "Ran", object: "x"), status: status, input: input, started: .now) }
+    var t = Turn(id: "t", request: "make me a tip calculator", at: .now, status: .done)
+    XCTAssertNil(Escalate.escalation(t))
+    XCTAssertFalse(Escalate.testRan(t))
+    t.steps = [step("a", "shell", "ola-test calc.test.js", .failed), step("b", "write", "calc.js"), step("c", "shell", "ola-test calc.test.js", .failed)]
+    XCTAssertTrue(Escalate.testRan(t))
+    XCTAssertEqual(Escalate.escalation(t), .tests)
+    t.steps = [step("a", "shell", "ls"), step("b", "shell", "ls"), step("c", "shell", "ls")]
+    XCTAssertEqual(Escalate.escalation(t), .loop)
+    t.steps = [step("a", "shell", "ls"), step("b", "shell", "ls"), step("w", "write", "{\"content\":\"x\"}"), step("c", "shell", "ls")]
+    XCTAssertNil(Escalate.escalation(t), "a file changed in between")
+    t.steps = [step("a", "write", "same"), step("b", "write", "same"), step("c", "write", "same")]
+    XCTAssertEqual(Escalate.escalation(t), .loop, "a file written again with the same words counts")
+    t.steps = []
+    t.cutOff = 2
+    XCTAssertEqual(Escalate.escalation(t), .length)
+    XCTAssertTrue(Stretch.has(Escalate.computes, "Build a budget spreadsheet for the union"))
+    XCTAssertFalse(Stretch.has(Escalate.computes, "Make a page that shows this poem"), "a page that only shows things")
+    XCTAssertTrue(Stretch.has(Escalate.test, "python3 test_calc.py"))
+    XCTAssertEqual(StretchReason.tests.why, "Ola\u{2019}s own model\u{2019}s tests of its work failed 2 times.")
+    XCTAssertEqual(StretchReason(rawValue: "untested"), .untested)
+  }
+
+  func testTheNudgeIsOlasTurnAndCutOffsAreCounted() {
+    var c = Conversation(sessionID: "s")
+    c.startTurn("make me a tip calculator")
+    c.startTurn(Escalate.nudge)
+    XCTAssertEqual(c.turns.last?.nudge, true)
+    XCTAssertEqual(c.turns.last?.request, "Ola asked its model to run a test of the logic before handing it over.")
+    c.apply(["type": "session.inbox.enqueued", "data": ["sessionID": "s", "inboxID": "in2", "item": ["type": "user", "payload": ["text": .string(Escalate.nudge)]]]])
+    XCTAssertEqual(c.turns.count, 2, "the server's copy of the nudge is the same turn")
+    XCTAssertEqual(c.turns.last?.id, "in2")
+    c.apply(["type": "session.step.ended", "data": ["sessionID": "s", "finish": "length"]])
+    c.apply(["type": "session.step.ended", "data": ["sessionID": "s", "finish": "stop"]])
+    XCTAssertEqual(c.turns.last?.cutOff, 1)
+    let turns = Conversation.turns(fromMessages: [
+      ["type": "user", "id": "u1", "text": .string(Escalate.nudge), "time": ["created": 1]],
+      ["type": "assistant", "id": "a1", "finish": "length", "content": [], "time": ["created": 2]],
+    ], directory: nil)
+    XCTAssertEqual(turns.first?.nudge, true)
+    XCTAssertEqual(turns.first?.cutOff, 1)
+  }
+
+  func testWhatOlaCountedGoesOnlyToTheNamedModel() async throws {
+    let store = OlaStore(fixture: Fixture.main)
+    store.hosted = HostedStatus(unavailable: nil, provider: "Made-up Cloud", model: "some-other/model")
+    XCTAssertEqual(store.plan(.tests, sessionID: "x"), .nothing, "never a model the setting does not name")
+    store.hosted.model = Escalate.to
+    XCTAssertEqual(store.plan(.tests, sessionID: "x"), .suggest(.hosted, [.hosted]))
+    store.hostedOn = true
+    XCTAssertEqual(store.plan(.loop, sessionID: "x"), .handover(.hosted), "the switch on: it just hands over")
+    store.hostedOn = false
+    // The nudge's turn, handed over untested again: the card, for the person's own request.
+    let id = try XCTUnwrap(store.selectedID)
+    store.conversations[id]?.startTurn("make me a tip calculator")
+    store.conversations[id]?.startTurn(Escalate.nudge)
+    var t = try XCTUnwrap(store.conversations[id]?.turns.last)
+    t.status = .done
+    await store.afterOlaRun(id, t)
+    let s = try XCTUnwrap(store.suggestion)
+    XCTAssertEqual([s.request, s.reason.rawValue], ["make me a tip calculator", "untested"])
+    // A page that only shows things: untouched.
+    store.suggestion = nil
+    store.conversations[id]?.startTurn("make a page that shows this poem")
+    t = try XCTUnwrap(store.conversations[id]?.turns.last)
+    t.status = .done
+    await store.afterOlaRun(id, t)
+    XCTAssertNil(store.suggestion)
+    XCTAssertEqual(store.conversations[id]?.turns.last?.request, "make a page that shows this poem", "no nudge")
+  }
 }
 
 /// The model door lets a request for the hosted model through only while the app hands one over.

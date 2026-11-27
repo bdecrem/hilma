@@ -25,7 +25,7 @@ public final class OlaStore {
   public private(set) var running: Set<String> = []
   /// Sessions that finished while Bart was looking elsewhere.
   public private(set) var unseen: Set<String> = []
-  public private(set) var conversations: [String: Conversation] = [:]
+  public internal(set) var conversations: [String: Conversation] = [:]
   public private(set) var models: [ModelInfo] = []
   public var model: ModelInfo?
   public private(set) var files: [String: [FileEntry]] = [:]
@@ -370,7 +370,7 @@ public final class OlaStore {
         if !isActive || sid != selectedID { onRunEnded?(s, t) }
         if hostedRuns[sid] != nil { Task { await self.finishHosted(sid) } }
         else if t.engine == .ola { Task { await self.afterOlaRun(sid, t) } }
-      }
+      } else if let t = conversations[sid]!.turns.last, t.isRunning { duringOlaRun(sid, t) }
       if type == "permission.asked", let s = sessions.first(where: { $0.id == sid }), let a = conversations[sid]!.approval {
         if !isActive || sid != selectedID { onApproval?(s, a) }
       }
@@ -1083,6 +1083,12 @@ public final class OlaStore {
 
   /// What to do about a stretch: nothing, hand it over without asking, or show the card.
   func plan(_ r: StretchReason, sessionID: String?) -> Plan {
+    // OLA-479: what Ola counted goes only to the hosted model, and only while it is the one
+    // `Escalate.to` names (never a Chinese model). Switched on here: just do it. Else the card.
+    if Escalate.reasons.contains(r) {
+      guard hosted.unavailable == nil, hosted.model == Escalate.to, fallbacks.stretch != .never, !(declined[sessionID ?? ""]?.contains(r) ?? false) else { return .nothing }
+      return hostedSwitchOn ? .handover(.hosted) : .suggest(.hosted, [.hosted])
+    }
     let offers = fallbacksHere
     guard !offers.isEmpty, fallbacks.stretch != .never, !(declined[sessionID ?? ""]?.contains(r) ?? false) else { return .nothing }
     if fallbacks.stretch == .handover {
@@ -1092,12 +1098,40 @@ public final class OlaStore {
     return .suggest(offers[0], offers)
   }
 
-  /// After an Ola run: did it get stuck, by what can be seen?
+  /// The hosted switch is on: in a cloud project the project's own (the website's Settings), else this folder's.
+  var hostedSwitchOn: Bool { config?.account == true ? hosted.unavailable == nil && !hosted.once : hostedOn }
+
+  /// A run Ola stopped itself because of what it counted (OLA-479), and why.
+  private var stopping: (session: String, turn: String, why: StretchReason)?
+
+  /// During an Ola run (OLA-479): what Ola counts reached a threshold, so it stops the run; the
+  /// request is handed over (or the card shown) when the run has ended.
+  func duringOlaRun(_ id: String, _ t: Turn) {
+    guard t.engine == .ola, t.isRunning, stopping == nil, let why = Escalate.escalation(t), plan(why, sessionID: id) != .nothing, let client else { return }
+    stopping = (id, t.id, why)
+    Task { try? await client.interrupt(id) }
+  }
+
+  /// After an Ola run: did it get stuck, by what can be seen, or by what Ola counted (OLA-479)?
   func afterOlaRun(_ id: String, _ t: Turn) async {
-    guard t.engine == .ola, let r = Stretch.stuck(t) else { return }
+    guard t.engine == .ola else { return }
+    let turns = conversations[id]?.turns ?? []
+    // The nudge's turn stands for the person's request before it.
+    let request = t.nudge == true && turns.count >= 2 ? turns[turns.count - 2].request : t.request
+    let force = Escalate.forced
+    var reason: StretchReason?
+    if let s = stopping, s.session == id, s.turn == t.id { reason = s.why } else { reason = t.status == .stopped ? nil : Stretch.stuck(t) ?? Escalate.escalation(t) }
+    if stopping?.session == id { stopping = nil }
+    if reason == nil, t.status == .done, let force, force != .untested { reason = force }
+    // A request that computes and was handed over with no test: one nudge, and a second time none is a failure.
+    if reason == nil, t.status == .done, Stretch.has(Escalate.computes, request) || force == .untested, force == .untested || !Escalate.testRan(t) {
+      if t.nudge == true { reason = .untested }
+      else if id == selectedID { await sendToOla(Escalate.nudge); return }
+    }
+    guard let r = reason else { return }
     switch plan(r, sessionID: id) {
-    case .handover(let f): await handOver(f, t.request, reason: r)
-    case .suggest(let target, let offers): suggestion = StretchSuggestion(sessionID: id, request: t.request, reason: r, target: target, offers: offers, turnID: t.id)
+    case .handover(let f): await handOver(f, request, reason: r)
+    case .suggest(let target, let offers): suggestion = StretchSuggestion(sessionID: id, request: request, reason: r, target: target, offers: offers, turnID: t.id)
     case .nothing: break
     }
   }
