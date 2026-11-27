@@ -54,7 +54,7 @@ export function StretchCard(props: { ola: Ola }) {
             }
           >
             <button type="button" class="primary-button" disabled={busy()} onClick={() => void answer('once')}>
-              Yes, give it to the bigger model
+              Yes, try it
             </button>
             <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => void answer('not_now')}>
               No

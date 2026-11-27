@@ -68,7 +68,7 @@ test('yes: one hand-off turn with the page and the list, shown as one plain line
   const st = emptyConversation()
   const t = Object.assign(startTurn(st, prompt, 5), { engine: 'hosted' as const, status: 'done' as const })
   assert.equal(t.request, DEAD_HANDOFF_LINE)
-  assert.match(DEAD_HANDOFF_LINE, /bigger model, which runs outside this machine/)
+  assert.match(DEAD_HANDOFF_LINE, /bigger model outside this machine/)
   // The hosted model's turn: no first pressing, no second pressing.
   assert.equal(pokeable(t), false)
   assert.equal(isPokeFix(t), false)

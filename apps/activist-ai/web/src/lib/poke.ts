@@ -93,9 +93,9 @@ export function deadQuestion(page: string, dead: Dead[], o: { hostedSetUp: boole
 }
 
 /** The card's words (StretchCard, reason 'dead'). */
-export const DEAD_TITLE = 'Ola pressed the buttons again after the fix, and this still does not work:'
+export const DEAD_TITLE = 'Still not working after one fix:'
 export const deadOffer = (provider: string | null) =>
-  `Give this to a bigger model? It runs outside this machine${provider ? `, at ${provider}` : ''}: if you say yes, your request, this conversation and the page go there.`
+  `Try a bigger model? It runs outside this machine${provider ? ` (${provider})` : ''}.`
 
 /**
  * The person's answer on that card: what to log ('yes' / 'no', none when nothing was offered) and the
@@ -107,7 +107,7 @@ export function deadAnswer(s: { canAct: boolean; request: string; page?: string;
 }
 
 /** The one line the conversation shows for the hand-off (handoffPrompt's sentence). */
-export const DEAD_HANDOFF_LINE = 'Ola gave this to a bigger model, which runs outside this machine, with the page and what does not work on it.'
+export const DEAD_HANDOFF_LINE = 'Ola gave this to a bigger model outside this machine.'
 /** What the bigger model is asked: the person's request, the page and what does not work on it. */
 export function deadHandoffRequest(request: string, page: string, dead: string[]): string {
   return `${request}\n\nThe page for this is ${page}. Ola's own model built it and tried once to fix it; Ola then pressed its buttons and typed in its fields, and this still does not work:\n${dead.map((d) => `- ${d}`).join('\n')}\n\nFix exactly that in ${page}, check it, and hand it over.`
