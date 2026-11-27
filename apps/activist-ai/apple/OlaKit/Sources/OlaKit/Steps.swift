@@ -51,9 +51,28 @@ public enum Plain {
     return String(s[r])
   }
 
+  /// The parts of a shell command that run one after another (`&&`, `||`, `;`, new lines), with the
+  /// bodies of heredocs taken out, so the words of a test file never count as a command (OLA-474,
+  /// the web's `commandParts`).
+  public static func commandParts(_ command: String) -> [String] {
+    let heredoc = try! NSRegularExpression(pattern: #"<<-?\s*(['"]?)(\w+)\1([^\n]*)\n[\s\S]*?\n[ \t]*\2[ \t]*(?=\n|$)"#)
+    let bare = heredoc.stringByReplacingMatches(in: command, range: NSRange(command.startIndex..., in: command), withTemplate: "<<$2$3")
+    return bare.replacingOccurrences(of: #"&&|\|\||;|\n"#, with: "\u{0}", options: .regularExpression)
+      .split(separator: "\u{0}").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+  }
+
+  /// The command a step is about: the test run in a chain, or the one command after `cd <folder> &&`.
+  static func mainCommand(_ c: String) -> String {
+    let parts = commandParts(c)
+    if parts.count < 2 { return c }
+    if let test = parts.first(where: { Stretch.has(Escalate.test, $0) }) { return test }
+    let rest = parts.filter { !matches($0, #"^cd(\s|$)"#) }
+    return rest.count == 1 ? rest[0] : c
+  }
+
   /// A shell command, said plainly.
   public static func describeCommand(_ command: String) -> Words {
-    let c = command.trimmingCharacters(in: .whitespacesAndNewlines)
+    let c = mainCommand(command.trimmingCharacters(in: .whitespacesAndNewlines))
     // Ola's own web commands read as what they do, not as "Ran ola-search".
     if let w = WebAsk.request(WebAsk.stripRedirects(c)) {
       switch w.kind {

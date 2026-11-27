@@ -124,6 +124,13 @@ test('words for common commands and tools', () => {
   // OLA-474: the agent's own checks of its code.
   assert.deepEqual(describeCommand('ola-test calc.js calc.test.js'), { icon: 'check', verb: 'Tested', object: 'calc.js' })
   assert.deepEqual(describeCommand('ola-test --all'), { icon: 'check', verb: 'Tested', object: 'its work' }, 'no file named')
+  // The checker's real shapes on the live server (chk479-b): a test after cd, after a heredoc, in a chain.
+  const heredoc = `cd /work && cat > dbg3.test.js <<'EOF'\nconst g = evaluateGrid([['=IF(1>0,"yes","no")']]);\nconsole.log('grid:', JSON.stringify(g[0][0]));\nEOF\nola-test sheet.js dbg3.test.js 2>&1 | tail -10`
+  assert.deepEqual(describeCommand(heredoc), { icon: 'check', verb: 'Tested', object: 'sheet.js' })
+  assert.deepEqual(describeCommand(`cd /work && cat > /tmp/opencode/dbg.test.js <<'EOF'\nconsole.log('x; y');\nEOF\nmkdir -p /tmp/opencode && cp /tmp/opencode/dbg.test.js ./dbg.test.js && ola-test sheet.js dbg.test.js 2>&1 | tail -10`).verb, 'Tested')
+  assert.deepEqual(describeCommand('cd /work; ola-test'), { icon: 'check', verb: 'Tested', object: 'its work' })
+  assert.deepEqual(describeCommand('cd /work && sed -n 268,285p sheet.js'), { icon: 'run', verb: 'Ran a short program', object: '' }, 'cd and one command reads as the command')
+  assert.equal(describeCommand('cd /work && cat fonts/fonts.css && head -60 base.css').verb, 'Ran', 'cd and two commands stays as it was')
   assert.equal(describeCommand('/opt/ola/bin/ola-ocr --pages 2 scans/study-3.pdf').object, 'study-3.pdf')
   assert.equal(describeCommand('ola-translate ley.md --to en').verb, 'Translated')
   assert.equal(describeCommand('ola-something-new x').verb, 'Used one of Ola’s tools')
@@ -292,6 +299,13 @@ test('OLA-479: Ola counts failed test rounds, the same step again and replies cu
   assert.ok(testRan({ steps: [sh('ola-test calc.js calc.test.js')] }))
   assert.ok(testRan({ steps: [sh('/opt/ola/bin/ola-test index.html t.js')] }))
   assert.ok(!testRan({ steps: [sh('cat calc.test.js'), sh('ola-page index.html --out .shots/a.png')] }), 'reading a test file or looking at a page is not a test')
+  assert.ok(!testRan({ steps: [sh('ls -la /work && which ola-test ola-page'), sh('cat /opt/ola/bin/ola-test')] }), 'naming ola-test is not running it (chk479-b)')
+  assert.ok(!testRan({ steps: [sh(`cat > t.py <<'EOF'\nimport unittest\nEOF`)] }), 'the words of a heredoc are not a command')
+  // chk479-b: the exit code of `ola-test … | tail` is tail's, so the summary line decides.
+  const piped = (output: string) => ({ tool: 'shell', status: 'done', detail: { input: `cd /work && cat > t.test.js <<'EOF'\ncheck('a', 1, 1)\nEOF\nola-test sheet.js t.test.js 2>&1 | tail -10`, output } })
+  assert.ok(testRan({ steps: [piped('3 passed, 0 failed\n')] }))
+  assert.equal(escalation(turn([piped('ola-test: ran sheet.js\n  ERROR: sheet.js line 482\n0 passed, 0 failed, 1 error\n'), piped('2 passed, 1 failed\n')])), 'tests', 'two failed rounds behind a pipe')
+  assert.equal(escalation(turn([piped('  no check ran\n0 passed, 0 failed\n'), piped('8 passed, 0 failed\n')])), null, 'one failed round (no check ran) then a pass')
   // What computes, and what only shows things (that keeps the fast path: no test, no nudge).
   for (const r of ['Build a tiny spreadsheet in one page', 'make a tip calculator', 'a memory game for my class', 'a page that totals our dues']) assert.ok(ESCALATE.computes.test(r), r)
   for (const r of ['Make a good morning page with the weather', 'a page for our block party on Saturday', 'Write a flyer for the garden club']) assert.ok(!ESCALATE.computes.test(r), r)

@@ -57,6 +57,13 @@ final class FoldTests: XCTestCase {
     XCTAssertEqual(Plain.describeCommand("ola-test calc.js calc.test.js").verb, "Tested")
     XCTAssertEqual(Plain.describeCommand("/opt/ola/bin/ola-test sheet/calc.js sheet/calc.test.js").object, "calc.js")
     XCTAssertEqual(Plain.describeCommand("ola-test --all").object, "its work")
+    // The checker's real shapes (chk479-b): a test after cd, after a heredoc, in a chain.
+    let heredoc = "cd /work && cat > dbg3.test.js <<'EOF'\nconst g = evaluateGrid([['=IF(1>0,\"yes\",\"no\")']]);\nconsole.log('grid:', JSON.stringify(g[0][0]));\nEOF\nola-test sheet.js dbg3.test.js 2>&1 | tail -10"
+    XCTAssertEqual([Plain.describeCommand(heredoc).verb, Plain.describeCommand(heredoc).object], ["Tested", "sheet.js"])
+    XCTAssertEqual(Plain.describeCommand("cd /work && cat > /tmp/opencode/dbg.test.js <<'EOF'\nconsole.log('x; y');\nEOF\nmkdir -p /tmp/opencode && cp /tmp/opencode/dbg.test.js ./dbg.test.js && ola-test sheet.js dbg.test.js 2>&1 | tail -10").verb, "Tested")
+    XCTAssertEqual(Plain.describeCommand("cd /work; ola-test").object, "its work")
+    XCTAssertEqual(Plain.describeCommand("cd /work && sed -n 268,285p sheet.js").verb, "Ran a short program", "cd and one command reads as the command")
+    XCTAssertEqual(Plain.describeCommand("cd /work && cat fonts/fonts.css && head -60 base.css").object, "cd", "cd and two commands stays as it was")
     XCTAssertEqual(Plain.describeTool("read", input: ["path": "/Users/admin/ola-bart/a/b.csv"], dir: "/Users/admin/ola-bart").object, "a/b.csv")
     XCTAssertEqual(Plain.present("Ran a short program"), "Run a short program")
     XCTAssertEqual(Plain.shellFailed(["exit": 2]), 2)

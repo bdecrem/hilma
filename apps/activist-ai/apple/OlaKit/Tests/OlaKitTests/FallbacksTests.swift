@@ -287,6 +287,17 @@ final class FallbacksTests: XCTestCase {
     XCTAssertTrue(Stretch.has(Escalate.computes, "Build a budget spreadsheet for the union"))
     XCTAssertFalse(Stretch.has(Escalate.computes, "Make a page that shows this poem"), "a page that only shows things")
     XCTAssertTrue(Stretch.has(Escalate.test, "python3 test_calc.py"))
+    // OLA-474, chk479-b: `ola-test … | tail` exits 0, so ola-test's summary line decides; naming it is not running it.
+    let piped = "cd /work && cat > t.test.js <<'EOF'\ncheck('a', 1, 1)\nEOF\nola-test sheet.js t.test.js 2>&1 | tail -10"
+    t.cutOff = 0
+    func ran(_ id: String, _ output: String) -> Step { Step(id: id, tool: "shell", words: Words(icon: .run, verb: "Ran", object: "x"), status: .done, input: piped, output: output, started: .now) }
+    t.steps = [ran("a", "ola-test: ran sheet.js\n  ERROR: sheet.js line 482\n0 passed, 0 failed, 1 error\n"), ran("b", "2 passed, 1 failed\n")]
+    XCTAssertTrue(Escalate.testRan(t))
+    XCTAssertEqual(Escalate.escalation(t), .tests, "two failed rounds behind a pipe")
+    t.steps = [ran("a", "  no check ran\n0 passed, 0 failed\n"), ran("b", "8 passed, 0 failed\n")]
+    XCTAssertNil(Escalate.escalation(t), "one failed round then a pass")
+    t.steps = [step("a", "shell", "ls -la /work && which ola-test ola-page"), step("b", "shell", "cat /opt/ola/bin/ola-test"), step("c", "shell", "cat > t.py <<'EOF'\nimport unittest\nEOF")]
+    XCTAssertFalse(Escalate.testRan(t), "naming ola-test, or a heredoc's words, is not a test")
     XCTAssertEqual(StretchReason.tests.why, "Ola\u{2019}s own model\u{2019}s tests of its work failed 2 times.")
     XCTAssertEqual(StretchReason(rawValue: "untested"), .untested)
   }

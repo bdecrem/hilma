@@ -243,8 +243,21 @@ public enum Escalate {
   public static let lengthHits = 2
   /// A request that computes (a test must run): formulas, totals, a calculator, a game's rules, an answer worked out.
   public static let computes = try! NSRegularExpression(pattern: #"\b(spreadsheets?|calculat\w*|formulas?|converter|convert|totals?|sums?|averages?|budget|tax|tips?|interest|loan|mortgage|scores?|scoring|game|quiz|puzzle|sudoku|chess|tic[- ]tac[- ]toe)\b"#, options: .caseInsensitive)
-  /// A step that ran a test.
-  public static let test = try! NSRegularExpression(pattern: #"\b(ola-test|pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b"#)
+  /// A command (one part of a step's command, see `Plain.commandParts`) that runs a test.
+  public static let test = try! NSRegularExpression(pattern: #"^(?:/opt/ola/bin/)?ola-test(?=\s|$)|^(?:python3?\s+-m\s+)?(?:pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b"#)
+  static let summary = try! NSRegularExpression(pattern: #"^(\d+) passed, (\d+) failed(?:, (\d+) errors?)?\s*$"#, options: .anchorsMatchLines)
+
+  public enum TestOutcome { case passed, failed }
+  /// Was this step a test run, and did it pass? Nil when no part of its command runs a test. A chain's
+  /// exit code is its last command's (`ola-test … | tail`), so ola-test's own last line counts too:
+  /// "N passed, M failed[, K errors]" fails on any failure or error, or when no check passed (the web's `testOutcome`).
+  public static func testOutcome(_ s: Step) -> TestOutcome? {
+    guard isShell(s), Plain.commandParts(s.input).contains(where: { Stretch.has(test, $0) }) else { return nil }
+    if s.status == .failed { return .failed }
+    guard let m = summary.matches(in: s.output, range: NSRange(s.output.startIndex..., in: s.output)).last else { return .passed }
+    let n = { (i: Int) -> Int in Range(m.range(at: i), in: s.output).flatMap { Int(s.output[$0]) } ?? 0 }
+    return n(2) > 0 || n(3) > 0 || n(1) == 0 ? .failed : .passed
+  }
   public static let reasons: Set<StretchReason> = [.tests, .loop, .length, .untested]
 
   /// The one nudge, sent as a request in the model's conversation, marked so the apps show it as Ola's.
@@ -268,13 +281,13 @@ public enum Escalate {
   static let changes: Set<String> = ["write", "edit", "patch", "apply_patch", "multiedit"]
 
   /// Did a step of this turn run a test?
-  public static func testRan(_ t: Turn) -> Bool { t.steps.contains { isShell($0) && Stretch.has(test, $0.input) } }
+  public static func testRan(_ t: Turn) -> Bool { t.steps.contains { testOutcome($0) != nil } }
 
   /// During a run or after it, by what can be seen: failed test rounds, the same step again with
   /// nothing changed in between (a file written again with the same words counts), replies cut off.
   public static func escalation(_ t: Turn) -> StretchReason? {
     if (t.cutOff ?? 0) >= lengthHits { return .length }
-    if t.steps.filter({ isShell($0) && Stretch.has(test, $0.input) && $0.status == .failed }).count >= failedTestRounds { return .tests }
+    if t.steps.filter({ testOutcome($0) == .failed }).count >= failedTestRounds { return .tests }
     var seen: [String: Int] = [:]
     for s in t.steps where !s.input.isEmpty {
       let key = "\(s.tool)\n\(s.input)"

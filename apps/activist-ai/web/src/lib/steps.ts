@@ -34,9 +34,29 @@ function pathOf(input: Input): string {
 /** The step that wrote a job down: the conversation then points at Jobs, where it is started. */
 export const JOB_PROPOSED = 'Wrote down a job'
 
+/**
+ * The parts of a shell command that run one after another (`&&`, `||`, `;`, new lines), with the
+ * bodies of heredocs taken out, so `cd /work && cat > t.js <<EOF … EOF` + `ola-test a.js t.js` is
+ * three parts and the words of a test file never count as a command (OLA-474).
+ */
+export function commandParts(command: string): string[] {
+  const bare = command.replace(/<<-?\s*(['"]?)(\w+)\1([^\n]*)\n[\s\S]*?\n[ \t]*\2[ \t]*(?=\n|$)/g, '<<$2$3')
+  return bare.split(/&&|\|\||;|\n/).map((p) => p.trim()).filter(Boolean)
+}
+
+/** The command a step is about: the test run in a chain, or the one command after `cd <folder> &&`. */
+function mainCommand(c: string): string {
+  const parts = commandParts(c)
+  if (parts.length < 2) return c
+  const test = parts.find((p) => ESCALATE.test.test(p))
+  if (test) return test
+  const rest = parts.filter((p) => !/^cd(\s|$)/.test(p))
+  return rest.length === 1 ? rest[0] : c
+}
+
 /** A shell command, said plainly. */
 export function describeCommand(command: string): Words {
-  const c = command.trim()
+  const c = mainCommand(command.trim())
   const web = webRequestOf(c)
   if (web?.kind === 'search') return { icon: 'search', verb: 'Searched the web for', object: web.item ? `“${web.item}”` : 'something' }
   if (web?.kind === 'fetch') return { icon: 'read', verb: 'Downloaded', object: web.item ? hostOf(web.item) : 'a document' }
@@ -428,8 +448,8 @@ export const ESCALATE = {
   lengthHits: 2,
   /** A request that computes (a test must run): formulas, totals, a calculator, a game's rules, an answer worked out. */
   computes: /\b(spreadsheets?|calculat\w*|formulas?|converter|convert|totals?|sums?|averages?|budget|tax|tips?|interest|loan|mortgage|scores?|scoring|game|quiz|puzzle|sudoku|chess|tic[- ]tac[- ]toe)\b/i,
-  /** A step that ran a test. */
-  test: /\b(ola-test|pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b/,
+  /** A command (one part of a step's command, see commandParts) that runs a test. */
+  test: /^(?:\/opt\/ola\/bin\/)?ola-test(?=\s|$)|^(?:python3?\s+-m\s+)?(?:pytest|unittest)\b|^python3?\s+\S*test\w*\.py\b/,
 }
 export const ESCALATIONS: readonly StretchReason[] = ['tests', 'loop', 'length', 'untested']
 
@@ -442,15 +462,28 @@ export function nudgeOf(text: string): { request: string; nudge: boolean } {
 }
 
 const CHANGES = new Set(['write', 'edit', 'patch', 'apply_patch', 'multiedit'])
+type TestStep = { tool: string; status: string; detail: { input: string; output?: string } }
+/**
+ * Was this step a test run, and did it pass? Null when no part of its command runs a test. A chain's
+ * exit code is its last command's (`ola-test … | tail`), so ola-test's own last line counts too:
+ * "N passed, M failed[, K errors]" fails on any failure or error, or when no check passed.
+ */
+export function testOutcome(s: TestStep, c = ESCALATE): 'passed' | 'failed' | null {
+  if (s.tool !== 'shell' && s.tool !== 'bash') return null
+  if (!commandParts(s.detail.input).some((p) => c.test.test(p))) return null
+  if (s.status === 'failed') return 'failed'
+  const m = [...(s.detail.output ?? '').matchAll(/^(\d+) passed, (\d+) failed(?:, (\d+) errors?)?\s*$/gm)].pop()
+  return m && (+m[2] > 0 || +(m[3] ?? 0) > 0 || +m[1] === 0) ? 'failed' : 'passed'
+}
 /** Did a step of this turn run a test? */
-export const testRan = (t: { steps: { tool: string; detail: { input: string } }[] }, c = ESCALATE) => t.steps.some((s) => (s.tool === 'shell' || s.tool === 'bash') && c.test.test(s.detail.input))
+export const testRan = (t: { steps: TestStep[] }, c = ESCALATE) => t.steps.some((s) => testOutcome(s, c) !== null)
 /**
  * During a run or after it, by what can be seen: failed test rounds, the same step again with nothing
  * changed in between (a file written again with the same words counts), replies cut off at the length limit.
  */
-export function escalation(t: { request: string; steps: { tool: string; status: string; detail: { input: string } }[]; cutOff?: number }, c = ESCALATE): Escalation | null {
+export function escalation(t: { request: string; steps: TestStep[]; cutOff?: number }, c = ESCALATE): Escalation | null {
   if ((t.cutOff ?? 0) >= c.lengthHits) return 'length'
-  const failedTests = t.steps.filter((s) => (s.tool === 'shell' || s.tool === 'bash') && c.test.test(s.detail.input) && s.status === 'failed').length
+  const failedTests = t.steps.filter((s) => testOutcome(s, c) === 'failed').length
   if (failedTests >= c.failedTestRounds) return 'tests'
   const seen = new Map<string, number>()
   for (const s of t.steps) {
