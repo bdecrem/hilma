@@ -195,6 +195,21 @@ try {
       await sleep(2500)
       continue
     }
+    // The stretch card (OLA-479): a person who cannot or does not hand over answers "OK" / "Not now",
+    // and Ola's own model gets one more turn to finish (OLA-454: the script used to stop at the card).
+    const card = page.locator('.stretch-card').last()
+    if ((await card.count()) && (await card.isVisible().catch(() => false))) {
+      const btn = card.getByRole('button', { name: /^(OK|Not now)$/ }).first()
+      if (await btn.isEnabled().catch(() => false)) {
+        const why = (await card.locator('.stretch-why').innerText().catch(() => '')).replace(/\s+/g, ' ')
+        await shot(`asked-${asked.length + 1}`)
+        asked.push(`${Math.round((Date.now() - t0) / 1000)} s: stretch card "${why.slice(0, 200)}" → ${await btn.innerText()}`)
+        await btn.click()
+        await until(async () => !(await page.locator('.stretch-card').count()), 30_000, 'the stretch card closing').catch(() => {})
+        await sleep(3000)
+        continue
+      }
+    }
     const st = await page.locator('.turn').last().getAttribute('data-status')
     if (st && st !== 'working' && st !== 'sending') {
       status = st

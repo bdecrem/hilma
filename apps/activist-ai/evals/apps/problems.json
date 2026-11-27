@@ -68,11 +68,16 @@
     "source": "real",
     "from": "Bart, 2026-11-25, on the Studio's Ola (Inkling 2 Mini): \"it failed at the spreadsheet in my opinion\". The page computed every formula right and kept showing the formula's text in the cell after Enter (OLA-466). fixtures/wrong is that page; fixtures/good is the larger Inkling's answer to the same words.",
     "needs_ai": false,
-    "keywords": [
-      "spreadsheet",
-      "sheet",
-      "grid"
-    ],
+    "keywords": ["spreadsheet", "sheet", "grid"],
     "must": "At phone size: type 2 in A6, 4 in B6 and =A6+B6*3 in C6, press Enter, and C6 shows 14. =SUM(A6:C6) shows 20. Changing A6 to 8 changes C6 to 20 before you press Enter. A cell holds the word hello. From an empty cell the right and down arrows move one cell. =B9 in A9 and =A9 in B9 show an error in both cells."
+  },
+  {
+    "id": "theremin",
+    "request": "Make me a pocket theremin: an app where dragging a finger across the screen plays a note (higher up is a higher pitch, further right is a brighter tone), always on a pentatonic scale so anything sounds nice, with glowing trails that fade out with the sound. Two fingers play two notes. Make it beautiful on a phone.",
+    "source": "real",
+    "from": "OLA-454, 2026-11-27: typed into Bart's own cloud project on app.ola.cx (the test server, Nemotron as Ola's own model) for his \"make another cool app ... surprize me\". Five rounds of the same conversation, each telling Ola what a person sees, and the page never played: a cover with no tap handler, then the canvas twice (the second on top), then a canvas never sized to the screen (only its default 300 by 150 corner took touches), and a misspelt setTargetTime that keeps every note sounding. fixtures/wrong is the fifth round; fixtures/good is that page with the canvas sized and the call spelt right.",
+    "needs_ai": false,
+    "keywords": ["theremin"],
+    "must": "At phone size with touch: the first tap anywhere starts it; a finger in the lower middle sounds a note; sliding it up raises the pitch; two fingers far apart sound two different notes at once; 2.5 s after the fingers lift nothing sounds."
   }
 ]
