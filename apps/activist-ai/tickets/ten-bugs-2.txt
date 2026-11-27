@@ -1,0 +1,47 @@
+The first ten open P0 / P1 bugs in Ola's code (apps/activist-ai), tracker order, Nov 27 (OLA-520 run two).
+Each: id, title, what is wrong in plain words (from the ticket and its thread).
+
+1. OLA-468 (P0)  The model server's log on the Studio keeps the first 120 characters of every answer
+   ~ola/Library/Logs/ola/model.log (mode 644, readable by any account) has a text_preview field per request
+   with the model's first words about the person's request. Ola's rule is that no content is logged. Wanted:
+   the preview off in the model server or stripped before the log is written, the log mode 600.
+
+2. OLA-299  A new project on a full machine says 'Lost the connection to Ola's computer. Trying again' forever
+   When the machine already runs its most workspaces ("4 workspaces are already running; the machine runs at
+   most 4", from ws.mjs start), a new project stays on 'Opening your project…' with 'Lost the connection'
+   for minutes and the first sentence then fails. The person is never told the machine is full.
+
+3. OLA-330  Ola tells times and dates in UTC in a cloud project
+   On Friday evening in California a card said 'Party is today (Sat Nov 21)', and asked who made a page, Ola
+   (ola-made-by) said 'created the page on Nov 21 at 5:32 AM' for 9:32 pm Pacific. The project's clock or
+   ola-made-by speaks UTC, not the person's time.
+
+4. OLA-371  A published page's card says 'Private: only the people in this project can open it. It is not on the public web' while sites.ola.cx serves it
+   After Ola published index.html at sites.ola.cx/appdriver/, both page cards in the web app still read
+   Private, and index.html (made by Ola) is labelled 'a web page you uploaded'.
+
+5. OLA-407  Asked to change the page and put it on ola again, Ola sometimes only changes it
+   'now change the page so it says Damson and put it on ola again' changed index.html, asked no yes, and
+   answered 'This change is not public yet ... say publish it again to put it up' (2 of 4 tries).
+
+6. OLA-412  A new cloud project stayed on 'Opening your project…' for more than 4 minutes, twice
+   Seen again Nov 27: a new project stayed on 'Opening your project…' / 'Lost the connection' for 240 s while
+   another new project was starting; alone, it opened. Find whether start-up is stuck or slow, and fix.
+
+7. OLA-426  'put something up on ola for me please, a public page with only the word Kestrel on it' made the page but did not publish it
+   Ola wrote kestrel.html and said 'the page is made, but it is not public yet ... your request did not ask to
+   publish or to replace it', with no publish card. 'put it up on ola ... public' means publish.
+
+8. OLA-450  A page Ola builds says tomorrow's date in the evening
+   The project's computer ran on UTC, so a page built at 4 pm Pacific said tomorrow's date. (A fix was built:
+   the project's computer keeps the machine's time zone, image tag 2.4.2-2; waiting for a check.)
+
+9. OLA-466  The spreadsheet Bart asked for came out broken to use
+   After Enter a formula cell shows '=E1*2' until another cell is typed in; typing on a selected cell inserts
+   into the old text; cell text is 14 px so an iPhone zooms on every tap. On Ola's side: the project computer
+   cannot run the page's JavaScript to check it, one step ran to the 16,000-token reply cap, and the page landed
+   as spreadsheet.html with no link. The spreadsheet is the eighth request in evals/apps with a check.
+
+10. OLA-470  Cap the model's thinking per reply, and write big files in parts
+   High thinking spent 32,000 tokens and wrote no code; the reply limit of 16,000 tokens cut the spreadsheet
+   file off. Wanted: a limit on thinking per reply, and big files written in parts.

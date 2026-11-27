@@ -5,7 +5,7 @@
 // ticket lane's sandbox through the model's gateway (gateway.sh <model> first), and the run's changes are
 // kept in <dir>/change.diff. Then each test TESTS.md names can be checked on the untouched code (three.mjs
 // takes the chosen one as a case).
-//   node apps/activist-ai/tickets/write-tests.mjs --model studio-qwen3.8-flash-next --bugs apps/activist-ai/tickets/ten-bugs.txt [--time 1800]
+//   node apps/activist-ai/tickets/write-tests.mjs --model studio-qwen3.8-flash-next --bugs apps/activist-ai/tickets/ten-bugs.txt [--ask <instruction file>] [--time 1800]
 import { writeFileSync, readFileSync, symlinkSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { repo, root, nmRoot, nmOla, MODELS, sh, q, runFolders, opencodeConfig, runOpencode, gatewayToken, LEAN } from './lib.mjs'
@@ -28,7 +28,8 @@ writeFileSync(path.join(work, '.gitignore'), 'node_modules\n', { flag: 'a' })
 writeFileSync(path.join(work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(model, { lean: true }), null, 2))
 sh('git init -q && git add -A && git commit -qm base && git tag config', work)
 
-const text = `Here are ten bugs. For each, say in one line whether a small model could fix it. Then choose the TWO for which you can write a good test, ` +
+// --ask <file>: the instruction itself (run two of OLA-520); the bugs follow it.
+const text = args.ask ? `${readFileSync(path.resolve(args.ask), 'utf8').trim()}\n\n${LEAN.reading} Work only in this folder.\n\n${bugs}` : `Here are ten bugs. For each, say in one line whether a small model could fix it. Then choose the TWO for which you can write a good test, ` +
   `and for each write one test file that fails on this code because of the bug and would pass once the bug is fixed. Put each test next to the tests ` +
   `of that part of the code, in the style of the tests already there, runnable with one node command. Do not fix the bugs. End with a file TESTS.md ` +
   `naming for each of the two: the bug id, the test file, the exact command to run it, and what it checks.\n\n${LEAN.reading} Work only in this folder.\n\n${bugs}`

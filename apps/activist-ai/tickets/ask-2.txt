@@ -1,0 +1,7 @@
+Here are ten bugs in this code. For each of the ten, say in one line whether a small model could fix it.
+
+Then, for EVERY one of the ten where you can write a good test, write one test file that fails on this code because of the bug and would pass once the bug is fixed. Put it next to the tests of that part of the code, in the style of the tests already there, runnable with one node command, with no network, no live model and no secrets. Where you cannot write a good test, say why in one line. Do not fix the bugs.
+
+End with two files at the top of this folder:
+- TESTS.md: per bug, either the test file, the exact command to run it and what it checks, or "no test: <why>".
+- TESTS.json: a JSON array with one entry per bug, {"bug": "OLA-…", "file": "<test file path from this folder, or null>", "cmd": "<the exact command, run from this folder, or null>", "why": "<one line>"}.
