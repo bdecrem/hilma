@@ -39,6 +39,7 @@ import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
 import { makeSwitches } from './switches.mjs'
 import { makeFaults } from './faults.mjs'
+import { pokeLine } from './poke.mjs'
 import { ASKS_WHO, NOTE_CLOSE, NOTE_OPEN, gatewayServed, makeMadeBy } from './madeby.mjs'
 import { asksAboutFile, filesFact } from './filesnote.mjs'
 import { asksChangeNotPublish, publishedFact } from './publishednote.mjs'
@@ -715,10 +716,12 @@ export function makeFrontDesk(cfg = config()) {
       const busy = workspaces.holdBusy(ws.slug)
       try {
         // 5 s of slack: the turn's start may come from the page's clock, the file's time from the VM's.
-        const r = await workspaces.poke(ws.slug, since - 5000)
-        if (!r) return json(res, 502, { error: 'poke_failed' })
-        log(`${ws.slug}: ${r.page ? `a page was pressed (${r.dead.length} dead)` : 'no page changed in the turn: nothing pressed'}`)
-        return json(res, 200, r)
+        const t0 = Date.now()
+        const r = await workspaces.poke(ws.slug, since - 5000).catch(() => ({ failed: 'failed' }))
+        // One line each time it runs (frontdesk/poke.mjs): whether it ran, which page, what it found.
+        log(pokeLine({ handle: sess.handle, slug: ws.slug, r, ms: Date.now() - t0 }))
+        if (r.failed) return json(res, 502, { error: 'poke_failed' })
+        return json(res, 200, { page: r.page, dead: r.dead })
       } finally {
         busy()
       }

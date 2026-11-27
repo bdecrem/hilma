@@ -1109,26 +1109,30 @@ export async function examples(id, args, input, { ms = 20_000 } = {}) {
 /**
  * `ola-poke --since <ms> /work` in the VM (OLA-515): the .html file in the project changed last since
  * `sinceMs` (however it was written: a write step or `cat > index.html`), every field typed in and every
- * button pressed, no model involved. Resolves { page: <rel> | null, dead: [{ what, name, say }] } (page
- * null and dead empty when no page changed), or null when the pressing failed or ran out of time (the
+ * button pressed, no model involved. Resolves { page: <rel> | null, pressed, typed, dead: [{ what, name,
+ * say }] } (page null and dead empty when no page changed), or { failed: 'failed' | 'timed out' } (the
  * caller then sends nothing).
  */
 export async function poke(id, sinceMs, { ms = 25_000 } = {}) {
   validId(id)
   if (!Number.isFinite(sinceMs) || sinceMs <= 0) refuse('not a time')
   const child = execTool(id, 'ola-poke', ['--since', String(Math.floor(sinceMs)), '/work'])
-  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  let killed = false
+  const timer = setTimeout(() => ((killed = true), child.kill('SIGKILL')), ms)
   const r = await collect(child, 256 * 1024)
   clearTimeout(timer)
-  if (r.code !== 0) return null
+  // A failure says which (OLA-515's log line): ola-poke's own deadline or ours, or anything else.
+  const failed = (why) => ({ failed: why })
+  if (r.code !== 0) return failed(killed || /TimeoutError/.test(r.err ?? '') ? 'timed out' : 'failed')
   try {
     const j = JSON.parse(r.out)
-    if (!Array.isArray(j?.dead)) return null
+    if (!Array.isArray(j?.dead)) return failed('failed')
     const page = typeof j.page === 'string' && j.page.startsWith('/work/') ? j.page.slice('/work/'.length) : null
-    if (page !== null && !validRel(page)) return null
-    return { page, dead: page === null ? [] : j.dead.filter((d) => d && typeof d.say === 'string').map((d) => ({ what: String(d.what ?? ''), name: String(d.name ?? '').slice(0, 60), say: d.say.slice(0, 300) })) }
+    if (page !== null && !validRel(page)) return failed('failed')
+    const n = (v) => (Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0)
+    return { page, pressed: n(j.pressed), typed: n(j.typed), dead: page === null ? [] : j.dead.filter((d) => d && typeof d.say === 'string').map((d) => ({ what: String(d.what ?? ''), name: String(d.name ?? '').slice(0, 60), say: d.say.slice(0, 300) })) }
   } catch {
-    return null
+    return failed('failed')
   }
 }
 
