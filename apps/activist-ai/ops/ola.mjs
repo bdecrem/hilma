@@ -610,6 +610,7 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['studio', ['--test', 'ops/studio-test.mjs']], // the studio's scripts (OLA-291), seconds, no VM
     ['disk', ['--test', 'ops/disk-test.mjs']], // the free-disk refusal (OLA-327), seconds, no VM
     ['park', ['--test', 'ops/park-test.mjs']], // idle projects parked for the VM suites (OLA-240), seconds, no VM
+    ['speed', ['evals/speed/test.mjs']], // the speed check's rules (OLA-456), a second, no VM, no model call
     // OLA-464: an ordinary update runs these in place of the web and front desk suites (ops/select.mjs, quickForm)
     ['web-unit', ['ops/unit.mjs', 'web']], // web/test, about a second, no browser
     ['frontdesk-unit', ['ops/unit.mjs', 'frontdesk']], // frontdesk/test, under a minute, no VM
@@ -1006,6 +1007,20 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     const fd = openSync(path.join(dir, `run-${short}.log`), 'a')
     spawn(NODE, [asks, '--after-deploy'], { cwd: code, detached: true, stdio: ['ignore', fd, fd], env: { ...process.env, OLA_TURN_HELD: '' } }).unref()
     say(`asks: started in the background, log ~/ola-asks/run-${short}.log`)
+  }
+  // The speed check (OLA-456): Ola against plain OpenCode on a page, a toy and an app, after every
+  // update that changes Ola's instructions, skills or tools (it decides from the changed files, and
+  // runs when the update could not tell). In the background; each walk takes the turn for itself.
+  // Result in ~/ola-staging/speed.json and ~/ola-speed/history.log. OLA_SPEED_AFTER_DEPLOY=0 leaves it out.
+  const speed = path.join(code, 'evals/speed/run.mjs')
+  if (process.env.OLA_SPEED_AFTER_DEPLOY !== '0' && existsSync(speed)) {
+    const dir = path.join(homedir(), 'ola-speed')
+    mkdirSync(dir, { recursive: true })
+    const list = path.join(dir, `changed-${short}.json`)
+    writeFileSync(list, JSON.stringify(changed))
+    const fd = openSync(path.join(dir, `run-${short}.log`), 'a')
+    spawn(NODE, [speed, '--after-deploy', '--changed', list], { cwd: code, detached: true, stdio: ['ignore', fd, fd], env: { ...process.env, OLA_TURN_HELD: '' } }).unref()
+    say(`speed check: started in the background, log ~/ola-speed/run-${short}.log`)
   }
   out.end()
 }

@@ -1,0 +1,8 @@
+{
+  "_": "The speed check's requests (OLA-456): one per kind, each typed the way Bart types it. Ola must finish each within twice plain OpenCode's time on the same model. Add a kind here; keep the words as a person would type them.",
+  "requests": [
+    { "id": "page", "kind": "a page", "ask": "build me a Good Morning web page with the weather in Santa Cruz today" },
+    { "id": "toy", "kind": "a toy", "ask": "make me a kite flying toy I can play with on my phone" },
+    { "id": "app", "kind": "an app", "ask": "build me a tip calculator" }
+  ]
+}

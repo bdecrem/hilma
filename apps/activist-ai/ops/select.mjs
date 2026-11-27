@@ -34,7 +34,7 @@ import path from 'node:path'
 
 
 // Seconds each, no VM: run every time.
-export const ALWAYS = ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk', 'park']
+export const ALWAYS = ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk', 'park', 'speed']
 // Entry file per suite (the check's own test file).
 export const ENTRY = {
   turn: 'ops/turn-test.mjs',
@@ -51,6 +51,7 @@ export const ENTRY = {
   studio: 'ops/studio-test.mjs',
   disk: 'ops/disk-test.mjs',
   park: 'ops/park-test.mjs',
+  speed: 'evals/speed/test.mjs',
   gateway: 'gateway/test.mjs',
   workspace: 'workspace/check.mjs',
   web: 'web/check.mjs',
@@ -72,7 +73,7 @@ export const OWNS = {
   studio: ['ops/studio/'],
 }
 // Lanes: the suites of one lane run in order; lanes run side by side.
-export const LANES = [['workspace', 'frontdesk'], ['web'], ['gateway'], ['tls'], ['apps'], ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk', 'park']]
+export const LANES = [['workspace', 'frontdesk'], ['web'], ['gateway'], ['tls'], ['apps'], ['turn', 'backup', 'ci', 'signers', 'restart', 'asks', 'select', 'models', 'suite', 'watch', 'clean', 'studio', 'disk', 'park', 'speed']]
 // A change to these runs every suite (with the update tool's own files, toolFiles).
 export const ALL_IF = ['package.json', 'package-lock.json']
 // Files no suite runs or reads, when no suite's closure names them: writing (*.md outside the
