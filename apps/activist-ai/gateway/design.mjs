@@ -2,12 +2,12 @@
 // design requests go to Inkling-2-Small (Thinking Machines, 594B, served on Together; it cannot run on
 // the 128 GB Mac Studio, so it stays hosted). Ola's design had been "AI design from 2 years ago".
 //
-// Which requests: the boundary is the skill, not the person's words. opencode loads a skill with its
-// `skill` tool ({"id":"designer"}), and AGENTS.md tells Ola to load `designer` (or `app-designer`)
-// before every page or app screen. So a request for `general` whose messages, after the person's last
-// message, hold a call of the skill tool for one of DESIGN_SKILLS ({"id":"designer"} in opencode 2.3.0) is design work, and the gateway
-// serves it with the name `design`. The turn's first request (the one that decides to load the skill)
-// stays on `general`; every later request of that turn goes to `design`; the next turn starts again.
+// Which requests (since Nov 27): the person's words, or the skill. A turn whose last message from the
+// person asks for a page, a site or a redo of its look (asksForDesign) is design work from its first
+// request. A request after a call of the skill tool for one of DESIGN_SKILLS ({"id":"designer"} in
+// opencode 2.x), or after a step that reads or runs the skills' files, is design work too. Until Nov 27
+// only the skill decided; then the project computer began refusing the designer skill unless named
+// (OLA-447), and most page requests stayed on `general`. The next turn starts again.
 // A caller may also ask for `design` by name: the same rules apply.
 //
 // Where the work may go. Today every model of Ola's is rented on Together, so sending design work
@@ -42,11 +42,6 @@ export const STEPS_MAX = 5000
 
 // The sentences the gateway adds for Ola to pass on (fixed text, from this file).
 export const WITHHELD = 'Note from Ola’s gateway: this design work is being done by Ola’s own model on this machine, because this project keeps its work in the office. In your reply, say in one plain sentence that a stronger design model is available if the project’s owner turns on the hosted model in Settings.'
-// OLA-463: Ola's instructions (AGENTS.md, since OLA-455) say the designer skills load only when the
-// person names them, which is right where Ola's own model builds the page (the Studio). Where a design
-// model is set and this caller's work may go to it, the skill is what sends the page there, so the
-// gateway says so in the request: a general request that offers the skill tool, before the skill loads.
-export const DESIGN_HERE = 'Note from Ola’s gateway: on this server a separate design model does page design. Before you make or restyle a web page, a site or an app screen, load the `designer` skill (`app-designer` for a phone or Mac app screen), also when the person did not name it.'
 export const DESIGN_DOWN = 'Note from Ola’s gateway: Ola’s design model could not answer this request just now, so Ola’s own everyday model is doing the design. In your reply, say so in one plain sentence.'
 
 /** The design settings, checked. `models` is GATEWAY_MODELS as read (it may hold design). */
@@ -89,6 +84,23 @@ const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((
 /** Did this assistant message ask the person something (the question tool, or words ending in a question)? */
 const asksPerson = (m) => m?.role === 'assistant' && ((Array.isArray(m.tool_calls) && m.tool_calls.some((c) => c?.function?.name === 'question')) || /\?\s*$/.test(textOf(m.content)))
 
+// The person's own words (OLA-168, Nov 27). Since OLA-447/455 the project computer refuses the
+// designer skill unless the person names it (opencode-system.jsonc denies skill.use designer), so a
+// skill call stopped being a trigger: the checker on 44a03a40d58a saw 'can you build us a little
+// website announcing the tenants' potluck next Friday at 6' served only by `general` on the iPhone and
+// on the Mac (0 design requests), and on the Mac in the cloud a step "Unable to load skill designer".
+// A request whose words ask for a page, a site or a redo of its look is design work from its first
+// request. The same words as the website's stretch check (web/src/lib/steps.ts), plus "page" and the
+// "make it pretty" redo (OLA-153).
+const DESIGN_THING = /\b(web ?page|page|landing page|home ?page|web ?site|site|poster|flyer|brochure|app screen)s?\b/i
+const DESIGN_VERB = /\b(build|make|create|draw|lay ?out|design|redesign|restyle|redo|throw together|put together|mock ?up)\b/i
+const DESIGN_ASK = /\b(re)?design (a|an|the|me|us|our|my|some|this|that)\b|\bmake (it|this|that|the page|the site)( look)? (pretty|prettier|nicer|beautiful|gorgeous|fun|bolder|more (fun|colorful|colourful|festive|modern))\b|\b(this|it|the page) looks (plain|boring|ugly|dull)\b|\buse (your|the) design(er)? skill\b/i
+export function asksForDesign(text) {
+  if (typeof text !== 'string' || !text) return false
+  const t = text.slice(0, 2000)
+  return DESIGN_ASK.test(t) || (DESIGN_THING.test(t) && DESIGN_VERB.test(t))
+}
+
 /**
  * Why this request is design work, or null: the designer or app-designer skill was loaded or used
  * after the person's last message ('skill'), or the person's last message answers a question the
@@ -103,6 +115,7 @@ export function designWhy(messages) {
   messages.forEach((m, i) => m?.role === 'user' && users.push(i))
   const last = users.at(-1) ?? -1
   for (let i = last + 1; i < messages.length; i++) if (usesDesignSkill(messages[i])) return 'skill'
+  if (last >= 0 && asksForDesign(textOf(messages[last].content))) return 'words'
   if (last < 1) return null
   const prev = users.at(-2) ?? -1
   let asked = null
@@ -112,6 +125,7 @@ export function designWhy(messages) {
       break
     }
   if (!asksPerson(asked)) return null
+  if (prev >= 0 && asksForDesign(textOf(messages[prev].content))) return 'answer'
   for (let i = prev + 1; i < last; i++) if (usesDesignSkill(messages[i])) return 'answer'
   return null
 }

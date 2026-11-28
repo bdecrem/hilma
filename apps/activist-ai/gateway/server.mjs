@@ -58,7 +58,7 @@ import { askFirstNote, bothNotes } from './askfirst.mjs'
 import { argsFit, schemasOf } from './toolargs.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 import { publishedChangeNote } from './publishedchange.mjs'
-import { DESIGN_DOWN, DESIGN_HERE, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
+import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
 import { CHECK_WEEKLY_TOKENS, checkCallerWeekly } from './check-accounts.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
 
@@ -1230,11 +1230,10 @@ async function handle(req, res, rec, signal) {
     else if (C.models.has('general')) (served = 'general'), (note = WITHHELD), (rec.design = 'withheld')
     else return no(403, 'design work may not leave this machine', 'The design model is off for this project. Its owner can turn on the hosted model in Settings.', 'permission_error')
   }
-  // OLA-463: where the design model is this caller's to use, Ola is told to load the skill for a page.
-  if (!isHosted && !probeBackup && !isProbe && !why && body.model === 'general' && C.models.has('design') && design.may(who) && Array.isArray(body.tools) && body.tools.some((t) => t?.function?.name === 'skill')) {
-    note = DESIGN_HERE
-    rec.design_here = 1
-  }
+  // OLA-463 told Ola here to load the designer skill for a page; the project computer refuses that
+  // skill unless the person names it, so the step failed ("Unable to load skill designer") and the
+  // design model was reached only when Ola tried anyway. Since OLA-168 (Nov 27) the person's words
+  // decide (design.mjs asksForDesign), and no note sends Ola to the skill.
   if (served !== body.model) rec.served = served
   const s = isHosted ? { ...C.sp.spec.general, name: 'hosted', pool: 0, perMinute: 0 } : C.sp.spec[served]
   if (pick) rec.pick = pick

@@ -11,7 +11,7 @@ import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { designWhy } from './design.mjs'
+import { asksForDesign, designWhy } from './design.mjs'
 import { askFirstNote, asksToBeAsked } from './askfirst.mjs'
 import { argsFit } from './toolargs.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
@@ -2193,8 +2193,9 @@ test('web: a person’s own caller (p-<id>) has a standing grant; a workspace st
 
 // A conversation as opencode sends it: the person's request, then (in a design turn) the skill
 // loaded. The fake reads its command from the last message, a tool result in a design turn.
+// The person's words here ask for no page (asksForDesign is false), so these cases test the skill alone.
 const turn = (cmd, { skill = null, after = false } = {}) => {
-  const m = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'make a page for our block party on Saturday' }]
+  const m = [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: 'go through the notes for our block party on Saturday' }]
   if (skill) m.push({ role: 'assistant', content: '', tool_calls: [{ id: 's1', type: 'function', function: { name: 'skill', arguments: JSON.stringify(skill === 'app-designer' ? { name: skill } : { id: skill }) } }] })
   if (after) m.push({ role: 'tool', tool_call_id: 's1', content: 'the skill' }, { role: 'assistant', content: 'Here it is.' }, { role: 'user', content: JSON.stringify(cmd) })
   else if (skill) m.push({ role: 'tool', tool_call_id: 's1', content: JSON.stringify(cmd) })
@@ -2256,29 +2257,34 @@ test('design: after the designer skill is loaded in this turn, the design model 
   }
 })
 
-// OLA-463: Ola's instructions say the designer skills load only by name (right where Ola's own model
-// builds the page). Where a design model is this caller's to use, the gateway tells Ola to load the
-// skill for a page; with no design model it says nothing.
-test('design: with a design model to use, a general request that offers the skill tool is told to load the skill for a page; without one, nothing is added (OLA-463)', async () => {
+// OLA-168, Nov 27: the project computer refuses the designer skill unless named (OLA-447), so the
+// checker on 44a03a40d58a saw page requests served only by `general` (iPhone, Ola on the Mac). The
+// person's words decide now, from the turn's first request, and no note sends Ola to the skill.
+test('design: a request whose words ask for a page is design work from its first request; other work is not; no note to load the skill (OLA-168)', async () => {
+  const yes = ['make a page for our block party on Saturday', "can you build us a little website announcing the tenants' potluck next Friday at 6", 'could you throw together a web page for the street fair on our block this Sunday?', 'now make it pretty. Use your design skill', 'this looks plain. make it prettier', 'redesign the page with bolder colors', 'make a flyer for the rally']
+  const no = ['how many members are in members.csv, by city?', 'who made that page?', 'which AI built this page?', 'publish it on ola', 'make a chart of turnout by month', 'summarize the survey answers', 'fix the typo in the third line']
+  for (const t of yes) assert.equal(asksForDesign(t), true, t)
+  for (const t of no) assert.equal(asksForDesign(t), false, t)
   const SKILL_TOOL = [{ type: 'function', function: { name: 'skill', parameters: { type: 'object', properties: {} } } }]
+  const msgs = (text) => [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: [{ type: 'text', text }] }]
   const up = await fakeUpstream()
   const g = await gateway({ ...baseEnv(up.url), ...DESIGN_ENV })
   try {
-    await call(g, T.a, turn({ tag: 'title' }))
-    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'no tools (a title): no note')
-    await call(g, T.a, { ...turn({ tag: 'offered' }), tools: SKILL_TOOL })
-    assert.ok(up.st.seen.at(-1).system.includes('load the `designer` skill'), up.st.seen.at(-1).system)
-    assert.notEqual(up.st.seen.at(-1).model, 'up/design-1', 'still the everyday model')
-    await call(g, T.a, { ...turn({ tag: 'loaded' }, { skill: 'designer' }), tools: SKILL_TOOL })
-    assert.equal(up.st.seen.at(-1).model, 'up/design-1')
-    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'the design turn itself: no note')
+    await call(g, T.a, { model: 'general', max_tokens: 4000, tools: SKILL_TOOL, messages: msgs(yes[1]) })
+    assert.equal(up.st.seen.at(-1).model, 'up/design-1', 'the first request of the turn goes to the design model')
+    assert.ok(!up.st.seen.at(-1).system.includes('load the `designer` skill'), 'no note to load the skill')
+    const line = await waitFor(() => g.logs().find((l) => l.design_why === 'words'), 3000, 'the log line says why')
+    assert.equal(line.served, 'design')
+    await call(g, T.a, { model: 'general', max_tokens: 4000, tools: SKILL_TOOL, messages: msgs(no[0]) })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'other work stays on the everyday model')
+    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'and gets no note')
   } finally {
     await g.stop()
   }
   const g2 = await gateway({ ...baseEnv(up.url), GATEWAY_USAGE_TOKEN: T.usage })
   try {
-    await call(g2, T.a, { ...turn({ tag: 'none' }), tools: SKILL_TOOL })
-    assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'no design model on this machine: no note')
+    await call(g2, T.a, { model: 'general', max_tokens: 4000, messages: msgs(yes[0]) })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'no design model on this machine: the everyday model')
   } finally {
     await g2.stop()
   }
@@ -2303,6 +2309,7 @@ test('design: the person answering the design work’s question, and the designe
   assert.equal(designWhy(ask('done')), null, 'a design turn that ended without asking: the next request starts on general')
   const noSkill = ask('words')
   noSkill.splice(2, 2)
+  noSkill[1] = { role: 'user', content: 'summarize the survey answers' }
   assert.equal(designWhy(noSkill), null, 'a question from work that was not design work')
   const look = [{ role: 'user', content: 'change the look of the page: make it warmer' }, { role: 'assistant', content: '', tool_calls: [{ id: 'b1', type: 'function', function: { name: 'bash', arguments: JSON.stringify({ command: 'python3 /opt/ola/skills/designer/scripts/look.py index.html --name warm' }) } }] }, { role: 'tool', tool_call_id: 'b1', content: 'ok' }]
   assert.equal(designWhy(look), 'skill', 'running the designer’s look.py is using the skill')

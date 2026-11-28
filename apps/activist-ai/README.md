@@ -2246,7 +2246,14 @@ Bart judged blind sheets of pages made by five models and decided: design reques
 Together at $0.30 per million input tokens, $0.03 cached, $1.00 output, from together.ai/pricing on
 Nov 20). It cannot run on the 128 GB Studio (172 GB at its smallest), so it stays hosted.
 
-- **Which requests** (`gateway/design.mjs`): a request for `general` whose messages, after the
+- **Which requests, since Nov 27** (`asksForDesign` in `gateway/design.mjs`): a turn whose last
+  message from the person asks for a page, a site, a flyer or a redo of its look ("make a page for
+  our block party", "can you build us a little website…", "now make it pretty") goes to `design`
+  from its first request. The project computer refuses the designer skill unless the person names
+  it (OLA-447), so the skill alone had stopped being a trigger: on 44a03a40d58a the iPhone and Ola
+  on the Mac made the potluck page with 0 design requests. The note telling Ola to load the skill
+  (OLA-463) is gone. The skill cases below still count too.
+- **Which requests, until Nov 27**: a request for `general` whose messages, after the
   person's last message, hold opencode's `skill` tool call for `designer` or `app-designer`. AGENTS.md
   has Ola load that skill before every page or app screen, so the turn's first request stays on
   `general` and the rest of the turn goes to `design`. No guessing from the person's words. The
