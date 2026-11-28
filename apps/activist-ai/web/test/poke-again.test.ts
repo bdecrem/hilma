@@ -3,7 +3,7 @@
 // All fine, or the second pressing failed: neither. Yes: one hand-off turn, never pressed again. No: nothing.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { deadAnswer, DEAD_HANDOFF_LINE, deadHandoffRequest, deadOffer, deadQuestion, isPokeFix, pokeable, pokeAgain, pokeAfter, pokePrompt, POKE_LINE, type Poked } from '../src/lib/poke.ts'
+import { deadAnswer, DEAD_HANDOFF_LINE, deadHandoffRequest, deadLines, deadOffer, deadQuestion, isPokeFix, pokeable, pokeAgain, pokeAfter, pokePrompt, POKE_LINE, type Poked } from '../src/lib/poke.ts'
 import { emptyConversation, startTurn } from '../src/lib/conversation.ts'
 import { handoffPrompt } from '../src/lib/steps.ts'
 import type { Turn } from '../src/lib/types.ts'
@@ -93,4 +93,15 @@ test('a second fix is never asked for: a fix turn still dead goes to the card, n
   const sent: string[] = []
   await pokeAfter(fixTurn(), { poke: async () => ({ page: 'index.html', dead: DEAD }), send: (x) => sent.push(x), stillLast: () => true })
   assert.deepEqual(sent, [])
+})
+
+test('seven still dead: the card names four and says how many more; the hand-off gets all seven', () => {
+  const seven = Array.from({ length: 7 }, (_, i) => ({ what: 'button', name: `B${i}`, say: `Pressing 'B${i}' changed nothing on the page.` }))
+  const q = deadQuestion('index.html', seven, { hostedSetUp: true, canSend: true })
+  assert.equal(q.dead.length, 7)
+  const lines = deadLines(q.dead)
+  assert.equal(lines.length, 5)
+  assert.equal(lines[4], 'And 3 more.')
+  assert.deepEqual(deadLines(q.dead.slice(0, 4)), q.dead.slice(0, 4))
+  assert.equal((deadHandoffRequest('make a game', 'index.html', q.dead).match(/^- /gm) ?? []).length, 7)
 })

@@ -87,9 +87,15 @@ export async function pokeAgain(
   return true
 }
 
-/** The card's facts: the sentences shown, and whether the bigger model is offered (never what cannot be done). */
+/** The card's facts: every sentence (the hand-off gets them all), and whether the bigger model is offered (never what cannot be done). */
 export function deadQuestion(page: string, dead: Dead[], o: { hostedSetUp: boolean; canSend: boolean }) {
-  return { page, dead: dead.slice(0, DEAD_SHOWN).map((d) => d.say), offered: o.hostedSetUp && o.canSend }
+  return { page, dead: dead.map((d) => d.say), offered: o.hostedSetUp && o.canSend }
+}
+
+/** The card's list: the first DEAD_SHOWN sentences, then how many more, so a long list never looks complete when it is not (checker, Nov 27: 7 dead, 4 shown, nothing said of the other 3). */
+export function deadLines(dead: string[]): string[] {
+  const more = dead.length - DEAD_SHOWN
+  return more > 0 ? [...dead.slice(0, DEAD_SHOWN), `And ${more} more.`] : dead
 }
 
 /** The card's words (StretchCard, reason 'dead'). */
