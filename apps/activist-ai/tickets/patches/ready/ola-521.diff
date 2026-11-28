@@ -1,0 +1,250 @@
+diff --git a/apps/activist-ai/frontdesk/poke.mjs b/apps/activist-ai/frontdesk/poke.mjs
+index 6b0e1e7b..75bb7bcd 100644
+--- a/apps/activist-ai/frontdesk/poke.mjs
++++ b/apps/activist-ai/frontdesk/poke.mjs
+@@ -1,13 +1,15 @@
+ // The trace of one click-through (OLA-515, /api/poke): one plain line in the front desk log each time
+ // it runs, so anyone can tell whether it ran, on which page, and what it found. Names only: the account,
+-// the project, the page's file name, counts, seconds, and for each dead thing its kind and the control's
+-// label. Never the page's text, the request or the answer. (The log line's time is the log's own.)
++// the project, the page's file name, counts, seconds, and for each dead thing its kind and its place in
++// the dead list ("button 1 of 3"), and for a script error whether it came on load. Never a control's label
++// (OLA-521: a label is page text and can hold a person's content), the page's text, the request or the
++// answer. (The log line's time is the log's own.)
+ 
+ const clip = (s, n) => {
+   const t = String(s ?? '').replace(/[\r\n\t]+/g, ' ').trim()
+   return t.length > n ? t.slice(0, n - 1) + '…' : t
+ }
+-const deadWord = (d) => (d.what === 'error' ? `script error${d.name ? ` on '${clip(d.name, 24)}'` : ' on load'}` : `${d.what === 'field' ? 'field' : 'button'} '${clip(d.name, 24)}'`)
++const deadWord = (d, n, total) => (d.what === 'error' ? `script error ${n} of ${total} (${d.name ? 'on a control' : 'on load'})` : `${d.what === 'field' ? 'field' : 'button'} ${n} of ${total}`)
+ 
+ /** One log line for one click-through: `r` is workspaces.poke's answer ({ failed } or { page, pressed, typed, dead }). */
+ export function pokeLine({ handle, slug, r, ms, second = false }) {
+@@ -15,7 +17,7 @@ export function pokeLine({ handle, slug, r, ms, second = false }) {
+   const took = `${(Math.max(0, ms) / 1000).toFixed(1)} s`
+   if (!r || r.failed) return `${who}: the pressing ${r?.failed === 'timed out' ? 'timed out' : 'failed'} after ${took}; nothing sent`
+   if (!r.page) return `${who}: no page changed in the turn; nothing pressed (${took})`
+-  const found = r.dead.length ? `${r.dead.length} dead: ${r.dead.slice(0, 4).map(deadWord).join(', ')}${r.dead.length > 4 ? `, and ${r.dead.length - 4} more` : ''}` : 'nothing dead'
++  const found = r.dead.length ? `${r.dead.length} dead: ${r.dead.slice(0, 4).map((d, i) => deadWord(d, i + 1, r.dead.length)).join(', ')}${r.dead.length > 4 ? `, and ${r.dead.length - 4} more` : ''}` : 'nothing dead'
+   return `${who}: pressed ${clip(r.page, 60)} (${r.pressed} pressed, ${r.typed} typed, ${took}): ${found}`
+ }
+ 
+diff --git a/apps/activist-ai/frontdesk/test/poke.test.mjs b/apps/activist-ai/frontdesk/test/poke.test.mjs
+index 44068a7a..25e8d588 100644
+--- a/apps/activist-ai/frontdesk/test/poke.test.mjs
++++ b/apps/activist-ai/frontdesk/test/poke.test.mjs
+@@ -10,14 +10,14 @@ test('a page pressed with nothing dead', () => {
+   assert.equal(pokeLine({ ...at, r: { page: 'index.html', pressed: 7, typed: 2, dead: [] }, ms: 3400 }), 'click-through for asks in asks-team: pressed index.html (7 pressed, 2 typed, 3.4 s): nothing dead')
+ })
+ 
+-test('a page with dead things: kind and label only, never what the page says', () => {
++test('a page with dead things: kind and place only, never what the page says', () => {
+   const r = { page: 'todo/index.html', pressed: 5, typed: 1, dead: [
+     { what: 'button', name: 'Done', say: "Pressing 'Done' changed nothing on the page." },
+     { what: 'field', name: 'People', say: "The field 'People' did not take what was typed." },
+     { what: 'error', name: '', say: 'Script error when the page opened: ReferenceError: secretThing is not defined' },
+   ] }
+   const line = pokeLine({ ...at, r, ms: 8000 })
+-  assert.equal(line, "click-through for asks in asks-team: pressed todo/index.html (5 pressed, 1 typed, 8.0 s): 3 dead: button 'Done', field 'People', script error on load")
++  assert.equal(line, "click-through for asks in asks-team: pressed todo/index.html (5 pressed, 1 typed, 8.0 s): 3 dead: button 1 of 3, field 2 of 3, script error 3 of 3 (on load)")
+   assert.ok(!line.includes('secretThing'))
+ })
+ 
+@@ -35,7 +35,7 @@ test('many dead things: four named, the rest counted, and the line fits the log
+ 
+ // OLA-522: the second pressing, the question and the answer each leave one line.
+ test('the second pressing, the question and its answer', () => {
+-  assert.equal(pokeLine({ ...at, r: { page: 'index.html', pressed: 4, typed: 1, dead: [{ what: 'button', name: 'Done', say: 'x' }] }, ms: 2000, second: true }), "second click-through (after the fix) for asks in asks-team: pressed index.html (4 pressed, 1 typed, 2.0 s): 1 dead: button 'Done'")
++  assert.equal(pokeLine({ ...at, r: { page: 'index.html', pressed: 4, typed: 1, dead: [{ what: 'button', name: 'Done', say: 'x' }] }, ms: 2000, second: true }), "second click-through (after the fix) for asks in asks-team: pressed index.html (4 pressed, 1 typed, 2.0 s): 1 dead: button 1 of 1")
+   assert.equal(pokeNoteLine({ ...at, note: { event: 'asked', offered: true, dead: 2 } }), 'click-through for asks in asks-team: still dead after the fix (2); told the person and asked whether to give it to the bigger model')
+   assert.match(pokeNoteLine({ ...at, note: { event: 'asked', offered: false, dead: 1 } }), /told the person \(no bigger model offered/)
+   assert.equal(pokeNoteLine({ ...at, note: { event: 'yes', offered: true, dead: 2 } }), 'click-through for asks in asks-team: the person said yes: handed to the bigger model')
+diff --git a/apps/activist-ai/frontdesk/test/pokedead.held.test.mjs b/apps/activist-ai/frontdesk/test/pokedead.held.test.mjs
+new file mode 100644
+index 00000000..09035e9a
+--- /dev/null
++++ b/apps/activist-ai/frontdesk/test/pokedead.held.test.mjs
+@@ -0,0 +1,83 @@
++// OLA-521, held examples: the same rule as pokedead.test.mjs, on other pages and other labels. A dead
++// control's label is page text and can carry a person's content, so the click-through log line names the
++// kind and the place (or a short hash) instead of the words. Run alongside pokedead.test.mjs.
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { pokeLine, pokeNoteLine } from '../poke.mjs'
++
++const at = { handle: 'ian', slug: 'mrd-library' }
++const line = (r, ms = 5100, extra = {}) => pokeLine({ ...at, r, ms, ...extra })
++
++/** Does the line name a dead `kind` by place or by a short hash: 'field 2 of 7', 'field 2',
++ *  'field #a1b2c3', 'field a1b2c3'? The label in quotes does not count as naming it. */
++const named = (l, kind) => new RegExp(String.raw`\b${kind} (?:\d+ of \d+|\d+|#[0-9a-z]{4,}|[0-9a-f]{6,})\b`, 'i')
++
++test('bug: a dead field labelled with an address keeps the address out of the log', () => {
++  const r = { page: 'intake/index.html', pressed: 8, typed: 3, dead: [{ what: 'field', name: '1412 Elm St — mold report', say: 'Typing changed nothing.' }] }
++  const l = line(r)
++  assert.ok(!l.includes('1412 Elm St'), `an address is page text: ${l}`)
++  assert.ok(!l.includes('mold report'), `and so is the rest of the label: ${l}`)
++  assert.ok(!l.includes("'"), `no quoted label: ${l}`)
++  assert.ok(named(l, 'field'), `says which field by place or hash: ${l}`)
++})
++
++test('bug: two dead fields with the same label are each named, neither by its words', () => {
++  const r = { page: 'loans/index.html', pressed: 6, typed: 1, dead: [
++    { what: 'field', name: 'Borrower name', say: 'a' },
++    { what: 'field', name: 'Borrower name', say: 'b' },
++  ] }
++  const l = line(r)
++  assert.ok(!l.includes('Borrower name'), `no label words: ${l}`)
++  assert.ok(!l.includes("'"), `no quoted label: ${l}`)
++  assert.equal((l.match(/field (?:\d+ of \d+|\d+|#[0-9a-z]{4,}|[0-9a-f]{6,})/gi) ?? []).length, 2, `both fields named: ${l}`)
++})
++
++test('bug: three dead controls, one a button and two fields, none of them quoted', () => {
++  const r = { page: 'notes/index.html', pressed: 12, typed: 4, dead: [
++    { what: 'button', name: 'Send J. Okafor’s note to the group chat', say: 'x' },
++    { what: 'field', name: 'J. Okafor — rent arrears', say: 'y' },
++    { what: 'field', name: 'Search the library', say: 'z' },
++  ] }
++  const l = line(r)
++  for (const words of ['J. Okafor', 'Send', 'rent arrears', 'Search the library']) assert.ok(!l.includes(words), `"${words}" is in the line: ${l}`)
++  assert.ok(!l.includes("'") && !l.includes('’'), `no quoted label: ${l}`)
++  assert.ok(named(l, 'button'), `the button is named: ${l}`)
++  assert.equal((l.match(/field (?:\d+ of \d+|\d+|#[0-9a-z]{4,}|[0-9a-f]{6,})/gi) ?? []).length, 2, `both fields named: ${l}`)
++  assert.ok(l.length <= 300, `${l.length} characters`)
++})
++
++// ---- what must not change with it ----
++
++test('stays: a long page name is still clipped to 60 and the counts and seconds are said', () => {
++  const page = 'quiroga-servicios/comunidad-2026/muy-largo/index.html'
++  const l = line({ page, pressed: 18, typed: 5, dead: [] }, 9400)
++  assert.equal(l, `click-through for ian in mrd-library: pressed ${page} (18 pressed, 5 typed, 9.4 s): nothing dead`)
++})
++
++test('stays: five dead things are four named and one counted', () => {
++  const dead = [
++    { what: 'button', name: 'b1', say: 'x' },
++    { what: 'button', name: 'b2', say: 'x' },
++    { what: 'field', name: 'f1', say: 'x' },
++    { what: 'button', name: 'b3', say: 'x' },
++    { what: 'field', name: 'f2', say: 'x' },
++  ]
++  const l = line({ page: 'index.html', pressed: 11, typed: 2, dead }, 7000)
++  assert.ok(l.startsWith('click-through for ian in mrd-library: pressed index.html (11 pressed, 2 typed, 7.0 s): 5 dead: '), l)
++  assert.ok(l.endsWith(', and 1 more'), l)
++  assert.equal((l.match(/\b(?:button|field) /g) ?? []).length, 4, `four named: ${l}`)
++})
++
++test('stays: the second pressing keeps its own prefix and a failed one still says nothing was sent', () => {
++  assert.match(line({ page: 'intake/index.html', pressed: 5, typed: 1, dead: [{ what: 'button', name: 'Save', say: 'x' }] }, 2300, { second: true }), /^second click-through \(after the fix\) for ian in mrd-library: pressed intake\/index\.html \(5 pressed, 1 typed, 2\.3 s\): 1 dead: button /)
++  assert.equal(line({ failed: 'timed out' }, 28_400), 'click-through for ian in mrd-library: the pressing timed out after 28.4 s; nothing sent')
++  assert.equal(line({ failed: 'failed' }, 1500, { second: true }), 'second click-through (after the fix) for ian in mrd-library: the pressing failed after 1.5 s; nothing sent')
++})
++
++test('stays: the note after the second pressing keeps its four lines and its silence', () => {
++  assert.match(pokeNoteLine({ ...at, note: { event: 'asked', offered: false, dead: 3 } }), /^click-through for ian in mrd-library: still dead after the fix \(3\); told the person \(no bigger model offered/)
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'yes', offered: false, dead: 1 } }), 'click-through for ian in mrd-library: the person said yes: handed to the bigger model')
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'no', offered: true, dead: 0 } }), 'click-through for ian in mrd-library: the person said no: nothing more')
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'asked', offered: true } }), null)
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'other', offered: true, dead: 2 } }), null)
++})
+diff --git a/apps/activist-ai/frontdesk/test/pokedead.test.mjs b/apps/activist-ai/frontdesk/test/pokedead.test.mjs
+new file mode 100644
+index 00000000..721870f3
+--- /dev/null
++++ b/apps/activist-ai/frontdesk/test/pokedead.test.mjs
+@@ -0,0 +1,93 @@
++// OLA-521: the click-through log line names a dead control by its kind and its place (or a short hash),
++// never by its label. A button's or field's label is page text and can carry a person's content, and one
++// line per click-through goes into the front desk log. Since 157cab08 (OLA-515) the line quotes the label;
++// this file is the change. Note: test/poke.test.mjs compares whole lines with quoted labels — it was
++// written for OLA-515 and goes with this one.
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { pokeLine, pokeNoteLine } from '../poke.mjs'
++
++const at = { handle: 'frances', slug: 'almanac' }
++const line = (r, ms = 4300, extra = {}) => pokeLine({ ...at, r, ms, ...extra })
++
++/** Does the line name a dead `kind` by place or by a short hash: 'button 3 of 11', 'button 3',
++ *  'button #a1b2c3', 'button a1b2c3'? Kind alone with the label in quotes does not count. */
++const named = (l, kind) => new RegExp(String.raw`\b${kind} (?:\d+ of \d+|\d+|#[0-9a-z]{4,}|[0-9a-f]{6,})\b`, 'i')
++
++test('bug: a dead button is named by its kind and place, not by its label', () => {
++  const r = { page: 'index.html', pressed: 11, typed: 2, dead: [{ what: 'button', name: 'No one added yet — type…', say: 'Pressing it changed nothing on the page.' }] }
++  const l = line(r)
++  assert.ok(!l.includes('No one added yet'), `the label is page text: ${l}`)
++  assert.ok(!l.includes("'"), `no quoted label: ${l}`)
++  assert.ok(named(l, 'button'), `says which button by place or hash: ${l}`)
++})
++
++test('bug: a field label and a button label with a person in them are both left out', () => {
++  const r = { page: 'todo/index.html', pressed: 9, typed: 1, dead: [
++    { what: 'field', name: 'Maria Alvarez', say: 'x' },
++    { what: 'button', name: 'Mark Maria Alvarez as done', say: 'y' },
++  ] }
++  const l = line(r)
++  assert.ok(!l.includes('Maria Alvarez'), `a person's name is never in the log: ${l}`)
++  assert.ok(!l.includes("'"), `no quoted label: ${l}`)
++  assert.ok(named(l, 'field') && named(l, 'button'), `both named by place or hash: ${l}`)
++})
++
++test('bug: clipping a long label to 24 characters still prints its first words', () => {
++  const r = { page: 'shelter/index.html', pressed: 14, typed: 3, dead: [{ what: 'button', name: 'Maria Alvarez said the shelter is full — type…', say: 'z' }] }
++  const l = line(r)
++  for (const words of ['Maria Alvarez', 'the shelter is full']) assert.ok(!l.includes(words), `"${words}" is in the line: ${l}`)
++  assert.ok(named(l, 'button'), `named by place or hash: ${l}`)
++})
++
++test('bug: two dead buttons with the same label are each named, and the line stays short', () => {
++  const r = { page: 'cases/index.html', pressed: 7, typed: 0, dead: [
++    { what: 'button', name: 'Save case notes', say: 'a' },
++    { what: 'button', name: 'Save case notes', say: 'b' },
++    { what: 'field', name: 'Case notes', say: 'c' },
++  ] }
++  const l = line(r)
++  assert.ok(!l.includes('Save case notes') && !l.includes('Case notes'), `no label words: ${l}`)
++  assert.equal((l.match(/button (?:\d+ of \d+|\d+|#[0-9a-z]{4,}|[0-9a-f]{6,})/gi) ?? []).length, 2, `both buttons named: ${l}`)
++  assert.ok(named(l, 'field'), `the field is named too: ${l}`)
++  assert.ok(l.length <= 300, `${l.length} characters`)
++})
++
++// ---- what must not change with it ----
++
++test('stays: the page, its counts and its seconds are still said', () => {
++  assert.equal(
++    line({ page: 'survey/index.html', pressed: 6, typed: 2, dead: [] }, 2600),
++    'click-through for frances in almanac: pressed survey/index.html (6 pressed, 2 typed, 2.6 s): nothing dead',
++  )
++})
++
++test('stays: no page, a failure and a timeout say the same as they do now', () => {
++  assert.equal(line({ page: null, pressed: 0, typed: 0, dead: [] }, 400), 'click-through for frances in almanac: no page changed in the turn; nothing pressed (0.4 s)')
++  assert.equal(line({ failed: 'failed' }, 900), 'click-through for frances in almanac: the pressing failed after 0.9 s; nothing sent')
++  assert.equal(line({ failed: 'timed out' }, 31_000, { second: true }), 'second click-through (after the fix) for frances in almanac: the pressing timed out after 31.0 s; nothing sent')
++})
++
++test('stays: still four dead things named, the rest counted, and at most 300 characters', () => {
++  const dead = Array.from({ length: 12 }, (_, i) => ({ what: 'button', name: `b${i}`, say: 'x' }))
++  const l = line({ page: 'index.html', pressed: 30, typed: 0, dead }, 16000)
++  assert.ok(l.startsWith('click-through for frances in almanac: pressed index.html (30 pressed, 0 typed, 16.0 s): 12 dead: '), l)
++  assert.ok(l.endsWith(', and 8 more'), l)
++  assert.equal((l.match(/\b(?:button|field) /g) ?? []).length, 4, `four named: ${l}`)
++  assert.ok(l.length <= 300, `${l.length} characters`)
++})
++
++test('stays: a script error keeps its place in the line and its message stays out of it', () => {
++  const r = { page: 'index.html', pressed: 3, typed: 0, dead: [{ what: 'error', name: '', say: 'Script error when the page opened: ReferenceError: mariaAlvarez is not defined' }] }
++  const l = line(r)
++  assert.ok(l.includes('script error'), l)
++  assert.ok(!/mariaAlvarez|ReferenceError/.test(l), l)
++})
++
++test('stays: the second pressing and the note after it keep their lines', () => {
++  assert.match(pokeLine({ ...at, r: { page: 'index.html', pressed: 4, typed: 1, dead: [{ what: 'button', name: 'Done', say: 'x' }] }, ms: 2000, second: true }), /^second click-through \(after the fix\) for frances in almanac: pressed index\.html /)
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'asked', offered: true, dead: 2 } }), 'click-through for frances in almanac: still dead after the fix (2); told the person and asked whether to give it to the bigger model')
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'yes', offered: true, dead: 2 } }), 'click-through for frances in almanac: the person said yes: handed to the bigger model')
++  assert.equal(pokeNoteLine({ ...at, note: { event: 'no', offered: true, dead: 1 } }), 'click-through for frances in almanac: the person said no: nothing more')
++  assert.equal(pokeNoteLine({ ...at, note: null }), null)
++})

@@ -1,0 +1,366 @@
+diff --git a/apps/activist-ai/apple/OlaKit/Sources/OlaKit/Steps.swift b/apps/activist-ai/apple/OlaKit/Sources/OlaKit/Steps.swift
+index e0e3ad49..8c87b0f9 100644
+--- a/apps/activist-ai/apple/OlaKit/Sources/OlaKit/Steps.swift
++++ b/apps/activist-ai/apple/OlaKit/Sources/OlaKit/Steps.swift
+@@ -3,7 +3,8 @@ import Foundation
+ // What the agent did, in plain words. A port of web/src/lib/steps.ts: keep the two in step, so the
+ // web app and Bart's apps say the same thing. The one place that knows opencode's tool names and
+ // arguments (2.3.0: glob, grep, read, write, edit, apply_patch, shell, todowrite, task, webfetch,
+-// websearch). A new tool falls through to "Used <name>": less well said, never hidden.
++// websearch). A new tool is said in plain words too ("Used a tool"), never by its name (OLA-385):
++// less well said, never hidden.
+ 
+ public enum StepIcon: String, Sendable, Codable { case look, read, write, change, run, check, search, think, other }
+ 
+@@ -144,7 +145,7 @@ public enum Plain {
+       let first = input["questions"].array.first
+       return Words(icon: .think, verb: "Asked you", object: first?["question"].string ?? first?["header"].str ?? "")
+     default:
+-      return Words(icon: .other, verb: "Used", object: tool)
++      return Words(icon: .other, verb: "Used a tool", object: "")
+     }
+   }
+ 
+@@ -259,7 +260,7 @@ public enum Plain {
+ 
+   /// The step words are past tense ("Ran"); a question about the future needs the plain form.
+   public static func present(_ verb: String) -> String {
+-    let table: [(String, String)] = [("^Ran\\b", "Run"), ("^Looked\\b", "Look"), ("^Counted\\b", "Count"), ("^Searched\\b", "Search"), ("^Checked\\b", "Check"), ("^Arranged\\b", "Arrange"), ("^Tried to install\\b", "Install")]
++    let table: [(String, String)] = [("^Used\\b", "Use"), ("^Ran\\b", "Run"), ("^Looked\\b", "Look"), ("^Counted\\b", "Count"), ("^Searched\\b", "Search"), ("^Checked\\b", "Check"), ("^Arranged\\b", "Arrange"), ("^Tried to install\\b", "Install")]
+     return table.reduce(verb) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
+   }
+ 
+diff --git a/apps/activist-ai/web/README.md b/apps/activist-ai/web/README.md
+index 230db300..2a98977e 100644
+--- a/apps/activist-ai/web/README.md
++++ b/apps/activist-ai/web/README.md
+@@ -92,7 +92,7 @@ browser ──── same origin only ────► front desk (dev.mjs today)
+ - **Plain words** (`src/lib/steps.ts`) is the one place that knows opencode's tool names
+   (`glob`, `read`, `write`, `edit`, `shell`, …) and turns a call into a sentence from the
+   design's verb table, with a short result on the right ("printed 56", "57 lines"). Unknown
+-  tools fall through to "Used <name>", never hidden.
++  tools fall through to "Used a tool", never named, never hidden.
+ - **The conversation** (`src/lib/conversation.ts`) folds opencode's V2 events into turns and
+   steps as pure functions, so the tests replay recorded event streams
+   (`test/fixtures/*.jsonl`, from `scripts/record-events.mjs`). `turnsFromMessages` rebuilds the
+diff --git a/apps/activist-ai/web/src/lib/steps.ts b/apps/activist-ai/web/src/lib/steps.ts
+index 8b3e6ca8..3db85cd5 100644
+--- a/apps/activist-ai/web/src/lib/steps.ts
++++ b/apps/activist-ai/web/src/lib/steps.ts
+@@ -1,7 +1,7 @@
+ // What Ola did, in plain words. The one place that knows opencode's tool names and arguments
+ // (2.3.0: glob, grep, read, write, edit, apply_patch, shell, todowrite, task, webfetch,
+-// websearch). A new tool falls through to "Used <name>", so nothing is hidden, only less
+-// well said. Verbs come from the design's fixed table: Looked through, Read, Wrote, Changed,
++// websearch). A new tool is said in plain words too, never by its name: nothing is hidden,
++// only less well said. Verbs come from the design's fixed table: Looked through, Read, Wrote, Changed,
+ // Ran, Checked, Searched.
+ import { webRequestOf } from '../../server/webask.mjs'
+ import { publishAskOf, publishRequestOf } from '../../server/publishask.mjs'
+@@ -154,7 +154,7 @@ export function describeTool(tool: string, input: Input, dir: string | null): Wo
+     case 'skill':
+       return { icon: 'think', verb: 'Looked up how to do this', object: '' }
+     default:
+-      return { icon: 'other', verb: 'Used', object: tool }
++      return { icon: 'other', verb: 'Used a tool', object: '' }
+   }
+ }
+ 
+@@ -242,6 +242,7 @@ export function runProblem(error: { type?: string; message?: string; status?: nu
+ 
+ // The step words are past tense ("Ran"); a question about the future needs the plain form.
+ const PRESENT: [RegExp, string][] = [
++  [/^Used\b/, 'Use'],
+   [/^Ran\b/, 'Run'],
+   [/^Looked\b/, 'Look'],
+   [/^Counted\b/, 'Count'],
+@@ -303,7 +304,7 @@ export function describeApproval(action: string, resources: string[], metadata:
+ //
+ // Claude Code names its tools differently (Read, Write, Edit, Bash, Glob, Grep, …) and calls the
+ // file argument file_path. They are said with the same fixed verbs as Ola's, by mapping each to
+-// its opencode counterpart; an unknown one falls through to "Used <name>", as for opencode.
++// its opencode counterpart; an unknown one is said in plain words too, as for opencode.
+ const CLAUDE_TOOLS: Record<string, string> = {
+   Read: 'read',
+   Write: 'write',
+diff --git a/apps/activist-ai/web/test/conversation.test.ts b/apps/activist-ai/web/test/conversation.test.ts
+index 8d69a783..514a63a8 100644
+--- a/apps/activist-ai/web/test/conversation.test.ts
++++ b/apps/activist-ai/web/test/conversation.test.ts
+@@ -142,7 +142,7 @@ test('words for common commands and tools', () => {
+   assert.equal(describeCommand("awk 'END{print NR}' survey.csv").verb, 'Ran a short program')
+   assert.equal(describeCommand('sort -u names.txt').object, 'sort')
+   assert.equal(describeTool('grep', { pattern: 'eviction' }, null).object, '“eviction”')
+-  assert.equal(describeTool('mystery', {}, null).verb, 'Used')
++  assert.equal(describeTool('mystery', {}, null).verb, 'Used a tool')
+   assert.equal(shortPath('/w/x/notes/a.md', '/w/x'), 'notes/a.md')
+   // The allowance used up, in plain words with the day it starts again (OLA-205).
+   const quota = runProblem({ status: 429, message: 'insufficient_quota' }).text
+diff --git a/apps/activist-ai/web/test/stepwords.held.test.ts b/apps/activist-ai/web/test/stepwords.held.test.ts
+new file mode 100644
+index 00000000..fb31708d
+--- /dev/null
++++ b/apps/activist-ai/web/test/stepwords.held.test.ts
+@@ -0,0 +1,120 @@
++// OLA-385, held examples: the same rule as stepwords.test.ts — what a step says never carries the
++// tool's name — on other paths and other names. A tab that opens an earlier conversation rebuilds its
++// steps from opencode's message list (turnsFromMessages); a step is first read while its call is still
++// coming in (status "preparing", before the arguments arrive, which is also how a step with no
++// arguments at all reads); and a run of several calls is read as one list. Each is the drawer's own way
++// of putting a step into words, so each shows the tool name the way the checker saw it on Nov 22.
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { applyEvent, emptyConversation, startTurn, stepVerb, turnsFromMessages } from '../src/lib/conversation.ts'
++import { describeClaudeTool, describeCommand, describeTool } from '../src/lib/steps.ts'
++
++/** What a person reads on a step line: the verb, then what it was done to (Drawer.tsx, StepRow). */
++const said = (w: { verb: string; object: string }): string => `${w.verb}${w.object ? ` ${w.object}` : ''}`
++
++/** Is `name` in the line as its own word? */
++const names = (line: string, name: string): boolean => new RegExp(`\\b${name}\\b`, 'i').test(line)
++
++test('bug: a tab that loads the run later lists the same steps, and names no tool either', () => {
++  // The stored message list of the checker's run, in the shape GET /api/session/:id/message gives:
++  // the drawer rebuilds steps from it (turnsFromMessages), with stepVerb putting the engine's name in
++  // front of the verb. Nothing there may name a tool either.
++  const messages = [
++    { type: 'user', id: 'u1', text: 'whats on this image', time: { created: 10 } },
++    {
++      type: 'assistant',
++      id: 'a1',
++      model: { id: 'hosted' },
++      content: [
++        { type: 'tool', id: 'c1', name: 'shell', state: { status: 'completed', input: { command: 'ola-see flyer-photo.png' } } },
++        { type: 'tool', id: 'c2', name: 'execute', state: { status: 'completed', input: { code: 'tools.ola_see({ path: "flyer-photo.png" })' } } },
++        { type: 'tool', id: 'c3', name: 'execute', state: { status: 'error', input: { code: 'tools.ola_see({ path: "flyer-photo.png" })' }, error: 'no such tool' } },
++      ],
++      time: { created: 20 },
++    },
++  ]
++  const turn = turnsFromMessages(messages, null)[0]
++  assert.equal(turn.steps.length, 3)
++  const read = turn.steps.map((s) => `${stepVerb(s, turn.engine)}${s.object ? ` ${s.object}` : ''}`)
++  assert.ok(read.includes('Looked at the picture flyer-photo.png'), `the plain step keeps its words: ${read.join(' | ')}`)
++  for (const l of read) assert.ok(!names(l, 'execute'), `a person reads "${l}"`)
++})
++
++test('bug: a step is read before its arguments arrive, and that first line names no tool either', () => {
++  // session.tool.input.started makes the step with no input yet: this is the first thing a person
++  // sees, so the rule has to hold before describeTool ever gets arguments, and for a tool whose call
++  // carries nothing to say.
++  for (const tool of ['execute', 'code_mode', 'interactive_bash']) {
++    const state = emptyConversation()
++    state.sessionID = 's'
++    startTurn(state, 'whats on this image', 0)
++    assert.equal(applyEvent(state, { type: 'session.tool.input.started', created: 1, data: { sessionID: 's', id: 't1', name: tool } }), true)
++    const step = state.turns[0].steps[0]
++    assert.equal(step.status, 'preparing')
++    const read = said(step)
++    assert.ok(!names(read, tool), `the first line a person sees is "${read}"`)
++  }
++})
++
++test('bug: a run of four steps is read as four plain lines, with no tool among them', () => {
++  const state = emptyConversation()
++  state.sessionID = 's'
++  startTurn(state, 'read the files here and make a one-page summary as summary.html', 0)
++  for (const ev of [
++    { type: 'session.tool.input.started', created: 1, data: { sessionID: 's', id: 't1', name: 'read' } },
++    { type: 'session.tool.called', created: 2, data: { sessionID: 's', id: 't1', input: { path: '/work/survey.csv' } } },
++    { type: 'session.tool.input.started', created: 3, data: { sessionID: 's', id: 't2', name: 'execute' } },
++    { type: 'session.tool.called', created: 4, data: { sessionID: 's', id: 't2', input: { code: 'tools.query_db({ sql: "select city, count(*) from t" })' } } },
++    { type: 'session.tool.input.started', created: 5, data: { sessionID: 's', id: 't3', name: 'code_mode' } },
++    { type: 'session.tool.called', created: 6, data: { sessionID: 's', id: 't3', input: { code: 'tools.query_db({ sql: "select city, count(*) from t" })' } } },
++    { type: 'session.tool.input.started', created: 7, data: { sessionID: 's', id: 't4', name: 'write' } },
++    { type: 'session.tool.called', created: 8, data: { sessionID: 's', id: 't4', input: { path: 'summary.html' } } },
++  ]) assert.equal(applyEvent(state, ev), true, ev.type)
++  const read = state.turns[0].steps.map((s) => said(s))
++  assert.equal(read.length, 4, read.join(' | '))
++  assert.deepEqual(read.filter((l) => /csv|summary\.html/.test(l)), ['Read survey.csv', 'Wrote summary.html'], `the file steps keep their words: ${read.join(' | ')}`)
++  for (const tool of ['execute', 'code_mode', 'interactive_bash']) {
++    for (const l of read) assert.ok(!names(l, tool), `a person reads "${l}"`)
++  }
++})
++
++// ---- what must not change with it ----
++
++test('stays: the four tools the recorded runs use keep the words recorded against them', () => {
++  // web/test/conversation.test.ts compares whole step lines for fixtures/fake-ask.jsonl and
++  // glm-ask.jsonl: a rule for unknown tools must leave these four exactly as they are.
++  assert.deepEqual(describeTool('glob', {}, null), { icon: 'look', verb: 'Looked through', object: 'the project folder' })
++  assert.deepEqual(describeTool('glob', { pattern: 'survey.csv' }, null), { icon: 'look', verb: 'Looked for', object: 'survey.csv' })
++  assert.deepEqual(describeTool('read', { path: 'survey.csv' }, null), { icon: 'read', verb: 'Read', object: 'survey.csv' })
++  assert.deepEqual(describeTool('write', { path: 'rows.md' }, null), { icon: 'write', verb: 'Wrote', object: 'rows.md' })
++  assert.deepEqual(describeTool('shell', { command: "python3 -c 'print(1)'" }, null), { icon: 'run', verb: 'Ran a short program', object: '' })
++})
++
++test('stays: a machine path in a step is still cut to the file the person knows', () => {
++  const dir = '/var/folders/yp/T/ola-web-rPNd5N/work'
++  for (const tool of ['read', 'write', 'edit']) {
++    for (const p of [`${dir}/notes/a.md`, '/opt/ola/lib/olatext.py', 'papers/2021/a b.pdf']) {
++      const l = said(describeTool(tool, { path: p }, dir))
++      assert.ok(!l.includes('/var/'), `the whole machine path is in "${l}"`)
++      assert.ok(!l.includes('/opt/ola/'), `a tool folder is in "${l}"`)
++    }
++  }
++  assert.equal(describeTool('list', { path: '/work/west-oakland-legal' }, '/work/west-oakland-legal').object, 'the project folder')
++})
++
++test('stays: Ola’s own commands in a shell step stay said as what they do', () => {
++  assert.equal(describeCommand('ola-db search "mold in building b"').verb, 'Searched the documents')
++  assert.equal(describeCommand('ola-db tables').verb, 'Looked in')
++  assert.equal(describeCommand('ola-publish status').verb, 'Checked')
++  assert.equal(describeCommand('ola-fetch https://example.org/a.pdf').verb, 'Downloaded')
++  assert.equal(describeCommand('ola-who-did-this index.html').verb, 'Used one of Ola’s tools')
++  assert.ok(!/ola-/.test(describeCommand('ola-transcribe meeting.m4a').verb + describeCommand('ola-transcribe meeting.m4a').object))
++})
++
++test('stays: Claude names that map to a tool keep their words, arguments and all', () => {
++  assert.equal(describeClaudeTool('LS', { path: '.' }, '/work').verb, 'Looked through')
++  assert.equal(describeClaudeTool('Bash', { command: 'ola-page index.html --width 390' }, null).verb, 'Looked at how the page shows')
++  assert.deepEqual(describeClaudeTool('Read', { file_path: 'a.md' }, null), { icon: 'read', verb: 'Read', object: 'a.md' })
++  assert.equal(describeClaudeTool('TodoWrite', {}, null).verb, 'Planned the next steps')
++  assert.equal(describeClaudeTool('Task', { description: 'check the totals' }, null).verb, 'Handed part of the work to a helper')
++})
+diff --git a/apps/activist-ai/web/test/stepwords.test.ts b/apps/activist-ai/web/test/stepwords.test.ts
+new file mode 100644
+index 00000000..b295535a
+--- /dev/null
++++ b/apps/activist-ai/web/test/stepwords.test.ts
+@@ -0,0 +1,136 @@
++// OLA-385: a step in the drawer is said in plain words, never by a tool's name.
++//
++// The OLA-380 checker, Nov 22 on cd2e8bfe (390 px WebKit and Chromium): asking "whats on this image"
++// in a new cloud project listed three steps as "Used execute" with Show details, beside plain ones
++// like "Looked at the picture flyer-photo.png". `execute` is Code Mode's tool — the recorded runs in
++// web/test/fixtures carry a `core/codemode` instruction set, and neither workspace/opencode.jsonc nor
++// web/server/proxy.mjs denies it — so any run that reaches for it prints a tool name at the person.
++//
++// steps.ts calls itself "the one place that knows opencode's tool names and arguments" and says a new
++// tool "falls through to 'Used <name>'". Everywhere else the file goes the other way: an unknown
++// ola-* command is "Used one of Ola's tools", a shell word longer than 24 characters becomes "Ran a
++// command", and conversation.test.ts:121 already pins "Ola's own commands are said as what they do,
++// never by name". These checks hold describeTool and describeClaudeTool to that rule — what a person
++// reads on a step line never carries a tool's name. Which plain words a fix picks is left open (words
++// for what the code did, or one generic phrase), as long as it covers every tool and not `execute`
++// alone.
++//
++// One existing test pins today's leak and has to change with the fix: conversation.test.ts:145
++// asserts describeTool('mystery', {}, null).verb === 'Used'. Nothing else in web/test changes.
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { applyEvent, emptyConversation, startTurn } from '../src/lib/conversation.ts'
++import type { LooseEvent } from '../src/lib/conversation.ts'
++import { describeClaudeTool, describeCommand, describeTool } from '../src/lib/steps.ts'
++
++/** What a person reads on a step line: the verb, then what it was done to (Drawer.tsx, StepRow). */
++const said = (w: { verb: string; object: string }): string => `${w.verb}${w.object ? ` ${w.object}` : ''}`
++
++/** Is `name` in the line as its own word? "Used one of Ola's tools" must not count as naming a tool. */
++const names = (line: string, name: string): boolean => new RegExp(`\\b${name}\\b`, 'i').test(line)
++
++/** The two events one tool call makes: the call beginning, then its arguments. */
++const call = (id: string, name: string, input: Record<string, unknown>): LooseEvent[] => [
++  { type: 'session.tool.input.started', created: 1, data: { sessionID: 's', id, name } },
++  { type: 'session.tool.called', created: 2, data: { sessionID: 's', id, input } },
++]
++
++/** The drawer's own list of a turn: one line per step, as StepRow would put them. */
++const lines = (state: ReturnType<typeof emptyConversation>): string[] =>
++  state.turns[state.turns.length - 1].steps.map((s) => said(s))
++
++test('bug: the checker\'s run — three calls of a tool no one named, beside a plain step', () => {
++  const state = emptyConversation()
++  state.sessionID = 's'
++  startTurn(state, 'whats on this image', 0)
++  for (const ev of [
++    ...call('t1', 'execute', { code: 'tools.ola_see({ path: "flyer-photo.png" })' }),
++    ...call('t2', 'execute', { code: 'tools.ola_see({ path: "flyer-photo.png", q: "the time on it" })' }),
++    ...call('t3', 'shell', { command: 'ola-see flyer-photo.png' }),
++  ]) assert.equal(applyEvent(state, ev), true, ev.type)
++  const read = lines(state)
++  assert.equal(read.length, 3, `three steps, three lines: ${read.join(' | ')}`)
++  assert.ok(read.includes('Looked at the picture flyer-photo.png'), `the plain step keeps its words: ${read.join(' | ')}`)
++  for (const l of read) assert.ok(!names(l, 'execute'), `a person reads "${l}"`)
++})
++
++test('bug: no tool is said by its name, the ones Ola reaches for and the ones it has never heard of', () => {
++  // `execute` is the ticket's. The others are names steps.ts has no words for, which is the same
++  // fallthrough: a fix that only learns today's tool leaves the next one to print itself.
++  for (const tool of ['execute', 'code_mode', 'interactive_bash', 'mystery']) {
++    const w = describeTool(tool, {}, null)
++    const l = said(w)
++    assert.ok(!names(l, tool), `"Used ${tool}" reads as "${l}"`)
++    assert.notEqual(w.object, tool, `the object is the tool's own name: ${l}`)
++    assert.ok(w.verb.trim().length > 2, `"${l}" says nothing about what happened`)
++  }
++})
++
++test('bug: Claude Code names reach the same rule, through describeClaudeTool', () => {
++  // steps.ts maps Claude's names onto Ola's and lets an unknown one "fall through to 'Used <name>',
++  // as for opencode". Claude Code has all four of these, so they are the same leak in capitals.
++  for (const tool of ['BashOutput', 'NotebookRead', 'KillShell', 'SlashCommand']) {
++    const l = said(describeClaudeTool(tool, {}, null))
++    assert.ok(!names(l, tool), `"Used ${tool}" reads as "${l}"`)
++  }
++})
++
++test('bug: a step that did not work still says what it tried, not the tool it tried it with', () => {
++  const state = emptyConversation()
++  state.sessionID = 's'
++  startTurn(state, 'whats on this image', 0)
++  for (const ev of [
++    ...call('t1', 'execute', { code: 'tools.bash({ command: "ls /work" })' }),
++    { type: 'session.tool.failed', created: 3, data: { sessionID: 's', id: 't1', error: { message: 'no such tool' } } },
++  ]) assert.equal(applyEvent(state, ev), true, ev.type)
++  const step = state.turns[state.turns.length - 1].steps[0]
++  assert.equal(step.status, 'failed')
++  // StepRow puts the words, then "(did not work)", then the reason under them: none of the three may
++  // be a tool name.
++  const read = `${said(step)} (did not work) ${step.error ?? ''}`
++  assert.ok(!names(read, 'execute'), `a person reads "${read}"`)
++})
++
++// ---- what must not change with it ----
++
++test('stays: a plain shell command keeps saying what it ran, program names and all', () => {
++  // conversation.test.ts already pins these; a rule about tool names must not swallow command names.
++  assert.equal(describeCommand('sort -u names.txt').object, 'sort')
++  assert.equal(describeCommand('python3 look.py index.html').object, 'look.py')
++  assert.equal(describeCommand('cd /work && cat fonts/fonts.css && head -60 base.css').verb, 'Ran')
++  assert.equal(describeCommand('grep -rl mold .').verb, 'Searched the files')
++})
++
++test('stays: Ola\'s own commands stay said as what they do, and unknown ones as one of Ola\'s tools', () => {
++  for (const c of ['ola-page a.html --out s.png', 'ola-see chart.png', 'ola-batch start', 'ola-unzip lib.zip', 'ola-made-by index.html']) {
++    const l = said(describeCommand(c))
++    assert.ok(!/ola-/.test(l), `"${c}" reads as "${l}"`)
++  }
++  assert.equal(describeCommand('ola-something-new x').verb, 'Used one of Ola’s tools')
++})
++
++test('stays: the tools the page already knows keep their own words, with the file they acted on', () => {
++  assert.deepEqual(describeTool('read', { path: '/work/notes/a.md' }, '/work'), { icon: 'read', verb: 'Read', object: 'notes/a.md' })
++  assert.deepEqual(describeTool('write', { path: 'summary.html' }, null), { icon: 'write', verb: 'Wrote', object: 'summary.html' })
++  assert.deepEqual(describeTool('glob', { pattern: '**/*.png' }, null), { icon: 'look', verb: 'Looked through', object: 'files like *.png' })
++  assert.deepEqual(describeTool('question', { questions: [{ question: 'Which Saturday?' }] }, null).verb, 'Asked you')
++  assert.deepEqual(describeTool('shell', { command: 'ola-see flyer-photo.png' }, null), { icon: 'look', verb: 'Looked at the picture', object: 'flyer-photo.png' })
++})
++
++test('stays: Claude names that are mapped keep their words, and the plan tool keeps its own', () => {
++  assert.deepEqual(describeClaudeTool('Read', { file_path: 'notes/a.md' }, '/work'), { icon: 'read', verb: 'Read', object: 'notes/a.md' })
++  assert.equal(describeClaudeTool('Bash', { command: 'grep -rl mold .' }, null).verb, 'Searched the files')
++  assert.equal(describeClaudeTool('EnterPlanMode', {}, null).verb, 'Planned the next steps')
++})
++
++test('stays: what a step ran is still there under Show details — the words change, nothing is hidden', () => {
++  const state = emptyConversation()
++  state.sessionID = 's'
++  startTurn(state, 'whats on this image', 0)
++  for (const ev of call('t1', 'execute', { code: 'tools.ola_see({ path: "flyer-photo.png" })' })) {
++    assert.equal(applyEvent(state, ev), true, ev.type)
++  }
++  const step = state.turns[state.turns.length - 1].steps[0]
++  assert.match(step.detail.input, /ola_see/, 'the call is still there to open')
++  assert.equal(step.tool, 'execute', 'the tool is still recorded on the step')
++})
