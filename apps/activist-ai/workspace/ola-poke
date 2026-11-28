@@ -73,6 +73,19 @@ INIT = r"""
       Object.defineProperty(P, 'value', { ...d, set(v) { d.set.call(this, v); if (w.__olaSafari && this === document.activeElement) try { const n = d.get.call(this).length; this.setSelectionRange(n, n) } catch (e) {} } })
     } catch (e) {}
   }
+  // Safari also clears a selection made on focus when the tap's mouseup comes, unless the page stops it
+  // (onmouseup="return false"): a cell that selects its text on focus without that guard gets 75 for a
+  // 7 typed on a 5, the caret at the start as the checker saw in WebKit (Nov 28 on be6242d6, chk466n and
+  // chk466p). Runs after the page's own handlers.
+  // The clearing is applied after the page's click handlers too: WebKit gave 75 on chk466n, whose click
+  // handler selects the text again.
+  let guarded = false
+  add.call(w, 'mouseup', (e) => { guarded = e.defaultPrevented }, false)
+  add.call(w, 'click', (e) => {
+    const a = document.activeElement
+    if (!w.__olaSafari || guarded || !a || !(a === e.target || a.contains(e.target) || e.target.contains(a)) || !('selectionStart' in a)) return
+    try { if (a.selectionStart !== a.selectionEnd) a.setSelectionRange(0, 0) } catch (x) {}
+  }, false)
 })()
 """
 
@@ -261,6 +274,9 @@ def grid_use(pg, report):
         if not pg.js("window.__olaTyping()"):
             report("grid", "A1", "Tapping a cell of the grid opened no field to type in, so a phone shows no keyboard and nothing can be typed: a tap on a cell must put the keyboard in that cell (focus an <input> inside it).")
             return True
+        px = pg.js("parseFloat(getComputedStyle(document.activeElement).fontSize) || 0") or 0
+        if 0 < px < 16:
+            report("grid", "A1", f"The text in the grid's cells is {px:g} px: under 16 px an iPhone zooms the page on every tap, so make the text of every field at least 16 px.")
         typed("5")
         enter(pg)
         tap("B1")

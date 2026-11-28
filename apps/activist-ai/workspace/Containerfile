@@ -81,6 +81,9 @@
 # 2.4.2-15 (OLA-466, check #1 failed on 2.4.2-14: in WebKit 7 typed on a 5 gave 75, and 2 of 3 pages opened no field on a tap):
 # ola-poke uses a grid page the way a person does (tap A1, 5, Enter; B1 =A1*2, Enter; 7 over the 5) with Safari's caret
 # behaviour, and says what went wrong; ola-examples 1.4.2 says a redraw never sets the focused cell's value. Builds on 2.4.2-14.
+# 2.4.2-16 (OLA-466, check #1 failed on 2.4.2-15: in WebKit 7 typed on a 5 gave 75 on two pages ola-poke passed, and one had
+# 11 to 13 px cells): ola-poke also clears a selection made on focus after the tap, as Safari does unless the page's mouseup
+# stops it, and says when the grid's text is under 16 px. Builds on 2.4.2-15.
 # 2.4.2-14 (OLA-466, check #1 failed on 2.4.2-13: typing 7 on a 5 still gave 57 in 2 of 3 projects): ola-examples 1.4.1, the
 # grid example carries the code that makes a typed key replace a cell (select on focus, keep it on mouseup). Builds on 2.4.2-13.
 # 2.4.2-13 (OLA-466; Bart, Nov 25: 'it failed at the spreadsheet in my opinion'): AGENTS.md says text in anything a person

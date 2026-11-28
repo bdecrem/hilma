@@ -85,6 +85,15 @@ function draw() { for (const i of document.querySelectorAll('input')) if (i !== 
     tr.insertCell().append(i) } }
 function draw() { for (const i of document.querySelectorAll('input')) i.value = i === document.activeElement ? (raw[i.dataset.k] || '') : val(i.dataset.k) }
 </script>""",
+    # Selects on focus with no mouseup guard, 13 px text: Safari clears the selection on mouseup (75), and an iPhone zooms.
+    "grid-noguard": GRID_HEAD.replace("font-size:16px", "font-size:13px") + """for (let r = 1; r <= 5; r++) { const tr = t.insertRow(); tr.insertCell().textContent = r
+  for (let c = 0; c < 5; c++) { const i = document.createElement('input'); i.dataset.k = ref(c, r)
+    i.setAttribute('onfocus', 'this.value = raw[this.dataset.k] || ""; this.select()')
+    i.onblur = () => { raw[i.dataset.k] = i.value; draw() }
+    i.onkeydown = (e) => { if (e.key === 'Enter') { raw[i.dataset.k] = i.value; i.blur() } }
+    tr.insertCell().append(i) } }
+function draw() { for (const i of document.querySelectorAll('input')) if (i !== document.activeElement) i.value = val(i.dataset.k) }
+</script>""",
     # Cells are plain table cells; a tap marks one as chosen and focuses nothing.
     "grid-nofield": GRID_HEAD + """for (let r = 1; r <= 5; r++) { const tr = t.insertRow(); tr.insertCell().textContent = r
   for (let c = 0; c < 5; c++) { const d = tr.insertCell(); d.style.cssText = 'width:60px;height:24px;border:1px solid #999'; d.onclick = () => { document.querySelectorAll('.on').forEach((x) => x.classList.remove('on')); d.classList.add('on') } } }
@@ -121,6 +130,9 @@ ok("a grid that works like a spreadsheet: nothing reported", c == 0 and j and j[
 c, j, e = run("grid-redraw")
 says = [x["say"] for x in (j or {}).get("dead", [])]
 ok("a grid whose redraw undoes the selection: 'Typing 7 on the cell A1 that held 5 gave ...' only", c == 0 and len(says) == 1 and says[0].startswith("Typing 7 on the cell A1 that held 5 gave '57'"), f"{c} {j} {e[-300:]}")
+c, j, e = run("grid-noguard")
+says = [x["say"] for x in (j or {}).get("dead", [])]
+ok("a grid that selects on focus without the mouseup guard, 13 px: Safari's 75 and the zoom, both said", c == 0 and len(says) == 2 and any(x.startswith("Typing 7 on the cell A1 that held 5 gave '75'") for x in says) and any("13 px" in x for x in says), f"{c} {j} {e[-300:]}")
 c, j, e = run("grid-nofield")
 says = [x["say"] for x in (j or {}).get("dead", [])]
 ok("a grid where a tap opens no field: said once", c == 0 and len(says) == 1 and says[0].startswith("Tapping a cell of the grid opened no field"), f"{c} {j} {e[-300:]}")
