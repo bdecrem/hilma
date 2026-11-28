@@ -652,7 +652,13 @@ does not count as use, and does not wake a stopped workspace (it gets 503 `aslee
 open overnight does not hold a VM. Opening the project (or any other request) starts it again: if
 that takes longer than `OLA_FD_WAKE_WAIT_MS` (1.5 s), `/api/project` answers 503 `waking` and the
 page shows **"Waking your project. This takes a few seconds…"** and asks again each second. A viewer's visit wakes it too
-(they need the files). A full machine says so instead (503 `machine_busy`).
+(they need the files). **On a full machine a person does not wait behind idle projects** (OLA-412,
+Nov 27: a new project waited four minutes while two projects idle for 9 and 24 minutes held two of
+the four slots): the start stops the running project that has gone longest without a request or a
+run, at least 5 minutes, with no transfer and nothing executing (log: `<slug>: stopped after N min
+idle to make room for <new>`), and tries once more; its next request wakes it. Only when every
+running project is in use does the page hear 503 `machine_busy`. The update's restart of projects it
+parked for its tests is not use: they keep their idle clock. Proof: `frontdesk/test/room.test.mjs`.
 
 **A run is activity** (2026-11-16; before, a run that outlasted the idle limit with no new request
 from the browser was stopped mid-task). Each sweep (a quarter of the shorter of the idle limit and

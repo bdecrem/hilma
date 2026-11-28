@@ -396,6 +396,11 @@ await check('"New project" is for admins only: a member is answered 404 and noth
   assert(u.status === 0, u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | '))
   return `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} unit checks`
 })
+await check('a project opened on a full machine stops the longest-idle one (not one running something, not one in use) and starts; an update\'s restart keeps the idle clock (OLA-412, test/room.test.mjs)', async () => {
+  const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/room.test.mjs')], { encoding: 'utf8', timeout: 60_000 })
+  assert(u.status === 0, u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | '))
+  return `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} unit checks`
+})
 await check('bob and vera register from their own invitations', async () => {
   await register(B, invites.bob, PW.bob)
   await register(V, invites.vera, PW.vera)

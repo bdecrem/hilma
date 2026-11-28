@@ -32,11 +32,13 @@ const READS_PER_PROMPT = 200
 // A run the front desk interrupted at the ceiling that its workspace still reports as running this
 // long after: no longer activity (a stuck or lying opencode does not hold the VM).
 const CANCEL_GRACE_MS = 60_000
+// A running project unused this long may be stopped to make room for one a person is opening (OLA-412).
+export const ROOM_IDLE_MS = 5 * 60_000
 // What the page shows on a run stopped at the ceiling (GET /api/runs).
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {}, comeBack = false }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask', onGoWeb = async () => {}, onPublishAsk = async () => {}, onPrompt = async (slug, sessionID, text) => text, onRunEnded = () => {}, comeBack = false, roomIdleMs = ROOM_IDLE_MS, wsRun = null, runningIds = () => ws.running().map((c) => (c.configuration?.id || c.id || '').slice(4)) }) {
   // `onPrompt` and `onRunEnded` (madeby.mjs, OLA-224): a person's prompt is noted as Ola's turn in
   // the VM before it goes on (and may get a note in front of it), and its run's end ends the turn.
   // "Lots of permissions" (autonomy `go`), from the front desk's own rewrite of each conversation's
@@ -73,7 +75,8 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   // desk restart does not hand a run a fresh ceiling (second review, 2026-11-16).
   const lastPrompt = new Map(db.prepare("SELECT w.slug, max(a.at) AS at FROM audit a JOIN workspaces w ON w.id = a.workspace_id WHERE a.action = 'run_started' GROUP BY w.slug").all().map((r) => [r.slug, r.at]))
 
-  const run = (cmd, slug) =>
+  // `wsRun` and `runningIds` stand in for ws.mjs and the container list in frontdesk/test/room.test.mjs.
+  const run = wsRun ?? ((cmd, slug) =>
     new Promise((resolve, reject) => {
       const child = spawn(process.execPath, [WS_CLI, cmd, slug], { stdio: ['ignore', 'ignore', 'pipe'], env: process.env })
       let err = ''
@@ -81,7 +84,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       // A full machine and a closed workspace are told apart (ws.mjs EXIT), so the page can say so.
       const why = (code) => (code === ws.EXIT.MACHINE_FULL ? 'MACHINE_BUSY' : code === ws.EXIT.CLOSED ? 'CLOSED' : 'START_FAILED')
       child.on('close', (code) => (code === 0 ? resolve() : reject(Object.assign(new Error(err.trim() || `ws ${cmd} exited ${code}`), { code: why(code) }))))
-    })
+    }))
 
   // After a rotation (a member removed) the password changed and the container was made again:
   // drop the pooled connections and the watcher made with the old one. A rotation under way
@@ -103,10 +106,16 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     proxies.delete(slug)
   }
 
-  /** Starts the workspace if it is not running (ws.mjs start is idempotent), at most once at a time. */
-  async function ensureRunning(slug) {
+  /**
+   * Starts the workspace if it is not running (ws.mjs start is idempotent), at most once at a time.
+   * `use: false` (the update's restart of parked projects) starts it without counting as use, so a
+   * project nobody touched keeps its idle clock (OLA-412: two projects idle 9 and 24 minutes were
+   * started again after an update with a fresh 30 minutes each and held two of the four slots).
+   * A start refused because the machine is full first makes room (see makeRoom) and tries once more.
+   */
+  async function ensureRunning(slug, { use = true } = {}) {
     fresh(slug)
-    lastUse.set(slug, Date.now())
+    if (use || !lastUse.has(slug)) lastUse.set(slug, Date.now())
     asleep.delete(slug)
     if (Date.now() - (ready.get(slug) ?? 0) < 30_000) return
     if (stopping.has(slug)) await stopping.get(slug).catch(() => {})
@@ -116,11 +125,51 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     if (!starting.has(slug) && f && Date.now() - f.at < 2000) throw f.e
     if (!starting.has(slug)) {
       const p = run('start', slug)
+        .catch(async (e) => {
+          if (e?.code !== 'MACHINE_BUSY' || !use || !(await makeRoom(slug))) throw e
+          return run('start', slug)
+        })
         .then(() => (ready.set(slug, Date.now()), refused.delete(slug), back.note(slug)), (e) => (refused.set(slug, { e, at: Date.now() }), Promise.reject(e)))
         .finally(() => starting.delete(slug))
       starting.set(slug, p)
     }
     return starting.get(slug)
+  }
+
+  // OLA-412: a person waits for a slot only while every running project is really in use. When the
+  // machine is full, the running project of this front desk that has gone longest without a request
+  // or a run, at least roomIdleMs (5 minutes, the update's park threshold), with no transfer under
+  // way and nothing executing in it, is stopped the idle stop's way (its next request wakes it), and
+  // the start is tried once more. Before, a new project waited up to 30 minutes behind idle ones.
+  let making = null
+  async function makeRoom(slug) {
+    if (making) return making.then(() => makeRoom(slug)) // one at a time: two starts must not stop the same one
+    making = (async () => {
+      const up = new Set(runningIds())
+      const now = Date.now()
+      const idle = []
+      for (const s of lastUse.keys()) {
+        if (s === slug || !up.has(s) || starting.has(s) || stopping.has(s) || (busy.get(s) ?? 0) > 0) continue
+        const at = Math.max(lastUse.get(s) ?? 0, lastRun.get(s) ?? 0)
+        if (now - at >= roomIdleMs) idle.push({ s, idleMs: now - at })
+      }
+      idle.sort((a, b) => b.idleMs - a.idleMs)
+      for (const { s, idleMs } of idle) {
+        const executing = await active(s)
+        if (executing && executing.size > 0) continue
+        try {
+          await sleep(s, `stopped after ${Math.round(idleMs / 60_000)} min idle to make room for ${slug}`, 'stop to make room')
+          return true
+        } catch {}
+      }
+      log(`${slug}: the machine is full and no running project has been idle for ${Math.round(roomIdleMs / 60_000)} min`)
+      return false
+    })()
+    try {
+      return await making
+    } finally {
+      making = null
+    }
   }
   const forget = (slug) => ready.delete(slug)
   const isReady = (slug) => Date.now() - (ready.get(slug) ?? 0) < 30_000
@@ -337,7 +386,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       return out
     },
     park: (slug) => sleep(slug, 'stopped for an update\'s tests', 'stop for an update'),
-    wake: (slug) => ensureRunning(slug),
+    wake: (slug) => ensureRunning(slug, { use: false }), // OLA-412: its idle clock goes on
   })
   const parkTimer = setInterval(() => {
     if (existsSync(parkFiles.request) || existsSync(parkFiles.parked)) parker.poll().catch((e) => log(`parking: ${e.message}`))
