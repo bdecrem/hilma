@@ -156,7 +156,7 @@ async function askMayor(prompt) {
   const key = readFileSync(path.join(homedir(), '.ola/bigmodel.key'), 'utf8').trim()
   const t0 = Date.now()
   const res = await fetch('http://127.0.0.1:8090/v1/chat/completions', { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'big', messages: [{ role: 'user', content: prompt }], max_tokens: 16000 }), signal: AbortSignal.timeout(20 * 60000) })
+    body: JSON.stringify({ model: 'big', messages: [{ role: 'user', content: prompt }], max_tokens: 14000, reasoning_effort: 'low' }), signal: AbortSignal.timeout(20 * 60000) })
   const j = await res.json()
   const m = j.choices?.[0]?.message || {}
   const text = m.content || ''
