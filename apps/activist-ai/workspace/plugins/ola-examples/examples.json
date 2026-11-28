@@ -327,19 +327,18 @@
         "math"
       ],
       "asked": [
-        "a grid of cells with column letters and row numbers that works on a phone: the grid scrolls in its own box, the letters and numbers stay in view",
-        "a cell holds a number, words, or a formula that starts with = (+ - * /, brackets, cell names like B2, SUM(B2:B6))",
-        "tap a cell to select it; typing then replaces what was in it, as in any spreadsheet",
-        "Enter, Tab or tapping another cell finishes it: the cell shows the result, never the formula; a bar above the grid shows the selected cell's formula",
-        "every cell that uses a changed cell updates at once",
-        "errors in the cell in the words spreadsheets use: #DIV/0! for =1/0, #LOOP! for a cell that uses itself, #NAME? for an unknown name",
+        "a grid of cells with column letters and row numbers that works on a phone",
+        "a cell holds a number, words, or a formula starting with = (+ - * /, brackets, B2, SUM(B2:B6))",
+        "tap a cell, type: it replaces what was there, as in any spreadsheet",
+        "Enter, Tab or another tap finishes it: the cell shows the result, never the formula; a bar above shows the formula",
+        "cells that use a changed cell update at once; errors as spreadsheets write them: #DIV/0!, #LOOP!, #NAME?",
         "it opens empty: no test values left in the cells"
       ],
       "built": [
         "index.html and sheet.js (formulas compute, so the parser and evaluator are plain functions in their own file, with 10 cases run once with ola-test: =1+2*3 is 7, =SUM(A1:A3), an empty cell counts as 0, A1 =B1 with B1 =A1 is #LOOP!, =1/0 is #DIV/0!)",
         "the page keeps each cell's typed text and shows its computed value; after any cell is finished it redraws the shown value of every cell, including the one just left",
-        "cells are <input> elements with 16 px text (smaller and an iPhone zooms the page on every tap); on focus the cell's text is selected, so the first key typed replaces it",
-        "cells 72 px wide in an overflow:auto box with a sticky letter row and number column, so about four columns show on a phone and more on a laptop; arrow keys and Enter move the selection"
+        "cells are <input> elements with 16 px text (smaller and an iPhone zooms on every tap); typing on a selected cell replaces it, never adds to it: each cell has `onfocus=\"this.select()\"` and `onmouseup=\"return false\"` (Safari drops the selection on mouseup), so the first key replaces the 5 with 7, not 57; an empty cell shows nothing, not 0",
+        "cells 72 px wide in an overflow:auto box; the letter row and the number column are sticky and the number column is its own column, never over column A"
       ],
       "tried": [
         "A1 5, Enter; B1 =A1*2, Enter: B1 showed 10, the bar showed =A1*2",

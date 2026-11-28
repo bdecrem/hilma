@@ -1,5 +1,9 @@
 # ola-examples
 
+## 1.4.1 (2026-11-27, OLA-466, check #1 failed on a0f82998)
+
+The checker's spreadsheets still made 57 from 5 then 7 in 2 of 3 projects: the example only said in words that the cell's text is selected on focus. It now carries the two attributes that do it (`onfocus="this.select()"`, `onmouseup="return false"`, tried in WebKit and Chromium, click and tap), says an empty cell shows nothing (not 0) and that the number column never covers column A. The asked lines are shorter, so the whole note fits its 2400 characters (2198).
+
 ## 1.4.0 (2026-11-27, OLA-466)
 
 A ninth example, test-budget-grid: an editable grid of cells with formulas, the neighbor of Bart's spreadsheet (which kept showing a formula's text after Enter, added to a cell's old text when typed on, and zoomed on every tap on an iPhone). Its lines say how a spreadsheet behaves: typing on a selected cell replaces it, a finished cell shows its value, 16 px cell text, the spreadsheet error words, no test values left in. "spreadsheet" now counts as a thing to make ("make me a spreadsheet" matched nothing before).
