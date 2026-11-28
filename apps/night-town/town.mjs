@@ -31,13 +31,6 @@ const q = (p) => JSON.stringify(p)
 const journal = () => existsSync(JOURNAL) ? readFileSync(JOURNAL, 'utf8').split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean) : []
 const running = () => { if (!existsSync(PIDF)) return false; try { process.kill(Number(readFileSync(PIDF, 'utf8')), 0); return true } catch { return false } }
 
-if (cmd === 'night') await night()
-else if (cmd === 'status') status()
-else if (cmd === 'report') report()
-else if (cmd === 'look') { if (!existsSync(TOWN)) freshTown(); mkdirSync(SHOTS, { recursive: true }); console.log(JSON.stringify(await judge(TOWN, keptChecks(), null))); console.log(JSON.stringify(await townReading()).slice(0, 600)); await screenshot(0); console.log(`shots in ${SHOTS}`); await browser?.close(); process.exit(0) }
-else if (cmd === 'stop') { writeFileSync(STOPF, stamp()); console.log('asked to stop: the night ends after the job in progress, with Ola\'s own model loaded') }
-else { console.error('town.mjs night [--until 07:00 | --minutes 30] [--jobs 6] [--fresh] | status | report | stop'); process.exit(2) }
-
 // ---------------------------------------------------------------- the town folder
 function regenIndex(dir) {
   const parts = readdirSync(path.join(dir, 'parts')).filter((f) => f.endsWith('.js') && f !== 'index.js').sort()
@@ -416,3 +409,11 @@ Every job, with Qwen's exact words, the change, the judge's output and the time:
   console.log(md)
   console.log(`written: ${path.join(NT, 'REPORT.md')}`)
 }
+
+if (cmd === 'night') await night()
+else if (cmd === 'status') status()
+else if (cmd === 'report') report()
+else if (cmd === 'look') { if (!existsSync(TOWN)) freshTown(); mkdirSync(SHOTS, { recursive: true }); console.log(JSON.stringify(await judge(TOWN, keptChecks(), null))); console.log(JSON.stringify(await townReading()).slice(0, 600)); await screenshot(0); console.log(`shots in ${SHOTS}`); await browser?.close(); process.exit(0) }
+else if (cmd === 'stop') { writeFileSync(STOPF, stamp()); console.log('asked to stop: the night ends after the job in progress, with Ola\'s own model loaded') }
+else { console.error('town.mjs night [--until 07:00 | --minutes 30] [--jobs 6] [--fresh] | status | report | stop'); process.exit(2) }
+
