@@ -260,7 +260,7 @@ async function night() {
   try {
     while (true) {
       if (existsSync(STOPF)) { stopping = 'asked to stop'; break }
-      if (left() < 6 * 60000) { stopping = 'the clock'; break }
+      if (left() < 12 * 60000) { stopping = 'the clock (too little time left for a round)'; break }
       if (!diskOk()) { stopping = `less than 20 GB free on disk (${lib.freeGb().toFixed(1)} GB)`; break }
       if (!free()) { stopping = 'the clock (while waiting for other work)'; break }
       round++
