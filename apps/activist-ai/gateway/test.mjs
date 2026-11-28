@@ -2275,6 +2275,8 @@ test('design: a request whose words ask for a page is design work from its first
     assert.ok(!up.st.seen.at(-1).system.includes('load the `designer` skill'), 'no note to load the skill')
     const line = await waitFor(() => g.logs().find((l) => l.design_why === 'words'), 3000, 'the log line says why')
     assert.equal(line.served, 'design')
+    await call(g, T.a, { model: 'general', max_tokens: 4000, messages: msgs(yes[1]) })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'a request with no tools (the conversation’s title) stays on the everyday model')
     await call(g, T.a, { model: 'general', max_tokens: 4000, tools: SKILL_TOOL, messages: msgs(no[0]) })
     assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'other work stays on the everyday model')
     assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'and gets no note')

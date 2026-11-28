@@ -1222,7 +1222,10 @@ async function handle(req, res, rec, signal) {
   // and Ola is told to say that a stronger design model is available.
   let served = body.model
   let note = null
-  const why = !isHosted && !probeBackup && C.models.has('design') && body.model === 'general' && !isProbe ? designWhy(body.messages) : null
+  let why = !isHosted && !probeBackup && C.models.has('design') && body.model === 'general' && !isProbe ? designWhy(body.messages) : null
+  // The person's words count only for a working request (one that offers tools): opencode's title and
+  // summary requests carry the same words and stay on the everyday model.
+  if (why === 'words' && !(Array.isArray(body.tools) && body.tools.length)) why = null
   if (!isHosted && !probeBackup && C.models.has('design') && (body.model === 'design' || why)) {
     // Why it is design work, a word for the log line (OLA-303): skill, or answer (the person answering its question).
     if (why) rec.design_why = why
