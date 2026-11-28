@@ -26,8 +26,15 @@ const env = Object.fromEntries(
 const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 
 async function all() {
-  const { data, error } = await db.from('venture_interview_turns').select('*').order('id')
-  if (error) throw new Error(error.message)
+  // In pages: one request returns at most 1000 rows, and past the thousandth turn (Nov 27) the newest calls
+  // were cut off, so a call Bart had just finished was not listed and the watcher never saw it.
+  const data = []
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await db.from('venture_interview_turns').select('*').order('id').range(from, from + 999)
+    if (error) throw new Error(error.message)
+    data.push(...page)
+    if (page.length < 1000) break
+  }
   const sessions = new Map()
   for (const t of data) {
     if (!sessions.has(t.session)) sessions.set(t.session, [])
