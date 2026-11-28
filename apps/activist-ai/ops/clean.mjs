@@ -194,6 +194,24 @@ function wsIds(p, depth = 6, out = []) {
   }
   return out
 }
+/**
+ * Deletes a tree; null when it went, else why not. A drive's run folder holds the app's read-only
+ * skills and plugins (OLA-429: rmSync stopped at ENOTEMPTY and the pass with it), so a failed try
+ * makes the tree writable (chmod -R u+w) and tries once more.
+ */
+function remove(p) {
+  try {
+    rmSync(p, { recursive: true, force: true })
+    return null
+  } catch {}
+  sh('/bin/chmod', ['-R', 'u+w', p])
+  try {
+    rmSync(p, { recursive: true, force: true })
+    return null
+  } catch (e) {
+    return e.code || e.message
+  }
+}
 /** Why a git clone must stay (work in it that exists nowhere else), or null. */
 function gitWork(p) {
   if (!existsSync(path.join(p, '.git'))) return null
@@ -361,7 +379,13 @@ export function clean({ dry = false, say = console.log } = {}) {
         // The temporary folder holds hundreds of these: one line for all of them, below.
         if (where === 'tmp' || rule.many) tmpSum[rule.what] = { n: (tmpSum[rule.what]?.n ?? 0) + 1, kb: (tmpSum[rule.what]?.kb ?? 0) + k }
         else say(`  ${dry ? 'would delete' : 'delete'} ${tilde(p)} (${human(k)}, ${rule.what}, last changed ${new Date(age).toISOString().slice(0, 10)})`)
-        if (!dry) rmSync(p, { recursive: true, force: true })
+        if (!dry) {
+          const why = remove(p)
+          if (why) {
+            say(`  could not delete ${tilde(p)}: ${why}`)
+            continue
+          }
+        }
         deleted.push({ kind: 'leftover', name: tilde(p), kb: k })
       }
     }

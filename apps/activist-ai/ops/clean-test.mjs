@@ -262,7 +262,10 @@ test('~/ola-drive (OLA-429): old runs, checker copies, build folders, Mac apps a
   const D = path.join(H, 'ola-drive')
   const SIX_H_AGO = Date.now() / 1000 - 7 * 3600
   for (const p of ['run-123/home/x', 'run-456/home/x', 'src-chk421p/apps/x', 'chk32/dd/x', 'dd-275/Build/x', 'apps/Ola-0.1-33/Ola.dmg', 'xcodegen/bin/xcodegen', 'checks/486-mac/result.json', 'drive-build/x', 'apps/dev/x', 'notmine/x']) put(path.join(D, p))
+  put(path.join(D, 'run-456/home/Library/Ola/skills/x/SKILL.md'))
   for (const n of readdirSync(D)) age(path.join(D, n))
+  chmodSync(path.join(D, 'run-456/home/Library/Ola/skills/x'), 0o555) // read-only, as the app leaves its skills
+  chmodSync(path.join(D, 'run-456/home/Library/Ola/skills'), 0o555)
   put(path.join(D, 'lock'), '1')
   age(path.join(D, 'lock'))
   put(path.join(D, 'run-789/home/x')) // today: stays
