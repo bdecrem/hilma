@@ -27,3 +27,11 @@ folder on the Studio (`~/nt-attempt-<n>`).
   were merged (its own check false). But 94% kept means the jobs are too easy to teach us much.
 - Changed: the mayor is told how the last round went and adjusts: at 80% kept it asks for bolder jobs (parts that use
   each other, two-step behaviors, people doing things together), at 40% or less smaller ones.
+
+## Attempt 4 (18:37 to 19:06, through start.sh, the clock stopped it)
+- Ran: the real launcher (start.sh under caffeinate); rounds of 6.2, 12.4 and 10.2 min; 12 of 15 kept. After a 6 of 6
+  round the mayor asked for bolder jobs (tavern drink-then-home, a dog that chases the cat, a school, a pond, a night
+  watchman) and the keep rate fell to 4 of 6, then 2 of 3: the dial works.
+- Broke: no stall, no crash; swaps 34 to 36 s a round (about 5% of a round). The rejections were real conflicts:
+  school and pond each passed alone and broke the tavern once merged beside it; the windmill hit the 8-minute cap.
+- Changed: nothing. Ready for the night: `start.sh --until 07:00` from a fresh seed in ~/night-town.
