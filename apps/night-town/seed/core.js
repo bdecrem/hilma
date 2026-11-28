@@ -5,8 +5,16 @@
   const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
   function mix(a, b, t) { const x = hex(a), y = hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('') }
 
-  let seed = 20261127
-  function rand() { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  // Seeded random, one stream per part: town.rand() inside a part's init/tick/draw draws from that part's own
+  // stream, so a new part never changes what an existing part does (and its kept check stays true).
+  const seeds = {}
+  let current = 'core'
+  function rand() {
+    let seed = seeds[current]
+    if (seed === undefined) { seed = 20261127; for (const ch of current) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619) }
+    seed = (seed + 0x6d2b79f5) | 0; seeds[current] = seed
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
 
   const parts = []
   const state = {
@@ -139,6 +147,6 @@
     },
   }
   function sorted(k) { return parts.slice().sort((a, b) => a[k] - b[k]) }
-  function run(p, what, fn) { try { fn() } catch (e) { if (town.errors.length < 50) town.errors.push(`${p.name}.${what}: ${e && e.message}`); if (town.throwErrors) throw e } }
+  function run(p, what, fn) { const was = current; current = what === 'draw' ? p.name + ':draw' : p.name; try { fn() } catch (e) { if (town.errors.length < 50) town.errors.push(`${p.name}.${what}: ${e && e.message}`); if (town.throwErrors) throw e } finally { current = was } }
   window.town = town
 })()

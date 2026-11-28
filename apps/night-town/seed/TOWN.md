@@ -35,7 +35,7 @@ town.register({
 ## Helpers
 
 - `town.C`: the colors `cream ink red blue yellow lime`; `town.mix(a, b, t)` blends two of them. Use only these.
-- `town.rand()`, `town.randInt(a, b)`, `town.pick(list)`: seeded random. Never `Math.random`.
+- `town.rand()`, `town.randInt(a, b)`, `town.pick(list)`: seeded random, a stream of its own for each part. Never `Math.random`.
 - `town.at(x, y)`, `town.set(x, y, kind)`, `town.walkable(x, y)`, `town.inside(x, y)`.
 - `town.findSpot(w, h)`: a free spot of grass with the road just below it, or null. Never build on a road tile.
 - `town.addBuilding({ kind, name, w, h, color, ...more })`: places it (at `findSpot` unless you give `x, y`),

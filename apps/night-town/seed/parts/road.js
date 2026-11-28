@@ -1,9 +1,10 @@
-// The main road: one street across the town at row 16 and one up through column 24, tile kind 'road'.
+// The roads, tile kind 'road': the main street across the town at row 16, two side streets at rows 7 and 25, and one avenue up column 24 joining them.
 town.register({
   name: 'road', order: 10, layer: 10,
   init(town) {
     for (let x = 0; x < town.W; x++) town.set(x, 16, 'road')
-    for (let y = 4; y < town.H; y++) town.set(24, y, 'road')
+    for (let x = 6; x < town.W - 6; x++) { town.set(x, 7, 'road'); town.set(x, 25, 'road') }
+    for (let y = 3; y < town.H; y++) town.set(24, y, 'road')
   },
   draw(ctx, town) {
     const T = town.TILE

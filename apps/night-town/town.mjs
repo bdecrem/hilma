@@ -146,7 +146,7 @@ Hand out exactly ${n} small, DIFFERENT jobs. Rules:
 - Favor what makes the town more alive to watch: things that move, change between day and night, react to each other. Build on what exists.
 - Vary the kinds of job across the round (we are learning what the builder is good and bad at).
 - A failed job must not come back in the same words: make it smaller or say it differently.
-- The check is the body of a JavaScript function given \`town\`, run in the page after the town started (time is day 1, 06:00). It must return true ONLY if the thing really happens: call town.advance(hours) first if it needs time, then test state (buildings, people, events, town.state.parts.<name>), not just that a part is registered. Keep it short and deterministic. Do not use the DOM or pixels.
+- The check is the body of a JavaScript function given \`town\`, run in the page after the town started (time is day 1, 06:00). It must return true ONLY if the thing really happens: call town.advance(hours) first if it needs time, then test state (buildings, people, events, town.state.parts.<name>), not just that a part is registered. Keep it short and deterministic. Do not use the DOM or pixels. It must not hinge on one lucky random draw: give it enough time, and test "at least one" or "more than", not exact counts of random things.
 - Each job is built and judged alone, in a copy of the town as it is now: its check must not depend on another job of this round.
 - Never put anything on a road tile; leave the roads as they are.
 - Use only the API above. Never ask for a change to core.js or index.html.
