@@ -156,9 +156,9 @@ never holds user data. The install list, and the check that says which of it is 
   live scripts, the evals) waits for the machine's one turn, `ops/turn.mjs`; a deploy goes before
   every waiting builder and holds the turn through its suites. `node ops/turn.mjs status` shows it.
 - **Status:** `node ops/ola.mjs status` shows every job, the deployed commit and each workspace.
-- **The disk:** every deploy that serves ends with `ops/clean.mjs` (old workspace images, releases
-  beyond the current and the previous, the image builder over 15 GB, builders' leftovers on a
-  written allowlist); `node ops/ola.mjs clean [--dry]` runs it by hand. README, "Deploying staging".
+- **The disk:** every deploy that serves ends with `ops/clean.mjs`, and one that finds under 10 GB
+  free starts with it (old workspace images, releases beyond the current and the previous, the image
+  builder over 10 GB, builders' and app drives' leftovers on a written allowlist); `node ops/ola.mjs clean [--dry]` runs it by hand. README, "Deploying staging".
 - **Backups:** `ops/backup.mjs` (OLA-86): nightly at 3:30 every project, the platform database and
   the gateway's records, encrypted with age, onto the backup drive plugged in (the SanDisk; a second
   drive swapped weekly from Bart's home); 14 days plus 8 weekly copies kept; a restore test on

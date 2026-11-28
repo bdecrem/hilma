@@ -12,12 +12,14 @@
 //              tag newer than the current one (a release being prepared). The rest are deleted.
 //   releases   kept: the current and the previous release, any a workspace's door or desk runs
 //              from (~/.ola/launchd), any a running process names. The rest are deleted.
-//   builder    deleted (container builder stop + delete) when its container holds more than 15 GB
+//   builder    deleted (container builder stop + delete) when its container holds more than 10 GB
 //              (OLA_CLEAN_BUILDER_GB) and no build is running; the next image build makes a new one.
 //   leftovers  only what matches ALLOW below, last changed more than 2 days ago
 //              (OLA_CLEAN_LEFTOVER_DAYS), named by no running process, no process's working folder,
 //              no launchd plist and no existing container, and (for a git clone) with nothing
 //              uncommitted, untracked or unpushed. Anything else in the home folder is never touched.
+//              Since OLA-429 also ~/ola-drive (the app drives'): run, source, check and build folders,
+//              downloaded Mac apps, and the per-commit iPhone builds (live + newest kept, 6 hours).
 //
 // Images and the builder are left alone while someone else holds the machine's test turn
 // (ops/turn.mjs: a suite may be about to start a VM from an image) or another deploy runs; the
@@ -35,9 +37,10 @@ const OLA = process.env.OLA_HOME || path.join(HOME, '.ola')
 const STAGING = process.env.OLA_STAGING || path.join(HOME, 'ola-staging')
 const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
 const STORE = process.env.OLA_CONTAINER_STORE || path.join(HOME, 'Library/Application Support/com.apple.container')
-const BUILDER_GB = Number(process.env.OLA_CLEAN_BUILDER_GB || 15)
+const BUILDER_GB = Number(process.env.OLA_CLEAN_BUILDER_GB || 10) // 10, so it stays under 15 between deploys (OLA-429)
 const LEFTOVER_DAYS = Number(process.env.OLA_CLEAN_LEFTOVER_DAYS || 2)
 const REPO = 'ola-workspace'
+const DRIVE = process.env.OLA_DRIVE || path.join(HOME, 'ola-drive')
 
 // Never deleted, whatever a pattern says (checked by name before anything else).
 export const NEVER = new Set([
@@ -63,6 +66,17 @@ export const ALLOW = [
   // Temporary folders Ola's checks make with mkdtemp.
   { where: 'tmp', re: /^ola-(check|fdcheck|image|web|shots|batch-live|batch-test|batch-truth|twin|studies|wcc|first-user-shots|fu-docs|watch-test|clean-test|skills-head|bart-skills)-[A-Za-z0-9]{6}$/, dir: true, what: 'a check\'s temporary folder' },
   { where: 'tmp', re: /^ola-check-notes-\d+\.txt$/, dir: false, what: 'a check\'s temporary file' },
+  // The app drives' folder, ~/ola-drive (apple/tools/drive.sh, OLA-429: 13 GB on Nov 28). Its lock,
+  // xcodegen copy, driver build and checks/ evidence are never touched.
+  { where: 'drive', re: /^run-\d+$/, dir: true, many: true, what: 'an app drive\'s run folder' },
+  { where: 'drive', re: /^src(-[a-z0-9-]{1,40})?$/, dir: true, what: 'a checker\'s source copy' },
+  { where: 'drive', re: /^chk[a-z0-9-]{0,40}$/, dir: true, what: 'a checker\'s drive folder' },
+  { where: 'drive', re: /^dd(-[a-z0-9-]{1,40})?$/, dir: true, what: 'an Xcode build folder' },
+  // drive-phone.sh's per-commit iPhone builds (~1.5 GB each, ten made on Nov 27 alone): the live
+  // release's and the newest are kept, the rest go after 6 hours.
+  { where: 'drivePhone', re: /^[0-9a-f]{12}$/, dir: true, live: true, newest: 1, days: 0.25, what: 'an iPhone app build for one commit' },
+  // drive.sh's downloaded Mac apps, one per build (~700 MB each).
+  { where: 'driveApps', re: /^Ola-[0-9][A-Za-z0-9.-]{0,40}$/, dir: true, what: 'a downloaded Mac app build' },
 ]
 
 const sh = (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 << 20, ...opts })
@@ -299,7 +313,11 @@ export function clean({ dry = false, say = console.log } = {}) {
   // ---- leftovers: the allowlist, older than LEFTOVER_DAYS, in use by nothing
   if (!ctrsKnown) say('leftovers: left alone, the containers could not be listed')
   else {
-    const places = { home: HOME, ship: path.join(HOME, 'ola-ship'), tmp: tmpdir() }
+    const places = { home: HOME, ship: path.join(HOME, 'ola-ship'), tmp: tmpdir(), drive: DRIVE, drivePhone: path.join(DRIVE, 'phone'), driveApps: path.join(DRIVE, 'apps') }
+    let liveCommit = null
+    try {
+      liveCommit = JSON.parse(readFileSync(path.join(STAGING, 'deployed.json'), 'utf8')).commit?.slice(0, 12) ?? null
+    } catch {}
     const cutoff = Date.now() - LEFTOVER_DAYS * 86_400_000
     let n = 0
     const tmpSum = {}
@@ -322,9 +340,17 @@ export function clean({ dry = false, say = console.log } = {}) {
         if (rule.dir === false && !st.isFile()) continue
         if (rule.needs && !rule.needs.some((f) => existsSync(path.join(p, f)))) continue
         const age = newest(p)
-        if (age > cutoff) continue
+        if (age > (rule.days != null ? Date.now() - rule.days * 86_400_000 : cutoff)) continue
+        if (rule.newest) {
+          const peers = readdirSync(dir).filter((x) => rule.re.test(x)).map((x) => [x, newest(path.join(dir, x))]).sort((a, b) => b[1] - a[1])
+          if (peers.slice(0, rule.newest).some(([x]) => x === name)) {
+            say(`  keep ${tilde(p)}: the newest`)
+            kept.push({ kind: 'leftover', name: tilde(p), reason: 'the newest' })
+            continue
+          }
+        }
         const ws = st.isDirectory() ? wsIds(p).filter((id) => ctrIds.has(`ola-${id}`)) : []
-        const reason = named(p, busy) ? 'a running process, a working folder or a launchd job names it' : ws.length ? `container ${ws.map((id) => `ola-${id}`).join(', ')} exists` : st.isDirectory() ? gitWork(p) : null
+        const reason = rule.live && (name === liveCommit || name === current) ? 'the live release\'s build' : named(p, busy) ? 'a running process, a working folder or a launchd job names it' : ws.length ? `container ${ws.map((id) => `ola-${id}`).join(', ')} exists` : st.isDirectory() ? gitWork(p) : null
         if (reason) {
           say(`  keep ${tilde(p)}: ${reason}`)
           kept.push({ kind: 'leftover', name: tilde(p), reason })
@@ -333,13 +359,13 @@ export function clean({ dry = false, say = console.log } = {}) {
         const k = kb(p)
         n++
         // The temporary folder holds hundreds of these: one line for all of them, below.
-        if (where === 'tmp') tmpSum[rule.what] = { n: (tmpSum[rule.what]?.n ?? 0) + 1, kb: (tmpSum[rule.what]?.kb ?? 0) + k }
+        if (where === 'tmp' || rule.many) tmpSum[rule.what] = { n: (tmpSum[rule.what]?.n ?? 0) + 1, kb: (tmpSum[rule.what]?.kb ?? 0) + k }
         else say(`  ${dry ? 'would delete' : 'delete'} ${tilde(p)} (${human(k)}, ${rule.what}, last changed ${new Date(age).toISOString().slice(0, 10)})`)
         if (!dry) rmSync(p, { recursive: true, force: true })
         deleted.push({ kind: 'leftover', name: tilde(p), kb: k })
       }
     }
-    for (const [what, v] of Object.entries(tmpSum)) say(`  ${dry ? 'would delete' : 'delete'} ${v.n} × ${what} in ${tmpdir()} (${human(v.kb)})`)
+    for (const [what, v] of Object.entries(tmpSum)) say(`  ${dry ? 'would delete' : 'delete'} ${v.n} × ${what} in ${tilde(ALLOW.find((a) => a.what === what).where === 'tmp' ? tmpdir() : DRIVE)} (${human(v.kb)})`)
     if (!n) say('  nothing')
   }
 

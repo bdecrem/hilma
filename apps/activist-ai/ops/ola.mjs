@@ -617,7 +617,18 @@ async function deploy(ref, { unsigned = false, check = false, all = false, base 
     ['frontdesk-unit', ['ops/unit.mjs', 'frontdesk']], // frontdesk/test, under a minute, no VM
   ]
   // Free disk first (OLA-327): on Nov 20 an update stopped half way with 3.8 GB left on the mini.
-  const diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
+  let diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
+  // Short: clean first, then look again (OLA-429: the clean ran only after a deploy that served, so
+  // a disk too full to deploy was never cleaned and every update was refused for five days).
+  if (diskShort) {
+    console.log(`${diskShort.split(':')[0]}: cleaning first`)
+    try {
+      clean({ say: console.log })
+    } catch (e) {
+      console.log(`clean failed: ${e.message}`)
+    }
+    diskShort = diskRefusal(freeGB(), { what: check ? 'a check' : 'an update' })
+  }
   if (diskShort) fail(diskShort)
   const PKGS = ['.', 'frontdesk', 'web'] // folders with a package-lock.json
   if (!existsSync(path.join(STAGING, '.git'))) fail(`${STAGING} is not a clone: git clone --no-checkout https://github.com/bdecrem/hilma ${STAGING} (see the README, "Deploying staging")`)

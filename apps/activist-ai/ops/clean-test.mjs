@@ -257,3 +257,34 @@ test('the alarm still never texts about the disk by default (DISK_TEXTS false)',
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', `import { settings } from ${JSON.stringify(path.join(HERE, 'watch.mjs'))}; console.log(settings().DISK_TEXTS)`], { env: env(), encoding: 'utf8' })
   assert.equal(r.stdout.trim(), 'false', r.stderr)
 })
+
+test('~/ola-drive (OLA-429): old runs, checker copies, build folders, Mac apps and iPhone builds go; the live and newest iPhone build, the lock, xcodegen and checks/ stay', () => {
+  const D = path.join(H, 'ola-drive')
+  const SIX_H_AGO = Date.now() / 1000 - 7 * 3600
+  for (const p of ['run-123/home/x', 'run-456/home/x', 'src-chk421p/apps/x', 'chk32/dd/x', 'dd-275/Build/x', 'apps/Ola-0.1-33/Ola.dmg', 'xcodegen/bin/xcodegen', 'checks/486-mac/result.json', 'drive-build/x', 'apps/dev/x', 'notmine/x']) put(path.join(D, p))
+  for (const n of readdirSync(D)) age(path.join(D, n))
+  put(path.join(D, 'lock'), '1')
+  age(path.join(D, 'lock'))
+  put(path.join(D, 'run-789/home/x')) // today: stays
+  put(path.join(D, 'apps/Ola-0.1-36/Ola.dmg')) // today: stays
+  // iPhone builds: the live release's (old) stays, the newest stays, an older one over 6 hours goes, a fresh one stays.
+  for (const [c, t] of [[C.cur, OLD], ['111111111111', SIX_H_AGO - 3600], ['222222222222', SIX_H_AGO], ['333333333333', Date.now() / 1000 - 3600]]) {
+    put(path.join(D, 'phone', c, 'dd/Ola.app/x'))
+    age(path.join(D, 'phone', c), t)
+  }
+  age(path.join(D, 'apps'), OLD)
+  utimesSync(path.join(D, 'apps/Ola-0.1-36'), Date.now() / 1000, Date.now() / 1000)
+  const dry = run(['--dry'])
+  assert.equal(dry.code, 0, dry.out)
+  assert.ok(existsSync(path.join(D, 'run-123')), 'dry deletes nothing')
+  const r = run()
+  assert.equal(r.code, 0, r.out)
+  assert.match(r.out, /delete 2 × an app drive's run folder in ~\/ola-drive/)
+  for (const p of ['run-123', 'run-456', 'src-chk421p', 'chk32', 'dd-275', 'apps/Ola-0.1-33', 'phone/111111111111', 'phone/222222222222']) assert.ok(!existsSync(path.join(D, p)), `${p} should be gone\n${r.out}`)
+  for (const p of ['lock', 'xcodegen', 'checks/486-mac', 'drive-build', 'apps/dev', 'notmine', 'run-789', 'apps/Ola-0.1-36', `phone/${C.cur}`, 'phone/333333333333']) assert.ok(existsSync(path.join(D, p)), `${p} should stay\n${r.out}`)
+})
+
+test('the builder goes over 10 GB by default (OLA-429: at 15 GB it was kept, and the cap was the problem)', () => {
+  const src = readFileSync(path.join(HERE, 'clean.mjs'), 'utf8')
+  assert.match(src, /OLA_CLEAN_BUILDER_GB \|\| 10\)/)
+})

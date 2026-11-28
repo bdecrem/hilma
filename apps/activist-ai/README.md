@@ -1452,7 +1452,8 @@ ops/ola.mjs ci --dry` says what the next run would do; tests `node --test ops/ci
 deploy suite, `ci`).
 
 **The disk is cleaned after every deploy that serves** (OLA-135, `ops/clean.mjs`), still holding the
-turn, and on demand with `node ops/ola.mjs clean --dry` (what it would delete) and `clean`. On
+turn, **and before a deploy or check that finds less than 10 GB free** (OLA-429: the clean once ran
+only after a deploy that served, so a disk too full to deploy was never cleaned), and on demand with `node ops/ola.mjs clean --dry` (what it would delete) and `clean`. On
 2026-11-17 the mini fell to 3.5 GB free twice; the image builder's cache alone held 49 GB. The rules:
 
 - **Images** (`ola-workspace:*` only; the base images stay): kept are the image the current release
@@ -1462,13 +1463,16 @@ turn, and on demand with `node ops/ola.mjs clean --dry` (what it would delete) a
   workspace's door or desk runs from (`~/.ola/launchd`) and any a running process names. A refused
   release stays only until the next clean; its log stays in `~/Library/Logs/ola`.
 - **The builder** (`buildkit`): `container builder stop` + `delete` when its container holds more
-  than 15 GB (`OLA_CLEAN_BUILDER_GB`) and no `container build` or `ws.mjs image` runs; the next image
+  than 10 GB (`OLA_CLEAN_BUILDER_GB`; 15 until OLA-429, when it sat at 15 and was kept) and no `container build` or `ws.mjs image` runs; the next image
   build makes a new one.
 - **Builders' leftovers**, only those on the written allowlist (`ALLOW` in `ops/clean.mjs`) and
   unchanged for 2 days (`OLA_CLEAN_LEFTOVER_DAYS`): `~/ola-<tag>` copies of Ola, `~/ola-<tag>-scratch`,
   the checks' `~/.ola-check[-<tag>]` and `~/.ola-fdcheck[-<tag>]`, the live scripts' `~/.ola-cq-live`,
   `~/.ola-wcc` and `~/.ola-cloudcheck`, builders' `~/ola-*.log|out`, the ship script's
-  `~/ola-ship/ola-{ios,mac}.xcarchive[.tgz]`, and the checks' mkdtemp folders in `$TMPDIR`. One is kept
+  `~/ola-ship/ola-{ios,mac}.xcarchive[.tgz]`, the checks' mkdtemp folders in `$TMPDIR`, and in
+  `~/ola-drive` (the app drives', OLA-429) `run-<n>`, `src[-<tag>]`, `chk<tag>`, `dd[-<tag>]` and
+  `apps/Ola-<build>`; its per-commit iPhone builds `phone/<commit12>` go after 6 hours except the
+  live release's and the newest. Its `lock`, `xcodegen`, `drive-build` and `checks/` stay. One is kept
   when a running process, a process's working folder, a launchd plist or an existing container
   (`ws/<id>`) names it, or when it is a git clone with anything uncommitted, untracked or unpushed.
   `NEVER` protects `~/.ola`, `~/ola-staging`, `~/ola-bart`, `~/.ola-bart`, `~/.ola-frontdesk`,
@@ -1478,7 +1482,7 @@ turn, and on demand with `node ops/ola.mjs clean --dry` (what it would delete) a
 Images and the builder are left alone while another process holds the test turn or another deploy
 runs, and the releases while another deploy runs (to wait for the turn: `node ops/turn.mjs run
 --label clean -- node ops/ola.mjs clean`). It prints what it keeps and why, what it deletes, and
-what was freed (measured with `df`). Tests: `node --test ops/clean-test.mjs` (7, a few seconds; a
+what was freed (measured with `df`). Tests: `node --test ops/clean-test.mjs` (9, a few seconds; a
 fake `container` CLI and a temporary home).
 
 **One test turn on the machine, and deploys go first** (OLA-83, 2026-11-19). The machine runs at
