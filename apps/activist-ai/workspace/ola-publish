@@ -124,7 +124,9 @@ def tell(r):
 
 def past(r):
     """An outcome already shown (or old): a record, never a claim about the address now (OLA-421)."""
-    when = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(float(r.get("written") or 0))) if r.get("written") else "an earlier time"
+    # In the person's zone, the one this computer keeps (TZ, OLA-450), in ola-made-by's words: OLA-330, a
+    # record said "02:11 UTC" and Ola repeated it to someone in California at 6:11 pm.
+    when = time.strftime("%b %d, %I:%M %p", time.localtime(float(r.get("written") or 0))).replace(" 0", " ") if r.get("written") else "an earlier time"
     if r.get("state") == "done" and r.get("unpublished"):
         # A take-down is the one record that can only point one way (OLA-421, check #1): nothing is up there
         # unless the page was published again since, and then a publish now says so with the card.

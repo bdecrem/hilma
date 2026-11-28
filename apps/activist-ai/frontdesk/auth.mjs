@@ -416,7 +416,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       if (!rows.length) return []
       const mark = db.prepare('UPDATE passkeys SET noticed_at = ? WHERE id = ?')
       for (const r of rows) mark.run(Date.now(), r.id)
-      return rows.map((r) => ({ kind: 'device_added', at: new Date(r.created_at).toISOString(), text: `A passkey for another device was added to your account on ${new Date(r.created_at).toUTCString().slice(0, 16)}. If that was you, there is nothing to do. If it was not, tell Bart at once: he will remove it.` }))
+      return rows.map((r) => ({ kind: 'device_added', at: new Date(r.created_at).toISOString(), text: `A passkey for another device was added to your account on ${new Date(r.created_at).toLocaleDateString('en-US', { timeZone: process.env.OLA_TZ || undefined, weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}. If that was you, there is nothing to do. If it was not, tell Bart at once: he will remove it.` }))
     },
 
     csrfOk(sess, req) {

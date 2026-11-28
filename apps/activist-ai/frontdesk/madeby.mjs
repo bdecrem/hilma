@@ -161,9 +161,15 @@ export function whoWords(engine, model) {
 // The files a person means by "that page": the project's own things, not fonts, screenshots or copies.
 const NOT_A_THING = /(^|\/)(\.|fonts\/|node_modules\/)|\.(woff2?|ttf|otf|map|lock|pyc)$/i
 const MAX_FACT_FILES = 8
-const when = (iso) => {
+// The time of a change in the person's zone, in ola-made-by's words ("Nov 27, 6:11 PM"; ola-db `when`).
+// OLA-330, Nov 27: these lines said "2026-11-28 02:11 UTC" and Ola repeated it to a person in
+// California at 6:11 pm. The zone is the machine's, the one each project's computer keeps
+// (workspace/ws.mjs ZONE, OLA-450); OLA_TZ names another, as there.
+export const ZONE = process.env.OLA_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+export const whenWords = (iso, tz = ZONE) => {
   const d = new Date(iso)
-  return Number.isFinite(d.getTime()) ? `${d.toISOString().slice(0, 16).replace('T', ' ')} UTC` : String(iso)
+  if (!Number.isFinite(d.getTime())) return String(iso)
+  return d.toLocaleString('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\u202f/g, ' ')
 }
 
 /**
@@ -171,7 +177,8 @@ const when = (iso) => {
  * `rows` are `ola-db made-by --json` (each file's last change), `history` the same files' rows newest
  * first; `busy` is true when another conversation is still working (its changes are not in yet).
  */
-export function recordFacts(rows, history, { busy = false } = {}) {
+export function recordFacts(rows, history, { busy = false, tz = ZONE } = {}) {
+  const when = (iso) => whenWords(iso, tz)
   const head = 'The record of who made this project’s files, read by Ola’s server for this question just now (ola-made-by prints the same). Answer who made or changed a file from these lines and in their words, never from what you remember of the conversation:'
   const things = (rows ?? []).filter((r) => typeof r?.path === 'string' && r.how !== 'deleted' && !NOT_A_THING.test(r.path))
   if (!things.length) return `${head} there is no record of any file in this project yet. Say you do not know who made it; never say you made it.${busy ? ' Another conversation in this project is still working, and its changes are not in the record yet.' : ''}`

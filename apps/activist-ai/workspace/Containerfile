@@ -78,6 +78,8 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.4.2-12 (OLA-330, Nov 27: Ola told a person in California at 6:11 pm that a page was made at "02:11 UTC"): ola-publish says a
+# publish record's time in this computer's zone (TZ), in ola-made-by's words, not in UTC. Builds on 2.4.2-11.
 # 2.4.2-11 (OLA-515, the first live test on 9f7b72cc123f: the page was written with `cat > index.html`, no write step, so
 # nothing was pressed): `ola-poke --since <ms> /work` finds the .html file changed last since the turn began by its time,
 # however it was written, and prints page null when none changed. Builds on 2.4.2-10.

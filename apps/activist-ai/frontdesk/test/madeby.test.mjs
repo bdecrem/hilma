@@ -236,7 +236,7 @@ test('a who-made question: the record is complete before it is read, and its fac
   const facts = await m.factsFor('fd-w', 'ses_1')
   await ending
   assert.match(facts, /^The record of who made this project’s files, read by Ola’s server/)
-  assert.match(facts, /index\.html: made \d{4}-\d\d-\d\d \d\d:\d\d UTC by Ola’s own open model; last changed \d{4}-\d\d-\d\d \d\d:\d\d UTC by Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola’s own model\)\./, facts)
+  assert.match(facts, /index\.html: made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d\d [AP]M by Ola’s own open model; last changed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d\d [AP]M by Inkling-2-Small, an outside open model that Ola uses for design work \(not Ola’s own model\)\./, facts)
   assert.ok(!facts.includes('woff2'), 'fonts are not what a person means by "that page"')
   // A turn of this conversation that was never heard to end is ended and read too.
   const t3 = await m.begin('fd-w', { engine: 'ola', session: 'ses_1', request: 'add a map page' })
@@ -257,9 +257,13 @@ test('recordFacts and the who-made question: the words, no record, and which req
   assert.match(recordFacts([], []), /there is no record of any file in this project yet\. Say you do not know who made it; never say you made it\.$/)
   const rows = [{ path: 'a.html', how: 'changed', engine: 'claude', model: 'claude-x', at: '2026-11-21T23:48:00Z' }, { path: 'b.html', how: 'created', engine: 'hosted', model: 'deepseek-v4-pro', at: '2026-11-21T23:40:00Z' }]
   const hist = [rows[0], { path: 'a.html', how: 'created', engine: 'ola', model: 'unknown', at: '2026-11-21T23:30:00Z' }, rows[1]]
-  const f = recordFacts(rows, hist)
-  assert.match(f, /a\.html: made 2026-11-21 23:30 UTC by Ola, but which model made this change is not known \(two conversations were working at the same time\); last changed 2026-11-21 23:48 UTC by Claude \(model claude-x\)\./)
-  assert.match(f, /b\.html: made 2026-11-21 23:40 UTC by DeepSeek V4 Pro, an outside open model \(not Ola’s own model\), and not changed since\./)
+  const f = recordFacts(rows, hist, { tz: 'America/Los_Angeles' })
+  assert.match(f, /a\.html: made Nov 21, 3:30 PM by Ola, but which model made this change is not known \(two conversations were working at the same time\); last changed Nov 21, 3:48 PM by Claude \(model claude-x\)\./)
+  assert.match(f, /b\.html: made Nov 21, 3:40 PM by DeepSeek V4 Pro, an outside open model \(not Ola’s own model\), and not changed since\./)
+  // OLA-330: the UTC instant of 9:32 pm Pacific is said as the person's evening, never as the next morning.
+  const p9 = [{ path: 'p.html', how: 'created', engine: 'ola', model: null, at: '2026-11-21T05:32:00Z' }]
+  assert.match(recordFacts(p9, p9, { tz: 'America/Los_Angeles' }), /p\.html: made Nov 20, 9:32 PM by Ola’s own open model, and not changed since\./)
+  assert.doesNotMatch(f, /UTC/)
   for (const q of ['who made that page?', 'Who changed it last?', 'which model built index.html', 'which agent built index.html: hosted or claude?', 'did you make this page?', 'who designed the flyer', 'who last edited the report?']) assert.ok(ASKS_WHO.test(q), q)
   for (const q of ['make a page for our block party on Saturday', 'who is coming to the party?', 'change the look of the page: make it warmer', 'publish it again']) assert.ok(!ASKS_WHO.test(q), q)
 })
