@@ -7,7 +7,7 @@ import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, NO_LONGER_NEEDED, questionOf, startClaudeTurn, startTurn, switchOf, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval, handoffPrompt, handoffWords, precheck, STRETCH_CHECKS, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
-import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
+import { claude, desk, DeskError, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
 import { deadAnswer, deadQuestion, isDeadHandoff, isHostedPokeFix, isPokeFix, pokeAfter, pokeAgain, pokeHosted, type Dead } from './poke.ts'
 import { answerFromWords, composerState, HELD, type ComposerState } from './composer.ts'
@@ -67,6 +67,10 @@ const QUIET_MS = 60_000
 // it is back within a second or two. Only a stream gone this long is "Lost the connection" (OLA-94).
 export const LOST_AFTER_MS = 5_000
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+/** OLA-489: what a request says while it waits for a place on a full machine, how often it asks, how long. */
+export const WAITING_FOR_ROOM = 'Ola’s computer is running as many projects as it can just now, so this waits here. It goes by itself as soon as a place frees; you can leave the page open.'
+const ROOM_ASK_MS = 10_000
+const ROOM_WAIT_MS = 15 * 60_000
 
 /**
  * `live: false` loads state with plain requests and never opens the event stream: a still
@@ -261,6 +265,42 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     return sendOla(request)
   }
 
+  // OLA-489: a request sent while Ola's computer runs as many projects as it can (the front desk's
+  // 503 machine_busy: the project's computer could not start) is not "did not reach Ola's computer":
+  // nothing reached opencode, so it waits in its turn with a plain note, asks again every 10 s (each
+  // ask lets the front desk close a project left idle to make room, OLA-412), and goes by itself.
+  // The opencode client hides the reply's body, so a 503 is told apart by asking /api/project.
+  let roomWait: { at: number; stop: () => void } | null = null
+  async function machineFull(): Promise<boolean> {
+    try {
+      await desk.project()
+      return false
+    } catch (e) {
+      return e instanceof DeskError && e.status === 503 && /machine_busy/.test(e.problem.detail ?? '')
+    }
+  }
+  async function whenRoom<T>(at: number, f: () => Promise<T>): Promise<T> {
+    const end = Date.now() + ROOM_WAIT_MS
+    const turn = () => state.turns.find((t) => t.at === at && t.status === 'sending')
+    for (;;) {
+      try {
+        const r = await f()
+        if (turn()?.notice === WAITING_FOR_ROOM) setState(produce((s) => void Object.assign(s.turns.find((t) => t.at === at)!, { notice: null })))
+        return r
+      } catch (e) {
+        if (disposed || !/\b503\b/.test(String((e as any)?.message ?? e)) || !turn() || !(await machineFull())) throw e
+        if (Date.now() > end) throw Object.assign(new Error(String((e as any)?.message ?? e)), { full: true })
+        setState(produce((s) => void Object.assign(s.turns.find((t) => t.at === at)!, { notice: WAITING_FOR_ROOM })))
+        const stopped = await new Promise<boolean>((resolve) => {
+          const timer = setTimeout(() => resolve(false), ROOM_ASK_MS)
+          roomWait = { at, stop: () => (clearTimeout(timer), resolve(true)) }
+        })
+        roomWait = null
+        if (stopped || disposed || !turn()) throw Object.assign(new Error('stopped while waiting for room'), { stopped: true })
+      }
+    }
+  }
+
   async function sendOla(request: string) {
     setState('problem', null)
     let sessionID: string
@@ -269,20 +309,24 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     const fail = (detail: unknown) =>
       setState(
         produce((s) => {
-          const t = s.turns[s.turns.length - 1]
+          const t = s.turns.find((x) => x.at === at)
           if (!t || t.status !== 'sending') return
-          t.status = 'failed'
+          t.notice = null
           t.ended = Date.now()
-          t.error = { text: 'Your request did not reach Ola’s computer. Nothing was done; send it again when the connection is back.', detail: String((detail as any)?.message ?? detail) }
+          if ((detail as any)?.stopped) return void (t.status = 'stopped')
+          t.status = 'failed'
+          t.error = (detail as any)?.full
+            ? { text: 'Ola’s computer stayed full, so your request did not go. Nothing was done; send it again in a few minutes.', detail: String((detail as any)?.message ?? detail) }
+            : { text: 'Your request did not reach Ola’s computer. Nothing was done; send it again when the connection is back.', detail: String((detail as any)?.message ?? detail) }
         }),
       )
     try {
-      sessionID = await ensureSession(request)
+      sessionID = await whenRoom(at, () => ensureSession(request))
     } catch (e) {
       return fail(e)
     }
     try {
-      await client.session.prompt({ sessionID, text: request })
+      await whenRoom(at, () => client.session.prompt({ sessionID, text: request }))
     } catch (e) {
       return fail(e)
     }
@@ -296,6 +340,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
 
   async function stop() {
     const last = state.turns[state.turns.length - 1]
+    // A request still waiting for room never reached Ola's computer: Stop takes it back here.
+    if (roomWait && last?.at === roomWait.at && last.status === 'sending') return roomWait.stop()
     if (last?.engine === 'claude' && (last.status === 'working' || last.status === 'sending')) {
       if (!last.run) return
       try {

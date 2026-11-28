@@ -121,6 +121,15 @@ leaves the resource errored, because Solid throws an errored resource on every r
 the page. `node full-machine.mjs [shots-dir]` proves it at 390 px in WebKit and Chromium against
 the dev server playing a full machine (`OLA_DEV_FULL=1`, `POST /__dev/full?on=0|1`), about a minute.
 
+**A machine that fills after the page opened** (OLA-489): the event stream is already open, so the
+composer sends, and the new conversation or the request hears 503 (the front desk could not start
+the project). The opencode client hides the reply's body, so the page asks `/api/project` why; on
+`machine_busy` the request waits in its turn ("so this waits here"), asks again every 10 s (each ask
+lets the front desk close a project idle 5 minutes to make room, OLA-412) and goes by itself; Stop
+takes it back; after 15 minutes it says the machine stayed full. Never "did not reach Ola's
+computer", which is for a connection that is really gone. `full-machine.mjs` plays it with
+`POST /__dev/full-sends?on=0|1` after `/new`, so the request is a conversation's first.
+
 ## What `check.mjs` proves (21 checks)
 
 The home renders its five kinds of things; both typefaces load from our origin; a request runs

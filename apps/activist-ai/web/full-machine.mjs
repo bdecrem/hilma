@@ -106,6 +106,36 @@ try {
       t(`${name}: after it opens, a request goes`, false, `${e.message}; page: ${(await body()).slice(0, 300)}`)
     }
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${name}-opened.png`), fullPage: true })
+
+    // OLA-489: the machine fills just after a new project opened (its first request, a new
+    // conversation): the request waits in its turn with a plain note, never "did not reach Ola's
+    // computer", and goes by itself once a place frees.
+    // A new conversation, so the request below is a first one (the session is made with it).
+    await until(async () => !/Sending|Working/.test(await body()), 30_000, 'the request before to end').catch(() => {})
+    await box.fill('/new')
+    await box.press('Enter')
+    await page.waitForTimeout(500)
+    const fresh = page
+    const freshBody = body
+    const box2 = box
+    await fetch(new URL('/__dev/full-sends?on=1', url), { method: 'POST', headers: { origin: new URL(url).origin } })
+    await box2.fill('make a flyer for the bake sale')
+    await box2.press('Enter')
+    try {
+      await until(async () => /so this waits here/.test((text = await freshBody())), 15_000, 'the waiting note')
+      t(`${name}: a first request on a machine that just filled waits, with why`, !/did not reach Ola/.test(text), text.slice(0, 400))
+    } catch (e) {
+      t(`${name}: a first request on a machine that just filled waits, with why`, false, `${e.message}; page: ${text.slice(0, 400)}`)
+    }
+    if (SHOTS) await fresh.screenshot({ path: path.join(SHOTS, `${name}-waiting.png`), fullPage: true })
+    await fetch(new URL('/__dev/full-sends?on=0', url), { method: 'POST', headers: { origin: new URL(url).origin } })
+    try {
+      await until(async () => !/so this waits here|Sending/.test((text = await freshBody())), 30_000, 'the waiting request to go')
+      t(`${name}: it goes by itself when a place frees`, !/did not reach Ola/.test(text), text.slice(0, 400))
+    } catch (e) {
+      t(`${name}: it goes by itself when a place frees`, false, `${e.message}; page: ${text.slice(0, 400)}`)
+    }
+    if (SHOTS) await fresh.screenshot({ path: path.join(SHOTS, `${name}-waited.png`), fullPage: true })
     await browser.close()
   }
 } finally {

@@ -1533,7 +1533,11 @@ export function makeFrontDesk(cfg = config()) {
     active.add(res)
     res.on('close', () => active.delete(res))
     handle(req, res).catch((e) => {
-      log(`error (${e?.code ?? e?.name ?? 'error'})`)
+      // OLA-489: which project and which route, so a refused start is found by the project's name
+      // (a checker read "nothing in frontdesk.log" for chk479-f beside 40 bare "error (MACHINE_BUSY)").
+      const w = String(req.headers['x-ola-workspace'] ?? new URL(req.url ?? '/', 'http://x').searchParams.get('w') ?? '')
+      const where = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(w) ? ` in ${w}` : ''
+      log(`error (${e?.code ?? e?.name ?? 'error'})${where} on ${req.method} ${(req.url ?? '').split('?')[0].slice(0, 120)}`)
       if (res.headersSent) res.destroy()
       else if (['MACHINE_BUSY', 'CLOSED', 'START_FAILED'].includes(e?.code)) startRefused(res, e)
       else json(res, 500, { error: 'server_error', message: 'Ola’s computer could not do that just now. Nothing was changed.' })
