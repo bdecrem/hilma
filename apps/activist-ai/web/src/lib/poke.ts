@@ -31,6 +31,14 @@ export const hasLoadError = (dead: Dead[]) => dead.some((d) => LOAD_ERROR.test(d
 // sent when the page still throws as it opens (never more than one).
 const LOAD_HINT = 'A script error when the page opens stops its script at that line, so nothing after it has run yet: read the rest of the script for mistakes of the same kind (an element the code uses that the page does not have, a method called on the wrong kind of value) and fix them too.'
 
+// OLA-466, checker Nov 28 on cb3fb944 (chk466k): ola-poke's grid use stops at the first step that fails,
+// so the first fix prompt said only "a tap opens no field"; the model fixed that, and the second pressing
+// found 7 over a 5 giving 75 behind it. So a fix prompt with a grid step in it names every step Ola takes
+// and the code that makes the usual failures work, and the model fixes them all in one turn.
+const GRID_HINT = 'Ola uses the grid the way a person does on a phone, in Safari, and stops at the first step that fails, so make every step work, not only the one named: tap A1, type 5, Enter; tap B1, type =A1*2, Enter (B1 shows 10, not its formula); tap A1 again and type 7 (A1 shows 7, not 57 or 75; B1 shows 14). For that: a tap on a cell focuses an <input> inside that cell, its whole text is selected when it gets focus (onfocus="this.select()" and onmouseup="return false" on the input), and a redraw never sets the value of the cell that has focus.'
+/** Whether a grid step (ola-poke's use of a spreadsheet) is among what is dead. */
+export const hasGridStep = (dead: Dead[]) => dead.some((d) => d.what === 'grid')
+
 /** Whether a finished turn gets its page pressed: Ola's own model's, ended well, not one Ola sent itself. */
 export const pokeable = (turn: Turn) => turn.status === 'done' && !turn.nudge && turn.engine !== 'claude' && turn.engine !== 'hosted'
 
@@ -38,7 +46,7 @@ export const pokeable = (turn: Turn) => turn.status === 'done' && !turn.nudge &&
 export function pokePrompt(page: string, dead: Dead[], line = POKE_LINE): string {
   const lines = dead.slice(0, MAX_LINES).map((d) => `- ${d.say}`)
   if (dead.length > MAX_LINES) lines.push(`- and ${dead.length - MAX_LINES} more like these.`)
-  const hint = hasLoadError(dead) ? `\n\n${LOAD_HINT}` : ''
+  const hint = (hasLoadError(dead) ? `\n\n${LOAD_HINT}` : '') + (hasGridStep(dead) ? `\n\n${GRID_HINT}` : '')
   return `${POKE_MARK}${line}\n\nFrom Ola, not the person: Ola opened ${page} in a browser, typed into every field and pressed every button. This did not work:\n${lines.join('\n')}${hint}\n\nFix exactly that in ${page}, then hand it over. Change nothing else.`
 }
 

@@ -68,3 +68,12 @@ test('a bigger-model turn that did not end well, or one the person asked for, is
   assert.deepEqual((await run(handoff({ status: 'failed' }), async () => ({ page: 'index.html', dead: DEAD }))).asked, [])
   assert.deepEqual((await run(turn('make me a spreadsheet', 'hosted'), async () => ({ page: 'index.html', dead: DEAD }))).asked, [])
 })
+
+// OLA-466, checker Nov 28 (chk466k): the grid use stops at its first failed step, so a later one was hidden.
+test('a fix prompt with a grid step names every step Ola takes and the code for each; others do not', () => {
+  const p = pokePrompt('index.html', DEAD)
+  assert.match(p, /stops at the first step that fails, so make every step work/)
+  assert.ok(p.includes('type =A1*2') && p.includes('not 57 or 75') && p.includes('onfocus="this.select()"'))
+  assert.match(pokePrompt('index.html', DEAD, POKE_LINE_HOSTED), /make every step work/)
+  assert.doesNotMatch(pokePrompt('index.html', [{ what: 'button', name: 'Done', say: "Pressing 'Done' changed nothing on the page." }]), /make every step work/)
+})
