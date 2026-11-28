@@ -109,7 +109,11 @@
       const layers = sorted('layer')
       for (const p of layers) if (p.draw && p.layer < 100) run(p, 'draw', () => { ctx.save(); p.draw(ctx, town); ctx.restore() })
       const dark = 1 - state.time.light
-      if (dark > 0) { ctx.fillStyle = C.blue; ctx.globalAlpha = dark * 0.55; ctx.fillRect(0, 0, W * TILE, H * TILE); ctx.globalAlpha = 1 }
+      if (dark > 0) {
+        ctx.fillStyle = C.blue; ctx.globalAlpha = dark * 0.55; ctx.fillRect(0, 0, W * TILE, H * TILE); ctx.globalAlpha = 1
+        // Lit windows glow through the dark: every building's window row, in sunflower.
+        if (state.time.light < 0.6) for (const b of state.buildings) { ctx.fillStyle = C.yellow; for (let i = 0; i < b.w; i++) ctx.fillRect(b.x * TILE + i * TILE + TILE * 0.3, b.y * TILE + b.h * TILE * 0.45, TILE * 0.4, TILE * 0.35) }
+      }
       for (const p of layers) if (p.draw && p.layer >= 100) run(p, 'draw', () => { ctx.save(); p.draw(ctx, town); ctx.restore() })
       const t = state.time, hh = Math.floor(t.hour), mm = Math.floor((t.hour - hh) * 60)
       ctx.fillStyle = C.ink; ctx.fillRect(8, 8, 128, 22); ctx.fillStyle = C.yellow; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'left'
