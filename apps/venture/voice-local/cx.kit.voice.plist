@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>cx.kit.voice</string>
+  <key>ProgramArguments</key><array>
+    <string>/Users/ola/voice-trial/.venv/bin/python</string>
+    <string>/Users/ola/kit-voice/server.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/ola/kit-voice</string>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/ola</string>
+    <key>PATH</key><string>/Users/ola/voice-trial/.venv/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>KIT_VOICE_SECRET_FILE</key><string>/Users/ola/.kit-voice-secret</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/Users/ola/Library/Logs/kit-voice/voice.log</string>
+  <key>StandardErrorPath</key><string>/Users/ola/Library/Logs/kit-voice/voice.log</string>
+</dict></plist>

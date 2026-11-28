@@ -255,3 +255,17 @@ body:has(.vi) {
   font-size: 26px;
   letter-spacing: 0.02em;
 }
+.vi-local {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--vi-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--mute);
+}
+.vi-local input {
+  accent-color: var(--clay);
+  width: 16px;
+  height: 16px;
+}

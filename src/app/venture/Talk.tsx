@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { drawMe, type Face } from '@/app/claude/drawing'
 import { isBackchannel } from '@/lib/venture/voice-turns'
+import { LocalVoice } from './local-voice'
 
 // The open conversation, forked from Call.tsx. Same WebRTC line to OpenAI
 // Realtime, but the Realtime model never decides what to say: it hears Bart
@@ -15,12 +16,20 @@ import { isBackchannel } from '@/lib/venture/voice-turns'
 // it is still writing do not start the reply over (the voice writer carries
 // the reply it was writing over to the longer turn, src/lib/venture/voice-carry.ts).
 // While he is talking, no new piece goes to the voice.
+//
+// The "Local voice" switch (OLA-529, off by default, remembered on the device) swaps the ears
+// and the mouth for Kit's voice server on the Mac Studio over Tailscale (./local-voice.ts): the
+// same events both ways, the same replies from Claude. If the Studio cannot be reached the page
+// says so; it never falls back to the paid voice on its own.
 
 type Phase = 'idle' | 'connecting' | 'live' | 'paused' | 'done'
 type Line = { role: 'claude' | 'bart'; text: string }
 type RtEvent = { type: string; transcript?: string; response?: { id?: string; status?: string }; error?: { message?: string } }
 
 const STORE = 'venture.talk.session'
+const LOCAL = 'venture.talk.local'
+const UNREACHABLE =
+  'I cannot reach the voice on the Mac Studio. This device has to be on Tailscale, and the Studio awake. Turn Local voice off to use the regular voice.'
 // Talking over Claude this long stops it.
 const BARGE_MS = 700
 
@@ -41,6 +50,7 @@ export default function Talk() {
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
   const [canResume, setCanResume] = useState(false)
+  const [local, setLocal] = useState(false)
 
   const key = useRef('')
   const session = useRef('')
@@ -48,6 +58,8 @@ export default function Talk() {
   const dc = useRef<RTCDataChannel | null>(null)
   const mic = useRef<MediaStream | null>(null)
   const audio = useRef<HTMLAudioElement | null>(null)
+  const lv = useRef<LocalVoice | null>(null)
+  const actx = useRef<AudioContext | null>(null)
   const wake = useRef<{ release: () => Promise<void> } | null>(null)
   const queue = useRef<Promise<void>>(Promise.resolve())
   const phaseRef = useRef<Phase>('idle')
@@ -82,6 +94,7 @@ export default function Talk() {
     key.current = new URLSearchParams(window.location.search).get('k') ?? ''
     try {
       setCanResume(!!window.localStorage.getItem(STORE))
+      setLocal(window.localStorage.getItem(LOCAL) === '1')
     } catch {}
   }, [])
 
@@ -105,7 +118,8 @@ export default function Talk() {
   }, [])
 
   const send = useCallback((ev: object) => {
-    if (dc.current?.readyState === 'open') dc.current.send(JSON.stringify(ev))
+    if (lv.current) lv.current.send(ev)
+    else if (dc.current?.readyState === 'open') dc.current.send(JSON.stringify(ev))
   }, [])
 
   // The reply has been heard to its end (or was cut): it becomes one stored turn.
@@ -273,6 +287,10 @@ export default function Talk() {
     if (closer.current) clearTimeout(closer.current)
     closer.current = null
     setDraft('')
+    lv.current?.close()
+    lv.current = null
+    actx.current?.close().catch(() => {})
+    actx.current = null
     dc.current?.close()
     pc.current?.close()
     mic.current?.getTracks().forEach((t) => t.stop())
@@ -369,6 +387,11 @@ export default function Talk() {
   const start = useCallback(async () => {
     setError('')
     setPhase('connecting')
+    // Local voice plays through Web Audio; on iOS its context must be made inside the tap.
+    if (local) {
+      actx.current = new AudioContext()
+      void actx.current.resume()
+    }
     try {
       // Mic first: it must be asked for inside the tap on iOS.
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -383,15 +406,70 @@ export default function Talk() {
       const res = await fetch('/api/venture/talk/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: key.current, session: resume || undefined }),
+        body: JSON.stringify({ key: key.current, session: resume || undefined, local: local || undefined }),
       })
-      if (!res.ok) throw new Error(res.status === 404 ? 'This link is not valid.' : 'The voice service did not answer. Try again.')
-      const info = (await res.json()) as { session: string; resumed: boolean; client_secret: string; calls_url: string }
+      if (!res.ok)
+        throw new Error(
+          res.status === 404
+            ? 'This link is not valid.'
+            : local && res.status === 503
+              ? 'Local voice is not set up on the server yet. Turn it off to use the regular voice.'
+              : 'The voice service did not answer. Try again.',
+        )
+      const info = (await res.json()) as {
+        session: string
+        resumed: boolean
+        client_secret?: string
+        calls_url?: string
+        local?: { url: string; token: string }
+      }
       session.current = info.session
       try {
         window.localStorage.setItem(STORE, info.session)
       } catch {}
       if (!info.resumed) setLines([])
+
+      const opening = () => {
+        setPhase('live')
+        // A fixed line, so the first sound comes at once and the floor is Bart's.
+        said.current = []
+        buf.current = info.resumed ? 'I am back. Go on.' : 'I am here. What is on your mind?'
+        streamDone.current = true
+        pump()
+      }
+      if (process.env.NODE_ENV !== 'production') {
+        // For scripts/venture/talk-check.mjs: a typed turn from "Bart", and
+        // what the voice said against what it was given.
+        ;(window as unknown as { __talk?: unknown }).__talk = { say: (text: string) => void reply(text), fidelity: fidelity.current }
+      }
+
+      if (info.local) {
+        if (!actx.current) throw new Error(UNREACHABLE)
+        const voice = new LocalVoice(info.local.url, info.local.token, actx.current, stream, onEvent, () => {
+          if (lv.current !== voice) return
+          post('event', 'dropped')
+          hangUp()
+          setCanResume(true)
+          setError('The line to the Mac Studio dropped. Nothing was lost.')
+          setPhase('paused')
+        })
+        try {
+          await voice.open()
+        } catch {
+          post('event', 'local voice unreachable')
+          voice.close()
+          throw new Error(UNREACHABLE)
+        }
+        lv.current = voice
+        // For scripts/venture/talk-local-check.mjs: end of speech to first sound, per turn.
+        ;(window as unknown as { __kitVoice?: unknown }).__kitVoice = voice
+        opening()
+        try {
+          const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }
+          wake.current = (await nav.wakeLock?.request('screen')) ?? null
+        } catch {}
+        return
+      }
 
       const conn = new RTCPeerConnection()
       pc.current = conn
@@ -413,19 +491,7 @@ export default function Talk() {
       stream.getTracks().forEach((t) => conn.addTrack(t, stream))
       const channel = conn.createDataChannel('oai-events')
       dc.current = channel
-      channel.onopen = () => {
-        setPhase('live')
-        // A fixed line, so the first sound comes at once and the floor is Bart's.
-        said.current = []
-        buf.current = info.resumed ? 'I am back. Go on.' : 'I am here. What is on your mind?'
-        streamDone.current = true
-        pump()
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        // For scripts/venture/talk-check.mjs: a typed turn from "Bart", and
-        // what the voice said against what it was given.
-        ;(window as unknown as { __talk?: unknown }).__talk = { say: (text: string) => void reply(text), fidelity: fidelity.current }
-      }
+      channel.onopen = opening
       channel.onmessage = (m) => {
         try {
           onEvent(JSON.parse(m.data))
@@ -434,7 +500,7 @@ export default function Talk() {
 
       const offer = await conn.createOffer()
       await conn.setLocalDescription(offer)
-      const sdp = await fetch(info.calls_url, {
+      const sdp = await fetch(info.calls_url!, {
         method: 'POST',
         headers: { Authorization: `Bearer ${info.client_secret}`, 'Content-Type': 'application/sdp' },
         body: offer.sdp,
@@ -452,7 +518,7 @@ export default function Talk() {
       setError(denied ? 'I need the microphone for this. Allow it and tap again.' : e instanceof Error ? e.message : 'Something went wrong. Try again.')
       setPhase(session.current ? 'paused' : 'idle')
     }
-  }, [hangUp, onEvent, post, pump, reply])
+  }, [hangUp, local, onEvent, post, pump, reply])
 
   // Ending is explicit: it tells the terminal session the transcript is whole.
   const end = useCallback(() => {
@@ -577,6 +643,22 @@ export default function Talk() {
           </div>
         </>
       )}
+      {phase !== 'live' && phase !== 'connecting' && (
+        <label className="vi-local">
+          <input
+            type="checkbox"
+            checked={local}
+            onChange={(e) => {
+              setLocal(e.target.checked)
+              try {
+                window.localStorage.setItem(LOCAL, e.target.checked ? '1' : '0')
+              } catch {}
+            }}
+          />
+          Local voice (Mac Studio)
+        </label>
+      )}
+      {phase === 'live' && local && <div className="vi-local">local voice</div>}
       {error && <div className="vi-error">{error}</div>}
       <audio ref={audio} autoPlay playsInline />
       {(lines.length > 0 || draft) && (
