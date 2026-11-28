@@ -45,7 +45,7 @@ function freshTown() {
   }
   mkdirSync(RUNS, { recursive: true }); mkdirSync(SHOTS, { recursive: true })
   cpSync(path.join(here, 'seed'), TOWN, { recursive: true })
-  writeFileSync(path.join(TOWN, 'checks.json'), '[]\n'); regenIndex(TOWN)
+  regenIndex(TOWN)
   sh('git init -q && git add -A && git -c user.name=town -c user.email=town@localhost commit -qm "the seed: ground, a road, three houses, six people"', TOWN)
 }
 const partsList = () => readdirSync(path.join(TOWN, 'parts')).filter((f) => f.endsWith('.js') && f !== 'index.js').sort()
@@ -98,8 +98,9 @@ async function judge(dir, checks, own) {
     if (r.colors < 4) return { ok: false, kind: 'blank frame', lines }
   } catch (e) { lines.push(`browser: ${e.message.slice(0, 200)}`); return { ok: false, kind: 'judge error', lines } }
   if (own) { const v = await runCheck(dir, own); lines.push(`its own check: ${v === true ? 'true' : v}`); if (v !== true) return { ok: false, kind: 'its own check false', lines } }
+  const c0 = Date.now()
   for (const k of checks) { const v = await runCheck(dir, k.check); if (v !== true) { lines.push(`earlier check "${k.name}": ${v}`); return { ok: false, kind: 'broke an earlier check', lines } } }
-  lines.push(`${checks.length} earlier checks still true`)
+  lines.push(`${checks.length} earlier checks still true (${((Date.now() - c0) / 1000).toFixed(1)} s)`)
   return { ok: true, kind: 'kept', lines }
 }
 async function screenshot(round) {
@@ -146,6 +147,8 @@ Hand out exactly ${n} small, DIFFERENT jobs. Rules:
 - Vary the kinds of job across the round (we are learning what the builder is good and bad at).
 - A failed job must not come back in the same words: make it smaller or say it differently.
 - The check is the body of a JavaScript function given \`town\`, run in the page after the town started (time is day 1, 06:00). It must return true ONLY if the thing really happens: call town.advance(hours) first if it needs time, then test state (buildings, people, events, town.state.parts.<name>), not just that a part is registered. Keep it short and deterministic. Do not use the DOM or pixels.
+- Each job is built and judged alone, in a copy of the town as it is now: its check must not depend on another job of this round.
+- Never put anything on a road tile; leave the roads as they are.
 - Use only the API above. Never ask for a change to core.js or index.html.
 
 Answer with JSON only, no other text:

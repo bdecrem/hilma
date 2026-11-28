@@ -1,0 +1,8 @@
+[
+  {
+    "name": "the seed town still lives",
+    "file": "seed",
+    "round": 0,
+    "check": "town.advance(30); const homes = town.buildingsOf('house'); return homes.length >= 3 && town.state.people.filter((p) => homes.some((h) => h.id === p.home)).length >= 6 && town.state.events.filter((e) => e.kind === 'walk').length > 10 && town.state.events.some((e) => e.kind === 'home')"
+  }
+]
