@@ -108,6 +108,19 @@ browser ──── same origin only ────► front desk (dev.mjs today)
   (`scripts/fonts.py`: Bricolage Grotesque 400–760, Literata 400–700 and italic), self-hosted in
   `public/fonts/` with their OFL licenses.
 
+## A full machine (`full-machine.mjs`, OLA-299)
+
+The machine runs at most four projects at once (`workspace/ws.mjs` MACHINE_FULL; the front desk
+answers `503 machine_busy`). The page treats that as a wait, not an error: in place of "Opening your
+project…" it says the machine is running as many projects as it can, that the project opens by
+itself when one closes, and that a project nobody has used for 30 minutes closes (the front desk's
+idle stop); it asks again every 10 s and opens without a reload. The drawer and the bar under the
+page say the same instead of "Lost the connection", and a request typed meanwhile stays in the box
+with that reason. Any other failure to load the project shows its problem box: the loader never
+leaves the resource errored, because Solid throws an errored resource on every read, which froze
+the page. `node full-machine.mjs [shots-dir]` proves it at 390 px in WebKit and Chromium against
+the dev server playing a full machine (`OLA_DEV_FULL=1`, `POST /__dev/full?on=0|1`), about a minute.
+
 ## What `check.mjs` proves (21 checks)
 
 The home renders its five kinds of things; both typefaces load from our origin; a request runs

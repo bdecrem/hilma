@@ -10,7 +10,7 @@ import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Pr
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
 import { deadAnswer, deadQuestion, isPokeFix, pokeAfter, pokeAgain, type Dead } from './poke.ts'
-import { answerFromWords, composerState, type ComposerState } from './composer.ts'
+import { answerFromWords, composerState, HELD, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
@@ -52,6 +52,8 @@ export interface OlaState extends ConversationState {
   help: boolean
   /** An answer to Ola's question is on its way (set and cleared by answerQuestion, whatever happens). */
   answering: boolean
+  /** The project cannot open yet: the machine runs as many projects as it can (OLA-299). The page's sentence, said where "Lost the connection" would be. */
+  held: string | null
 }
 
 /** What the page does after something typed: keep the text in the composer, or show the files. */
@@ -98,7 +100,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       /* a browser that keeps nothing: a reload opens an empty conversation, as before */
     }
   }
-  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false, answering: false })
+  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: rememberedAutonomy(), problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false, answering: false, held: null })
   let disposed = false
   /** Counts what the person did to the conversation (sent, opened, started one): resumeWorking yields to it. */
   let acted = 0
@@ -660,7 +662,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   const BUSY = 'Ola is still working on your last request. Wait for it to finish, or type /stop.'
 
   /** The composer's button for this text, from the conversation's state (lib/composer.ts). */
-  const composer = (draft: string): ComposerState => composerState({ draft, working: busy(), question: state.question, answering: state.answering, connection: state.connection })
+  const composer = (draft: string): ComposerState => composerState({ draft, working: busy(), question: state.question, answering: state.answering, connection: state.connection, held: state.held })
   /**
    * What the composer and the Ask Ola bar send: the answer to Ola's question when it waits for
    * words, else a request or a command (typed). Text that cannot go now is said, never dropped
@@ -703,7 +705,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return { keep: false }
     }
     if (busy()) return say(BUSY)
-    if (state.connection === 'lost') return say('The connection to Ola’s computer is lost. Send this again when it is back.')
+    if (state.connection === 'lost') return say(state.held ? HELD : 'The connection to Ola’s computer is lost. Send this again when it is back.')
     const last = [...state.turns].reverse().find((t) => t.request.trim())
     if (name === 'ola') {
       if (!rest) return say('Type your request after /ola.')
@@ -891,6 +893,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     send,
     typed,
     clearSaid: () => state.said && setState('said', null),
+    /** OLA-299: the page says the machine is full (a sentence) or no longer (null). */
+    setHeld: (sentence: string | null) => state.held !== sentence && setState('held', sentence),
     composer,
     submit,
     sendClaude,

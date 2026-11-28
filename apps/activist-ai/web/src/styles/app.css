@@ -314,6 +314,12 @@ code {
   padding: var(--s5) var(--s2);
   font-size: 17px;
 }
+/* OLA-299: the machine is full; a sentence to read, not a spinner line. */
+.loading.loading-full {
+  color: var(--on-room);
+  max-width: 36em;
+  line-height: 1.5;
+}
 .page-problem {
   max-width: 700px;
   margin: var(--s4) auto;

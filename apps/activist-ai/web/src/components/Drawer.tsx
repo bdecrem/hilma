@@ -215,7 +215,9 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
 
       <Show when={s().connection === 'lost'}>
         <div class="banner banner-lost" role="alert">
-          <strong>Lost the connection to Ola’s computer.</strong> Trying again. Work already started keeps going there; this page catches up when the connection is back.
+          <Show when={s().held} fallback={<><strong>Lost the connection to Ola’s computer.</strong> Trying again. Work already started keeps going there; this page catches up when the connection is back.</>}>
+            {(h) => h()}
+          </Show>
         </div>
       </Show>
       <Show when={s().problem}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>

@@ -5,7 +5,7 @@
 // Run: node --test test/composer.test.ts (web/check.mjs runs it too).
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { answerFromWords, composerState, type ComposerInput } from '../src/lib/composer.ts'
+import { answerFromWords, composerState, HELD, type ComposerInput } from '../src/lib/composer.ts'
 import type { Question } from '../src/lib/types.ts'
 
 const field = (o: Partial<Question['fields'][number]> = {}): Question['fields'][number] => ({ key: 'q0', title: 'Live data?', text: 'Should I fetch live data?', options: [{ value: 'Yes, fetch live data', label: 'Yes, fetch live data', description: null }], custom: true, multiple: false, placeholder: 'Or say it in your own words', ...o })
@@ -96,4 +96,12 @@ test('idle with the connection lost: a new request waits, says why, and is activ
   assert.match(lost.blocked ?? '', /connection/)
   assert.equal(st({ draft: 'Make a page', connection: 'open' }).enabled, true)
   assert.equal(st({ draft: '/help', connection: 'lost' }).enabled, true)
+})
+
+test('OLA-299: the machine is full (the project cannot open yet): a request stays, and the reason is the full machine, not a lost connection', () => {
+  const s = st({ draft: 'make a flyer', connection: 'lost', held: 'Ola’s computer is running as many projects as it can at once (4)…' })
+  assert.deepEqual([s.button, s.enabled, s.submits], ['send', false, false])
+  assert.equal(s.blocked, HELD)
+  assert.doesNotMatch(s.blocked!, /connection/)
+  assert.match(st({ draft: 'make a flyer', connection: 'lost' }).blocked!, /connection to Ola’s computer is lost/)
 })

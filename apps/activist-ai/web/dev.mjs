@@ -326,6 +326,7 @@ let pagePort = PORT
 // The event streams the page holds open (for /__dev/cut-streams), and how many it has opened.
 const eventStreams = new Set()
 let eventOpens = 0
+let devFull = process.env.OLA_DEV_FULL === '1'
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
   const p = url.pathname
@@ -338,6 +339,10 @@ const server = http.createServer(async (req, res) => {
     if (origin && origin !== `http://${req.headers.host}`) return json(res, 403, { error: 'wrong_origin' })
   }
   try {
+    // OLA-299: a machine already running as many projects as it can, played as the front desk
+    // answers it (server.mjs startRefused): OLA_DEV_FULL=1 at start, POST /__dev/full?on=0|1.
+    if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/full' && req.method === 'POST') return ((devFull = url.searchParams.get('on') === '1'), json(res, 200, { full: devFull }))
+    if (devFull && (p === '/api/project' || p === '/oc/api/event')) return json(res, 503, { error: 'machine_busy', message: 'Ola’s computer is running as many projects as it can just now. Try again in a few minutes.' })
     if (p === '/oc/api/event') (eventStreams.add(res), (eventOpens += 1), res.on('close', () => eventStreams.delete(res)))
     if (p.startsWith('/oc/')) return await proxy(req, res, p.slice(3), url.search)
     // Fallback to Claude, stood in for (server/claude-standin.mjs; the real one is the front desk's).

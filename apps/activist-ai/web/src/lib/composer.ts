@@ -22,6 +22,8 @@ export interface ComposerInput {
   /** An answer to that question is on its way (between the tap and opencode's reply). */
   answering: boolean
   connection: Connection
+  /** The project cannot open yet because the machine is full (OLA-299): said instead of "lost". */
+  held?: string | null
 }
 
 export type ComposerButton = 'answer' | 'send' | 'stop'
@@ -43,6 +45,9 @@ export function answerFromWords(q: Pick<Question, 'fields'>, words: string): Rec
   return wordsAnswer(q, words) ?? {}
 }
 
+/** What a request typed while the machine is full gets (OLA-299): it stays in the box. */
+export const HELD = 'Ola’s computer is full just now, so this cannot go yet. Your project opens by itself when a place frees; send it then. Your words stay here.'
+
 export function composerState(i: ComposerInput): ComposerState {
   const text = i.draft.trim()
   const command = text.startsWith('/')
@@ -61,5 +66,5 @@ export function composerState(i: ComposerInput): ComposerState {
   // banner says, and which comes back by itself (lib/ola.ts listen).
   const lost = i.connection === 'lost'
   const can = !!text && (command || !lost)
-  return { button: 'send', enabled: can, submits: can, blocked: text && !can ? 'The connection to Ola’s computer is lost. Send this again when it is back.' : null, placeholder: 'request' }
+  return { button: 'send', enabled: can, submits: can, blocked: text && !can ? (i.held ? HELD : 'The connection to Ola’s computer is lost. Send this again when it is back.') : null, placeholder: 'request' }
 }

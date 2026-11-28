@@ -1,7 +1,7 @@
 // The app: a project opens on its things; "Ask Ola" is a bar at the bottom that opens into a
 // drawer with the conversation; "What Ola has of yours" is one click from the header.
 // Routes are hash routes (#/ and #/files) so the front desk serves one page for every path.
-import type { Me, Role, SourceThing } from './lib/types.ts'
+import type { Me, Problem, ProjectPayload, Role, SourceThing } from './lib/types.ts'
 import { createEffect, createResource, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { desk, DeskError, site } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
@@ -29,6 +29,11 @@ const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?
 /** `?still` in the address: no live stream (screenshots, printing). */
 const STILL = new URLSearchParams(location.search).has('still')
 
+/** What the page says while the machine runs as many projects as it can (OLA-299). The 30 minutes
+ * is the front desk's idle stop (OLA_FD_IDLE_STOP_MIN, 30 on the test server). */
+export const fullSentence = (capacity?: number) =>
+  `Ola’s computer is running as many projects as it can at once${capacity ? ` (${capacity})` : ''}, so yours cannot open yet. It opens here by itself as soon as one closes; a project nobody has used for 30 minutes closes. You can leave this page open.`
+
 export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const canRun = () => props.role !== 'viewer'
   const [route, setRoute] = createSignal<Route>(routeOf(location.hash))
@@ -39,25 +44,54 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
 
   // A workspace stopped for idleness is started when its project opens: until it answers, the
   // front desk says "waking" and the page asks again each second.
+  const ola = createOla({ live: !STILL })
+  onCleanup(() => ola.dispose())
   const [waking, setWaking] = createSignal(false)
-  const [project, { refetch }] = createResource(async () => {
-    for (let tries = 0; ; tries++) {
+  // OLA-299: a machine already running as many projects as it can (ws.mjs MACHINE_FULL, the front
+  // desk's 503 machine_busy) is a wait, not an error: the page says so in plain words, keeps asking
+  // every 10 s, and opens the project by itself once a place frees (the front desk starts it on the
+  // next ask). The conversation's "Lost the connection" gives way to the same sentence.
+  const [full, setFull] = createSignal<string | null>(null)
+  // A project that could not be loaded. Kept apart from the resource: Solid throws an errored
+  // resource on every read, which froze the page on "Opening your project…" (OLA-299).
+  const [loadProblem, setLoadProblem] = createSignal<Problem | null>(null)
+  let left = false
+  onCleanup(() => (left = true))
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+  const [project, { refetch }] = createResource<ProjectPayload | undefined>(async (_, info) => {
+    for (let tries = 0; !left; tries++) {
       try {
         const p = await desk.project()
         setWaking(false)
+        setFull(null)
+        ola.setHeld(null)
+        setLoadProblem(null)
         return p
       } catch (e) {
-        if (!(e instanceof DeskError && e.status === 503 && /waking/.test(e.problem.detail ?? '')) || tries >= 90) {
+        const d = e instanceof DeskError && e.status === 503 ? (e.problem.detail ?? '') : ''
+        if (/machine_busy/.test(d)) {
+          const sentence = fullSentence(props.me.machine?.capacity)
           setWaking(false)
-          throw e
+          setFull(sentence)
+          ola.setHeld(sentence)
+          tries = 0
+          await sleep(10_000)
+          continue
         }
-        setWaking(true)
-        await new Promise((r) => setTimeout(r, 1000))
+        if (/waking/.test(d) && tries < 90) {
+          setWaking(true)
+          await sleep(1000)
+          continue
+        }
+        setWaking(false)
+        setFull(null)
+        ola.setHeld(null)
+        setLoadProblem(e instanceof DeskError ? e.problem : { text: 'The project could not be loaded.', detail: String(e) })
+        return info.value // a refresh that failed keeps what the page already shows
       }
     }
+    return info.value
   })
-  const ola = createOla({ live: !STILL })
-  onCleanup(() => ola.dispose())
   // Publish (OLA-209): what of this project is on the public web, and the owner's sheet.
   const [siteStatus, { refetch: refetchSite }] = createResource(() => site.status().catch(() => undefined))
   const [publishing, setPublishing] = createSignal<string | null>(null)
@@ -254,10 +288,12 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
       </header>
 
       <main id="main" class="main" tabindex="-1">
-        <Show when={project.error}>
-          <div class="page-problem">
-            <ProblemBox problem={project.error instanceof DeskError ? project.error.problem : { text: 'The project could not be loaded.', detail: String(project.error) }} role="alert" />
-          </div>
+        <Show when={loadProblem()}>
+          {(lp) => (
+            <div class="page-problem">
+              <ProblemBox problem={lp()} role="alert" />
+            </div>
+          )}
         </Show>
         <Show
           when={route() === 'home'}
@@ -347,7 +383,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </div>
             </Show>
           </section>
-          <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your project. This takes a few seconds…' : 'Opening your project…'}</p>}>
+          <Show when={project()} fallback={<Show when={!loadProblem()}><p class="loading" classList={{ 'loading-full': !!full() }} role="status">{full() ?? (waking() ? 'Waking your project. This takes a few seconds…' : 'Opening your project…')}</p></Show>}>
             <Show when={madeThings().length || sources().length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
               <div class="made" classList={{ 'tab-hidden': isNarrow() && tab() !== 'made' }}>
                 {/* What Ola made, by kind: pages, charts and images, tables, documents. */}
@@ -423,7 +459,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                   <span class="mark-dot" aria-hidden="true" /> {ola.state.question && !ola.state.approval ? 'Ola is asking you something' : 'Ola is waiting for your yes'} ·{' '}
                 </Show>
               }>
-                <span class="mark-dot" aria-hidden="true" /> Lost the connection to Ola’s computer. Trying again ·{' '}
+                <span class="mark-dot" aria-hidden="true" /> {ola.state.held ? 'Ola’s computer is full. Your project opens when a place frees' : 'Lost the connection to Ola’s computer. Trying again'} ·{' '}
               </Show>
               <button type="button" class="link-button on-room" onClick={() => openDrawer()}>
                 Open the drawer
