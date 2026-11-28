@@ -245,6 +245,8 @@ async function night() {
     rmSync(PIDF, { force: true })
   }
   for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(sig, () => { finish(`signal ${sig}`); process.exit(1) })
+  // A crash anywhere (a page event, a stray promise) still ends with Ola's own model loaded; exit 3 tells start.sh to go on.
+  for (const ev of ['uncaughtException', 'unhandledRejection']) process.on(ev, (e) => { finish(`crash (${ev}): ${String(e && e.stack || e).split('\n').slice(0, 3).join(' ')}`); process.exit(3) })
   const free = () => { let n = 0; while (sh('pgrep -f "before-after.mjs|runner.mjs|ola.mjs deploy|three.mjs|write-tests.mjs|batch.mjs run" >/dev/null').code === 0) { if (n++ % 10 === 0) log('waiting: other work of ours is running on the Studio'); spawnSync('sleep', ['60']); if (left() < 0) return false } return true }
   const diskOk = () => lib.freeGb() >= 20
 
@@ -271,7 +273,11 @@ async function night() {
       log(`round ${round}: Qwen up in ${swapIn} s (${st.code === 0 ? 'ok' : 'FAILED'})`)
       let plan = null, ask = null, mayorWhy = ''
       if (st.code === 0) {
-        try { ask = await askMayor(prompt); writeFileSync(path.join(rdir, 'answer.json'), JSON.stringify(ask, null, 2)); plan = parseJobs(ask.text, N) } catch (e) { mayorWhy = e.message.slice(0, 200) }
+        // One more try while Qwen is up, if the first answer was not usable (not JSON, cut off, or the call failed).
+        for (let t = 1; t <= 2 && !plan; t++) {
+          try { ask = await askMayor(prompt); writeFileSync(path.join(rdir, `answer${t > 1 ? '-2' : ''}.json`), JSON.stringify(ask, null, 2)); plan = parseJobs(ask.text, N) }
+          catch (e) { mayorWhy = `${t > 1 ? 'twice: ' : ''}${e.message.slice(0, 200)}`; if (t === 1) log(`round ${round}: the mayor's answer was not usable (${mayorWhy}); asking once more`) }
+        }
       } else mayorWhy = `Qwen did not start: ${st.out.slice(-200)}`
       const b0 = Date.now(); const back = ownModelBack(); const swapOut = Math.round((Date.now() - b0) / 1000)
       log(`round ${round}: the mayor ${plan ? `handed out ${plan.jobs.length} jobs in ${ask.seconds} s` : `failed: ${mayorWhy}`}; Ola's own model back in ${swapOut} s${back ? '' : ' (NOT BACK)'}`)
@@ -334,6 +340,7 @@ async function night() {
     }
   } catch (e) { stopping = `crash: ${e.stack?.split('\n').slice(0, 3).join(' ')}` }
   finish(stopping || 'done')
+  process.exit(/^crash/.test(stopping || '') ? 3 : 0)
 }
 function nextTime(hm) {
   const [h, m] = hm.split(':').map(Number)
