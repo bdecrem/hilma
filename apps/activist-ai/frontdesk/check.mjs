@@ -1314,6 +1314,20 @@ await check('alice uploads, lists, downloads (same bytes) and deletes through th
   const list = await api('/api/files', { cookie: a.cookie, ws: FA })
   const entry = list.json.files.find((f) => f.path === made.name)
   assert(entry?.origin === 'uploaded' && entry.size === made.bytes.length, JSON.stringify(entry))
+  // OLA-371: a file Ola writes over after the upload is Ola's, not "you uploaded".
+  {
+    const page = { name: 'ola371-page.html', bytes: Buffer.from('<!doctype html><title>Made-up page</title><p>uploaded</p>\n') }
+    const pageFile = path.join(run, page.name)
+    writeFileSync(pageFile, page.bytes)
+    await A.page.setInputFiles('#file-picker', pageFile)
+    await A.page.locator('table.files', { hasText: page.name }).first().waitFor({ timeout: 30_000 })
+    const before = (await api('/api/files', { cookie: a.cookie, ws: FA })).json.files.find((f) => f.path === page.name)
+    assert(before?.origin === 'uploaded', `just uploaded: ${JSON.stringify(before)}`)
+    spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', `open("/work/${page.name}", "w").write("<!doctype html><title>Made-up page</title><p>rewritten by Ola</p>\\n")`])
+    const after = (await api('/api/files', { cookie: a.cookie, ws: FA })).json.files.find((f) => f.path === page.name)
+    assert(after?.origin === 'made' && after.uploaded === null, `rewritten by Ola, still listed as: ${JSON.stringify(after)}`)
+    await api(`/api/files/${page.name}`, { method: 'DELETE', cookie: a.cookie, csrf: a.csrf, ws: FA })
+  }
   const back = await A.page.evaluate(async ([n, w]) => {
     const r = await fetch(`/api/files/${encodeURIComponent(n)}?w=${w}`)
     return [r.status, r.headers.get('content-disposition'), Array.from(new Uint8Array(await r.arrayBuffer()))]

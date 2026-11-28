@@ -100,6 +100,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   const publishedFor = (file: string | null | undefined, copies?: string[]) => {
     const s = siteStatus()?.published
     if (!s || !file) return null
+    if (s.folder === '') return s.url // the whole project is what is published
     return s.page === file || (s.folder && (file.startsWith(`${s.folder}/`) || copies?.includes(s.folder))) ? s.url : null
   }
 
@@ -141,7 +142,10 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   // Things Ola made appear on the home when a run finishes.
   createEffect((prev: string | undefined) => {
     const status = lastTurn()?.status
-    if (prev && (prev === 'working' || prev === 'sending') && status && status !== 'working' && status !== 'sending') void refetch()
+    if (prev && (prev === 'working' || prev === 'sending') && status && status !== 'working' && status !== 'sending') {
+      void refetch()
+      void refetchSite() // Ola may have published or taken down a page in that run (OLA-371)
+    }
     return status
   })
   // A new view moves focus to its heading, so a screen reader hears where it is.

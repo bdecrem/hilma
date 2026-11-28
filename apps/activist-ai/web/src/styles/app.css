@@ -357,6 +357,7 @@ code {
 }
 .thing-head {
   display: flex;
+  flex-wrap: wrap; /* in a narrow card the actions go under the title, never over it (OLA-371) */
   gap: var(--s3);
   align-items: flex-start;
   padding: var(--s4) var(--s5);
@@ -369,8 +370,9 @@ code {
   flex: none;
 }
 .thing-titles {
-  flex: 1;
+  flex: 1 1 10rem;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .thing-title {
   font-size: var(--fs-section);
@@ -2000,6 +2002,7 @@ button.thing-action {
   display: flex;
   gap: var(--s4);
   flex: none;
+  margin-left: auto;
 }
 .thing-open {
   color: var(--ink);

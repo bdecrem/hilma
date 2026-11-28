@@ -427,13 +427,15 @@ export function makeFrontDesk(cfg = config()) {
   /** The workspace's files as the page sees them: plain files, hidden folders left out. */
   async function fileEntries(ws) {
     const list = await workspaces.filesAsync(ws.slug)
-    const up = new Map(db.prepare('SELECT name_ref, at FROM uploads WHERE workspace_id = ?').all(ws.id).map((r) => [Buffer.from(r.name_ref).toString('hex'), r.at]))
+    const up = new Map(db.prepare('SELECT name_ref, sha256, at FROM uploads WHERE workspace_id = ?').all(ws.id).map((r) => [Buffer.from(r.name_ref).toString('hex'), r]))
     const out = []
     for (const f of list) {
       if (f.type !== 'file' || f.path.split('/').some((p) => p.startsWith('.') || p === 'node_modules' || p === '__pycache__') || !workspaces.validRel(f.path)) continue
       // The project database is shown under Data, not as a file (and its -wal and -shm never).
       if (/^project\.db(-wal|-shm|-journal)?$/.test(f.path)) continue
-      const at = up.get(nameRef(keys, ws.id, f.path).toString('hex'))
+      // Uploaded only while it is still what the person uploaded: a file Ola wrote over since is Ola's (OLA-371).
+      const u = up.get(nameRef(keys, ws.id, f.path).toString('hex'))
+      const at = u && (!f.sha256 || f.sha256 === u.sha256) ? u.at : null
       out.push({ path: f.path, size: f.size, modified: new Date((f.mtime ?? 0) * 1000).toISOString(), origin: at ? 'uploaded' : 'made', uploaded: at ? new Date(at).toISOString() : null })
       shas.set(`${ws.slug}\0${f.path}`, f.sha256)
       if (shas.size > 20_000) shas.clear()
@@ -912,7 +914,11 @@ export function makeFrontDesk(cfg = config()) {
         }
         return n === f.size ? Buffer.concat(parts) : null
       },
-      uploaded: (rel) => !!db.prepare('SELECT 1 FROM uploads WHERE workspace_id = ? AND name_ref = ?').get(ws.id, nameRef(keys, ws.id, rel)),
+      uploaded: (rel) => {
+        const u = db.prepare('SELECT sha256 FROM uploads WHERE workspace_id = ? AND name_ref = ?').get(ws.id, nameRef(keys, ws.id, rel))
+        const now = shas.get(`${ws.slug}\0${rel}`)
+        return !!u && (!now || now === u.sha256) // a file Ola wrote over since is no longer the group's upload (OLA-371)
+      },
       secrets: () => workspaces.secretValues(ws.slug),
     }
   }
