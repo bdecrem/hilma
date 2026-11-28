@@ -6,8 +6,8 @@
 // Starts the dev server (built page, scripted model) playing a full machine (OLA_DEV_FULL=1: the
 // front desk's 503 machine_busy on /api/project and the event stream), opens the page at 390 px in
 // WebKit and Chromium, and checks what the person sees: the plain sentence, never "Lost the
-// connection"; a request typed in Ask Ola stays in the box with a sentence saying why; then a place
-// frees (/__dev/full?on=0) and the project opens by itself, no reload, with the composer working.
+// connection"; a request typed in Ask Ola waits in its turn (OLA-489); then a place frees
+// (/__dev/full?on=0), the project opens by itself, no reload, and the request goes.
 // Before the fix the page froze on "Opening your project…" (Solid throws an errored resource on
 // every read) and the drawer said "Lost the connection" forever.
 import { spawn, spawnSync } from 'node:child_process'
@@ -75,20 +75,24 @@ try {
     t(`${name}: the sentence says when (a project unused for 30 minutes closes)`, /30 minutes closes/.test(text) && /\(4\)/.test(text), text.slice(0, 300))
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${name}-full.png`), fullPage: true })
 
-    // Ask Ola while full: the words stay, the reason is said.
+    // Ask Ola while full, after the page said so (OLA-489, the checker on Nov 28: Send stayed dimmed
+    // here and the request never went, on a phone every time): the request goes into its turn,
+    // waits there with a plain note, and goes by itself once a place frees, no reload.
     const openAsk = () => page.locator('.askbar-open:visible, .askbar-status button:visible').first().click()
     await openAsk()
     const box = page.locator('#ask-drawer textarea')
     await box.fill('make a flyer for the potluck')
     await box.press('Enter')
-    await page.waitForTimeout(500)
-    text = await body()
-    t(`${name}: the drawer says full, not lost`, /running as many projects as it can/.test(text) && !/Lost the connection/.test(text), text.slice(0, 400))
-    t(`${name}: a request typed while full stays, with why`, (await box.inputValue()) === 'make a flyer for the potluck' && /cannot go yet/.test(text), text.slice(0, 400))
+    try {
+      await until(async () => /so this waits here/.test((text = await body())), 15_000, 'the waiting note')
+      t(`${name}: a request typed after the page said full waits in its turn`, (await box.inputValue()) === '' && !/Lost the connection|did not reach Ola|cannot go yet/.test(text), text.slice(0, 400))
+    } catch (e) {
+      t(`${name}: a request typed after the page said full waits in its turn`, false, `${e.message}; page: ${text.slice(0, 400)}`)
+    }
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${name}-full-drawer.png`), fullPage: true })
     // The drawer stays open: on a phone it covers the page, and the project loads behind it.
 
-    // A place frees: the project opens by itself (the page asks every 10 s), no reload.
+    // A place frees: the project opens by itself (the page asks every 10 s) and the waiting request goes.
     await full(false)
     try {
       await until(async () => !/running as many projects as it can/.test((text = await body())) && !/Opening your project/.test(text), 25_000, 'the project to open')
@@ -96,14 +100,11 @@ try {
     } catch (e) {
       t(`${name}: the project opens by itself when a place frees`, false, `${e.message}; page: ${text.slice(0, 300)}`)
     }
-    await until(async () => !/Lost the connection/.test(await body()), 15_000, 'the connection to be back').catch(() => {})
-    await box.fill('make a flyer for the potluck')
-    await box.press('Enter')
     try {
-      await until(async () => (await box.inputValue()) === '' && !/cannot go yet|Lost the connection/.test(await body()), 15_000, 'the request to go')
-      t(`${name}: after it opens, a request goes`, true)
+      await until(async () => !/so this waits here|Sending/.test((text = await body())), 30_000, 'the waiting request to go')
+      t(`${name}: the request typed while full went by itself`, !/did not reach Ola|stayed full/.test(text), text.slice(0, 400))
     } catch (e) {
-      t(`${name}: after it opens, a request goes`, false, `${e.message}; page: ${(await body()).slice(0, 300)}`)
+      t(`${name}: the request typed while full went by itself`, false, `${e.message}; page: ${text.slice(0, 400)}`)
     }
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${name}-opened.png`), fullPage: true })
 

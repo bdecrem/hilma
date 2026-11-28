@@ -10,7 +10,7 @@ import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Pr
 import { claude, desk, DeskError, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
 import { deadAnswer, deadQuestion, isDeadHandoff, isHostedPokeFix, isPokeFix, pokeAfter, pokeAgain, pokeHosted, type Dead } from './poke.ts'
-import { answerFromWords, composerState, HELD, type ComposerState } from './composer.ts'
+import { answerFromWords, composerState, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
@@ -756,7 +756,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     const say = (sentence: string): Typed => (setState('said', sentence), { keep: true })
     setState('said', null)
     if (p.kind === 'none') {
-      if (!value || busy() || state.connection === 'lost') return { keep: true }
+      if (!value || busy() || (state.connection === 'lost' && !state.held)) return { keep: true }
       void send(value)
       return { keep: false }
     }
@@ -775,7 +775,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return { keep: false }
     }
     if (busy()) return say(BUSY)
-    if (state.connection === 'lost') return say(state.held ? HELD : 'The connection to Ola’s computer is lost. Send this again when it is back.')
+    if (state.connection === 'lost' && !state.held) return say('The connection to Ola’s computer is lost. Send this again when it is back.')
     const last = [...state.turns].reverse().find((t) => t.request.trim())
     if (name === 'ola') {
       if (!rest) return say('Type your request after /ola.')

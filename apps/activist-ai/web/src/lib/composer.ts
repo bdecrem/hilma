@@ -22,7 +22,9 @@ export interface ComposerInput {
   /** An answer to that question is on its way (between the tap and opencode's reply). */
   answering: boolean
   connection: Connection
-  /** The project cannot open yet because the machine is full (OLA-299): said instead of "lost". */
+  /** The project cannot open yet because the machine is full (OLA-299). A request still goes and waits
+   * in its turn for a place (lib/ola.ts whenRoom, OLA-489; the checker, Nov 28: with Send dimmed here a
+   * request typed after the page said "cannot open yet" never went, on a phone every time). */
   held?: string | null
 }
 
@@ -45,9 +47,6 @@ export function answerFromWords(q: Pick<Question, 'fields'>, words: string): Rec
   return wordsAnswer(q, words) ?? {}
 }
 
-/** What a request typed while the machine is full gets (OLA-299): it stays in the box. */
-export const HELD = 'Ola’s computer is full just now, so this cannot go yet. Your project opens by itself when a place frees; send it then. Your words stay here.'
-
 export function composerState(i: ComposerInput): ComposerState {
   const text = i.draft.trim()
   const command = text.startsWith('/')
@@ -63,8 +62,9 @@ export function composerState(i: ComposerInput): ComposerState {
     return { button: 'stop', enabled: true, submits: command, blocked, placeholder: i.question ? 'answer' : 'working' }
   }
   // Nothing running: a new request (or a command). Not while the connection is lost, which the
-  // banner says, and which comes back by itself (lib/ola.ts listen).
-  const lost = i.connection === 'lost'
+  // banner says, and which comes back by itself (lib/ola.ts listen). A full machine (held) is not
+  // lost: the request goes and waits in its turn for a place (OLA-489).
+  const lost = i.connection === 'lost' && !i.held
   const can = !!text && (command || !lost)
-  return { button: 'send', enabled: can, submits: can, blocked: text && !can ? (i.held ? HELD : 'The connection to Ola’s computer is lost. Send this again when it is back.') : null, placeholder: 'request' }
+  return { button: 'send', enabled: can, submits: can, blocked: text && !can ? 'The connection to Ola’s computer is lost. Send this again when it is back.' : null, placeholder: 'request' }
 }

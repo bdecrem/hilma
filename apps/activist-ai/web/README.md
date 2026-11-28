@@ -115,8 +115,9 @@ answers `503 machine_busy`). The page treats that as a wait, not an error: in pl
 project…" it says the machine is running as many projects as it can, that the project opens by
 itself when one closes, and that a project nobody has used for 30 minutes closes (the front desk's
 idle stop); it asks again every 10 s and opens without a reload. The drawer and the bar under the
-page say the same instead of "Lost the connection", and a request typed meanwhile stays in the box
-with that reason. Any other failure to load the project shows its problem box: the loader never
+page say the same instead of "Lost the connection", and a request typed meanwhile goes into its
+turn and waits there with "so this waits here", then goes by itself once a place frees (OLA-489; it
+used to stay in the box with Send dimmed and never go). Any other failure to load the project shows its problem box: the loader never
 leaves the resource errored, because Solid throws an errored resource on every read, which froze
 the page. `node full-machine.mjs [shots-dir]` proves it at 390 px in WebKit and Chromium against
 the dev server playing a full machine (`OLA_DEV_FULL=1`, `POST /__dev/full?on=0|1`), about a minute.
