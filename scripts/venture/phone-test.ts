@@ -148,6 +148,28 @@ test('a meeting: start, greeting, a turn in and a spoken reply out, stored, ende
   assert.deepEqual(back.body.turns.map((t: { who: string }) => t.who), ['kit', 'bart', 'kit'])
 })
 
+test('local voice (OLA-534): no ElevenLabs token, the Studio address back, turns stored as a phone meeting', async () => {
+  const f = fake()
+  assert.equal((await P.startMeeting(post({ local: true }), f.d)).status, 503, 'no local voice on the server: refused, never the paid voice')
+  assert.equal(f.calls.mint, 0)
+  f.d.localVoice = () => ({ url: 'https://voice.test', token: '123.abc' })
+  f.tick(60)
+  const start = await read(await P.startMeeting(post({ local: true }), f.d))
+  assert.equal(start.status, 200)
+  assert.equal(f.calls.mint, 0, 'nothing minted')
+  assert.equal(start.body.conversation_token, undefined)
+  assert.deepEqual(start.body.local, { url: 'https://voice.test', token: '123.abc' })
+  const session = start.body.session
+  assert.equal((await P.localTurn(post({ text: 'hi' }, 'bad'), session, f.d)).status, 401)
+  assert.equal((await read(await P.localTurn(post({ text: '[begin]' }), session, f.d))).body, P.GREETING)
+  f.tick(5)
+  assert.equal((await read(await P.localTurn(post({ text: 'Should we ship the PDF page today?' }), session, f.d))).body, 'Ship it today. Then call me.')
+  const rows = f.rows.filter((x) => x.session === session)
+  assert.ok(rows.some((x) => x.text === 'voice: local (Mac Studio)'))
+  assert.deepEqual(rows.filter((x) => x.role !== 'event').map((x) => x.role), ['claude', 'bart', 'claude'])
+  assert.ok(rows.every((x) => x.call === 'phone'))
+})
+
 test('a retried turn is stored once; silence gets a short line without Claude', async () => {
   const f = fake()
   const start = await read(await P.startMeeting(post({}), f.d))

@@ -64,6 +64,9 @@ export type PhoneDeps = {
   /// Tests only: how often a reply checks its question still stands.
   checkEvery?: number
   mint(engineId: string): Promise<string>
+  /// Local voice (OLA-534): the Mac Studio's voice address and a six-hour token for it, or null when
+  /// this server has none (the same token the talk page gets, src/app/api/venture/talk/session).
+  localVoice?(): { url: string; token: string } | null
   system(): Promise<string>
   warm(system: string): Promise<void>
   later(fn: () => Promise<void>): void
@@ -102,7 +105,10 @@ function bySession(rows: Row[]): Map<string, Row[]> {
 export async function startMeeting(req: Request, d: PhoneDeps): Promise<Response> {
   const user = d.user(bearer(req))
   if (!user) return json({ error: 'Sign in again.' }, 401)
-  const body = (await req.json().catch(() => ({}))) as { session?: unknown }
+  const body = (await req.json().catch(() => ({}))) as { session?: unknown; local?: unknown }
+  // Local voice: the Studio's ears and mouth instead of ElevenLabs; nothing is minted.
+  const local = body.local === true ? (d.localVoice?.() ?? null) : null
+  if (body.local === true && !local) return json({ error: 'The Mac Studio voice is not set up on the server. Turn off Local voice to talk now.' }, 503)
 
   let session: string = newSession()
   let resumed = false
@@ -128,6 +134,18 @@ export async function startMeeting(req: Request, d: PhoneDeps): Promise<Response
     }
   }
   await d.addTurn(session, 'event', resumed ? 'resumed' : 'started')
+
+  if (local) {
+    await d.addTurn(session, 'event', 'voice: local (Mac Studio)')
+    d.later(async () => {
+      try {
+        await d.warm(await d.system())
+      } catch (e) {
+        console.error('[venture/phone] warm failed:', e)
+      }
+    })
+    return json({ session, resumed, local, kickoff: KICKOFF })
+  }
 
   let token: string
   try {
@@ -311,6 +329,21 @@ async function* phoneReply(session: string, asked: { id: number; text: string },
       if (state === 'running') await d.addTurn(session, 'event', 'interrupted').catch(() => {})
     }
   }
+}
+
+// MARK: A turn with the local voice (OLA-534)
+
+/// POST { text } (Bearer) → Claude's reply to what he said, streamed as plain text: the phone's own
+/// ears (the Mac Studio) heard him, so the phone asks here instead of the bridge. The same turn
+/// logic as an ElevenLabs meeting (kitTurn): the kickoff gets the greeting, the rows are stored
+/// under call = 'phone', so the list, the minutes and transcript.mjs see the meeting as any other.
+export async function localTurn(req: Request, session: string, d: PhoneDeps): Promise<Response> {
+  if (!d.user(bearer(req))) return json({ error: 'Sign in again.' }, 401)
+  if (!isSession(session)) return json({ error: 'no such meeting' }, 404)
+  const body = (await req.json().catch(() => ({}))) as { text?: unknown }
+  const text = typeof body.text === 'string' ? body.text.trim().slice(0, 20_000) : ''
+  if (!text) return json({ error: 'nothing said' }, 400)
+  return kitTurn({ voice_session_id: kitVoiceId(session), transcript: [{ role: 'user', content: text }] }, req.signal, d)
 }
 
 // MARK: End, read back, the list

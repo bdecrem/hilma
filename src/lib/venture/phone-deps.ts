@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto'
 import { after } from 'next/server'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { mintElevenConversationToken } from '@/lib/f2/eleven'
@@ -30,6 +31,15 @@ export const phoneDeps: PhoneDeps = {
     if (error) throw new Error(`venture turn revise failed: ${error.message}`)
   },
   mint: (engineId) => mintElevenConversationToken(engineId),
+  // Kit's voice server on the Mac Studio (apps/venture/voice-local/server.py checks the token);
+  // the same six-hour token the talk page's session route signs. The secret never leaves here.
+  localVoice() {
+    const url = process.env.KIT_VOICE_URL?.trim()
+    const secret = process.env.KIT_VOICE_SECRET?.trim()
+    if (!url || !secret) return null
+    const exp = String(Math.floor(Date.now() / 1000) + 6 * 3600)
+    return { url, token: `${exp}.${createHmac('sha256', secret).update(`kit-voice:${exp}`).digest('hex')}` }
+  },
   // Only the lead travels: the Mac mini, which writes every reply on the Claude login, adds the persona and the notes (talk.ts).
   system: async () => PHONE_LEAD,
   warm: (lead) => warmCache(lead),

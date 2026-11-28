@@ -17,14 +17,22 @@ struct KitScreen: View {
   @State private var meeting: KitOpenMeeting?
   @State private var noting = false
   @State private var reading: KitRecent?
+  /// Kit's meetings on the Mac Studio's voice instead of ElevenLabs (OLA-534). Off unless he turns it on.
+  @AppStorage("kit.localVoice") private var localVoice = false
 
   var body: some View {
     KitScroll {
       VStack(alignment: .leading, spacing: Space.xl) {
         VStack(spacing: Space.m) {
           KitAction(title: "Talk to Kit", detail: "A meeting, out loud. Cut in any time.", symbol: "waveform", primary: true) {
-            meeting = KitOpenMeeting(meeting: KitMeeting(service: api) { ElevenKitTransport() })
+            let local = localVoice, api = api.local(local)
+            meeting = KitOpenMeeting(meeting: KitMeeting(service: api) { local ? LocalKitTransport(api: api) as KitVoiceTransport : ElevenKitTransport() })
           }
+          Toggle(isOn: $localVoice) {
+            Text("Local voice (Mac Studio)").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink)
+          }
+          .tint(Ola.action)
+          .padding(.horizontal, Space.xs)
           KitAction(title: "Leave a note", detail: "Up to five minutes. Kit reads it soon.", symbol: "mic", primary: false) {
             noting = true
           }

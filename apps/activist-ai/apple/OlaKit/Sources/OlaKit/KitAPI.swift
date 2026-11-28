@@ -76,6 +76,13 @@ public struct KitMeetingStart: Equatable, Sendable {
   }
 }
 
+/// The variables a local-voice start carries to its transport (OLA-534): the Studio's address, and
+/// the meeting id its replies are asked for under. The token rides in `conversationToken`.
+public enum KitLocalStart {
+  public static let url = "local_voice_url"
+  public static let session = "session"
+}
+
 /// Why a meeting ended, in the server's words.
 public enum KitEndReason: String, Sendable, Equatable {
   case you, silence, dropped, phoneCall = "phone call", background, timeLimit = "time limit", error
@@ -106,10 +113,15 @@ public struct KitAPI: KitService {
   public var base: URL
   public var token: @Sendable () -> String?
   public var urlSession: URLSession
+  /// Meetings on the local voice (the Mac Studio) instead of ElevenLabs (OLA-534).
+  public var local = false
 
   public init(base: URL = KitAPI.defaultBase, urlSession: URLSession = .shared, token: @escaping @Sendable () -> String?) {
     self.base = base; self.token = token; self.urlSession = urlSession
   }
+
+  /// The same API with meetings on the local voice, or not.
+  public func local(_ on: Bool) -> KitAPI { var a = self; a.local = on; return a }
 
   public func overview() async throws -> KitOverview {
     let j = try await call("GET", "api/venture/phone")
@@ -119,6 +131,15 @@ public struct KitAPI: KitService {
   public func startMeeting(resume: String?) async throws -> KitMeetingStart {
     var body: [String: JSON] = [:]
     if let resume { body["session"] = .string(resume) }
+    if local {
+      body["local"] = .bool(true)
+      let j = try await call("POST", "api/venture/phone/meeting", json: .object(body), timeout: 20)
+      guard let session = j["session"].string, let url = j["local"]["url"].string, let token = j["local"]["token"].string else {
+        throw KitError.refused("The Mac Studio voice is not set up. Turn off Local voice to talk now.")
+      }
+      return KitMeetingStart(session: session, resumed: j["resumed"].bool ?? false, conversationToken: token,
+                             variables: [KitLocalStart.url: url, KitLocalStart.session: session], kickoff: j["kickoff"].string ?? "[begin]")
+    }
     let j = try await call("POST", "api/venture/phone/meeting", json: .object(body), timeout: 20)
     guard let session = j["session"].string, let token = j["conversation_token"].string else { throw KitError.refused("Kit cannot take a call right now.") }
     var vars: [String: String] = [:]
@@ -128,6 +149,23 @@ public struct KitAPI: KitService {
 
   public func endMeeting(_ id: String, seconds: Int, reason: KitEndReason) async throws {
     _ = try await call("POST", "api/venture/phone/meeting/\(id)", json: .object(["seconds": .number(Double(seconds)), "reason": .string(reason.rawValue)]))
+  }
+
+  /// Kit's reply to what he said on a local-voice meeting, as it is written (plain text chunks).
+  /// Cancelling the task that reads it cancels the request: the server keeps what was written and
+  /// marks it interrupted.
+  public func localReply(_ session: String, text: String) async throws -> URLSession.AsyncBytes {
+    guard let token = token(), !token.isEmpty else { throw KitError.signedOut }
+    var req = URLRequest(url: base.appendingPathComponent("api/venture/phone/meeting/\(session)/reply"), timeoutInterval: 60)
+    req.httpMethod = "POST"
+    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    req.httpBody = JSON.object(["text": .string(text)]).data
+    let (bytes, res) = try await urlSession.bytes(for: req)
+    let status = (res as? HTTPURLResponse)?.statusCode ?? 0
+    if status == 401 { throw KitError.signedOut }
+    guard (200..<300).contains(status) else { throw KitError.refused("Kit could not answer (\(status)).") }
+    return bytes
   }
 
   /// Bart moves a line between Decided and To be decided, or removes it.

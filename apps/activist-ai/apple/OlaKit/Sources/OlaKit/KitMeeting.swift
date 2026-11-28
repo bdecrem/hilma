@@ -167,6 +167,8 @@ public final class KitMeeting {
     case .kitSaid(let text, let id):
       let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !text.isEmpty else { return }
+      // The local voice reports a turn again as more of it is spoken: the same line grows.
+      if let i = kitLineIndex[id], lines.indices.contains(i) { lines[i].text = text; return }
       kitLineIndex[id] = lines.count
       lines.append(KitLine(id: lines.count, who: .kit, text: text))
     case .kitCut(let text, let id):

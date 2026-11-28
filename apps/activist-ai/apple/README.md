@@ -865,6 +865,19 @@ tap one to read it back), built to drop into the admin-only `KitRootView` with t
 - **A note** (`KitNoteScreen`, `KitNoteRecorder`): tap to record, tap to stop (one-handed, no
   holding), a level meter, five minutes with a countdown in the last thirty seconds, Send or Discard,
   then "Kit has your note" with the words. AAC, 24 kHz mono; the file is deleted once sent.
+- **Local voice (Mac Studio), OLA-534.** A switch under Talk to Kit, "Local voice (Mac Studio)", off by
+  default and kept on the phone (`kit.localVoice`). On, a meeting's ears and mouth are Kit's voice
+  server on the Studio (hilma's `apps/venture/voice-local/`, `https://kit-voice.tunn3l.sh`) instead of
+  ElevenLabs: `iOS/Kit/LocalKitTransport.swift` (AVAudioEngine, `.playAndRecord` in `.voiceChat` with
+  voice processing on the input, so the phone cancels its own speaker's echo), on OlaKit's
+  `KitLocalVoice` (the server's HTTP contract, ported from `src/app/venture/local-voice.ts`). The start
+  is `POST /api/venture/phone/meeting {local: true}` with the app token: the server hands back the
+  Studio's address and a six-hour token (never compiled in) and mints nothing; each of his turns goes
+  to `/api/venture/phone/meeting/<id>/reply`, the same turn as an ElevenLabs meeting (`kitTurn`,
+  call `phone`), so the list, the minutes and `transcript.mjs` see it as any meeting. The Studio not
+  answering ends the start with "The Mac Studio voice is not answering. Turn off Local voice…"; it
+  never falls back to the paid voice. Proof of the network half against the live Studio:
+  `( set -a; . ./.env.local; set +a; node scripts/venture/phone-local-voice-check.mjs <audio> )`.
 - Proof without a real call: `swift test --filter KitMeetingTests` (a fake connection and server;
   every exit closes and reports once). Screens: `-KitShots <dir>` on a simulator debug build draws
   every state, light and dark, with made-up words, and exits (`~/Desktop/ola-brand/apple-shots/kit-voice/`).
