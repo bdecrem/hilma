@@ -125,7 +125,6 @@ export function designWhy(messages) {
       break
     }
   if (!asksPerson(asked)) return null
-  if (prev >= 0 && asksForDesign(textOf(messages[prev].content))) return 'answer'
   for (let i = prev + 1; i < last; i++) if (usesDesignSkill(messages[i])) return 'answer'
   return null
 }

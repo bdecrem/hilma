@@ -2280,6 +2280,11 @@ test('design: a request whose words ask for a page is design work from its first
     await call(g, T.a, { model: 'general', max_tokens: 4000, tools: SKILL_TOOL, messages: msgs(no[0]) })
     assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'other work stays on the everyday model')
     assert.ok(!up.st.seen.at(-1).system.includes('separate design model'), 'and gets no note')
+    // The checker on 35b7e9c860ee: 'who made that page?' after a page whose reply ended in a question
+    // went to the design model. A design turn by words has no question tool; the next message is its own.
+    const after = [...msgs(yes[1]), { role: 'assistant', content: 'The page is in your Files. Want me to fill in the room?' }, { role: 'user', content: 'who made that page?' }]
+    await call(g, T.a, { model: 'general', max_tokens: 4000, tools: SKILL_TOOL, messages: after })
+    assert.equal(up.st.seen.at(-1).model, 'up/general-1', 'the next question stays on the everyday model')
   } finally {
     await g.stop()
   }
