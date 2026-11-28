@@ -60,6 +60,38 @@ go.onclick = () => { out.textContent = (bill.value / (people.value || 1)).toFixe
 <script>document.getElementById('say').onclick = () => alert('hello')</script>""",
 }
 
+# Grids (OLA-466): one used the way a person does (tap, type, Enter, type over a filled cell).
+GRID_HEAD = """<!doctype html><title>Sheet</title><style>input{width:60px;font-size:16px}</style>
+<table id="t"><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></table>
+<script>
+const raw = {}, ref = (c, r) => 'ABCDE'[c] + r
+const val = (k) => { const s = raw[k] || ''; if (!s.startsWith('=')) return s; return String(s.slice(1).replace(/[A-E][1-5]/g, (m) => +val(m) || 0).split('*').reduce((a, b) => a * +b, 1)) }
+"""
+GRID_PAGES = {
+    "grid-good": GRID_HEAD + """for (let r = 1; r <= 5; r++) { const tr = t.insertRow(); tr.insertCell().textContent = r
+  for (let c = 0; c < 5; c++) { const i = document.createElement('input'); i.dataset.k = ref(c, r)
+    i.setAttribute('onfocus', 'this.value = raw[this.dataset.k] || ""; this.select()'); i.setAttribute('onmouseup', 'return false')
+    i.onblur = () => { raw[i.dataset.k] = i.value; draw() }
+    i.onkeydown = (e) => { if (e.key === 'Enter') { raw[i.dataset.k] = i.value; i.blur() } }
+    tr.insertCell().append(i) } }
+function draw() { for (const i of document.querySelectorAll('input')) if (i !== document.activeElement) i.value = val(i.dataset.k) }
+</script>""",
+    # Selects the text, then a redraw sets every cell's value, the focused one too: 57 (Safari: 75).
+    "grid-redraw": GRID_HEAD + """for (let r = 1; r <= 5; r++) { const tr = t.insertRow(); tr.insertCell().textContent = r
+  for (let c = 0; c < 5; c++) { const i = document.createElement('input'); i.dataset.k = ref(c, r)
+    i.onfocus = () => { i.select(); draw() }
+    i.onblur = () => { raw[i.dataset.k] = i.value; draw() }
+    i.onkeydown = (e) => { if (e.key === 'Enter') { raw[i.dataset.k] = i.value; i.blur() } }
+    tr.insertCell().append(i) } }
+function draw() { for (const i of document.querySelectorAll('input')) i.value = i === document.activeElement ? (raw[i.dataset.k] || '') : val(i.dataset.k) }
+</script>""",
+    # Cells are plain table cells; a tap marks one as chosen and focuses nothing.
+    "grid-nofield": GRID_HEAD + """for (let r = 1; r <= 5; r++) { const tr = t.insertRow(); tr.insertCell().textContent = r
+  for (let c = 0; c < 5; c++) { const d = tr.insertCell(); d.style.cssText = 'width:60px;height:24px;border:1px solid #999'; d.onclick = () => { document.querySelectorAll('.on').forEach((x) => x.classList.remove('on')); d.classList.add('on') } } }
+</script>""",
+}
+PAGES.update(GRID_PAGES)
+
 
 def run(name):
     d = Path(tempfile.mkdtemp(prefix="ola-poke-test-"))
@@ -84,6 +116,14 @@ says = [x["say"] for x in (j or {}).get("dead", [])]
 ok("a script error on load is reported with its message", c == 0 and len(says) == 1 and says[0].startswith("Script error when the page opened:") and "setUpCounter" in says[0], f"{c} {j} {e[-300:]}")
 c, j, e = run("harmless")
 ok("Copy, Reset on an empty form, a link and an alert: nothing reported", c == 0 and j and j["dead"] == [], f"{c} {j} {e[-300:]}")
+c, j, e = run("grid-good")
+ok("a grid that works like a spreadsheet: nothing reported", c == 0 and j and j["dead"] == [], f"{c} {j} {e[-300:]}")
+c, j, e = run("grid-redraw")
+says = [x["say"] for x in (j or {}).get("dead", [])]
+ok("a grid whose redraw undoes the selection: 'Typing 7 on the cell A1 that held 5 gave ...' only", c == 0 and len(says) == 1 and says[0].startswith("Typing 7 on the cell A1 that held 5 gave '57'"), f"{c} {j} {e[-300:]}")
+c, j, e = run("grid-nofield")
+says = [x["say"] for x in (j or {}).get("dead", [])]
+ok("a grid where a tap opens no field: said once", c == 0 and len(says) == 1 and says[0].startswith("Tapping a cell of the grid opened no field"), f"{c} {j} {e[-300:]}")
 d = Path(tempfile.mkdtemp(prefix="ola-poke-test-"))
 (d / "index.html").write_text("<!doctype html><button onclick='while(true){}'>Spin</button>")
 r = subprocess.run([sys.executable, "-I", POKE, str(d / "index.html")], capture_output=True, text=True, timeout=60, env={**os.environ, "OLA_POKE_DEADLINE_S": "6"})

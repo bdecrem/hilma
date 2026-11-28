@@ -7,7 +7,7 @@ const clip = (s, n) => {
   const t = String(s ?? '').replace(/[\r\n\t]+/g, ' ').trim()
   return t.length > n ? t.slice(0, n - 1) + '…' : t
 }
-const deadWord = (d) => (d.what === 'error' ? `script error${d.name ? ` on '${clip(d.name, 24)}'` : ' on load'}` : `${d.what === 'field' ? 'field' : 'button'} '${clip(d.name, 24)}'`)
+const deadWord = (d) => (d.what === 'error' ? `script error${d.name ? ` on '${clip(d.name, 24)}'` : ' on load'}` : `${d.what === 'field' ? 'field' : d.what === 'grid' ? 'grid cell' : 'button'} '${clip(d.name, 24)}'`)
 
 /** One log line for one click-through: `r` is workspaces.poke's answer ({ failed } or { page, pressed, typed, dead }). */
 export function pokeLine({ handle, slug, r, ms, second = false }) {

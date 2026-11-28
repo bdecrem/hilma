@@ -63,6 +63,53 @@ INIT = r"""
   for (const G of [w.WebGLRenderingContext, w.WebGL2RenderingContext]) if (G) for (const k of ['drawArrays', 'drawElements', 'clear']) wrap(G.prototype, k)
   for (const t of ['invalid', 'submit', 'hashchange', 'toggle']) add.call(w, t, fx, true)
   new MutationObserver((l) => { w.__olaMut += l.length }).observe(document, { subtree: true, childList: true, attributes: true, characterData: true })
+  // Safari, for the grid use (OLA-466): setting the value of the field that has the keyboard puts the
+  // caret at its end, so a page that selects a cell's text and then redraws it gets 75 for a 7 typed on
+  // a 5. Chromium keeps the selection when the value is the same; here it behaves like Safari while
+  // __olaSafari is on.
+  for (const P of [HTMLInputElement.prototype, HTMLTextAreaElement.prototype]) {
+    try {
+      const d = Object.getOwnPropertyDescriptor(P, 'value')
+      Object.defineProperty(P, 'value', { ...d, set(v) { d.set.call(this, v); if (w.__olaSafari && this === document.activeElement) try { const n = d.get.call(this).length; this.setSelectionRange(n, n) } catch (e) {} } })
+    } catch (e) {}
+  }
+})()
+"""
+
+# The grid use (OLA-466): a page that is a grid of cells (a spreadsheet, a budget table) is found by
+# where its cells are on screen, as in evals/apps/checks/spreadsheet.mjs: the text fields (or table
+# cells when it has few fields) grouped into rows of five or more by their top edge, a header row of
+# letters and a first column of numbers skipped. Cells get data-olagrid="A1"…, again on every look,
+# since pages redraw their grid.
+GRID = r"""
+(() => {
+  const w = window
+  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 10 && r.height > 8 && getComputedStyle(e).visibility !== 'hidden' }
+  const shown = (e) => ('value' in e && e.tagName !== 'TD' && e.tagName !== 'TH' ? e.value : e.innerText || '').trim()
+  w.__olaGrid = () => {
+    let els = [...document.querySelectorAll('input:not([type]), input[type=text], input[type=search], textarea, [contenteditable=""], [contenteditable=true]')].filter((e) => vis(e) && !e.readOnly)
+    if (els.length < 25) els = [...document.querySelectorAll('td, [role=gridcell], [role=cell]')].filter(vis)
+    const at = els.map((e) => { const r = e.getBoundingClientRect(); return { e, x: r.left + scrollX, y: r.top + scrollY } }).sort((a, b) => a.y - b.y || a.x - b.x)
+    let rows = []
+    for (const c of at) { const last = rows[rows.length - 1]; if (last && Math.abs(last[0].y - c.y) <= 4) last.push(c); else rows.push([c]) }
+    rows = rows.filter((r) => r.length >= 5).map((r) => r.sort((a, b) => a.x - b.x))
+    if (rows.length && rows[0].filter((c) => /^[A-Z]{1,2}$/.test(shown(c.e))).length >= rows[0].length - 1) rows.shift()
+    if (rows.length >= 3 && rows.slice(0, 3).every((r, i) => shown(r[0].e) === String(i + 1))) rows = rows.map((r) => r.slice(1))
+    document.querySelectorAll('[data-olagrid]').forEach((e) => e.removeAttribute('data-olagrid'))
+    rows.forEach((r, ri) => r.forEach((c, ci) => { if (ci < 26) c.e.setAttribute('data-olagrid', String.fromCharCode(65 + ci) + (ri + 1)) }))
+    return { rows: rows.length, cols: rows.length ? Math.min(...rows.map((r) => r.length)) : 0 }
+  }
+  const cell = (ref) => { w.__olaGrid(); return document.querySelector('[data-olagrid="' + ref + '"]') }
+  w.__olaCellAim = (ref) => {
+    const e = cell(ref)
+    if (!e) return null
+    e.scrollIntoView({ block: 'center', inline: 'center' })
+    const r = e.getBoundingClientRect()
+    return [r.left + r.width / 2, r.top + r.height / 2]
+  }
+  w.__olaShown = (ref) => { const e = cell(ref); return e ? shown(e) : null }
+  w.__olaTyping = () => { const e = document.activeElement; return !!e && (e.isContentEditable || (e.tagName === 'TEXTAREA' && !e.readOnly) || (e.tagName === 'INPUT' && /^(|text|search|number|tel)$/.test(e.type) && !e.readOnly)) }
+  return true
 })()
 """
 
@@ -177,6 +224,69 @@ def q(s):
     return "'" + s.replace("'", "’") + "'"
 
 
+def enter(pg):
+    for t in ("keyDown", "keyUp"):
+        k = {"type": t, "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13, "nativeVirtualKeyCode": 13}
+        if t == "keyDown":
+            k["text"] = "\r"
+        pg.cdp.send("Input.dispatchKeyEvent", k, session=pg.sid, timeout=10)
+    pg.cdp.pump(0.25)
+
+
+def grid_use(pg, report):
+    """Use a grid page the way a person does (OLA-466): tap A1, type 5, Enter; tap B1, type =A1*2, Enter;
+    tap A1 again and type 7 over the 5, Enter. Each value is read from the cell on screen. Returns
+    whether the page was a grid (then it was typed into, and the caller opens it again)."""
+    g = json.loads(pg.js("JSON.stringify(window.__olaGrid())"))
+    if g["rows"] < 3 or g["cols"] < 3:
+        return False
+    pg.js("window.__olaSafari = true")
+    mark = len(pg.cdp.events)
+
+    def tap(ref):
+        aim = json.loads(pg.js(f"JSON.stringify(window.__olaCellAim('{ref}'))") or "null")
+        if not aim:
+            return False
+        pg.click(*aim)
+        pg.cdp.pump(0.2)
+        return True
+
+    def typed(text):
+        pg.cdp.send("Input.insertText", {"text": text}, session=pg.sid, timeout=10)
+        pg.cdp.pump(0.1)
+
+    try:
+        if not tap("A1"):
+            return True
+        if not pg.js("window.__olaTyping()"):
+            report("grid", "A1", "Tapping a cell of the grid opened no field to type in, so a phone shows no keyboard and nothing can be typed: a tap on a cell must put the keyboard in that cell (focus an <input> inside it).")
+            return True
+        typed("5")
+        enter(pg)
+        tap("B1")
+        typed("=A1*2")
+        enter(pg)
+        b1 = pg.js("window.__olaShown('B1')") or ""
+        if b1.startswith("="):
+            report("grid", "B1", f"After Enter the cell B1 still shows its formula {q(b1)}, not its value 10: a finished cell shows its value.")
+        elif b1 not in ("10", "10.0", "10.00"):
+            report("grid", "B1", f"With 5 in A1 and =A1*2 in B1, after Enter B1 shows {q(b1)}, not 10.")
+        tap("A1")
+        typed("7")
+        enter(pg)
+        a1 = pg.js("window.__olaShown('A1')") or ""
+        if a1 != "7":
+            report("grid", "A1", f"Typing 7 on the cell A1 that held 5 gave {q(a1)}, not 7: typing on a filled cell replaces it, as in any spreadsheet. Select the cell's text when it gets the keyboard (onfocus=\"this.select()\" onmouseup=\"return false\"), and never set the value of the cell that has the keyboard after that (a redraw that does puts the caret at the end in Safari, and the 7 lands after the 5).")
+        for err in pg.errors(mark)[0]:
+            report("error", "grid", f"Typing in the grid gave a script error: {err}")
+        return True
+    finally:
+        try:
+            pg.js("window.__olaSafari = false")
+        except Exception:
+            pass
+
+
 def poke(page_path):
     t0 = time.time()
     page = Path(page_path).resolve()
@@ -206,14 +316,23 @@ def poke(page_path):
             cdp.send(m, session=sid)
         cdp.send("Emulation.setDeviceMetricsOverride", {"width": 1280, "height": 900, "deviceScaleFactor": 1, "mobile": False}, session=sid)
         cdp.send("Page.addScriptToEvaluateOnNewDocument", {"source": INIT}, session=sid)
+        def load(start):
+            end = time.time() + 8
+            while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events[start:]):
+                cdp.pump(0.2)
+            cdp.pump(0.5)
+
         cdp.send("Page.navigate", {"url": url}, session=sid)
-        end = time.time() + 8
-        while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events):
-            cdp.pump(0.2)
-        cdp.pump(0.5)
+        load(0)
         pg = Page(cdp, sid)
         for err in pg.errors(0)[0]:
             report("error", "", f"Script error when the page opened: {err}")
+        # A grid is used first, on the page as it opened; then it is opened again for the rest.
+        pg.js(GRID)
+        if grid_use(pg, report):
+            start = len(cdp.events)
+            cdp.send("Page.reload", {"ignoreCache": True}, session=sid)
+            load(start)
         mark = len(cdp.events)
         found = json.loads(pg.js(FIND))
         pg.js(LIB)

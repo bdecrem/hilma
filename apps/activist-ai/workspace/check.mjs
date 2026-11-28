@@ -1020,7 +1020,7 @@ print(json.dumps({"mib": n, "stopped": why}))
     // ola-poke (OLA-515): every field typed in and every button pressed on a page, no model; what is dead as JSON (poke_test.py)
     {
       const pk = await sh(A, ['python3', '-I', '-'], { input: readFileSync(new URL('./poke_test.py', import.meta.url), 'utf8') })
-      t('ola-poke in the VM: a working page and harmless Copy / Reset / link buttons report nothing; a dead button, a field that takes no input and a script error on load are each reported in one sentence; a hung page exits 1 within its deadline; --since finds a page a shell command wrote (poke_test.py)', pk.code === 0 && /8 passed, 0 failed/.test(pk.out), `${pk.out.trim().split('\n').pop()}${pk.code ? ` ${pk.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')} ${pk.err.slice(-300)}` : ''}`)
+      t('ola-poke in the VM: a working page and harmless Copy / Reset / link buttons report nothing; a dead button, a field that takes no input and a script error on load are each reported in one sentence; a grid used like a spreadsheet (a tap opens no field, 7 typed on a 5 gives 57) is said; a hung page exits 1 within its deadline; --since finds a page a shell command wrote (poke_test.py)', pk.code === 0 && /11 passed, 0 failed/.test(pk.out), `${pk.out.trim().split('\n').pop()}${pk.code ? ` ${pk.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')} ${pk.err.slice(-300)}` : ''}`)
     }
 
     // "Compare with Claude" (2.3.0-18): ola-twin and its library are in the image, read-only, and the

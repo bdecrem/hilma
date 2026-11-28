@@ -1,5 +1,9 @@
 # ola-examples
 
+## 1.4.2 (2026-11-28, OLA-466, check #1 failed on d8694661)
+
+In WebKit, 7 typed on a 5 still gave 75 on a page that had both attributes: its redraw set the focused cell's value after select(), which in Safari puts the caret at the end. The grid example now says a redraw never sets the value of the cell that has the keyboard, and that a tap puts the keyboard in the cell itself (2 of 3 checker pages opened no field on a tap). The note is 2344 of 2400 characters.
+
 ## 1.4.1 (2026-11-27, OLA-466, check #1 failed on a0f82998)
 
 The checker's spreadsheets still made 57 from 5 then 7 in 2 of 3 projects: the example only said in words that the cell's text is selected on focus. It now carries the two attributes that do it (`onfocus="this.select()"`, `onmouseup="return false"`, tried in WebKit and Chromium, click and tap), says an empty cell shows nothing (not 0) and that the number column never covers column A. The asked lines are shorter, so the whole note fits its 2400 characters (2198).
