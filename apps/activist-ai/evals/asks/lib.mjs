@@ -788,6 +788,75 @@ export function whoVerdict(row, answer) {
   return { ok: re.test(a), who: row.engine, miss: `no ${row.engine}` }
 }
 
+// The person's time zone (OLA-330): the Ola machine's, where its first users are; the project's
+// computer keeps the same one (workspace/ws.mjs ZONE, OLA-450). OLA_TZ names another, as there.
+export const ZONE = process.env.OLA_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+/** The calendar day of an instant in a zone: { y, m (1-12), d, wd (0 = Sunday) }. */
+export function dayIn(ms, tz = ZONE) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'long' }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]))
+  return { y: +p.year, m: +p.month, d: +p.day, wd: WEEKDAYS.indexOf(p.weekday.toLowerCase()) }
+}
+/** Every calendar date an answer names: "Friday, November 27", "Nov 27", "27 November", "11/27", "2026-11-27". */
+export function datesNamed(text) {
+  const a = String(text).toLowerCase()
+  const out = []
+  const mon = '(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?'
+  for (const x of a.matchAll(new RegExp(`\\b${mon}\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, 'g'))) out.push({ m: MONTHS.findIndex((n) => n.startsWith(x[1].slice(0, 3))) + 1, d: +x[2] })
+  for (const x of a.matchAll(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?${mon}`, 'g'))) out.push({ m: MONTHS.findIndex((n) => n.startsWith(x[2].slice(0, 3))) + 1, d: +x[1] })
+  for (const x of a.matchAll(/\b(\d{4})-(\d\d)-(\d\d)\b/g)) out.push({ m: +x[2], d: +x[3] })
+  for (const x of a.matchAll(/(?<![\d/-])(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?(?![\d/])/g)) out.push({ m: +x[1], d: +x[2] })
+  return out.filter((x) => x.m >= 1 && x.m <= 12 && x.d >= 1 && x.d <= 31)
+}
+/**
+ * today (OLA-330): the answer names the person's today (in ZONE, at the time it was given) and no
+ * other date or weekday. Nov 20, 9:33 pm Pacific, a project's card said "Party is today (Sat Nov 21)":
+ * the project's computer spoke UTC. Checked against both ends of the request, so a request that
+ * crosses midnight is not failed for it.
+ */
+export function todayVerdict(answer, now = Date.now(), since = now) {
+  const days = [dayIn(since), dayIn(now)]
+  const isToday = (x) => days.some((t) => t.m === x.m && t.d === x.d)
+  const named = datesNamed(answer)
+  const wrong = named.filter((x) => !isToday(x))
+  const wds = [...String(answer).toLowerCase().matchAll(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/g)].map((x) => WEEKDAYS.indexOf(x[1]))
+  const wrongWd = wds.filter((w) => !days.some((t) => t.wd === w))
+  const today = `${WEEKDAYS[days[1].wd]}, ${MONTHS[days[1].m - 1]} ${days[1].d}`
+  if (!named.some(isToday)) return { ok: false, why: `the answer does not name today, ${today} (${ZONE})` }
+  if (wrong.length || wrongWd.length) return { ok: false, why: `the answer names ${[...wrong.map((x) => `${MONTHS[x.m - 1]} ${x.d}`), ...wrongWd.map((w) => WEEKDAYS[w])].join(', ')}; today is ${today} (${ZONE})` }
+  return { ok: true, why: `the answer names today, ${today} (${ZONE})` }
+}
+/** Every clock time an answer names, as minutes after midnight: "9:32 pm", "5:38 AM", "21:32". */
+export function timesNamed(text) {
+  const out = []
+  for (const x of String(text).matchAll(/\b(\d{1,2}):(\d\d)\s*([ap])\.?\s*m\b\.?/gi)) out.push(((+x[1] % 12) + (x[3].toLowerCase() === 'p' ? 12 : 0)) * 60 + +x[2])
+  for (const x of String(text).matchAll(/\b([01]?\d|2[0-3]):(\d\d)\b(?!\s*[ap]\.?\s*m\b)/gi)) out.push(+x[1] * 60 + +x[2])
+  return out
+}
+const minutesIn = (iso, tz = ZONE) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(new Date(iso)).map((x) => [x.type, x.value]))
+  return (+p.hour % 24) * 60 + +p.minute
+}
+/**
+ * record:time (OLA-330): every clock time the answer gives is a time of the page's record in the
+ * person's zone (a minute either way), and it gives at least one. Nov 20, 9:32 pm Pacific, Ola said
+ * the design model "created the page on Nov 21 at 5:32 AM": the record's UTC time, read as it was.
+ */
+export function timeVerdict(rows, answer) {
+  const said = timesNamed(answer)
+  const near = (a, b) => Math.min(Math.abs(a - b), 1440 - Math.abs(a - b)) <= 1
+  const local = rows.map((r) => minutesIn(r.at))
+  const fmt = (m) => `${((Math.floor(m / 60) + 11) % 12) + 1}:${String(m % 60).padStart(2, '0')} ${m >= 720 ? 'pm' : 'am'}`
+  if (!said.length) return { ok: false, why: `the answer gives no time; the record says ${local.map(fmt).join(', ')} (${ZONE})` }
+  const off = said.filter((t) => !local.some((l) => near(t, l)))
+  if (off.length) {
+    const utc = off.some((t) => rows.some((r) => near(t, minutesIn(r.at, 'UTC'))))
+    return { ok: false, why: `the answer gives ${off.map(fmt).join(', ')}${utc ? ', the record\u2019s UTC time' : ''}; the record says ${local.map(fmt).join(', ')} (${ZONE})` }
+  }
+  return { ok: true, why: `the answer gives ${said.map(fmt).join(', ')}, the record's times in ${ZONE}` }
+}
+
 /**
  * One outcome, checked. Kinds (cases.json "must"):
  *   site:<words>         Ola's answer gives an https://sites.ola.cx/<name>/ address, and that address
@@ -804,6 +873,9 @@ export function whoVerdict(row, answer) {
  *                        first, with draft lines, and questions come after)
  *   record:made|last     the answer names whoever the project's own record says made (or last
  *                        changed) the newest page (OLA-303); the design model as an outside model
+ *   record:time          every clock time the answer gives is one of the newest page's record times in
+ *                        the person's zone, ZONE, never the UTC one (OLA-330)
+ *   today                the answer names the person's today in ZONE and no other date or weekday (OLA-330)
  */
 export async function checkMust(must, T, answer, { steps = [], lastSteps = steps, lastAnswered = [], before = [], earlier = '', wait = 60_000, since = 0, sessions = [], rereads = 3, rereadMs = 4000, reader = readAsReaderLazy, fetchFirst = fetchText } = {}) {
   const [kind, ...rest] = must.split(':')
@@ -891,11 +963,16 @@ export async function checkMust(must, T, answer, { steps = [], lastSteps = steps
     const page = rows.filter((r) => /\.html?$/i.test(r?.path ?? '') && r.how !== 'deleted' && !/^site\//.test(r.path)).sort((x, y) => String(y.at).localeCompare(String(x.at)))[0]
     if (!page) return { ok: false, why: 'the record has no page' }
     const hist = (await T.madeBy(page.path)).filter((r) => r.path === page.path)
+    if (arg === 'time') {
+      const v = timeVerdict(hist.length ? hist : [page], answer)
+      return { ok: v.ok, why: `${page.path}: ${v.why}` }
+    }
     const row = arg === 'made' ? (hist.filter((r) => r.how === 'created').at(-1) ?? hist.at(-1)) : hist[0]
     if (!row) return { ok: false, why: `the record has no row for ${page.path}` }
     const v = whoVerdict(row, answer)
     return { ok: v.ok, why: `the record says ${page.path} was ${arg === 'made' ? 'made' : 'last changed'} by ${v.who}; ${v.ok ? 'the answer says so' : `the answer does not (${v.miss})`}` }
   }
+  if (kind === 'today') return todayVerdict(answer, Date.now(), since || Date.now())
   if (kind === 'says') {
     const ok = new RegExp(arg, 'i').test(answer)
     return { ok, why: ok ? `the answer matches /${arg}/` : `the answer does not match /${arg}/` }

@@ -831,6 +831,53 @@
       }
     },
     {
+      "id": "today-date",
+      "say": "what is today's date?",
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat",
+        "local-mac:chat",
+        "local-phone:chat"
+      ],
+      "must": [
+        "today"
+      ],
+      "mustNot": [],
+      "passes": 2,
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-330",
+        "what": "The checker of OLA-303 on 18f9cd483982, Nov 20 about 9:33 pm Pacific, cloud project chk1122a-test: after 'make a page for our block party on Saturday' the card said 'Party is today (Sat Nov 21)' on Friday Nov 20; asked who made it, Ola said the design model 'created the page on Nov 21 at 5:32 AM' and 'I changed it last - at 5:38 AM', the record's UTC times. The project's computer ran on UTC (fixed by OLA-450: it keeps the machine's zone).",
+        "words": "description"
+      }
+    },
+    {
+      "id": "design-who-when-cloud",
+      "say": "who made that page, and when?",
+      "before": [
+        "make a page for our block party on Saturday"
+      ],
+      "places": [
+        "cloud-web:chat",
+        "cloud-mac:chat",
+        "cloud-phone:chat"
+      ],
+      "must": [
+        "newfile:\\.html$",
+        "record:made",
+        "record:time"
+      ],
+      "mustNot": [],
+      "passes": 2,
+      "from": {
+        "date": "2026-11-20",
+        "ticket": "OLA-330",
+        "what": "The checker of OLA-303 on 18f9cd483982, Nov 20 about 9:33 pm Pacific, cloud project chk1122a-test: after 'make a page for our block party on Saturday' the card said 'Party is today (Sat Nov 21)' on Friday Nov 20; asked who made it, Ola said the design model 'created the page on Nov 21 at 5:32 AM' and 'I changed it last - at 5:38 AM', the record's UTC times. The project's computer ran on UTC (fixed by OLA-450: it keeps the machine's zone).",
+        "words": "description"
+      }
+    },
+    {
       "id": "design-change-who-cloud",
       "say": "who changed it last?",
       "before": [
