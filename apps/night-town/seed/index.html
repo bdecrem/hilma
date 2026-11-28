@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Night Town</title>
+<style>
+  html, body { margin: 0; background: #16121c; min-height: 100dvh; display: grid; place-items: center; }
+  canvas { max-width: 100vw; max-height: 100dvh; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<canvas id="town" width="960" height="640"></canvas>
+<script src="core.js"></script>
+<script src="parts/index.js"></script>
+<script>for (const f of window.TOWN_PARTS) document.write('<script src="parts/' + f + '"><\/script>')</script>
+<script>town.start({ test: /[?&]test\b/.test(location.search) })</script>
+</body>
+</html>
