@@ -113,6 +113,20 @@ writes the `ended` marker, so `transcript.mjs --wait talk` returns at once.
 | Page | `src/app/venture/talk/`, `src/app/venture/Talk.tsx` |
 | Test call, no human | `VENTURE_KEY=<key> node scripts/venture/talk-check.mjs <outDir> [base]` |
 
+**Local voice (OLA-529, 2026-11-27).** A switch under the button, off by default and remembered
+on the device, swaps the ears and the mouth for Kit's voice server on the Mac Studio
+(`apps/venture/voice-local/`: Silero VAD ends a turn after 800 ms of quiet, Parakeet writes it
+down, Kokoro `af_heart` reads each sentence). The browser reaches it over Tailscale at
+`wss://ola-studio.tailde799a.ts.net:8443` (`tailscale serve`, tailnet only), with a six-hour token
+the session route signs from `KIT_VOICE_SECRET` (Vercel; the Studio's copy is
+`~/.kit-voice-secret`). `src/app/venture/local-voice.ts` speaks the same events as the Realtime
+data channel, so Talk.tsx's turn-taking is shared; Claude's replies are unchanged. An unreachable
+Studio is an error on the page, never a silent switch to the paid voice. Install or update with
+`apps/venture/voice-local/install.sh` (launchd `cx.kit.voice` of user `ola`, log
+`~/Library/Logs/kit-voice/voice.log`, counts and timings only), stop with `install.sh stop`.
+Check: `VENTURE_KEY=<key> node scripts/venture/talk-local-check.mjs <dir> [base]` from a machine
+on the tailnet.
+
 The check plays one spoken comment through a fake microphone, then (on a dev
 server, through `window.__talk`) compares what the voice said with what it was
 given, types a turn, talks over the reply and checks the cut. Run it against
