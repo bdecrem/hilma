@@ -117,6 +117,11 @@ if waiting:
 if unread:
     note += ("\nBart wrote on the board and Kit has not read it yet (act on it, answer with "
              "`issues.mjs comment <id> \"...\"`, then `issues.mjs inbox --mark`):\n" + "\n".join(unread[:20]))
+drift = [l for l in data.get("drift") or [] if isinstance(l, str)]
+if drift:
+    note += ("\nWorked on in the last two days and still marked next (Bart, Nov 27: issues are closed or their status "
+             "changed as routinely as they are created). Before this turn ends set each to what is true: `start` "
+             "(being worked on), `ready`, `wait` (needs Bart), `done --proof`, or `drop --why`:\n" + "\n".join(drift[:15]))
 sweep = [d for d in data.get("sweep") or [] if isinstance(d, str)]
 if sweep:
     note += ("\nThe daily sweep has not been done for " + ", ".join(sweep) + ": when the work in hand allows, and "

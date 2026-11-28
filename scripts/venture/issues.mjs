@@ -1123,7 +1123,15 @@ if (cmd === 'overrides') {
   // for .claude/hooks/bart-done.py: one quick read, two lists, JSON; silent and empty on failure
   const [w, u] = await Promise.all([db.from('venture_issues').select('*').eq('project', 'ola').eq('status', 'waiting').order('num'), db.from('venture_issue_activity').select('*').is('seen_by_kit_at', null).eq('via', 'board').order('at')])
   const sweep = await sweepDue(db).catch(() => [])
-  console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine), sweep }))
+  // Worked on, status not changed (Bart, Nov 27: "just like we routinely create issues, we must close them
+  // routinely or otherwise change status when work is done on them"): still "next" with a commit in the last two days.
+  let drift = []
+  try {
+    const cs = (await db.from('venture_commits').select('issue_id').not('issue_id', 'is', null).gte('at', new Date(Date.now() - 48 * 3600e3).toISOString())).data ?? []
+    const ids = [...new Set(cs.map((c) => c.issue_id))]
+    if (ids.length) drift = ((await db.from('venture_issues').select('*').eq('project', 'ola').eq('status', 'open').in('id', ids).order('num')).data ?? []).filter((r) => !isTracker(r)).map(line)
+  } catch {}
+  console.log(JSON.stringify({ waiting: (w.data ?? []).map(line), unread: u.error ? [] : (u.data ?? []).map(inboxLine), sweep, drift }))
 } else if (cmd === 'plate') {
   const rows = check(await db.from('venture_issues').select('*').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting']), 'plate').filter((r) => !isTracker(r))
   const order = { in_progress: 0, open: 1, waiting: 2 }
