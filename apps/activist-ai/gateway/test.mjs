@@ -55,7 +55,7 @@ async function fakeUpstream() {
     try {
       cmd = JSON.parse(body.messages.at(-1).content)
     } catch {}
-    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization, maxTokens: body.max_tokens, system: body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n'), tools: Array.isArray(body.tools) ? body.tools.map((t) => t?.function?.name) : undefined })
+    st.seen.push({ tag: cmd.tag, model: body.model, keys: Object.keys(body).sort(), auth: req.headers.authorization, maxTokens: body.max_tokens, system: body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n'), tools: Array.isArray(body.tools) ? body.tools.map((t) => t?.function?.name) : undefined, effort: body.reasoning_effort })
     st.inflight++
     st.max = Math.max(st.max, st.inflight)
     res.on('close', () => {
@@ -79,7 +79,16 @@ async function fakeUpstream() {
       return res.end(JSON.stringify({ error: { message: cmd.error || 'no' } }))
     }
     // callSeq: one tool call per try of the same tag, the last one repeated (OLA-411).
-    const nth = cmd.callSeq ? st.seen.filter((x) => x.tag === cmd.tag).length - 1 : 0
+    const nth = cmd.callSeq || cmd.cutSeq ? st.seen.filter((x) => x.tag === cmd.tag).length - 1 : 0
+    // cutSeq: per try of the same tag, 'empty' or 'call' is a reply cut off at the reply limit
+    // (nothing said, or a tool call whose arguments end mid-way), 'text' a cut reply with words,
+    // anything else a whole reply; the last one repeated (OLA-470).
+    const cut = cmd.cutSeq?.[Math.min(nth, cmd.cutSeq.length - 1)]
+    if (cut === 'empty' || cut === 'call' || cut === 'text') {
+      const m = cut === 'empty' ? { role: 'assistant', content: '' } : cut === 'text' ? { role: 'assistant', content: 'half a sentence' } : { role: 'assistant', content: null, tool_calls: [{ id: 'c1', type: 'function', function: { name: 'write', arguments: '{"filePath":"index.html","content":"<html><body><table' } }] }
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ id: 'x1', model: body.model, choices: [{ index: 0, message: m, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 16000 } }))
+    }
     const seqCall = cmd.callSeq?.[Math.min(nth, cmd.callSeq.length - 1)]
     const message = seqCall
       ? { role: 'assistant', content: null, tool_calls: [{ id: `c${nth}`, type: 'function', function: { name: seqCall.name, arguments: JSON.stringify(seqCall.args) } }] }
@@ -2374,6 +2383,50 @@ test('ask first: a person who asks to be asked first gets a card, through a note
 // needs (header, options with a label and a description each) showed the person a red failed step
 // before the card. The gateway tries such a reply again; if every try misses, the last reply goes
 // through as before, so a schema read wrongly costs a retry, never a turn.
+
+test('a reply cut off at the reply limit gets one more try with the note, then fails as too long (OLA-470)', async () => {
+  const up = await fakeUpstream()
+  const local = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_EVERYDAY_LOCAL: '0' })
+  const tools = [{ type: 'function', function: { name: 'write', parameters: { type: 'object', properties: { filePath: { type: 'string' }, content: { type: 'string' } }, required: ['filePath', 'content'] } } }]
+  const ask = (c) => ({ model: 'general', max_tokens: 16000, tools, messages: [{ role: 'system', content: 'You are Ola.' }, { role: 'user', content: JSON.stringify(c) }] })
+  try {
+    // cut once (a write whose arguments end mid-way), then a whole reply: the person gets it
+    const r = await call(g, T.a, ask({ tag: 'cut1', cutSeq: ['call', 'whole'], reply: 'Wrote the first part of index.html' }))
+    assert.equal(r.status, 200)
+    assert.equal(r.json.choices[0].message.content, 'Wrote the first part of index.html')
+    const tries = up.st.seen.filter((x) => x.tag === 'cut1')
+    assert.equal(tries.length, 2, 'one more try, not three')
+    assert.ok(!tries[0].system.includes('reply limit'), 'the first try has no note')
+    assert.ok(tries[1].system.includes('write it in parts'), 'the second try carries the note')
+    assert.equal(tries[1].effort, undefined, 'a rented model keeps its own thinking setting')
+    await waitFor(() => g.logs().find((l) => l.length_cuts === 1 && l.status === 200), 3000, 'the log line counts the cut')
+    // cut twice (nothing said): a failure the web app reads as too long, after two tries only
+    const r2 = await call(g, T.a, ask({ tag: 'cut2', cutSeq: ['empty'] }))
+    assert.equal(r2.status, 502)
+    assert.match(JSON.stringify(r2.json), /too long/, 'worded so steps.ts counts it as a budget problem')
+    assert.equal(up.st.seen.filter((x) => x.tag === 'cut2').length, 2, 'never a third try of a cut reply')
+    await waitFor(() => g.logs().find((l) => l.length_cuts === 2), 3000, 'the log line counts both cuts')
+    // a cut reply that has words goes through as it is
+    const r3 = await call(g, T.a, ask({ tag: 'cut3', cutSeq: ['text'] }))
+    assert.equal(r3.status, 200)
+    assert.equal(r3.json.choices[0].finish_reason, 'length')
+    assert.equal(up.st.seen.filter((x) => x.tag === 'cut3').length, 1)
+  } finally {
+    await g.stop()
+  }
+  // Ola's own model on this machine: the one more try asks for low thinking
+  const g2 = await gateway({ ...baseEnv(local.url), GATEWAY_EVERYDAY_LOCAL: '1' })
+  try {
+    const r = await call(g2, T.a, ask({ tag: 'cut4', cutSeq: ['empty', 'whole'] }))
+    assert.equal(r.status, 200)
+    const tries = local.st.seen.filter((x) => x.tag === 'cut4')
+    assert.deepEqual(tries.map((x) => x.effort), [undefined, 'low'])
+  } finally {
+    await g2.stop()
+  }
+})
+
 test('tool arguments that miss the tool’s schema are tried again, and pass through after the last try (OLA-411)', async () => {
   const QSCHEMA = { type: 'object', required: ['questions'], properties: { questions: { type: 'array', items: { type: 'object', required: ['question', 'header', 'options'], properties: { question: { type: 'string' }, header: { type: 'string' }, options: { type: 'array', items: { type: 'object', required: ['label', 'description'], properties: { label: { type: 'string' }, description: { type: 'string' } } } }, multiple: { type: 'boolean' } } } } } }
   const good = { questions: [{ question: 'What date?', header: 'Date', options: [{ label: 'Saturday', description: 'This Saturday' }] }] }

@@ -155,6 +155,7 @@ waiting. That token can read usage and nothing else, so the web app never needs 
 | First byte (response headers) | `GATEWAY_FIRST_BYTE_TIMEOUT_MS` | 300 s | 504, not retried |
 | Total, from getting a slot, all tries | `GATEWAY_TOTAL_TIMEOUT_MS` | 600 s | 504 |
 | Reply size from the model server | `GATEWAY_MAX_REPLY_BYTES` | 16 MiB | 502 |
+| A reply cut off at the reply limit with nothing usable (no words, or a tool call cut mid-way) | the caller's `max_tokens` (opencode.jsonc: 16,000 for `general`) | — | one more try with a note (think briefly, write a long file in parts) and, for Ola's own model on our machine, thinking low; cut again: 502 "too long", which the web app counts as a budget problem. Log `length_cuts` (OLA-470, `gateway/replylimit.mjs`) |
 
 Other settings: `UPSTREAM_BASE_URL` and `UPSTREAM_API_KEY` (required; plain http only to
 127.0.0.1), `GATEWAY_HOST` (127.0.0.1), `GATEWAY_PORT` (4180), `GATEWAY_DB` (the usage file,

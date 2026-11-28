@@ -58,6 +58,7 @@ import { askFirstNote, bothNotes } from './askfirst.mjs'
 import { argsFit, schemasOf } from './toolargs.mjs'
 import { firstDraftNote, withoutQuestion } from './firstdraft.mjs'
 import { publishedChangeNote } from './publishedchange.mjs'
+import { LENGTH_FAILED, cutUnusable, lengthRetry } from './replylimit.mjs'
 import { DESIGN_DOWN, DESIGN_MIN_OUTPUT, DESIGN_SETTINGS, WITHHELD, designConfig, designWhy, makeDesign, sessionOf, withNote } from './design.mjs'
 import { CHECK_WEEKLY_TOKENS, checkCallerWeekly } from './check-accounts.mjs'
 import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
@@ -952,6 +953,16 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
       continue
     }
     const wrong = fault(message, offered, schemas)
+    // OLA-470: a reply cut off at the reply limit with nothing usable is not tried again unchanged.
+    if (cutUnusable(json.choices[0], wrong)) {
+      tally.lengthCuts = (tally.lengthCuts || 0) + 1
+      if (tally.lengthCuts > 1) return { status: 502, error: LENGTH_FAILED, why: 'the reply was cut off at the reply limit twice' }
+      // Thinking low only for Ola's own model on this machine (the one measured, and the one whose
+      // server takes the setting); a rented model keeps its own.
+      body = lengthRetry(body, withNote, { effort: design.local && body.model === C.models.get('general') })
+      last = 'a reply cut off at the reply limit'
+      continue
+    }
     if (wrong === MISSES_SCHEMA) missed = json
     if (wrong) {
       last = `the model produced ${wrong}`
@@ -1362,6 +1373,7 @@ async function handle(req, res, rec, signal) {
     rec.status = out.status
     if (out.argsRetried) rec.args_retried = 1
     if (out.argsMissed) rec.args_missed = 1
+    if (tally.lengthCuts) rec.length_cuts = tally.lengthCuts
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
       if (wantStream) stream(res, clean, wantUsage)
