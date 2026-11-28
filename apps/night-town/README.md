@@ -12,21 +12,23 @@ Qwen and Inkmini do not fit in memory together, so the mayor works in turns: `bi
 - `seed/`: the starting town: `core.js` (map, clock, registry, helpers, test surface), `parts/` (ground, road,
   three houses, six people), `TOWN.md` (the API both models get every time), `check.js` (the checks without a
   browser, for the builders).
-- `town.mjs`: the loop, the judge, status and report.
+- `town.mjs`: the loop, the judge, status and report. `start.sh`: the night's launcher. `ATTEMPTS.md`: the trial runs
+  before the first night and what each changed.
 
 On the Studio (`ssh ola@100.100.60.59`, `export PATH=/opt/homebrew/bin:$PATH`, repo `~/big-test/hilma`;
 Playwright lives in `~/night-town-tools`):
 
 ```sh
 cd ~/big-test/hilma
-nohup caffeinate -i node apps/night-town/town.mjs night --fresh --until 07:00 > ~/night-town.out 2>&1 &   # start
+apps/night-town/start.sh --until 07:00     # start, from a fresh seed (--resume keeps the town); output ~/night-town.out
 node apps/night-town/town.mjs status      # rounds, kept / rejected, the last five jobs, running or not
 node apps/night-town/town.mjs stop        # ends after the jobs in progress, Ola's own model loaded
 node apps/night-town/town.mjs report      # writes ~/night-town/REPORT.md (works on a partial night)
 node apps/night-town/town.mjs look        # judge the town as it is and take a screenshot (no model)
 ```
 
-`--minutes 30` instead of `--until` for a short run; `--jobs 6` jobs per mayor visit; `NIGHT_TOWN_DIR` for another
+start.sh runs the loop under caffeinate and starts it again on the same town if it crashes. Directly:
+`node apps/night-town/town.mjs night [--fresh] [--until 07:00 | --minutes 30]`; `--jobs 6` jobs per mayor visit; `NIGHT_TOWN_DIR` for another
 folder. In `~/night-town`: `town/` (the town, `git log` is its growth; open `town/index.html`), `journal.jsonl` (every
 job: Qwen's words and check, the builder's minutes, steps, tokens, the diff's path, the verdict, the judge's output,
 the kind of failure), `rounds.jsonl`, `night.log`, `shots/` (day and night after every round), `runs/` (each job's copy).
