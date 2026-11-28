@@ -623,9 +623,9 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
         flagged.add(t.id)
         void pokeAfter(t, { poke: (since) => desk.poke(since), send: (text) => sendOla(text), stillLast })
       } else if (t.status === 'done' && isPokeFix(t)) {
-        // OLA-522: after the one fix, pressed once more; still dead: say what, and ask about the bigger model.
+        // OLA-522: after the fix, pressed once more; still dead: say what, and ask about the bigger model (OLA-466: a page that still throws as it opens gets one more fix first).
         flagged.add(t.id)
-        void pokeAgain(t, { poke: (since) => desk.poke(since, true), stillDead: (page, dead) => stillDead(t, page, dead), stillLast })
+        void pokeAgain(t, { poke: (since) => desk.poke(since, true), stillDead: (page, dead) => stillDead(t, page, dead), stillLast, send: (text) => sendOla(text) })
       }
       return
     }
@@ -634,8 +634,10 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
   /** OLA-522: the card after the second pressing, for the fix turn `t`: what still does not work, and the one question when it can be acted on. */
   function stillDead(t: Turn, page: string, dead: Dead[]) {
-    const i = state.turns.findIndex((x) => x.id === t.id)
-    const request = (i > 0 ? state.turns[i - 1]?.request : '') ?? ''
+    // The person's request: the turn before the fix turns (one, or two when the page threw as it opened).
+    let i = state.turns.findIndex((x) => x.id === t.id) - 1
+    while (i > 0 && isPokeFix(state.turns[i])) i--
+    const request = (i >= 0 ? state.turns[i]?.request : '') ?? ''
     const q = deadQuestion(page, dead, { hostedSetUp: isSetUp('hosted'), canSend: state.owner || isOn('hosted') })
     setState('suggestion', { id: `s${Date.now()}`, request, turnId: t.id, reason: 'dead', offers: ['hosted'], target: 'hosted', canAct: q.offered, page: q.page, dead: q.dead })
     void desk.pokeNote({ event: 'asked', offered: q.offered, dead: dead.length })

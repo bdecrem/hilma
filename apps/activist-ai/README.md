@@ -2422,7 +2422,7 @@ and iPhone apps are parked).
 
 **After the one fix (OLA-522, Bart, Nov 27: "if invalid ... ask the customer if we can escalate to
 inkling 2 small").** When Ola's fix turn ends, the page is pressed once more (`/api/poke` with
-`second`). All works, or the pressing fails: nothing more. Still dead: the stretch card, reason
+`second`). All works, or the pressing fails: nothing more. **A page that still throws as it opens** after the first fix (OLA-466, checker Nov 28: clearing one load error showed a second that had been hidden behind it) gets one more fix turn first, shown as "Ola pressed the page again after the fix: it still stops with an error when it opens, so Ola asked its model to fix that too."; every fix prompt that carries a load error also says the script stopped at that line, so the code after it never ran. Never a third. Still dead: the stretch card, reason
 `dead`, says "Ola pressed the buttons again after the fix, and this still does not work:" with the
 same sentences (four at most) and, only when the hosted model is set up and this person can send it
 (the owner, or the project's switch on), asks "Give this to a bigger model? It runs outside this

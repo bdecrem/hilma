@@ -18,16 +18,28 @@ export type Poked = { page: string | null; dead: Dead[] }
 export { POKE_MARK }
 /** The one line the conversation shows for that turn (conversation.ts nudgeOf reads the first line). */
 export const POKE_LINE = 'Ola pressed the buttons on the page, found something that does not work, and asked its model to fix it.'
+/** The line of the one extra fix turn (OLA-466): after the first fix the page still threw when it opened. */
+export const POKE_LINE_AGAIN = 'Ola pressed the page again after the fix: it still stops with an error when it opens, so Ola asked its model to fix that too.'
 const MAX_LINES = 6
+/** ola-poke's sentence for a script error as the page opened (workspace/ola-poke). */
+const LOAD_ERROR = /^Script error when the page opened:/
+/** Whether a script error as the page opened is among what is dead: it stops the page's script there, so nothing after it was ever tried. */
+export const hasLoadError = (dead: Dead[]) => dead.some((d) => LOAD_ERROR.test(d.say))
+// OLA-466, checker Nov 28 (chk466j): the first fix cleared "formula-input is null", which had hidden
+// "cells.keys is not a function" behind it; the card then offered the bigger model for an error Ola's
+// model had never been shown. So the fix prompt says what a load error means, and one more fix turn is
+// sent when the page still throws as it opens (never more than one).
+const LOAD_HINT = 'A script error when the page opens stops its script at that line, so nothing after it has run yet: read the rest of the script for mistakes of the same kind (an element the code uses that the page does not have, a method called on the wrong kind of value) and fix them too.'
 
 /** Whether a finished turn gets its page pressed: Ola's own model's, ended well, not one Ola sent itself. */
 export const pokeable = (turn: Turn) => turn.status === 'done' && !turn.nudge && turn.engine !== 'claude' && turn.engine !== 'hosted'
 
 /** The follow-up turn for what was dead on `page`. */
-export function pokePrompt(page: string, dead: Dead[]): string {
+export function pokePrompt(page: string, dead: Dead[], line = POKE_LINE): string {
   const lines = dead.slice(0, MAX_LINES).map((d) => `- ${d.say}`)
   if (dead.length > MAX_LINES) lines.push(`- and ${dead.length - MAX_LINES} more like these.`)
-  return `${POKE_MARK}${POKE_LINE}\n\nFrom Ola, not the person: Ola opened ${page} in a browser, typed into every field and pressed every button. This did not work:\n${lines.join('\n')}\n\nFix exactly that in ${page}, then hand it over. Change nothing else.`
+  const hint = hasLoadError(dead) ? `\n\n${LOAD_HINT}` : ''
+  return `${POKE_MARK}${line}\n\nFrom Ola, not the person: Ola opened ${page} in a browser, typed into every field and pressed every button. This did not work:\n${lines.join('\n')}${hint}\n\nFix exactly that in ${page}, then hand it over. Change nothing else.`
 }
 
 /**
@@ -61,18 +73,20 @@ export async function pokeAfter(turn: Turn, io: { poke: (since: number) => Promi
 // and the list; after it Ola does not press again and does not ask again. No: nothing more. The second
 // pressing failing or timing out: nothing said, nothing offered.
 
-/** Ola's one fix turn (its first line is POKE_LINE): the turn pressed a second time. */
-export const isPokeFix = (turn: Turn) => !!turn.nudge && turn.request === POKE_LINE && turn.engine !== 'claude' && turn.engine !== 'hosted'
+/** Ola's fix turn (its first line is POKE_LINE, or POKE_LINE_AGAIN for the one extra): the turn pressed again. */
+export const isPokeFix = (turn: Turn) => !!turn.nudge && (turn.request === POKE_LINE || turn.request === POKE_LINE_AGAIN) && turn.engine !== 'claude' && turn.engine !== 'hosted'
 /** At most this many sentences of what does not work, on the card. */
 export const DEAD_SHOWN = 4
 
 /**
  * At the end of the fix turn: press the page again and, when something is still dead, hand it to
- * `stillDead` (which shows the card). Resolves whether it did.
+ * `stillDead` (which shows the card). Except once: after the first fix, a page that still throws as it
+ * opens gets one more fix turn through `send` (POKE_LINE_AGAIN) instead of the card. Resolves whether
+ * either happened.
  */
 export async function pokeAgain(
   turn: Turn,
-  io: { poke: (since: number) => Promise<Poked>; stillDead: (page: string, dead: Dead[]) => unknown; stillLast: () => boolean },
+  io: { poke: (since: number) => Promise<Poked>; stillDead: (page: string, dead: Dead[]) => unknown; stillLast: () => boolean; send?: (text: string) => unknown },
 ): Promise<boolean> {
   if (!isPokeFix(turn) || turn.status !== 'done' || !(turn.at > 0)) return false
   let r: Poked
@@ -83,6 +97,10 @@ export async function pokeAgain(
   }
   const dead = Array.isArray(r?.dead) ? r.dead.filter((d) => d && typeof d.say === 'string' && d.say) : []
   if (typeof r?.page !== 'string' || !r.page || !dead.length || !io.stillLast()) return false
+  if (turn.request === POKE_LINE && io.send && hasLoadError(dead)) {
+    io.send(pokePrompt(r.page, dead, POKE_LINE_AGAIN))
+    return true
+  }
   io.stillDead(r.page, dead)
   return true
 }

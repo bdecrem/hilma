@@ -3,7 +3,7 @@
 // All fine, or the second pressing failed: neither. Yes: one hand-off turn, never pressed again. No: nothing.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { deadAnswer, DEAD_HANDOFF_LINE, deadHandoffRequest, deadLines, deadOffer, deadQuestion, isPokeFix, pokeable, pokeAgain, pokeAfter, pokePrompt, POKE_LINE, type Poked } from '../src/lib/poke.ts'
+import { deadAnswer, DEAD_HANDOFF_LINE, deadHandoffRequest, deadLines, deadOffer, deadQuestion, isPokeFix, pokeable, pokeAgain, pokeAfter, pokePrompt, POKE_LINE, POKE_LINE_AGAIN, type Poked } from '../src/lib/poke.ts'
 import { emptyConversation, startTurn } from '../src/lib/conversation.ts'
 import { handoffPrompt } from '../src/lib/steps.ts'
 import type { Turn } from '../src/lib/types.ts'
@@ -104,4 +104,40 @@ test('seven still dead: the card names four and says how many more; the hand-off
   assert.equal(lines[4], 'And 3 more.')
   assert.deepEqual(deadLines(q.dead.slice(0, 4)), q.dead.slice(0, 4))
   assert.equal((deadHandoffRequest('make a game', 'index.html', q.dead).match(/^- /gm) ?? []).length, 7)
+})
+
+// OLA-466, checker Nov 28 (chk466j): the first fix cleared one error that had hidden a second behind it.
+const LOAD = [{ what: 'error', name: '', say: 'Script error when the page opened: TypeError: cells.keys is not a function or its return value is not iterable' }]
+
+test('the fix prompt for a load error says it stops the script there and asks for the rest of its kind', () => {
+  assert.match(pokePrompt('index.html', LOAD), /stops its script at that line, so nothing after it has run yet/)
+  assert.doesNotMatch(pokePrompt('index.html', DEAD), /stops its script/)
+})
+
+test('after the first fix the page still throws as it opens: one more fix turn, not the card', async () => {
+  const sent: string[] = []
+  const cards: string[][] = []
+  const did = await pokeAgain(fixTurn(), { poke: async () => ({ page: 'index.html', dead: [...LOAD, ...DEAD] }), stillDead: (_p, d) => cards.push(d.map((x) => x.say)), stillLast: () => true, send: (s) => sent.push(s) })
+  assert.equal(did, true)
+  assert.deepEqual(cards, [])
+  assert.equal(sent.length, 1)
+  const again = startTurn(emptyConversation(), sent[0], 1_764_270_100_000)
+  assert.equal(again.request, POKE_LINE_AGAIN)
+  assert.equal(isPokeFix(again), true)
+  assert.match(sent[0], /cells\.keys is not a function/)
+})
+
+test('after the extra fix it still throws: the card, never a third fix', async () => {
+  const sent: string[] = []
+  const cards: string[][] = []
+  const t = Object.assign(startTurn(emptyConversation(), pokePrompt('index.html', LOAD, POKE_LINE_AGAIN), 1_764_270_100_000), { id: 'msg_fix2', status: 'done', ended: 2 }) as Turn
+  await pokeAgain(t, { poke: async () => ({ page: 'index.html', dead: LOAD }), stillDead: (_p, d) => cards.push(d.map((x) => x.say)), stillLast: () => true, send: (s) => sent.push(s) })
+  assert.deepEqual([sent.length, cards.length], [0, 1])
+})
+
+test('after the first fix only a dead button is left: the card, as before', async () => {
+  const sent: string[] = []
+  const cards: string[][] = []
+  await pokeAgain(fixTurn(), { poke: async () => ({ page: 'index.html', dead: DEAD }), stillDead: (_p, d) => cards.push(d.map((x) => x.say)), stillLast: () => true, send: (s) => sent.push(s) })
+  assert.deepEqual([sent.length, cards.length], [0, 1])
 })
