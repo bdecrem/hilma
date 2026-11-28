@@ -140,6 +140,8 @@ ${JSON.stringify(reading).slice(0, 3000)}
 THE LAST JOBS AND WHAT HAPPENED:
 ${recent || '(none yet: this is the first round)'}
 
+${pace()}
+
 Hand out exactly ${n} small, DIFFERENT jobs. Rules:
 - Small steps: one building, one behavior, or one visible thing per job. A builder has about 8 minutes.
 - Each job is a NEW part (a new file parts/<name>.js) or a change to ONE named existing part. Jobs in the same round must touch different files.
@@ -154,6 +156,14 @@ Hand out exactly ${n} small, DIFFERENT jobs. Rules:
 Answer with JSON only, no other text:
 {"note": "one or two sentences: what you are going for this round",
  "jobs": [{"name": "short-name", "kind": "building|behavior|people|visual|sky|interaction|system", "file": "parts/<name>.js", "change": "new|edit", "what": "two or three sentences of what to build", "check": "function body that returns true"}]}`
+}
+// How bold the next round should be, from how the last one went (the town should evolve, not repeat one size of job all night).
+function pace() {
+  const js = journal(); if (!js.length) return 'This is the first round: start with simple, visible things.'
+  const last = js.filter((j) => j.round === js[js.length - 1].round), kept = last.filter((j) => j.verdict === 'kept').length
+  const share = kept / last.length
+  return `Last round ${kept} of ${last.length} jobs were kept. ` + (share >= 0.8 ? 'That is too easy: make this round a little bolder. Ask for things that use what other parts made (people visiting the new buildings, parts reacting to each other\'s events), a behavior with two or three steps, or something the townspeople do together. Still one file per job.'
+    : share <= 0.4 ? 'That is too hard: make this round smaller and plainer, one clear thing per job.' : 'Keep about this size, and try one bolder job.')
 }
 async function askMayor(prompt) {
   const key = readFileSync(path.join(homedir(), '.ola/bigmodel.key'), 'utf8').trim()

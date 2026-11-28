@@ -18,3 +18,12 @@ folder on the Studio (`~/nt-attempt-<n>`).
 - Changed: one random stream per part (a new part cannot change an old part's luck); the mayor is told checks must
   not hinge on one random draw and that nothing goes on a road; a seed check that the town still lives; two more
   streets in the seed so the town spreads; the mayor gets a second try per visit; a crash still puts Ola's model back; no new round with under 12 minutes left.
+
+## Attempt 3 (18:15 to 18:36, the clock stopped it)
+- Ran: three rounds of six jobs in 6.1, 8.1 and 7.3 min, 17 of 18 kept (bakery, trees, smoke, birds, bell, market,
+  clouds, fireflies, stars, mice, shadows, cart, windmill ...); swaps 34 to 37 s a round; the town spread over all
+  three streets; earlier checks take about 0.05 s each; it stopped itself with 8 minutes left and Ola's model loaded.
+- Broke: nothing stalled. The one rejection was real: "well" passed alone and failed after the round's other parts
+  were merged (its own check false). But 94% kept means the jobs are too easy to teach us much.
+- Changed: the mayor is told how the last round went and adjusts: at 80% kept it asks for bolder jobs (parts that use
+  each other, two-step behaviors, people doing things together), at 40% or less smaller ones.
